@@ -434,7 +434,7 @@ export default function Index() {
             {pricingPlans.map((plan, index) => (
               <Card 
                 key={index}
-                className={`group transition-all duration-500 transform hover:-translate-y-8 border-0 shadow-lg relative overflow-hidden ${
+                className={`group transition-all duration-700 ease-out transform hover:-translate-y-10 border-0 shadow-lg relative overflow-hidden ${
                   plan.popular 
                     ? 'shadow-2xl scale-110 glass ring-2 ring-teal-400 animate-glow' 
                     : 'glass hover:shadow-2xl'
@@ -468,7 +468,7 @@ export default function Index() {
                   </ul>
                   <Button 
                     size="lg"
-                    className={`w-full py-4 text-lg font-bold rounded-full transition-all duration-500 transform hover:scale-105 ${
+                    className={`w-full py-4 text-lg font-bold rounded-full transition-all duration-700 ease-out transform hover:scale-105 ${
                       plan.popular
                         ? 'bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl animate-glow'
                         : 'border-2 border-gray-400 hover:border-teal-400 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 text-gray-300 hover:text-white'
@@ -505,7 +505,7 @@ export default function Index() {
           </p>
           <Button 
             size="lg"
-            className="bg-white text-gray-900 hover:bg-gray-100 px-16 py-8 text-2xl font-black rounded-full transform transition-all duration-500 hover:scale-110 shadow-2xl hover:shadow-white/25 animate-float"
+            className="bg-white text-gray-900 hover:bg-gray-100 px-16 py-8 text-2xl font-black rounded-full transform transition-all duration-700 ease-out hover:scale-110 shadow-2xl hover:shadow-white/25 animate-float"
           >
             <Rocket className="mr-4 w-8 h-8" />
             Start Building
