@@ -185,7 +185,7 @@ export default function Index() {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
           <div className="text-center">
-            <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className={`transition-all duration-1500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
               
               {/* Sparkle decoration */}
               <div className="flex justify-center mb-6">
@@ -211,7 +211,7 @@ export default function Index() {
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <Button 
                   size="lg" 
-                  className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transform transition-all duration-300 hover:scale-110 shadow-2xl hover:shadow-purple-500/25 animate-glow overflow-hidden"
+                  className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transform transition-all duration-500 ease-out hover:scale-110 shadow-2xl hover:shadow-purple-500/25 animate-glow overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center">
                     <Rocket className="mr-3 w-6 h-6 group-hover:animate-pulse" />
@@ -224,7 +224,7 @@ export default function Index() {
                 <Button 
                   variant="outline" 
                   size="lg"
-                  className="group glass border-2 border-gray-300/50 hover:border-purple-400/50 px-10 py-6 text-xl font-bold rounded-full transition-all duration-300 hover:scale-105 backdrop-blur-sm"
+                  className="group glass border-2 border-gray-300/50 hover:border-purple-400/50 px-10 py-6 text-xl font-bold rounded-full transition-all duration-500 ease-out hover:scale-105 backdrop-blur-sm"
                 >
                   <Play className="mr-3 w-6 h-6 group-hover:scale-110 transition-transform" />
                   Watch Demo
@@ -267,19 +267,19 @@ export default function Index() {
             {features.map((feature, index) => (
               <Card 
                 key={index}
-                className="group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-4 hover:rotate-1 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 overflow-hidden relative"
+                className="group hover:shadow-2xl transition-all duration-700 ease-out transform hover:-translate-y-6 hover:rotate-2 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 overflow-hidden relative"
               >
                 <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500" style={{ background: `linear-gradient(to bottom right, ${feature.gradient.split(' ')[1]}, ${feature.gradient.split(' ')[3]})` }}></div>
                 
                 <CardContent className="p-8 text-center relative z-10">
                   <div className="mb-6 flex justify-center">
-                    <div className={`p-6 rounded-3xl bg-gradient-to-br ${feature.gradient} group-hover:scale-125 transition-all duration-500 shadow-lg group-hover:shadow-xl animate-float`} style={{ animationDelay: `${index * 0.5}s` }}>
+                    <div className={`p-6 rounded-3xl bg-gradient-to-br ${feature.gradient} group-hover:scale-125 transition-all duration-700 ease-out shadow-lg group-hover:shadow-xl animate-float`} style={{ animationDelay: `${index * 0.5}s` }}>
                       <div className="text-white">
                         {feature.icon}
                       </div>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-gradient transition-all duration-300">{feature.title}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-gradient transition-all duration-500 ease-out">{feature.title}</h3>
                   <p className="text-gray-600 leading-relaxed font-medium">{feature.description}</p>
                   
                   {/* Step number */}
