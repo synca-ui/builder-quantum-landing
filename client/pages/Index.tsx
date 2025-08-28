@@ -7,6 +7,8 @@ export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     setIsVisible(true);
