@@ -231,14 +231,13 @@ export default function Index() {
                 </Button>
               </div>
 
-              {/* Trust indicators */}
-              <div className="mt-16 flex flex-col items-center">
-                <p className="text-sm text-gray-500 mb-4 font-medium">Trusted by 50,000+ businesses worldwide</p>
-                <div className="flex items-center gap-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
-                  ))}
-                  <span className="ml-2 text-gray-600 font-semibold">4.9/5 from 2,000+ reviews</span>
+              {/* Simple trust indicator */}
+              <div className="mt-16 flex justify-center">
+                <div className="inline-flex items-center gap-4 glass px-8 py-4 rounded-full">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse"></div>
+                    <span className="text-gray-600 font-medium">50,000+ businesses trust sync.a</span>
+                  </div>
                 </div>
               </div>
             </div>
