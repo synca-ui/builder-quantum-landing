@@ -113,6 +113,34 @@ export default function Index() {
     }
   ];
 
+  const configuratorSteps = [
+    {
+      title: "Choose Your Business Type",
+      description: "Select what best describes your business",
+      options: [
+        { name: "Coffee Shop", icon: "☕", gradient: "from-orange-400 to-amber-500" },
+        { name: "Restaurant", icon: "🍽️", gradient: "from-red-400 to-rose-500" },
+        { name: "Retail Store", icon: "🛍️", gradient: "from-teal-400 to-emerald-500" },
+        { name: "Bakery", icon: "🥖", gradient: "from-purple-400 to-pink-500" }
+      ]
+    },
+    {
+      title: "Pick Your Style",
+      description: "Choose a design that matches your vibe",
+      options: [
+        { name: "Modern & Clean", icon: "✨", gradient: "from-blue-400 to-indigo-500" },
+        { name: "Warm & Cozy", icon: "🔥", gradient: "from-orange-400 to-red-500" },
+        { name: "Elegant & Sophisticated", icon: "💎", gradient: "from-purple-400 to-indigo-500" },
+        { name: "Fun & Playful", icon: "🎨", gradient: "from-pink-400 to-purple-500" }
+      ]
+    },
+    {
+      title: "Add Your Details",
+      description: "Tell us about your business",
+      isForm: true
+    }
+  ];
+
   const demoTemplates = [
     {
       name: "Coffee Shop",
