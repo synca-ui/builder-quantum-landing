@@ -453,7 +453,7 @@ export default function Index() {
                 sync.a
               </h3>
               <p className="text-gray-400 leading-relaxed text-lg font-medium">
-                The easiest way to build beautiful, professional websites for your business.
+                The easiest way for cafés, restaurants, and local shops to create their digital presence.
               </p>
               <div className="flex space-x-4 mt-6">
                 {[...Array(3)].map((_, i) => (
