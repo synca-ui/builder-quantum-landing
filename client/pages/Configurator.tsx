@@ -63,13 +63,37 @@ export default function Configurator() {
     {
       id: 'style',
       title: "What style suits your brand?",
-      description: "Choose a design aesthetic that reflects your business personality",
+      description: "Choose a design aesthetic that reflects your business personality. This will dictate everything from color schemes to layout and typography.",
       component: 'style',
       options: [
-        { name: "Minimalistic", preview: "Clean lines, lots of white space", gradient: "from-gray-400 to-gray-600", value: "minimalistic" },
-        { name: "Modern & Creative", preview: "Bold layouts, creative elements", gradient: "from-purple-400 to-pink-500", value: "modern" },
-        { name: "Professional & Elegant", preview: "Sophisticated, trustworthy design", gradient: "from-blue-400 to-indigo-600", value: "professional" },
-        { name: "Bold & Eye-catching", preview: "Vibrant colors, dynamic layouts", gradient: "from-orange-400 to-red-500", value: "bold" }
+        {
+          name: "Minimalist",
+          preview: "Clean lines, ample white space, simple navigation, and a single-column layout",
+          gradient: "from-gray-50 to-gray-200",
+          value: "minimalist",
+          colors: { primary: "#6B7280", secondary: "#F9FAFB", accent: "#374151" }
+        },
+        {
+          name: "Creative & Bold",
+          preview: "Vibrant colors, large typography, dynamic full-screen images, creative animations, and a multi-column layout",
+          gradient: "from-purple-500 to-pink-500",
+          value: "creative",
+          colors: { primary: "#8B5CF6", secondary: "#EC4899", accent: "#F59E0B" }
+        },
+        {
+          name: "Professional & Elegant",
+          preview: "Subtle colors, classic typography, balanced whitespace, with horizontal and vertical navigation options",
+          gradient: "from-blue-600 to-indigo-700",
+          value: "professional",
+          colors: { primary: "#2563EB", secondary: "#1E40AF", accent: "#3B82F6" }
+        },
+        {
+          name: "Modern & Sleek",
+          preview: "Dark mode, sharp lines, subtle animations, sleek menu transitions, and a modular grid layout",
+          gradient: "from-gray-800 to-black",
+          value: "modern",
+          colors: { primary: "#111827", secondary: "#1F2937", accent: "#10B981" }
+        }
       ]
     },
     {
@@ -134,8 +158,28 @@ export default function Configurator() {
   });
 
   const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+
+    // Persist style selection to localStorage for homepage navigation
+    if (field === 'style') {
+      localStorage.setItem('selectedStyle', value);
+      localStorage.setItem('configuratorData', JSON.stringify(newFormData));
+    }
   };
+
+  // Load persisted data on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('configuratorData');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setFormData(prev => ({ ...prev, ...parsedData }));
+      } catch (error) {
+        console.log('Error loading saved data:', error);
+      }
+    }
+  }, []);
 
   const nextStep = () => {
     if (currentStep < filteredSteps.length - 1) {
