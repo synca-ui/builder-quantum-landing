@@ -177,8 +177,189 @@ export default function Index() {
     </div>
   );
 
+  // Navigation component
+  const Navigation = () => (
+    <nav className="fixed top-0 w-full z-50 glass border-b border-white/20 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <h1 className="text-2xl font-black text-gradient">sync.a</h1>
+          </div>
+
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-8">
+              <a href="#configurator" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
+                <Settings className="w-4 h-4 inline mr-2" />
+                Configurator
+              </a>
+              <a href="#features" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
+                <Layers className="w-4 h-4 inline mr-2" />
+                Features
+              </a>
+              <a href="#demo" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
+                <Play className="w-4 h-4 inline mr-2" />
+                Demo
+              </a>
+              <a href="#pricing" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
+                <Crown className="w-4 h-4 inline mr-2" />
+                Pricing
+              </a>
+            </div>
+          </div>
+
+          <div className="hidden md:block">
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              Get Started
+            </Button>
+          </div>
+
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-gray-700"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden glass border-t border-white/20">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a href="#configurator" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Configurator</a>
+            <a href="#features" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Features</a>
+            <a href="#demo" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Demo</a>
+            <a href="#pricing" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Pricing</a>
+            <div className="px-3 py-2">
+              <Button
+                size="sm"
+                className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-full"
+              >
+                Get Started
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+
   return (
     <div className="min-h-screen bg-white overflow-hidden">
+      <Navigation />
+
+      {/* Configurator Section */}
+      <section id="configurator" className="relative min-h-screen flex items-center bg-gradient-to-br from-teal-50 via-white to-purple-50 pt-16">
+        <Particles />
+
+        {/* Interactive cursor follower */}
+        <div
+          className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
+          style={{
+            left: mousePosition.x - 6,
+            top: mousePosition.y - 6,
+            transform: `translate3d(0, 0, 0) scale(0.8)`,
+            transition: 'transform 0.1s ease-out'
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
+          <div className="text-center mb-16">
+            <div className={`transition-all duration-1500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <Settings className="w-12 h-12 text-teal-500" />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+
+              <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
+                <span className="font-display text-gradient animate-gradient">Create Your</span>
+                <br />
+                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent animate-gradient">
+                  Digital Presence
+                </span>
+              </h1>
+
+              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
+                Answer a few simple questions and we'll build your perfect website in minutes
+              </p>
+            </div>
+          </div>
+
+          {/* Configurator Steps */}
+          <div className="max-w-4xl mx-auto">
+            {configuratorSteps.map((step, stepIndex) => (
+              <div key={stepIndex} className={`mb-12 transition-all duration-700 ease-out ${currentStep === stepIndex ? 'opacity-100 scale-100' : currentStep > stepIndex ? 'opacity-50 scale-95' : 'opacity-30 scale-90'}`}>
+                {currentStep >= stepIndex && (
+                  <Card className="glass border-0 shadow-2xl overflow-hidden">
+                    <CardContent className="p-8">
+                      <div className="text-center mb-8">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{step.title}</h3>
+                        <p className="text-gray-600 font-medium">{step.description}</p>
+                      </div>
+
+                      {step.isForm ? (
+                        <div className="space-y-6">
+                          <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                              <label className="block text-sm font-bold text-gray-700 mb-2">Business Name</label>
+                              <input type="text" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300" placeholder="Your amazing business name" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+                              <input type="text" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300" placeholder="City, State" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Tell us about your business</label>
+                            <textarea className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 h-24" placeholder="What makes your business special?"></textarea>
+                          </div>
+                          <div className="text-center">
+                            <Button
+                              size="lg"
+                              className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-12 py-4 text-lg font-bold rounded-full transition-all duration-500 ease-out hover:scale-110 shadow-2xl"
+                            >
+                              <Rocket className="mr-3 w-6 h-6" />
+                              Create My Website
+                              <Sparkles className="ml-3 w-6 h-6" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {step.options?.map((option, optionIndex) => (
+                            <Card
+                              key={optionIndex}
+                              className="group hover:shadow-xl transition-all duration-500 ease-out transform hover:-translate-y-2 cursor-pointer border-2 border-transparent hover:border-teal-400"
+                              onClick={() => setCurrentStep(Math.min(currentStep + 1, configuratorSteps.length - 1))}
+                            >
+                              <CardContent className="p-6 text-center">
+                                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${option.gradient} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                                  <span className="text-2xl">{option.icon}</span>
+                                </div>
+                                <h4 className="font-bold text-gray-900 group-hover:text-gradient transition-all duration-300">{option.name}</h4>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center bg-gradient-to-br from-gray-50 via-white to-teal-50">
         <Particles />
