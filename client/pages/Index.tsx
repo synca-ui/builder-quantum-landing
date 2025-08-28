@@ -413,14 +413,14 @@ export default function Index() {
             <Sparkles className="w-16 h-16 text-white mx-auto animate-pulse" />
           </div>
           <h2 className="text-6xl md:text-8xl font-black text-white mb-8 leading-tight font-display">
-            Ready to Build
+            Ready to Go
             <br />
             <span className="bg-gradient-to-r from-yellow-300 to-white bg-clip-text text-transparent animate-gradient">
-              Your Website?
+              Digital?
             </span>
           </h2>
           <p className="text-2xl md:text-3xl text-white/90 mb-12 max-w-3xl mx-auto font-medium">
-            Join thousands of small businesses using sync.a to bring their ideas online.
+            Join local businesses already thriving online with their digital presence.
           </p>
           <Button 
             size="lg"
