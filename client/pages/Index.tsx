@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers } from "lucide-react";
+import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers, Coffee, ShoppingBag, Utensils, Briefcase, Instagram, Facebook, Twitter, Linkedin, MapPin, Phone, Mail, CreditCard, Upload, ArrowLeft, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -9,10 +9,20 @@ export default function Index() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [formData, setFormData] = useState({
+    businessType: '',
+    style: '',
+    pages: [],
+    socialMedia: {},
+    contactInfo: {},
+    menuItems: [],
+    paymentMethods: []
+  });
 
   useEffect(() => {
     setIsVisible(true);
-
+    
     let animationFrame: number;
     const handleMouseMove = (e: MouseEvent) => {
       if (animationFrame) {
@@ -22,7 +32,7 @@ export default function Index() {
         setMousePosition({ x: e.clientX, y: e.clientY });
       });
     };
-
+    
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -32,188 +42,162 @@ export default function Index() {
     };
   }, []);
 
-  const features = [
-    {
-      icon: <Zap className="w-8 h-8 text-teal-500" />,
-      title: "Quick Setup",
-      description: "Get your café or restaurant online in minutes. No technical skills needed - just add your info and go live.",
-      gradient: "from-teal-400 to-cyan-500"
-    },
-    {
-      icon: <Palette className="w-8 h-8 text-purple-500" />,
-      title: "Local Business Templates",
-      description: "Beautiful designs crafted specifically for restaurants, cafés, bakeries, and local shops.",
-      gradient: "from-purple-400 to-pink-500"
-    },
-    {
-      icon: <Smartphone className="w-8 h-8 text-orange-500" />,
-      title: "Mobile-First Design",
-      description: "Your customers will love browsing your menu and location info on their phones.",
-      gradient: "from-orange-400 to-red-500"
-    },
-    {
-      icon: <Globe className="w-8 h-8 text-teal-500" />,
-      title: "Local SEO Ready",
-      description: "Get found by local customers with built-in SEO optimization for your neighborhood.",
-      gradient: "from-blue-400 to-indigo-500"
-    }
-  ];
-
-
-  const pricingPlans = [
-    {
-      name: "Starter",
-      price: "$12",
-      period: "/month",
-      description: "Perfect for cafés & small shops",
-      features: [
-        "Beautiful Website",
-        "Menu/Product Display",
-        "Contact & Location Info",
-        "Mobile Optimized",
-        "Basic Analytics"
-      ],
-      cta: "Start Your Site",
-      popular: false,
-      gradient: "from-orange-400 to-red-500"
-    },
-    {
-      name: "Business",
-      price: "$24",
-      period: "/month",
-      description: "Ideal for restaurants & stores",
-      features: [
-        "Online Ordering System",
-        "Customer Reviews",
-        "Social Media Integration",
-        "Advanced Analytics",
-        "Email Marketing",
-        "Priority Support"
-      ],
-      cta: "Grow Your Business",
-      popular: true,
-      gradient: "from-teal-400 to-purple-600"
-    },
-    {
-      name: "Premium",
-      price: "$49",
-      period: "/month",
-      description: "For multi-location businesses",
-      features: [
-        "Multiple Locations",
-        "Advanced E-commerce",
-        "Custom Integrations",
-        "White-label Options",
-        "Dedicated Manager",
-        "Custom Domain"
-      ],
-      cta: "Scale Your Brand",
-      popular: false,
-      gradient: "from-purple-400 to-indigo-600"
-    }
-  ];
-
   const configuratorSteps = [
     {
-      title: "Choose Your Business Type",
-      description: "Select what best describes your business",
+      id: 'welcome',
+      title: "Let's Build Your Perfect Website!",
+      description: "Answer a few simple questions, and we'll help you create a website tailored to your business. Fast. Easy. Professional.",
+      component: 'welcome'
+    },
+    {
+      id: 'business-type',
+      title: "What type of business are you setting up a website for?",
+      description: "Choose the category that best describes your business",
+      component: 'business-type',
       options: [
-        { name: "Coffee Shop", icon: "☕", gradient: "from-orange-400 to-amber-500" },
-        { name: "Restaurant", icon: "🍽️", gradient: "from-red-400 to-rose-500" },
-        { name: "Retail Store", icon: "🛍️", gradient: "from-teal-400 to-emerald-500" },
-        { name: "Bakery", icon: "🥖", gradient: "from-purple-400 to-pink-500" }
+        { name: "Restaurant", icon: <Utensils className="w-8 h-8" />, gradient: "from-red-400 to-orange-500", value: "restaurant" },
+        { name: "Retail Store", icon: <ShoppingBag className="w-8 h-8" />, gradient: "from-blue-400 to-purple-500", value: "retail" },
+        { name: "Café", icon: <Coffee className="w-8 h-8" />, gradient: "from-orange-400 to-yellow-500", value: "cafe" },
+        { name: "Services", icon: <Briefcase className="w-8 h-8" />, gradient: "from-teal-400 to-green-500", value: "services" }
       ]
     },
     {
-      title: "Pick Your Style",
-      description: "Choose a design that matches your vibe",
+      id: 'style',
+      title: "What style suits your brand?",
+      description: "Choose a design aesthetic that reflects your business personality",
+      component: 'style',
       options: [
-        { name: "Modern & Clean", icon: "✨", gradient: "from-blue-400 to-indigo-500" },
-        { name: "Warm & Cozy", icon: "🔥", gradient: "from-orange-400 to-red-500" },
-        { name: "Elegant & Sophisticated", icon: "💎", gradient: "from-purple-400 to-indigo-500" },
-        { name: "Fun & Playful", icon: "🎨", gradient: "from-pink-400 to-purple-500" }
+        { name: "Minimalistic", preview: "Clean lines, lots of white space", gradient: "from-gray-400 to-gray-600", value: "minimalistic" },
+        { name: "Modern & Creative", preview: "Bold layouts, creative elements", gradient: "from-purple-400 to-pink-500", value: "modern" },
+        { name: "Professional & Elegant", preview: "Sophisticated, trustworthy design", gradient: "from-blue-400 to-indigo-600", value: "professional" },
+        { name: "Bold & Eye-catching", preview: "Vibrant colors, dynamic layouts", gradient: "from-orange-400 to-red-500", value: "bold" }
       ]
     },
     {
-      title: "Add Your Details",
-      description: "Tell us about your business",
-      isForm: true
+      id: 'pages',
+      title: "What pages do you need on your website?",
+      description: "Select all the pages that are relevant to your business",
+      component: 'pages',
+      options: [
+        { name: "Home Page", required: true, value: "home" },
+        { name: "Menu", value: "menu", condition: "restaurant|cafe" },
+        { name: "Shop", value: "shop", condition: "retail" },
+        { name: "About Us", value: "about" },
+        { name: "Contact", value: "contact" },
+        { name: "Blog", value: "blog" },
+        { name: "FAQ", value: "faq" },
+        { name: "Services", value: "services", condition: "services" }
+      ]
+    },
+    {
+      id: 'social',
+      title: "Connect your social media accounts and external links",
+      description: "Link your social media to increase engagement with customers",
+      component: 'social'
+    },
+    {
+      id: 'payment',
+      title: "Set up your payment options",
+      description: "Choose how customers can pay for your products or services",
+      component: 'payment',
+      condition: "restaurant|retail|services"
+    },
+    {
+      id: 'menu-products',
+      title: "Add items to your menu or product catalog",
+      description: "Showcase what you offer to attract customers",
+      component: 'menu-products',
+      condition: "restaurant|cafe|retail"
+    },
+    {
+      id: 'contact',
+      title: "Enter your contact information and location",
+      description: "Help customers find and contact your business",
+      component: 'contact'
+    },
+    {
+      id: 'review',
+      title: "Review your website setup",
+      description: "Check all your settings and make any final adjustments",
+      component: 'review'
+    },
+    {
+      id: 'launch',
+      title: "Congratulations, your website is ready to launch!",
+      description: "Your beautiful website is ready to go live",
+      component: 'launch'
     }
   ];
 
-  const demoTemplates = [
-    {
-      name: "Coffee Shop",
-      preview: "bg-gradient-to-br from-orange-50 to-amber-100",
-      color: "from-orange-500 to-amber-600"
-    },
-    {
-      name: "Restaurant",
-      preview: "bg-gradient-to-br from-red-50 to-rose-100",
-      color: "from-red-500 to-rose-600"
-    },
-    {
-      name: "Local Store",
-      preview: "bg-gradient-to-br from-teal-50 to-emerald-100",
-      color: "from-teal-500 to-emerald-600"
+  const filteredSteps = configuratorSteps.filter(step => {
+    if (!step.condition) return true;
+    return step.condition.split('|').includes(formData.businessType);
+  });
+
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const nextStep = () => {
+    if (currentStep < filteredSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
     }
-  ];
+  };
 
-  // Particle component
-  const Particles = () => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(12)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse opacity-20"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 4}s`,
-            animationDuration: `${3 + Math.random() * 2}s`
-          }}
-        />
-      ))}
-    </div>
-  );
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
-  // Navigation component
+  // Enhanced Navigation component
   const Navigation = () => (
-    <nav className="fixed top-0 w-full z-50 glass border-b border-white/20 backdrop-blur-md">
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${isDarkMode ? 'bg-gray-900/90' : 'glass'} border-b ${isDarkMode ? 'border-gray-700' : 'border-white/20'} backdrop-blur-xl`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-black text-gradient">sync.a</h1>
-          </div>
-
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              <a href="#configurator" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
-                <Settings className="w-4 h-4 inline mr-2" />
-                Configurator
-              </a>
-              <a href="#features" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
-                <Layers className="w-4 h-4 inline mr-2" />
-                Features
-              </a>
-              <a href="#demo" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
-                <Play className="w-4 h-4 inline mr-2" />
-                Demo
-              </a>
-              <a href="#pricing" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
-                <Crown className="w-4 h-4 inline mr-2" />
-                Pricing
-              </a>
+        <div className="flex items-center justify-between h-20">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <h1 className="text-3xl font-black text-gradient animate-pulse">sync.a</h1>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce"></div>
+            </div>
+            
+            {/* Progress indicator */}
+            <div className="hidden md:flex items-center ml-8">
+              <div className="flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+                <Settings className="w-4 h-4 text-teal-500" />
+                <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+                  Step {currentStep + 1} of {filteredSteps.length}
+                </span>
+                <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${((currentStep + 1) / filteredSteps.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
             </div>
           </div>
-
+          
           <div className="hidden md:block">
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
-            >
-              Get Started
-            </Button>
+            <div className="flex items-center space-x-6">
+              {/* Dark mode toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`p-2 rounded-full transition-all duration-300 ${isDarkMode ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </Button>
+              
+              <Button 
+                size="sm"
+                className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg animate-glow"
+              >
+                <Rocket className="w-4 h-4 mr-2" />
+                Launch Preview
+              </Button>
+            </div>
           </div>
 
           <div className="md:hidden">
@@ -221,514 +205,549 @@ export default function Index() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700"
+              className={`${isDarkMode ? 'text-white' : 'text-gray-700'}`}
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </Button>
           </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden glass border-t border-white/20">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="#configurator" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Configurator</a>
-            <a href="#features" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Features</a>
-            <a href="#demo" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Demo</a>
-            <a href="#pricing" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Pricing</a>
-            <div className="px-3 py-2">
-              <Button
-                size="sm"
-                className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-full"
-              >
-                Get Started
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 
-  return (
-    <div className="min-h-screen bg-white overflow-hidden">
-      <Navigation />
-
-      {/* Configurator Section */}
-      <section id="configurator" className="relative min-h-screen flex items-center bg-gradient-to-br from-teal-50 via-white to-purple-50 pt-16">
-        <Particles />
-
-        {/* Interactive cursor follower */}
-        <div
-          className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
-          style={{
-            left: mousePosition.x - 6,
-            top: mousePosition.y - 6,
-            transform: `translate3d(0, 0, 0) scale(0.8)`,
-            transition: 'transform 0.1s ease-out'
-          }}
-        />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
-          <div className="text-center mb-16">
-            <div className={`transition-all duration-1500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <Settings className="w-12 h-12 text-teal-500" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
-                </div>
-              </div>
-
-              <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
-                <span className="font-display text-gradient animate-gradient">Create Your</span>
-                <br />
-                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent animate-gradient">
-                  Digital Presence
-                </span>
-              </h1>
-
-              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
-                Answer a few simple questions and we'll build your perfect website in minutes
-              </p>
-            </div>
-          </div>
-
-          {/* Configurator Steps */}
-          <div className="max-w-4xl mx-auto">
-            {configuratorSteps.map((step, stepIndex) => (
-              <div key={stepIndex} className={`mb-12 transition-all duration-700 ease-out ${currentStep === stepIndex ? 'opacity-100 scale-100' : currentStep > stepIndex ? 'opacity-50 scale-95' : 'opacity-30 scale-90'}`}>
-                {currentStep >= stepIndex && (
-                  <Card className="glass border-0 shadow-2xl overflow-hidden">
-                    <CardContent className="p-8">
-                      <div className="text-center mb-8">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{step.title}</h3>
-                        <p className="text-gray-600 font-medium">{step.description}</p>
-                      </div>
-
-                      {step.isForm ? (
-                        <div className="space-y-6">
-                          <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                              <label className="block text-sm font-bold text-gray-700 mb-2">Business Name</label>
-                              <input type="text" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300" placeholder="Your amazing business name" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-                              <input type="text" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300" placeholder="City, State" />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Tell us about your business</label>
-                            <textarea className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 h-24" placeholder="What makes your business special?"></textarea>
-                          </div>
-                          <div className="text-center">
-                            <Button
-                              size="lg"
-                              className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-12 py-4 text-lg font-bold rounded-full transition-all duration-500 ease-out hover:scale-110 shadow-2xl"
-                            >
-                              <Rocket className="mr-3 w-6 h-6" />
-                              Create My Website
-                              <Sparkles className="ml-3 w-6 h-6" />
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {step.options?.map((option, optionIndex) => (
-                            <Card
-                              key={optionIndex}
-                              className="group hover:shadow-xl transition-all duration-500 ease-out transform hover:-translate-y-2 cursor-pointer border-2 border-transparent hover:border-teal-400"
-                              onClick={() => setCurrentStep(Math.min(currentStep + 1, configuratorSteps.length - 1))}
-                            >
-                              <CardContent className="p-6 text-center">
-                                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${option.gradient} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                                  <span className="text-2xl">{option.icon}</span>
-                                </div>
-                                <h4 className="font-bold text-gray-900 group-hover:text-gradient transition-all duration-300">{option.name}</h4>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center bg-gradient-to-br from-gray-50 via-white to-teal-50">
-        <Particles />
-        
-        {/* Floating geometric shapes */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-10 animate-float blur-xl"></div>
-          <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 opacity-10 animate-float-reverse blur-xl animate-morphing"></div>
-          <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full opacity-10 animate-float blur-lg" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute bottom-1/3 left-1/4 w-28 h-28 bg-gradient-to-br from-pink-400 to-pink-500 opacity-10 animate-float-reverse blur-lg" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
-          <div className="text-center">
-            <div className={`transition-all duration-1500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
-              
-              {/* Sparkle decoration */}
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <Sparkles className="w-8 h-8 text-teal-500" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
-                </div>
-              </div>
-
-              <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
-                <span className="font-display text-gradient animate-gradient">Build a Stunning</span>
-                <br />
-                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent animate-gradient">
-                  Website in Minutes
-                </span>
-              </h1>
-              
-              <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed font-medium">
-                Create your <span className="text-gradient font-bold">digital presence</span> in minutes. Perfect for cafés, restaurants,
-                and local businesses ready to <span className="text-gradient font-bold">thrive online</span>.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <Button 
-                  size="lg" 
-                  className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transform transition-all duration-500 ease-out hover:scale-110 shadow-2xl hover:shadow-purple-500/25 animate-glow overflow-hidden"
-                >
-                  <span className="relative z-10 flex items-center">
-                    <Rocket className="mr-3 w-6 h-6 group-hover:animate-pulse" />
-                    Get Started Now
-                    <ChevronRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="group glass border-2 border-gray-300/50 hover:border-purple-400/50 px-10 py-6 text-xl font-bold rounded-full transition-all duration-500 ease-out hover:scale-105 backdrop-blur-sm"
-                >
-                  <Play className="mr-3 w-6 h-6 group-hover:scale-110 transition-transform" />
-                  Watch Demo
-                </Button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="features" className="py-32 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden">
-        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23f1f5f9\" fill-opacity=\"0.3\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"}></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-100 to-purple-100 px-6 py-3 rounded-full mb-6">
-              <Crown className="w-5 h-5 text-teal-600" />
-              <span className="text-teal-700 font-bold">How It Works</span>
-            </div>
-            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
-              <span className="text-gradient">Three Simple Steps</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              From empty storefront to online success. Our platform helps local businesses create their digital presence effortlessly.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <Card 
-                key={index}
-                className="group hover:shadow-2xl transition-all duration-700 ease-out transform hover:-translate-y-6 hover:rotate-2 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 overflow-hidden relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500" style={{ background: `linear-gradient(to bottom right, ${feature.gradient.split(' ')[1]}, ${feature.gradient.split(' ')[3]})` }}></div>
-                
-                <CardContent className="p-8 text-center relative z-10">
-                  <div className="mb-6 flex justify-center">
-                    <div className={`p-6 rounded-3xl bg-gradient-to-br ${feature.gradient} group-hover:scale-125 transition-all duration-700 ease-out shadow-lg group-hover:shadow-xl animate-float`} style={{ animationDelay: `${index * 0.5}s` }}>
-                      <div className="text-white">
-                        {feature.icon}
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-gradient transition-all duration-500 ease-out">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed font-medium">{feature.description}</p>
-                  
-                  {/* Step number */}
-                  <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-teal-400 to-purple-400 rounded-full flex items-center justify-center text-white font-black text-lg group-hover:scale-110 transition-transform duration-300">
-                    {index + 1}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          <div className="text-center mt-16">
-            <Button 
-              variant="outline"
-              size="lg"
-              className="group border-2 border-teal-500 text-teal-600 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 hover:text-white px-10 py-4 text-xl font-bold rounded-full transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl"
-            >
-              <Sparkles className="mr-3 w-6 h-6 group-hover:animate-spin" />
-              See All Features
-              <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform" />
+  // Live Preview Component
+  const LivePreview = () => (
+    <div className="sticky top-24 h-[calc(100vh-6rem)]">
+      <div className="h-full flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Live Preview</h3>
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" className="p-2">
+              <Smartphone className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="p-2">
+              <Globe className="w-4 h-4" />
             </Button>
           </div>
         </div>
-      </section>
-
-      {/* Interactive Demo Section */}
-      <section id="demo" className="py-32 bg-gradient-to-br from-gray-900 to-purple-900 relative overflow-hidden">
-        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"}></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black text-white mb-6 font-display">
-              Try It <span className="text-gradient">Live</span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto font-medium">
-              Experience the magic of our website builder with this interactive demo
-            </p>
-          </div>
-
-          <div className="glass rounded-3xl shadow-2xl p-10 max-w-6xl mx-auto border border-white/20">
-            <div className="flex flex-wrap gap-4 justify-center mb-10">
-              {demoTemplates.map((template, index) => (
-                <Button
-                  key={index}
-                  variant={activeDemo === index ? "default" : "outline"}
-                  onClick={() => setActiveDemo(index)}
-                  className={`px-8 py-4 rounded-full transition-all duration-500 font-bold text-lg ${
-                    activeDemo === index 
-                      ? `bg-gradient-to-r ${template.color} text-white shadow-xl transform scale-110 animate-glow` 
-                      : 'glass border-white/30 text-white hover:scale-105 hover:bg-white/10'
-                  }`}
-                >
-                  {template.name}
-                </Button>
-              ))}
-            </div>
-            
-            <div className="relative group">
-              <div className={`aspect-video rounded-2xl ${demoTemplates[activeDemo].preview} transition-all duration-1000 ease-out flex items-center justify-center relative overflow-hidden transform group-hover:scale-105`}>
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
-                <div className="text-center relative z-10">
-                  <div className={`w-24 h-24 rounded-full bg-gradient-to-r ${demoTemplates[activeDemo].color} mx-auto mb-6 flex items-center justify-center shadow-2xl animate-pulse group-hover:animate-bounce`}>
-                    <Play className="w-10 h-10 text-white" />
+        {/* iPhone mockup */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="relative">
+            {/* iPhone frame */}
+            <div className="w-64 h-[520px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
+              <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
+                {/* iPhone notch */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-10"></div>
+                
+                {/* Website preview */}
+                <div className="pt-8 h-full overflow-y-auto">
+                  {/* Header */}
+                  <div className={`px-4 py-3 border-b ${formData.style === 'bold' ? 'bg-gradient-to-r from-orange-400 to-red-500' : formData.style === 'modern' ? 'bg-gradient-to-r from-purple-400 to-pink-500' : 'bg-white'}`}>
+                    <div className="flex items-center justify-between">
+                      <div className={`text-lg font-bold ${formData.style === 'bold' || formData.style === 'modern' ? 'text-white' : 'text-gray-900'}`}>
+                        {formData.businessType === 'restaurant' ? 'Bella Vista' : 
+                         formData.businessType === 'cafe' ? 'Brew & Co' :
+                         formData.businessType === 'retail' ? 'Style Shop' : 'Your Business'}
+                      </div>
+                      <Menu className={`w-4 h-4 ${formData.style === 'bold' || formData.style === 'modern' ? 'text-white' : 'text-gray-600'}`} />
+                    </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-800 mb-3">{demoTemplates[activeDemo].name}</h3>
-                  <p className="text-gray-600 font-medium">Click to customize this template</p>
+                  
+                  {/* Hero section */}
+                  <div className="px-4 py-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-teal-400 to-purple-500 rounded-full flex items-center justify-center">
+                      {formData.businessType === 'restaurant' ? <Utensils className="w-8 h-8 text-white" /> :
+                       formData.businessType === 'cafe' ? <Coffee className="w-8 h-8 text-white" /> :
+                       formData.businessType === 'retail' ? <ShoppingBag className="w-8 h-8 text-white" /> :
+                       <Briefcase className="w-8 h-8 text-white" />}
+                    </div>
+                    <h2 className="text-sm font-bold text-gray-900 mb-1">Welcome to Your Business</h2>
+                    <p className="text-xs text-gray-600">Experience the best in town</p>
+                  </div>
+                  
+                  {/* Navigation pills */}
+                  {formData.pages.length > 0 && (
+                    <div className="px-4 mb-4">
+                      <div className="flex flex-wrap gap-1">
+                        {formData.pages.map((page: string, index: number) => (
+                          <div key={index} className="px-2 py-1 bg-gray-100 rounded-full">
+                            <span className="text-xs text-gray-600 capitalize">{page}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Content based on business type */}
+                  <div className="px-4 space-y-3">
+                    {formData.businessType === 'restaurant' && (
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-900 mb-2">Featured Menu</h3>
+                        <div className="space-y-2">
+                          {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
+                            <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                              <div>
+                                <div className="text-xs font-medium text-gray-900">{item.name}</div>
+                                <div className="text-xs text-gray-600">{item.description}</div>
+                              </div>
+                              <div className="text-xs font-bold text-teal-600">${item.price}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {formData.businessType === 'retail' && (
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-900 mb-2">Featured Products</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {formData.menuItems.slice(0, 4).map((item: any, index: number) => (
+                            <div key={index} className="bg-gray-50 rounded p-2">
+                              <div className="w-full h-16 bg-gray-200 rounded mb-1"></div>
+                              <div className="text-xs font-medium text-gray-900">{item.name}</div>
+                              <div className="text-xs font-bold text-teal-600">${item.price}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Social media icons */}
+                  {Object.keys(formData.socialMedia).length > 0 && (
+                    <div className="px-4 py-3 border-t mt-4">
+                      <div className="flex justify-center space-x-3">
+                        {Object.keys(formData.socialMedia).map((platform, index) => (
+                          <div key={index} className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                            {platform === 'instagram' && <Instagram className="w-3 h-3 text-gray-600" />}
+                            {platform === 'facebook' && <Facebook className="w-3 h-3 text-gray-600" />}
+                            {platform === 'twitter' && <Twitter className="w-3 h-3 text-gray-600" />}
+                            {platform === 'linkedin' && <Linkedin className="w-3 h-3 text-gray-600" />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                
-                {/* Animated elements */}
-                <div className="absolute top-4 left-4 w-4 h-4 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-ping"></div>
-                <div className="absolute bottom-4 right-4 w-6 h-6 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full animate-pulse"></div>
               </div>
-              
-              <Button 
-                size="lg"
-                className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-10 py-4 rounded-full shadow-2xl font-bold text-lg transition-all duration-500 ease-out hover:scale-110 animate-float"
-              >
-                <Sparkles className="mr-3 w-6 h-6" />
-                Try it Live
-                <ArrowRight className="ml-3 w-6 h-6" />
-              </Button>
+            </div>
+            
+            {/* Floating indicators */}
+            <div className="absolute -right-4 top-1/2 transform -translate-y-1/2">
+              <div className="flex flex-col space-y-2">
+                <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  );
 
-
-      {/* Pricing Section */}
-      <section id="pricing" className="py-32 bg-gradient-to-br from-gray-900 via-purple-900 to-teal-900 relative overflow-hidden">
-        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"}></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black text-white mb-6 font-display">
-              Simple <span className="text-gradient">Pricing</span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto font-medium">
-              Affordable plans designed for local businesses. Start small, scale as you grow.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <Card 
-                key={index}
-                className={`group transition-all duration-700 ease-out transform hover:-translate-y-10 border-0 shadow-lg relative overflow-hidden ${
-                  plan.popular 
-                    ? 'shadow-2xl scale-110 glass ring-2 ring-teal-400 animate-glow' 
-                    : 'glass hover:shadow-2xl'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                    <span className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-6 py-3 rounded-full text-sm font-bold shadow-xl animate-pulse">
-                      <Crown className="w-4 h-4 inline mr-2" />
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                
-                <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-5 group-hover:opacity-15 transition-opacity duration-500`}></div>
-                
-                <CardContent className="p-10 text-center relative z-10">
-                  <h3 className="text-3xl font-bold text-white mb-3">{plan.name}</h3>
-                  <p className="text-gray-300 mb-8 font-medium">{plan.description}</p>
-                  <div className="mb-8">
-                    <span className="text-6xl font-black text-white">{plan.price}</span>
-                    <span className="text-gray-300 text-lg">{plan.period}</span>
-                  </div>
-                  <ul className="space-y-4 mb-10">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center justify-center">
-                        <Check className="w-5 h-5 text-teal-400 mr-3 animate-pulse" />
-                        <span className="text-gray-300 font-medium">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    size="lg"
-                    className={`w-full py-4 text-lg font-bold rounded-full transition-all duration-700 ease-out transform hover:scale-105 ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl animate-glow'
-                        : 'border-2 border-gray-400 hover:border-teal-400 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 text-gray-300 hover:text-white'
-                    }`}
-                    variant={plan.popular ? "default" : "outline"}
-                  >
-                    {plan.cta}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+  // Step Components
+  const WelcomeStep = () => (
+    <div className="text-center py-16">
+      <div className="mb-8">
+        <div className="w-32 h-32 mx-auto mb-6 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
+          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+            <Rocket className="w-16 h-16 text-teal-500 animate-bounce" />
           </div>
         </div>
-      </section>
+        <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
+          Let's Build Your <span className="text-gradient">Perfect Website!</span>
+        </h2>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+          Answer a few simple questions, and we'll help you create a website tailored to your business. Fast. Easy. Professional.
+        </p>
+      </div>
+      
+      <Button 
+        onClick={nextStep}
+        size="lg"
+        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-2xl animate-glow"
+      >
+        <Sparkles className="mr-3 w-6 h-6" />
+        Get Started
+        <ChevronRight className="ml-3 w-6 h-6" />
+      </Button>
+    </div>
+  );
 
-      {/* Call to Action Section */}
-      <section className="py-32 bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
-        <div className="absolute inset-0 animate-gradient bg-gradient-to-r from-teal-400 via-purple-400 to-orange-400 opacity-30"></div>
-        
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-          <div className="mb-8">
-            <Sparkles className="w-16 h-16 text-white mx-auto animate-pulse" />
-          </div>
-          <h2 className="text-6xl md:text-8xl font-black text-white mb-8 leading-tight font-display">
-            Ready to Go
-            <br />
-            <span className="bg-gradient-to-r from-yellow-300 to-white bg-clip-text text-transparent animate-gradient">
-              Digital?
-            </span>
-          </h2>
-          <p className="text-2xl md:text-3xl text-white/90 mb-12 max-w-3xl mx-auto font-medium">
-            Join local businesses already thriving online with their digital presence.
-          </p>
-          <Button 
-            size="lg"
-            className="bg-white text-gray-900 hover:bg-gray-100 px-16 py-8 text-2xl font-black rounded-full transform transition-all duration-700 ease-out hover:scale-110 shadow-2xl hover:shadow-white/25 animate-float"
+  const BusinessTypeStep = () => (
+    <div className="py-8">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          What type of business are you setting up a website for?
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose the category that best describes your business
+        </p>
+      </div>
+      
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {filteredSteps[currentStep].options?.map((option: any, index: number) => (
+          <Card 
+            key={index}
+            className={`group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:-translate-y-4 border-2 ${
+              formData.businessType === option.value ? 'border-teal-500 shadow-xl' : 'border-transparent'
+            }`}
+            onClick={() => {
+              updateFormData('businessType', option.value);
+              setTimeout(nextStep, 500);
+            }}
           >
-            <Rocket className="mr-4 w-8 h-8" />
-            Start Building
-            <ArrowRight className="ml-4 w-8 h-8" />
-          </Button>
-          
-          <div className="mt-12 text-white/80 font-medium">
-            <p>✨ No credit card required • 🚀 Go live in minutes • 💎 Cancel anytime</p>
+            <CardContent className="p-8 text-center">
+              <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${option.gradient} flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 text-white`}>
+                {option.icon}
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 group-hover:text-gradient transition-all duration-300">
+                {option.name}
+              </h3>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const StyleStep = () => (
+    <div className="py-8">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          What style suits your brand?
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose a design aesthetic that reflects your business personality
+        </p>
+      </div>
+      
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {filteredSteps[currentStep].options?.map((option: any, index: number) => (
+          <Card 
+            key={index}
+            className={`group cursor-pointer transition-all duration-500 hover:shadow-2xl border-2 ${
+              formData.style === option.value ? 'border-teal-500 shadow-xl' : 'border-transparent'
+            }`}
+            onClick={() => {
+              updateFormData('style', option.value);
+            }}
+          >
+            <CardContent className="p-8">
+              <div className={`w-full h-32 rounded-lg bg-gradient-to-br ${option.gradient} mb-6 relative overflow-hidden`}>
+                <div className="absolute inset-0 bg-black/20"></div>
+                <div className="absolute bottom-4 left-4 text-white">
+                  <div className="text-sm font-bold">{option.name}</div>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{option.name}</h3>
+              <p className="text-gray-600">{option.preview}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="flex justify-between">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button 
+          onClick={nextStep} 
+          disabled={!formData.style}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const PagesStep = () => (
+    <div className="py-8">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          What pages do you need on your website?
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Select all the pages that are relevant to your business
+        </p>
+      </div>
+      
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {filteredSteps[currentStep].options?.filter((option: any) => 
+          !option.condition || option.condition.split('|').includes(formData.businessType)
+        ).map((option: any, index: number) => (
+          <Card 
+            key={index}
+            className={`cursor-pointer transition-all duration-300 border-2 ${
+              formData.pages.includes(option.value) ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+            } ${option.required ? 'opacity-75' : ''}`}
+            onClick={() => {
+              if (option.required) return;
+              const newPages = formData.pages.includes(option.value)
+                ? formData.pages.filter((p: string) => p !== option.value)
+                : [...formData.pages, option.value];
+              updateFormData('pages', newPages);
+            }}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{option.name}</h3>
+                  {option.required && <span className="text-sm text-gray-500">Required</span>}
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  formData.pages.includes(option.value) || option.required ? 'border-teal-500 bg-teal-500' : 'border-gray-300'
+                }`}>
+                  {(formData.pages.includes(option.value) || option.required) && <Check className="w-4 h-4 text-white" />}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="flex justify-between">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const SocialStep = () => (
+    <div className="py-8">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Connect your social media accounts
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Link your social media to increase engagement with customers
+        </p>
+      </div>
+      
+      <div className="max-w-2xl mx-auto space-y-4 mb-8">
+        {[
+          { name: 'Instagram', icon: <Instagram className="w-6 h-6" />, key: 'instagram', color: 'from-pink-500 to-purple-500' },
+          { name: 'Facebook', icon: <Facebook className="w-6 h-6" />, key: 'facebook', color: 'from-blue-500 to-blue-600' },
+          { name: 'Twitter', icon: <Twitter className="w-6 h-6" />, key: 'twitter', color: 'from-blue-400 to-blue-500' },
+          { name: 'LinkedIn', icon: <Linkedin className="w-6 h-6" />, key: 'linkedin', color: 'from-blue-600 to-blue-700' }
+        ].map((platform, index) => (
+          <Card key={index} className="border-2 border-gray-200 hover:border-teal-300 transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${platform.color} flex items-center justify-center text-white`}>
+                  {platform.icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900">{platform.name}</h3>
+                  <input 
+                    type="url" 
+                    placeholder={`Enter your ${platform.name} URL`}
+                    className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    onChange={(e) => updateFormData('socialMedia', { ...formData.socialMedia, [platform.key]: e.target.value })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="flex justify-between">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const ContactStep = () => (
+    <div className="py-8">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Enter your contact information and location
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Help customers find and contact your business
+        </p>
+      </div>
+      
+      <div className="max-w-2xl mx-auto space-y-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              <Phone className="w-4 h-4 inline mr-2" />
+              Phone Number
+            </label>
+            <input 
+              type="tel" 
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="(555) 123-4567"
+              onChange={(e) => updateFormData('contactInfo', { ...formData.contactInfo, phone: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              <Mail className="w-4 h-4 inline mr-2" />
+              Email Address
+            </label>
+            <input 
+              type="email" 
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="hello@yourbusiness.com"
+              onChange={(e) => updateFormData('contactInfo', { ...formData.contactInfo, email: e.target.value })}
+            />
           </div>
         </div>
         
-        {/* Decorative elements */}
-        <div className="absolute top-10 left-10 w-32 h-32 bg-white opacity-10 rounded-full animate-float blur-xl"></div>
-        <div className="absolute bottom-10 right-10 w-40 h-40 bg-white opacity-10 rounded-full animate-float-reverse blur-xl"></div>
-        <div className="absolute top-1/2 right-20 w-24 h-24 bg-white opacity-10 rounded-full animate-float blur-lg"></div>
-      </section>
-
-      {/* Footer Section */}
-      <footer className="bg-gray-900 text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            <MapPin className="w-4 h-4 inline mr-2" />
+            Business Address
+          </label>
+          <input 
+            type="text" 
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            placeholder="123 Main Street, City, State 12345"
+            onChange={(e) => updateFormData('contactInfo', { ...formData.contactInfo, address: e.target.value })}
+          />
+        </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
-          <div className="grid md:grid-cols-4 gap-12 mb-16">
-            <div>
-              <h3 className="text-3xl font-black mb-6 text-gradient font-display">
-                sync.a
-              </h3>
-              <p className="text-gray-400 leading-relaxed text-lg font-medium">
-                The easiest way for cafés, restaurants, and local shops to create their digital presence.
-              </p>
-              <div className="flex space-x-4 mt-6">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className={`w-3 h-3 rounded-full bg-gradient-to-r from-teal-400 to-purple-400 animate-pulse`} style={{ animationDelay: `${i * 0.5}s` }}></div>
-                ))}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Business Description</label>
+          <textarea 
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent h-24"
+            placeholder="Tell customers what makes your business special..."
+            onChange={(e) => updateFormData('contactInfo', { ...formData.contactInfo, description: e.target.value })}
+          />
+        </div>
+      </div>
+      
+      <div className="flex justify-between">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const LaunchStep = () => (
+    <div className="text-center py-16">
+      <div className="mb-8">
+        <div className="w-32 h-32 mx-auto mb-6 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
+          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+            <PartyPopper className="w-16 h-16 text-teal-500 animate-bounce" />
+          </div>
+        </div>
+        <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
+          <span className="text-gradient">Congratulations!</span>
+          <br />Your website is ready to launch!
+        </h2>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+          Your beautiful website is ready to go live and start attracting customers
+        </p>
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <Button 
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-2xl animate-glow"
+        >
+          <Rocket className="mr-3 w-6 h-6" />
+          Launch My Website
+          <Sparkles className="ml-3 w-6 h-6" />
+        </Button>
+        
+        <Button 
+          onClick={() => setCurrentStep(filteredSteps.length - 2)}
+          variant="outline" 
+          size="lg"
+          className="px-8 py-4 text-lg font-bold rounded-full"
+        >
+          Review Changes
+        </Button>
+      </div>
+      
+      <div className="mt-12 text-center">
+        <p className="text-gray-500 font-medium">
+          ✨ Launch in seconds • 🚀 No technical skills needed • 💎 30-day money-back guarantee
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderCurrentStep = () => {
+    const step = filteredSteps[currentStep];
+    if (!step) return null;
+
+    switch (step.component) {
+      case 'welcome': return <WelcomeStep />;
+      case 'business-type': return <BusinessTypeStep />;
+      case 'style': return <StyleStep />;
+      case 'pages': return <PagesStep />;
+      case 'social': return <SocialStep />;
+      case 'contact': return <ContactStep />;
+      case 'launch': return <LaunchStep />;
+      default: return <div>Step not implemented</div>;
+    }
+  };
+
+  return (
+    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} overflow-hidden`}>
+      <Navigation />
+      
+      {/* Interactive cursor follower */}
+      <div 
+        className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
+        style={{ 
+          left: mousePosition.x - 6, 
+          top: mousePosition.y - 6,
+          transform: `translate3d(0, 0, 0) scale(0.8)`,
+          transition: 'transform 0.1s ease-out'
+        }}
+      />
+      
+      {/* Main Content */}
+      <div className="pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Configurator Content */}
+            <div className="lg:col-span-2">
+              <div className={`min-h-[80vh] ${isDarkMode ? 'text-white' : 'text-gray-900'} transition-all duration-500`}>
+                {renderCurrentStep()}
               </div>
             </div>
             
-            <div>
-              <h4 className="text-xl font-bold mb-6 text-white">Product</h4>
-              <ul className="space-y-3">
-                {['Features', 'Templates', 'Pricing', 'Enterprise'].map((item, i) => (
-                  <li key={i}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-xl font-bold mb-6 text-white">Company</h4>
-              <ul className="space-y-3">
-                {['About', 'Blog', 'Careers', 'Contact'].map((item, i) => (
-                  <li key={i}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-xl font-bold mb-6 text-white">Support</h4>
-              <ul className="space-y-3">
-                {['Help Center', 'Terms of Service', 'Privacy Policy', 'Status'].map((item, i) => (
-                  <li key={i}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 pt-10 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 font-medium text-lg">© 2024 sync.a. All rights reserved. Made with ❤️</p>
-            <div className="flex space-x-8 mt-6 md:mt-0">
-              {['Twitter', 'GitHub', 'LinkedIn'].map((social, i) => (
-                <a key={i} href="#" className="text-gray-400 hover:text-white transition-colors duration-300 group">
-                  <span className="sr-only">{social}</span>
-                  <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <div className="w-6 h-6 bg-white rounded-full"></div>
-                  </div>
-                </a>
-              ))}
+            {/* Live Preview Sidebar */}
+            <div className="hidden lg:block">
+              <LivePreview />
             </div>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
