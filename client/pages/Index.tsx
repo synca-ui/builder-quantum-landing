@@ -372,17 +372,6 @@ export default function Index() {
           <div className="absolute bottom-1/3 left-1/4 w-28 h-28 bg-gradient-to-br from-pink-400 to-pink-500 opacity-10 animate-float-reverse blur-lg" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        {/* Interactive cursor follower */}
-        <div
-          className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
-          style={{
-            left: mousePosition.x - 6,
-            top: mousePosition.y - 6,
-            transform: `translate3d(0, 0, 0) scale(0.8)`,
-            transition: 'transform 0.1s ease-out'
-          }}
-        />
-        
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
           <div className="text-center">
             <div className={`transition-all duration-1500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
