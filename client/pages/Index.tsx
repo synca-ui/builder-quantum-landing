@@ -204,8 +204,8 @@ export default function Index() {
               </h1>
               
               <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed font-medium">
-                Create, Customize, and Go Live. Perfect for small businesses looking to get online 
-                <span className="text-gradient font-bold"> quickly and beautifully</span>.
+                Create your <span className="text-gradient font-bold">digital presence</span> in minutes. Perfect for cafés, restaurants,
+                and local businesses ready to <span className="text-gradient font-bold">thrive online</span>.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -231,15 +231,6 @@ export default function Index() {
                 </Button>
               </div>
 
-              {/* Simple trust indicator */}
-              <div className="mt-16 flex justify-center">
-                <div className="inline-flex items-center gap-4 glass px-8 py-4 rounded-full">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse"></div>
-                    <span className="text-gray-600 font-medium">50,000+ businesses trust sync.a</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -259,7 +250,7 @@ export default function Index() {
               <span className="text-gradient">Three Simple Steps</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              From zero to hero in minutes. Our revolutionary platform makes website building effortless.
+              From empty storefront to online success. Our platform helps local businesses create their digital presence effortlessly.
             </p>
           </div>
           
