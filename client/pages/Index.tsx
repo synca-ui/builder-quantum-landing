@@ -357,55 +357,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-32 bg-gradient-to-br from-white via-teal-50 to-purple-50 relative overflow-hidden">
-        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23f1f5f9\" fill-opacity=\"0.6\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"}></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 px-6 py-3 rounded-full mb-6">
-              <Star className="w-5 h-5 text-purple-600 fill-current" />
-              <span className="text-purple-700 font-bold">Customer Love</span>
-            </div>
-            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
-              What Our <span className="text-gradient">Customers Say</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Join thousands of satisfied customers who built their dream websites with sync.a
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card 
-                key={index}
-                className="group hover:shadow-2xl transition-all duration-700 ease-out transform hover:-translate-y-8 hover:rotate-3 border-0 shadow-lg glass overflow-hidden relative"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-                
-                <CardContent className="p-8 relative z-10">
-                  <div className="mb-6">
-                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-100 to-purple-100 px-4 py-2 rounded-full">
-                      <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse"></div>
-                      <span className="text-teal-700 font-bold text-sm">Verified Customer</span>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-8 italic leading-relaxed text-lg font-medium">"{testimonial.text}"</p>
-                  <div className="flex items-center">
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white font-bold mr-4 animate-float transition-all duration-500 ease-out group-hover:scale-110`}>
-                      {testimonial.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-lg">{testimonial.name}</p>
-                      <p className="text-gray-600 font-medium">{testimonial.business}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Pricing Section */}
       <section className="py-32 bg-gradient-to-br from-gray-900 via-purple-900 to-teal-900 relative overflow-hidden">
