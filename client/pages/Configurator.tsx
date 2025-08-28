@@ -258,137 +258,342 @@ export default function Configurator() {
     </nav>
   );
 
-  // Live Preview Component
-  const LivePreview = () => (
-    <div className="sticky top-24 h-[calc(100vh-6rem)]">
-      <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Live Preview</h3>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" className="p-2">
-              <Smartphone className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="p-2">
-              <Globe className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-        
-        {/* iPhone mockup */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="relative">
-            {/* iPhone frame */}
-            <div className="w-64 h-[520px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
-              <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                {/* iPhone notch */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-10"></div>
-                
-                {/* Website preview */}
-                <div className="pt-8 h-full overflow-y-auto">
-                  {/* Header */}
-                  <div className={`px-4 py-3 border-b ${formData.style === 'bold' ? 'bg-gradient-to-r from-orange-400 to-red-500' : formData.style === 'modern' ? 'bg-gradient-to-r from-purple-400 to-pink-500' : 'bg-white'}`}>
-                    <div className="flex items-center justify-between">
-                      <div className={`text-lg font-bold ${formData.style === 'bold' || formData.style === 'modern' ? 'text-white' : 'text-gray-900'}`}>
-                        {formData.businessType === 'restaurant' ? 'Bella Vista' : 
-                         formData.businessType === 'cafe' ? 'Brew & Co' :
-                         formData.businessType === 'retail' ? 'Style Shop' : 'Your Business'}
-                      </div>
-                      <Menu className={`w-4 h-4 ${formData.style === 'bold' || formData.style === 'modern' ? 'text-white' : 'text-gray-600'}`} />
-                    </div>
-                  </div>
-                  
-                  {/* Hero section */}
-                  <div className="px-4 py-6 text-center">
-                    <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-teal-400 to-purple-500 rounded-full flex items-center justify-center">
-                      {formData.businessType === 'restaurant' ? <Utensils className="w-8 h-8 text-white" /> :
-                       formData.businessType === 'cafe' ? <Coffee className="w-8 h-8 text-white" /> :
-                       formData.businessType === 'retail' ? <ShoppingBag className="w-8 h-8 text-white" /> :
-                       <Briefcase className="w-8 h-8 text-white" />}
-                    </div>
-                    <h2 className="text-sm font-bold text-gray-900 mb-1">Welcome to Your Business</h2>
-                    <p className="text-xs text-gray-600">Experience the best in town</p>
-                  </div>
-                  
-                  {/* Navigation pills */}
-                  {formData.pages.length > 0 && (
-                    <div className="px-4 mb-4">
-                      <div className="flex flex-wrap gap-1">
-                        {formData.pages.map((page: string, index: number) => (
-                          <div key={index} className="px-2 py-1 bg-gray-100 rounded-full">
-                            <span className="text-xs text-gray-600 capitalize">{page}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Content based on business type */}
-                  <div className="px-4 space-y-3">
-                    {formData.businessType === 'restaurant' && (
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-2">Featured Menu</h3>
-                        <div className="space-y-2">
-                          {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                            <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                              <div>
-                                <div className="text-xs font-medium text-gray-900">{item.name}</div>
-                                <div className="text-xs text-gray-600">{item.description}</div>
-                              </div>
-                              <div className="text-xs font-bold text-teal-600">${item.price}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {formData.businessType === 'retail' && (
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-2">Featured Products</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {formData.menuItems.slice(0, 4).map((item: any, index: number) => (
-                            <div key={index} className="bg-gray-50 rounded p-2">
-                              <div className="w-full h-16 bg-gray-200 rounded mb-1"></div>
-                              <div className="text-xs font-medium text-gray-900">{item.name}</div>
-                              <div className="text-xs font-bold text-teal-600">${item.price}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Social media icons */}
-                  {Object.keys(formData.socialMedia).length > 0 && (
-                    <div className="px-4 py-3 border-t mt-4">
-                      <div className="flex justify-center space-x-3">
-                        {Object.keys(formData.socialMedia).map((platform, index) => (
-                          <div key={index} className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                            {platform === 'instagram' && <Instagram className="w-3 h-3 text-gray-600" />}
-                            {platform === 'facebook' && <Facebook className="w-3 h-3 text-gray-600" />}
-                            {platform === 'twitter' && <Twitter className="w-3 h-3 text-gray-600" />}
-                            {platform === 'linkedin' && <Linkedin className="w-3 h-3 text-gray-600" />}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+  // Live Preview Component with Dramatic Style Variations
+  const LivePreview = () => {
+    const getBusinessName = () => {
+      if (formData.businessType === 'restaurant') return 'Bella Vista';
+      if (formData.businessType === 'cafe') return 'Brew & Co';
+      if (formData.businessType === 'retail') return 'Style Shop';
+      if (formData.businessType === 'services') return 'Expert Solutions';
+      return 'Your Business';
+    };
+
+    const renderMinimalistPreview = () => (
+      <div className="pt-8 h-full overflow-y-auto bg-white">
+        {/* Minimal floating header */}
+        <div className="absolute top-8 left-0 right-0 z-10 px-4">
+          <div className="bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-sm border border-gray-100 mx-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium text-gray-900">{getBusinessName()}</div>
+              <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <Menu className="w-3 h-3 text-gray-600" />
               </div>
             </div>
-            
-            {/* Floating indicators */}
-            <div className="absolute -right-4 top-1/2 transform -translate-y-1/2">
-              <div className="flex flex-col space-y-2">
-                <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+          </div>
+        </div>
+
+        {/* Minimal hero section */}
+        <div className="pt-16 px-6 text-center">
+          <div className="w-12 h-12 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+            {formData.businessType === 'restaurant' ? <Utensils className="w-6 h-6 text-gray-600" /> :
+             formData.businessType === 'cafe' ? <Coffee className="w-6 h-6 text-gray-600" /> :
+             formData.businessType === 'retail' ? <ShoppingBag className="w-6 h-6 text-gray-600" /> :
+             <Briefcase className="w-6 h-6 text-gray-600" />}
+          </div>
+          <h1 className="text-base font-light text-gray-900 mb-2">{getBusinessName()}</h1>
+          <p className="text-xs text-gray-500 mb-8">Simple. Clean. Elegant.</p>
+        </div>
+
+        {/* Minimal single-column content */}
+        <div className="px-6 space-y-6">
+          <div className="text-center">
+            <div className="w-full h-20 bg-gray-50 rounded mb-3"></div>
+            <p className="text-xs text-gray-600 leading-relaxed">Clean design that lets your content speak for itself.</p>
+          </div>
+
+          {/* Minimal navigation pills */}
+          {formData.pages.length > 1 && (
+            <div className="flex justify-center">
+              <div className="bg-gray-50 rounded-full p-1 flex space-x-1">
+                {formData.pages.slice(0, 3).map((page: string, index: number) => (
+                  <div key={index} className="px-3 py-1 text-xs text-gray-600 capitalize">{page}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Floating action button */}
+        <div className="absolute bottom-4 right-4">
+          <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center shadow-lg">
+            <Plus className="w-4 h-4 text-white" />
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderCreativePreview = () => (
+      <div className="pt-8 h-full overflow-y-auto bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400">
+        {/* Creative full-screen navigation overlay */}
+        <div className="absolute top-8 left-0 right-0 z-10 px-4">
+          <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 mx-4 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div className="text-lg font-black text-white tracking-wider">{getBusinessName()}</div>
+              <div className="grid grid-cols-3 gap-1">
+                <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                <div className="w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <div className="w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                <div className="w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.8s' }}></div>
+                <div className="w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bold hero section */}
+        <div className="pt-20 px-4 text-center text-white">
+          <div className="w-16 h-16 mx-auto mb-4 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center rotate-12 transform">
+            {formData.businessType === 'restaurant' ? <Utensils className="w-8 h-8 text-white" /> :
+             formData.businessType === 'cafe' ? <Coffee className="w-8 h-8 text-white" /> :
+             formData.businessType === 'retail' ? <ShoppingBag className="w-8 h-8 text-white" /> :
+             <Briefcase className="w-8 h-8 text-white" />}
+          </div>
+          <h1 className="text-xl font-black tracking-wide mb-2">{getBusinessName()}</h1>
+          <p className="text-sm font-bold opacity-90 mb-6">BOLD • CREATIVE • UNFORGETTABLE</p>
+        </div>
+
+        {/* Multi-column dynamic layout */}
+        <div className="px-4 grid grid-cols-2 gap-3">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
+            <div className="w-full h-12 bg-white/20 rounded-lg mb-2"></div>
+            <p className="text-xs text-white/80">Creative design that stands out</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
+            <div className="w-full h-12 bg-white/20 rounded-lg mb-2"></div>
+            <p className="text-xs text-white/80">Dynamic animations</p>
+          </div>
+        </div>
+
+        {/* Creative menu navigation */}
+        {formData.pages.length > 1 && (
+          <div className="mt-4 px-4">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20">
+              <div className="flex flex-wrap gap-1">
+                {formData.pages.slice(0, 4).map((page: string, index: number) => (
+                  <div key={index} className="px-3 py-1 bg-white/20 rounded-full">
+                    <span className="text-xs text-white font-bold uppercase tracking-wider">{page}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+
+    const renderProfessionalPreview = () => (
+      <div className="pt-8 h-full overflow-y-auto bg-white">
+        {/* Professional top navigation */}
+        <div className="border-b border-gray-200 bg-white">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold text-gray-900">{getBusinessName()}</div>
+              <div className="flex space-x-3">
+                {formData.pages.slice(0, 3).map((page: string, index: number) => (
+                  <div key={index} className="text-xs text-gray-600 hover:text-blue-600 transition-colors capitalize">
+                    {page}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Professional hero section */}
+        <div className="px-4 py-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="text-center">
+            <div className="w-14 h-14 mx-auto mb-4 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
+              {formData.businessType === 'restaurant' ? <Utensils className="w-7 h-7 text-white" /> :
+               formData.businessType === 'cafe' ? <Coffee className="w-7 h-7 text-white" /> :
+               formData.businessType === 'retail' ? <ShoppingBag className="w-7 h-7 text-white" /> :
+               <Briefcase className="w-7 h-7 text-white" />}
+            </div>
+            <h1 className="text-lg font-semibold text-gray-900 mb-2">{getBusinessName()}</h1>
+            <p className="text-sm text-gray-600">Professional • Trustworthy • Elegant</p>
+          </div>
+        </div>
+
+        {/* Professional content sections */}
+        <div className="px-4 py-4 space-y-4">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Our Services</h3>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <span className="text-xs text-gray-600">Excellence in every detail</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <span className="text-xs text-gray-600">Professional approach</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Contact Information</h3>
+            <div className="space-y-1">
+              <p className="text-xs text-gray-600">📞 (555) 123-4567</p>
+              <p className="text-xs text-gray-600">✉️ info@{getBusinessName().toLowerCase().replace(' ', '')}.com</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Professional footer */}
+        <div className="mt-auto border-t border-gray-200 px-4 py-3 bg-gray-50">
+          <div className="flex justify-center space-x-4">
+            {Object.keys(formData.socialMedia).slice(0, 3).map((platform, index) => (
+              <div key={index} className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                <div className="w-3 h-3 bg-white rounded-full"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderModernPreview = () => (
+      <div className="pt-8 h-full overflow-y-auto bg-gray-900">
+        {/* Modern sticky side navigation */}
+        <div className="absolute top-8 left-2 bottom-8 w-12 z-10">
+          <div className="bg-gray-800/90 backdrop-blur-md rounded-2xl h-full border border-gray-700/50 p-2">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="w-6 h-6 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
+              {formData.pages.slice(0, 4).map((page: string, index: number) => (
+                <div key={index} className="w-6 h-6 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-emerald-500 transition-colors">
+                  <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Modern content area */}
+        <div className="pl-16 pr-4">
+          {/* Sleek header */}
+          <div className="mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-xl flex items-center justify-center">
+                {formData.businessType === 'restaurant' ? <Utensils className="w-4 h-4 text-white" /> :
+                 formData.businessType === 'cafe' ? <Coffee className="w-4 h-4 text-white" /> :
+                 formData.businessType === 'retail' ? <ShoppingBag className="w-4 h-4 text-white" /> :
+                 <Briefcase className="w-4 h-4 text-white" />}
+              </div>
+              <div>
+                <h1 className="text-sm font-bold text-white">{getBusinessName()}</h1>
+                <p className="text-xs text-gray-400">Modern & Sleek</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Modular grid layout */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700/50">
+              <div className="w-full h-8 bg-gradient-to-r from-emerald-400/20 to-cyan-500/20 rounded-lg mb-2"></div>
+              <p className="text-xs text-gray-300">Sharp design</p>
+            </div>
+            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700/50">
+              <div className="w-full h-8 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg mb-2"></div>
+              <p className="text-xs text-gray-300">Sleek animations</p>
+            </div>
+          </div>
+
+          {/* Modern card */}
+          <div className="bg-gray-800 rounded-2xl p-4 border border-gray-700/50 shadow-2xl">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-white">Live Status</span>
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Modern design with cutting-edge technology and smooth user experience.
+            </p>
+          </div>
+
+          {/* Floating elements */}
+          <div className="mt-4 flex space-x-2">
+            {['Feature', 'Innovation', 'Technology'].map((item, index) => (
+              <div key={index} className="px-2 py-1 bg-emerald-500/20 rounded-full border border-emerald-500/30">
+                <span className="text-xs text-emerald-400 font-medium">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderPreviewContent = () => {
+      if (!formData.style) {
+        return (
+          <div className="pt-8 h-full flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <Palette className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-sm text-gray-500">Choose a style to see preview</p>
+            </div>
+          </div>
+        );
+      }
+
+      switch (formData.style) {
+        case 'minimalist': return renderMinimalistPreview();
+        case 'creative': return renderCreativePreview();
+        case 'professional': return renderProfessionalPreview();
+        case 'modern': return renderModernPreview();
+        default: return renderMinimalistPreview();
+      }
+    };
+
+    return (
+      <div className="sticky top-24 h-[calc(100vh-6rem)]">
+        <div className="h-full flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Live Preview</h3>
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" className="p-2">
+                <Smartphone className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" className="p-2">
+                <Globe className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* iPhone 16 Pro mockup */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative">
+              {/* iPhone frame */}
+              <div className="w-64 h-[520px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
+                <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
+                  {/* iPhone notch */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+
+                  {/* Website preview with dramatic style changes */}
+                  <div className="h-full relative transition-all duration-700 ease-in-out">
+                    {renderPreviewContent()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating style indicators */}
+              <div className="absolute -right-4 top-1/2 transform -translate-y-1/2">
+                <div className="flex flex-col space-y-2">
+                  <div className={`w-3 h-3 rounded-full animate-pulse ${
+                    formData.style === 'minimalist' ? 'bg-gray-400' :
+                    formData.style === 'creative' ? 'bg-gradient-to-r from-purple-400 to-pink-400' :
+                    formData.style === 'professional' ? 'bg-blue-500' :
+                    formData.style === 'modern' ? 'bg-emerald-500' : 'bg-gray-300'
+                  }`}></div>
+                  <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                  <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Step Components
   const WelcomeStep = () => (
