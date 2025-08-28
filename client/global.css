@@ -1,5 +1,6 @@
 /** @import must precede all other statements */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -57,6 +58,19 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* sync.a Brand Colors */
+    --teal-50: 166 76% 97%;
+    --teal-500: 166 72% 40%;
+    --teal-600: 166 72% 32%;
+
+    --orange-50: 24 100% 97%;
+    --orange-500: 24 95% 53%;
+    --orange-600: 24 95% 45%;
+
+    --purple-50: 270 100% 98%;
+    --purple-500: 270 91% 65%;
+    --purple-600: 270 91% 57%;
   }
 
   .dark {
@@ -95,6 +109,19 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* sync.a Brand Colors - Dark Mode */
+    --teal-50: 166 76% 5%;
+    --teal-500: 166 72% 60%;
+    --teal-600: 166 72% 68%;
+
+    --orange-50: 24 100% 5%;
+    --orange-500: 24 95% 65%;
+    --orange-600: 24 95% 73%;
+
+    --purple-50: 270 100% 5%;
+    --purple-500: 270 91% 75%;
+    --purple-600: 270 91% 83%;
   }
 }
 
