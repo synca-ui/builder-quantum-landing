@@ -295,7 +295,7 @@ export default function Index() {
             <Button 
               variant="outline"
               size="lg"
-              className="group border-2 border-teal-500 text-teal-600 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 hover:text-white px-10 py-4 text-xl font-bold rounded-full transition-all duration-500 hover:scale-105 hover:shadow-xl"
+              className="group border-2 border-teal-500 text-teal-600 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 hover:text-white px-10 py-4 text-xl font-bold rounded-full transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl"
             >
               <Sparkles className="mr-3 w-6 h-6 group-hover:animate-spin" />
               See All Features
@@ -338,7 +338,7 @@ export default function Index() {
             </div>
             
             <div className="relative group">
-              <div className={`aspect-video rounded-2xl ${demoTemplates[activeDemo].preview} transition-all duration-700 flex items-center justify-center relative overflow-hidden transform group-hover:scale-105`}>
+              <div className={`aspect-video rounded-2xl ${demoTemplates[activeDemo].preview} transition-all duration-1000 ease-out flex items-center justify-center relative overflow-hidden transform group-hover:scale-105`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
                 <div className="text-center relative z-10">
                   <div className={`w-24 h-24 rounded-full bg-gradient-to-r ${demoTemplates[activeDemo].color} mx-auto mb-6 flex items-center justify-center shadow-2xl animate-pulse group-hover:animate-bounce`}>
@@ -355,7 +355,7 @@ export default function Index() {
               
               <Button 
                 size="lg"
-                className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-10 py-4 rounded-full shadow-2xl font-bold text-lg transition-all duration-300 hover:scale-110 animate-float"
+                className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-10 py-4 rounded-full shadow-2xl font-bold text-lg transition-all duration-500 ease-out hover:scale-110 animate-float"
               >
                 <Sparkles className="mr-3 w-6 h-6" />
                 Try it Live
@@ -388,7 +388,7 @@ export default function Index() {
             {testimonials.map((testimonial, index) => (
               <Card 
                 key={index}
-                className="group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-6 hover:rotate-2 border-0 shadow-lg glass overflow-hidden relative"
+                className="group hover:shadow-2xl transition-all duration-700 ease-out transform hover:-translate-y-8 hover:rotate-3 border-0 shadow-lg glass overflow-hidden relative"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
                 
@@ -401,7 +401,7 @@ export default function Index() {
                   </div>
                   <p className="text-gray-700 mb-8 italic leading-relaxed text-lg font-medium">"{testimonial.text}"</p>
                   <div className="flex items-center">
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white font-bold mr-4 animate-float`}>
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white font-bold mr-4 animate-float transition-all duration-500 ease-out group-hover:scale-110`}>
                       {testimonial.name.charAt(0)}
                     </div>
                     <div>
