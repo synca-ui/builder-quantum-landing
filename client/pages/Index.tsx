@@ -121,15 +121,15 @@ export default function Index() {
   // Particle component
   const Particles = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
+      {[...Array(12)].map((_, i) => (
         <div
           key={i}
-          className="absolute w-2 h-2 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-sparkle opacity-30"
+          className="absolute w-1 h-1 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse opacity-20"
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            animationDuration: `${2 + Math.random() * 3}s`
+            animationDelay: `${Math.random() * 4}s`,
+            animationDuration: `${3 + Math.random() * 2}s`
           }}
         />
       ))}
@@ -151,12 +151,12 @@ export default function Index() {
         </div>
 
         {/* Interactive cursor follower */}
-        <div 
-          className="fixed w-6 h-6 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-50 transition-all duration-300 ease-out z-50"
-          style={{ 
-            left: mousePosition.x - 12, 
-            top: mousePosition.y - 12,
-            transform: `scale(${Math.sin(Date.now() * 0.005) * 0.5 + 1})`
+        <div
+          className="fixed w-4 h-4 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-30 transition-all duration-700 ease-out z-50"
+          style={{
+            left: mousePosition.x - 8,
+            top: mousePosition.y - 8,
+            transform: `scale(${Math.sin(Date.now() * 0.002) * 0.2 + 0.8})`
           }}
         />
         
@@ -167,8 +167,8 @@ export default function Index() {
               {/* Sparkle decoration */}
               <div className="flex justify-center mb-6">
                 <div className="relative">
-                  <Sparkles className="w-8 h-8 text-teal-500 animate-pulse" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-ping"></div>
+                  <Sparkles className="w-8 h-8 text-teal-500" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
                 </div>
               </div>
 
