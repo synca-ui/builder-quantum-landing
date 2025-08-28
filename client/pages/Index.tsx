@@ -102,19 +102,19 @@ export default function Index() {
 
   const demoTemplates = [
     {
-      name: "Modern Business",
-      preview: "bg-gradient-to-br from-blue-50 to-indigo-100",
-      color: "from-blue-500 to-indigo-600"
+      name: "Coffee Shop",
+      preview: "bg-gradient-to-br from-orange-50 to-amber-100",
+      color: "from-orange-500 to-amber-600"
     },
     {
-      name: "Creative Portfolio", 
-      preview: "bg-gradient-to-br from-purple-50 to-pink-100",
-      color: "from-purple-500 to-pink-600"
+      name: "Restaurant",
+      preview: "bg-gradient-to-br from-red-50 to-rose-100",
+      color: "from-red-500 to-rose-600"
     },
     {
-      name: "Online Store",
-      preview: "bg-gradient-to-br from-green-50 to-emerald-100", 
-      color: "from-green-500 to-emerald-600"
+      name: "Local Store",
+      preview: "bg-gradient-to-br from-teal-50 to-emerald-100",
+      color: "from-teal-500 to-emerald-600"
     }
   ];
 
