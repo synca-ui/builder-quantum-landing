@@ -46,78 +46,55 @@ export default function Index() {
     }
   ];
 
-  const testimonials = [
-    {
-      name: "Sophia D.",
-      business: "Café Owner",
-      text: "sync.a allowed me to go from concept to launch in just hours. It's easy to use and delivers professional results.",
-      rating: 5,
-      gradient: "from-pink-400 to-rose-500"
-    },
-    {
-      name: "Marcus T.",
-      business: "Freelance Designer",
-      text: "The templates are gorgeous and the customization options are endless. My clients love their new websites.",
-      rating: 5,
-      gradient: "from-blue-400 to-cyan-500"
-    },
-    {
-      name: "Elena R.",
-      business: "Online Store Owner",
-      text: "I've tried other builders but sync.a is by far the most intuitive. My online store is now thriving.",
-      rating: 5,
-      gradient: "from-green-400 to-emerald-500"
-    }
-  ];
 
   const pricingPlans = [
     {
-      name: "Basic",
-      price: "$9",
+      name: "Starter",
+      price: "$12",
       period: "/month",
-      description: "Perfect for personal websites",
+      description: "Perfect for cafés & small shops",
       features: [
-        "1 Website",
-        "Basic Templates",
-        "Mobile Responsive",
-        "SSL Certificate",
-        "24/7 Support"
+        "Beautiful Website",
+        "Menu/Product Display",
+        "Contact & Location Info",
+        "Mobile Optimized",
+        "Basic Analytics"
       ],
-      cta: "Start Basic",
+      cta: "Start Your Site",
       popular: false,
-      gradient: "from-gray-400 to-gray-600"
+      gradient: "from-orange-400 to-red-500"
     },
     {
-      name: "Pro",
-      price: "$29",
+      name: "Business",
+      price: "$24",
       period: "/month",
-      description: "Ideal for growing businesses",
+      description: "Ideal for restaurants & stores",
       features: [
-        "5 Websites",
-        "Premium Templates",
-        "Advanced Customization",
-        "E-commerce Ready",
-        "Analytics Dashboard",
+        "Online Ordering System",
+        "Customer Reviews",
+        "Social Media Integration",
+        "Advanced Analytics",
+        "Email Marketing",
         "Priority Support"
       ],
-      cta: "Start Pro",
+      cta: "Grow Your Business",
       popular: true,
       gradient: "from-teal-400 to-purple-600"
     },
     {
-      name: "Business",
-      price: "$79",
+      name: "Premium",
+      price: "$49",
       period: "/month",
-      description: "For established businesses",
+      description: "For multi-location businesses",
       features: [
-        "Unlimited Websites",
-        "All Premium Features",
-        "White-label Options",
-        "API Access",
+        "Multiple Locations",
+        "Advanced E-commerce",
         "Custom Integrations",
-        "Dedicated Support"
+        "White-label Options",
+        "Dedicated Manager",
+        "Custom Domain"
       ],
-      cta: "Start Business",
+      cta: "Scale Your Brand",
       popular: false,
       gradient: "from-purple-400 to-indigo-600"
     }
@@ -368,7 +345,7 @@ export default function Index() {
               Simple <span className="text-gradient">Pricing</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto font-medium">
-              Choose the perfect plan for your business needs. Start free, upgrade anytime.
+              Affordable plans designed for local businesses. Start small, scale as you grow.
             </p>
           </div>
           
