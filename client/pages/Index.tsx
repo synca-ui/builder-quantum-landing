@@ -10,13 +10,24 @@ export default function Index() {
 
   useEffect(() => {
     setIsVisible(true);
-    
+
+    let animationFrame: number;
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+      animationFrame = requestAnimationFrame(() => {
+        setMousePosition({ x: e.clientX, y: e.clientY });
+      });
     };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
   }, []);
 
   const features = [
@@ -152,11 +163,12 @@ export default function Index() {
 
         {/* Interactive cursor follower */}
         <div
-          className="fixed w-4 h-4 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-30 transition-all duration-700 ease-out z-50"
+          className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
           style={{
-            left: mousePosition.x - 8,
-            top: mousePosition.y - 8,
-            transform: `scale(${Math.sin(Date.now() * 0.002) * 0.2 + 0.8})`
+            left: mousePosition.x - 6,
+            top: mousePosition.y - 6,
+            transform: `translate3d(0, 0, 0) scale(0.8)`,
+            transition: 'transform 0.1s ease-out'
           }}
         />
         
