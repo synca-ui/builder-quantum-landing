@@ -393,14 +393,11 @@ export default function Index() {
                 <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
                 
                 <CardContent className="p-8 relative z-10">
-                  <div className="flex mb-6">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className="w-6 h-6 text-yellow-400 fill-current animate-pulse" 
-                        style={{ animationDelay: `${i * 0.1}s` }}
-                      />
-                    ))}
+                  <div className="mb-6">
+                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-100 to-purple-100 px-4 py-2 rounded-full">
+                      <div className="w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse"></div>
+                      <span className="text-teal-700 font-bold text-sm">Verified Customer</span>
+                    </div>
                   </div>
                   <p className="text-gray-700 mb-8 italic leading-relaxed text-lg font-medium">"{testimonial.text}"</p>
                   <div className="flex items-center">
