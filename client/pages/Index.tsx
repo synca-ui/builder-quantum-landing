@@ -22,26 +22,26 @@ export default function Index() {
   const features = [
     {
       icon: <Zap className="w-8 h-8 text-teal-500" />,
-      title: "Lightning Fast",
-      description: "Build your website in minutes, not hours. Our intuitive drag-and-drop builder gets you online quickly.",
+      title: "Quick Setup",
+      description: "Get your café or restaurant online in minutes. No technical skills needed - just add your info and go live.",
       gradient: "from-teal-400 to-cyan-500"
     },
     {
       icon: <Palette className="w-8 h-8 text-purple-500" />,
-      title: "Beautiful Templates",
-      description: "Choose from hundreds of professionally designed templates that look great on every device.",
+      title: "Local Business Templates",
+      description: "Beautiful designs crafted specifically for restaurants, cafés, bakeries, and local shops.",
       gradient: "from-purple-400 to-pink-500"
     },
     {
       icon: <Smartphone className="w-8 h-8 text-orange-500" />,
-      title: "Mobile Optimized",
-      description: "Every website automatically adapts to mobile, tablet, and desktop screens perfectly.",
+      title: "Mobile-First Design",
+      description: "Your customers will love browsing your menu and location info on their phones.",
       gradient: "from-orange-400 to-red-500"
     },
     {
       icon: <Globe className="w-8 h-8 text-teal-500" />,
-      title: "Global CDN",
-      description: "Your site loads fast anywhere in the world with our global content delivery network.",
+      title: "Local SEO Ready",
+      description: "Get found by local customers with built-in SEO optimization for your neighborhood.",
       gradient: "from-blue-400 to-indigo-500"
     }
   ];
