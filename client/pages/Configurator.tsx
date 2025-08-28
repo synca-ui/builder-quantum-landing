@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers, Coffee, ShoppingBag, Utensils, Briefcase, Instagram, Facebook, Twitter, Linkedin, MapPin, Phone, Mail, CreditCard, Upload, ArrowLeft, PartyPopper } from "lucide-react";
+import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers, Coffee, ShoppingBag, Utensils, Briefcase, Instagram, Facebook, Twitter, Linkedin, MapPin, Phone, Mail, CreditCard, Upload, ArrowLeft, PartyPopper, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
