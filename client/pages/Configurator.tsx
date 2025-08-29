@@ -656,15 +656,55 @@ export default function Configurator() {
       }));
     };
 
-    // Sample content for realistic previews
+    // Sample content for realistic previews - template specific
+    const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+    const templateContent = {
+      'minimalist': {
+        items: [
+          { name: 'Artisan Coffee', description: 'Single origin, carefully roasted', price: '4.50' },
+          { name: 'Avocado Toast', description: 'Fresh sourdough, organic avocado', price: '8.00' },
+          { name: 'Matcha Latte', description: 'Premium ceremonial grade matcha', price: '5.25' }
+        ],
+        tagline: 'Simplicity meets excellence',
+        description: 'Minimal design, maximum flavor'
+      },
+      'vibrant': {
+        items: [
+          { name: 'Dragon Bowl', description: 'Colorful superfood fusion bowl', price: '12.50' },
+          { name: 'Neon Smoothie', description: 'Rainbow fruit blend, energizing', price: '7.00' },
+          { name: 'Fusion Tacos', description: 'Asian-Mexican creative fusion', price: '9.25' }
+        ],
+        tagline: 'Bold flavors, vibrant experience',
+        description: 'Where creativity meets cuisine'
+      },
+      'professional': {
+        items: [
+          { name: 'Prime Ribeye', description: 'Aged 28 days, chef signature', price: '42.00' },
+          { name: 'Lobster Risotto', description: 'Maine lobster, saffron arborio', price: '36.00' },
+          { name: 'Chocolate Soufflé', description: 'Classic French technique', price: '14.00' }
+        ],
+        tagline: 'Excellence in every detail',
+        description: 'Fine dining at its finest'
+      },
+      'modern-dark': {
+        items: [
+          { name: 'NITRO COLD BREW', description: 'Smooth nitrogen-infused coffee', price: '5.50' },
+          { name: 'TECH BOWL', description: 'Future food, plant-based protein', price: '11.00' },
+          { name: 'DARK ROAST', description: 'Bold, intense, uncompromising', price: '4.25' }
+        ],
+        tagline: 'FUTURE OF COFFEE',
+        description: 'Next-gen café experience'
+      }
+    };
+
+    const currentContent = templateContent[selectedId] || templateContent['minimalist'];
+
     const sampleContent = {
-      menuItems: formData.menuItems.length > 0 ? formData.menuItems : [
-        { name: 'Signature Latte', description: 'Our house special with organic beans', price: '4.50' },
-        { name: 'Artisan Sandwich', description: 'Fresh ingredients, homemade bread', price: '8.00' },
-        { name: 'Chocolate Croissant', description: 'Buttery, flaky pastry with dark chocolate', price: '3.25' }
-      ],
+      menuItems: formData.menuItems.length > 0 ? formData.menuItems : currentContent.items,
+      tagline: formData.slogan || currentContent.tagline,
+      businessDescription: formData.uniqueDescription || currentContent.description,
       reviews: [
-        { name: 'Sarah M.', rating: 5, text: 'Amazing coffee and friendly staff!' },
+        { name: 'Sarah M.', rating: 5, text: 'Amazing experience!' },
         { name: 'John D.', rating: 5, text: 'Love the atmosphere here.' }
       ],
       hours: formData.openingHours?.Monday ? formData.openingHours : {
@@ -673,10 +713,10 @@ export default function Configurator() {
         Wednesday: { open: '7:00', close: '19:00' }
       },
       galleryImages: formData.gallery.length > 0 ? formData.gallery : [
-        { url: '/api/placeholder/300/300', alt: 'Our cozy interior' },
-        { url: '/api/placeholder/300/300', alt: 'Fresh coffee being brewed' },
-        { url: '/api/placeholder/300/300', alt: 'Delicious pastries' },
-        { url: '/api/placeholder/300/300', alt: 'Our friendly team' }
+        { url: '/api/placeholder/300/300', alt: 'Our space' },
+        { url: '/api/placeholder/300/300', alt: 'Fresh preparation' },
+        { url: '/api/placeholder/300/300', alt: 'Signature items' },
+        { url: '/api/placeholder/300/300', alt: 'Our team' }
       ]
     };
 
