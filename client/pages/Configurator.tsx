@@ -349,7 +349,13 @@ export default function Configurator() {
 
   // Enhanced Navigation component
   const Navigation = () => (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${isDarkMode ? 'bg-gray-900/90' : 'glass'} border-b ${isDarkMode ? 'border-gray-700' : 'border-white/20'} backdrop-blur-xl`}>
+    <nav
+      className={`fixed top-0 w-full z-50 ${isDarkMode ? 'bg-gray-900/90' : 'glass'} border-b ${isDarkMode ? 'border-gray-700' : 'border-white/20'} backdrop-blur-xl transition-colors duration-300`}
+      style={{
+        transform: 'translate3d(0, 0, 0)',
+        willChange: 'transform'
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-4">
