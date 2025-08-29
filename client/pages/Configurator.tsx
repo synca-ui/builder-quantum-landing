@@ -1257,7 +1257,7 @@ export default function Configurator() {
       case "modern":
         return (
           <div
-            className={`h-full overflow-hidden text-white ${fontClass}`}
+            className={`h-full overflow-y-auto text-white ${fontClass}`}
             style={{
               background: formData.backgroundType === 'gradient'
                 ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
