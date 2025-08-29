@@ -2337,7 +2337,6 @@ export default function Configurator() {
 
   // Business Information (Step 1) - Minimalistic
   const BusinessInfoStep = () => {
-    const [showOptionalFields, setShowOptionalFields] = useState(false);
 
     return (
       <div className="py-8 max-w-xl mx-auto">
