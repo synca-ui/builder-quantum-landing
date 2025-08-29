@@ -12,23 +12,7 @@ export default function Index() {
 
   useEffect(() => {
     setIsVisible(true);
-
-    // Throttle mouse tracking to reduce re-renders and improve performance
-    let lastUpdate = 0;
-    const throttleMs = 50; // Only update every 50ms for better performance
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const now = Date.now();
-      if (now - lastUpdate >= throttleMs) {
-        setMousePosition({ x: e.clientX, y: e.clientY });
-        lastUpdate = now;
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
+    // Mouse tracking removed for better performance
   }, []);
 
   const features = [
@@ -129,18 +113,16 @@ export default function Index() {
     }
   ];
 
-  // Particle component - reduced count for better performance
+  // Simplified particles - reduced count and removed heavy animations
   const Particles = memo(() => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(6)].map((_, i) => (
+      {[...Array(3)].map((_, i) => (
         <div
           key={i}
-          className="absolute w-1 h-1 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse opacity-20"
+          className="absolute w-1 h-1 bg-teal-400 rounded-full opacity-30"
           style={{
             left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 4}s`,
-            animationDuration: `${3 + Math.random() * 2}s`
+            top: `${Math.random() * 100}%`
           }}
         />
       ))}
@@ -343,12 +325,10 @@ export default function Index() {
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-teal-50 min-h-screen flex items-center">
         <Particles />
         
-        {/* Floating geometric shapes */}
+        {/* Simplified background shapes - removed heavy animations */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-10 animate-float blur-xl"></div>
-          <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 opacity-10 animate-float-reverse blur-xl animate-morphing"></div>
-          <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full opacity-10 animate-float blur-lg" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute bottom-1/3 left-1/4 w-28 h-28 bg-gradient-to-br from-pink-400 to-pink-500 opacity-10 animate-float-reverse blur-lg" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-5"></div>
+          <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full opacity-5"></div>
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
@@ -364,9 +344,9 @@ export default function Index() {
               </div>
 
               <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
-                <span className="font-display text-gradient animate-gradient">Build a Stunning</span>
+                <span className="font-display text-gradient">Build a Stunning</span>
                 <br />
-                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent animate-gradient">
+                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
                   Website in Minutes
                 </span>
               </h1>
@@ -379,11 +359,11 @@ export default function Index() {
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <a href="/configurator">
                   <Button 
-                    size="lg" 
-                    className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transform transition-all duration-500 ease-out hover:scale-110 shadow-2xl hover:shadow-purple-500/25 animate-glow overflow-hidden"
+                    size="lg"
+                    className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-colors duration-300 shadow-2xl overflow-hidden"
                   >
                     <span className="relative z-10 flex items-center">
-                      <Rocket className="mr-3 w-6 h-6 group-hover:animate-pulse" />
+                      <Rocket className="mr-3 w-6 h-6" />
                       Get Started Now
                       <ChevronRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
                     </span>
@@ -433,7 +413,7 @@ export default function Index() {
                 
                 <CardContent className="p-8 text-center relative z-10">
                   <div className="mb-6 flex justify-center">
-                    <div className={`p-6 rounded-3xl bg-gradient-to-br ${feature.gradient} group-hover:scale-125 transition-all duration-700 ease-out shadow-lg group-hover:shadow-xl animate-float`} style={{ animationDelay: `${index * 0.5}s` }}>
+                    <div className={`p-6 rounded-3xl bg-gradient-to-br ${feature.gradient} group-hover:scale-105 transition-transform duration-300 ease-out shadow-lg`}>
                       <div className="text-white">
                         {feature.icon}
                       </div>
