@@ -1168,31 +1168,31 @@ export default function Configurator() {
               {/* Modern Content */}
               {previewState.activePage === 'home' && (
                 <div className="p-4" style={{ backgroundColor: formData.backgroundType === 'color' && formData.backgroundColor !== '#FFFFFF' ? formData.backgroundColor : undefined }}>
-                  <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
+                  <div className="bg-black/80 backdrop-blur-sm rounded-2xl p-6 mb-4 border border-green-500/30">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl bg-green-500/20 border border-green-500/50 flex items-center justify-center">
                         <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
                           <LogoDisplay />
                         </div>
                       </div>
                       <div>
-                        <h1 className="text-xl font-bold text-white font-mono">{getBusinessName()}</h1>
-                        <p className="text-sm text-green-400 font-mono">{sampleContent.tagline}</p>
+                        <h1 className="text-xl font-bold text-white font-mono tracking-wider">{getBusinessName()}</h1>
+                        <p className="text-sm text-green-400 font-mono uppercase tracking-widest">{sampleContent.tagline}</p>
                         <p className="text-xs text-gray-400 font-mono mt-1">{sampleContent.businessDescription}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Modular Grid */}
+                  {/* Modular Grid with Tech Styling */}
                   <div className="grid gap-3">
                     {sampleContent.menuItems.slice(0, 3).map((item, index) => (
-                      <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-all cursor-pointer">
+                      <div key={index} className="bg-gray-900/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:border-green-500/50 transition-all cursor-pointer group">
                         <div className="flex justify-between items-center">
                           <div>
-                            <h3 className="text-sm font-semibold text-white">{item.name}</h3>
-                            <p className="text-xs text-gray-400 mt-1">{item.description}</p>
+                            <h3 className="text-sm font-semibold text-white font-mono uppercase tracking-wide group-hover:text-green-400 transition-colors">{item.name}</h3>
+                            <p className="text-xs text-gray-400 mt-1 font-mono">{item.description}</p>
                           </div>
-                          <div className="text-sm font-mono font-bold text-green-400">${item.price}</div>
+                          <div className="text-sm font-mono font-bold text-green-400 bg-green-500/10 px-2 py-1 rounded border border-green-500/30">${item.price}</div>
                         </div>
                       </div>
                     ))}
