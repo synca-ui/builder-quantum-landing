@@ -124,43 +124,92 @@ async function apiRequest<T>(
   }
 }
 
-// Configuration API functions
+// Configuration API functions with error handling
 export const configurationApi = {
   // Save configuration (create or update)
   async save(config: Partial<Configuration>): Promise<ApiResponse<Configuration>> {
-    return apiRequest<Configuration>('/configurations', {
-      method: 'POST',
-      body: JSON.stringify(config),
-    });
+    try {
+      return await apiRequest<Configuration>('/configurations', {
+        method: 'POST',
+        body: JSON.stringify(config),
+      });
+    } catch (error) {
+      console.warn('Failed to save configuration:', error);
+      return {
+        success: false,
+        error: 'Failed to save configuration - server may be unavailable',
+      };
+    }
   },
 
   // Get all user configurations
   async getAll(): Promise<ApiResponse<Configuration[]>> {
-    return apiRequest<Configuration[]>('/configurations');
+    try {
+      return await apiRequest<Configuration[]>('/configurations');
+    } catch (error) {
+      console.warn('Failed to get configurations:', error);
+      return {
+        success: false,
+        error: 'Failed to load configurations - server may be unavailable',
+        data: [], // Return empty array as fallback
+      };
+    }
   },
 
   // Get specific configuration
   async get(id: string): Promise<ApiResponse<Configuration>> {
-    return apiRequest<Configuration>(`/configurations/${id}`);
+    try {
+      return await apiRequest<Configuration>(`/configurations/${id}`);
+    } catch (error) {
+      console.warn('Failed to get configuration:', error);
+      return {
+        success: false,
+        error: 'Failed to load configuration - server may be unavailable',
+      };
+    }
   },
 
   // Delete configuration
   async delete(id: string): Promise<ApiResponse<void>> {
-    return apiRequest<void>(`/configurations/${id}`, {
-      method: 'DELETE',
-    });
+    try {
+      return await apiRequest<void>(`/configurations/${id}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.warn('Failed to delete configuration:', error);
+      return {
+        success: false,
+        error: 'Failed to delete configuration - server may be unavailable',
+      };
+    }
   },
 
   // Publish configuration
   async publish(id: string): Promise<ApiResponse<Configuration>> {
-    return apiRequest<Configuration>(`/configurations/${id}/publish`, {
-      method: 'POST',
-    });
+    try {
+      return await apiRequest<Configuration>(`/configurations/${id}/publish`, {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.warn('Failed to publish configuration:', error);
+      return {
+        success: false,
+        error: 'Failed to publish configuration - server may be unavailable',
+      };
+    }
   },
 
   // Get published site by subdomain
   async getPublishedSite(subdomain: string): Promise<ApiResponse<Configuration>> {
-    return apiRequest<Configuration>(`/sites/${subdomain}`);
+    try {
+      return await apiRequest<Configuration>(`/sites/${subdomain}`);
+    } catch (error) {
+      console.warn('Failed to get published site:', error);
+      return {
+        success: false,
+        error: 'Failed to load published site - server may be unavailable',
+      };
+    }
   },
 };
 
