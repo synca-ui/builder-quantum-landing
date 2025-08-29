@@ -130,7 +130,7 @@ export default function Index() {
   ];
 
   // Particle component - reduced count for better performance
-  const Particles = useMemo(() => (
+  const Particles = memo(() => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(6)].map((_, i) => (
         <div
@@ -145,7 +145,7 @@ export default function Index() {
         />
       ))}
     </div>
-  ), []); // Memoize to prevent re-creation on every render
+  ));
 
   // Enhanced Interactive Navigation component
   const Navigation = () => {
