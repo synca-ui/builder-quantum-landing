@@ -973,27 +973,27 @@ export default function Configurator() {
       fancy: {
         items: [
           {
-            name: "Royal Espresso",
-            description: "Gold-filtered premium blend",
+            name: "Signature Espresso",
+            description: "Premium single-origin blend",
             price: "8.00",
-            emoji: "👑",
+            emoji: "☕",
           },
           {
-            name: "Truffle Pasta",
-            description: "Fresh pasta, white truffle",
+            name: "Artisan Pasta",
+            description: "Handcrafted with seasonal ingredients",
             price: "28.00",
-            emoji: "🍝",
+            emoji: "🍽️",
           },
           {
-            name: "Champagne Cocktail",
-            description: "Dom Pérignon, gold flakes",
+            name: "Sommelier Selection",
+            description: "Curated wine pairing experience",
             price: "35.00",
-            emoji: "🥂",
+            emoji: "🍷",
           },
         ],
-        tagline: "Luxury Dining Experience",
+        tagline: "Refined Culinary Excellence",
         hours: "By Reservation",
-        special: "VIP Service",
+        special: "Chef's Table Experience",
       },
     };
 
