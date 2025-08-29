@@ -1182,12 +1182,32 @@ export default function Configurator() {
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Gallery</h2>
               <div className="grid grid-cols-2 gap-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={templateStyles.galleryItem}>
-                    <Camera className="w-6 h-6 text-gray-400" />
-                  </div>
-                ))}
+                {formData.gallery.length > 0 ? (
+                  formData.gallery.map((image, index) => (
+                    <div key={index} className={templateStyles.galleryItem + " overflow-hidden"}>
+                      <img
+                        src={image.url}
+                        alt={image.alt}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))
+                ) : (
+                  [1, 2, 3, 4].map((i) => (
+                    <div key={i} className={templateStyles.galleryItem}>
+                      <Camera className="w-6 h-6 text-gray-400" />
+                      <p className="text-xs text-gray-500 mt-1">Photo {i}</p>
+                    </div>
+                  ))
+                )}
               </div>
+              {formData.gallery.length === 0 && (
+                <div className="text-center py-4">
+                  <p className={templateStyles.itemDesc}>
+                    Upload photos in the media gallery step to see them here.
+                  </p>
+                </div>
+              )}
             </div>
           );
 
