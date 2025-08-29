@@ -1033,13 +1033,13 @@ export default function Configurator() {
               itemCard:
                 "bg-white/15 backdrop-blur rounded-xl p-3 border border-white/30",
               itemName: "font-bold text-sm text-white",
-              itemDesc: "text-xs text-white/80",
+              itemDesc: "text-xs text-white/90",
               itemPrice: "font-bold text-sm text-white",
               galleryItem:
                 "aspect-square bg-white/10 backdrop-blur rounded-xl flex items-center justify-center border border-white/30",
               aboutLogo:
                 "w-16 h-16 mx-auto bg-white/20 backdrop-blur rounded-xl flex items-center justify-center",
-              contactIcon: "w-4 h-4 text-white/80",
+              contactIcon: "w-4 h-4 text-white",
               homeCard:
                 "bg-white/15 backdrop-blur rounded-xl p-2 text-center border border-white/30",
             };
