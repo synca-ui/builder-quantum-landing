@@ -1319,7 +1319,7 @@ export default function Configurator() {
 
       case "clean":
         return (
-          <div className={`h-full overflow-hidden bg-emerald-50 ${fontClass}`}>
+          <div className={`h-full overflow-y-auto bg-emerald-50 ${fontClass}`}>
             {/* Status Bar */}
             <div className="h-6 bg-white flex items-center justify-center text-xs font-medium text-slate-800">
               9:41 AM
@@ -1378,7 +1378,7 @@ export default function Configurator() {
       case "fancy":
         return (
           <div
-            className={`h-full overflow-hidden text-white ${fontClass}`}
+            className={`h-full overflow-y-auto text-white ${fontClass}`}
             style={{
               background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
             }}
