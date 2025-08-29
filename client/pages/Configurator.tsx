@@ -337,6 +337,16 @@ export default function Configurator() {
     }
   }, [currentStep]);
 
+  // Memoized progress percentage to prevent recalculation
+  const progressPercentage = useMemo(() => {
+    return ((currentStep + 1) / configuratorSteps.length) * 100;
+  }, [currentStep, configuratorSteps.length]);
+
+  // Memoized current phase data
+  const currentPhase = useMemo(() => {
+    return currentStep > 0 ? configuratorSteps[currentStep] : null;
+  }, [currentStep, configuratorSteps]);
+
   // Enhanced Navigation component
   const Navigation = () => (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${isDarkMode ? 'bg-gray-900/90' : 'glass'} border-b ${isDarkMode ? 'border-gray-700' : 'border-white/20'} backdrop-blur-xl`}>
