@@ -300,7 +300,7 @@ export default function Index() {
                     <div className="transition-all duration-300 group-hover:rotate-45">
                       <Settings className="w-4 h-4" />
                     </div>
-                    <span>{hasSavedSites ? 'New Site' : 'Start Building'}</span>
+                    <span>Start Building</span>
                     <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
                   </div>
                 </Button>
