@@ -1057,50 +1057,6 @@ export default function Configurator() {
                 </div>
               </div>
 
-              {/* Color Selector Dots */}
-              <div className="absolute -right-8 top-1/2 transform -translate-y-1/2">
-                <div className="flex flex-col space-y-3">
-                  <div className="text-xs font-bold text-gray-600 mb-1">Colors</div>
-                  {colorPresets.map((preset, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        updateFormData('primaryColor', preset.primary);
-                        updateFormData('secondaryColor', preset.secondary);
-                      }}
-                      className={`w-4 h-4 rounded-full border-2 transition-all duration-300 hover:scale-125 hover:shadow-md group relative ${
-                        formData.primaryColor === preset.primary ? 'border-white shadow-lg scale-125 ring-2 ring-gray-300' : 'border-gray-300 hover:border-white'
-                      }`}
-                      style={{ backgroundColor: preset.primary }}
-                      title={`Switch to ${preset.name} theme`}
-                    >
-                      {/* Tooltip */}
-                      <div className="absolute -left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                        {preset.name}
-                      </div>
-                    </button>
-                  ))}
-
-                  {/* Custom color button */}
-                  <button
-                    onClick={() => {
-                      // Scroll to branding step or open color picker
-                      const brandingStep = configuratorSteps.findIndex(step => step.id === 'branding');
-                      if (brandingStep !== -1) {
-                        setCurrentStep(brandingStep);
-                      }
-                    }}
-                    className="w-4 h-4 rounded-full border-2 border-dashed border-gray-400 hover:border-gray-600 hover:bg-gray-100 transition-all duration-200 flex items-center justify-center group relative"
-                    title="Customize colors"
-                  >
-                    <Palette className="w-2 h-2 text-gray-500" />
-                    {/* Tooltip */}
-                    <div className="absolute -left-20 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                      Custom
-                    </div>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
