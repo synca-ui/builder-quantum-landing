@@ -769,17 +769,28 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">Primary Color</label>
           <div className="flex items-center space-x-4">
-            <input
-              type="color"
-              value={formData.primaryColor}
-              onChange={(e) => updateFormData('primaryColor', e.target.value)}
-              className="w-12 h-12 rounded-lg cursor-pointer"
-            />
+            <div className="relative">
+              <input
+                key="primary-color-picker"
+                type="color"
+                value={formData.primaryColor}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  updateFormData('primaryColor', e.target.value);
+                }}
+                onFocus={(e) => e.stopPropagation()}
+                onBlur={(e) => e.stopPropagation()}
+                className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-colors"
+                style={{ WebkitAppearance: 'none', padding: '2px' }}
+              />
+            </div>
             <div className="flex-1">
               <Input
+                key="primary-color-text"
                 type="text"
                 value={formData.primaryColor}
                 onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                onFocus={(e) => e.stopPropagation()}
                 className="font-mono"
                 placeholder="#2563EB"
               />
@@ -792,17 +803,28 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">Secondary Color</label>
           <div className="flex items-center space-x-4">
-            <input
-              type="color"
-              value={formData.secondaryColor}
-              onChange={(e) => updateFormData('secondaryColor', e.target.value)}
-              className="w-12 h-12 rounded-lg cursor-pointer"
-            />
+            <div className="relative">
+              <input
+                key="secondary-color-picker"
+                type="color"
+                value={formData.secondaryColor}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  updateFormData('secondaryColor', e.target.value);
+                }}
+                onFocus={(e) => e.stopPropagation()}
+                onBlur={(e) => e.stopPropagation()}
+                className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-colors"
+                style={{ WebkitAppearance: 'none', padding: '2px' }}
+              />
+            </div>
             <div className="flex-1">
               <Input
+                key="secondary-color-text"
                 type="text"
                 value={formData.secondaryColor}
                 onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                onFocus={(e) => e.stopPropagation()}
                 className="font-mono"
                 placeholder="#7C3AED"
               />
@@ -1575,7 +1597,7 @@ export default function Configurator() {
             {formData.onlineOrdering && (
               <div className="mt-4 p-3 bg-white rounded-lg border border-teal-200">
                 <p className="text-sm text-teal-700">
-                  ✨ Customers can order directly from your website. Includes payment processing, order management, and delivery tracking.
+                  ��� Customers can order directly from your website. Includes payment processing, order management, and delivery tracking.
                 </p>
               </div>
             )}
