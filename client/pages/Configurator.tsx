@@ -643,10 +643,12 @@ export default function Configurator() {
           <div className="relative">
             <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <Input
+              key="location-input"
               type="text"
               placeholder="123 Main Street, City, State"
               value={formData.location}
               onChange={(e) => updateFormData('location', e.target.value)}
+              onFocus={(e) => e.stopPropagation()}
               className="w-full pl-10 px-4 py-3"
             />
           </div>
@@ -656,10 +658,12 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Slogan (Optional)</label>
           <Input
+            key="slogan-input"
             type="text"
             placeholder="e.g. The best coffee in town"
             value={formData.slogan}
             onChange={(e) => updateFormData('slogan', e.target.value)}
+            onFocus={(e) => e.stopPropagation()}
             className="w-full px-4 py-3"
           />
         </div>
@@ -668,9 +672,11 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">What makes your business unique?</label>
           <Textarea
+            key="description-input"
             placeholder="Tell us what sets you apart from the competition..."
             value={formData.uniqueDescription}
             onChange={(e) => updateFormData('uniqueDescription', e.target.value)}
+            onFocus={(e) => e.stopPropagation()}
             className="w-full px-4 py-3 h-24"
           />
         </div>
