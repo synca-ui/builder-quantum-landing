@@ -1982,6 +1982,11 @@ export default function Configurator() {
       case 'menu-products': return <MenuProductsStep />;
       case 'reservations': return <ReservationsStep />;
       case 'contact-social': return <ContactSocialStep />;
+      case 'media-gallery': return <MediaGalleryStep />;
+      case 'advanced-features': return <AdvancedFeaturesStep />;
+      case 'domain-hosting': return <DomainHostingStep />;
+      case 'preview-adjustments': return <PreviewAdjustmentsStep />;
+      case 'publish': return <PublishStep />;
       default: return (
         <div className="py-16 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h2>
