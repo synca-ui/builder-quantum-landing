@@ -1176,10 +1176,9 @@ export default function Configurator() {
                         </div>
                       </div>
                       <div>
-                        <h1 className="text-xl font-bold text-white">{getBusinessName()}</h1>
-                        {formData.slogan && (
-                          <p className="text-sm text-gray-400">{formData.slogan}</p>
-                        )}
+                        <h1 className="text-xl font-bold text-white font-mono">{getBusinessName()}</h1>
+                        <p className="text-sm text-green-400 font-mono">{sampleContent.tagline}</p>
+                        <p className="text-xs text-gray-400 font-mono mt-1">{sampleContent.businessDescription}</p>
                       </div>
                     </div>
                   </div>
