@@ -524,7 +524,10 @@ export default function Configurator() {
 
   // Navigation functions
   const startConfigurator = useCallback(() => {
-    setCurrentStep(0); // Go to template selection
+    // Use requestAnimationFrame for smoother transition
+    requestAnimationFrame(() => {
+      setCurrentStep(0); // Go to template selection
+    });
   }, []);
 
   const nextStep = useCallback(() => {
