@@ -1094,9 +1094,8 @@ export default function Configurator() {
                       </div>
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
-                    {formData.slogan && (
-                      <p className="text-gray-600">{formData.slogan}</p>
-                    )}
+                    <p className="text-gray-600 font-medium">{sampleContent.tagline}</p>
+                    <p className="text-gray-500 text-sm mt-1">{sampleContent.businessDescription}</p>
                   </div>
 
                   <div className="py-6">
