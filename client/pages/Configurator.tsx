@@ -313,19 +313,29 @@ export default function Configurator() {
     }
   }, []);
 
-  const nextStep = () => {
+  const nextStep = useCallback(() => {
     if (currentStep < configuratorSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-      localStorage.setItem('configuratorStep', (currentStep + 1).toString());
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      try {
+        localStorage.setItem('configuratorStep', newStep.toString());
+      } catch (error) {
+        console.warn('Failed to save step to localStorage:', error);
+      }
     }
-  };
+  }, [currentStep, configuratorSteps.length]);
 
-  const prevStep = () => {
+  const prevStep = useCallback(() => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      localStorage.setItem('configuratorStep', (currentStep - 1).toString());
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      try {
+        localStorage.setItem('configuratorStep', newStep.toString());
+      } catch (error) {
+        console.warn('Failed to save step to localStorage:', error);
+      }
     }
-  };
+  }, [currentStep]);
 
   // Enhanced Navigation component
   const Navigation = () => (
