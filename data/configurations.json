@@ -7,7 +7,7 @@
     "location": "sssss",
     "slogan": "ss",
     "uniqueDescription": "sss",
-    "template": "minimalist",
+    "template": "modern",
     "primaryColor": "#2563EB",
     "secondaryColor": "#7C3AED",
     "fontFamily": "sans-serif",
@@ -33,7 +33,7 @@
     "domainName": "",
     "selectedDomain": "",
     "createdAt": "2025-08-29T10:37:02.078Z",
-    "updatedAt": "2025-08-29T10:58:48.790Z",
+    "updatedAt": "2025-08-29T10:58:59.325Z",
     "status": "draft"
   }
 ]
