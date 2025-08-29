@@ -129,10 +129,10 @@ export default function Index() {
     }
   ];
 
-  // Particle component
-  const Particles = () => (
+  // Particle component - reduced count for better performance
+  const Particles = useMemo(() => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(12)].map((_, i) => (
+      {[...Array(6)].map((_, i) => (
         <div
           key={i}
           className="absolute w-1 h-1 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-pulse opacity-20"
@@ -145,7 +145,7 @@ export default function Index() {
         />
       ))}
     </div>
-  );
+  ), []); // Memoize to prevent re-creation on every render
 
   // Enhanced Interactive Navigation component
   const Navigation = () => {
