@@ -1387,6 +1387,420 @@ export default function Configurator() {
     </div>
   );
 
+  // Additional step components
+  const OpeningHoursStep = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Set your opening hours
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            When are you open for business? This helps customers know when to visit.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {days.map((day) => {
+            const hours = formData.openingHours[day] || { open: '09:00', close: '17:00', closed: false };
+
+            return (
+              <Card key={day} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24">
+                      <h3 className="font-semibold text-gray-900">{day}</h3>
+                    </div>
+                    <Button
+                      variant={hours.closed ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const newHours = {
+                          ...formData.openingHours,
+                          [day]: { ...hours, closed: !hours.closed }
+                        };
+                        updateFormData('openingHours', newHours);
+                      }}
+                    >
+                      {hours.closed ? 'Closed' : 'Open'}
+                    </Button>
+                  </div>
+
+                  {!hours.closed && (
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="time"
+                        defaultValue={hours.open}
+                        onChange={(e) => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...hours, open: e.target.value }
+                          };
+                          updateFormData('openingHours', newHours);
+                        }}
+                        className="w-32"
+                      />
+                      <span className="text-gray-500">to</span>
+                      <Input
+                        type="time"
+                        defaultValue={hours.close}
+                        onChange={(e) => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...hours, close: e.target.value }
+                          };
+                          updateFormData('openingHours', newHours);
+                        }}
+                        className="w-32"
+                      />
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const MenuProductsStep = () => {
+    const [newItem, setNewItem] = useState({ name: '', description: '', price: '' });
+
+    const addMenuItem = () => {
+      if (newItem.name && newItem.price) {
+        const updatedItems = [...formData.menuItems, { ...newItem, id: Date.now().toString() }];
+        updateFormData('menuItems', updatedItems);
+        setNewItem({ name: '', description: '', price: '' });
+      }
+    };
+
+    const removeMenuItem = (index: number) => {
+      const updatedItems = formData.menuItems.filter((_, i) => i !== index);
+      updateFormData('menuItems', updatedItems);
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Add your menu or products
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Showcase what you offer. You can add items manually or upload your menu.
+          </p>
+        </div>
+
+        {/* Upload Options */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <Card className="p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-2xl flex items-center justify-center">
+                <Camera className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Menu Image</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload a photo of your existing menu</p>
+              <Button
+                variant="outline"
+                className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700"
+                onClick={() => document.getElementById('menu-img-upload')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose Image File
+              </Button>
+              <input
+                id="menu-img-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    updateFormData('menuPdf', file);
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">JPG, PNG up to 10MB</p>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-2xl flex items-center justify-center">
+                <Upload className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload CSV File</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload structured menu data as CSV</p>
+              <Button
+                variant="outline"
+                className="w-full border-2 border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 text-green-700"
+                onClick={() => document.getElementById('csv-upload')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose CSV File
+              </Button>
+              <input
+                id="csv-upload"
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Handle CSV file processing here
+                    console.log('CSV file uploaded:', file);
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">Format: name,description,price</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="h-px bg-gray-300 flex-1"></div>
+            <span className="text-gray-500 font-medium">OR</span>
+            <div className="h-px bg-gray-300 flex-1"></div>
+          </div>
+        </div>
+
+        {/* Add New Item Form */}
+        <Card className="p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Item</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Item Name *</label>
+              <Input
+                type="text"
+                placeholder="e.g. Signature Latte"
+                value={newItem.name}
+                onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+              <Input
+                type="text"
+                placeholder="Brief description"
+                value={newItem.description}
+                onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Price *</label>
+              <div className="flex">
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="9.99"
+                  value={newItem.price}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={addMenuItem}
+                  disabled={!newItem.name || !newItem.price}
+                  className="ml-2 bg-teal-500 hover:bg-teal-600"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Menu Items List */}
+        {formData.menuItems.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold text-gray-900">Your Menu Items</h3>
+            {formData.menuItems.map((item, index) => (
+              <Card key={index} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                    {item.description && (
+                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg font-bold text-teal-600">${item.price}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeMenuItem(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const ContactSocialStep = () => {
+    const contactMethods = [
+      { id: 'phone', icon: <Phone className="w-5 h-5" />, label: 'Phone', placeholder: '+1 (555) 123-4567' },
+      { id: 'email', icon: <Mail className="w-5 h-5" />, label: 'Email', placeholder: 'hello@yourbusiness.com' },
+      { id: 'address', icon: <MapPin className="w-5 h-5" />, label: 'Address', placeholder: '123 Main St, City, State' }
+    ];
+
+    const socialPlatforms = [
+      { id: 'instagram', icon: <Instagram className="w-5 h-5" />, label: 'Instagram', placeholder: '@yourbusiness' },
+      { id: 'facebook', icon: <Facebook className="w-5 h-5" />, label: 'Facebook', placeholder: 'facebook.com/yourbusiness' }
+    ];
+
+    const getContactValue = (methodId: string) => {
+      if (!formData.contactMethods) return '';
+      if (Array.isArray(formData.contactMethods)) {
+        const contact = formData.contactMethods.find(c => c.type === methodId);
+        return contact ? contact.value : '';
+      }
+      return formData.contactMethods[methodId] || '';
+    };
+
+    const getSocialValue = (platformId: string) => {
+      if (!formData.socialMedia) return '';
+      return formData.socialMedia[platformId] || '';
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Contact & social media
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            How can customers reach you? Add your contact information and social media links.
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Contact Information */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Contact Information</h3>
+            <div className="space-y-4">
+              {contactMethods.map((method) => (
+                <div key={method.id}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{method.label}</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 text-gray-400">
+                      {method.icon}
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder={method.placeholder}
+                      defaultValue={getContactValue(method.id)}
+                      ref={setInputRef(`contact_${method.id}`)}
+                      onBlur={handleInputBlur(`contact_${method.id}`)}
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Social Media */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Social Media</h3>
+            <div className="space-y-4">
+              {socialPlatforms.map((platform) => (
+                <div key={platform.id}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{platform.label}</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 text-gray-400">
+                      {platform.icon}
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder={platform.placeholder}
+                      defaultValue={getSocialValue(platform.id)}
+                      ref={setInputRef(`social_${platform.id}`)}
+                      onBlur={handleInputBlur(`social_${platform.id}`)}
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Instagram Sync */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-md font-bold text-gray-900">Instagram Integration</h4>
+                  <p className="text-sm text-gray-600">Automatically sync your Instagram posts to your website</p>
+                </div>
+                <Button
+                  variant={formData.instagramSync ? "default" : "outline"}
+                  onClick={() => updateFormData('instagramSync', !formData.instagramSync)}
+                  className={formData.instagramSync ? 'bg-teal-500 hover:bg-teal-600' : ''}
+                >
+                  {formData.instagramSync ? 'Enabled' : 'Disabled'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   // Render step content based on current step
   const renderStepContent = () => {
     const currentStepConfig = configuratorSteps[currentStep];
@@ -1401,6 +1815,12 @@ export default function Configurator() {
         return <BrandingStep />;
       case 'page-structure':
         return <PageStructureStep />;
+      case 'opening-hours':
+        return <OpeningHoursStep />;
+      case 'menu-products':
+        return <MenuProductsStep />;
+      case 'contact-social':
+        return <ContactSocialStep />;
       // Add other step components here...
       default:
         return (
