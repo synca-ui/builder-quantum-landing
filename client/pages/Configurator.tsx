@@ -1232,7 +1232,7 @@ export default function Configurator() {
                         <button
                           key={page}
                           onClick={() => navigateToPage(page)}
-                          className={`w-full px-4 py-2 text-left text-black hover:bg-gray-50 transition-colors text-sm ${
+                          className={`w-full px-3 py-1.5 text-left text-black hover:bg-gray-50 transition-colors text-xs ${
                             previewState.activePage === page
                               ? "bg-gray-50 font-medium"
                               : ""
