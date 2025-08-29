@@ -372,8 +372,37 @@ export default function Configurator() {
   const updateFormDataFromInputs = useCallback(() => {
     const inputValues = collectFormValues();
 
+    // Process contact methods into array format for backend compatibility
+    const contactMethods: any[] = [];
+    const socialMedia: any = {};
+    const regularFields: any = {};
+
+    Object.keys(inputValues).forEach(key => {
+      if (key.startsWith('contact_')) {
+        const contactType = key.replace('contact_', '');
+        const value = inputValues[key];
+        if (value && value.trim()) {
+          contactMethods.push({ type: contactType, value: value.trim() });
+        }
+      } else if (key.startsWith('social_')) {
+        const platform = key.replace('social_', '');
+        const value = inputValues[key];
+        if (value && value.trim()) {
+          socialMedia[platform] = value.trim();
+        }
+      } else {
+        regularFields[key] = inputValues[key];
+      }
+    });
+
+    const processedData = {
+      ...regularFields,
+      ...(contactMethods.length > 0 && { contactMethods }),
+      ...(Object.keys(socialMedia).length > 0 && { socialMedia })
+    };
+
     setFormData(prev => {
-      const newData = { ...prev, ...inputValues };
+      const newData = { ...prev, ...processedData };
       formDataRef.current = newData; // Keep ref in sync
       return newData;
     });
@@ -385,7 +414,7 @@ export default function Configurator() {
 
     debouncedSaveRef.current = setTimeout(() => {
       if (autoSaverRef.current) {
-        const currentData = { ...formDataRef.current, ...inputValues };
+        const currentData = { ...formDataRef.current, ...processedData };
         autoSaverRef.current.save(currentData as Partial<Configuration>);
       }
     }, 500);
