@@ -950,7 +950,7 @@ export default function Configurator() {
         ],
         tagline: "Luxury Dining Experience",
         hours: "By Reservation",
-        special: "👑 VIP Service",
+        special: "VIP Service",
       },
     };
 
