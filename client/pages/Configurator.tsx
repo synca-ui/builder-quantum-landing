@@ -800,11 +800,34 @@ export default function Configurator() {
     // Helper function for font size classes
     const getFontSizeClass = (baseSize: string) => {
       const sizeMap = {
-        small: { 'text-xs': 'text-xs', 'text-sm': 'text-xs', 'text-base': 'text-sm', 'text-lg': 'text-base', 'text-xl': 'text-lg', 'text-2xl': 'text-xl' },
-        medium: { 'text-xs': 'text-xs', 'text-sm': 'text-sm', 'text-base': 'text-base', 'text-lg': 'text-lg', 'text-xl': 'text-xl', 'text-2xl': 'text-2xl' },
-        large: { 'text-xs': 'text-sm', 'text-sm': 'text-base', 'text-base': 'text-lg', 'text-lg': 'text-xl', 'text-xl': 'text-2xl', 'text-2xl': 'text-3xl' }
+        small: {
+          "text-xs": "text-xs",
+          "text-sm": "text-xs",
+          "text-base": "text-sm",
+          "text-lg": "text-base",
+          "text-xl": "text-lg",
+          "text-2xl": "text-xl",
+        },
+        medium: {
+          "text-xs": "text-xs",
+          "text-sm": "text-sm",
+          "text-base": "text-base",
+          "text-lg": "text-lg",
+          "text-xl": "text-xl",
+          "text-2xl": "text-2xl",
+        },
+        large: {
+          "text-xs": "text-sm",
+          "text-sm": "text-base",
+          "text-base": "text-lg",
+          "text-lg": "text-xl",
+          "text-xl": "text-2xl",
+          "text-2xl": "text-3xl",
+        },
       };
-      return sizeMap[styles.userFontSize] ? sizeMap[styles.userFontSize][baseSize] || baseSize : baseSize;
+      return sizeMap[styles.userFontSize]
+        ? sizeMap[styles.userFontSize][baseSize] || baseSize
+        : baseSize;
     };
 
     const getBusinessIcon = () => {
@@ -1076,12 +1099,14 @@ export default function Configurator() {
 
       switch (previewState.activePage) {
         case "menu":
-          if (!formData.selectedPages.includes('menu')) {
+          if (!formData.selectedPages.includes("menu")) {
             return (
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                  <p className={templateStyles.itemDesc}>
+                    This page is not enabled
+                  </p>
                 </div>
               </div>
             );
@@ -1104,7 +1129,10 @@ export default function Configurator() {
                           </p>
                         </div>
                       </div>
-                      <span className={templateStyles.itemPrice} style={{ color: styles.userPrimary }}>
+                      <span
+                        className={templateStyles.itemPrice}
+                        style={{ color: styles.userPrimary }}
+                      >
                         ${item.price}
                       </span>
                     </div>
@@ -1115,12 +1143,14 @@ export default function Configurator() {
           );
 
         case "gallery":
-          if (!formData.selectedPages.includes('gallery')) {
+          if (!formData.selectedPages.includes("gallery")) {
             return (
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                  <p className={templateStyles.itemDesc}>
+                    This page is not enabled
+                  </p>
                 </div>
               </div>
             );
@@ -1139,12 +1169,14 @@ export default function Configurator() {
           );
 
         case "about":
-          if (!formData.selectedPages.includes('about')) {
+          if (!formData.selectedPages.includes("about")) {
             return (
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                  <p className={templateStyles.itemDesc}>
+                    This page is not enabled
+                  </p>
                 </div>
               </div>
             );
@@ -1153,7 +1185,10 @@ export default function Configurator() {
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>About Us</h2>
               <div className="text-center space-y-3">
-                <div className={templateStyles.aboutLogo} style={{ backgroundColor: `${styles.userPrimary}20` }}>
+                <div
+                  className={templateStyles.aboutLogo}
+                  style={{ backgroundColor: `${styles.userPrimary}20` }}
+                >
                   <div style={{ color: styles.userPrimary }}>
                     <LogoDisplay />
                   </div>
@@ -1174,12 +1209,14 @@ export default function Configurator() {
           );
 
         case "contact":
-          if (!formData.selectedPages.includes('contact')) {
+          if (!formData.selectedPages.includes("contact")) {
             return (
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                  <p className={templateStyles.itemDesc}>
+                    This page is not enabled
+                  </p>
                 </div>
               </div>
             );
@@ -1189,21 +1226,25 @@ export default function Configurator() {
               <h2 className={templateStyles.title}>Contact</h2>
               <div className="space-y-3">
                 {/* Phone */}
-                {formData.contactMethods?.find(c => c.type === 'phone') && (
+                {formData.contactMethods?.find((c) => c.type === "phone") && (
                   <div className="flex items-center space-x-2">
                     <Phone className={templateStyles.contactIcon} />
                     <span className={templateStyles.itemDesc}>
-                      {formData.contactMethods.find(c => c.type === 'phone')?.value || '+1 (555) 123-4567'}
+                      {formData.contactMethods.find((c) => c.type === "phone")
+                        ?.value || "+1 (555) 123-4567"}
                     </span>
                   </div>
                 )}
 
                 {/* Email */}
-                {formData.contactMethods?.find(c => c.type === 'email') && (
+                {formData.contactMethods?.find((c) => c.type === "email") && (
                   <div className="flex items-center space-x-2">
                     <Mail className={templateStyles.contactIcon} />
                     <span className={templateStyles.itemDesc}>
-                      {formData.contactMethods.find(c => c.type === 'email')?.value}
+                      {
+                        formData.contactMethods.find((c) => c.type === "email")
+                          ?.value
+                      }
                     </span>
                   </div>
                 )}
@@ -1219,48 +1260,65 @@ export default function Configurator() {
                 )}
 
                 {/* Opening Hours */}
-                {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <Clock className={templateStyles.contactIcon} />
-                    <span className={templateStyles.itemDesc}>
-                      {currentContent.hours}
-                    </span>
-                  </div>
-                )}
+                {formData.openingHours &&
+                  Object.keys(formData.openingHours).length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <Clock className={templateStyles.contactIcon} />
+                      <span className={templateStyles.itemDesc}>
+                        {currentContent.hours}
+                      </span>
+                    </div>
+                  )}
 
                 {/* Social Media */}
-                {formData.socialMedia && (Object.keys(formData.socialMedia).length > 0 || formData.instagramSync) && (
-                  <div className="mt-4">
-                    <h3 className={templateStyles.itemName + " mb-2"}>Follow Us</h3>
-                    <div className="flex space-x-3">
-                      {formData.socialMedia.instagram && (
-                        <a href={formData.socialMedia.instagram} className="flex items-center space-x-1 text-pink-600 hover:text-pink-700">
-                          <Instagram className="w-4 h-4" />
-                          <span className="text-xs">Instagram</span>
-                        </a>
-                      )}
-                      {formData.socialMedia.facebook && (
-                        <a href={formData.socialMedia.facebook} className="flex items-center space-x-1 text-blue-600 hover:text-blue-700">
-                          <Facebook className="w-4 h-4" />
-                          <span className="text-xs">Facebook</span>
-                        </a>
-                      )}
-                      {formData.instagramSync && !formData.socialMedia.instagram && (
-                        <div className="flex items-center space-x-1 text-pink-600">
-                          <Instagram className="w-4 h-4" />
-                          <span className="text-xs">Instagram</span>
-                        </div>
-                      )}
+                {formData.socialMedia &&
+                  (Object.keys(formData.socialMedia).length > 0 ||
+                    formData.instagramSync) && (
+                    <div className="mt-4">
+                      <h3 className={templateStyles.itemName + " mb-2"}>
+                        Follow Us
+                      </h3>
+                      <div className="flex space-x-3">
+                        {formData.socialMedia.instagram && (
+                          <a
+                            href={formData.socialMedia.instagram}
+                            className="flex items-center space-x-1 text-pink-600 hover:text-pink-700"
+                          >
+                            <Instagram className="w-4 h-4" />
+                            <span className="text-xs">Instagram</span>
+                          </a>
+                        )}
+                        {formData.socialMedia.facebook && (
+                          <a
+                            href={formData.socialMedia.facebook}
+                            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700"
+                          >
+                            <Facebook className="w-4 h-4" />
+                            <span className="text-xs">Facebook</span>
+                          </a>
+                        )}
+                        {formData.instagramSync &&
+                          !formData.socialMedia.instagram && (
+                            <div className="flex items-center space-x-1 text-pink-600">
+                              <Instagram className="w-4 h-4" />
+                              <span className="text-xs">Instagram</span>
+                            </div>
+                          )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Default fallback if no contact info */}
-                {(!formData.contactMethods || formData.contactMethods.length === 0) && !formData.location && !formData.socialMedia && (
-                  <div className="text-center py-4">
-                    <p className={templateStyles.itemDesc}>Contact information will appear here</p>
-                  </div>
-                )}
+                {(!formData.contactMethods ||
+                  formData.contactMethods.length === 0) &&
+                  !formData.location &&
+                  !formData.socialMedia && (
+                    <div className="text-center py-4">
+                      <p className={templateStyles.itemDesc}>
+                        Contact information will appear here
+                      </p>
+                    </div>
+                  )}
               </div>
             </div>
           );
@@ -1292,7 +1350,10 @@ export default function Configurator() {
                     >
                       {item.name}
                     </h3>
-                    <p className={templateStyles.itemPrice + " text-xs"} style={{ color: styles.userPrimary }}>
+                    <p
+                      className={templateStyles.itemPrice + " text-xs"}
+                      style={{ color: styles.userPrimary }}
+                    >
                       ${item.price}
                     </p>
                   </div>
@@ -1306,9 +1367,11 @@ export default function Configurator() {
                     className="px-4 py-2 rounded-lg text-xs font-medium transition-colors"
                     style={{
                       backgroundColor: styles.userPrimary,
-                      color: '#FFFFFF'
+                      color: "#FFFFFF",
                     }}
-                    onClick={() => {/* Handle reservation */}}
+                    onClick={() => {
+                      /* Handle reservation */
+                    }}
                   >
                     <Calendar className="w-3 h-3 mr-1 inline" />
                     Reserve Table
@@ -1317,50 +1380,72 @@ export default function Configurator() {
               )}
 
               {/* Small Opening Hours at Bottom */}
-              {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
-                <div className="text-center mt-6 pt-4 border-t border-gray-100">
-                  <div className="flex items-center justify-center space-x-2 mb-2">
-                    <Clock className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-600">Opening Hours</span>
+              {formData.openingHours &&
+                Object.keys(formData.openingHours).length > 0 && (
+                  <div className="text-center mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <Clock className="w-3 h-3 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-600">
+                        Opening Hours
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 space-y-0.5">
+                      {Object.entries(formData.openingHours)
+                        .slice(0, 2)
+                        .map(([day, hours]) => (
+                          <div
+                            key={day}
+                            className="flex justify-between items-center"
+                          >
+                            <span>{day}</span>
+                            <span>
+                              {hours.closed
+                                ? "Closed"
+                                : `${hours.open} - ${hours.close}`}
+                            </span>
+                          </div>
+                        ))}
+                      {Object.keys(formData.openingHours).length > 2 && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          +{Object.keys(formData.openingHours).length - 2} more
+                          days
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 space-y-0.5">
-                    {Object.entries(formData.openingHours).slice(0, 2).map(([day, hours]) => (
-                      <div key={day} className="flex justify-between items-center">
-                        <span>{day}</span>
-                        <span>{hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}</span>
-                      </div>
-                    ))}
-                    {Object.keys(formData.openingHours).length > 2 && (
-                      <div className="text-xs text-gray-400 mt-1">
-                        +{Object.keys(formData.openingHours).length - 2} more days
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                )}
 
               {/* Social Media Icons */}
-              {formData.socialMedia && (Object.keys(formData.socialMedia).length > 0 || formData.instagramSync) && (
-                <div className="text-center mt-4">
-                  <div className="flex justify-center space-x-4">
-                    {formData.socialMedia.instagram && (
-                      <a href={formData.socialMedia.instagram} className="text-pink-500 hover:text-pink-600 transition-colors">
-                        <Instagram className="w-4 h-4" />
-                      </a>
-                    )}
-                    {formData.socialMedia.facebook && (
-                      <a href={formData.socialMedia.facebook} className="text-blue-500 hover:text-blue-600 transition-colors">
-                        <Facebook className="w-4 h-4" />
-                      </a>
-                    )}
-                    {formData.instagramSync && !formData.socialMedia.instagram && (
-                      <div className="text-pink-500">
-                        <Instagram className="w-4 h-4" />
-                      </div>
-                    )}
+              {formData.socialMedia &&
+                (Object.keys(formData.socialMedia).length > 0 ||
+                  formData.instagramSync) && (
+                  <div className="text-center mt-4">
+                    <div className="flex justify-center space-x-4">
+                      {formData.socialMedia.instagram && (
+                        <a
+                          href={formData.socialMedia.instagram}
+                          className="text-pink-500 hover:text-pink-600 transition-colors"
+                        >
+                          <Instagram className="w-4 h-4" />
+                        </a>
+                      )}
+                      {formData.socialMedia.facebook && (
+                        <a
+                          href={formData.socialMedia.facebook}
+                          className="text-blue-500 hover:text-blue-600 transition-colors"
+                        >
+                          <Facebook className="w-4 h-4" />
+                        </a>
+                      )}
+                      {formData.instagramSync &&
+                        !formData.socialMedia.instagram && (
+                          <div className="text-pink-500">
+                            <Instagram className="w-4 h-4" />
+                          </div>
+                        )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           );
       }
@@ -1369,8 +1454,10 @@ export default function Configurator() {
     switch (selectedIdForSwitch) {
       case "minimalistic":
         return (
-          <div className={`h-full overflow-y-auto ${fontClass}`}
-               style={{ backgroundColor: formData.backgroundColor || '#FFFFFF' }}>
+          <div
+            className={`h-full overflow-y-auto ${fontClass}`}
+            style={{ backgroundColor: formData.backgroundColor || "#FFFFFF" }}
+          >
             {/* Status Bar */}
             <div className="h-6 bg-white flex items-center justify-center text-xs font-medium text-black">
               9:41 AM
@@ -1383,7 +1470,10 @@ export default function Configurator() {
                   <div className="w-6 h-6 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className={`${getFontSizeClass('text-lg')} font-medium`} style={{ color: styles.userFontColor }}>
+                  <h1
+                    className={`${getFontSizeClass("text-lg")} font-medium`}
+                    style={{ color: styles.userFontColor }}
+                  >
                     {getBusinessName()}
                   </h1>
                 </div>
@@ -1399,28 +1489,29 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white shadow-sm border-t border-gray-100 z-50">
                   <div className="py-1">
-                    {formData.selectedPages.map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => navigateToPage(page)}
-                          className={`w-full px-3 py-1.5 text-left text-black hover:bg-gray-50 transition-colors text-xs ${
-                            previewState.activePage === page
-                              ? "bg-gray-50 font-medium"
-                              : ""
-                          }`}
-                        >
-                          {page.charAt(0).toUpperCase() + page.slice(1)}
-                        </button>
-                      ),
-                    )}
+                    {formData.selectedPages.map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-3 py-1.5 text-left text-black hover:bg-gray-50 transition-colors text-xs ${
+                          previewState.activePage === page
+                            ? "bg-gray-50 font-medium"
+                            : ""
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
             </nav>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#FFFFFF' }}>
+            <div
+              className="flex-1 overflow-y-auto"
+              style={{ backgroundColor: formData.backgroundColor || "#FFFFFF" }}
+            >
               {renderPageContent()}
             </div>
           </div>
@@ -1431,9 +1522,11 @@ export default function Configurator() {
           <div
             className={`h-full overflow-y-auto text-white ${fontClass}`}
             style={{
-              background: formData.backgroundType === 'gradient'
-                ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
-                : formData.backgroundColor || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              background:
+                formData.backgroundType === "gradient"
+                  ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+                  : formData.backgroundColor ||
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             }}
           >
             {/* Status Bar */}
@@ -1464,21 +1557,19 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white/15 backdrop-blur-md border-t border-white/30 z-50">
                   <div className="py-1">
-                    {formData.selectedPages.map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => navigateToPage(page)}
-                          className={`w-full px-3 py-1.5 text-left text-white hover:bg-white/10 transition-colors text-xs ${
-                            previewState.activePage === page
-                              ? "bg-white/20 font-bold"
-                              : ""
-                          }`}
-                        >
-                          {page.charAt(0).toUpperCase() + page.slice(1)}
-                        </button>
-                      ),
-                    )}
+                    {formData.selectedPages.map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-3 py-1.5 text-left text-white hover:bg-white/10 transition-colors text-xs ${
+                          previewState.activePage === page
+                            ? "bg-white/20 font-bold"
+                            : ""
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1520,21 +1611,19 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-emerald-100 z-50">
                   <div className="py-1">
-                    {formData.selectedPages.map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => navigateToPage(page)}
-                          className={`w-full px-3 py-1.5 text-left text-slate-700 hover:bg-emerald-50 transition-colors text-xs ${
-                            previewState.activePage === page
-                              ? "bg-emerald-50 font-semibold text-emerald-700"
-                              : ""
-                          }`}
-                        >
-                          {page.charAt(0).toUpperCase() + page.slice(1)}
-                        </button>
-                      ),
-                    )}
+                    {formData.selectedPages.map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-3 py-1.5 text-left text-slate-700 hover:bg-emerald-50 transition-colors text-xs ${
+                          previewState.activePage === page
+                            ? "bg-emerald-50 font-semibold text-emerald-700"
+                            : ""
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1583,21 +1672,19 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-slate-800/90 backdrop-blur border-t border-amber-500/40 z-50">
                   <div className="py-1">
-                    {formData.selectedPages.map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => navigateToPage(page)}
-                          className={`w-full px-3 py-1.5 text-left text-amber-100 hover:bg-amber-500/10 transition-colors text-xs font-serif ${
-                            previewState.activePage === page
-                              ? "bg-amber-500/20 text-amber-300 font-bold"
-                              : ""
-                          }`}
-                        >
-                          {page.charAt(0).toUpperCase() + page.slice(1)}
-                        </button>
-                      ),
-                    )}
+                    {formData.selectedPages.map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-3 py-1.5 text-left text-amber-100 hover:bg-amber-500/10 transition-colors text-xs font-serif ${
+                          previewState.activePage === page
+                            ? "bg-amber-500/20 text-amber-300 font-bold"
+                            : ""
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -2567,9 +2654,17 @@ export default function Configurator() {
           </label>
           <div className="grid grid-cols-3 gap-4">
             {[
-              { id: "small", name: "Small", description: "Compact and minimal" },
-              { id: "medium", name: "Medium", description: "Standard readability" },
-              { id: "large", name: "Large", description: "Bold and prominent" }
+              {
+                id: "small",
+                name: "Small",
+                description: "Compact and minimal",
+              },
+              {
+                id: "medium",
+                name: "Medium",
+                description: "Standard readability",
+              },
+              { id: "large", name: "Large", description: "Bold and prominent" },
             ].map((size) => (
               <Card
                 key={size.id}
@@ -2581,10 +2676,15 @@ export default function Configurator() {
                 onClick={() => updateFormData("fontSize", size.id)}
               >
                 <CardContent className="p-4 text-center">
-                  <div className={`font-bold mb-2 ${
-                    size.id === "small" ? "text-sm" :
-                    size.id === "medium" ? "text-base" : "text-lg"
-                  }`}>
+                  <div
+                    className={`font-bold mb-2 ${
+                      size.id === "small"
+                        ? "text-sm"
+                        : size.id === "medium"
+                          ? "text-base"
+                          : "text-lg"
+                    }`}
+                  >
                     {size.name}
                   </div>
                   <div className="text-xs text-gray-500">
