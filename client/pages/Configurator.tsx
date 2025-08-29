@@ -2268,6 +2268,7 @@ export default function Configurator() {
                       value={formData.primaryColor}
                       onChange={(e) => updateFormData('primaryColor', e.target.value)}
                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                      style={{ WebkitAppearance: 'none', padding: '4px' }}
                     />
                     <Input
                       type="text"
@@ -2286,6 +2287,7 @@ export default function Configurator() {
                       value={formData.secondaryColor}
                       onChange={(e) => updateFormData('secondaryColor', e.target.value)}
                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                      style={{ WebkitAppearance: 'none', padding: '4px' }}
                     />
                     <Input
                       type="text"
@@ -2296,6 +2298,17 @@ export default function Configurator() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Gradient Preview */}
+              <div className="mt-4">
+                <label className="block text-xs text-gray-600 mb-2">Preview</label>
+                <div
+                  className="w-full h-16 rounded-lg border border-gray-300"
+                  style={{
+                    background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+                  }}
+                ></div>
               </div>
             </div>
           )}
