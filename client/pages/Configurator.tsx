@@ -463,16 +463,257 @@ export default function Configurator() {
     </nav>
   );
 
-  // Live Preview Component with Enhanced Templates
+  // Color theme presets for quick switching
+  const colorPresets = [
+    { name: 'Ocean', primary: '#2563EB', secondary: '#7C3AED', accent: '#0891B2' },
+    { name: 'Forest', primary: '#059669', secondary: '#10B981', accent: '#34D399' },
+    { name: 'Sunset', primary: '#DC2626', secondary: '#F59E0B', accent: '#FB923C' },
+    { name: 'Purple', primary: '#7C3AED', secondary: '#EC4899', accent: '#A855F7' }
+  ];
+
+  // Enhanced Live Preview Component with Dramatically Different Template Designs
   const LivePreview = () => {
     const getBusinessName = () => formData.businessName || 'Your Business';
-    
+
     const getTemplateStyles = () => {
       const selected = templates.find(t => t.id === formData.template);
-      return selected ? selected.style : templates[0].style;
+      const baseStyles = selected ? selected.style : templates[0].style;
+
+      // Apply user's custom colors to the template
+      return {
+        ...baseStyles,
+        userPrimary: formData.primaryColor,
+        userSecondary: formData.secondaryColor
+      };
     };
 
     const styles = getTemplateStyles();
+
+    const getBusinessIcon = () => {
+      switch (formData.businessType) {
+        case 'cafe': return <Coffee className="w-8 h-8" />;
+        case 'restaurant': return <Utensils className="w-8 h-8" />;
+        case 'bar': return <Heart className="w-8 h-8" />;
+        case 'store': return <ShoppingBag className="w-8 h-8" />;
+        default: return <Building className="w-8 h-8" />;
+      }
+    };
+
+    const renderMinimalistTemplate = () => (
+      <div className="h-full overflow-y-auto bg-white transition-all duration-700 ease-in-out">
+        {/* Floating minimal navigation */}
+        <div className="absolute top-8 left-4 right-4 z-10">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-bold text-gray-900">{getBusinessName()}</div>
+              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center">
+                <Menu className="w-3 h-3 text-gray-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Single column layout with lots of whitespace */}
+        <div className="pt-20 px-6">
+          {/* Hero - very minimal */}
+          <div className="text-center py-12">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full" style={{ backgroundColor: styles.userPrimary }}>
+                <div className="w-full h-full flex items-center justify-center text-white text-xs">
+                  {getBusinessIcon()}
+                </div>
+              </div>
+            </div>
+            <h1 className="text-xl font-light text-gray-900 mb-2">{getBusinessName()}</h1>
+            {formData.slogan && (
+              <p className="text-sm text-gray-500 font-light">{formData.slogan}</p>
+            )}
+          </div>
+
+          {/* Minimal menu display */}
+          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
+            <div className="py-8">
+              <div className="space-y-6">
+                {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
+                  <div key={index} className="border-b border-gray-100 pb-4">
+                    <div className="flex justify-between items-baseline">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+                        <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+                      </div>
+                      <div className="text-sm font-light text-gray-600">${item.price}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    const renderCreativeTemplate = () => (
+      <div className="h-full overflow-y-auto transition-all duration-700 ease-in-out"
+           style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+        {/* Full-screen creative navigation */}
+        <div className="relative">
+          {/* Bold header with overlay */}
+          <div className="absolute top-0 left-0 right-0 z-20 p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-white font-black text-lg">{getBusinessName()}</div>
+              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <Menu className="w-4 h-4 text-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic hero with large typography */}
+          <div className="relative pt-16 pb-8 px-4 text-center">
+            <div className="relative z-10">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl" style={{ backgroundColor: styles.userPrimary }}>
+                  <div className="w-full h-full flex items-center justify-center text-white">
+                    {getBusinessIcon()}
+                  </div>
+                </div>
+              </div>
+              <h1 className="text-2xl font-black text-white mb-3">{getBusinessName()}</h1>
+              {formData.slogan && (
+                <p className="text-lg font-bold text-white/90">{formData.slogan}</p>
+              )}
+            </div>
+
+            {/* Floating geometric shapes */}
+            <div className="absolute top-20 left-8 w-12 h-12 bg-white/10 rounded-2xl transform rotate-12 animate-pulse"></div>
+            <div className="absolute bottom-12 right-6 w-8 h-8 bg-white/15 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
+          </div>
+
+          {/* Multi-column creative layout */}
+          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
+            <div className="px-4 pb-8">
+              <div className="grid grid-cols-2 gap-3">
+                {formData.menuItems.slice(0, 4).map((item: any, index: number) => (
+                  <div key={index} className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-white">
+                      <h3 className="text-sm font-bold">{item.name}</h3>
+                      <p className="text-xs text-white/80 mt-1">{item.description}</p>
+                      <div className="text-lg font-black mt-2" style={{ color: styles.userSecondary }}>${item.price}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    const renderProfessionalTemplate = () => (
+      <div className="h-full overflow-y-auto bg-white transition-all duration-700 ease-in-out">
+        {/* Traditional top navigation */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+                <div className="w-5 h-5" style={{ color: styles.userPrimary }}>
+                  {getBusinessIcon()}
+                </div>
+              </div>
+              <div className="text-base font-semibold text-gray-900">{getBusinessName()}</div>
+            </div>
+            <Menu className="w-4 h-4 text-gray-600" />
+          </div>
+        </div>
+
+        {/* Traditional grid layout */}
+        <div className="p-4">
+          {/* Professional hero */}
+          <div className="text-center py-8 border-b border-gray-100">
+            <h1 className="text-xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
+            {formData.slogan && (
+              <p className="text-sm text-gray-600">{formData.slogan}</p>
+            )}
+          </div>
+
+          {/* Traditional menu layout */}
+          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
+            <div className="py-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Our Menu</h2>
+              <div className="space-y-4">
+                {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
+                  <div key={index} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-gray-900">{item.name}</h3>
+                        <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+                      </div>
+                      <div className="text-sm font-bold ml-4" style={{ color: styles.userPrimary }}>${item.price}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    const renderModernTemplate = () => (
+      <div className="h-full overflow-y-auto bg-gray-900 transition-all duration-700 ease-in-out">
+        {/* Sticky side navigation indicator */}
+        <div className="absolute left-0 top-0 bottom-0 w-1 z-20" style={{ backgroundColor: styles.userPrimary }}></div>
+
+        {/* Modern header */}
+        <div className="bg-gray-800/90 backdrop-blur-sm px-4 py-3 border-b border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: styles.userPrimary }}></div>
+              <div className="text-white font-mono text-sm">{getBusinessName()}</div>
+            </div>
+            <div className="w-6 h-6 bg-gray-700 rounded flex items-center justify-center">
+              <Menu className="w-3 h-3 text-gray-300" />
+            </div>
+          </div>
+        </div>
+
+        {/* Modular grid layout */}
+        <div className="p-4">
+          {/* Modern hero card */}
+          <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
+                <div className="w-6 h-6" style={{ color: styles.userPrimary }}>
+                  {getBusinessIcon()}
+                </div>
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-white">{getBusinessName()}</h1>
+                {formData.slogan && (
+                  <p className="text-sm text-gray-400">{formData.slogan}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Modular content cards */}
+          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
+            <div className="grid gap-3">
+              {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
+                <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-colors">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">{item.name}</h3>
+                      <p className="text-xs text-gray-400 mt-1">{item.description}</p>
+                    </div>
+                    <div className="text-sm font-mono font-bold text-green-400">${item.price}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
 
     const renderPreviewContent = () => {
       if (!formData.template) {
@@ -486,76 +727,19 @@ export default function Configurator() {
         );
       }
 
-      return (
-        <div className="pt-8 h-full overflow-y-auto transition-all duration-700 ease-in-out" style={{ backgroundColor: styles.background }}>
-          {/* Header based on template */}
-          <div className="px-4 py-3" style={{ backgroundColor: styles.background, borderBottom: `1px solid ${styles.accent}20` }}>
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-bold" style={{ color: styles.text }}>
-                {getBusinessName()}
-              </div>
-              <Menu className="w-4 h-4" style={{ color: styles.text }} />
-            </div>
-          </div>
-          
-          {/* Hero section */}
-          <div className="px-4 py-6 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ backgroundColor: styles.accent }}>
-              {formData.businessType === 'cafe' ? <Coffee className="w-8 h-8 text-white" /> :
-               formData.businessType === 'restaurant' ? <Utensils className="w-8 h-8 text-white" /> :
-               formData.businessType === 'bar' ? <Heart className="w-8 h-8 text-white" /> :
-               formData.businessType === 'store' ? <ShoppingBag className="w-8 h-8 text-white" /> :
-               <Building className="w-8 h-8 text-white" />}
-            </div>
-            <h2 className="text-lg font-bold mb-2" style={{ color: styles.text }}>{getBusinessName()}</h2>
-            {formData.slogan && (
-              <p className="text-sm opacity-80" style={{ color: styles.text }}>{formData.slogan}</p>
-            )}
-          </div>
-          
-          {/* Content sections based on selected pages */}
-          <div className="px-4 space-y-4">
-            {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
-              <div>
-                <h3 className="text-sm font-bold mb-2" style={{ color: styles.text }}>Menu Highlights</h3>
-                <div className="space-y-2">
-                  {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-2 rounded" style={{ backgroundColor: `${styles.accent}10` }}>
-                      <div>
-                        <div className="text-xs font-medium" style={{ color: styles.text }}>{item.name}</div>
-                        <div className="text-xs opacity-70" style={{ color: styles.text }}>{item.description}</div>
-                      </div>
-                      <div className="text-xs font-bold" style={{ color: styles.accent }}>${item.price}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {formData.selectedPages.includes('gallery') && formData.gallery.length > 0 && (
-              <div>
-                <h3 className="text-sm font-bold mb-2" style={{ color: styles.text }}>Gallery</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {formData.gallery.slice(0, 4).map((image: any, index: number) => (
-                    <div key={index} className="aspect-square rounded" style={{ backgroundColor: `${styles.accent}20` }}></div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Footer */}
-          <div className="px-4 py-4 mt-6" style={{ borderTop: `1px solid ${styles.accent}20` }}>
-            <div className="flex justify-center space-x-3">
-              {Object.keys(formData.socialMedia).map((platform, index) => (
-                <div key={index} className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: styles.accent }}>
-                  <div className="w-3 h-3 bg-white rounded-full"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
+      // Render dramatically different templates
+      switch (formData.template) {
+        case 'minimalist':
+          return renderMinimalistTemplate();
+        case 'creative':
+          return renderCreativeTemplate();
+        case 'professional':
+          return renderProfessionalTemplate();
+        case 'modern':
+          return renderModernTemplate();
+        default:
+          return renderMinimalistTemplate();
+      }
     };
 
     return (
@@ -572,7 +756,7 @@ export default function Configurator() {
               </Button>
             </div>
           </div>
-          
+
           {/* iPhone 16 Pro mockup */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative">
@@ -581,25 +765,47 @@ export default function Configurator() {
                 <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
                   {/* iPhone notch */}
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
-                  
+
                   {/* Website preview */}
                   <div className="h-full relative transition-all duration-700 ease-in-out">
                     {renderPreviewContent()}
                   </div>
                 </div>
               </div>
-              
-              {/* Floating template indicator */}
-              <div className="absolute -right-4 top-1/2 transform -translate-y-1/2">
-                <div className="flex flex-col space-y-2">
-                  <div className={`w-3 h-3 rounded-full animate-pulse ${
-                    formData.template === 'minimalistic' ? 'bg-gray-400' :
-                    formData.template === 'modern' ? 'bg-blue-500' :
-                    formData.template === 'intuitive' ? 'bg-teal-500' :
-                    formData.template === 'fancy' ? 'bg-purple-500' : 'bg-gray-300'
-                  }`}></div>
-                  <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                  <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+              {/* Color Selector Dots */}
+              <div className="absolute -right-8 top-1/2 transform -translate-y-1/2">
+                <div className="flex flex-col space-y-3">
+                  <div className="text-xs font-bold text-gray-600 mb-1">Colors</div>
+                  {colorPresets.map((preset, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        updateFormData('primaryColor', preset.primary);
+                        updateFormData('secondaryColor', preset.secondary);
+                      }}
+                      className={`w-4 h-4 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                        formData.primaryColor === preset.primary ? 'border-white shadow-lg scale-110' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: preset.primary }}
+                      title={`Switch to ${preset.name} theme`}
+                    />
+                  ))}
+
+                  {/* Custom color button */}
+                  <button
+                    onClick={() => {
+                      // Scroll to branding step or open color picker
+                      const brandingStep = configuratorSteps.findIndex(step => step.id === 'branding');
+                      if (brandingStep !== -1) {
+                        setCurrentStep(brandingStep);
+                      }
+                    }}
+                    className="w-4 h-4 rounded-full border-2 border-dashed border-gray-400 hover:border-gray-600 transition-colors flex items-center justify-center"
+                    title="Customize colors"
+                  >
+                    <Palette className="w-2 h-2 text-gray-500" />
+                  </button>
                 </div>
               </div>
             </div>
