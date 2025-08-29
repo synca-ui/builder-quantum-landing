@@ -925,7 +925,7 @@ export default function Configurator() {
         ],
         tagline: "Fresh, Healthy, Natural",
         hours: "6:30 - 19:30",
-        special: "���� 100% Organic",
+        special: "100% Organic",
       },
       fancy: {
         items: [
