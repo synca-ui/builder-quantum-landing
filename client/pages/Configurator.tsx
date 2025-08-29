@@ -1727,12 +1727,14 @@ export default function Configurator() {
                   {formData.onlineOrdering && (
                     <button
                       className="p-2 hover:bg-emerald-50 rounded-lg transition-colors relative"
-                      onClick={() => {/* Handle cart */}}
+                      onClick={() => setShowCart(!showCart)}
                     >
                       <ShoppingBag className="w-5 h-5 text-slate-600" />
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
-                        0
-                      </span>
+                      {cartItemsCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {cartItemsCount}
+                        </span>
+                      )}
                     </button>
                   )}
                   <button
@@ -1801,12 +1803,14 @@ export default function Configurator() {
                   {formData.onlineOrdering && (
                     <button
                       className="p-2 hover:bg-amber-500/10 rounded border border-amber-500/30 transition-colors relative"
-                      onClick={() => {/* Handle cart */}}
+                      onClick={() => setShowCart(!showCart)}
                     >
                       <ShoppingBag className="w-5 h-5 text-amber-400" />
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
-                        0
-                      </span>
+                      {cartItemsCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {cartItemsCount}
+                        </span>
+                      )}
                     </button>
                   )}
                   <button
