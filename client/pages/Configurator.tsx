@@ -835,38 +835,38 @@ export default function Configurator() {
     };
 
     switch (selectedIdForSwitch) {
-      case 'cafe-modern':
+      case 'minimalistic':
         return (
-          <div className={`h-full overflow-hidden bg-amber-50 ${fontClass}`}>
+          <div className={`h-full overflow-hidden bg-white ${fontClass}`}>
             {/* Status Bar */}
-            <div className="h-6 bg-white flex items-center justify-center text-xs font-semibold">
+            <div className="h-6 bg-white flex items-center justify-center text-xs font-medium text-black">
               9:41 AM
             </div>
 
             {/* Navigation */}
-            <nav className="bg-white shadow-sm px-4 py-3 relative">
+            <nav className="bg-white px-4 py-4 relative border-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                  <div className="w-6 h-6 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-bold text-gray-900">{getBusinessName()}</h1>
+                  <h1 className="text-lg font-medium text-black">{getBusinessName()}</h1>
                 </div>
-                <button onClick={toggleMenu} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Menu className="w-5 h-5 text-gray-700" />
+                <button onClick={toggleMenu} className="p-1 hover:bg-gray-50 rounded transition-colors">
+                  <Menu className="w-5 h-5 text-black" />
                 </button>
               </div>
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t z-50">
-                  <div className="py-2">
+                <div className="absolute top-full left-0 right-0 bg-white shadow-sm border-t border-gray-100 z-50">
+                  <div className="py-1">
                     {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-4 py-2 text-left hover:bg-amber-50 transition-colors ${
-                          previewState.activePage === page ? 'bg-amber-100 font-semibold' : ''
+                        className={`w-full px-4 py-2 text-left text-black hover:bg-gray-50 transition-colors text-sm ${
+                          previewState.activePage === page ? 'bg-gray-50 font-medium' : ''
                         }`}
                       >
                         {page.charAt(0).toUpperCase() + page.slice(1)}
@@ -878,95 +878,44 @@ export default function Configurator() {
             </nav>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#FEFBF3' }}>
+            <div className="flex-1 overflow-y-auto bg-white">
               {renderPageContent()}
             </div>
           </div>
         );
 
-      case 'restaurant-elegant':
-        return (
-          <div className={`h-full overflow-hidden bg-gray-50 ${fontClass}`}>
-            {/* Status Bar */}
-            <div className="h-6 bg-white flex items-center justify-center text-xs font-semibold">
-              9:41 AM
-            </div>
-
-            {/* Navigation */}
-            <nav className="bg-white border-b border-gray-200 px-4 py-3 relative">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
-                    <LogoDisplay />
-                  </div>
-                  <h1 className="text-lg font-serif font-bold text-gray-900">{getBusinessName()}</h1>
-                </div>
-                <button onClick={toggleMenu} className="p-2 hover:bg-gray-100 rounded transition-colors">
-                  <Menu className="w-5 h-5 text-gray-700" />
-                </button>
-              </div>
-
-              {/* Dropdown Menu */}
-              {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t z-50">
-                  <div className="py-2">
-                    {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => navigateToPage(page)}
-                        className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
-                          previewState.activePage === page ? 'bg-gray-100 font-semibold' : ''
-                        }`}
-                      >
-                        {page.charAt(0).toUpperCase() + page.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </nav>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#FFFFFF' }}>
-              {renderPageContent()}
-            </div>
-          </div>
-        );
-
-      case 'bar-vibrant':
+      case 'modern':
         return (
           <div className={`h-full overflow-hidden text-white ${fontClass}`}
-               style={{ background: formData.backgroundType === 'gradient'
-                 ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
-                 : formData.backgroundColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+               style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
             {/* Status Bar */}
-            <div className="h-6 bg-black/20 flex items-center justify-center text-xs font-semibold text-white">
+            <div className="h-6 bg-white/10 flex items-center justify-center text-xs font-semibold text-white">
               9:41 AM
             </div>
 
             {/* Navigation */}
-            <nav className="bg-black/20 backdrop-blur-sm px-4 py-3 relative">
+            <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-3 relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-black text-white">{getBusinessName()}</h1>
+                  <h1 className="text-lg font-bold text-white">{getBusinessName()}</h1>
                 </div>
-                <button onClick={toggleMenu} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <button onClick={toggleMenu} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                   <Menu className="w-5 h-5 text-white" />
                 </button>
               </div>
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-white/20 z-50">
+                <div className="absolute top-full left-0 right-0 bg-white/15 backdrop-blur-md border-t border-white/30 z-50">
                   <div className="py-2">
                     {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-4 py-2 text-left text-white hover:bg-white/10 transition-colors ${
+                        className={`w-full px-4 py-2 text-left text-white hover:bg-white/10 transition-colors font-medium ${
                           previewState.activePage === page ? 'bg-white/20 font-bold' : ''
                         }`}
                       >
@@ -985,41 +934,41 @@ export default function Configurator() {
           </div>
         );
 
-      case 'modern-dark':
+      case 'clean':
         return (
-          <div className={`h-full overflow-hidden bg-gray-900 text-white ${fontClass}`}>
+          <div className={`h-full overflow-hidden bg-emerald-50 ${fontClass}`}>
             {/* Status Bar */}
-            <div className="h-6 bg-black flex items-center justify-center text-xs font-semibold text-green-400">
+            <div className="h-6 bg-white flex items-center justify-center text-xs font-medium text-slate-800">
               9:41 AM
             </div>
 
             {/* Navigation */}
-            <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 px-4 py-3 relative">
+            <nav className="bg-white shadow-sm border-b border-emerald-100 px-4 py-4 relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-mono font-bold text-white">{getBusinessName()}</h1>
+                  <h1 className="text-lg font-semibold text-slate-800">{getBusinessName()}</h1>
                 </div>
-                <button onClick={toggleMenu} className="p-2 hover:bg-gray-700 rounded transition-colors">
-                  <Menu className="w-5 h-5 text-gray-300" />
+                <button onClick={toggleMenu} className="p-2 hover:bg-emerald-50 rounded-lg transition-colors">
+                  <Menu className="w-5 h-5 text-slate-600" />
                 </button>
               </div>
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-gray-800 border-t border-gray-600 z-50">
+                <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-emerald-100 z-50">
                   <div className="py-2">
                     {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-4 py-2 text-left text-white hover:bg-gray-700 transition-colors font-mono ${
-                          previewState.activePage === page ? 'bg-gray-700 text-green-400 font-bold' : ''
+                        className={`w-full px-4 py-3 text-left text-slate-700 hover:bg-emerald-50 transition-colors ${
+                          previewState.activePage === page ? 'bg-emerald-50 font-semibold text-emerald-700' : ''
                         }`}
                       >
-                        {page.toUpperCase()}
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
                       </button>
                     ))}
                   </div>
@@ -1028,7 +977,57 @@ export default function Configurator() {
             </nav>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#111827' }}>
+            <div className="flex-1 overflow-y-auto bg-emerald-50">
+              {renderPageContent()}
+            </div>
+          </div>
+        );
+
+      case 'fancy':
+        return (
+          <div className={`h-full overflow-hidden text-white ${fontClass}`}
+               style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+            {/* Status Bar */}
+            <div className="h-6 bg-black/50 flex items-center justify-center text-xs font-semibold text-amber-400">
+              9:41 AM
+            </div>
+
+            {/* Navigation */}
+            <nav className="bg-slate-900/80 backdrop-blur border-b border-amber-500/30 px-4 py-3 relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded border border-amber-500/50 bg-amber-500/10 flex items-center justify-center">
+                    <LogoDisplay />
+                  </div>
+                  <h1 className="text-lg font-serif font-bold text-white">{getBusinessName()}</h1>
+                </div>
+                <button onClick={toggleMenu} className="p-2 hover:bg-amber-500/10 rounded border border-amber-500/30 transition-colors">
+                  <Menu className="w-5 h-5 text-amber-400" />
+                </button>
+              </div>
+
+              {/* Dropdown Menu */}
+              {previewState.menuOpen && (
+                <div className="absolute top-full left-0 right-0 bg-slate-800/90 backdrop-blur border-t border-amber-500/40 z-50">
+                  <div className="py-2">
+                    {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-4 py-2 text-left text-amber-100 hover:bg-amber-500/10 transition-colors font-serif ${
+                          previewState.activePage === page ? 'bg-amber-500/20 text-amber-300 font-bold' : ''
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </nav>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
               {renderPageContent()}
             </div>
           </div>
