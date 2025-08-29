@@ -2265,6 +2265,8 @@ export default function Configurator() {
             </div>
           </div>
         </div>
+        {/* Cart Dropdown Modal */}
+        <CartDropdown />
       </div>
     );
   };
