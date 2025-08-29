@@ -93,10 +93,15 @@ export async function saveConfiguration(req: Request, res: Response) {
       updatedAt: new Date().toISOString()
     };
 
+    // Set createdAt if it doesn't exist (new configuration)
+    if (!configData.createdAt) {
+      configData.createdAt = new Date().toISOString();
+    }
+
     // Validate configuration data
     const parsed = ConfigurationSchema.safeParse(configData);
     if (!parsed.success) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid configuration data',
         details: parsed.error.issues
       });
@@ -104,18 +109,20 @@ export async function saveConfiguration(req: Request, res: Response) {
 
     const config = parsed.data;
     const configurations = await loadConfigurations();
-    
+
     if (config.id) {
       // Update existing configuration
       const index = configurations.findIndex(c => c.id === config.id && c.userId === userId);
       if (index === -1) {
         return res.status(404).json({ error: 'Configuration not found' });
       }
+      // Preserve original createdAt for updates
+      config.createdAt = configurations[index].createdAt;
       configurations[index] = config;
     } else {
       // Create new configuration
       config.id = generateId();
-      config.createdAt = new Date().toISOString();
+      // createdAt is already set above
       configurations.push(config);
     }
 
