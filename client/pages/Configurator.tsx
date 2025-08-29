@@ -353,17 +353,21 @@ export default function Configurator() {
     }, 1000); // 1 second debounce for all fields
   }, []); // Empty dependency array for complete stability
 
-  // Create completely stable input handlers using refs to avoid dependencies
-  const inputHandlers = useMemo(() => {
-    const handlers: Record<string, (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void> = {};
+  // Create completely stable input handlers using refs to avoid any dependencies
+  const inputHandlersRef = useRef<Record<string, (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void>>({});
 
+  // Initialize handlers once and never recreate them
+  if (Object.keys(inputHandlersRef.current).length === 0) {
     const createHandler = (field: string) => {
       return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        // Don't prevent default for input events - this causes focus loss
         const value = e.target.value;
 
-        // Update form data immediately for responsive UI
-        setFormData(prev => ({ ...prev, [field]: value }));
+        // Update form data using the ref to get latest value
+        setFormData(prev => {
+          const newData = { ...prev, [field]: value };
+          formDataRef.current = newData; // Keep ref in sync
+          return newData;
+        });
 
         // Debounce saves to prevent rapid API calls
         if (debouncedSaveRef.current) {
@@ -375,18 +379,19 @@ export default function Configurator() {
             const currentData = { ...formDataRef.current, [field]: value };
             autoSaverRef.current.save(currentData as Partial<Configuration>);
           }
-        }, 1000); // 1 second debounce for all fields
+        }, 1000);
       };
     };
 
-    // Pre-create handlers for common fields
+    // Pre-create handlers for common fields once
     const fields = ['businessName', 'location', 'slogan', 'uniqueDescription', 'primaryColor', 'secondaryColor'];
     fields.forEach(field => {
-      handlers[field] = createHandler(field);
+      inputHandlersRef.current[field] = createHandler(field);
     });
+  }
 
-    return handlers;
-  }, []); // No dependencies - completely stable
+  // Always return the same handler references
+  const inputHandlers = inputHandlersRef.current;
 
   // Load persisted data on component mount
   useEffect(() => {
