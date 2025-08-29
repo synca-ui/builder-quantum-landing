@@ -203,48 +203,73 @@ export default function Configurator() {
 
   // Business type options
   const businessTypes = [
-    { value: 'cafe', label: 'Café', icon: <Coffee className="w-6 h-6" />, gradient: 'from-orange-400 to-yellow-500' },
-    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' }
+    { value: 'cafe', label: 'Café', icon: <Coffee className="w-6 h-6" />, gradient: 'from-amber-400 to-orange-500' },
+    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-rose-500' },
+    { value: 'bar', label: 'Bar', icon: <ShoppingBag className="w-6 h-6" />, gradient: 'from-purple-500 to-indigo-600' }
   ];
 
-  // Enhanced professional templates with realistic previews
+  // Modern App-Style Templates for Café, Restaurant, Bar
   const templates = [
     {
-      id: 'minimalist',
-      name: 'Minimalist Clean',
-      description: 'Clean lines, ample white space, perfect for modern cafés and professional services',
-      preview: 'bg-gradient-to-br from-gray-50 to-white',
+      id: 'cafe-modern',
+      name: 'Café Modern',
+      description: 'Instagram-worthy design perfect for trendy coffee shops and cafés',
+      preview: 'bg-gradient-to-br from-amber-100 to-orange-200',
+      businessTypes: ['cafe'],
+      style: {
+        background: '#FEFBF3',
+        accent: '#F59E0B',
+        text: '#1F2937',
+        secondary: '#FEF3C7',
+        layout: 'card-grid',
+        navigation: 'clean-top',
+        typography: 'modern-sans'
+      },
+      features: ['Instagram Ready', 'Mobile First', 'Minimalist'],
+      mockup: {
+        nav: { bg: 'bg-white', text: 'text-gray-900', border: 'border-amber-100' },
+        hero: { bg: 'bg-amber-50', text: 'text-gray-900' },
+        cards: { bg: 'bg-white', border: 'border-amber-200', text: 'text-gray-600' }
+      }
+    },
+    {
+      id: 'restaurant-elegant',
+      name: 'Restaurant Elite',
+      description: 'Sophisticated design for upscale restaurants and fine dining',
+      preview: 'bg-gradient-to-br from-slate-100 to-gray-200',
+      businessTypes: ['restaurant'],
       style: {
         background: '#FFFFFF',
-        accent: '#374151',
+        accent: '#DC2626',
         text: '#111827',
-        secondary: '#F9FAFB',
-        layout: 'single-column',
-        navigation: 'minimal-top',
-        typography: 'clean-sans'
+        secondary: '#F8FAFC',
+        layout: 'elegant-grid',
+        navigation: 'classic-top',
+        typography: 'elegant-serif'
       },
-      features: ['Clean Design', 'Mobile First', 'Fast Loading'],
+      features: ['Fine Dining', 'Reservations', 'Menu Focus'],
       mockup: {
-        nav: { bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-100' },
+        nav: { bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-200' },
         hero: { bg: 'bg-gray-50', text: 'text-gray-900' },
         cards: { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-600' }
       }
     },
     {
-      id: 'vibrant',
-      name: 'Vibrant & Bold',
-      description: 'Eye-catching colors, dynamic layouts, perfect for creative businesses and restaurants',
+      id: 'bar-vibrant',
+      name: 'Bar Vibrant',
+      description: 'Bold and energetic design perfect for bars and nightlife venues',
       preview: 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500',
+      businessTypes: ['bar'],
       style: {
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         accent: '#EC4899',
         text: '#FFFFFF',
         secondary: '#8B5CF6',
         layout: 'creative-grid',
-        navigation: 'overlay-creative',
+        navigation: 'overlay-modern',
         typography: 'bold-display'
       },
-      features: ['Bold Colors', 'Creative Layout', 'Instagram Ready'],
+      features: ['Nightlife Vibe', 'Event Focus', 'Social Media'],
       mockup: {
         nav: { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-400' },
         hero: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white' },
@@ -252,44 +277,24 @@ export default function Configurator() {
       }
     },
     {
-      id: 'professional',
-      name: 'Professional Elite',
-      description: 'Sophisticated design, traditional elegance, ideal for upscale establishments',
-      preview: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
-      style: {
-        background: '#FFFFFF',
-        accent: '#2563EB',
-        text: '#1F2937',
-        secondary: '#F8FAFC',
-        layout: 'traditional-grid',
-        navigation: 'classic-top',
-        typography: 'elegant-serif'
-      },
-      features: ['Professional', 'Trustworthy', 'Classic Appeal'],
-      mockup: {
-        nav: { bg: 'bg-blue-600', text: 'text-white', border: 'border-blue-500' },
-        hero: { bg: 'bg-blue-50', text: 'text-blue-900' },
-        cards: { bg: 'bg-white', border: 'border-blue-200', text: 'text-blue-600' }
-      }
-    },
-    {
       id: 'modern-dark',
-      name: 'Modern Dark',
-      description: 'Sleek dark theme, contemporary aesthetics, perfect for trendy venues',
+      name: 'Premium Dark',
+      description: 'Luxurious dark theme for high-end establishments',
       preview: 'bg-gradient-to-br from-gray-800 via-gray-900 to-black',
+      businessTypes: ['restaurant', 'bar'],
       style: {
         background: '#111827',
         accent: '#10B981',
         text: '#FFFFFF',
         secondary: '#1F2937',
-        layout: 'modular-cards',
+        layout: 'luxury-cards',
         navigation: 'floating-modern',
-        typography: 'tech-mono'
+        typography: 'luxury-sans'
       },
-      features: ['Dark Theme', 'Modern UI', 'Tech-Forward'],
+      features: ['Premium Feel', 'Dark Theme', 'Luxury'],
       mockup: {
-        nav: { bg: 'bg-gray-800', text: 'text-white', border: 'border-gray-600' },
-        hero: { bg: 'bg-gray-900', text: 'text-white' },
+        nav: { bg: 'bg-gray-900', text: 'text-white', border: 'border-gray-700' },
+        hero: { bg: 'bg-gray-800', text: 'text-white' },
         cards: { bg: 'bg-gray-800', border: 'border-gray-600', text: 'text-gray-300' }
       }
     }
@@ -1712,9 +1717,9 @@ export default function Configurator() {
               </div>
 
               <div className="flex justify-center">
-                <div className="w-64 h-[480px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
-                  <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+                <div className="w-56 h-[420px] bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl">
+                  <div className="w-full h-full bg-white rounded-[1.75rem] overflow-hidden relative">
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-5 bg-gray-900 rounded-b-lg z-20"></div>
                     <div className="h-full relative transition-all duration-500 ease-in-out">
                       <TemplatePreviewContent />
                     </div>
