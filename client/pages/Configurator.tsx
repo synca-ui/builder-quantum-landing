@@ -487,6 +487,9 @@ export default function Configurator() {
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
+      // Collect current form values before moving to previous step
+      updateFormDataFromInputs();
+
       const newStep = currentStep - 1;
       setCurrentStep(newStep);
       try {
@@ -495,7 +498,7 @@ export default function Configurator() {
         console.warn('Failed to save step to localStorage:', error);
       }
     }
-  }, [currentStep]);
+  }, [currentStep, updateFormDataFromInputs]);
 
   // Publish configuration
   const publishConfiguration = useCallback(async () => {
