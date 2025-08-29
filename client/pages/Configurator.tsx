@@ -1858,6 +1858,97 @@ export default function Configurator() {
     }
   };
 
+  // Universal Cart Dropdown Component
+  const CartDropdown = () => {
+    if (!formData.onlineOrdering || !showCart) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
+        <div className="absolute inset-0 bg-black/20" onClick={() => setShowCart(false)} />
+        <div className="relative w-80 bg-white rounded-lg shadow-xl border border-gray-200">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg flex items-center">
+                <ShoppingBag className="w-5 h-5 mr-2" />
+                Cart ({cartItemsCount})
+              </h3>
+              <button
+                onClick={() => setShowCart(false)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {cartItems.length === 0 ? (
+              <div className="text-center py-8">
+                <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">Your cart is empty</p>
+                <p className="text-sm text-gray-400 mt-1">Add items from the menu to get started</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {cartItems.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{item.name}</h4>
+                        {item.description && (
+                          <p className="text-sm text-gray-600">{item.description}</p>
+                        )}
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="text-sm text-gray-500">Qty: {item.quantity}</span>
+                          <span className="text-sm font-medium text-teal-600">${item.price} each</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-lg">${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                        <button
+                          onClick={() => removeFromCart(item.name)}
+                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-lg font-bold">Total:</span>
+                    <span className="text-xl font-bold text-teal-600">${cartTotal.toFixed(2)}</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        setCartItems([]);
+                        setShowCart(false);
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Clear Cart
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCart(false);
+                        /* Handle checkout */
+                      }}
+                      className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium"
+                    >
+                      Checkout
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Enhanced Interactive Live Preview Component
   const LivePreview = () => {
     const [previewState, setPreviewState] = useState({
