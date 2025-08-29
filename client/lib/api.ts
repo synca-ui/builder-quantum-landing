@@ -303,18 +303,54 @@ export const sessionApi = {
     }
   },
 
-  // Get user's latest configuration
+  // Get user's latest configuration with fallback
   async getLatestConfiguration(): Promise<Configuration | null> {
-    const result = await configurationApi.getAll();
-    if (result.success && result.data && result.data.length > 0) {
-      // Sort by updatedAt and return the most recent
-      const sorted = result.data.sort((a, b) => 
-        new Date(b.updatedAt || b.createdAt || 0).getTime() - 
-        new Date(a.updatedAt || a.createdAt || 0).getTime()
-      );
-      return sorted[0];
+    try {
+      const result = await configurationApi.getAll();
+      if (result.success && result.data && result.data.length > 0) {
+        // Sort by updatedAt and return the most recent
+        const sorted = result.data.sort((a, b) =>
+          new Date(b.updatedAt || b.createdAt || 0).getTime() -
+          new Date(a.updatedAt || a.createdAt || 0).getTime()
+        );
+        return sorted[0];
+      }
+    } catch (error) {
+      console.warn('Failed to get latest configuration from API, trying localStorage:', error);
+      // Fallback to localStorage
+      try {
+        const savedData = localStorage.getItem('configuratorData');
+        const savedId = localStorage.getItem('currentConfigId');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          return {
+            ...parsedData,
+            id: savedId || undefined,
+          } as Configuration;
+        }
+      } catch (storageError) {
+        console.warn('localStorage fallback also failed:', storageError);
+      }
     }
     return null;
+  },
+
+  // Check API health
+  async checkApiHealth(): Promise<boolean> {
+    try {
+      const response = await fetch('/api/ping', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Short timeout for health check
+        signal: AbortSignal.timeout(5000),
+      });
+      return response.ok;
+    } catch (error) {
+      console.warn('API health check failed:', error);
+      return false;
+    }
   },
 };
 
