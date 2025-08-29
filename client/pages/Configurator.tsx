@@ -692,6 +692,9 @@ export default function Configurator() {
 
     const currentContent = templateContent[selectedId] || templateContent['minimalistic'];
 
+    // Ensure selectedIdForSwitch is available for styling
+    const selectedIdForSwitch = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+
     const LogoDisplay = () => {
       if (formData.logo) {
         return (
@@ -729,25 +732,97 @@ export default function Configurator() {
 
     const fontClass = fontOptions.find(f => f.id === formData.fontFamily)?.class || 'font-sans';
 
-    // Page rendering based on active page
+    // Template-aware page rendering
     const renderPageContent = () => {
+      const getTemplateStyles = () => {
+        switch (selectedIdForSwitch) {
+          case 'minimalistic':
+            return {
+              page: 'p-4',
+              title: 'text-lg font-medium mb-4 text-center text-black',
+              itemCard: 'bg-gray-50 rounded p-3 shadow-sm border border-gray-100',
+              itemName: 'font-medium text-sm text-black',
+              itemDesc: 'text-xs text-gray-600',
+              itemPrice: 'font-medium text-sm text-black',
+              galleryItem: 'aspect-square bg-gray-100 rounded flex items-center justify-center',
+              aboutLogo: 'w-16 h-16 mx-auto bg-gray-100 rounded flex items-center justify-center',
+              contactIcon: 'w-4 h-4 text-gray-600',
+              homeCard: 'bg-gray-50 rounded p-2 text-center border border-gray-100'
+            };
+          case 'modern':
+            return {
+              page: 'p-4',
+              title: 'text-lg font-bold mb-4 text-center text-white',
+              itemCard: 'bg-white/15 backdrop-blur rounded-xl p-3 border border-white/30',
+              itemName: 'font-bold text-sm text-white',
+              itemDesc: 'text-xs text-white/80',
+              itemPrice: 'font-bold text-sm text-white',
+              galleryItem: 'aspect-square bg-white/10 backdrop-blur rounded-xl flex items-center justify-center border border-white/30',
+              aboutLogo: 'w-16 h-16 mx-auto bg-white/20 backdrop-blur rounded-xl flex items-center justify-center',
+              contactIcon: 'w-4 h-4 text-white/80',
+              homeCard: 'bg-white/15 backdrop-blur rounded-xl p-2 text-center border border-white/30'
+            };
+          case 'clean':
+            return {
+              page: 'p-4',
+              title: 'text-lg font-semibold mb-4 text-center text-slate-800',
+              itemCard: 'bg-white rounded-lg p-3 shadow-sm border border-emerald-200',
+              itemName: 'font-semibold text-sm text-slate-800',
+              itemDesc: 'text-xs text-slate-600',
+              itemPrice: 'font-semibold text-sm text-emerald-600',
+              galleryItem: 'aspect-square bg-emerald-100 rounded-lg flex items-center justify-center',
+              aboutLogo: 'w-16 h-16 mx-auto bg-emerald-100 rounded-lg flex items-center justify-center',
+              contactIcon: 'w-4 h-4 text-emerald-600',
+              homeCard: 'bg-white rounded-lg p-2 text-center border border-emerald-200'
+            };
+          case 'fancy':
+            return {
+              page: 'p-4',
+              title: 'text-lg font-serif font-bold mb-4 text-center text-white',
+              itemCard: 'bg-slate-800/80 backdrop-blur rounded border border-amber-500/40 p-3',
+              itemName: 'font-serif font-bold text-sm text-amber-100',
+              itemDesc: 'text-xs text-amber-200/80',
+              itemPrice: 'font-serif font-bold text-sm text-amber-400',
+              galleryItem: 'aspect-square bg-slate-800/50 backdrop-blur rounded flex items-center justify-center border border-amber-500/30',
+              aboutLogo: 'w-16 h-16 mx-auto bg-amber-500/20 backdrop-blur rounded border border-amber-500/50 flex items-center justify-center',
+              contactIcon: 'w-4 h-4 text-amber-400',
+              homeCard: 'bg-slate-800/50 backdrop-blur rounded p-2 text-center border border-amber-500/30'
+            };
+          default:
+            return {
+              page: 'p-4',
+              title: 'text-lg font-bold mb-4 text-center',
+              itemCard: 'bg-white/90 backdrop-blur rounded-lg p-3 shadow-sm',
+              itemName: 'font-semibold text-sm',
+              itemDesc: 'text-xs text-gray-600',
+              itemPrice: 'font-bold text-sm',
+              galleryItem: 'aspect-square bg-gray-200 rounded-lg flex items-center justify-center',
+              aboutLogo: 'w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center',
+              contactIcon: 'w-4 h-4 text-gray-600',
+              homeCard: 'bg-white/10 backdrop-blur rounded-lg p-2 text-center'
+            };
+        }
+      };
+
+      const templateStyles = getTemplateStyles();
+
       switch (previewState.activePage) {
         case 'menu':
           return (
-            <div className="p-3">
-              <h2 className="text-lg font-bold mb-3 text-center">Menu</h2>
+            <div className={templateStyles.page}>
+              <h2 className={templateStyles.title}>Menu</h2>
               <div className="space-y-3">
                 {currentContent.items.map((item, index) => (
-                  <div key={index} className="bg-white/90 backdrop-blur rounded-lg p-3 shadow-sm">
+                  <div key={index} className={templateStyles.itemCard}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-2">
                         <span className="text-lg">{item.emoji}</span>
                         <div>
-                          <h3 className="font-semibold text-sm">{item.name}</h3>
-                          <p className="text-xs text-gray-600">{item.description}</p>
+                          <h3 className={templateStyles.itemName}>{item.name}</h3>
+                          <p className={templateStyles.itemDesc}>{item.description}</p>
                         </div>
                       </div>
-                      <span className="font-bold text-sm" style={{ color: styles.userPrimary }}>${item.price}</span>
+                      <span className={templateStyles.itemPrice}>${item.price}</span>
                     </div>
                   </div>
                 ))}
@@ -757,11 +832,11 @@ export default function Configurator() {
 
         case 'gallery':
           return (
-            <div className="p-3">
-              <h2 className="text-lg font-bold mb-3 text-center">Gallery</h2>
+            <div className={templateStyles.page}>
+              <h2 className={templateStyles.title}>Gallery</h2>
               <div className="grid grid-cols-2 gap-2">
                 {[1,2,3,4].map((i) => (
-                  <div key={i} className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
+                  <div key={i} className={templateStyles.galleryItem}>
                     <Camera className="w-6 h-6 text-gray-400" />
                   </div>
                 ))}
@@ -771,16 +846,16 @@ export default function Configurator() {
 
         case 'about':
           return (
-            <div className="p-3">
-              <h2 className="text-lg font-bold mb-3 text-center">About Us</h2>
+            <div className={templateStyles.page}>
+              <h2 className={templateStyles.title}>About Us</h2>
               <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                <div className={templateStyles.aboutLogo}>
                   <LogoDisplay />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">{getBusinessName()}</h3>
-                  <p className="text-xs text-gray-600">{currentContent.tagline}</p>
-                  <p className="text-xs text-gray-500 mt-2">{currentContent.special}</p>
+                  <h3 className={templateStyles.itemName}>{getBusinessName()}</h3>
+                  <p className={templateStyles.itemDesc}>{currentContent.tagline}</p>
+                  <p className={templateStyles.itemDesc + ' mt-2'}>{currentContent.special}</p>
                 </div>
               </div>
             </div>
@@ -788,20 +863,20 @@ export default function Configurator() {
 
         case 'contact':
           return (
-            <div className="p-3">
-              <h2 className="text-lg font-bold mb-3 text-center">Contact</h2>
+            <div className={templateStyles.page}>
+              <h2 className={templateStyles.title}>Contact</h2>
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Phone className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm">+1 (555) 123-4567</span>
+                  <Phone className={templateStyles.contactIcon} />
+                  <span className={templateStyles.itemDesc}>+1 (555) 123-4567</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm">123 Main St, City</span>
+                  <MapPin className={templateStyles.contactIcon} />
+                  <span className={templateStyles.itemDesc}>123 Main St, City</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm">{currentContent.hours}</span>
+                  <Clock className={templateStyles.contactIcon} />
+                  <span className={templateStyles.itemDesc}>{currentContent.hours}</span>
                 </div>
               </div>
             </div>
@@ -809,23 +884,22 @@ export default function Configurator() {
 
         default: // home
           return (
-            <div className="p-3">
+            <div className={templateStyles.page}>
               <div className="text-center mb-4">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full border-2 border-white/20 flex items-center justify-center"
-                     style={{ backgroundColor: `${styles.userPrimary}20` }}>
+                <div className={templateStyles.aboutLogo + ' mb-2'}>
                   <LogoDisplay />
                 </div>
-                <h1 className="text-lg font-bold">{getBusinessName()}</h1>
-                <p className="text-sm opacity-90">{currentContent.tagline}</p>
-                <p className="text-xs opacity-75 mt-1">{currentContent.special}</p>
+                <h1 className={templateStyles.itemName + ' text-base'}>{getBusinessName()}</h1>
+                <p className={templateStyles.itemDesc}>{currentContent.tagline}</p>
+                <p className={templateStyles.itemDesc + ' mt-1'}>{currentContent.special}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 {currentContent.items.slice(0, 4).map((item, index) => (
-                  <div key={index} className="bg-white/10 backdrop-blur rounded-lg p-2 text-center">
+                  <div key={index} className={templateStyles.homeCard}>
                     <div className="text-lg mb-1">{item.emoji}</div>
-                    <h3 className="text-xs font-bold truncate">{item.name}</h3>
-                    <p className="text-xs opacity-75">${item.price}</p>
+                    <h3 className={templateStyles.itemName + ' text-xs truncate'}>{item.name}</h3>
+                    <p className={templateStyles.itemPrice + ' text-xs'}>${item.price}</p>
                   </div>
                 ))}
               </div>
