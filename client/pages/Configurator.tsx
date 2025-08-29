@@ -257,15 +257,31 @@ export default function Configurator() {
     { id: 'contact', name: 'Contact', icon: <Phone className="w-4 h-4" /> }
   ];
 
-  // State management functions
-  const updateFormData = (field: string, value: any) => {
-    const newFormData = { ...formData, [field]: value };
-    setFormData(newFormData);
-    
-    // Save to localStorage for persistence
-    localStorage.setItem('configuratorData', JSON.stringify(newFormData));
-    localStorage.setItem('configuratorStep', currentStep.toString());
-  };
+  // Debounced localStorage save to prevent blocking UI
+  const debouncedSave = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return (data: any, step: number) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        try {
+          localStorage.setItem('configuratorData', JSON.stringify(data));
+          localStorage.setItem('configuratorStep', step.toString());
+        } catch (error) {
+          console.warn('Failed to save to localStorage:', error);
+        }
+      }, 300); // 300ms debounce
+    };
+  }, []);
+
+  // State management functions with useCallback to prevent re-renders
+  const updateFormData = useCallback((field: string, value: any) => {
+    setFormData(prev => {
+      const newFormData = { ...prev, [field]: value };
+      // Debounced save to localStorage
+      debouncedSave(newFormData, currentStep);
+      return newFormData;
+    });
+  }, [currentStep, debouncedSave]);
 
   // Load persisted data on component mount
   useEffect(() => {
