@@ -1274,114 +1274,139 @@ export default function Configurator() {
     </div>
   );
 
-  // Enhanced Template Selection with Better Previews
+  // Template Selection with Live Preview
   const TemplateStep = () => {
-    const [selectedTemplate, setSelectedTemplate] = useState(formData.template);
+    const [selectedTemplate, setSelectedTemplate] = useState(previewTemplateId || formData.template);
+
+    const handleTemplateClick = (templateId: string) => {
+      setSelectedTemplate(templateId);
+      setPreviewTemplateId(templateId);
+    };
+
+    const handleUseTemplate = () => {
+      if (selectedTemplate) {
+        updateFormData('template', selectedTemplate);
+        nextStep();
+      }
+    };
 
     return (
-      <div className="py-12">
-        <div className="text-center mb-16">
-          <div className="mb-8">
-            <div className="w-20 h-20 mx-auto mb-6 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-2xl opacity-20"></div>
-              <div className="absolute inset-2 bg-white rounded-xl flex items-center justify-center">
-                <Palette className="w-10 h-10 text-teal-500" />
+      <div className="py-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
+            Choose Your <span className="bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">Template</span>
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Click on a template to see a live preview. Each template is designed for real web apps.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Template Selection */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Available Templates</h3>
+            {templates.map((template) => (
+              <Card
+                key={template.id}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  selectedTemplate === template.id
+                    ? 'border-teal-500 bg-teal-50 shadow-lg'
+                    : 'border-gray-200 hover:border-teal-300 hover:shadow-md'
+                }`}
+                onClick={() => handleTemplateClick(template.id)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-3">
+                        <div className={`w-4 h-4 rounded-full mr-3 ${template.preview}`}></div>
+                        <h4 className="text-lg font-bold text-gray-900">{template.name}</h4>
+                        {selectedTemplate === template.id && (
+                          <Check className="w-5 h-5 text-teal-600 ml-2" />
+                        )}
+                      </div>
+                      <p className="text-gray-600 text-sm mb-3">{template.description}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {template.features.map((feature, index) => (
+                          <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Eye className={`w-6 h-6 ${selectedTemplate === template.id ? 'text-teal-600' : 'text-gray-400'}`} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Use Template Button */}
+            {selectedTemplate && (
+              <Card className="p-6 bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200">
+                <div className="text-center">
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">Ready to use this template?</h4>
+                  <p className="text-gray-600 text-sm mb-4">
+                    You're previewing: <strong>{templates.find(t => t.id === selectedTemplate)?.name}</strong>
+                  </p>
+                  <Button
+                    onClick={handleUseTemplate}
+                    size="lg"
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold"
+                  >
+                    <Sparkles className="mr-2 w-5 h-5" />
+                    Use This Template
+                    <ChevronRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </div>
+
+          {/* Live Preview */}
+          <div className="sticky top-8">
+            <div className="bg-gray-100 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Live Preview</h3>
+                <div className="flex space-x-2">
+                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <div className="w-64 h-[480px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
+                  <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+                    <div className="h-full relative transition-all duration-500 ease-in-out">
+                      {selectedTemplate ? (
+                        <LivePreview />
+                      ) : (
+                        <div className="h-full flex items-center justify-center bg-gray-50">
+                          <div className="text-center">
+                            <Palette className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-sm text-gray-500">Click a template to see preview</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
-              Choose Your Perfect <span className="bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">Template</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Start with a professionally designed template that matches your business style. Each template is crafted for maximum impact and user experience.
-            </p>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-          {templates.map((template) => (
-            <Card
-              key={template.id}
-              className={`group cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
-                selectedTemplate === template.id
-                  ? 'border-teal-500 shadow-lg bg-gradient-to-br from-teal-50/50 to-purple-50/50'
-                  : 'border-gray-200 hover:border-teal-300'
-              }`}
-              onClick={() => setSelectedTemplate(template.id)}
-            >
-              <CardContent className="p-0">
-                {/* Minimalistic Template Preview */}
-                <div className={`w-full h-32 rounded-t-lg ${template.preview} relative overflow-hidden`}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10"></div>
-                  
-                  {/* Minimalistic Preview with Click Effect */}
-                  <div className="absolute inset-2 bg-white/90 backdrop-blur-sm rounded overflow-hidden border border-gray-200">
-                    <div className={`h-2 ${template.mockup.nav.bg} border-b border-gray-100`}></div>
-                    <div className={`p-2 ${template.mockup.hero.bg} h-full flex flex-col justify-center items-center`}>
-                      <div className={`w-3 h-3 mx-auto mb-1 rounded-full ${template.mockup.cards.bg} border`}></div>
-                      <div className="space-y-0.5">
-                        <div className={`h-1 ${template.mockup.cards.bg} border rounded w-8 mx-auto`}></div>
-                        <div className={`h-0.5 ${template.mockup.cards.bg} border rounded w-6 mx-auto`}></div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="absolute top-4 left-4">
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                      selectedTemplate === template.id 
-                        ? 'bg-teal-500 text-white' 
-                        : 'bg-white/90 text-gray-700'
-                    }`}>
-                      {template.name}
-                    </div>
-                  </div>
-
-                  {selectedTemplate === template.id && (
-                    <div className="absolute top-4 right-4">
-                      <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center shadow-lg">
-                        <Check className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-3">
-                  <h3 className={`text-sm font-bold mb-1 transition-colors text-center ${
-                    selectedTemplate === template.id ? 'text-teal-700' : 'text-gray-900'
-                  }`}>
-                    {template.name}
-                  </h3>
-
-                  {selectedTemplate === template.id && (
-                    <>
-                      <p className="text-gray-600 text-xs leading-relaxed mb-2 text-center">{template.description}</p>
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          updateFormData('template', template.id);
-                          nextStep();
-                        }}
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold"
-                      >
-                        <Sparkles className="mr-1 w-3 h-3" />
-                        Use Template
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="flex justify-between">
+        <div className="flex justify-between mt-8">
           <Button onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back to Welcome
           </Button>
           <div className="text-center">
             <p className="text-sm text-gray-500">
-              Select a template and click "Customize This Template" to continue
+              {selectedTemplate ? 'Click "Use This Template" to continue' : 'Select a template to see live preview'}
             </p>
           </div>
         </div>
