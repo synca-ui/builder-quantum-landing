@@ -2344,6 +2344,11 @@ export default function Configurator() {
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Online Store</h3>
                 <p className="text-gray-600">Sell products online with integrated payments</p>
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>What this does:</strong> Transform your website into a full e-commerce store. Sell merchandise, gift cards, or retail products with secure payment processing, inventory management, and order tracking.
+                  </p>
+                </div>
               </div>
             </div>
             <Button
