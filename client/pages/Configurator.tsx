@@ -1010,9 +1010,8 @@ export default function Configurator() {
                     </div>
                   </div>
                   <h1 className="text-3xl font-black text-white mb-3">{getBusinessName()}</h1>
-                  {formData.slogan && (
-                    <p className="text-xl font-bold text-white/90 mb-6">{formData.slogan}</p>
-                  )}
+                  <p className="text-lg font-bold text-white/90 mb-2">{sampleContent.tagline}</p>
+                  <p className="text-sm text-white/70 mb-6">{sampleContent.businessDescription}</p>
                   
                   {/* Interactive Creative Grid */}
                   <div className="grid grid-cols-2 gap-3 mt-8">
