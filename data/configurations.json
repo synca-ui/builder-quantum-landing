@@ -2,38 +2,52 @@
   {
     "id": "mewp7j0feso9wymuabs",
     "userId": "user_mewod4t90763iqgq366k",
-    "businessName": "",
+    "businessName": "ddaadsssdsss",
     "businessType": "cafe",
     "location": "sssss",
     "slogan": "ss",
-    "uniqueDescription": "sss",
-    "template": "modern",
-    "primaryColor": "#2563EB",
-    "secondaryColor": "#7C3AED",
+    "uniqueDescription": "ssss",
+    "template": "minimalist",
+    "primaryColor": "#7C2D12",
+    "secondaryColor": "#EA580C",
     "fontFamily": "sans-serif",
     "selectedPages": [
       "home",
-      "gallery",
       "menu",
-      "about"
+      "about",
+      "contact",
+      "gallery"
     ],
     "customPages": [],
-    "openingHours": {},
-    "menuItems": [],
-    "reservationsEnabled": false,
+    "openingHours": {
+      "Monday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      }
+    },
+    "menuItems": [
+      {
+        "name": "Matcha Latte Herbst",
+        "description": "Leckerer",
+        "price": "5.99",
+        "id": "1756465861789"
+      }
+    ],
+    "reservationsEnabled": true,
     "maxGuests": 10,
-    "notificationMethod": "email",
+    "notificationMethod": "phone",
     "contactMethods": [],
     "socialMedia": {},
     "gallery": [],
     "onlineOrdering": false,
     "onlineStore": false,
     "teamArea": false,
-    "hasDomain": false,
+    "hasDomain": true,
     "domainName": "",
     "selectedDomain": "",
     "createdAt": "2025-08-29T10:37:02.078Z",
-    "updatedAt": "2025-08-29T11:08:36.548Z",
+    "updatedAt": "2025-08-29T11:17:25.513Z",
     "status": "draft"
   }
 ]
