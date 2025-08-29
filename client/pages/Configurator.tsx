@@ -1080,7 +1080,7 @@ export default function Configurator() {
                           </p>
                         </div>
                       </div>
-                      <span className={templateStyles.itemPrice}>
+                      <span className={templateStyles.itemPrice} style={{ color: styles.userPrimary }}>
                         ${item.price}
                       </span>
                     </div>
@@ -1109,8 +1109,10 @@ export default function Configurator() {
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>About Us</h2>
               <div className="text-center space-y-3">
-                <div className={templateStyles.aboutLogo}>
-                  <LogoDisplay />
+                <div className={templateStyles.aboutLogo} style={{ backgroundColor: `${styles.userPrimary}20` }}>
+                  <div style={{ color: styles.userPrimary }}>
+                    <LogoDisplay />
+                  </div>
                 </div>
                 <div>
                   <h3 className={templateStyles.itemName}>
