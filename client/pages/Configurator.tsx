@@ -2015,8 +2015,61 @@ export default function Configurator() {
             Add your menu or products
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Showcase what you offer. You can add items one by one or upload a menu PDF.
+            Showcase what you offer. You can add items manually or upload your menu.
           </p>
+        </div>
+
+        {/* Upload Options */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* Image Upload */}
+          <Card className="p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-2xl flex items-center justify-center">
+                <Camera className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Menu Image</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Upload a photo of your existing menu
+              </p>
+              <Button
+                variant="outline"
+                className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose Image File
+              </Button>
+              <p className="text-xs text-gray-500 mt-2">JPG, PNG up to 10MB</p>
+            </div>
+          </Card>
+
+          {/* CSV Upload */}
+          <Card className="p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-2xl flex items-center justify-center">
+                <Upload className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload CSV File</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Upload structured menu data as CSV
+              </p>
+              <Button
+                variant="outline"
+                className="w-full border-2 border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 text-green-700"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose CSV File
+              </Button>
+              <p className="text-xs text-gray-500 mt-2">Format: name,description,price</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="h-px bg-gray-300 flex-1"></div>
+            <span className="text-gray-500 font-medium">OR</span>
+            <div className="h-px bg-gray-300 flex-1"></div>
+          </div>
         </div>
 
         {/* Add New Item Form */}
