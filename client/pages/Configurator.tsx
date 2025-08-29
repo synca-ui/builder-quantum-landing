@@ -108,6 +108,9 @@ export default function Configurator() {
     hasDomain: false,
     domainName: "",
     selectedDomain: "",
+
+    // UI State
+    showOptionalFields: false,
   });
 
   useEffect(() => {
