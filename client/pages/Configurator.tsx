@@ -963,16 +963,16 @@ export default function Configurator() {
           {previewState.menuOpen && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
               <div className="text-center space-y-6">
-                {['Home', 'Menu', 'Gallery', 'Contact'].map((page, index) => (
+                {getAvailablePages().map((page, index) => (
                   <button
-                    key={page}
-                    onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.toLowerCase(), menuOpen: false }))}
+                    key={page.id}
+                    onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
                     className="block text-3xl font-black text-white hover:text-pink-300 transition-all duration-300 hover:scale-110"
-                    style={{ 
+                    style={{
                       animationDelay: `${index * 100}ms`,
                     }}
                   >
-                    {page}
+                    {page.name}
                   </button>
                 ))}
               </div>
