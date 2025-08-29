@@ -125,6 +125,40 @@ export default function Configurator() {
     null,
   );
 
+  // Shopping cart state for ordering feature
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [showCart, setShowCart] = useState(false);
+
+  // Add to cart function
+  const addToCart = useCallback((item: any) => {
+    setCartItems(prev => {
+      const existingItem = prev.find(cartItem => cartItem.name === item.name);
+      if (existingItem) {
+        return prev.map(cartItem =>
+          cartItem.name === item.name
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
+  }, []);
+
+  // Remove from cart function
+  const removeFromCart = useCallback((itemName: string) => {
+    setCartItems(prev => prev.filter(item => item.name !== itemName));
+  }, []);
+
+  // Get total cart items count
+  const cartItemsCount = useMemo(() => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  }, [cartItems]);
+
+  // Get cart total price
+  const cartTotal = useMemo(() => {
+    return cartItems.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0);
+  }, [cartItems]);
+
   // COMPLETE Configuration steps
   const configuratorSteps = [
     // Step 0: Template Selection
@@ -1154,8 +1188,8 @@ export default function Configurator() {
                       {/* Show + icon if ordering is enabled */}
                       {formData.onlineOrdering && (
                         <button
-                          className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs"
-                          onClick={() => {/* Handle add to cart */}}
+                          className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
+                          onClick={() => addToCart(item)}
                         >
                           <Plus className="w-3 h-3" />
                         </button>
@@ -1411,8 +1445,8 @@ export default function Configurator() {
                     {/* Show + icon if ordering is enabled */}
                     {formData.onlineOrdering && (
                       <button
-                        className="absolute top-1 right-1 w-4 h-4 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs"
-                        onClick={() => {/* Handle add to cart */}}
+                        className="absolute top-1 right-1 w-4 h-4 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
+                        onClick={() => addToCart(item)}
                       >
                         <Plus className="w-2 h-2" />
                       </button>
