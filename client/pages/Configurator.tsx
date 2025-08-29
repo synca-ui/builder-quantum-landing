@@ -65,6 +65,9 @@ export default function Configurator() {
     setIsVisible(true);
   }, []);
 
+  // Template preview selection (for step 0 live preview before committing)
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
+
   // COMPLETE Configuration steps
   const configuratorSteps = [
     // Step 0: Template Selection
@@ -604,7 +607,8 @@ export default function Configurator() {
     const getBusinessName = () => formData.businessName || 'Your Business';
     
     const getTemplateStyles = () => {
-      const selected = templates.find(t => t.id === formData.template);
+      const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+      const selected = templates.find(t => t.id === selectedId);
       const baseStyles = selected ? selected.style : templates[0].style;
       
       return {
@@ -666,7 +670,8 @@ export default function Configurator() {
     };
 
     const renderPreviewContent = () => {
-      if (!formData.template) {
+      const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+      if (!selectedId) {
         return (
           <div className="h-full flex items-center justify-center bg-gray-50">
             <div className="text-center">
@@ -695,7 +700,8 @@ export default function Configurator() {
       };
 
       // Render different templates based on selection with INTERACTIVE FEATURES
-      switch (formData.template) {
+      const selectedIdForSwitch = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+      switch (selectedIdForSwitch) {
         case 'minimalist':
           return (
             <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
@@ -3162,8 +3168,8 @@ export default function Configurator() {
 
   return (
     <div className={`min-h-screen bg-white transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      {/* Only show navigation when in configurator steps */}
-      {currentStep >= 0 && <Navigation />}
+      {/* Show navigation on all pages, including landing */}
+      <Navigation />
       
       {currentStep === -1 ? (
         // Welcome page takes full screen
