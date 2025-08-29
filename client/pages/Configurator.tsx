@@ -1202,17 +1202,17 @@ export default function Configurator() {
             {previewState.menuOpen && (
               <div className="mt-3 pt-3 border-t border-gray-700">
                 <div className="space-y-1">
-                  {['Home', 'Menu', 'Tech', 'Contact'].map((page) => (
+                  {getAvailablePages().map((page) => (
                     <button
-                      key={page}
-                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.toLowerCase(), menuOpen: false }))}
+                      key={page.id}
+                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
                       className={`w-full text-left px-3 py-2 text-sm font-mono rounded transition-all ${
-                        previewState.activePage === page.toLowerCase() 
+                        previewState.activePage === page.id
                           ? 'bg-green-500/20 text-green-400 border-l-2 border-green-400'
                           : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
                       }`}
                     >
-                      {page.toLowerCase()}
+                      {page.id}
                     </button>
                   ))}
                 </div>
