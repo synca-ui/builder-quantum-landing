@@ -54,17 +54,25 @@ export default function Configurator() {
 
   useEffect(() => {
     setIsVisible(true);
-    
+
     let animationFrame: number;
+    let lastUpdate = 0;
+    const throttleDelay = 16; // ~60fps max
+
     const handleMouseMove = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - lastUpdate < throttleDelay) return;
+
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
       }
+
       animationFrame = requestAnimationFrame(() => {
         setMousePosition({ x: e.clientX, y: e.clientY });
+        lastUpdate = now;
       });
     };
-    
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
