@@ -384,11 +384,11 @@ export default function Configurator() {
             </div>
             
             {/* Phase indicator */}
-            {currentStep > 0 && (
+            {currentPhase && (
               <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-teal-500/10 to-purple-500/10 px-3 py-1 rounded-full border border-teal-500/20">
                 <Crown className="w-3 h-3 text-teal-600" />
                 <span className="text-xs font-bold text-teal-700">
-                  Phase {configuratorSteps[currentStep].phase}: {configuratorSteps[currentStep].phaseTitle}
+                  Phase {currentPhase.phase}: {currentPhase.phaseTitle}
                 </span>
               </div>
             )}
