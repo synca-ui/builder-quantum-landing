@@ -596,6 +596,305 @@ export default function Configurator() {
     </nav>
   );
 
+  // Simple Template Preview (content only, no phone frame)
+  const TemplatePreviewContent = () => {
+    const [previewState, setPreviewState] = useState({
+      menuOpen: false,
+      activePage: 'home',
+      hoveredItem: null
+    });
+
+    const getBusinessName = () => {
+      if (formData.businessName) return formData.businessName;
+      // Use realistic names based on selected template for preview
+      const templateNames = {
+        'minimalist': 'Brew & Bean',
+        'vibrant': 'Fusion Kitchen',
+        'professional': 'Sterling Restaurant',
+        'modern-dark': 'NEXUS Coffee'
+      };
+      const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+      return templateNames[selectedId] || 'Your Business';
+    };
+
+    const getTemplateStyles = () => {
+      const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+      const selected = templates.find(t => t.id === selectedId);
+      const baseStyles = selected ? selected.style : templates[0].style;
+
+      return {
+        ...baseStyles,
+        userPrimary: formData.primaryColor,
+        userSecondary: formData.secondaryColor
+      };
+    };
+
+    const styles = getTemplateStyles();
+
+    const getBusinessIcon = () => {
+      switch (formData.businessType) {
+        case 'cafe': return <Coffee className="w-5 h-5" />;
+        case 'restaurant': return <Utensils className="w-5 h-5" />;
+        default: return <Building className="w-5 h-5" />;
+      }
+    };
+
+    // Sample content for realistic previews - template specific
+    const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+    const templateContent = {
+      'minimalist': {
+        items: [
+          { name: 'Artisan Coffee', description: 'Single origin, carefully roasted', price: '4.50' },
+          { name: 'Avocado Toast', description: 'Fresh sourdough, organic avocado', price: '8.00' }
+        ],
+        tagline: 'Simplicity meets excellence',
+        description: 'Minimal design, maximum flavor'
+      },
+      'vibrant': {
+        items: [
+          { name: 'Dragon Bowl', description: 'Colorful superfood fusion bowl', price: '12.50' },
+          { name: 'Neon Smoothie', description: 'Rainbow fruit blend, energizing', price: '7.00' }
+        ],
+        tagline: 'Bold flavors, vibrant experience',
+        description: 'Where creativity meets cuisine'
+      },
+      'professional': {
+        items: [
+          { name: 'Prime Ribeye', description: 'Aged 28 days, chef signature', price: '42.00' },
+          { name: 'Lobster Risotto', description: 'Maine lobster, saffron arborio', price: '36.00' }
+        ],
+        tagline: 'Excellence in every detail',
+        description: 'Fine dining at its finest'
+      },
+      'modern-dark': {
+        items: [
+          { name: 'NITRO COLD BREW', description: 'Smooth nitrogen-infused coffee', price: '5.50' },
+          { name: 'TECH BOWL', description: 'Future food, plant-based protein', price: '11.00' }
+        ],
+        tagline: 'FUTURE OF COFFEE',
+        description: 'Next-gen café experience'
+      }
+    };
+
+    const currentContent = templateContent[selectedId] || templateContent['minimalist'];
+    const sampleContent = {
+      menuItems: currentContent.items,
+      tagline: currentContent.tagline,
+      businessDescription: currentContent.description,
+    };
+
+    const LogoDisplay = () => {
+      if (formData.logo) {
+        return (
+          <img
+            src={typeof formData.logo === 'string' ? formData.logo : URL.createObjectURL(formData.logo)}
+            alt="Business logo"
+            className="w-8 h-8 object-contain rounded"
+          />
+        );
+      }
+      return getBusinessIcon();
+    };
+
+    // Render different templates based on selection
+    const selectedIdForSwitch = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+
+    if (!selectedIdForSwitch) {
+      return (
+        <div className="h-full flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <Palette className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-xs text-gray-500">Choose a template</p>
+          </div>
+        </div>
+      );
+    }
+
+    const fontClass = fontOptions.find(f => f.id === formData.fontFamily)?.class || 'font-sans';
+
+    switch (selectedIdForSwitch) {
+      case 'minimalist':
+        return (
+          <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
+            <nav className="bg-white border-b border-gray-100 px-2 py-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 rounded bg-gray-50 flex items-center justify-center"
+                       style={{ backgroundColor: `${styles.userPrimary}15` }}>
+                    <div style={{ color: styles.userPrimary }} className="text-xs">
+                      <LogoDisplay />
+                    </div>
+                  </div>
+                  <h1 className="text-sm font-medium text-gray-900">{getBusinessName()}</h1>
+                </div>
+                <Menu className="w-3 h-3 text-gray-600" />
+              </div>
+            </nav>
+
+            <div className="p-3">
+              <div className="text-center mb-4">
+                <div className="w-8 h-8 mx-auto mb-2 rounded-xl bg-gray-50 flex items-center justify-center"
+                     style={{ backgroundColor: `${styles.userPrimary}15` }}>
+                  <div style={{ color: styles.userPrimary }} className="text-xs">
+                    <LogoDisplay />
+                  </div>
+                </div>
+                <h2 className="text-sm font-light text-gray-900">{getBusinessName()}</h2>
+                <p className="text-gray-500 text-xs">{sampleContent.tagline}</p>
+              </div>
+
+              <div className="space-y-2">
+                {sampleContent.menuItems.map((item, index) => (
+                  <div key={index} className="text-center border-b border-gray-100 pb-2">
+                    <h4 className="font-medium text-gray-900 text-xs">{item.name}</h4>
+                    <p className="text-gray-500 text-xs">{item.description}</p>
+                    <span className="text-xs font-light" style={{ color: styles.userPrimary }}>
+                      ${item.price}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'vibrant':
+        return (
+          <div className={`h-full overflow-y-auto text-white ${fontClass}`}
+               style={{ background: formData.backgroundType === 'color' ? formData.backgroundColor : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <nav className="p-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                    <LogoDisplay />
+                  </div>
+                  <h1 className="text-sm font-black text-white">{getBusinessName()}</h1>
+                </div>
+                <Menu className="w-3 h-3 text-white" />
+              </div>
+            </nav>
+
+            <div className="p-3 text-center">
+              <div className="w-8 h-8 mx-auto mb-2 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <LogoDisplay />
+              </div>
+              <h1 className="text-sm font-black text-white">{getBusinessName()}</h1>
+              <p className="text-xs font-bold text-white/90">{sampleContent.tagline}</p>
+
+              <div className="grid grid-cols-2 gap-1 mt-3">
+                {sampleContent.menuItems.map((item, index) => (
+                  <div key={index} className="bg-white/20 backdrop-blur rounded-lg p-2">
+                    <h3 className="text-xs font-bold text-white">{item.name}</h3>
+                    <div className="text-sm font-black text-white">${item.price}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'professional':
+        return (
+          <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
+            <nav className="bg-white border-b border-gray-200 px-2 py-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 rounded bg-gray-100 flex items-center justify-center">
+                    <div style={{ color: styles.userPrimary }} className="text-xs">
+                      <LogoDisplay />
+                    </div>
+                  </div>
+                  <h1 className="text-sm font-semibold text-gray-900">{getBusinessName()}</h1>
+                </div>
+                <Menu className="w-3 h-3 text-gray-600" />
+              </div>
+            </nav>
+
+            <div className="p-3">
+              <div className="text-center py-3 border-b border-gray-100">
+                <div className="w-8 h-8 mx-auto mb-2 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <div style={{ color: styles.userPrimary }} className="text-xs">
+                    <LogoDisplay />
+                  </div>
+                </div>
+                <h1 className="text-sm font-bold text-gray-900">{getBusinessName()}</h1>
+                <p className="text-gray-600 font-medium text-xs">{sampleContent.tagline}</p>
+              </div>
+
+              <div className="py-2">
+                <h2 className="text-xs font-bold text-gray-900 mb-2">Featured Items</h2>
+                <div className="space-y-2">
+                  {sampleContent.menuItems.map((item, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 text-xs">{item.name}</h3>
+                          <p className="text-gray-600 text-xs">{item.description}</p>
+                        </div>
+                        <div className="text-xs font-bold ml-2" style={{ color: styles.userPrimary }}>${item.price}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'modern-dark':
+        return (
+          <div className={`h-full overflow-y-auto bg-gray-900 text-white ${fontClass}`}>
+            <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 px-2 py-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 rounded-lg bg-gray-700 flex items-center justify-center">
+                    <div style={{ color: styles.userPrimary }} className="text-xs">
+                      <LogoDisplay />
+                    </div>
+                  </div>
+                  <h1 className="text-white font-mono text-xs">{getBusinessName()}</h1>
+                </div>
+                <Menu className="w-3 h-3 text-gray-300" />
+              </div>
+            </nav>
+
+            <div className="p-2">
+              <div className="bg-black/80 backdrop-blur-sm rounded-xl p-3 mb-2 border border-green-500/30">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-lg bg-green-500/20 border border-green-500/50 flex items-center justify-center">
+                    <div style={{ color: styles.userPrimary }} className="text-xs">
+                      <LogoDisplay />
+                    </div>
+                  </div>
+                  <div>
+                    <h1 className="text-sm font-bold text-white font-mono">{getBusinessName()}</h1>
+                    <p className="text-xs text-green-400 font-mono">{sampleContent.tagline}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                {sampleContent.menuItems.map((item, index) => (
+                  <div key={index} className="bg-gray-800 rounded-lg p-2 border border-gray-700/50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-xs font-semibold text-white font-mono">{item.name}</h3>
+                        <p className="text-xs text-gray-400 font-mono">{item.description}</p>
+                      </div>
+                      <div className="text-xs font-mono font-bold text-green-400 bg-green-500/10 px-1 rounded">${item.price}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return <div className="h-full bg-gray-50"></div>;
+    }
+  };
+
   // Enhanced Interactive Live Preview Component
   const LivePreview = () => {
     const [previewState, setPreviewState] = useState({
