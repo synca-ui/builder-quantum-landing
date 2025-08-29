@@ -3578,7 +3578,7 @@ export default function Configurator() {
                     <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
                       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
                       <div className="h-full relative">
-                        <LivePreview />
+                        <TemplatePreviewContent />
                       </div>
                     </div>
                   </div>
