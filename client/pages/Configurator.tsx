@@ -763,21 +763,21 @@ export default function Configurator() {
               </button>
             </div>
             
-            {/* Navigation Menu */}
+            {/* Navigation Menu - Dynamic based on selected pages */}
             {previewState.menuOpen && (
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div className="space-y-1">
-                  {['Home', 'Menu', 'About', 'Contact'].map((page) => (
+                  {getAvailablePages().map((page) => (
                     <button
-                      key={page}
-                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.toLowerCase(), menuOpen: false }))}
+                      key={page.id}
+                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
                       className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                        previewState.activePage === page.toLowerCase()
+                        previewState.activePage === page.id
                           ? 'bg-gray-100 text-gray-900 font-medium'
                           : 'text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      {page}
+                      {page.name}
                     </button>
                   ))}
                 </div>
