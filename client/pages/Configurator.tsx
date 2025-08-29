@@ -1248,7 +1248,7 @@ export default function Configurator() {
             </nav>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-white">
+            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#FFFFFF' }}>
               {renderPageContent()}
             </div>
           </div>
