@@ -367,11 +367,10 @@ export default function Configurator() {
   // Create stable input handlers that don't change between renders
   const inputHandlers = useMemo(() => {
     const handlers: Record<string, (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void> = {};
-    
+
     const createHandler = (field: string) => {
       return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
+        // Don't prevent default for input events - this causes focus loss
         const value = e.target.value;
         updateFormData(field, value);
       };
