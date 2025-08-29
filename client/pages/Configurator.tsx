@@ -1795,7 +1795,11 @@ export default function Configurator() {
           {/* Template Selection */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Available Templates</h3>
-            {templates.map((template) => (
+            {templates.filter(template =>
+              !template.businessTypes ||
+              template.businessTypes.includes(formData.businessType) ||
+              !formData.businessType
+            ).map((template) => (
               <Card
                 key={template.id}
                 className={`cursor-pointer transition-all duration-300 border-2 ${
