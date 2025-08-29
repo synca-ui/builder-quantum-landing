@@ -1320,7 +1320,8 @@ export default function Configurator() {
               type="text"
               placeholder="123 Main Street, City, State"
               defaultValue={formData.location}
-              onChange={handleInputChange('location')}
+              ref={setInputRef('location')}
+              onBlur={handleInputBlur('location')}
               onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
               autoComplete="street-address"
@@ -1335,7 +1336,8 @@ export default function Configurator() {
             type="text"
             placeholder="e.g. The best coffee in town"
             defaultValue={formData.slogan}
-            onChange={handleInputChange('slogan')}
+            ref={setInputRef('slogan')}
+            onBlur={handleInputBlur('slogan')}
             onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
             className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
           />
@@ -1347,7 +1349,8 @@ export default function Configurator() {
           <Textarea
             placeholder="Tell us what sets you apart from the competition..."
             defaultValue={formData.uniqueDescription}
-            onChange={handleInputChange('uniqueDescription')}
+            ref={setInputRef('uniqueDescription')}
+            onBlur={handleInputBlur('uniqueDescription')}
             className="w-full px-4 py-3 h-24 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
           />
         </div>
