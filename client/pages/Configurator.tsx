@@ -2904,20 +2904,20 @@ export default function Configurator() {
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} overflow-hidden`}>
+    <div className="min-h-screen bg-white overflow-hidden">
       <Navigation />
-      
+
       {/* Main Content */}
       <div className="pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Configurator Content */}
             <div className="lg:col-span-2">
-              <div className={`min-h-[80vh] ${isDarkMode ? 'text-white' : 'text-gray-900'} transition-all duration-500`}>
+              <div className="min-h-[80vh] text-gray-900">
                 {renderCurrentStep()}
               </div>
             </div>
-            
+
             {/* Live Preview Sidebar */}
             <div className="hidden lg:block">
               <LivePreview />
