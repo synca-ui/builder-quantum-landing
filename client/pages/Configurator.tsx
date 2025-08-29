@@ -91,6 +91,8 @@ export default function Configurator() {
     menuItems: [],
     menuPdf: null,
     reservationsEnabled: false,
+    reservationButtonColor: "#2563EB",
+    reservationButtonShape: "rounded",
     timeSlots: [],
     maxGuests: 10,
     notificationMethod: "email",
@@ -103,6 +105,7 @@ export default function Configurator() {
     onlineOrdering: false,
     onlineStore: false,
     teamArea: false,
+    cartItems: [],
 
     // Domain & Publishing
     hasDomain: false,
@@ -3742,6 +3745,71 @@ export default function Configurator() {
                     <option value="both">Email & Phone</option>
                   </select>
                 </div>
+              </div>
+            </Card>
+
+            {/* Reservation Button Customization */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Reservation Button Style
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Button Color
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="color"
+                      value={formData.reservationButtonColor}
+                      onChange={(e) => updateFormData("reservationButtonColor", e.target.value)}
+                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.reservationButtonColor}
+                      onChange={(e) => updateFormData("reservationButtonColor", e.target.value)}
+                      className="font-mono flex-1"
+                      placeholder="#2563EB"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Button Shape
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: "rounded", name: "Rounded", class: "rounded-lg" },
+                      { id: "pill", name: "Pill", class: "rounded-full" },
+                      { id: "square", name: "Square", class: "rounded-none" }
+                    ].map((shape) => (
+                      <Button
+                        key={shape.id}
+                        variant={formData.reservationButtonShape === shape.id ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => updateFormData("reservationButtonShape", shape.id)}
+                        className={`${shape.class} ${formData.reservationButtonShape === shape.id ? "bg-teal-500 hover:bg-teal-600" : ""}`}
+                      >
+                        {shape.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Button Preview */}
+              <div className="mt-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Preview</label>
+                <button
+                  className={`px-6 py-3 text-white font-medium transition-colors ${
+                    formData.reservationButtonShape === "rounded" ? "rounded-lg" :
+                    formData.reservationButtonShape === "pill" ? "rounded-full" : "rounded-none"
+                  }`}
+                  style={{ backgroundColor: formData.reservationButtonColor }}
+                >
+                  <Calendar className="w-4 h-4 mr-2 inline" />
+                  Reserve Table
+                </button>
               </div>
             </Card>
 
