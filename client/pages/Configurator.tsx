@@ -1645,6 +1645,1161 @@ export default function Configurator() {
     </div>
   );
 
+  const PageStructureStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Select your pages
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose which pages your website will include. You can always add more later.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {pageOptions.map((page) => {
+          const isSelected = formData.selectedPages.includes(page.id);
+          const isVisible = !page.condition || page.condition.includes(formData.businessType);
+
+          if (!isVisible) return null;
+
+          return (
+            <Card
+              key={page.id}
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              } ${page.required ? 'opacity-75' : ''}`}
+              onClick={() => {
+                if (page.required) return;
+                const newPages = isSelected
+                  ? formData.selectedPages.filter(p => p !== page.id)
+                  : [...formData.selectedPages, page.id];
+                updateFormData('selectedPages', newPages);
+              }}
+            >
+              <CardContent className="p-6 text-center">
+                <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-r ${
+                  isSelected ? 'from-teal-500 to-purple-500' : 'from-gray-400 to-gray-500'
+                } flex items-center justify-center text-white`}>
+                  {page.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{page.name}</h3>
+                {page.required && (
+                  <p className="text-xs text-gray-500">Required</p>
+                )}
+                {isSelected && !page.required && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const OpeningHoursStep = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Set your opening hours
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            When are you open for business? This helps customers know when to visit.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {days.map((day) => {
+            const hours = formData.openingHours[day] || { open: '09:00', close: '17:00', closed: false };
+
+            return (
+              <Card key={day} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24">
+                      <h3 className="font-semibold text-gray-900">{day}</h3>
+                    </div>
+                    <Button
+                      variant={hours.closed ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const newHours = {
+                          ...formData.openingHours,
+                          [day]: { ...hours, closed: !hours.closed }
+                        };
+                        updateFormData('openingHours', newHours);
+                      }}
+                    >
+                      {hours.closed ? 'Closed' : 'Open'}
+                    </Button>
+                  </div>
+
+                  {!hours.closed && (
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="time"
+                        defaultValue={hours.open}
+                        onChange={(e) => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...hours, open: e.target.value }
+                          };
+                          updateFormData('openingHours', newHours);
+                        }}
+                        className="w-32"
+                      />
+                      <span className="text-gray-500">to</span>
+                      <Input
+                        type="time"
+                        defaultValue={hours.close}
+                        onChange={(e) => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...hours, close: e.target.value }
+                          };
+                          updateFormData('openingHours', newHours);
+                        }}
+                        className="w-32"
+                      />
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const MenuProductsStep = () => {
+    const [newItem, setNewItem] = useState({ name: '', description: '', price: '' });
+
+    const addMenuItem = () => {
+      if (newItem.name && newItem.price) {
+        const updatedItems = [...formData.menuItems, { ...newItem, id: Date.now().toString() }];
+        updateFormData('menuItems', updatedItems);
+        setNewItem({ name: '', description: '', price: '' });
+      }
+    };
+
+    const removeMenuItem = (index: number) => {
+      const updatedItems = formData.menuItems.filter((_, i) => i !== index);
+      updateFormData('menuItems', updatedItems);
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Add your menu or products
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Showcase what you offer. You can add items one by one or upload a menu PDF.
+          </p>
+        </div>
+
+        {/* Add New Item Form */}
+        <Card className="p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Item</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Item Name *</label>
+              <Input
+                type="text"
+                placeholder="e.g. Signature Latte"
+                value={newItem.name}
+                onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+              <Input
+                type="text"
+                placeholder="Brief description"
+                value={newItem.description}
+                onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Price *</label>
+              <div className="flex">
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="9.99"
+                  value={newItem.price}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={addMenuItem}
+                  disabled={!newItem.name || !newItem.price}
+                  className="ml-2 bg-teal-500 hover:bg-teal-600"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Menu Items List */}
+        {formData.menuItems.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold text-gray-900">Your Menu Items</h3>
+            {formData.menuItems.map((item, index) => (
+              <Card key={index} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                    {item.description && (
+                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg font-bold text-teal-600">${item.price}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeMenuItem(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const ReservationsStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Setup reservations
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Enable table bookings for your business. Perfect for restaurants and cafés.
+        </p>
+      </div>
+
+      <div className="space-y-8">
+        {/* Enable Reservations Toggle */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Enable Reservations</h3>
+              <p className="text-gray-600">Allow customers to book tables online</p>
+            </div>
+            <Button
+              variant={formData.reservationsEnabled ? "default" : "outline"}
+              onClick={() => updateFormData('reservationsEnabled', !formData.reservationsEnabled)}
+              className={formData.reservationsEnabled ? 'bg-teal-500 hover:bg-teal-600' : ''}
+            >
+              {formData.reservationsEnabled ? 'Enabled' : 'Disabled'}
+            </Button>
+          </div>
+        </Card>
+
+        {formData.reservationsEnabled && (
+          <>
+            {/* Maximum Guests */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Booking Settings</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Maximum party size</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="50"
+                    defaultValue={formData.maxGuests.toString()}
+                    onChange={(e) => updateFormData('maxGuests', parseInt(e.target.value) || 10)}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Notification method</label>
+                  <select
+                    value={formData.notificationMethod}
+                    onChange={(e) => updateFormData('notificationMethod', e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  >
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="both">Email & Phone</option>
+                  </select>
+                </div>
+              </div>
+            </Card>
+
+            {/* Time Slots */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Available Time Slots</h3>
+              <p className="text-gray-600 mb-4">Set the times when customers can make reservations</p>
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {Array.from({ length: 14 }, (_, i) => {
+                  const hour = 10 + i;
+                  const time = `${hour}:00`;
+                  const isSelected = formData.timeSlots.includes(time);
+
+                  return (
+                    <Button
+                      key={time}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const newSlots = isSelected
+                          ? formData.timeSlots.filter(slot => slot !== time)
+                          : [...formData.timeSlots, time];
+                        updateFormData('timeSlots', newSlots);
+                      }}
+                      className={isSelected ? 'bg-teal-500 hover:bg-teal-600' : ''}
+                    >
+                      {time}
+                    </Button>
+                  );
+                })}
+              </div>
+            </Card>
+          </>
+        )}
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const ContactSocialStep = () => {
+    const contactMethods = [
+      { id: 'phone', icon: <Phone className="w-5 h-5" />, label: 'Phone', placeholder: '+1 (555) 123-4567' },
+      { id: 'email', icon: <Mail className="w-5 h-5" />, label: 'Email', placeholder: 'hello@yourbusiness.com' },
+      { id: 'address', icon: <MapPin className="w-5 h-5" />, label: 'Address', placeholder: '123 Main St, City, State' }
+    ];
+
+    const socialPlatforms = [
+      { id: 'instagram', icon: <Instagram className="w-5 h-5" />, label: 'Instagram', placeholder: '@yourbusiness' },
+      { id: 'facebook', icon: <Facebook className="w-5 h-5" />, label: 'Facebook', placeholder: 'facebook.com/yourbusiness' }
+    ];
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Contact & social media
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            How can customers reach you? Add your contact information and social media links.
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Contact Information */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Contact Information</h3>
+            <div className="space-y-4">
+              {contactMethods.map((method) => (
+                <div key={method.id}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{method.label}</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 text-gray-400">
+                      {method.icon}
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder={method.placeholder}
+                      defaultValue={formData.contactMethods?.[method.id] || ''}
+                      onChange={(e) => {
+                        const newMethods = { ...formData.contactMethods, [method.id]: e.target.value };
+                        updateFormData('contactMethods', newMethods);
+                      }}
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Social Media */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Social Media</h3>
+            <div className="space-y-4">
+              {socialPlatforms.map((platform) => (
+                <div key={platform.id}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{platform.label}</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 text-gray-400">
+                      {platform.icon}
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder={platform.placeholder}
+                      defaultValue={formData.socialMedia?.[platform.id] || ''}
+                      onChange={(e) => {
+                        const newSocial = { ...formData.socialMedia, [platform.id]: e.target.value };
+                        updateFormData('socialMedia', newSocial);
+                      }}
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Instagram Sync */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-md font-bold text-gray-900">Instagram Integration</h4>
+                  <p className="text-sm text-gray-600">Automatically sync your Instagram posts to your website</p>
+                </div>
+                <Button
+                  variant={formData.instagramSync ? "default" : "outline"}
+                  onClick={() => updateFormData('instagramSync', !formData.instagramSync)}
+                  className={formData.instagramSync ? 'bg-teal-500 hover:bg-teal-600' : ''}
+                >
+                  {formData.instagramSync ? 'Enabled' : 'Disabled'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const MediaGalleryStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Upload your photos
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Show off your space, food, and atmosphere. Great photos help customers connect with your business.
+        </p>
+      </div>
+
+      <div className="space-y-8">
+        {/* Photo Upload Area */}
+        <Card className="p-8">
+          <div className="text-center">
+            <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Photos</h3>
+            <p className="text-gray-600 mb-6">Drag and drop images or click to browse</p>
+            <Button className="bg-teal-500 hover:bg-teal-600">
+              <Camera className="w-4 h-4 mr-2" />
+              Choose Photos
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">
+              Supports JPG, PNG up to 10MB each. Recommended: 1200x800px or larger
+            </p>
+          </div>
+        </Card>
+
+        {/* Gallery Preview */}
+        {formData.gallery.length > 0 && (
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Your Gallery</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {formData.gallery.map((image, index) => (
+                <div key={index} className="relative group">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <img
+                      src={image.url}
+                      alt={image.alt || `Gallery image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white"
+                    onClick={() => {
+                      const newGallery = formData.gallery.filter((_, i) => i !== index);
+                      updateFormData('gallery', newGallery);
+                    }}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Tips */}
+        <Card className="p-6 bg-teal-50 border-teal-200">
+          <h3 className="text-lg font-bold text-teal-900 mb-4">📸 Photo Tips</h3>
+          <ul className="space-y-2 text-sm text-teal-800">
+            <li>• Use natural lighting when possible</li>
+            <li>• Show your products, space, and team in action</li>
+            <li>• Include wide shots of your interior/exterior</li>
+            <li>• Capture the atmosphere and mood of your business</li>
+            <li>• Avoid blurry or dark photos</li>
+          </ul>
+        </Card>
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const AdvancedFeaturesStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Advanced features
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Enable additional functionality to enhance your website and business operations.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {/* Online Ordering */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                <ShoppingBag className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Online Ordering</h3>
+                <p className="text-gray-600">Allow customers to order food for pickup or delivery</p>
+              </div>
+            </div>
+            <Button
+              variant={formData.onlineOrdering ? "default" : "outline"}
+              onClick={() => updateFormData('onlineOrdering', !formData.onlineOrdering)}
+              className={formData.onlineOrdering ? 'bg-teal-500 hover:bg-teal-600' : ''}
+            >
+              {formData.onlineOrdering ? 'Enabled' : 'Enable'}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Online Store */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Store className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Online Store</h3>
+                <p className="text-gray-600">Sell products online with integrated payments</p>
+              </div>
+            </div>
+            <Button
+              variant={formData.onlineStore ? "default" : "outline"}
+              onClick={() => updateFormData('onlineStore', !formData.onlineStore)}
+              className={formData.onlineStore ? 'bg-teal-500 hover:bg-teal-600' : ''}
+            >
+              {formData.onlineStore ? 'Enabled' : 'Enable'}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Team/Staff Area */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <Users className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Team Showcase</h3>
+                <p className="text-gray-600">Display your team members and their roles</p>
+              </div>
+            </div>
+            <Button
+              variant={formData.teamArea ? "default" : "outline"}
+              onClick={() => updateFormData('teamArea', !formData.teamArea)}
+              className={formData.teamArea ? 'bg-teal-500 hover:bg-teal-600' : ''}
+            >
+              {formData.teamArea ? 'Enabled' : 'Enable'}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Analytics & Insights */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <Zap className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Analytics & Insights</h3>
+                <p className="text-gray-600">Track website visitors and customer behavior</p>
+              </div>
+            </div>
+            <Button
+              variant="default"
+              className="bg-teal-500 hover:bg-teal-600"
+            >
+              Included
+            </Button>
+          </div>
+        </Card>
+
+        {/* SEO Optimization */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                <Eye className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">SEO Optimization</h3>
+                <p className="text-gray-600">Help customers find you on Google and search engines</p>
+              </div>
+            </div>
+            <Button
+              variant="default"
+              className="bg-teal-500 hover:bg-teal-600"
+            >
+              Included
+            </Button>
+          </div>
+        </Card>
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const DomainHostingStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Choose your domain
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Select how customers will find your website online. You can use your own domain or get started with a free subdomain.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {/* Use Existing Domain */}
+        <Card className={`p-6 cursor-pointer border-2 transition-all ${
+          formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+        }`} onClick={() => updateFormData('hasDomain', true)}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Globe className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Use my own domain</h3>
+                <p className="text-gray-600">Connect your existing domain (e.g., yourbusiness.com)</p>
+              </div>
+            </div>
+            {formData.hasDomain && (
+              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-white" />
+              </div>
+            )}
+          </div>
+
+          {formData.hasDomain && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Your domain name</label>
+              <Input
+                type="text"
+                placeholder="yourbusiness.com"
+                defaultValue={formData.domainName}
+                onChange={handleInputChange('domainName')}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Don't worry - we'll help you connect this later
+              </p>
+            </div>
+          )}
+        </Card>
+
+        {/* Free Subdomain */}
+        <Card className={`p-6 cursor-pointer border-2 transition-all ${
+          !formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+        }`} onClick={() => updateFormData('hasDomain', false)}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <Zap className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Free subdomain</h3>
+                <p className="text-gray-600">Get started with a free .synca.app subdomain</p>
+              </div>
+            </div>
+            {!formData.hasDomain && (
+              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-white" />
+              </div>
+            )}
+          </div>
+
+          {!formData.hasDomain && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Choose your subdomain</label>
+              <div className="flex items-center">
+                <Input
+                  type="text"
+                  placeholder="yourbusiness"
+                  defaultValue={formData.selectedDomain}
+                  onChange={handleInputChange('selectedDomain')}
+                  className="flex-1"
+                />
+                <span className="ml-2 text-gray-500">.synca.app</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Your website will be available at {formData.selectedDomain || 'yourbusiness'}.synca.app
+              </p>
+            </div>
+          )}
+        </Card>
+
+        {/* Domain Features */}
+        <Card className="p-6 bg-gray-50">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">What's included with hosting</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-3">
+              <Shield className="w-5 h-5 text-green-600" />
+              <span className="text-sm text-gray-700">SSL security (HTTPS)</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Zap className="w-5 h-5 text-green-600" />
+              <span className="text-sm text-gray-700">Fast global CDN</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Cloud className="w-5 h-5 text-green-600" />
+              <span className="text-sm text-gray-700">Automatic backups</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Wifi className="w-5 h-5 text-green-600" />
+              <span className="text-sm text-gray-700">99.9% uptime</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const PreviewAdjustmentsStep = () => (
+    <div className="py-8 max-w-6xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Preview & final tweaks
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Review your website and make any final adjustments before publishing.
+        </p>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Website Preview */}
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Website Preview</h3>
+          <Card className="p-4">
+            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              <div className="w-full h-full bg-gradient-to-br from-teal-50 to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                  <Play className="w-16 h-16 text-teal-500 mx-auto mb-4" />
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">{formData.businessName || 'Your Business'}</h4>
+                  <p className="text-gray-600">{formData.slogan || 'Your website preview'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center mt-4">
+              <Button className="bg-teal-500 hover:bg-teal-600">
+                <Eye className="w-4 h-4 mr-2" />
+                Full Preview
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        {/* Quick Settings */}
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Adjustments</h3>
+          <div className="space-y-4">
+            {/* Business Name */}
+            <Card className="p-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Business Name</label>
+              <Input
+                type="text"
+                defaultValue={formData.businessName}
+                onChange={handleInputChange('businessName')}
+                className="w-full"
+              />
+            </Card>
+
+            {/* Colors */}
+            <Card className="p-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Brand Colors</label>
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={formData.primaryColor}
+                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                      className="w-10 h-10 rounded border-2 border-gray-300"
+                    />
+                    <span className="text-sm text-gray-600">Primary</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={formData.secondaryColor}
+                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                      className="w-10 h-10 rounded border-2 border-gray-300"
+                    />
+                    <span className="text-sm text-gray-600">Secondary</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Template */}
+            <Card className="p-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Template Style</label>
+              <select
+                value={formData.template}
+                onChange={(e) => updateFormData('template', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              >
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            </Card>
+
+            {/* Domain */}
+            <Card className="p-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Website URL</label>
+              <div className="flex items-center">
+                {formData.hasDomain ? (
+                  <Input
+                    type="text"
+                    defaultValue={formData.domainName}
+                    onChange={handleInputChange('domainName')}
+                    className="flex-1"
+                  />
+                ) : (
+                  <>
+                    <Input
+                      type="text"
+                      defaultValue={formData.selectedDomain}
+                      onChange={handleInputChange('selectedDomain')}
+                      className="flex-1"
+                    />
+                    <span className="ml-2 text-gray-500">.synca.app</span>
+                  </>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Ready to Publish
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const PublishStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <div className="w-24 h-24 mx-auto mb-6 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
+          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+            <Rocket className="w-12 h-12 text-teal-500" />
+          </div>
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Publish your website
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          You're all set! Your website is ready to go live and start attracting customers.
+        </p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <Card className="p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Website Summary</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Business:</span>
+              <span className="font-semibold">{formData.businessName || 'Your Business'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Type:</span>
+              <span className="font-semibold">{businessTypes.find(t => t.value === formData.businessType)?.label || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Template:</span>
+              <span className="font-semibold">{templates.find(t => t.id === formData.template)?.name || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Pages:</span>
+              <span className="font-semibold">{formData.selectedPages.length} pages</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Your URL</h3>
+          <div className="bg-gray-50 rounded-lg p-4 mb-4">
+            <p className="text-lg font-mono text-gray-900">
+              {formData.hasDomain
+                ? formData.domainName || 'yourdomain.com'
+                : `${formData.selectedDomain || 'yourbusiness'}.synca.app`
+              }
+            </p>
+          </div>
+          <div className="space-y-2 text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <Shield className="w-4 h-4 text-green-600" />
+              <span>SSL secured (HTTPS)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Globe className="w-4 h-4 text-green-600" />
+              <span>Mobile responsive</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Zap className="w-4 h-4 text-green-600" />
+              <span>Fast loading</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Publish Actions */}
+      <div className="space-y-6">
+        {publishStatus === 'published' && publishedUrl ? (
+          <Card className="p-8 text-center bg-green-50 border-green-200">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-green-900 mb-2">🎉 Your website is live!</h3>
+            <p className="text-green-700 mb-6">Congratulations! Your website has been successfully published.</p>
+            <div className="space-y-4">
+              <Button
+                size="lg"
+                onClick={() => window.open(publishedUrl, '_blank')}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Globe className="w-5 h-5 mr-2" />
+                Visit Your Website
+              </Button>
+              <div className="flex justify-center space-x-4">
+                <Button variant="outline" size="sm">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ) : (
+          <Card className="p-8 text-center">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Ready to launch?</h3>
+            <p className="text-gray-600 mb-6">
+              Your website will be live in seconds. You can always make changes later.
+            </p>
+            <Button
+              size="lg"
+              onClick={publishConfiguration}
+              disabled={publishStatus === 'publishing'}
+              className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-4 text-xl font-bold rounded-full shadow-2xl animate-glow"
+            >
+              {publishStatus === 'publishing' ? (
+                <>
+                  <Cloud className="w-6 h-6 mr-3 animate-pulse" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Rocket className="w-6 h-6 mr-3" />
+                  Publish Website
+                </>
+              )}
+            </Button>
+          </Card>
+        )}
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        {publishStatus === 'published' && (
+          <Button
+            size="lg"
+            onClick={() => window.location.href = '/dashboard'}
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Go to Dashboard
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
   // Render current step
   const renderCurrentStep = () => {
     const step = configuratorSteps[currentStep];
