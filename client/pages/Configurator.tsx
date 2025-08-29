@@ -1259,7 +1259,9 @@ export default function Configurator() {
           <div
             className={`h-full overflow-hidden text-white ${fontClass}`}
             style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              background: formData.backgroundType === 'gradient'
+                ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+                : formData.backgroundColor || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             }}
           >
             {/* Status Bar */}
