@@ -1267,8 +1267,8 @@ export default function Configurator() {
           <Input
             type="text"
             placeholder="e.g. Bella's Café"
-            value={formData.businessName}
-            onChange={inputHandlers.businessName}
+            defaultValue={formData.businessName}
+            onChange={handleInputChange('businessName')}
             onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
             className="w-full px-4 py-3 text-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
             autoComplete="organization"
