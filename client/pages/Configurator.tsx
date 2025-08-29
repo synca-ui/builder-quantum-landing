@@ -353,7 +353,7 @@ export default function Configurator() {
     }, 1000); // 1 second debounce for all fields
   }, []); // Empty dependency array for complete stability
 
-  // Create stable input handlers that don't change between renders
+  // Create completely stable input handlers using refs to avoid dependencies
   const inputHandlers = useMemo(() => {
     const handlers: Record<string, (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void> = {};
 
@@ -361,7 +361,21 @@ export default function Configurator() {
       return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         // Don't prevent default for input events - this causes focus loss
         const value = e.target.value;
-        updateFormData(field, value);
+
+        // Update form data immediately for responsive UI
+        setFormData(prev => ({ ...prev, [field]: value }));
+
+        // Debounce saves to prevent rapid API calls
+        if (debouncedSaveRef.current) {
+          clearTimeout(debouncedSaveRef.current);
+        }
+
+        debouncedSaveRef.current = setTimeout(() => {
+          if (autoSaverRef.current) {
+            const currentData = { ...formDataRef.current, [field]: value };
+            autoSaverRef.current.save(currentData as Partial<Configuration>);
+          }
+        }, 1000); // 1 second debounce for all fields
       };
     };
 
@@ -372,7 +386,7 @@ export default function Configurator() {
     });
 
     return handlers;
-  }, [updateFormData]);
+  }, []); // No dependencies - completely stable
 
   // Load persisted data on component mount
   useEffect(() => {
