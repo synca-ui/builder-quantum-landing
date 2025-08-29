@@ -1286,50 +1286,30 @@ export default function Configurator() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
           {templates.map((template) => (
             <Card
               key={template.id}
-              className={`group cursor-pointer transition-all duration-500 hover:shadow-2xl border-2 ${
-                selectedTemplate === template.id 
-                  ? 'border-teal-500 shadow-2xl scale-[1.02] bg-gradient-to-br from-teal-50/50 to-purple-50/50' 
-                  : 'border-gray-200 hover:border-teal-300 hover:scale-[1.01]'
+              className={`group cursor-pointer transition-all duration-300 hover:shadow-lg border-2 ${
+                selectedTemplate === template.id
+                  ? 'border-teal-500 shadow-lg bg-gradient-to-br from-teal-50/50 to-purple-50/50'
+                  : 'border-gray-200 hover:border-teal-300'
               }`}
               onClick={() => setSelectedTemplate(template.id)}
             >
               <CardContent className="p-0">
-                {/* Enhanced Template Preview */}
-                <div className={`w-full h-64 rounded-t-lg ${template.preview} relative overflow-hidden`}>
+                {/* Minimalistic Template Preview */}
+                <div className={`w-full h-32 rounded-t-lg ${template.preview} relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10"></div>
                   
-                  {/* Realistic Template Mockup */}
-                  <div className="absolute inset-4 bg-white rounded-lg overflow-hidden border border-gray-200">
-                    {/* Mock Navigation */}
-                    <div className={`h-8 ${template.mockup.nav.bg} ${template.mockup.nav.border} border-b flex items-center px-2 space-x-1`}>
-                      <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
-                      <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                      <div className="flex-1 text-center">
-                        <div className={`text-xs font-bold ${template.mockup.nav.text}`}>
-                          {template.name} Demo
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Mock Content */}
-                    <div className={`p-3 ${template.mockup.hero.bg} h-full`}>
-                      <div className="text-center">
-                        <div className={`w-4 h-4 mx-auto mb-2 rounded ${template.mockup.cards.bg} ${template.mockup.cards.border} border flex items-center justify-center`}>
-                          <div className="w-2 h-2 bg-teal-500 rounded"></div>
-                        </div>
-                        <div className={`text-xs font-bold mb-1 ${template.mockup.hero.text}`}>Your Business</div>
-                        <div className={`text-xs ${template.mockup.cards.text} mb-2`}>Tagline here</div>
-                        
-                        {/* Mock Cards/Sections */}
-                        <div className="space-y-1">
-                          <div className={`h-3 ${template.mockup.cards.bg} ${template.mockup.cards.border} border rounded`}></div>
-                          <div className={`h-2 ${template.mockup.cards.bg} ${template.mockup.cards.border} border rounded w-3/4 mx-auto`}></div>
-                        </div>
+                  {/* Minimalistic Preview with Click Effect */}
+                  <div className="absolute inset-2 bg-white/90 backdrop-blur-sm rounded overflow-hidden border border-gray-200">
+                    <div className={`h-2 ${template.mockup.nav.bg} border-b border-gray-100`}></div>
+                    <div className={`p-2 ${template.mockup.hero.bg} h-full flex flex-col justify-center items-center`}>
+                      <div className={`w-3 h-3 mx-auto mb-1 rounded-full ${template.mockup.cards.bg} border`}></div>
+                      <div className="space-y-0.5">
+                        <div className={`h-1 ${template.mockup.cards.bg} border rounded w-8 mx-auto`}></div>
+                        <div className={`h-0.5 ${template.mockup.cards.bg} border rounded w-6 mx-auto`}></div>
                       </div>
                     </div>
                   </div>
@@ -1353,38 +1333,29 @@ export default function Configurator() {
                   )}
                 </div>
                 
-                <div className="p-6">
-                  <h3 className={`text-xl font-bold mb-2 transition-colors ${
+                <div className="p-3">
+                  <h3 className={`text-sm font-bold mb-1 transition-colors text-center ${
                     selectedTemplate === template.id ? 'text-teal-700' : 'text-gray-900'
                   }`}>
                     {template.name}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">{template.description}</p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {template.features.map((feature, index) => (
-                      <span key={index} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
 
-                  {/* Customize Button - only show for selected template */}
                   {selectedTemplate === template.id && (
-                    <div className="mt-4">
+                    <>
+                      <p className="text-gray-600 text-xs leading-relaxed mb-2 text-center">{template.description}</p>
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();
                           updateFormData('template', template.id);
                           nextStep();
                         }}
+                        size="sm"
                         className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold"
                       >
-                        <Sparkles className="mr-2 w-4 h-4" />
-                        Customize This Template
-                        <ChevronRight className="ml-2 w-4 h-4" />
+                        <Sparkles className="mr-1 w-3 h-3" />
+                        Use Template
                       </Button>
-                    </div>
+                    </>
                   )}
                 </div>
               </CardContent>
@@ -1680,10 +1651,10 @@ export default function Configurator() {
           </div>
         </div>
 
-        {/* Background Style */}
+        {/* Background Style - Only Color and Gradient */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">Background Style</label>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-4 mb-6">
             <Card
               className={`cursor-pointer transition-all duration-300 border-2 ${
                 formData.backgroundType === 'color' ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
@@ -1720,24 +1691,6 @@ export default function Configurator() {
                 )}
               </CardContent>
             </Card>
-            <Card
-              className={`cursor-pointer transition-all duration-300 border-2 ${
-                formData.backgroundType === 'image' ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-              }`}
-              onClick={() => updateFormData('backgroundType', 'image')}
-            >
-              <CardContent className="p-4 text-center">
-                <div className="w-full h-16 rounded-lg mb-3 bg-gray-200 bg-[url('/api/placeholder/100/100')] bg-cover"></div>
-                <div className="text-sm font-bold text-gray-900">Custom Image</div>
-                {formData.backgroundType === 'image' && (
-                  <div className="mt-2">
-                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           {formData.backgroundType === 'color' && (
@@ -1761,35 +1714,46 @@ export default function Configurator() {
             </div>
           )}
 
-          {formData.backgroundType === 'image' && (
+          {formData.backgroundType === 'gradient' && (
             <div>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-teal-400 transition-colors">
-                <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-2">Upload background image</p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => document.getElementById('bg-upload')?.click()}
-                >
-                  Choose Image
-                </Button>
-                <input
-                  id="bg-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      updateFormData('backgroundImage', file);
-                    }
-                  }}
-                />
-                {formData.backgroundImage && (
-                  <div className="mt-3 p-2 bg-teal-50 rounded border border-teal-200">
-                    <p className="text-xs text-teal-700">✓ Background image uploaded</p>
+              <label className="block text-sm font-bold text-gray-700 mb-3">Gradient Colors</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-2">Start Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={formData.primaryColor}
+                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.primaryColor}
+                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                      className="font-mono text-sm"
+                      placeholder="#2563EB"
+                    />
                   </div>
-                )}
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-2">End Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={formData.secondaryColor}
+                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.secondaryColor}
+                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                      className="font-mono text-sm"
+                      placeholder="#7C3AED"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -2437,6 +2401,16 @@ export default function Configurator() {
         return <ReservationsStep />;
       case 'contact-social':
         return <ContactSocialStep />;
+      case 'media-gallery':
+        return <MediaGalleryStep />;
+      case 'advanced-features':
+        return <AdvancedFeaturesStep />;
+      case 'domain-hosting':
+        return <DomainHostingStep />;
+      case 'preview-adjustments':
+        return <PreviewAdjustmentsStep />;
+      case 'publish':
+        return <PublishStep />;
       default:
         return (
           <div className="py-16 text-center">
