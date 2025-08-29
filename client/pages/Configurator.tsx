@@ -1205,66 +1205,124 @@ export default function Configurator() {
     </div>
   );
 
-  const TemplateStep = () => (
-    <div className="py-8">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Choose your template
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Select a design that matches your vision. You can customize colors and content later.
-        </p>
-      </div>
+  const TemplateStep = () => {
+    const [selectedTemplate, setSelectedTemplate] = useState(formData.template);
 
-      <div className="grid md:grid-cols-2 gap-8 mb-8">
-        {templates.map((template) => (
-          <Card
-            key={template.id}
-            className={`group cursor-pointer transition-all duration-500 hover:shadow-2xl border-2 ${
-              formData.template === template.id ? 'border-teal-500 shadow-xl scale-105' : 'border-transparent'
-            }`}
-            onClick={() => updateFormData('template', template.id)}
-          >
-            <CardContent className="p-0">
-              <div className={`w-full h-48 rounded-t-lg ${template.preview} relative overflow-hidden`}>
-                <div className="absolute inset-0 bg-black/5"></div>
-                <div className="absolute bottom-4 left-4 text-gray-900">
-                  <div className="text-lg font-bold">{template.name}</div>
-                </div>
-                {formData.template === template.id && (
-                  <div className="absolute top-4 right-4">
-                    <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center">
-                      <Check className="w-5 h-5 text-white" />
+    const handleTemplateSelect = useCallback((templateId: string) => {
+      setSelectedTemplate(templateId);
+      updateFormData('template', templateId);
+    }, [updateFormData]);
+
+    return (
+      <div className="py-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Choose your template
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Select a design that matches your vision. Each template offers a unique look and feel.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {templates.map((template) => (
+            <Card
+              key={template.id}
+              className={`group cursor-pointer transition-all duration-300 hover:shadow-xl border-2 hover:border-teal-300 ${
+                selectedTemplate === template.id
+                  ? 'border-teal-500 shadow-xl transform scale-[1.02] bg-teal-50/30'
+                  : 'border-gray-200 hover:bg-gray-50/50'
+              }`}
+              onClick={() => handleTemplateSelect(template.id)}
+            >
+              <CardContent className="p-0">
+                <div className={`w-full h-52 rounded-t-lg ${template.preview} relative overflow-hidden`}>
+                  {/* Template Preview Content */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10"></div>
+
+                  {/* Template Name Badge */}
+                  <div className="absolute top-4 left-4">
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      selectedTemplate === template.id
+                        ? 'bg-teal-500 text-white'
+                        : 'bg-white/90 text-gray-700'
+                    }`}>
+                      {template.name}
                     </div>
                   </div>
-                )}
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{template.name}</h3>
-                <p className="text-gray-600">{template.description}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          disabled={!formData.template}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
+                  {/* Selection Indicator */}
+                  {selectedTemplate === template.id && (
+                    <div className="absolute top-4 right-4">
+                      <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center shadow-lg animate-in zoom-in duration-200">
+                        <Check className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Interactive Preview Elements */}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="space-y-2">
+                      {/* Mock navigation */}
+                      <div className="flex space-x-1">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="w-8 h-1 bg-white/60 rounded-full"></div>
+                        ))}
+                      </div>
+                      {/* Mock content */}
+                      <div className="space-y-1">
+                        <div className="w-20 h-2 bg-white/80 rounded"></div>
+                        <div className="w-16 h-1 bg-white/60 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <h3 className={`text-xl font-bold mb-2 transition-colors ${
+                    selectedTemplate === template.id ? 'text-teal-700' : 'text-gray-900'
+                  }`}>
+                    {template.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{template.description}</p>
+
+                  {/* Template Features */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {template.style.layout && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                        {template.style.layout.replace('-', ' ')}
+                      </span>
+                    )}
+                    {template.style.navigation && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                        {template.style.navigation.replace('-', ' ')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="flex justify-between">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            disabled={!selectedTemplate}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const BrandingStep = () => (
     <div className="py-8 max-w-2xl mx-auto">
