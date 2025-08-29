@@ -1565,8 +1565,8 @@ export default function Configurator() {
                 <div className="flex-1">
                   <Input
                     type="text"
-                    value={formData.primaryColor}
-                    onChange={inputHandlers.primaryColor}
+                    defaultValue={formData.primaryColor}
+                    onChange={handleInputChange('primaryColor')}
                     className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                     placeholder="#2563EB"
                   />
@@ -1594,8 +1594,8 @@ export default function Configurator() {
                 <div className="flex-1">
                   <Input
                     type="text"
-                    value={formData.secondaryColor}
-                    onChange={inputHandlers.secondaryColor}
+                    defaultValue={formData.secondaryColor}
+                    onChange={handleInputChange('secondaryColor')}
                     className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                     placeholder="#7C3AED"
                   />
