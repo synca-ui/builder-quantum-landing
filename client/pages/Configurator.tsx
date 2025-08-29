@@ -1501,7 +1501,7 @@ export default function Configurator() {
                   </div>
                   <h1
                     className={`${getFontSizeClass("text-lg")} font-medium`}
-                    style={{ color: styles.userFontColor }}
+                    style={{ color: selectedIdForSwitch === "modern" || selectedIdForSwitch === "fancy" ? "#FFFFFF" : styles.userFontColor }}
                   >
                     {getBusinessName()}
                   </h1>
