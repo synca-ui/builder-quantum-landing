@@ -797,6 +797,16 @@ export default function Configurator() {
 
     const styles = getTemplateStyles();
 
+    // Helper function for font size classes
+    const getFontSizeClass = (baseSize: string) => {
+      const sizeMap = {
+        small: { 'text-xs': 'text-xs', 'text-sm': 'text-xs', 'text-base': 'text-sm', 'text-lg': 'text-base', 'text-xl': 'text-lg', 'text-2xl': 'text-xl' },
+        medium: { 'text-xs': 'text-xs', 'text-sm': 'text-sm', 'text-base': 'text-base', 'text-lg': 'text-lg', 'text-xl': 'text-xl', 'text-2xl': 'text-2xl' },
+        large: { 'text-xs': 'text-sm', 'text-sm': 'text-base', 'text-base': 'text-lg', 'text-lg': 'text-xl', 'text-xl': 'text-2xl', 'text-2xl': 'text-3xl' }
+      };
+      return sizeMap[styles.userFontSize] ? sizeMap[styles.userFontSize][baseSize] || baseSize : baseSize;
+    };
+
     const getBusinessIcon = () => {
       switch (formData.businessType) {
         case "cafe":
