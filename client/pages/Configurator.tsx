@@ -65,10 +65,8 @@ export default function Configurator() {
     setIsVisible(true);
   }, []);
 
-  // RESTRUCTURED Configuration steps
+  // COMPLETE Configuration steps
   const configuratorSteps = [
-    // Step -1: Welcome Page (handled separately)
-    
     // Step 0: Template Selection
     {
       id: 'template',
@@ -109,7 +107,7 @@ export default function Configurator() {
       component: 'page-structure'
     },
     
-    // Rest of the steps...
+    // Step 4: Opening Hours
     {
       id: 'opening-hours',
       title: "Set your opening hours",
@@ -118,6 +116,8 @@ export default function Configurator() {
       phaseTitle: "Business Details",
       component: 'opening-hours'
     },
+    
+    // Step 5: Menu/Products
     {
       id: 'menu-products',
       title: "Add your menu or products",
@@ -126,6 +126,8 @@ export default function Configurator() {
       phaseTitle: "Business Details",
       component: 'menu-products'
     },
+    
+    // Step 6: Reservations
     {
       id: 'reservations',
       title: "Setup reservations",
@@ -134,6 +136,8 @@ export default function Configurator() {
       phaseTitle: "Business Details",
       component: 'reservations'
     },
+    
+    // Step 7: Contact & Social
     {
       id: 'contact-social',
       title: "Contact & social media",
@@ -142,6 +146,8 @@ export default function Configurator() {
       phaseTitle: "Business Details",
       component: 'contact-social'
     },
+    
+    // Step 8: Media Gallery
     {
       id: 'media-gallery',
       title: "Upload your photos",
@@ -150,6 +156,8 @@ export default function Configurator() {
       phaseTitle: "Media & Advanced",
       component: 'media-gallery'
     },
+    
+    // Step 9: Advanced Features
     {
       id: 'advanced-features',
       title: "Optional features",
@@ -158,6 +166,8 @@ export default function Configurator() {
       phaseTitle: "Media & Advanced",
       component: 'advanced-features'
     },
+    
+    // Step 10: Domain & Hosting
     {
       id: 'domain-hosting',
       title: "Choose your domain",
@@ -166,6 +176,8 @@ export default function Configurator() {
       phaseTitle: "Publishing",
       component: 'domain-hosting'
     },
+    
+    // Step 11: Final Preview
     {
       id: 'preview-adjustments',
       title: "Preview & final tweaks",
@@ -174,6 +186,8 @@ export default function Configurator() {
       phaseTitle: "Publishing",
       component: 'preview-adjustments'
     },
+    
+    // Step 12: Publish
     {
       id: 'publish',
       title: "Publish your website",
@@ -190,7 +204,7 @@ export default function Configurator() {
     { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' }
   ];
 
-  // Enhanced professional templates
+  // Enhanced professional templates with realistic previews
   const templates = [
     {
       id: 'minimalist',
@@ -206,7 +220,12 @@ export default function Configurator() {
         navigation: 'minimal-top',
         typography: 'clean-sans'
       },
-      features: ['Clean Design', 'Mobile First', 'Fast Loading']
+      features: ['Clean Design', 'Mobile First', 'Fast Loading'],
+      mockup: {
+        nav: { bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-100' },
+        hero: { bg: 'bg-gray-50', text: 'text-gray-900' },
+        cards: { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-600' }
+      }
     },
     {
       id: 'vibrant',
@@ -222,7 +241,12 @@ export default function Configurator() {
         navigation: 'overlay-creative',
         typography: 'bold-display'
       },
-      features: ['Bold Colors', 'Creative Layout', 'Instagram Ready']
+      features: ['Bold Colors', 'Creative Layout', 'Instagram Ready'],
+      mockup: {
+        nav: { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-400' },
+        hero: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white' },
+        cards: { bg: 'bg-white/10 backdrop-blur-sm', border: 'border-white/20', text: 'text-white' }
+      }
     },
     {
       id: 'professional',
@@ -238,7 +262,12 @@ export default function Configurator() {
         navigation: 'classic-top',
         typography: 'elegant-serif'
       },
-      features: ['Professional', 'Trustworthy', 'Classic Appeal']
+      features: ['Professional', 'Trustworthy', 'Classic Appeal'],
+      mockup: {
+        nav: { bg: 'bg-blue-600', text: 'text-white', border: 'border-blue-500' },
+        hero: { bg: 'bg-blue-50', text: 'text-blue-900' },
+        cards: { bg: 'bg-white', border: 'border-blue-200', text: 'text-blue-600' }
+      }
     },
     {
       id: 'modern-dark',
@@ -254,7 +283,12 @@ export default function Configurator() {
         navigation: 'floating-modern',
         typography: 'tech-mono'
       },
-      features: ['Dark Theme', 'Modern UI', 'Tech-Forward']
+      features: ['Dark Theme', 'Modern UI', 'Tech-Forward'],
+      mockup: {
+        nav: { bg: 'bg-gray-800', text: 'text-white', border: 'border-gray-600' },
+        hero: { bg: 'bg-gray-900', text: 'text-white' },
+        cards: { bg: 'bg-gray-800', border: 'border-gray-600', text: 'text-gray-300' }
+      }
     }
   ];
 
@@ -559,11 +593,12 @@ export default function Configurator() {
     </nav>
   );
 
-  // Enhanced Live Preview Component with Logo Upload
+  // Enhanced Interactive Live Preview Component
   const LivePreview = () => {
     const [previewState, setPreviewState] = useState({
       menuOpen: false,
-      activePage: 'home'
+      activePage: 'home',
+      hoveredItem: null
     });
     
     const getBusinessName = () => formData.businessName || 'Your Business';
@@ -587,6 +622,47 @@ export default function Configurator() {
         case 'restaurant': return <Utensils className="w-5 h-5" />;
         default: return <Building className="w-5 h-5" />;
       }
+    };
+
+    // Get pages for navigation
+    const getAvailablePages = () => {
+      const pageMap = {
+        'home': 'Home',
+        'menu': 'Menu',
+        'gallery': 'Gallery',
+        'about': 'About',
+        'reservations': 'Reservations',
+        'contact': 'Contact'
+      };
+
+      return formData.selectedPages.map(pageId => ({
+        id: pageId,
+        name: pageMap[pageId] || pageId.charAt(0).toUpperCase() + pageId.slice(1)
+      }));
+    };
+
+    // Sample content for realistic previews
+    const sampleContent = {
+      menuItems: formData.menuItems.length > 0 ? formData.menuItems : [
+        { name: 'Signature Latte', description: 'Our house special with organic beans', price: '4.50' },
+        { name: 'Artisan Sandwich', description: 'Fresh ingredients, homemade bread', price: '8.00' },
+        { name: 'Chocolate Croissant', description: 'Buttery, flaky pastry with dark chocolate', price: '3.25' }
+      ],
+      reviews: [
+        { name: 'Sarah M.', rating: 5, text: 'Amazing coffee and friendly staff!' },
+        { name: 'John D.', rating: 5, text: 'Love the atmosphere here.' }
+      ],
+      hours: formData.openingHours?.Monday ? formData.openingHours : {
+        Monday: { open: '7:00', close: '19:00' },
+        Tuesday: { open: '7:00', close: '19:00' },
+        Wednesday: { open: '7:00', close: '19:00' }
+      },
+      galleryImages: formData.gallery.length > 0 ? formData.gallery : [
+        { url: '/api/placeholder/300/300', alt: 'Our cozy interior' },
+        { url: '/api/placeholder/300/300', alt: 'Fresh coffee being brewed' },
+        { url: '/api/placeholder/300/300', alt: 'Delicious pastries' },
+        { url: '/api/placeholder/300/300', alt: 'Our friendly team' }
+      ]
     };
 
     const renderPreviewContent = () => {
@@ -618,11 +694,12 @@ export default function Configurator() {
         return getBusinessIcon();
       };
 
-      // Render different templates based on selection
+      // Render different templates based on selection with INTERACTIVE FEATURES
       switch (formData.template) {
         case 'minimalist':
           return (
             <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
+              {/* Interactive Navigation */}
               <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -635,26 +712,159 @@ export default function Configurator() {
                       </div>
                       <h1 className="text-lg font-medium text-gray-900">{getBusinessName()}</h1>
                     </div>
-                    <button className="p-2 hover:bg-gray-50 rounded-lg">
+                    <button 
+                      className="p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                    >
                       <Menu className="w-4 h-4 text-gray-600" />
                     </button>
                   </div>
-                </div>
-              </nav>
-              <div className="px-6 py-8" style={{ backgroundColor: formData.backgroundColor }}>
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center" 
-                       style={{ backgroundColor: `${styles.userPrimary}15` }}>
-                    <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
-                      <LogoDisplay />
+                  
+                  {/* Interactive Menu Dropdown */}
+                  {previewState.menuOpen && (
+                    <div className="mt-3 pt-3 border-t border-gray-100 animate-in slide-in-from-top duration-200">
+                      <div className="space-y-1">
+                        {getAvailablePages().map((page) => (
+                          <button
+                            key={page.id}
+                            onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
+                            className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${
+                              previewState.activePage === page.id
+                                ? 'bg-gray-100 text-gray-900 font-medium'
+                                : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page.name}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <h2 className="text-2xl font-light text-gray-900 mb-2">{getBusinessName()}</h2>
-                  {formData.slogan && (
-                    <p className="text-gray-500 text-sm">{formData.slogan}</p>
                   )}
                 </div>
-              </div>
+              </nav>
+
+              {/* Interactive Content Pages */}
+              {previewState.activePage === 'home' && (
+                <div className="px-6 py-8" style={{ backgroundColor: formData.backgroundColor }}>
+                  <div className="text-center mb-8">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center" 
+                         style={{ backgroundColor: `${styles.userPrimary}15` }}>
+                      <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
+                        <LogoDisplay />
+                      </div>
+                    </div>
+                    <h2 className="text-2xl font-light text-gray-900 mb-2">{getBusinessName()}</h2>
+                    {formData.slogan && (
+                      <p className="text-gray-500 text-sm">{formData.slogan}</p>
+                    )}
+                  </div>
+
+                  {/* Interactive Menu Items */}
+                  <div className="space-y-4">
+                    {sampleContent.menuItems.slice(0, 3).map((item, index) => (
+                      <div 
+                        key={index} 
+                        className="text-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 px-4 py-2 rounded transition-colors"
+                        onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: index }))}
+                        onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
+                      >
+                        <h4 className="font-medium text-gray-900 mb-1">{item.name}</h4>
+                        <p className="text-sm text-gray-500 mb-2">{item.description}</p>
+                        <span 
+                          className={`text-lg font-light transition-all ${previewState.hoveredItem === index ? 'scale-110' : ''}`} 
+                          style={{ color: styles.userPrimary }}
+                        >
+                          ${item.price}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Interactive Reservation Button */}
+                  {formData.reservationsEnabled && (
+                    <div className="mt-8 text-center">
+                      <button
+                        className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-3 rounded-full font-medium transition-all hover:scale-105 cursor-pointer"
+                        style={{ backgroundColor: styles.userPrimary }}
+                      >
+                        <Calendar className="w-4 h-4 mr-2 inline" />
+                        Reserve a Table
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Opening Hours */}
+                  {Object.keys(sampleContent.hours).length > 0 && (
+                    <div className="mt-12 pt-8 border-t border-gray-100">
+                      <h3 className="text-lg font-medium text-gray-900 mb-6 text-center">Opening Hours</h3>
+                      <div className="space-y-3">
+                        {Object.entries(sampleContent.hours).map(([day, hours]: [string, any]) => (
+                          <div key={day} className="flex justify-between items-center py-2 border-b border-gray-50">
+                            <span className="text-gray-700 font-medium">{day}</span>
+                            <span className="text-gray-600">
+                              {hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {previewState.activePage === 'menu' && (
+                <div className="px-6 py-8">
+                  <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Menu</h2>
+                  <div className="space-y-6">
+                    {sampleContent.menuItems.map((item, index) => (
+                      <div key={index} className="border-b border-gray-100 pb-4 hover:bg-gray-50 px-4 py-2 rounded transition-colors cursor-pointer">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-gray-900">{item.name}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                          </div>
+                          <span className="font-light text-lg ml-4" style={{ color: styles.userPrimary }}>${item.price}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {previewState.activePage === 'gallery' && formData.selectedPages.includes('gallery') && (
+                <div className="px-6 py-8">
+                  <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Gallery</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {sampleContent.galleryImages.map((image, index) => (
+                      <div key={index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform">
+                        <img
+                          src={image.url}
+                          alt={image.alt}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {previewState.activePage === 'contact' && (
+                <div className="px-6 py-8">
+                  <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Contact</h2>
+                  <div className="space-y-4 text-center">
+                    {formData.location && (
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2">Location</h3>
+                        <p className="text-gray-600 text-sm">{formData.location}</p>
+                      </div>
+                    )}
+                    <div className="pt-4">
+                      <h3 className="font-medium text-gray-900 mb-2">Get in Touch</h3>
+                      <p className="text-gray-600 text-sm">Visit us today!</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
 
@@ -662,6 +872,7 @@ export default function Configurator() {
           return (
             <div className={`h-full overflow-y-auto text-white ${fontClass}`} 
                  style={{ background: formData.backgroundType === 'color' ? formData.backgroundColor : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+              {/* Interactive Navigation */}
               <nav className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -670,28 +881,83 @@ export default function Configurator() {
                     </div>
                     <h1 className="text-xl font-black text-white">{getBusinessName()}</h1>
                   </div>
-                  <button className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
+                  <button 
+                    className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer"
+                    onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                  >
                     <Menu className="w-4 h-4 text-white" />
                   </button>
                 </div>
+
+                {/* Full-Screen Interactive Menu */}
+                {previewState.menuOpen && (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="text-center space-y-6">
+                      {getAvailablePages().map((page, index) => (
+                        <button
+                          key={page.id}
+                          onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
+                          className="block text-3xl font-black text-white hover:text-pink-300 transition-all duration-300 hover:scale-110 cursor-pointer"
+                          style={{
+                            animationDelay: `${index * 100}ms`,
+                          }}
+                        >
+                          {page.name}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: false }))}
+                        className="mt-8 text-white/60 hover:text-white transition-colors"
+                      >
+                        <X className="w-8 h-8 mx-auto" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </nav>
-              <div className="pt-8 px-4 text-center">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center">
-                  <div style={{ color: styles.userPrimary }} className="w-10 h-10 flex items-center justify-center">
-                    <LogoDisplay />
+
+              {/* Interactive Content */}
+              {previewState.activePage === 'home' && (
+                <div className="pt-8 px-4 text-center">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center">
+                    <div style={{ color: styles.userPrimary }} className="w-10 h-10 flex items-center justify-center">
+                      <LogoDisplay />
+                    </div>
+                  </div>
+                  <h1 className="text-3xl font-black text-white mb-3">{getBusinessName()}</h1>
+                  {formData.slogan && (
+                    <p className="text-xl font-bold text-white/90 mb-6">{formData.slogan}</p>
+                  )}
+                  
+                  {/* Interactive Creative Grid */}
+                  <div className="grid grid-cols-2 gap-3 mt-8">
+                    {sampleContent.menuItems.slice(0, 4).map((item, index) => (
+                      <div 
+                        key={index} 
+                        className="bg-white/20 backdrop-blur rounded-2xl p-4 hover:bg-white/30 transition-all cursor-pointer hover:scale-105"
+                        onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: index }))}
+                        onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
+                      >
+                        <h3 className="text-sm font-bold text-white">{item.name}</h3>
+                        <p className="text-xs text-white/80 mt-1">{item.description}</p>
+                        <div 
+                          className={`text-lg font-black mt-2 transition-all ${previewState.hoveredItem === index ? 'scale-110' : ''}`} 
+                          style={{ color: styles.userSecondary }}
+                        >
+                          ${item.price}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <h1 className="text-3xl font-black text-white mb-3">{getBusinessName()}</h1>
-                {formData.slogan && (
-                  <p className="text-xl font-bold text-white/90">{formData.slogan}</p>
-                )}
-              </div>
+              )}
             </div>
           );
 
         case 'professional':
           return (
             <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
+              {/* Professional Navigation */}
               <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -703,31 +969,77 @@ export default function Configurator() {
                       </div>
                       <h1 className="text-lg font-semibold text-gray-900">{getBusinessName()}</h1>
                     </div>
-                    <button className="p-2 hover:bg-gray-100 rounded">
+                    <button 
+                      className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                      onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                    >
                       <Menu className="w-4 h-4 text-gray-600" />
                     </button>
                   </div>
-                </div>
-              </nav>
-              <div className="p-4" style={{ backgroundColor: formData.backgroundColor }}>
-                <div className="text-center py-8 border-b border-gray-100">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
-                    <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
-                      <LogoDisplay />
+                  
+                  {/* Professional Dropdown */}
+                  {previewState.menuOpen && (
+                    <div className="mt-3 pt-3 border-t border-gray-100 animate-in slide-in-from-top duration-200">
+                      <div className="grid grid-cols-2 gap-2">
+                        {getAvailablePages().map((page) => (
+                          <button
+                            key={page.id}
+                            onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
+                            className={`text-left px-3 py-2 text-sm rounded transition-colors cursor-pointer ${
+                              previewState.activePage === page.id
+                                ? 'bg-blue-50 text-blue-900 font-semibold'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page.name}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
-                  {formData.slogan && (
-                    <p className="text-gray-600">{formData.slogan}</p>
                   )}
                 </div>
-              </div>
+              </nav>
+
+              {/* Professional Content */}
+              {previewState.activePage === 'home' && (
+                <div className="p-4" style={{ backgroundColor: formData.backgroundColor }}>
+                  <div className="text-center py-8 border-b border-gray-100">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
+                        <LogoDisplay />
+                      </div>
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
+                    {formData.slogan && (
+                      <p className="text-gray-600">{formData.slogan}</p>
+                    )}
+                  </div>
+
+                  <div className="py-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Featured Items</h2>
+                    <div className="space-y-4">
+                      {sampleContent.menuItems.slice(0, 3).map((item, index) => (
+                        <div key={index} className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                              <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                            </div>
+                            <div className="text-lg font-bold ml-4" style={{ color: styles.userPrimary }}>${item.price}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
 
         case 'modern-dark':
           return (
             <div className={`h-full overflow-y-auto bg-gray-900 text-white ${fontClass}`}>
+              {/* Modern Header */}
               <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 sticky top-0 z-50">
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -739,29 +1051,72 @@ export default function Configurator() {
                       </div>
                       <h1 className="text-white font-mono text-lg">{getBusinessName()}</h1>
                     </div>
-                    <button className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center">
+                    <button 
+                      className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center transition-colors cursor-pointer"
+                      onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                    >
                       <Menu className="w-4 h-4 text-gray-300" />
                     </button>
                   </div>
-                </div>
-              </nav>
-              <div className="p-4" style={{ backgroundColor: formData.backgroundType === 'color' && formData.backgroundColor !== '#FFFFFF' ? formData.backgroundColor : undefined }}>
-                <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
-                      <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
-                        <LogoDisplay />
+                  
+                  {/* Modern Slide Menu */}
+                  {previewState.menuOpen && (
+                    <div className="mt-3 pt-3 border-t border-gray-700 animate-in slide-in-from-top duration-200">
+                      <div className="space-y-1">
+                        {getAvailablePages().map((page) => (
+                          <button
+                            key={page.id}
+                            onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
+                            className={`w-full text-left px-3 py-2 text-sm font-mono rounded transition-all cursor-pointer ${
+                              previewState.activePage === page.id
+                                ? 'bg-green-500/20 text-green-400 border-l-2 border-green-400'
+                                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                            }`}
+                          >
+                            {page.id}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                    <div>
-                      <h1 className="text-xl font-bold text-white">{getBusinessName()}</h1>
-                      {formData.slogan && (
-                        <p className="text-sm text-gray-400">{formData.slogan}</p>
-                      )}
+                  )}
+                </div>
+              </nav>
+
+              {/* Modern Content */}
+              {previewState.activePage === 'home' && (
+                <div className="p-4" style={{ backgroundColor: formData.backgroundType === 'color' && formData.backgroundColor !== '#FFFFFF' ? formData.backgroundColor : undefined }}>
+                  <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
+                        <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
+                          <LogoDisplay />
+                        </div>
+                      </div>
+                      <div>
+                        <h1 className="text-xl font-bold text-white">{getBusinessName()}</h1>
+                        {formData.slogan && (
+                          <p className="text-sm text-gray-400">{formData.slogan}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Modular Grid */}
+                  <div className="grid gap-3">
+                    {sampleContent.menuItems.slice(0, 3).map((item, index) => (
+                      <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-all cursor-pointer">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="text-sm font-semibold text-white">{item.name}</h3>
+                            <p className="text-xs text-gray-400 mt-1">{item.description}</p>
+                          </div>
+                          <div className="text-sm font-mono font-bold text-green-400">${item.price}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           );
 
@@ -785,8 +1140,8 @@ export default function Configurator() {
             </div>
           </div>
 
-          {/* Logo Upload Section in Live Preview */}
-          {currentStep >= 1 && (
+          {/* Logo Upload Section - Only show until Step 2 */}
+          {currentStep >= 1 && currentStep <= 2 && (
             <div className="mb-4 p-4 bg-gray-50 rounded-lg">
               <h4 className="text-sm font-bold text-gray-700 mb-3">Business Logo</h4>
               <div className="flex items-center space-x-3">
@@ -908,7 +1263,7 @@ export default function Configurator() {
     </div>
   );
 
-  // Template Selection (Step 0) - NO AUTO-REDIRECT
+  // Enhanced Template Selection with Better Previews
   const TemplateStep = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(formData.template);
 
@@ -943,8 +1298,41 @@ export default function Configurator() {
               onClick={() => setSelectedTemplate(template.id)}
             >
               <CardContent className="p-0">
-                <div className={`w-full h-48 rounded-t-lg ${template.preview} relative overflow-hidden`}>
+                {/* Enhanced Template Preview */}
+                <div className={`w-full h-64 rounded-t-lg ${template.preview} relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10"></div>
+                  
+                  {/* Realistic Template Mockup */}
+                  <div className="absolute inset-4 bg-white rounded-lg overflow-hidden border border-gray-200">
+                    {/* Mock Navigation */}
+                    <div className={`h-8 ${template.mockup.nav.bg} ${template.mockup.nav.border} border-b flex items-center px-2 space-x-1`}>
+                      <div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                      <div className="flex-1 text-center">
+                        <div className={`text-xs font-bold ${template.mockup.nav.text}`}>
+                          {template.name} Demo
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Mock Content */}
+                    <div className={`p-3 ${template.mockup.hero.bg} h-full`}>
+                      <div className="text-center">
+                        <div className={`w-4 h-4 mx-auto mb-2 rounded ${template.mockup.cards.bg} ${template.mockup.cards.border} border flex items-center justify-center`}>
+                          <div className="w-2 h-2 bg-teal-500 rounded"></div>
+                        </div>
+                        <div className={`text-xs font-bold mb-1 ${template.mockup.hero.text}`}>Your Business</div>
+                        <div className={`text-xs ${template.mockup.cards.text} mb-2`}>Tagline here</div>
+                        
+                        {/* Mock Cards/Sections */}
+                        <div className="space-y-1">
+                          <div className={`h-3 ${template.mockup.cards.bg} ${template.mockup.cards.border} border rounded`}></div>
+                          <div className={`h-2 ${template.mockup.cards.bg} ${template.mockup.cards.border} border rounded w-3/4 mx-auto`}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   
                   <div className="absolute top-4 left-4">
                     <div className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
@@ -963,20 +1351,6 @@ export default function Configurator() {
                       </div>
                     </div>
                   )}
-
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="space-y-2">
-                      <div className="flex space-x-1">
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className="w-8 h-1 bg-white/60 rounded-full"></div>
-                        ))}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="w-20 h-2 bg-white/80 rounded"></div>
-                        <div className="w-16 h-1 bg-white/60 rounded"></div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
                 
                 <div className="p-6">
@@ -987,7 +1361,7 @@ export default function Configurator() {
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed mb-4">{template.description}</p>
                   
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {template.features.map((feature, index) => (
                       <span key={index} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                         {feature}
@@ -1439,6 +1813,604 @@ export default function Configurator() {
     </div>
   );
 
+  // Page Structure Step
+  const PageStructureStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Select your pages
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose which pages your website will include. You can always add more later.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {pageOptions.map((page) => {
+          const isSelected = formData.selectedPages.includes(page.id);
+          const isVisible = !page.condition || page.condition.includes(formData.businessType);
+
+          if (!isVisible) return null;
+
+          return (
+            <Card
+              key={page.id}
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              } ${page.required ? 'opacity-75' : ''}`}
+              onClick={() => {
+                if (page.required) return;
+                const newPages = isSelected
+                  ? formData.selectedPages.filter(p => p !== page.id)
+                  : [...formData.selectedPages, page.id];
+                updateFormData('selectedPages', newPages);
+              }}
+            >
+              <CardContent className="p-6 text-center">
+                <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-r ${
+                  isSelected ? 'from-teal-500 to-purple-500' : 'from-gray-400 to-gray-500'
+                } flex items-center justify-center text-white`}>
+                  {page.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{page.name}</h3>
+                {page.required && (
+                  <p className="text-xs text-gray-500">Required</p>
+                )}
+                {isSelected && !page.required && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Additional step components
+  const OpeningHoursStep = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Set your opening hours
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            When are you open for business? This helps customers know when to visit.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {days.map((day) => {
+            const hours = formData.openingHours[day] || { open: '09:00', close: '17:00', closed: false };
+
+            return (
+              <Card key={day} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24">
+                      <h3 className="font-semibold text-gray-900">{day}</h3>
+                    </div>
+                    <Button
+                      variant={hours.closed ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const newHours = {
+                          ...formData.openingHours,
+                          [day]: { ...hours, closed: !hours.closed }
+                        };
+                        updateFormData('openingHours', newHours);
+                      }}
+                    >
+                      {hours.closed ? 'Closed' : 'Open'}
+                    </Button>
+                  </div>
+
+                  {!hours.closed && (
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="time"
+                        defaultValue={hours.open}
+                        onChange={(e) => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...hours, open: e.target.value }
+                          };
+                          updateFormData('openingHours', newHours);
+                        }}
+                        className="w-32"
+                      />
+                      <span className="text-gray-500">to</span>
+                      <Input
+                        type="time"
+                        defaultValue={hours.close}
+                        onChange={(e) => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...hours, close: e.target.value }
+                          };
+                          updateFormData('openingHours', newHours);
+                        }}
+                        className="w-32"
+                      />
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const MenuProductsStep = () => {
+    const [newItem, setNewItem] = useState({ name: '', description: '', price: '' });
+
+    const addMenuItem = () => {
+      if (newItem.name && newItem.price) {
+        const updatedItems = [...formData.menuItems, { ...newItem, id: Date.now().toString() }];
+        updateFormData('menuItems', updatedItems);
+        setNewItem({ name: '', description: '', price: '' });
+      }
+    };
+
+    const removeMenuItem = (index: number) => {
+      const updatedItems = formData.menuItems.filter((_, i) => i !== index);
+      updateFormData('menuItems', updatedItems);
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Add your menu or products
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Showcase what you offer. You can add items manually or upload your menu.
+          </p>
+        </div>
+
+        {/* Upload Options */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <Card className="p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-2xl flex items-center justify-center">
+                <Camera className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Menu Image</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload a photo of your existing menu</p>
+              <Button
+                variant="outline"
+                className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700"
+                onClick={() => document.getElementById('menu-img-upload')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose Image File
+              </Button>
+              <input
+                id="menu-img-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    updateFormData('menuPdf', file);
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">JPG, PNG up to 10MB</p>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-2xl flex items-center justify-center">
+                <Upload className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload CSV File</h3>
+              <p className="text-gray-600 text-sm mb-4">Upload structured menu data as CSV</p>
+              <Button
+                variant="outline"
+                className="w-full border-2 border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 text-green-700"
+                onClick={() => document.getElementById('csv-upload')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose CSV File
+              </Button>
+              <input
+                id="csv-upload"
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Handle CSV file processing here
+                    console.log('CSV file uploaded:', file);
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">Format: name,description,price</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="h-px bg-gray-300 flex-1"></div>
+            <span className="text-gray-500 font-medium">OR</span>
+            <div className="h-px bg-gray-300 flex-1"></div>
+          </div>
+        </div>
+
+        {/* Add New Item Form */}
+        <Card className="p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Item</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Item Name *</label>
+              <Input
+                type="text"
+                placeholder="e.g. Signature Latte"
+                value={newItem.name}
+                onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+              <Input
+                type="text"
+                placeholder="Brief description"
+                value={newItem.description}
+                onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Price *</label>
+              <div className="flex">
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="9.99"
+                  value={newItem.price}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={addMenuItem}
+                  disabled={!newItem.name || !newItem.price}
+                  className="ml-2 bg-teal-500 hover:bg-teal-600"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Menu Items List */}
+        {formData.menuItems.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold text-gray-900">Your Menu Items</h3>
+            {formData.menuItems.map((item, index) => (
+              <Card key={index} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                    {item.description && (
+                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg font-bold text-teal-600">${item.price}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeMenuItem(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const ReservationsStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Setup reservations
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Enable table bookings for your business. Perfect for restaurants and cafés.
+        </p>
+      </div>
+
+      <div className="space-y-8">
+        {/* Enable Reservations Toggle */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Enable Reservations</h3>
+              <p className="text-gray-600">Allow customers to book tables online</p>
+            </div>
+            <Button
+              variant={formData.reservationsEnabled ? "default" : "outline"}
+              onClick={() => updateFormData('reservationsEnabled', !formData.reservationsEnabled)}
+              className={formData.reservationsEnabled ? 'bg-teal-500 hover:bg-teal-600' : ''}
+            >
+              {formData.reservationsEnabled ? 'Enabled' : 'Disabled'}
+            </Button>
+          </div>
+        </Card>
+
+        {formData.reservationsEnabled && (
+          <>
+            {/* Maximum Guests */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Booking Settings</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Maximum party size</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="50"
+                    defaultValue={formData.maxGuests.toString()}
+                    onChange={(e) => updateFormData('maxGuests', parseInt(e.target.value) || 10)}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Notification method</label>
+                  <select
+                    value={formData.notificationMethod}
+                    onChange={(e) => updateFormData('notificationMethod', e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  >
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="both">Email & Phone</option>
+                  </select>
+                </div>
+              </div>
+            </Card>
+
+            {/* Time Slots */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Available Time Slots</h3>
+              <p className="text-gray-600 mb-4">Set the times when customers can make reservations</p>
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {Array.from({ length: 14 }, (_, i) => {
+                  const hour = 10 + i;
+                  const time = `${hour}:00`;
+                  const isSelected = formData.timeSlots.includes(time);
+
+                  return (
+                    <Button
+                      key={time}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const newSlots = isSelected
+                          ? formData.timeSlots.filter(slot => slot !== time)
+                          : [...formData.timeSlots, time];
+                        updateFormData('timeSlots', newSlots);
+                      }}
+                      className={isSelected ? 'bg-teal-500 hover:bg-teal-600' : ''}
+                    >
+                      {time}
+                    </Button>
+                  );
+                })}
+              </div>
+            </Card>
+          </>
+        )}
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const ContactSocialStep = () => {
+    const contactMethods = [
+      { id: 'phone', icon: <Phone className="w-5 h-5" />, label: 'Phone', placeholder: '+1 (555) 123-4567' },
+      { id: 'email', icon: <Mail className="w-5 h-5" />, label: 'Email', placeholder: 'hello@yourbusiness.com' },
+      { id: 'address', icon: <MapPin className="w-5 h-5" />, label: 'Address', placeholder: '123 Main St, City, State' }
+    ];
+
+    const socialPlatforms = [
+      { id: 'instagram', icon: <Instagram className="w-5 h-5" />, label: 'Instagram', placeholder: '@yourbusiness' },
+      { id: 'facebook', icon: <Facebook className="w-5 h-5" />, label: 'Facebook', placeholder: 'facebook.com/yourbusiness' }
+    ];
+
+    const getContactValue = (methodId: string) => {
+      if (!formData.contactMethods) return '';
+      if (Array.isArray(formData.contactMethods)) {
+        const contact = formData.contactMethods.find(c => c.type === methodId);
+        return contact ? contact.value : '';
+      }
+      return formData.contactMethods[methodId] || '';
+    };
+
+    const getSocialValue = (platformId: string) => {
+      if (!formData.socialMedia) return '';
+      return formData.socialMedia[platformId] || '';
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Contact & social media
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            How can customers reach you? Add your contact information and social media links.
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Contact Information */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Contact Information</h3>
+            <div className="space-y-4">
+              {contactMethods.map((method) => (
+                <div key={method.id}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{method.label}</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 text-gray-400">
+                      {method.icon}
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder={method.placeholder}
+                      defaultValue={getContactValue(method.id)}
+                      ref={setInputRef(`contact_${method.id}`)}
+                      onBlur={handleInputBlur(`contact_${method.id}`)}
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Social Media */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Social Media</h3>
+            <div className="space-y-4">
+              {socialPlatforms.map((platform) => (
+                <div key={platform.id}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{platform.label}</label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 text-gray-400">
+                      {platform.icon}
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder={platform.placeholder}
+                      defaultValue={getSocialValue(platform.id)}
+                      ref={setInputRef(`social_${platform.id}`)}
+                      onBlur={handleInputBlur(`social_${platform.id}`)}
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Instagram Sync */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-md font-bold text-gray-900">Instagram Integration</h4>
+                  <p className="text-sm text-gray-600">Automatically sync your Instagram posts to your website</p>
+                </div>
+                <Button
+                  variant={formData.instagramSync ? "default" : "outline"}
+                  onClick={() => updateFormData('instagramSync', !formData.instagramSync)}
+                  className={formData.instagramSync ? 'bg-teal-500 hover:bg-teal-600' : ''}
+                >
+                  {formData.instagramSync ? 'Enabled' : 'Disabled'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   // Render main content based on current step
   const renderMainContent = () => {
     if (currentStep === -1) {
@@ -1455,6 +2427,16 @@ export default function Configurator() {
         return <BusinessInfoStep />;
       case 'design-customization':
         return <DesignCustomizationStep />;
+      case 'page-structure':
+        return <PageStructureStep />;
+      case 'opening-hours':
+        return <OpeningHoursStep />;
+      case 'menu-products':
+        return <MenuProductsStep />;
+      case 'reservations':
+        return <ReservationsStep />;
+      case 'contact-social':
+        return <ContactSocialStep />;
       default:
         return (
           <div className="py-16 text-center">
