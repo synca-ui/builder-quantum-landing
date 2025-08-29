@@ -2580,6 +2580,10 @@ export default function Configurator() {
                   onClick={() => {
                     updateFormData("primaryColor", preset.primary);
                     updateFormData("secondaryColor", preset.secondary);
+                    // Set background type to gradient for better visual impact
+                    updateFormData("backgroundType", "gradient");
+                    // Set background color based on theme
+                    updateFormData("backgroundColor", preset.primary);
                   }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
                     isSelected
