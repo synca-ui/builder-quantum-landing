@@ -8,7 +8,6 @@ import { configurationApi, AutoSaver, sessionApi, handleApiError, type Configura
 
 export default function Configurator() {
   const [isVisible, setIsVisible] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
