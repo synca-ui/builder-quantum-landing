@@ -1076,6 +1076,16 @@ export default function Configurator() {
 
       switch (previewState.activePage) {
         case "menu":
+          if (!formData.selectedPages.includes('menu')) {
+            return (
+              <div className={templateStyles.page}>
+                <div className="text-center py-8">
+                  <h2 className={templateStyles.title}>Page Not Available</h2>
+                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                </div>
+              </div>
+            );
+          }
           return (
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Menu</h2>
@@ -1105,6 +1115,16 @@ export default function Configurator() {
           );
 
         case "gallery":
+          if (!formData.selectedPages.includes('gallery')) {
+            return (
+              <div className={templateStyles.page}>
+                <div className="text-center py-8">
+                  <h2 className={templateStyles.title}>Page Not Available</h2>
+                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                </div>
+              </div>
+            );
+          }
           return (
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Gallery</h2>
@@ -1119,6 +1139,16 @@ export default function Configurator() {
           );
 
         case "about":
+          if (!formData.selectedPages.includes('about')) {
+            return (
+              <div className={templateStyles.page}>
+                <div className="text-center py-8">
+                  <h2 className={templateStyles.title}>Page Not Available</h2>
+                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                </div>
+              </div>
+            );
+          }
           return (
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>About Us</h2>
@@ -1144,6 +1174,16 @@ export default function Configurator() {
           );
 
         case "contact":
+          if (!formData.selectedPages.includes('contact')) {
+            return (
+              <div className={templateStyles.page}>
+                <div className="text-center py-8">
+                  <h2 className={templateStyles.title}>Page Not Available</h2>
+                  <p className={templateStyles.itemDesc}>This page is not enabled</p>
+                </div>
+              </div>
+            );
+          }
           return (
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Contact</h2>
