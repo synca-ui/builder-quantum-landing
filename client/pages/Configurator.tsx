@@ -2081,6 +2081,22 @@ export default function Configurator() {
       { id: 'facebook', icon: <Facebook className="w-5 h-5" />, label: 'Facebook', placeholder: 'facebook.com/yourbusiness' }
     ];
 
+    // Get current contact values (array format for backend compatibility)
+    const getContactValue = (methodId: string) => {
+      if (!formData.contactMethods) return '';
+      if (Array.isArray(formData.contactMethods)) {
+        const contact = formData.contactMethods.find(c => c.type === methodId);
+        return contact ? contact.value : '';
+      }
+      // Fallback for old object format
+      return formData.contactMethods[methodId] || '';
+    };
+
+    const getSocialValue = (platformId: string) => {
+      if (!formData.socialMedia) return '';
+      return formData.socialMedia[platformId] || '';
+    };
+
     return (
       <div className="py-8 max-w-4xl mx-auto">
         <div className="text-center mb-12">
@@ -2107,11 +2123,9 @@ export default function Configurator() {
                     <Input
                       type="text"
                       placeholder={method.placeholder}
-                      defaultValue={formData.contactMethods?.[method.id] || ''}
-                      onChange={(e) => {
-                        const newMethods = { ...formData.contactMethods, [method.id]: e.target.value };
-                        updateFormData('contactMethods', newMethods);
-                      }}
+                      defaultValue={getContactValue(method.id)}
+                      ref={setInputRef(`contact_${method.id}`)}
+                      onBlur={handleInputBlur(`contact_${method.id}`)}
                       className="pl-12"
                     />
                   </div>
@@ -2134,11 +2148,9 @@ export default function Configurator() {
                     <Input
                       type="text"
                       placeholder={platform.placeholder}
-                      defaultValue={formData.socialMedia?.[platform.id] || ''}
-                      onChange={(e) => {
-                        const newSocial = { ...formData.socialMedia, [platform.id]: e.target.value };
-                        updateFormData('socialMedia', newSocial);
-                      }}
+                      defaultValue={getSocialValue(platform.id)}
+                      ref={setInputRef(`social_${platform.id}`)}
+                      onBlur={handleInputBlur(`social_${platform.id}`)}
                       className="pl-12"
                     />
                   </div>
