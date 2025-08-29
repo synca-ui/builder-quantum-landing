@@ -2439,91 +2439,230 @@ export default function Configurator() {
 
   // Additional step components
   const OpeningHoursStep = () => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const weekends = ['Saturday', 'Sunday'];
+
+    const [useWeekdaySchedule, setUseWeekdaySchedule] = useState(true);
+    const [weekdayHours, setWeekdayHours] = useState({ open: '09:00', close: '17:00', closed: false });
+
+    const applyWeekdaySchedule = () => {
+      const newHours = { ...formData.openingHours };
+      weekdays.forEach(day => {
+        newHours[day] = { ...weekdayHours };
+      });
+      updateFormData('openingHours', newHours);
+    };
 
     return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Set your opening hours
+      <div className="py-8 max-w-3xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Öffnungszeiten festlegen
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            When are you open for business? This helps customers know when to visit.
+          <p className="text-gray-600">
+            Wann haben Sie geöffnet? Das hilft Kunden zu wissen, wann sie Sie besuchen können.
           </p>
         </div>
 
-        <div className="space-y-4">
-          {days.map((day) => {
-            const hours = formData.openingHours[day] || { open: '09:00', close: '17:00', closed: false };
+        <div className="space-y-6">
+          {/* Weekdays (Mo-Fr) */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Montag - Freitag</h3>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="weekday-schedule"
+                  checked={useWeekdaySchedule}
+                  onChange={(e) => setUseWeekdaySchedule(e.target.checked)}
+                  className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <label htmlFor="weekday-schedule" className="text-sm text-gray-600">
+                  Gleiche Zeiten für alle Wochentage
+                </label>
+              </div>
+            </div>
 
-            return (
-              <Card key={day} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-24">
-                      <h3 className="font-semibold text-gray-900">{day}</h3>
-                    </div>
-                    <Button
-                      variant={hours.closed ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        const newHours = {
-                          ...formData.openingHours,
-                          [day]: { ...hours, closed: !hours.closed }
-                        };
-                        updateFormData('openingHours', newHours);
+            {useWeekdaySchedule ? (
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant={weekdayHours.closed ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    const newHours = { ...weekdayHours, closed: !weekdayHours.closed };
+                    setWeekdayHours(newHours);
+                    applyWeekdaySchedule();
+                  }}
+                >
+                  {weekdayHours.closed ? 'Geschlossen' : 'Geöffnet'}
+                </Button>
+
+                {!weekdayHours.closed && (
+                  <>
+                    <Input
+                      type="time"
+                      value={weekdayHours.open}
+                      onChange={(e) => {
+                        const newHours = { ...weekdayHours, open: e.target.value };
+                        setWeekdayHours(newHours);
+                        applyWeekdaySchedule();
                       }}
-                    >
-                      {hours.closed ? 'Closed' : 'Open'}
-                    </Button>
-                  </div>
-
-                  {!hours.closed && (
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        defaultValue={hours.open}
-                        onChange={(e) => {
-                          const newHours = {
-                            ...formData.openingHours,
-                            [day]: { ...hours, open: e.target.value }
-                          };
-                          updateFormData('openingHours', newHours);
-                        }}
-                        className="w-32"
-                      />
-                      <span className="text-gray-500">to</span>
-                      <Input
-                        type="time"
-                        defaultValue={hours.close}
-                        onChange={(e) => {
-                          const newHours = {
-                            ...formData.openingHours,
-                            [day]: { ...hours, close: e.target.value }
-                          };
-                          updateFormData('openingHours', newHours);
-                        }}
-                        className="w-32"
-                      />
+                      className="w-32"
+                    />
+                    <span className="text-gray-500">bis</span>
+                    <Input
+                      type="time"
+                      value={weekdayHours.close}
+                      onChange={(e) => {
+                        const newHours = { ...weekdayHours, close: e.target.value };
+                        setWeekdayHours(newHours);
+                        applyWeekdaySchedule();
+                      }}
+                      className="w-32"
+                    />
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {weekdays.map((day) => {
+                  const hours = formData.openingHours[day] || { open: '09:00', close: '17:00', closed: false };
+                  return (
+                    <div key={day} className="flex items-center justify-between">
+                      <div className="w-24">
+                        <span className="text-sm font-medium text-gray-700">{day.slice(0, 3)}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant={hours.closed ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            const newHours = {
+                              ...formData.openingHours,
+                              [day]: { ...hours, closed: !hours.closed }
+                            };
+                            updateFormData('openingHours', newHours);
+                          }}
+                        >
+                          {hours.closed ? 'Zu' : 'Auf'}
+                        </Button>
+                        {!hours.closed && (
+                          <>
+                            <Input
+                              type="time"
+                              value={hours.open}
+                              onChange={(e) => {
+                                const newHours = {
+                                  ...formData.openingHours,
+                                  [day]: { ...hours, open: e.target.value }
+                                };
+                                updateFormData('openingHours', newHours);
+                              }}
+                              className="w-24 text-sm"
+                            />
+                            <span className="text-gray-500 text-sm">-</span>
+                            <Input
+                              type="time"
+                              value={hours.close}
+                              onChange={(e) => {
+                                const newHours = {
+                                  ...formData.openingHours,
+                                  [day]: { ...hours, close: e.target.value }
+                                };
+                                updateFormData('openingHours', newHours);
+                              }}
+                              className="w-24 text-sm"
+                            />
+                          </>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
+          {/* Weekends & Holidays */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Wochenende & Feiertage</h3>
+            <div className="space-y-3">
+              {weekends.map((day) => {
+                const hours = formData.openingHours[day] || { open: '10:00', close: '18:00', closed: false };
+                return (
+                  <div key={day} className="flex items-center justify-between">
+                    <div className="w-24">
+                      <span className="text-sm font-medium text-gray-700">{day === 'Saturday' ? 'Samstag' : 'Sonntag'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant={hours.closed ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...hours, closed: !hours.closed }
+                          };
+                          updateFormData('openingHours', newHours);
+                        }}
+                      >
+                        {hours.closed ? 'Geschlossen' : 'Geöffnet'}
+                      </Button>
+                      {!hours.closed && (
+                        <>
+                          <Input
+                            type="time"
+                            value={hours.open}
+                            onChange={(e) => {
+                              const newHours = {
+                                ...formData.openingHours,
+                                [day]: { ...hours, open: e.target.value }
+                              };
+                              updateFormData('openingHours', newHours);
+                            }}
+                            className="w-24 text-sm"
+                          />
+                          <span className="text-gray-500 text-sm">-</span>
+                          <Input
+                            type="time"
+                            value={hours.close}
+                            onChange={(e) => {
+                              const newHours = {
+                                ...formData.openingHours,
+                                [day]: { ...hours, close: e.target.value }
+                              };
+                              updateFormData('openingHours', newHours);
+                            }}
+                            className="w-24 text-sm"
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                💡 <strong>Tipp:</strong> Feiertage werden automatisch wie Sonntag behandelt.
+                Sie können diese später in den Einstellungen anpassen.
+              </p>
+            </div>
+          </Card>
         </div>
 
         <div className="flex justify-between mt-8">
           <Button onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
+            Zurück
           </Button>
           <Button
             onClick={nextStep}
             size="lg"
             className="bg-gradient-to-r from-teal-500 to-purple-500"
           >
-            Continue
+            Weiter
             <ChevronRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
