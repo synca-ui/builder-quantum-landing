@@ -473,6 +473,13 @@ export default function Configurator() {
 
   // Enhanced Live Preview Component with Dramatically Different Template Designs
   const LivePreview = () => {
+    const [previewState, setPreviewState] = useState({
+      menuOpen: false,
+      activeSection: 'home',
+      hoveredItem: null,
+      scrollY: 0
+    });
+
     const getBusinessName = () => formData.businessName || 'Your Business';
 
     const getTemplateStyles = () => {
@@ -503,13 +510,42 @@ export default function Configurator() {
       <div className="h-full overflow-y-auto bg-white transition-all duration-700 ease-in-out">
         {/* Floating minimal navigation */}
         <div className="absolute top-8 left-4 right-4 z-10">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg border border-gray-200">
+          <div className={`bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg border border-gray-200 transition-all duration-300 ${
+            previewState.menuOpen ? 'shadow-xl scale-105' : ''
+          }`}>
             <div className="flex items-center justify-between">
               <div className="text-sm font-bold text-gray-900">{getBusinessName()}</div>
-              <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center">
+              <button
+                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                className={`w-6 h-6 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 ${
+                  previewState.menuOpen ? 'rotate-90' : ''
+                }`}
+              >
                 <Menu className="w-3 h-3 text-gray-600" />
-              </div>
+              </button>
             </div>
+
+            {/* Dropdown menu */}
+            {previewState.menuOpen && (
+              <div className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="space-y-2">
+                  {['Home', 'Menu', 'About', 'Contact'].map((item, index) => (
+                    <button
+                      key={item}
+                      onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
+                      className={`w-full text-left px-2 py-1 text-xs rounded-lg transition-colors ${
+                        previewState.activeSection === item.toLowerCase()
+                          ? 'bg-gray-100 text-gray-900 font-medium'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -535,15 +571,25 @@ export default function Configurator() {
             <div className="py-8">
               <div className="space-y-6">
                 {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                  <div key={index} className="border-b border-gray-100 pb-4">
+                  <button
+                    key={index}
+                    onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                    onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                    onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
+                    className={`w-full border-b border-gray-100 pb-4 transition-all duration-200 ${
+                      previewState.hoveredItem === item.name ? 'transform scale-105 bg-gray-50 rounded-lg px-2 py-2' : ''
+                    }`}
+                  >
                     <div className="flex justify-between items-baseline">
-                      <div>
+                      <div className="text-left">
                         <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
                         <p className="text-xs text-gray-500 mt-1">{item.description}</p>
                       </div>
-                      <div className="text-sm font-light text-gray-600">${item.price}</div>
+                      <div className={`text-sm font-light transition-colors ${
+                        previewState.hoveredItem === item.name ? 'text-blue-600 font-medium' : 'text-gray-600'
+                      }`}>${item.price}</div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -561,10 +607,38 @@ export default function Configurator() {
           <div className="absolute top-0 left-0 right-0 z-20 p-4">
             <div className="flex items-center justify-between">
               <div className="text-white font-black text-lg">{getBusinessName()}</div>
-              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <button
+                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                className={`w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/30 hover:scale-110 ${
+                  previewState.menuOpen ? 'rotate-180 bg-white/40' : ''
+                }`}
+              >
                 <Menu className="w-4 h-4 text-white" />
-              </div>
+              </button>
             </div>
+
+            {/* Creative full-screen menu overlay */}
+            {previewState.menuOpen && (
+              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 animate-in fade-in duration-300">
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center space-y-8">
+                    {['Home', 'Menu', 'Gallery', 'Contact'].map((item, index) => (
+                      <button
+                        key={item}
+                        onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
+                        className="block text-4xl font-black text-white hover:text-pink-300 transition-all duration-300 hover:scale-110"
+                        style={{
+                          animationDelay: `${index * 100}ms`,
+                          animation: 'slideInLeft 0.5s ease-out forwards'
+                        }}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Dynamic hero with large typography */}
@@ -593,13 +667,22 @@ export default function Configurator() {
             <div className="px-4 pb-8">
               <div className="grid grid-cols-2 gap-3">
                 {formData.menuItems.slice(0, 4).map((item: any, index: number) => (
-                  <div key={index} className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                  <button
+                    key={index}
+                    onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                    onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                    onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
+                    className={`bg-white/20 backdrop-blur-sm rounded-2xl p-4 transition-all duration-300 hover:bg-white/30 hover:scale-105 ${
+                      previewState.hoveredItem === item.name ? 'transform scale-105 bg-white/30 shadow-lg' : ''
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
                     <div className="text-white">
                       <h3 className="text-sm font-bold">{item.name}</h3>
                       <p className="text-xs text-white/80 mt-1">{item.description}</p>
                       <div className="text-lg font-black mt-2" style={{ color: styles.userSecondary }}>${item.price}</div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -614,15 +697,41 @@ export default function Configurator() {
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center transition-colors hover:bg-gray-200">
                 <div className="w-5 h-5" style={{ color: styles.userPrimary }}>
                   {getBusinessIcon()}
                 </div>
               </div>
               <div className="text-base font-semibold text-gray-900">{getBusinessName()}</div>
             </div>
-            <Menu className="w-4 h-4 text-gray-600" />
+            <button
+              onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+            >
+              <Menu className="w-4 h-4 text-gray-600" />
+            </button>
           </div>
+
+          {/* Professional dropdown menu */}
+          {previewState.menuOpen && (
+            <div className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="grid grid-cols-2 gap-2">
+                {['Home', 'Menu', 'About', 'Contact'].map((item, index) => (
+                  <button
+                    key={item}
+                    onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
+                    className={`text-left px-3 py-2 text-sm rounded transition-colors ${
+                      previewState.activeSection === item.toLowerCase()
+                        ? 'bg-blue-50 text-blue-900 font-semibold'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Traditional grid layout */}
@@ -641,15 +750,26 @@ export default function Configurator() {
               <h2 className="text-lg font-bold text-gray-900 mb-4">Our Menu</h2>
               <div className="space-y-4">
                 {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-4">
+                  <button
+                    key={index}
+                    onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                    onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                    onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
+                    className={`w-full bg-gray-50 rounded-lg p-4 transition-all duration-200 hover:bg-gray-100 hover:shadow-md ${
+                      previewState.hoveredItem === item.name ? 'transform scale-102 bg-gray-100 shadow-md border-l-4' : ''
+                    }`}
+                    style={previewState.hoveredItem === item.name ? { borderLeftColor: styles.userPrimary } : {}}
+                  >
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
+                      <div className="flex-1 text-left">
                         <h3 className="text-sm font-semibold text-gray-900">{item.name}</h3>
                         <p className="text-xs text-gray-600 mt-1">{item.description}</p>
                       </div>
-                      <div className="text-sm font-bold ml-4" style={{ color: styles.userPrimary }}>${item.price}</div>
+                      <div className={`text-sm font-bold ml-4 transition-colors ${
+                        previewState.hoveredItem === item.name ? 'scale-110' : ''
+                      }`} style={{ color: styles.userPrimary }}>${item.price}</div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -667,13 +787,40 @@ export default function Configurator() {
         <div className="bg-gray-800/90 backdrop-blur-sm px-4 py-3 border-b border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: styles.userPrimary }}></div>
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: styles.userPrimary }}></div>
               <div className="text-white font-mono text-sm">{getBusinessName()}</div>
             </div>
-            <div className="w-6 h-6 bg-gray-700 rounded flex items-center justify-center">
+            <button
+              onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+              className={`w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center transition-all duration-200 ${
+                previewState.menuOpen ? 'rotate-90' : ''
+              }`}
+            >
               <Menu className="w-3 h-3 text-gray-300" />
-            </div>
+            </button>
           </div>
+
+          {/* Modern slide-down menu */}
+          {previewState.menuOpen && (
+            <div className="mt-3 pt-3 border-t border-gray-700 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="space-y-1">
+                {['Home', 'Menu', 'Gallery', 'Contact'].map((item, index) => (
+                  <button
+                    key={item}
+                    onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono rounded transition-all duration-200 ${
+                      previewState.activeSection === item.toLowerCase()
+                        ? 'bg-green-500/20 text-green-400 border-l-2 border-green-400'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                    }`}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    {item.toLowerCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modular grid layout */}
@@ -699,15 +846,25 @@ export default function Configurator() {
           {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
             <div className="grid gap-3">
               {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-colors">
+                <button
+                  key={index}
+                  onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                  onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
+                  onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
+                  className={`w-full bg-gray-800 rounded-xl p-4 border border-gray-700 transition-all duration-200 hover:border-gray-600 hover:bg-gray-750 ${
+                    previewState.hoveredItem === item.name ? 'transform scale-105 border-green-500 bg-gray-750 shadow-lg' : ''
+                  }`}
+                >
                   <div className="flex justify-between items-center">
-                    <div>
+                    <div className="text-left">
                       <h3 className="text-sm font-semibold text-white">{item.name}</h3>
                       <p className="text-xs text-gray-400 mt-1">{item.description}</p>
                     </div>
-                    <div className="text-sm font-mono font-bold text-green-400">${item.price}</div>
+                    <div className={`text-sm font-mono font-bold text-green-400 transition-transform ${
+                      previewState.hoveredItem === item.name ? 'scale-110' : ''
+                    }`}>${item.price}</div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -784,12 +941,17 @@ export default function Configurator() {
                         updateFormData('primaryColor', preset.primary);
                         updateFormData('secondaryColor', preset.secondary);
                       }}
-                      className={`w-4 h-4 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
-                        formData.primaryColor === preset.primary ? 'border-white shadow-lg scale-110' : 'border-gray-300'
+                      className={`w-4 h-4 rounded-full border-2 transition-all duration-300 hover:scale-125 hover:shadow-md group relative ${
+                        formData.primaryColor === preset.primary ? 'border-white shadow-lg scale-125 ring-2 ring-gray-300' : 'border-gray-300 hover:border-white'
                       }`}
                       style={{ backgroundColor: preset.primary }}
                       title={`Switch to ${preset.name} theme`}
-                    />
+                    >
+                      {/* Tooltip */}
+                      <div className="absolute -left-16 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                        {preset.name}
+                      </div>
+                    </button>
                   ))}
 
                   {/* Custom color button */}
@@ -801,10 +963,14 @@ export default function Configurator() {
                         setCurrentStep(brandingStep);
                       }
                     }}
-                    className="w-4 h-4 rounded-full border-2 border-dashed border-gray-400 hover:border-gray-600 transition-colors flex items-center justify-center"
+                    className="w-4 h-4 rounded-full border-2 border-dashed border-gray-400 hover:border-gray-600 hover:bg-gray-100 transition-all duration-200 flex items-center justify-center group relative"
                     title="Customize colors"
                   >
                     <Palette className="w-2 h-2 text-gray-500" />
+                    {/* Tooltip */}
+                    <div className="absolute -left-20 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                      Custom
+                    </div>
                   </button>
                 </div>
               </div>
