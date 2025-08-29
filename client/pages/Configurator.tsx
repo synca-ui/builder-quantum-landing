@@ -2756,22 +2756,43 @@ export default function Configurator() {
           </div>
 
           {!formData.hasDomain && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div
+              className="mt-4 pt-4 border-t border-gray-200"
+              onClick={(e) => e.stopPropagation()} // Prevent card click when interacting with input
+            >
               <label className="block text-sm font-bold text-gray-700 mb-2">Choose your subdomain</label>
-              <div className="flex items-center">
+              <div className="flex items-center bg-gray-50 rounded-lg border border-gray-300 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
                 <Input
                   type="text"
                   placeholder="yourbusiness"
                   defaultValue={formData.selectedDomain}
                   ref={setInputRef('selectedDomain')}
                   onBlur={handleInputBlur('selectedDomain')}
-                  className="flex-1"
+                  onKeyDown={(e) => {
+                    e.stopPropagation(); // Prevent any parent handlers
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleInputBlur('selectedDomain')(); // Save on Enter
+                    }
+                    // Only allow valid subdomain characters
+                    if (!/[a-zA-Z0-9-]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="flex-1 border-0 bg-transparent focus:ring-0 focus:border-0"
+                  autoComplete="username"
                 />
-                <span className="ml-2 text-gray-500">.synca.app</span>
+                <span className="pr-3 text-gray-500 font-mono text-sm">.synca.app</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Your website will be available at {formData.selectedDomain || 'yourbusiness'}.synca.app
-              </p>
+              <div className="flex items-start justify-between mt-2">
+                <p className="text-xs text-gray-500">
+                  Your website will be available at <span className="font-mono font-medium">{formData.selectedDomain || 'yourbusiness'}.synca.app</span>
+                </p>
+                <div className="text-xs text-green-600 ml-2">
+                  <Zap className="w-3 h-3 inline mr-1" />
+                  Free
+                </div>
+              </div>
             </div>
           )}
         </Card>
