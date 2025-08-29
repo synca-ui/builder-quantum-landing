@@ -147,79 +147,161 @@ export default function Index() {
     </div>
   );
 
-  // Enhanced Navigation component
-  const Navigation = () => (
-    <nav className="fixed top-0 w-full z-50 glass border-b border-white/20 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-black text-gradient">sync.a</h1>
-          </div>
-          
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              <a href="#features" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
-                <Layers className="w-4 h-4 inline mr-2" />
-                Features
-              </a>
-              <a href="#demo" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
-                <Play className="w-4 h-4 inline mr-2" />
-                Demo
-              </a>
-              <a href="#pricing" className="text-gray-700 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 hover:bg-teal-50">
-                <Crown className="w-4 h-4 inline mr-2" />
-                Pricing
-              </a>
+  // Enhanced Interactive Navigation component
+  const Navigation = () => {
+    const [scrolled, setScrolled] = useState(false);
+    const [hoveredItem, setHoveredItem] = useState(null);
+
+    useEffect(() => {
+      const handleScroll = () => {
+        setScrolled(window.scrollY > 50);
+      };
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const navItems = [
+      { id: 'features', label: 'Features', icon: <Layers className="w-4 h-4" />, href: '#features' },
+      { id: 'demo', label: 'Demo', icon: <Play className="w-4 h-4" />, href: '#demo' },
+      { id: 'pricing', label: 'Pricing', icon: <Crown className="w-4 h-4" />, href: '#pricing' }
+    ];
+
+    return (
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${
+        scrolled
+          ? 'glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2'
+          : 'bg-transparent border-b border-transparent py-4'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo with enhanced animation */}
+            <div className="flex items-center">
+              <div className="relative group">
+                <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
+                  sync.a
+                </h1>
+                <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
+              </div>
             </div>
-          </div>
 
-          <div className="hidden md:block">
-            <a href="/configurator">
-              <Button 
-                size="sm"
-                className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Start Building
-              </Button>
-            </a>
-          </div>
+            {/* Desktop Navigation with enhanced hover effects */}
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
+                {navItems.map((item, index) => (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    className="relative px-4 py-2 text-sm font-bold transition-all duration-500 ease-out rounded-full group"
+                    onMouseEnter={() => setHoveredItem(item.id)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                  >
+                    {/* Background highlight */}
+                    <div className={`absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20 rounded-full transition-all duration-500 ${
+                      hoveredItem === item.id ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                    }`}></div>
 
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </Button>
-          </div>
-        </div>
-      </div>
+                    {/* Content */}
+                    <div className={`relative flex items-center space-x-2 transition-all duration-500 ${
+                      hoveredItem === item.id ? 'text-teal-600 transform translate-y-[-1px]' : 'text-gray-700'
+                    }`}>
+                      <div className={`transition-all duration-500 ${
+                        hoveredItem === item.id ? 'rotate-12 scale-110' : 'rotate-0 scale-100'
+                      }`}>
+                        {item.icon}
+                      </div>
+                      <span>{item.label}</span>
+                    </div>
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden glass border-t border-white/20">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="#features" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Features</a>
-            <a href="#demo" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Demo</a>
-            <a href="#pricing" className="text-gray-700 hover:text-teal-600 block px-3 py-2 rounded-md text-base font-bold">Pricing</a>
-            <div className="px-3 py-2">
+                    {/* Animated underline */}
+                    <div className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-teal-500 to-purple-500 transition-all duration-500 ${
+                      hoveredItem === item.id ? 'w-8 -translate-x-1/2' : 'w-0 -translate-x-1/2'
+                    }`}></div>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* CTA Button with enhanced animation */}
+            <div className="hidden md:block">
               <a href="/configurator">
-                <Button 
+                <Button
                   size="sm"
-                  className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-full"
+                  className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
                 >
-                  Start Building
+                  {/* Animated background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+
+                  {/* Button content */}
+                  <div className="relative flex items-center space-x-2">
+                    <div className="transition-all duration-300 group-hover:rotate-45">
+                      <Settings className="w-4 h-4" />
+                    </div>
+                    <span>Start Building</span>
+                    <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
+                  </div>
                 </Button>
               </a>
             </div>
+
+            {/* Mobile menu button with animation */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="relative p-2 text-gray-700 transition-all duration-300"
+              >
+                <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
+                  {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </div>
+              </Button>
+            </div>
           </div>
         </div>
-      )}
-    </nav>
-  );
+
+        {/* Enhanced Mobile menu with slide animation */}
+        <div className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${
+          isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+        }`}>
+          <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
+            <div className="px-4 py-4 space-y-2">
+              {navItems.map((item, index) => (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className="group flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 font-bold transition-all duration-300"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                    {item.icon}
+                  </div>
+                  <span>{item.label}</span>
+                  <div className="ml-auto w-0 group-hover:w-2 h-2 bg-gradient-to-r from-teal-500 to-purple-500 rounded-full transition-all duration-300"></div>
+                </a>
+              ))}
+
+              <div className="pt-2 border-t border-gray-200/50">
+                <a href="/configurator" onClick={() => setIsMenuOpen(false)}>
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-xl py-3 transition-all duration-300 hover:scale-105"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <Settings className="w-4 h-4" />
+                      <span>Start Building</span>
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white">
