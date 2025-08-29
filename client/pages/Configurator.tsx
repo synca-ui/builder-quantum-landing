@@ -353,45 +353,57 @@ export default function Configurator() {
     }, 1000); // 1 second debounce for all fields
   }, []); // Empty dependency array for complete stability
 
-  // Input refs for uncontrolled components to completely avoid focus loss
+  // Input refs for completely uncontrolled components
   const inputRefs = useRef<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>({});
 
-  // Update form data from input refs without causing re-renders during typing
-  const updateFieldFromRef = useCallback((field: string) => {
-    const element = inputRefs.current[field];
-    if (element) {
-      const value = element.value;
-
-      // Update state without triggering re-renders that could cause focus loss
-      setFormData(prev => {
-        const newData = { ...prev, [field]: value };
-        formDataRef.current = newData; // Keep ref in sync
-        return newData;
-      });
-
-      // Debounce saves to prevent rapid API calls
-      if (debouncedSaveRef.current) {
-        clearTimeout(debouncedSaveRef.current);
+  // Collect values from all input refs without causing re-renders
+  const collectFormValues = useCallback(() => {
+    const values: any = {};
+    Object.keys(inputRefs.current).forEach(field => {
+      const element = inputRefs.current[field];
+      if (element) {
+        values[field] = element.value;
       }
-
-      debouncedSaveRef.current = setTimeout(() => {
-        if (autoSaverRef.current) {
-          const currentData = { ...formDataRef.current, [field]: value };
-          autoSaverRef.current.save(currentData as Partial<Configuration>);
-        }
-      }, 1000);
-    }
+    });
+    return values;
   }, []);
 
-  // Create stable input handlers that don't depend on formData
-  const handleInputChange = useCallback((field: string) => {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      // Store the element ref for later access
-      inputRefs.current[field] = e.target;
-      // Update form data immediately
-      updateFieldFromRef(field);
+  // Update form data only when needed (on blur, step change, etc.) - NOT during typing
+  const updateFormDataFromInputs = useCallback(() => {
+    const inputValues = collectFormValues();
+
+    setFormData(prev => {
+      const newData = { ...prev, ...inputValues };
+      formDataRef.current = newData; // Keep ref in sync
+      return newData;
+    });
+
+    // Save to backend
+    if (debouncedSaveRef.current) {
+      clearTimeout(debouncedSaveRef.current);
+    }
+
+    debouncedSaveRef.current = setTimeout(() => {
+      if (autoSaverRef.current) {
+        const currentData = { ...formDataRef.current, ...inputValues };
+        autoSaverRef.current.save(currentData as Partial<Configuration>);
+      }
+    }, 500);
+  }, [collectFormValues]);
+
+  // Input blur handler - only updates state when user finishes typing
+  const handleInputBlur = useCallback((field: string) => {
+    return () => {
+      updateFormDataFromInputs();
     };
-  }, [updateFieldFromRef]);
+  }, [updateFormDataFromInputs]);
+
+  // Simple ref setter for inputs - NO state updates during typing
+  const setInputRef = useCallback((field: string) => {
+    return (element: HTMLInputElement | HTMLTextAreaElement | null) => {
+      inputRefs.current[field] = element;
+    };
+  }, []);
 
   // Load persisted data on component mount
   useEffect(() => {
