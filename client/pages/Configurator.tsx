@@ -1716,16 +1716,7 @@ export default function Configurator() {
                   <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
                     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
                     <div className="h-full relative transition-all duration-500 ease-in-out">
-                      {selectedTemplate ? (
-                        <LivePreview />
-                      ) : (
-                        <div className="h-full flex items-center justify-center bg-gray-50">
-                          <div className="text-center">
-                            <Palette className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-sm text-gray-500">Click a template to see preview</p>
-                          </div>
-                        </div>
-                      )}
+                      <TemplatePreviewContent />
                     </div>
                   </div>
                 </div>
