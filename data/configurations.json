@@ -1,0 +1,39 @@
+[
+  {
+    "id": "mewp7j0feso9wymuabs",
+    "userId": "user_mewod4t90763iqgq366k",
+    "businessName": "",
+    "businessType": "cafe",
+    "location": "ssss",
+    "slogan": "s",
+    "uniqueDescription": "s",
+    "template": "professional",
+    "primaryColor": "#2563EB",
+    "secondaryColor": "#7C3AED",
+    "fontFamily": "sans-serif",
+    "selectedPages": [
+      "home",
+      "gallery",
+      "menu",
+      "about"
+    ],
+    "customPages": [],
+    "openingHours": {},
+    "menuItems": [],
+    "reservationsEnabled": false,
+    "maxGuests": 10,
+    "notificationMethod": "email",
+    "contactMethods": [],
+    "socialMedia": {},
+    "gallery": [],
+    "onlineOrdering": false,
+    "onlineStore": false,
+    "teamArea": false,
+    "hasDomain": false,
+    "domainName": "",
+    "selectedDomain": "",
+    "createdAt": "2025-08-29T10:37:02.078Z",
+    "updatedAt": "2025-08-29T10:37:59.775Z",
+    "status": "draft"
+  }
+]
