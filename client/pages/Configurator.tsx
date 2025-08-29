@@ -1193,6 +1193,225 @@ export default function Configurator() {
     );
   };
 
+  const ReservationsStep = () => (
+    <div className="py-8 max-w-2xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Setup reservations
+        </h2>
+        <p className="text-lg text-gray-600">
+          Enable table bookings for your business
+        </p>
+      </div>
+
+      {/* Enable/Disable Toggle */}
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Enable Reservations</h3>
+              <p className="text-gray-600">Allow customers to book tables online</p>
+            </div>
+            <Button
+              variant={formData.reservationsEnabled ? "default" : "outline"}
+              onClick={() => updateFormData('reservationsEnabled', !formData.reservationsEnabled)}
+              className={formData.reservationsEnabled ? "bg-teal-500 hover:bg-teal-600" : ""}
+            >
+              {formData.reservationsEnabled ? 'Enabled' : 'Disabled'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {formData.reservationsEnabled && (
+        <div className="space-y-6">
+          {/* Max Guests */}
+          <Card>
+            <CardContent className="p-6">
+              <label className="block text-sm font-bold text-gray-700 mb-4">Maximum Party Size</label>
+              <div className="flex items-center space-x-4">
+                <Users className="w-5 h-5 text-gray-400" />
+                <Input
+                  type="number"
+                  value={formData.maxGuests}
+                  onChange={(e) => updateFormData('maxGuests', parseInt(e.target.value))}
+                  className="w-24"
+                  min="1"
+                  max="20"
+                />
+                <span className="text-gray-600">guests</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Method */}
+          <Card>
+            <CardContent className="p-6">
+              <label className="block text-sm font-bold text-gray-700 mb-4">How would you like to receive reservations?</label>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { id: 'email', label: 'Email', icon: <Mail className="w-4 h-4" /> },
+                  { id: 'sms', label: 'SMS', icon: <Phone className="w-4 h-4" /> },
+                  { id: 'whatsapp', label: 'WhatsApp', icon: <Share2 className="w-4 h-4" /> }
+                ].map((method) => (
+                  <Card
+                    key={method.id}
+                    className={`cursor-pointer transition-all duration-300 border-2 ${
+                      formData.notificationMethod === method.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                    }`}
+                    onClick={() => updateFormData('notificationMethod', method.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                          {method.icon}
+                        </div>
+                        <span className="font-medium text-gray-900">{method.label}</span>
+                        {formData.notificationMethod === method.id && (
+                          <Check className="w-5 h-5 text-teal-500 ml-auto" />
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const ContactSocialStep = () => (
+    <div className="py-8 max-w-2xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Contact & social media
+        </h2>
+        <p className="text-lg text-gray-600">
+          How can customers reach you?
+        </p>
+      </div>
+
+      {/* Contact Methods */}
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Contact Methods</h3>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { id: 'phone', label: 'Phone', icon: <Phone className="w-4 h-4" /> },
+              { id: 'email', label: 'Email', icon: <Mail className="w-4 h-4" /> },
+              { id: 'form', label: 'Contact Form', icon: <Users className="w-4 h-4" /> },
+              { id: 'whatsapp', label: 'WhatsApp', icon: <Share2 className="w-4 h-4" /> }
+            ].map((method) => (
+              <Card
+                key={method.id}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  formData.contactMethods.includes(method.id) ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                }`}
+                onClick={() => {
+                  const newMethods = formData.contactMethods.includes(method.id)
+                    ? formData.contactMethods.filter((m: string) => m !== method.id)
+                    : [...formData.contactMethods, method.id];
+                  updateFormData('contactMethods', newMethods);
+                }}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                    {method.icon}
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">{method.label}</span>
+                  {formData.contactMethods.includes(method.id) && (
+                    <Check className="w-4 h-4 text-teal-500 mx-auto mt-2" />
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Social Media */}
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
+          <div className="space-y-4">
+            {[
+              { key: 'instagram', name: 'Instagram', icon: <Instagram className="w-5 h-5" />, color: 'from-pink-500 to-purple-500' },
+              { key: 'facebook', name: 'Facebook', icon: <Facebook className="w-5 h-5" />, color: 'from-blue-500 to-blue-600' },
+              { key: 'tiktok', name: 'TikTok', icon: <Play className="w-5 h-5" />, color: 'from-black to-gray-700' }
+            ].map((platform) => (
+              <div key={platform.key} className="flex items-center space-x-4">
+                <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${platform.color} flex items-center justify-center text-white`}>
+                  {platform.icon}
+                </div>
+                <div className="flex-1">
+                  <Input
+                    type="url"
+                    placeholder={`Your ${platform.name} URL`}
+                    value={formData.socialMedia[platform.key] || ''}
+                    onChange={(e) => updateFormData('socialMedia', {
+                      ...formData.socialMedia,
+                      [platform.key]: e.target.value
+                    })}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Instagram Sync Option */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 mb-1">Auto-sync Instagram photos</h4>
+                <p className="text-xs text-gray-600">Automatically display your latest Instagram posts on your website</p>
+              </div>
+              <Button
+                variant={formData.instagramSync ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateFormData('instagramSync', !formData.instagramSync)}
+                className={formData.instagramSync ? "bg-pink-500 hover:bg-pink-600" : ""}
+              >
+                {formData.instagramSync ? 'On' : 'Off'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-between">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
   const renderCurrentStep = () => {
     const step = configuratorSteps[currentStep];
     if (!step) return null;
