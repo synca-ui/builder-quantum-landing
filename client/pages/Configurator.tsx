@@ -790,6 +790,8 @@ export default function Configurator() {
         ...baseStyles,
         userPrimary: formData.primaryColor,
         userSecondary: formData.secondaryColor,
+        userFontColor: formData.fontColor,
+        userFontSize: formData.fontSize,
       };
     };
 
