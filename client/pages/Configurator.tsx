@@ -78,6 +78,8 @@ export default function Configurator() {
     primaryColor: "#2563EB",
     secondaryColor: "#7C3AED",
     fontFamily: "sans-serif",
+    fontColor: "#000000",
+    fontSize: "medium",
     backgroundType: "color",
     backgroundColor: "#FFFFFF",
     backgroundImage: null,
