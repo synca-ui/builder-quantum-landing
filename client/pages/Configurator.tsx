@@ -894,7 +894,7 @@ export default function Configurator() {
             name: "Green Smoothie",
             description: "Spinach, apple, ginger",
             price: "6.00",
-            emoji: "🥤",
+            emoji: "��",
           },
         ],
         tagline: "Fresh, Healthy, Natural",
@@ -1188,24 +1188,52 @@ export default function Configurator() {
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Contact</h2>
               <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Phone className={templateStyles.contactIcon} />
-                  <span className={templateStyles.itemDesc}>
-                    +1 (555) 123-4567
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className={templateStyles.contactIcon} />
-                  <span className={templateStyles.itemDesc}>
-                    123 Main St, City
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className={templateStyles.contactIcon} />
-                  <span className={templateStyles.itemDesc}>
-                    {currentContent.hours}
-                  </span>
-                </div>
+                {/* Phone */}
+                {formData.contactMethods?.find(c => c.type === 'phone') && (
+                  <div className="flex items-center space-x-2">
+                    <Phone className={templateStyles.contactIcon} />
+                    <span className={templateStyles.itemDesc}>
+                      {formData.contactMethods.find(c => c.type === 'phone')?.value || '+1 (555) 123-4567'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Email */}
+                {formData.contactMethods?.find(c => c.type === 'email') && (
+                  <div className="flex items-center space-x-2">
+                    <Mail className={templateStyles.contactIcon} />
+                    <span className={templateStyles.itemDesc}>
+                      {formData.contactMethods.find(c => c.type === 'email')?.value}
+                    </span>
+                  </div>
+                )}
+
+                {/* Location */}
+                {formData.location && (
+                  <div className="flex items-center space-x-2">
+                    <MapPin className={templateStyles.contactIcon} />
+                    <span className={templateStyles.itemDesc}>
+                      {formData.location}
+                    </span>
+                  </div>
+                )}
+
+                {/* Opening Hours */}
+                {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <Clock className={templateStyles.contactIcon} />
+                    <span className={templateStyles.itemDesc}>
+                      {currentContent.hours}
+                    </span>
+                  </div>
+                )}
+
+                {/* Default fallback if no contact info */}
+                {(!formData.contactMethods || formData.contactMethods.length === 0) && !formData.location && (
+                  <div className="text-center py-4">
+                    <p className={templateStyles.itemDesc}>Contact information will appear here</p>
+                  </div>
+                )}
               </div>
             </div>
           );
