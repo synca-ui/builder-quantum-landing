@@ -1291,13 +1291,13 @@ export default function Configurator() {
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white/15 backdrop-blur-md border-t border-white/30 z-50">
-                  <div className="py-2">
+                  <div className="py-1">
                     {["home", "menu", "gallery", "about", "contact"].map(
                       (page) => (
                         <button
                           key={page}
                           onClick={() => navigateToPage(page)}
-                          className={`w-full px-4 py-2 text-left text-white hover:bg-white/10 transition-colors font-medium ${
+                          className={`w-full px-3 py-1.5 text-left text-white hover:bg-white/10 transition-colors text-xs ${
                             previewState.activePage === page
                               ? "bg-white/20 font-bold"
                               : ""
@@ -1347,13 +1347,13 @@ export default function Configurator() {
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-emerald-100 z-50">
-                  <div className="py-2">
+                  <div className="py-1">
                     {["home", "menu", "gallery", "about", "contact"].map(
                       (page) => (
                         <button
                           key={page}
                           onClick={() => navigateToPage(page)}
-                          className={`w-full px-4 py-3 text-left text-slate-700 hover:bg-emerald-50 transition-colors ${
+                          className={`w-full px-3 py-1.5 text-left text-slate-700 hover:bg-emerald-50 transition-colors text-xs ${
                             previewState.activePage === page
                               ? "bg-emerald-50 font-semibold text-emerald-700"
                               : ""
@@ -1410,13 +1410,13 @@ export default function Configurator() {
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-slate-800/90 backdrop-blur border-t border-amber-500/40 z-50">
-                  <div className="py-2">
+                  <div className="py-1">
                     {["home", "menu", "gallery", "about", "contact"].map(
                       (page) => (
                         <button
                           key={page}
                           onClick={() => navigateToPage(page)}
-                          className={`w-full px-4 py-2 text-left text-amber-100 hover:bg-amber-500/10 transition-colors font-serif ${
+                          className={`w-full px-3 py-1.5 text-left text-amber-100 hover:bg-amber-500/10 transition-colors text-xs font-serif ${
                             previewState.activePage === page
                               ? "bg-amber-500/20 text-amber-300 font-bold"
                               : ""
