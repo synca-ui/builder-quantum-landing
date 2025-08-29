@@ -1862,6 +1862,38 @@ export default function Configurator() {
         })}
       </div>
 
+      {/* Page-Specific Configuration Info */}
+      {formData.selectedPages.length > 1 && (
+        <Card className="p-6 mt-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Selected Pages Configuration</h3>
+          <p className="text-gray-600 text-sm mb-4">
+            You've selected multiple pages. During the next steps, you'll be able to configure specific content for each page:
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {formData.selectedPages.map((pageId) => {
+              const pageInfo = {
+                home: { name: 'Home', config: 'Business info, hero section, featured content' },
+                menu: { name: 'Menu', config: 'Menu items, categories, pricing' },
+                gallery: { name: 'Gallery', config: 'Photo uploads, image organization' },
+                about: { name: 'About', config: 'Business story, team members, mission' },
+                reservations: { name: 'Reservations', config: 'Booking system, time slots, policies' },
+                contact: { name: 'Contact', config: 'Contact details, location, hours' }
+              };
+
+              const page = pageInfo[pageId];
+              if (!page) return null;
+
+              return (
+                <div key={pageId} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">{page.name}</h4>
+                  <p className="text-xs text-gray-600">{page.config}</p>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       <div className="flex justify-between mt-8">
         <Button onClick={prevStep} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
