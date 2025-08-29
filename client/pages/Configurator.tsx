@@ -3220,10 +3220,19 @@ export default function Configurator() {
       <Navigation />
       
       {currentStep === -1 ? (
-        // Welcome page takes full screen
-        renderMainContent()
+        // Welcome page takes full screen with padding for navbar
+        <div className="pt-20">
+          {renderMainContent()}
+        </div>
+      ) : currentStep === 0 ? (
+        // Template selection step - special layout with built-in preview
+        <div className="pt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {renderMainContent()}
+          </div>
+        </div>
       ) : (
-        // Configurator steps with live preview
+        // Other configurator steps with live preview
         <div className="pt-20">
           <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Main Content */}
@@ -3232,7 +3241,7 @@ export default function Configurator() {
                 {renderMainContent()}
               </div>
             </div>
-            
+
             {/* Live Preview */}
             <div className="hidden lg:block">
               <LivePreview />
