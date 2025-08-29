@@ -151,7 +151,6 @@ export default function Index() {
   const Navigation = () => {
     const [scrolled, setScrolled] = useState(false);
     const [hoveredItem, setHoveredItem] = useState(null);
-    const [hasSavedSites, setHasSavedSites] = useState(false);
 
     useEffect(() => {
       // Throttled scroll handler for better performance
@@ -167,47 +166,6 @@ export default function Index() {
       };
       window.addEventListener('scroll', handleScroll, { passive: true });
       return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    // Check API health and saved configurations with performance optimization
-    useEffect(() => {
-      let isCanceled = false;
-
-      const checkSavedSites = async () => {
-        try {
-          // Check localStorage first for instant response
-          const cachedResult = localStorage.getItem('hasSavedSites');
-          if (cachedResult && !isCanceled) {
-            setHasSavedSites(cachedResult === 'true');
-          }
-
-          // Then check API with timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('API timeout')), 2000)
-          );
-
-          const apiPromise = sessionApi.hasSavedConfigurations();
-          const hasConfigs = await Promise.race([apiPromise, timeoutPromise]);
-
-          if (!isCanceled) {
-            setHasSavedSites(hasConfigs as boolean);
-            // Cache the result for future visits
-            localStorage.setItem('hasSavedSites', String(hasConfigs));
-          }
-        } catch (error) {
-          // Silent fail - don't block navigation
-          if (!isCanceled) {
-            setHasSavedSites(false);
-          }
-        }
-      };
-
-      // Delay to not block initial render
-      const timeoutId = setTimeout(checkSavedSites, 300);
-      return () => {
-        isCanceled = true;
-        clearTimeout(timeoutId);
-      };
     }, []);
 
     const navItems = [
