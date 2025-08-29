@@ -1,5 +1,7 @@
 // Client-side API functions for configuration management
 
+import { handleFetchError } from '@/utils/debug';
+
 export interface Configuration {
   id?: string;
   userId: string;
