@@ -1228,7 +1228,7 @@ export default function Configurator() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 mb-4">
                 {currentContent.items.slice(0, 4).map((item, index) => (
                   <div key={index} className={templateStyles.homeCard}>
                     <div className="text-lg mb-1">{item.emoji}</div>
@@ -1237,12 +1237,35 @@ export default function Configurator() {
                     >
                       {item.name}
                     </h3>
-                    <p className={templateStyles.itemPrice + " text-xs"}>
+                    <p className={templateStyles.itemPrice + " text-xs"} style={{ color: styles.userPrimary }}>
                       ${item.price}
                     </p>
                   </div>
                 ))}
               </div>
+
+              {/* Small Opening Hours at Bottom */}
+              {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
+                <div className="text-center mt-6 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Clock className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs font-medium text-gray-600">Opening Hours</span>
+                  </div>
+                  <div className="text-xs text-gray-500 space-y-0.5">
+                    {Object.entries(formData.openingHours).slice(0, 2).map(([day, hours]) => (
+                      <div key={day} className="flex justify-between items-center">
+                        <span>{day}</span>
+                        <span>{hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}</span>
+                      </div>
+                    ))}
+                    {Object.keys(formData.openingHours).length > 2 && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        +{Object.keys(formData.openingHours).length - 2} more days
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
       }
