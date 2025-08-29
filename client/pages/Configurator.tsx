@@ -1023,6 +1023,24 @@ export default function Configurator() {
               </div>
             </div>
           )}
+
+          {/* Gallery Page for Creative template */}
+          {previewState.activePage === 'gallery' && formData.selectedPages.includes('gallery') && (
+            <div className="pt-16 px-4">
+              <h2 className="text-2xl font-black text-white mb-6 text-center">Gallery</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {sampleContent.galleryImages.map((image, index) => (
+                  <div key={index} className="aspect-square bg-white/10 backdrop-blur rounded-2xl overflow-hidden">
+                    <img
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
