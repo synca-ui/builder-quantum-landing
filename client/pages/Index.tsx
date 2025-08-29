@@ -214,7 +214,7 @@ export default function Index() {
       { id: 'features', label: 'Features', icon: <Layers className="w-4 h-4" />, href: '#features' },
       { id: 'demo', label: 'Demo', icon: <Play className="w-4 h-4" />, href: '#demo' },
       { id: 'pricing', label: 'Pricing', icon: <Crown className="w-4 h-4" />, href: '#pricing' },
-      ...(hasSavedSites ? [{ id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/dashboard' }] : [])
+      { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/dashboard' }
     ];
 
     return (
