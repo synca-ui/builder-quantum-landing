@@ -900,7 +900,7 @@ export default function Configurator() {
         ],
         tagline: "Modern Flavors, Bold Choices",
         hours: "7:00 - 22:00",
-        special: "✨ Innovative Menu",
+        special: "Innovative Menu",
       },
       clean: {
         items: [
