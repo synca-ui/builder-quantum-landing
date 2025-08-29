@@ -717,8 +717,6 @@ export default function Configurator() {
       setPreviewState(prev => ({ ...prev, activePage: page, menuOpen: false }));
     };
 
-    const selectedIdForSwitch = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
-
     if (!selectedIdForSwitch) {
       return (
         <div className="h-full flex items-center justify-center bg-gray-50">
