@@ -1590,7 +1590,8 @@ export default function Configurator() {
                   <Input
                     type="text"
                     defaultValue={formData.primaryColor}
-                    onChange={handleInputChange('primaryColor')}
+                    ref={setInputRef('primaryColor')}
+                    onBlur={handleInputBlur('primaryColor')}
                     className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                     placeholder="#2563EB"
                   />
@@ -1619,7 +1620,8 @@ export default function Configurator() {
                   <Input
                     type="text"
                     defaultValue={formData.secondaryColor}
-                    onChange={handleInputChange('secondaryColor')}
+                    ref={setInputRef('secondaryColor')}
+                    onBlur={handleInputBlur('secondaryColor')}
                     className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                     placeholder="#7C3AED"
                   />
