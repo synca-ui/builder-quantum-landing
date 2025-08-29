@@ -1234,65 +1234,41 @@ export default function Configurator() {
     );
   };
 
-  // Welcome Page Component
+  // Welcome Page Component - Simplified and Clean
   const WelcomePage = () => (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-purple-50 flex items-center justify-center">
-      <div className="max-w-4xl mx-auto px-4 text-center">
-        <div className="mb-12">
-          <div className="w-32 h-32 mx-auto mb-8 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
-            <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center">
-              <Rocket className="w-16 h-16 text-teal-500" />
+    <div className="min-h-[calc(100vh-5rem)] bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+              Build Your Perfect <span className="bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">Web App</span>
+            </h1>
+            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+              Create a professional web app for your business in minutes. Choose a template, preview it live, customize, and publish.
+            </p>
+            <ul className="space-y-2 text-gray-700 mb-8">
+              <li className="flex items-center"><Check className="w-4 h-4 text-teal-600 mr-2"/> Live app-like template previews</li>
+              <li className="flex items-center"><Check className="w-4 h-4 text-teal-600 mr-2"/> Minimal, fast, and clean flow</li>
+              <li className="flex items-center"><Check className="w-4 h-4 text-teal-600 mr-2"/> One-click publish</li>
+            </ul>
+            <Button
+              onClick={startConfigurator}
+              size="lg"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-8 py-6 text-lg font-bold rounded-full shadow-xl hover:scale-105 transition-all duration-300"
+            >
+              <Sparkles className="w-5 h-5" />
+              Let's Get Started
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </div>
+          <div className="hidden lg:block">
+            <div className="w-full h-80 bg-gradient-to-br from-teal-50 to-purple-50 border border-gray-200 rounded-2xl flex items-center justify-center">
+              <div className="text-center">
+                <Palette className="w-10 h-10 text-teal-500 mx-auto mb-3" />
+                <p className="text-gray-600">Start by choosing a template on the next step</p>
+              </div>
             </div>
           </div>
-          <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">
-            Build Your Perfect <span className="bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">Website</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Create a stunning, professional website for your business in just minutes. Our smart configurator guides you through each step, from choosing the perfect template to customizing every detail.
-          </p>
-        </div>
-
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Here's how it works:</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-teal-400 to-teal-500 rounded-2xl flex items-center justify-center">
-                <Palette className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">1. Choose Template</h3>
-              <p className="text-gray-600 text-sm">Select from our professionally designed templates that match your business style.</p>
-            </div>
-            <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center">
-                <Settings className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">2. Customize Everything</h3>
-              <p className="text-gray-600 text-sm">Personalize colors, fonts, content, and upload your logo - all with live preview.</p>
-            </div>
-            <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center">
-                <Rocket className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">3. Publish & Go Live</h3>
-              <p className="text-gray-600 text-sm">Launch your website with one click and start attracting customers immediately.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <Button
-            onClick={startConfigurator}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-16 py-8 text-2xl font-bold rounded-full shadow-2xl hover:scale-105 transition-all duration-300"
-          >
-            <Sparkles className="mr-4 w-8 h-8" />
-            Let's Get Started
-            <ChevronRight className="ml-4 w-8 h-8" />
-          </Button>
-          <p className="text-sm text-gray-500">
-            No technical skills required • Takes 5-10 minutes • Professional results guaranteed
-          </p>
         </div>
       </div>
     </div>
