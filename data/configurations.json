@@ -1,53 +1,44 @@
 [
   {
-    "id": "mewp7j0feso9wymuabs",
-    "userId": "user_mewod4t90763iqgq366k",
-    "businessName": "Julian Cafe",
+    "id": "mewr939m3p0tk2kp4vn",
+    "userId": "user_mewob7z4evfnynhjxcc",
+    "businessName": "Julians Cafe",
     "businessType": "cafe",
     "location": "",
-    "slogan": "ss",
-    "uniqueDescription": "ssss",
+    "slogan": "",
+    "uniqueDescription": "",
     "template": "modern",
-    "primaryColor": "#059669",
-    "secondaryColor": "#10B981",
+    "primaryColor": "#0891B2",
+    "secondaryColor": "#06B6D4",
     "fontFamily": "sans-serif",
     "selectedPages": [
       "home",
-      "menu",
-      "about",
-      "contact",
-      "gallery"
+      "gallery",
+      "menu"
     ],
     "customPages": [],
     "openingHours": {
-      "Monday": {
+      "Tuesday": {
         "open": "09:00",
         "close": "17:00",
         "closed": false
       }
     },
-    "menuItems": [
-      {
-        "name": "Matcha Latte Herbst",
-        "description": "Leckerer",
-        "price": "5.99",
-        "id": "1756465861789"
-      }
-    ],
-    "reservationsEnabled": true,
+    "menuItems": [],
+    "reservationsEnabled": false,
     "maxGuests": 10,
-    "notificationMethod": "phone",
+    "notificationMethod": "email",
     "contactMethods": [],
     "socialMedia": {},
     "gallery": [],
     "onlineOrdering": false,
     "onlineStore": false,
     "teamArea": false,
-    "hasDomain": true,
+    "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-08-29T10:37:02.078Z",
-    "updatedAt": "2025-08-29T11:26:49.971Z",
+    "createdAt": "2025-08-29T11:34:14.218Z",
+    "updatedAt": "2025-08-29T11:35:22.301Z",
     "status": "draft"
   }
 ]
