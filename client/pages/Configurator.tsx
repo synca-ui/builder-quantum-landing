@@ -2404,94 +2404,119 @@ export default function Configurator() {
     );
   };
 
-  const MediaGalleryStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Upload your photos
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Show off your space, food, and atmosphere. Great photos help customers connect with your business.
-        </p>
-      </div>
+  const MediaGalleryStep = () => {
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Gallery & Photos
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Showcase your business with beautiful photos when you enable the Gallery page.
+          </p>
+        </div>
 
-      <div className="space-y-8">
-        {/* Photo Upload Area */}
-        <Card className="p-8">
-          <div className="text-center">
-            <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Photos</h3>
-            <p className="text-gray-600 mb-6">Drag and drop images or click to browse</p>
-            <Button className="bg-teal-500 hover:bg-teal-600">
-              <Camera className="w-4 h-4 mr-2" />
-              Choose Photos
-            </Button>
-            <p className="text-xs text-gray-500 mt-2">
-              Supports JPG, PNG up to 10MB each. Recommended: 1200x800px or larger
-            </p>
-          </div>
-        </Card>
+        {/* Only show upload area if Gallery page is selected */}
+        {formData.selectedPages.includes('gallery') ? (
+          <div className="space-y-8">
+            {/* Photo Upload Area */}
+            <Card className="p-8">
+              <div className="text-center">
+                <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Photos for Gallery</h3>
+                <p className="text-gray-600 mb-6">Drag and drop images or click to browse. Images will be displayed in square format.</p>
+                <Button className="bg-teal-500 hover:bg-teal-600">
+                  <Camera className="w-4 h-4 mr-2" />
+                  Choose Photos
+                </Button>
+                <p className="text-xs text-gray-500 mt-2">
+                  Supports JPG, PNG up to 10MB each. Images will be cropped to 1:1 square format automatically.
+                </p>
+              </div>
+            </Card>
 
-        {/* Gallery Preview */}
-        {formData.gallery.length > 0 && (
-          <Card className="p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Your Gallery</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {formData.gallery.map((image, index) => (
-                <div key={index} className="relative group">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <img
-                      src={image.url}
-                      alt={image.alt || `Gallery image ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white"
-                    onClick={() => {
-                      const newGallery = formData.gallery.filter((_, i) => i !== index);
-                      updateFormData('gallery', newGallery);
-                    }}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
+            {/* Gallery Preview - Square 1:1 format */}
+            {formData.gallery.length > 0 && (
+              <Card className="p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Your Gallery (Square Format)</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {formData.gallery.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden border-2 border-teal-200">
+                        <img
+                          src={image.url}
+                          alt={image.alt || `Gallery image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white"
+                        onClick={() => {
+                          const newGallery = formData.gallery.filter((_, i) => i !== index);
+                          updateFormData('gallery', newGallery);
+                        }}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </Card>
+            )}
+
+            {/* Tips */}
+            <Card className="p-6 bg-teal-50 border-teal-200">
+              <h3 className="text-lg font-bold text-teal-900 mb-4">📸 Photo Tips</h3>
+              <ul className="space-y-2 text-sm text-teal-800">
+                <li>• Use natural lighting when possible</li>
+                <li>• Show your products, space, and team in action</li>
+                <li>• Include wide shots of your interior/exterior</li>
+                <li>• Capture the atmosphere and mood of your business</li>
+                <li>• Avoid blurry or dark photos</li>
+                <li>• Images will be automatically cropped to square (1:1) format for gallery display</li>
+              </ul>
+            </Card>
+          </div>
+        ) : (
+          /* Show message when Gallery page is not selected */
+          <Card className="p-8">
+            <div className="text-center">
+              <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Gallery Page Not Selected</h3>
+              <p className="text-gray-600 mb-6">
+                To upload photos, first enable the "Gallery" page in the page selection step.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep(configuratorSteps.findIndex(step => step.id === 'page-structure'))}
+                className="border-teal-500 text-teal-600 hover:bg-teal-50"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Go Back to Select Pages
+              </Button>
             </div>
           </Card>
         )}
 
-        {/* Tips */}
-        <Card className="p-6 bg-teal-50 border-teal-200">
-          <h3 className="text-lg font-bold text-teal-900 mb-4">📸 Photo Tips</h3>
-          <ul className="space-y-2 text-sm text-teal-800">
-            <li>• Use natural lighting when possible</li>
-            <li>• Show your products, space, and team in action</li>
-            <li>• Include wide shots of your interior/exterior</li>
-            <li>• Capture the atmosphere and mood of your business</li>
-            <li>• Avoid blurry or dark photos</li>
-          </ul>
-        </Card>
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
       </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const AdvancedFeaturesStep = () => (
     <div className="py-8 max-w-4xl mx-auto">
