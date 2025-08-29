@@ -601,7 +601,7 @@ export default function Configurator() {
     </nav>
   );
 
-  // Simple Template Preview (content only, no phone frame)
+  // Modern App-Style Template Preview
   const TemplatePreviewContent = () => {
     const [previewState, setPreviewState] = useState({
       menuOpen: false,
@@ -611,12 +611,12 @@ export default function Configurator() {
 
     const getBusinessName = () => {
       if (formData.businessName) return formData.businessName;
-      // Use realistic names based on selected template for preview
+      // Template-specific business names
       const templateNames = {
-        'minimalist': 'Brew & Bean',
-        'vibrant': 'Fusion Kitchen',
-        'professional': 'Sterling Restaurant',
-        'modern-dark': 'NEXUS Coffee'
+        'cafe-modern': 'Bean & Brew',
+        'restaurant-elegant': 'Ristorante Bella',
+        'bar-vibrant': 'NIGHTLIFE',
+        'modern-dark': 'NOIR'
       };
       const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
       return templateNames[selectedId] || 'Your Business';
@@ -638,55 +638,59 @@ export default function Configurator() {
 
     const getBusinessIcon = () => {
       switch (formData.businessType) {
-        case 'cafe': return <Coffee className="w-5 h-5" />;
-        case 'restaurant': return <Utensils className="w-5 h-5" />;
-        default: return <Building className="w-5 h-5" />;
+        case 'cafe': return <Coffee className="w-4 h-4" />;
+        case 'restaurant': return <Utensils className="w-4 h-4" />;
+        case 'bar': return <Star className="w-4 h-4" />;
+        default: return <Building className="w-4 h-4" />;
       }
     };
 
-    // Sample content for realistic previews - template specific
+    // Template-specific content
     const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
     const templateContent = {
-      'minimalist': {
+      'cafe-modern': {
         items: [
-          { name: 'Artisan Coffee', description: 'Single origin, carefully roasted', price: '4.50' },
-          { name: 'Avocado Toast', description: 'Fresh sourdough, organic avocado', price: '8.00' }
+          { name: 'Signature Latte', description: 'House blend espresso with oat milk', price: '4.50', emoji: '☕' },
+          { name: 'Avocado Toast', description: 'Sourdough, avocado, hemp seeds', price: '8.00', emoji: '🥑' },
+          { name: 'Acai Bowl', description: 'Organic acai with fresh berries', price: '9.50', emoji: '🫐' }
         ],
-        tagline: 'Simplicity meets excellence',
-        description: 'Minimal design, maximum flavor'
+        tagline: 'Artisan Coffee & Fresh Eats',
+        hours: 'Open 7:00 - 19:00',
+        special: '🌱 Organic & Local'
       },
-      'vibrant': {
+      'restaurant-elegant': {
         items: [
-          { name: 'Dragon Bowl', description: 'Colorful superfood fusion bowl', price: '12.50' },
-          { name: 'Neon Smoothie', description: 'Rainbow fruit blend, energizing', price: '7.00' }
+          { name: 'Wagyu Steak', description: 'Prime cut with truffle sauce', price: '65.00', emoji: '🥩' },
+          { name: 'Lobster Risotto', description: 'Maine lobster, saffron arborio', price: '42.00', emoji: '🦞' },
+          { name: 'Chocolate Soufflé', description: 'Dark chocolate, gold leaf', price: '18.00', emoji: '🍫' }
         ],
-        tagline: 'Bold flavors, vibrant experience',
-        description: 'Where creativity meets cuisine'
+        tagline: 'Fine Dining Excellence',
+        hours: 'Dinner from 18:00',
+        special: '⭐ Michelin Guide'
       },
-      'professional': {
+      'bar-vibrant': {
         items: [
-          { name: 'Prime Ribeye', description: 'Aged 28 days, chef signature', price: '42.00' },
-          { name: 'Lobster Risotto', description: 'Maine lobster, saffron arborio', price: '36.00' }
+          { name: 'Neon Mojito', description: 'Premium rum, fresh mint, LED ice', price: '14.00', emoji: '🍸' },
+          { name: 'Dragon Shots', description: 'Spicy tequila blend', price: '8.00', emoji: '🔥' },
+          { name: 'Cosmic Bowl', description: 'Sharing cocktail for groups', price: '35.00', emoji: '🌟' }
         ],
-        tagline: 'Excellence in every detail',
-        description: 'Fine dining at its finest'
+        tagline: 'Nightlife & Cocktails',
+        hours: 'Open 20:00 - 03:00',
+        special: '🎵 Live DJ Sets'
       },
       'modern-dark': {
         items: [
-          { name: 'NITRO COLD BREW', description: 'Smooth nitrogen-infused coffee', price: '5.50' },
-          { name: 'TECH BOWL', description: 'Future food, plant-based protein', price: '11.00' }
+          { name: 'NITRO ESPRESSO', description: 'Cold nitrogen-infused shot', price: '6.00', emoji: '⚡' },
+          { name: 'WAGYU SLIDER', description: 'Premium beef, black bun', price: '18.00', emoji: '🖤' },
+          { name: 'GOLD COCKTAIL', description: '24k gold leaf premium mix', price: '45.00', emoji: '✨' }
         ],
-        tagline: 'FUTURE OF COFFEE',
-        description: 'Next-gen café experience'
+        tagline: 'LUXURY REDEFINED',
+        hours: 'EXCLUSIVE HOURS',
+        special: '💎 MEMBERS ONLY'
       }
     };
 
-    const currentContent = templateContent[selectedId] || templateContent['minimalist'];
-    const sampleContent = {
-      menuItems: currentContent.items,
-      tagline: currentContent.tagline,
-      businessDescription: currentContent.description,
-    };
+    const currentContent = templateContent[selectedId] || templateContent['cafe-modern'];
 
     const LogoDisplay = () => {
       if (formData.logo) {
@@ -694,14 +698,22 @@ export default function Configurator() {
           <img
             src={typeof formData.logo === 'string' ? formData.logo : URL.createObjectURL(formData.logo)}
             alt="Business logo"
-            className="w-8 h-8 object-contain rounded"
+            className="w-6 h-6 object-contain rounded"
           />
         );
       }
       return getBusinessIcon();
     };
 
-    // Render different templates based on selection
+    // Dropdown menu toggle
+    const toggleMenu = () => {
+      setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }));
+    };
+
+    const navigateToPage = (page: string) => {
+      setPreviewState(prev => ({ ...prev, activePage: page, menuOpen: false }));
+    };
+
     const selectedIdForSwitch = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
 
     if (!selectedIdForSwitch) {
@@ -717,180 +729,307 @@ export default function Configurator() {
 
     const fontClass = fontOptions.find(f => f.id === formData.fontFamily)?.class || 'font-sans';
 
-    switch (selectedIdForSwitch) {
-      case 'minimalist':
-        return (
-          <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
-            <nav className="bg-white border-b border-gray-100 px-2 py-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded bg-gray-50 flex items-center justify-center"
-                       style={{ backgroundColor: `${styles.userPrimary}15` }}>
-                    <div style={{ color: styles.userPrimary }} className="text-xs">
-                      <LogoDisplay />
+    // Page rendering based on active page
+    const renderPageContent = () => {
+      switch (previewState.activePage) {
+        case 'menu':
+          return (
+            <div className="p-3">
+              <h2 className="text-lg font-bold mb-3 text-center">Menu</h2>
+              <div className="space-y-3">
+                {currentContent.items.map((item, index) => (
+                  <div key={index} className="bg-white/90 backdrop-blur rounded-lg p-3 shadow-sm">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-2">
+                        <span className="text-lg">{item.emoji}</span>
+                        <div>
+                          <h3 className="font-semibold text-sm">{item.name}</h3>
+                          <p className="text-xs text-gray-600">{item.description}</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-sm" style={{ color: styles.userPrimary }}>${item.price}</span>
                     </div>
                   </div>
-                  <h1 className="text-sm font-medium text-gray-900">{getBusinessName()}</h1>
-                </div>
-                <Menu className="w-3 h-3 text-gray-600" />
+                ))}
               </div>
-            </nav>
+            </div>
+          );
 
+        case 'gallery':
+          return (
+            <div className="p-3">
+              <h2 className="text-lg font-bold mb-3 text-center">Gallery</h2>
+              <div className="grid grid-cols-2 gap-2">
+                {[1,2,3,4].map((i) => (
+                  <div key={i} className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-gray-400" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+
+        case 'about':
+          return (
+            <div className="p-3">
+              <h2 className="text-lg font-bold mb-3 text-center">About Us</h2>
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                  <LogoDisplay />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">{getBusinessName()}</h3>
+                  <p className="text-xs text-gray-600">{currentContent.tagline}</p>
+                  <p className="text-xs text-gray-500 mt-2">{currentContent.special}</p>
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'contact':
+          return (
+            <div className="p-3">
+              <h2 className="text-lg font-bold mb-3 text-center">Contact</h2>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm">+1 (555) 123-4567</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm">123 Main St, City</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm">{currentContent.hours}</span>
+                </div>
+              </div>
+            </div>
+          );
+
+        default: // home
+          return (
             <div className="p-3">
               <div className="text-center mb-4">
-                <div className="w-8 h-8 mx-auto mb-2 rounded-xl bg-gray-50 flex items-center justify-center"
-                     style={{ backgroundColor: `${styles.userPrimary}15` }}>
-                  <div style={{ color: styles.userPrimary }} className="text-xs">
-                    <LogoDisplay />
-                  </div>
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full border-2 border-white/20 flex items-center justify-center"
+                     style={{ backgroundColor: `${styles.userPrimary}20` }}>
+                  <LogoDisplay />
                 </div>
-                <h2 className="text-sm font-light text-gray-900">{getBusinessName()}</h2>
-                <p className="text-gray-500 text-xs">{sampleContent.tagline}</p>
+                <h1 className="text-lg font-bold">{getBusinessName()}</h1>
+                <p className="text-sm opacity-90">{currentContent.tagline}</p>
+                <p className="text-xs opacity-75 mt-1">{currentContent.special}</p>
               </div>
 
-              <div className="space-y-2">
-                {sampleContent.menuItems.map((item, index) => (
-                  <div key={index} className="text-center border-b border-gray-100 pb-2">
-                    <h4 className="font-medium text-gray-900 text-xs">{item.name}</h4>
-                    <p className="text-gray-500 text-xs">{item.description}</p>
-                    <span className="text-xs font-light" style={{ color: styles.userPrimary }}>
-                      ${item.price}
-                    </span>
+              <div className="grid grid-cols-2 gap-2">
+                {currentContent.items.slice(0, 4).map((item, index) => (
+                  <div key={index} className="bg-white/10 backdrop-blur rounded-lg p-2 text-center">
+                    <div className="text-lg mb-1">{item.emoji}</div>
+                    <h3 className="text-xs font-bold truncate">{item.name}</h3>
+                    <p className="text-xs opacity-75">${item.price}</p>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        );
+          );
+      }
+    };
 
-      case 'vibrant':
+    switch (selectedIdForSwitch) {
+      case 'cafe-modern':
         return (
-          <div className={`h-full overflow-y-auto text-white ${fontClass}`}
-               style={{ background: formData.backgroundType === 'color' ? formData.backgroundColor : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-            <nav className="p-2">
+          <div className={`h-full overflow-hidden bg-amber-50 ${fontClass}`}>
+            {/* Status Bar */}
+            <div className="h-6 bg-white flex items-center justify-center text-xs font-semibold">
+              9:41 AM
+            </div>
+
+            {/* Navigation */}
+            <nav className="bg-white shadow-sm px-4 py-3 relative">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-sm font-black text-white">{getBusinessName()}</h1>
+                  <h1 className="text-lg font-bold text-gray-900">{getBusinessName()}</h1>
                 </div>
-                <Menu className="w-3 h-3 text-white" />
+                <button onClick={toggleMenu} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <Menu className="w-5 h-5 text-gray-700" />
+                </button>
               </div>
+
+              {/* Dropdown Menu */}
+              {previewState.menuOpen && (
+                <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t z-50">
+                  <div className="py-2">
+                    {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-4 py-2 text-left hover:bg-amber-50 transition-colors ${
+                          previewState.activePage === page ? 'bg-amber-100 font-semibold' : ''
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </nav>
 
-            <div className="p-3 text-center">
-              <div className="w-8 h-8 mx-auto mb-2 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <LogoDisplay />
-              </div>
-              <h1 className="text-sm font-black text-white">{getBusinessName()}</h1>
-              <p className="text-xs font-bold text-white/90">{sampleContent.tagline}</p>
-
-              <div className="grid grid-cols-2 gap-1 mt-3">
-                {sampleContent.menuItems.map((item, index) => (
-                  <div key={index} className="bg-white/20 backdrop-blur rounded-lg p-2">
-                    <h3 className="text-xs font-bold text-white">{item.name}</h3>
-                    <div className="text-sm font-black text-white">${item.price}</div>
-                  </div>
-                ))}
-              </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#FEFBF3' }}>
+              {renderPageContent()}
             </div>
           </div>
         );
 
-      case 'professional':
+      case 'restaurant-elegant':
         return (
-          <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
-            <nav className="bg-white border-b border-gray-200 px-2 py-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded bg-gray-100 flex items-center justify-center">
-                    <div style={{ color: styles.userPrimary }} className="text-xs">
-                      <LogoDisplay />
-                    </div>
-                  </div>
-                  <h1 className="text-sm font-semibold text-gray-900">{getBusinessName()}</h1>
-                </div>
-                <Menu className="w-3 h-3 text-gray-600" />
-              </div>
-            </nav>
+          <div className={`h-full overflow-hidden bg-gray-50 ${fontClass}`}>
+            {/* Status Bar */}
+            <div className="h-6 bg-white flex items-center justify-center text-xs font-semibold">
+              9:41 AM
+            </div>
 
-            <div className="p-3">
-              <div className="text-center py-3 border-b border-gray-100">
-                <div className="w-8 h-8 mx-auto mb-2 rounded-xl bg-gray-100 flex items-center justify-center">
-                  <div style={{ color: styles.userPrimary }} className="text-xs">
+            {/* Navigation */}
+            <nav className="bg-white border-b border-gray-200 px-4 py-3 relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
+                  <h1 className="text-lg font-serif font-bold text-gray-900">{getBusinessName()}</h1>
                 </div>
-                <h1 className="text-sm font-bold text-gray-900">{getBusinessName()}</h1>
-                <p className="text-gray-600 font-medium text-xs">{sampleContent.tagline}</p>
+                <button onClick={toggleMenu} className="p-2 hover:bg-gray-100 rounded transition-colors">
+                  <Menu className="w-5 h-5 text-gray-700" />
+                </button>
               </div>
 
-              <div className="py-2">
-                <h2 className="text-xs font-bold text-gray-900 mb-2">Featured Items</h2>
-                <div className="space-y-2">
-                  {sampleContent.menuItems.map((item, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 text-xs">{item.name}</h3>
-                          <p className="text-gray-600 text-xs">{item.description}</p>
-                        </div>
-                        <div className="text-xs font-bold ml-2" style={{ color: styles.userPrimary }}>${item.price}</div>
-                      </div>
-                    </div>
-                  ))}
+              {/* Dropdown Menu */}
+              {previewState.menuOpen && (
+                <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t z-50">
+                  <div className="py-2">
+                    {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
+                          previewState.activePage === page ? 'bg-gray-100 font-semibold' : ''
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+              )}
+            </nav>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#FFFFFF' }}>
+              {renderPageContent()}
+            </div>
+          </div>
+        );
+
+      case 'bar-vibrant':
+        return (
+          <div className={`h-full overflow-hidden text-white ${fontClass}`}
+               style={{ background: formData.backgroundType === 'gradient'
+                 ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+                 : formData.backgroundColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            {/* Status Bar */}
+            <div className="h-6 bg-black/20 flex items-center justify-center text-xs font-semibold text-white">
+              9:41 AM
+            </div>
+
+            {/* Navigation */}
+            <nav className="bg-black/20 backdrop-blur-sm px-4 py-3 relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                    <LogoDisplay />
+                  </div>
+                  <h1 className="text-lg font-black text-white">{getBusinessName()}</h1>
+                </div>
+                <button onClick={toggleMenu} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                  <Menu className="w-5 h-5 text-white" />
+                </button>
               </div>
+
+              {/* Dropdown Menu */}
+              {previewState.menuOpen && (
+                <div className="absolute top-full left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-white/20 z-50">
+                  <div className="py-2">
+                    {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-4 py-2 text-left text-white hover:bg-white/10 transition-colors ${
+                          previewState.activePage === page ? 'bg-white/20 font-bold' : ''
+                        }`}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </nav>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
+              {renderPageContent()}
             </div>
           </div>
         );
 
       case 'modern-dark':
         return (
-          <div className={`h-full overflow-y-auto bg-gray-900 text-white ${fontClass}`}>
-            <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 px-2 py-1">
+          <div className={`h-full overflow-hidden bg-gray-900 text-white ${fontClass}`}>
+            {/* Status Bar */}
+            <div className="h-6 bg-black flex items-center justify-center text-xs font-semibold text-green-400">
+              9:41 AM
+            </div>
+
+            {/* Navigation */}
+            <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 px-4 py-3 relative">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded-lg bg-gray-700 flex items-center justify-center">
-                    <div style={{ color: styles.userPrimary }} className="text-xs">
-                      <LogoDisplay />
-                    </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded bg-gray-700 flex items-center justify-center">
+                    <LogoDisplay />
                   </div>
-                  <h1 className="text-white font-mono text-xs">{getBusinessName()}</h1>
+                  <h1 className="text-lg font-mono font-bold text-white">{getBusinessName()}</h1>
                 </div>
-                <Menu className="w-3 h-3 text-gray-300" />
+                <button onClick={toggleMenu} className="p-2 hover:bg-gray-700 rounded transition-colors">
+                  <Menu className="w-5 h-5 text-gray-300" />
+                </button>
               </div>
+
+              {/* Dropdown Menu */}
+              {previewState.menuOpen && (
+                <div className="absolute top-full left-0 right-0 bg-gray-800 border-t border-gray-600 z-50">
+                  <div className="py-2">
+                    {['home', 'menu', 'gallery', 'about', 'contact'].map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full px-4 py-2 text-left text-white hover:bg-gray-700 transition-colors font-mono ${
+                          previewState.activePage === page ? 'bg-gray-700 text-green-400 font-bold' : ''
+                        }`}
+                      >
+                        {page.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </nav>
 
-            <div className="p-2">
-              <div className="bg-black/80 backdrop-blur-sm rounded-xl p-3 mb-2 border border-green-500/30">
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-lg bg-green-500/20 border border-green-500/50 flex items-center justify-center">
-                    <div style={{ color: styles.userPrimary }} className="text-xs">
-                      <LogoDisplay />
-                    </div>
-                  </div>
-                  <div>
-                    <h1 className="text-sm font-bold text-white font-mono">{getBusinessName()}</h1>
-                    <p className="text-xs text-green-400 font-mono">{sampleContent.tagline}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                {sampleContent.menuItems.map((item, index) => (
-                  <div key={index} className="bg-gray-800 rounded-lg p-2 border border-gray-700/50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-xs font-semibold text-white font-mono">{item.name}</h3>
-                        <p className="text-xs text-gray-400 font-mono">{item.description}</p>
-                      </div>
-                      <div className="text-xs font-mono font-bold text-green-400 bg-green-500/10 px-1 rounded">${item.price}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: formData.backgroundColor || '#111827' }}>
+              {renderPageContent()}
             </div>
           </div>
         );
