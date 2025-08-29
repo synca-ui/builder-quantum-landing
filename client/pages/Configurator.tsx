@@ -1425,9 +1425,12 @@ export default function Configurator() {
               {formData.reservationsEnabled && (
                 <div className="text-center mt-4">
                   <button
-                    className="px-4 py-2 rounded-lg text-xs font-medium transition-colors"
+                    className={`px-4 py-2 text-xs font-medium transition-colors ${
+                      formData.reservationButtonShape === "rounded" ? "rounded-lg" :
+                      formData.reservationButtonShape === "pill" ? "rounded-full" : "rounded-none"
+                    }`}
                     style={{
-                      backgroundColor: styles.userPrimary,
+                      backgroundColor: formData.reservationButtonColor,
                       color: "#FFFFFF",
                     }}
                     onClick={() => {
