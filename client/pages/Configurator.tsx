@@ -668,10 +668,10 @@ export default function Configurator() {
           Select a design that matches your vision. You can customize colors and content later.
         </p>
       </div>
-      
+
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         {templates.map((template) => (
-          <Card 
+          <Card
             key={template.id}
             className={`group cursor-pointer transition-all duration-500 hover:shadow-2xl border-2 ${
               formData.template === template.id ? 'border-teal-500 shadow-xl scale-105' : 'border-transparent'
@@ -700,15 +700,261 @@ export default function Configurator() {
           </Card>
         ))}
       </div>
-      
+
       <div className="flex justify-between">
         <Button onClick={prevStep} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
           Back
         </Button>
-        <Button 
-          onClick={nextStep} 
+        <Button
+          onClick={nextStep}
           disabled={!formData.template}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const BrandingStep = () => (
+    <div className="py-8 max-w-2xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Define your brand colors
+        </h2>
+        <p className="text-lg text-gray-600">
+          Choose colors and fonts that represent your business personality
+        </p>
+      </div>
+
+      <div className="space-y-8">
+        {/* Primary Color */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Primary Color</label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="color"
+              value={formData.primaryColor}
+              onChange={(e) => updateFormData('primaryColor', e.target.value)}
+              className="w-12 h-12 rounded-lg cursor-pointer"
+            />
+            <div className="flex-1">
+              <Input
+                type="text"
+                value={formData.primaryColor}
+                onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                className="font-mono"
+                placeholder="#2563EB"
+              />
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">This will be your main brand color for buttons and accents</p>
+        </div>
+
+        {/* Secondary Color */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Secondary Color</label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="color"
+              value={formData.secondaryColor}
+              onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+              className="w-12 h-12 rounded-lg cursor-pointer"
+            />
+            <div className="flex-1">
+              <Input
+                type="text"
+                value={formData.secondaryColor}
+                onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                className="font-mono"
+                placeholder="#7C3AED"
+              />
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">Supporting color for gradients and highlights</p>
+        </div>
+
+        {/* Color Presets */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Quick Presets</label>
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { primary: '#2563EB', secondary: '#7C3AED', name: 'Ocean' },
+              { primary: '#059669', secondary: '#10B981', name: 'Forest' },
+              { primary: '#DC2626', secondary: '#F59E0B', name: 'Sunset' },
+              { primary: '#7C2D12', secondary: '#EA580C', name: 'Autumn' },
+              { primary: '#1F2937', secondary: '#374151', name: 'Elegant' },
+              { primary: '#BE185D', secondary: '#EC4899', name: 'Vibrant' },
+              { primary: '#6366F1', secondary: '#8B5CF6', name: 'Purple' },
+              { primary: '#0891B2', secondary: '#06B6D4', name: 'Sky' }
+            ].map((preset, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  updateFormData('primaryColor', preset.primary);
+                  updateFormData('secondaryColor', preset.secondary);
+                }}
+                className="flex flex-col items-center p-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors"
+              >
+                <div className="flex space-x-1 mb-2">
+                  <div className="w-6 h-6 rounded" style={{ backgroundColor: preset.primary }}></div>
+                  <div className="w-6 h-6 rounded" style={{ backgroundColor: preset.secondary }}></div>
+                </div>
+                <span className="text-xs font-medium text-gray-700">{preset.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Font Selection */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Font Style</label>
+          <div className="grid grid-cols-3 gap-4">
+            {fontOptions.map((font) => (
+              <Card
+                key={font.id}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  formData.fontFamily === font.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                }`}
+                onClick={() => updateFormData('fontFamily', font.id)}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className={`text-lg font-bold mb-2 ${font.class}`}>{font.name}</div>
+                  <div className={`text-sm text-gray-600 ${font.class}`}>{font.preview}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const PageStructureStep = () => (
+    <div className="py-8 max-w-2xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Select your pages
+        </h2>
+        <p className="text-lg text-gray-600">
+          Choose which pages your website will include
+        </p>
+      </div>
+
+      <div className="space-y-4 mb-8">
+        {pageOptions.filter(page =>
+          !page.condition || page.condition.includes(formData.businessType)
+        ).map((page) => (
+          <Card
+            key={page.id}
+            className={`cursor-pointer transition-all duration-300 border-2 ${
+              formData.selectedPages.includes(page.id) ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+            } ${page.required ? 'opacity-75' : ''}`}
+            onClick={() => {
+              if (page.required) return;
+              const newPages = formData.selectedPages.includes(page.id)
+                ? formData.selectedPages.filter(p => p !== page.id)
+                : [...formData.selectedPages, page.id];
+              updateFormData('selectedPages', newPages);
+            }}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-r from-teal-400 to-purple-500 flex items-center justify-center text-white`}>
+                    {page.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{page.name}</h3>
+                    {page.required && <span className="text-sm text-gray-500">Required</span>}
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  formData.selectedPages.includes(page.id) || page.required ? 'border-teal-500 bg-teal-500' : 'border-gray-300'
+                }`}>
+                  {(formData.selectedPages.includes(page.id) || page.required) && <Check className="w-4 h-4 text-white" />}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Custom Pages */}
+      <div className="mb-8">
+        <label className="block text-sm font-bold text-gray-700 mb-4">Custom Pages (Optional)</label>
+        <div className="flex space-x-2">
+          <Input
+            type="text"
+            placeholder="e.g. Events, Catering, Gift Cards"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                const newCustomPages = [...formData.customPages, e.currentTarget.value.trim()];
+                updateFormData('customPages', newCustomPages);
+                e.currentTarget.value = '';
+              }
+            }}
+            className="flex-1"
+          />
+          <Button
+            variant="outline"
+            onClick={(e) => {
+              const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+              if (input && input.value.trim()) {
+                const newCustomPages = [...formData.customPages, input.value.trim()];
+                updateFormData('customPages', newCustomPages);
+                input.value = '';
+              }
+            }}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+        {formData.customPages.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {formData.customPages.map((page, index) => (
+              <div key={index} className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full">
+                <span className="text-sm text-gray-700">{page}</span>
+                <button
+                  onClick={() => {
+                    const newCustomPages = formData.customPages.filter((_, i) => i !== index);
+                    updateFormData('customPages', newCustomPages);
+                  }}
+                  className="text-gray-500 hover:text-red-500"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-between">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
