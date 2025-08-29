@@ -438,7 +438,7 @@ export default function Index() {
                 size="lg"
                 className="group border-2 border-teal-500 text-teal-600 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 hover:text-white px-10 py-4 text-xl font-bold rounded-full transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl"
               >
-                <Sparkles className="mr-3 w-6 h-6 group-hover:animate-spin" />
+                <Sparkles className="mr-3 w-6 h-6" />
                 Start Building
                 <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform" />
               </Button>
@@ -469,9 +469,9 @@ export default function Index() {
                   variant={activeDemo === index ? "default" : "outline"}
                   onClick={() => setActiveDemo(index)}
                   className={`px-8 py-4 rounded-full transition-all duration-500 font-bold text-lg ${
-                    activeDemo === index 
-                      ? `bg-gradient-to-r ${template.color} text-white shadow-xl transform scale-110 animate-glow` 
-                      : 'glass border-white/30 text-white hover:scale-105 hover:bg-white/10'
+                    activeDemo === index
+                      ? `bg-gradient-to-r ${template.color} text-white shadow-xl transform scale-105`
+                      : 'glass border-white/30 text-white hover:bg-white/10'
                   }`}
                 >
                   {template.name}
@@ -483,22 +483,22 @@ export default function Index() {
               <div className={`aspect-video rounded-2xl ${demoTemplates[activeDemo].preview} transition-all duration-1000 ease-out flex items-center justify-center relative overflow-hidden transform group-hover:scale-105`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
                 <div className="text-center relative z-10">
-                  <div className={`w-24 h-24 rounded-full bg-gradient-to-r ${demoTemplates[activeDemo].color} mx-auto mb-6 flex items-center justify-center shadow-2xl animate-pulse group-hover:animate-bounce`}>
+                  <div className={`w-24 h-24 rounded-full bg-gradient-to-r ${demoTemplates[activeDemo].color} mx-auto mb-6 flex items-center justify-center shadow-2xl`}>
                     <Play className="w-10 h-10 text-white" />
                   </div>
                   <h3 className="text-3xl font-bold text-gray-800 mb-3">{demoTemplates[activeDemo].name}</h3>
                   <p className="text-gray-600 font-medium">Click to customize this template</p>
                 </div>
                 
-                {/* Animated elements */}
-                <div className="absolute top-4 left-4 w-4 h-4 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-ping"></div>
-                <div className="absolute bottom-4 right-4 w-6 h-6 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full animate-pulse"></div>
+                {/* Simplified decorative elements */}
+                <div className="absolute top-4 left-4 w-4 h-4 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full opacity-60"></div>
+                <div className="absolute bottom-4 right-4 w-6 h-6 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full opacity-60"></div>
               </div>
               
               <a href="/configurator">
                 <Button 
                   size="lg"
-                  className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-10 py-4 rounded-full shadow-2xl font-bold text-lg transition-all duration-500 ease-out hover:scale-110 animate-float"
+                  className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-10 py-4 rounded-full shadow-2xl font-bold text-lg transition-colors duration-300"
                 >
                   <Sparkles className="mr-3 w-6 h-6" />
                   Try it Live
@@ -529,14 +529,14 @@ export default function Index() {
               <Card 
                 key={index}
                 className={`group transition-all duration-700 ease-out transform hover:-translate-y-10 border-0 shadow-lg relative overflow-hidden ${
-                  plan.popular 
-                    ? 'shadow-2xl scale-110 glass ring-2 ring-teal-400 animate-glow' 
-                    : 'glass hover:shadow-2xl'
+                  plan.popular
+                    ? 'shadow-2xl scale-105 glass ring-2 ring-teal-400'
+                    : 'glass hover:shadow-lg transition-shadow duration-300'
                 }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                    <span className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-6 py-3 rounded-full text-sm font-bold shadow-xl animate-pulse">
+                    <span className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-6 py-3 rounded-full text-sm font-bold shadow-xl">
                       <Crown className="w-4 h-4 inline mr-2" />
                       Most Popular
                     </span>
@@ -555,7 +555,7 @@ export default function Index() {
                   <ul className="space-y-4 mb-10">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center justify-center">
-                        <Check className="w-5 h-5 text-teal-400 mr-3 animate-pulse" />
+                        <Check className="w-5 h-5 text-teal-400 mr-3" />
                         <span className="text-gray-300 font-medium">{feature}</span>
                       </li>
                     ))}
@@ -565,8 +565,8 @@ export default function Index() {
                       size="lg"
                       className={`w-full py-4 text-lg font-bold rounded-full transition-all duration-700 ease-out transform hover:scale-105 ${
                         plan.popular
-                          ? 'bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl animate-glow'
-                          : 'border-2 border-gray-400 hover:border-teal-400 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 text-gray-300 hover:text-white'
+                          ? 'bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300'
+                          : 'border-2 border-gray-400 hover:border-teal-400 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 text-gray-300 hover:text-white transition-all duration-300'
                       }`}
                       variant={plan.popular ? "default" : "outline"}
                     >
