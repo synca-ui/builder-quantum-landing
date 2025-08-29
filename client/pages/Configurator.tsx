@@ -328,41 +328,26 @@ export default function Configurator() {
   const formDataRef = useRef(formData);
   formDataRef.current = formData;
 
-  // Create stable debounced save function that doesn't depend on formData
-  const debouncedInputSave = useCallback(() => {
-    let timeoutId: NodeJS.Timeout;
-    return (field: string, value: any) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        if (autoSaverRef.current) {
-          const currentData = { ...formDataRef.current, [field]: value };
-          autoSaverRef.current.save(currentData as Partial<Configuration>);
-        }
-      }, 1500); // Increased delay for better stability
-    };
-  }, []);
-
-  // Initialize the debounced save function once
-  const debouncedSaveRef = useRef(debouncedInputSave());
+  // Simple debounced save that doesn't cause re-renders
+  const debouncedSaveRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stable form update function that doesn't change between renders
   const updateFormData = useCallback((field: string, value: any) => {
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      return newData;
-    });
-    
-    // For text inputs, use debounced save to prevent focus loss
-    if (typeof value === 'string' && field !== 'template') {
-      debouncedSaveRef.current(field, value);
-    } else {
-      // For non-text inputs (like template selection), save immediately
+    // Update form data immediately for responsive UI
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    // Debounce saves to prevent rapid API calls
+    if (debouncedSaveRef.current) {
+      clearTimeout(debouncedSaveRef.current);
+    }
+
+    debouncedSaveRef.current = setTimeout(() => {
       if (autoSaverRef.current) {
         const currentData = { ...formDataRef.current, [field]: value };
         autoSaverRef.current.save(currentData as Partial<Configuration>);
       }
-    }
-  }, []); // Empty dependency array for stability
+    }, 1000); // 1 second debounce for all fields
+  }, []); // Empty dependency array for complete stability
 
   // Create stable input handlers that don't change between renders
   const inputHandlers = useMemo(() => {
