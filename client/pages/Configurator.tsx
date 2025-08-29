@@ -1197,7 +1197,8 @@ export default function Configurator() {
     switch (selectedIdForSwitch) {
       case "minimalistic":
         return (
-          <div className={`h-full overflow-hidden bg-white ${fontClass}`}>
+          <div className={`h-full overflow-hidden ${fontClass}`}
+               style={{ backgroundColor: formData.backgroundColor || '#FFFFFF' }}>
             {/* Status Bar */}
             <div className="h-6 bg-white flex items-center justify-center text-xs font-medium text-black">
               9:41 AM
