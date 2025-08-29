@@ -1035,19 +1035,19 @@ export default function Configurator() {
           case "modern":
             return {
               page: "p-4",
-              title: "text-lg font-bold mb-4 text-center text-white",
+              title: "text-lg font-bold mb-4 text-center text-white drop-shadow-lg",
               itemCard:
-                "bg-white/15 backdrop-blur rounded-xl p-3 border border-white/30",
-              itemName: "font-bold text-sm text-white",
-              itemDesc: "text-xs text-white/90",
-              itemPrice: "font-bold text-sm text-white",
+                "bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/40 shadow-xl",
+              itemName: "font-bold text-sm text-white drop-shadow-md",
+              itemDesc: "text-xs text-white drop-shadow-sm",
+              itemPrice: "font-bold text-sm text-white drop-shadow-md",
               galleryItem:
-                "aspect-square bg-white/10 backdrop-blur rounded-xl flex items-center justify-center border border-white/30",
+                "aspect-square bg-white/15 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/40",
               aboutLogo:
-                "w-16 h-16 mx-auto bg-white/20 backdrop-blur rounded-xl flex items-center justify-center",
-              contactIcon: "w-4 h-4 text-white",
+                "w-16 h-16 mx-auto bg-white/25 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30",
+              contactIcon: "w-4 h-4 text-white drop-shadow-sm",
               homeCard:
-                "bg-white/15 backdrop-blur rounded-xl p-2 text-center border border-white/30",
+                "bg-white/20 backdrop-blur-md rounded-xl p-2 text-center border border-white/40 shadow-lg",
             };
           case "clean":
             return {
