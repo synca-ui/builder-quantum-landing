@@ -1363,7 +1363,7 @@ export default function Configurator() {
 
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {(formData.menuItems.length > 0 ? formData.menuItems : currentContent.items).slice(0, 4).map((item, index) => (
-                  <div key={index} className={templateStyles.homeCard}>
+                  <div key={index} className={`${templateStyles.homeCard} relative`}>
                     <div className="text-lg mb-1">{item.emoji || "🍽️"}</div>
                     <h3
                       className={templateStyles.itemName + " text-xs truncate"}
