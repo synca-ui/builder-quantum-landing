@@ -1308,6 +1308,7 @@ export default function Configurator() {
               placeholder="123 Main Street, City, State"
               value={formData.location}
               onChange={inputHandlers.location}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
               autoComplete="street-address"
             />
@@ -1322,6 +1323,7 @@ export default function Configurator() {
             placeholder="e.g. The best coffee in town"
             value={formData.slogan}
             onChange={inputHandlers.slogan}
+            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
             className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
           />
         </div>
