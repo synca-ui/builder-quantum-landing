@@ -737,6 +737,20 @@ export default function Configurator() {
                             {page.name}
                           </button>
                         ))}
+
+                        {/* Reservation Button in Menu */}
+                        {formData.reservationsEnabled && (
+                          <div className="pt-2 mt-2 border-t border-gray-100">
+                            <button
+                              className="block w-full text-left px-3 py-2 text-sm rounded-md transition-colors cursor-pointer bg-teal-50 text-teal-700 hover:bg-teal-100"
+                              style={{ backgroundColor: `${styles.userPrimary}15`, color: styles.userPrimary }}
+                              onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: false }))}
+                            >
+                              <Calendar className="w-4 h-4 mr-2 inline" />
+                              Reserve Table
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
