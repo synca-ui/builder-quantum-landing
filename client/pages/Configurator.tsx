@@ -9,17 +9,17 @@ import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
 export default function Configurator() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(-1); // Start with welcome page
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    // Template Selection (NEW FIRST STEP)
+    // Template Selection
     template: '',
     
-    // Phase 1: Business Basics
+    // Business Information
     businessName: '',
     businessType: '',
     location: '',
@@ -27,7 +27,7 @@ export default function Configurator() {
     slogan: '',
     uniqueDescription: '',
     
-    // Phase 2: Design & Style
+    // Design & Style
     primaryColor: '#2563EB',
     secondaryColor: '#7C3AED',
     fontFamily: 'sans-serif',
@@ -37,7 +37,7 @@ export default function Configurator() {
     selectedPages: ['home'],
     customPages: [],
     
-    // Phase 3: Content & Features
+    // Content & Features
     openingHours: {},
     menuItems: [],
     menuPdf: null,
@@ -49,13 +49,13 @@ export default function Configurator() {
     socialMedia: {},
     instagramSync: false,
     
-    // Phase 4: Media & Advanced
+    // Media & Advanced
     gallery: [],
     onlineOrdering: false,
     onlineStore: false,
     teamArea: false,
     
-    // Phase 5: Domain & Publishing
+    // Domain & Publishing
     hasDomain: false,
     domainName: '',
     selectedDomain: ''
@@ -65,9 +65,11 @@ export default function Configurator() {
     setIsVisible(true);
   }, []);
 
-  // REORDERED Configuration steps with Template Selection FIRST
+  // RESTRUCTURED Configuration steps
   const configuratorSteps = [
-    // NEW FIRST STEP: Template Selection
+    // Step -1: Welcome Page (handled separately)
+    
+    // Step 0: Template Selection
     {
       id: 'template',
       title: "Choose your template",
@@ -77,109 +79,107 @@ export default function Configurator() {
       component: 'template'
     },
     
-    // Phase 1: Business Basics
+    // Step 1: Business Information
     {
       id: 'business-info',
       title: "Tell us about your business",
       description: "Basic information to get started",
       phase: 1,
-      phaseTitle: "Business Basics",
+      phaseTitle: "Business Information",
       component: 'business-info'
     },
     
-    // Phase 2: Design & Visual Style
+    // Step 2: Design Customization
     {
-      id: 'branding',
-      title: "Define your brand colors & fonts",
-      description: "Choose colors, fonts and styling that represent your business",
+      id: 'design-customization',
+      title: "Customize your design",
+      description: "Colors, fonts, and styling",
       phase: 2,
-      phaseTitle: "Design & Visual Style",
-      component: 'branding'
+      phaseTitle: "Design Customization",
+      component: 'design-customization'
     },
+    
+    // Step 3: Page Structure
     {
       id: 'page-structure',
       title: "Select your pages",
       description: "Choose which pages your website will include",
-      phase: 2,
-      phaseTitle: "Design & Visual Style",
+      phase: 3,
+      phaseTitle: "Content Structure",
       component: 'page-structure'
     },
     
-    // Phase 3: Content & Features
+    // Rest of the steps...
     {
       id: 'opening-hours',
       title: "Set your opening hours",
       description: "When are you open for business?",
-      phase: 3,
-      phaseTitle: "Content & Features",
+      phase: 4,
+      phaseTitle: "Business Details",
       component: 'opening-hours'
     },
     {
       id: 'menu-products',
       title: "Add your menu or products",
       description: "Showcase what you offer",
-      phase: 3,
-      phaseTitle: "Content & Features",
+      phase: 4,
+      phaseTitle: "Business Details",
       component: 'menu-products'
     },
     {
       id: 'reservations',
       title: "Setup reservations",
       description: "Enable table bookings for your business",
-      phase: 3,
-      phaseTitle: "Content & Features",
+      phase: 4,
+      phaseTitle: "Business Details",
       component: 'reservations'
     },
     {
       id: 'contact-social',
       title: "Contact & social media",
       description: "How can customers reach you?",
-      phase: 3,
-      phaseTitle: "Content & Features",
+      phase: 4,
+      phaseTitle: "Business Details",
       component: 'contact-social'
     },
-    
-    // Phase 4: Media & Advanced Options
     {
       id: 'media-gallery',
       title: "Upload your photos",
       description: "Show off your space, food, and atmosphere",
-      phase: 4,
-      phaseTitle: "Media & Advanced Options",
+      phase: 5,
+      phaseTitle: "Media & Advanced",
       component: 'media-gallery'
     },
     {
       id: 'advanced-features',
       title: "Optional features",
       description: "Enable advanced functionality",
-      phase: 4,
-      phaseTitle: "Media & Advanced Options",
+      phase: 5,
+      phaseTitle: "Media & Advanced",
       component: 'advanced-features'
     },
-    
-    // Phase 5: Domain, Preview & Publishing
     {
       id: 'domain-hosting',
       title: "Choose your domain",
       description: "Select how customers will find your website",
-      phase: 5,
-      phaseTitle: "Domain, Preview & Publishing",
+      phase: 6,
+      phaseTitle: "Publishing",
       component: 'domain-hosting'
     },
     {
       id: 'preview-adjustments',
       title: "Preview & final tweaks",
       description: "Review and make final adjustments",
-      phase: 5,
-      phaseTitle: "Domain, Preview & Publishing",
+      phase: 6,
+      phaseTitle: "Publishing",
       component: 'preview-adjustments'
     },
     {
       id: 'publish',
       title: "Publish your website",
       description: "Make your website live!",
-      phase: 5,
-      phaseTitle: "Domain, Preview & Publishing",
+      phase: 6,
+      phaseTitle: "Publishing",
       component: 'publish'
     }
   ];
@@ -338,6 +338,10 @@ export default function Configurator() {
   }, []);
 
   // Navigation functions
+  const startConfigurator = useCallback(() => {
+    setCurrentStep(0); // Go to template selection
+  }, []);
+
   const nextStep = useCallback(() => {
     if (currentStep < configuratorSteps.length - 1) {
       updateFormDataFromInputs();
@@ -349,10 +353,13 @@ export default function Configurator() {
     if (currentStep > 0) {
       updateFormDataFromInputs();
       setCurrentStep(prev => prev - 1);
+    } else if (currentStep === 0) {
+      // Go back to welcome page
+      setCurrentStep(-1);
     }
   }, [currentStep, updateFormDataFromInputs]);
 
-  // Back to Step 1 (Template) function
+  // Back to Template Selection function
   const backToTemplates = useCallback(() => {
     updateFormDataFromInputs();
     setCurrentStep(0);
@@ -410,11 +417,13 @@ export default function Configurator() {
 
   // Progress calculation
   const progressPercentage = useMemo(() => {
+    if (currentStep < 0) return 0;
     return ((currentStep + 1) / configuratorSteps.length) * 100;
   }, [currentStep, configuratorSteps.length]);
 
   // Current phase data
   const currentPhase = useMemo(() => {
+    if (currentStep < 0) return null;
     return configuratorSteps[currentStep] || null;
   }, [currentStep, configuratorSteps]);
 
@@ -431,43 +440,47 @@ export default function Configurator() {
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full opacity-75"></div>
             </div>
             
-            {/* Progress indicator */}
-            <div className="hidden md:flex items-center ml-8">
-              <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-full">
-                <Settings className="w-4 h-4 text-teal-500" />
-                <span className="text-sm font-bold text-gray-700">
-                  Step {currentStep + 1} of {configuratorSteps.length}
-                </span>
-                <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-transform duration-300 ease-out"
-                    style={{ width: `${progressPercentage}%` }}
-                  ></div>
+            {/* Progress indicator - only show when in configurator steps */}
+            {currentStep >= 0 && (
+              <div className="hidden md:flex items-center ml-8">
+                <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-full">
+                  <Settings className="w-4 h-4 text-teal-500" />
+                  <span className="text-sm font-bold text-gray-700">
+                    Step {currentStep + 1} of {configuratorSteps.length}
+                  </span>
+                  <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-transform duration-300 ease-out"
+                      style={{ width: `${progressPercentage}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             
             {/* Save Status */}
-            <div className="hidden lg:flex items-center space-x-2 ml-4">
-              {saveStatus === 'saving' && (
-                <div className="flex items-center space-x-2 text-orange-600">
-                  <Cloud className="w-4 h-4 animate-pulse" />
-                  <span className="text-xs">Saving...</span>
-                </div>
-              )}
-              {saveStatus === 'saved' && (
-                <div className="flex items-center space-x-2 text-green-600">
-                  <Check className="w-4 h-4" />
-                  <span className="text-xs">Saved</span>
-                </div>
-              )}
-              {saveStatus === 'error' && (
-                <div className="flex items-center space-x-2 text-red-600">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-xs">Save failed</span>
-                </div>
-              )}
-            </div>
+            {currentStep >= 0 && (
+              <div className="hidden lg:flex items-center space-x-2 ml-4">
+                {saveStatus === 'saving' && (
+                  <div className="flex items-center space-x-2 text-orange-600">
+                    <Cloud className="w-4 h-4 animate-pulse" />
+                    <span className="text-xs">Saving...</span>
+                  </div>
+                )}
+                {saveStatus === 'saved' && (
+                  <div className="flex items-center space-x-2 text-green-600">
+                    <Check className="w-4 h-4" />
+                    <span className="text-xs">Saved</span>
+                  </div>
+                )}
+                {saveStatus === 'error' && (
+                  <div className="flex items-center space-x-2 text-red-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-xs">Save failed</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Phase indicator */}
             {currentPhase && (
@@ -482,7 +495,7 @@ export default function Configurator() {
           
           <div className="hidden md:block">
             <div className="flex items-center space-x-6">
-              {/* Back to Templates button - always visible after step 0 */}
+              {/* Back to Templates button - only show after template selection */}
               {currentStep > 0 && (
                 <Button
                   variant="outline"
@@ -495,37 +508,39 @@ export default function Configurator() {
                 </Button>
               )}
               
-              <div className="flex items-center space-x-2">
-                {publishStatus === 'published' && publishedUrl ? (
-                  <Button 
-                    size="sm"
-                    onClick={() => window.open(publishedUrl, '_blank')}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
-                  >
-                    <Globe className="w-4 h-4 mr-2" />
-                    View Live Site
-                  </Button>
-                ) : (
-                  <Button 
-                    size="sm"
-                    onClick={publishConfiguration}
-                    disabled={publishStatus === 'publishing'}
-                    className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg"
-                  >
-                    {publishStatus === 'publishing' ? (
-                      <>
-                        <Cloud className="w-4 h-4 mr-2 animate-pulse" />
-                        Publishing...
-                      </>
-                    ) : (
-                      <>
-                        <Rocket className="w-4 h-4 mr-2" />
-                        Publish Website
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
+              {currentStep >= 0 && (
+                <div className="flex items-center space-x-2">
+                  {publishStatus === 'published' && publishedUrl ? (
+                    <Button 
+                      size="sm"
+                      onClick={() => window.open(publishedUrl, '_blank')}
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
+                    >
+                      <Globe className="w-4 h-4 mr-2" />
+                      View Live Site
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm"
+                      onClick={publishConfiguration}
+                      disabled={publishStatus === 'publishing'}
+                      className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg"
+                    >
+                      {publishStatus === 'publishing' ? (
+                        <>
+                          <Cloud className="w-4 h-4 mr-2 animate-pulse" />
+                          Publishing...
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="w-4 h-4 mr-2" />
+                          Publish Website
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -544,7 +559,7 @@ export default function Configurator() {
     </nav>
   );
 
-  // Enhanced Live Preview Component
+  // Enhanced Live Preview Component with Logo Upload
   const LivePreview = () => {
     const [previewState, setPreviewState] = useState({
       menuOpen: false,
@@ -589,6 +604,20 @@ export default function Configurator() {
       // Apply font family based on user selection
       const fontClass = fontOptions.find(f => f.id === formData.fontFamily)?.class || 'font-sans';
 
+      // Common logo display component
+      const LogoDisplay = () => {
+        if (formData.logo) {
+          return (
+            <img
+              src={typeof formData.logo === 'string' ? formData.logo : URL.createObjectURL(formData.logo)}
+              alt="Business logo"
+              className="w-8 h-8 object-contain rounded"
+            />
+          );
+        }
+        return getBusinessIcon();
+      };
+
       // Render different templates based on selection
       switch (formData.template) {
         case 'minimalist':
@@ -597,7 +626,15 @@ export default function Configurator() {
               <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
-                    <h1 className="text-lg font-medium text-gray-900">{getBusinessName()}</h1>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center" 
+                           style={{ backgroundColor: `${styles.userPrimary}15` }}>
+                        <div style={{ color: styles.userPrimary }}>
+                          <LogoDisplay />
+                        </div>
+                      </div>
+                      <h1 className="text-lg font-medium text-gray-900">{getBusinessName()}</h1>
+                    </div>
                     <button className="p-2 hover:bg-gray-50 rounded-lg">
                       <Menu className="w-4 h-4 text-gray-600" />
                     </button>
@@ -608,8 +645,8 @@ export default function Configurator() {
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center" 
                        style={{ backgroundColor: `${styles.userPrimary}15` }}>
-                    <div style={{ color: styles.userPrimary }}>
-                      {getBusinessIcon()}
+                    <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
+                      <LogoDisplay />
                     </div>
                   </div>
                   <h2 className="text-2xl font-light text-gray-900 mb-2">{getBusinessName()}</h2>
@@ -627,7 +664,12 @@ export default function Configurator() {
                  style={{ background: formData.backgroundType === 'color' ? formData.backgroundColor : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
               <nav className="p-4">
                 <div className="flex items-center justify-between">
-                  <h1 className="text-xl font-black text-white">{getBusinessName()}</h1>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                      <LogoDisplay />
+                    </div>
+                    <h1 className="text-xl font-black text-white">{getBusinessName()}</h1>
+                  </div>
                   <button className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
                     <Menu className="w-4 h-4 text-white" />
                   </button>
@@ -635,8 +677,8 @@ export default function Configurator() {
               </nav>
               <div className="pt-8 px-4 text-center">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center">
-                  <div style={{ color: styles.userPrimary }}>
-                    {getBusinessIcon()}
+                  <div style={{ color: styles.userPrimary }} className="w-10 h-10 flex items-center justify-center">
+                    <LogoDisplay />
                   </div>
                 </div>
                 <h1 className="text-3xl font-black text-white mb-3">{getBusinessName()}</h1>
@@ -656,7 +698,7 @@ export default function Configurator() {
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
                         <div style={{ color: styles.userPrimary }}>
-                          {getBusinessIcon()}
+                          <LogoDisplay />
                         </div>
                       </div>
                       <h1 className="text-lg font-semibold text-gray-900">{getBusinessName()}</h1>
@@ -669,6 +711,11 @@ export default function Configurator() {
               </nav>
               <div className="p-4" style={{ backgroundColor: formData.backgroundColor }}>
                 <div className="text-center py-8 border-b border-gray-100">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
+                    <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
+                      <LogoDisplay />
+                    </div>
+                  </div>
                   <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
                   {formData.slogan && (
                     <p className="text-gray-600">{formData.slogan}</p>
@@ -685,7 +732,11 @@ export default function Configurator() {
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: styles.userPrimary }}></div>
+                      <div className="w-8 h-8 rounded-xl bg-gray-700 flex items-center justify-center">
+                        <div style={{ color: styles.userPrimary }}>
+                          <LogoDisplay />
+                        </div>
+                      </div>
                       <h1 className="text-white font-mono text-lg">{getBusinessName()}</h1>
                     </div>
                     <button className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center">
@@ -698,8 +749,8 @@ export default function Configurator() {
                 <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
-                      <div style={{ color: styles.userPrimary }}>
-                        {getBusinessIcon()}
+                      <div style={{ color: styles.userPrimary }} className="w-8 h-8 flex items-center justify-center">
+                        <LogoDisplay />
                       </div>
                     </div>
                     <div>
@@ -733,6 +784,48 @@ export default function Configurator() {
               </Button>
             </div>
           </div>
+
+          {/* Logo Upload Section in Live Preview */}
+          {currentStep >= 1 && (
+            <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className="text-sm font-bold text-gray-700 mb-3">Business Logo</h4>
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center">
+                  {formData.logo ? (
+                    <img
+                      src={typeof formData.logo === 'string' ? formData.logo : URL.createObjectURL(formData.logo)}
+                      alt="Logo preview"
+                      className="w-full h-full object-contain rounded"
+                    />
+                  ) : (
+                    <Building className="w-6 h-6 text-gray-400" />
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => document.getElementById('logo-preview-upload')?.click()}
+                  className="text-xs"
+                >
+                  <Upload className="w-3 h-3 mr-1" />
+                  {formData.logo ? 'Change' : 'Upload'}
+                </Button>
+                <input
+                  id="logo-preview-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      updateFormData('logo', file);
+                    }
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 2MB</p>
+            </div>
+          )}
           
           <div className="flex-1 flex items-center justify-center">
             <div className="relative">
@@ -751,19 +844,73 @@ export default function Configurator() {
     );
   };
 
-  // Step 1: Template Selection (NEW FIRST STEP)
+  // Welcome Page Component
+  const WelcomePage = () => (
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="max-w-4xl mx-auto px-4 text-center">
+        <div className="mb-12">
+          <div className="w-32 h-32 mx-auto mb-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
+            <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center">
+              <Rocket className="w-16 h-16 text-teal-500" />
+            </div>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">
+            Build Your Perfect <span className="bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">Website</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+            Create a stunning, professional website for your business in just minutes. Our smart configurator guides you through each step, from choosing the perfect template to customizing every detail.
+          </p>
+        </div>
+
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">Here's how it works:</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-teal-400 to-teal-500 rounded-2xl flex items-center justify-center">
+                <Palette className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">1. Choose Template</h3>
+              <p className="text-gray-600 text-sm">Select from our professionally designed templates that match your business style.</p>
+            </div>
+            <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center">
+                <Settings className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">2. Customize Everything</h3>
+              <p className="text-gray-600 text-sm">Personalize colors, fonts, content, and upload your logo - all with live preview.</p>
+            </div>
+            <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-orange-500 rounded-2xl flex items-center justify-center">
+                <Rocket className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">3. Publish & Go Live</h3>
+              <p className="text-gray-600 text-sm">Launch your website with one click and start attracting customers immediately.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <Button
+            onClick={startConfigurator}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-16 py-8 text-2xl font-bold rounded-full shadow-2xl hover:scale-105 transition-all duration-300"
+          >
+            <Sparkles className="mr-4 w-8 h-8" />
+            Let's Get Started
+            <ChevronRight className="ml-4 w-8 h-8" />
+          </Button>
+          <p className="text-sm text-gray-500">
+            No technical skills required • Takes 5-10 minutes • Professional results guaranteed
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Template Selection (Step 0) - NO AUTO-REDIRECT
   const TemplateStep = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(formData.template);
-
-    const handleTemplateSelect = useCallback((templateId: string) => {
-      setSelectedTemplate(templateId);
-      updateFormData('template', templateId);
-
-      // Auto-redirect to next step after template selection
-      setTimeout(() => {
-        nextStep();
-      }, 500);
-    }, [updateFormData, nextStep]);
 
     return (
       <div className="py-12">
@@ -793,7 +940,7 @@ export default function Configurator() {
                   ? 'border-teal-500 shadow-2xl scale-[1.02] bg-gradient-to-br from-teal-50/50 to-purple-50/50' 
                   : 'border-gray-200 hover:border-teal-300 hover:scale-[1.01]'
               }`}
-              onClick={() => handleTemplateSelect(template.id)}
+              onClick={() => setSelectedTemplate(template.id)}
             >
               <CardContent className="p-0">
                 <div className={`w-full h-48 rounded-t-lg ${template.preview} relative overflow-hidden`}>
@@ -847,34 +994,46 @@ export default function Configurator() {
                       </span>
                     ))}
                   </div>
+
+                  {/* Customize Button - only show for selected template */}
+                  {selectedTemplate === template.id && (
+                    <div className="mt-4">
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateFormData('template', template.id);
+                          nextStep();
+                        }}
+                        className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold"
+                      >
+                        <Sparkles className="mr-2 w-4 h-4" />
+                        Customize This Template
+                        <ChevronRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="flex justify-center">
-          <Button
-            onClick={nextStep}
-            disabled={!selectedTemplate}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {selectedTemplate ? (
-              <>
-                Customize This Template
-                <ChevronRight className="ml-3 w-6 h-6" />
-              </>
-            ) : (
-              'Select a Template First'
-            )}
+        <div className="flex justify-between">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back to Welcome
           </Button>
+          <div className="text-center">
+            <p className="text-sm text-gray-500">
+              Select a template and click "Customize This Template" to continue
+            </p>
+          </div>
         </div>
       </div>
     );
   };
 
-  // Step 2: Business Information
+  // Business Information (Step 1)
   const BusinessInfoStep = () => (
     <div className="py-8 max-w-2xl mx-auto">
       <div className="text-center mb-12">
@@ -943,40 +1102,6 @@ export default function Configurator() {
           </div>
         </div>
 
-        {/* Logo Upload - FIXED */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Business Logo (Optional)</label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-teal-400 transition-colors">
-            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-2">Upload your logo</p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => document.getElementById('logo-upload')?.click()}
-            >
-              Choose File
-            </Button>
-            <input
-              id="logo-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  updateFormData('logo', file);
-                }
-              }}
-            />
-            <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 2MB</p>
-            {formData.logo && (
-              <div className="mt-3 p-2 bg-teal-50 rounded border border-teal-200">
-                <p className="text-xs text-teal-700">✓ Logo uploaded</p>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Slogan */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Slogan (Optional)</label>
@@ -1022,12 +1147,12 @@ export default function Configurator() {
     </div>
   );
 
-  // Step 3: Branding (FIXED Typography and Background)
-  const BrandingStep = () => (
+  // Design Customization (Step 2)
+  const DesignCustomizationStep = () => (
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Define your brand identity
+          Customize your design
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Choose colors, fonts and styling that represent your business personality and create a memorable brand experience.
@@ -1152,7 +1277,7 @@ export default function Configurator() {
           </div>
         </div>
 
-        {/* Font Selection - FIXED */}
+        {/* Font Selection */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">Typography Style</label>
           <div className="grid grid-cols-3 gap-4">
@@ -1181,7 +1306,7 @@ export default function Configurator() {
           </div>
         </div>
 
-        {/* Background Style - FIXED */}
+        {/* Background Style */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">Background Style</label>
           <div className="grid grid-cols-3 gap-4 mb-6">
@@ -1314,495 +1439,12 @@ export default function Configurator() {
     </div>
   );
 
-  // Rest of the original steps...
-  const PageStructureStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Select your pages
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose which pages your website will include. You can always add more later.
-        </p>
-      </div>
+  // Render main content based on current step
+  const renderMainContent = () => {
+    if (currentStep === -1) {
+      return <WelcomePage />;
+    }
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {pageOptions.map((page) => {
-          const isSelected = formData.selectedPages.includes(page.id);
-          const isVisible = !page.condition || page.condition.includes(formData.businessType);
-
-          if (!isVisible) return null;
-
-          return (
-            <Card
-              key={page.id}
-              className={`cursor-pointer transition-all duration-300 border-2 ${
-                isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-              } ${page.required ? 'opacity-75' : ''}`}
-              onClick={() => {
-                if (page.required) return;
-                const newPages = isSelected
-                  ? formData.selectedPages.filter(p => p !== page.id)
-                  : [...formData.selectedPages, page.id];
-                updateFormData('selectedPages', newPages);
-              }}
-            >
-              <CardContent className="p-6 text-center">
-                <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-r ${
-                  isSelected ? 'from-teal-500 to-purple-500' : 'from-gray-400 to-gray-500'
-                } flex items-center justify-center text-white`}>
-                  {page.icon}
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">{page.name}</h3>
-                {page.required && (
-                  <p className="text-xs text-gray-500">Required</p>
-                )}
-                {isSelected && !page.required && (
-                  <div className="mt-2">
-                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  // Additional step components
-  const OpeningHoursStep = () => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-    return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Set your opening hours
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            When are you open for business? This helps customers know when to visit.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {days.map((day) => {
-            const hours = formData.openingHours[day] || { open: '09:00', close: '17:00', closed: false };
-
-            return (
-              <Card key={day} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-24">
-                      <h3 className="font-semibold text-gray-900">{day}</h3>
-                    </div>
-                    <Button
-                      variant={hours.closed ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        const newHours = {
-                          ...formData.openingHours,
-                          [day]: { ...hours, closed: !hours.closed }
-                        };
-                        updateFormData('openingHours', newHours);
-                      }}
-                    >
-                      {hours.closed ? 'Closed' : 'Open'}
-                    </Button>
-                  </div>
-
-                  {!hours.closed && (
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        defaultValue={hours.open}
-                        onChange={(e) => {
-                          const newHours = {
-                            ...formData.openingHours,
-                            [day]: { ...hours, open: e.target.value }
-                          };
-                          updateFormData('openingHours', newHours);
-                        }}
-                        className="w-32"
-                      />
-                      <span className="text-gray-500">to</span>
-                      <Input
-                        type="time"
-                        defaultValue={hours.close}
-                        onChange={(e) => {
-                          const newHours = {
-                            ...formData.openingHours,
-                            [day]: { ...hours, close: e.target.value }
-                          };
-                          updateFormData('openingHours', newHours);
-                        }}
-                        className="w-32"
-                      />
-                    </div>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const MenuProductsStep = () => {
-    const [newItem, setNewItem] = useState({ name: '', description: '', price: '' });
-
-    const addMenuItem = () => {
-      if (newItem.name && newItem.price) {
-        const updatedItems = [...formData.menuItems, { ...newItem, id: Date.now().toString() }];
-        updateFormData('menuItems', updatedItems);
-        setNewItem({ name: '', description: '', price: '' });
-      }
-    };
-
-    const removeMenuItem = (index: number) => {
-      const updatedItems = formData.menuItems.filter((_, i) => i !== index);
-      updateFormData('menuItems', updatedItems);
-    };
-
-    return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Add your menu or products
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Showcase what you offer. You can add items manually or upload your menu.
-          </p>
-        </div>
-
-        {/* Upload Options */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Card className="p-6">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <Camera className="w-8 h-8 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Menu Image</h3>
-              <p className="text-gray-600 text-sm mb-4">Upload a photo of your existing menu</p>
-              <Button
-                variant="outline"
-                className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700"
-                onClick={() => document.getElementById('menu-img-upload')?.click()}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Choose Image File
-              </Button>
-              <input
-                id="menu-img-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    updateFormData('menuPdf', file);
-                  }
-                }}
-              />
-              <p className="text-xs text-gray-500 mt-2">JPG, PNG up to 10MB</p>
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-2xl flex items-center justify-center">
-                <Upload className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload CSV File</h3>
-              <p className="text-gray-600 text-sm mb-4">Upload structured menu data as CSV</p>
-              <Button
-                variant="outline"
-                className="w-full border-2 border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 text-green-700"
-                onClick={() => document.getElementById('csv-upload')?.click()}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Choose CSV File
-              </Button>
-              <input
-                id="csv-upload"
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    // Handle CSV file processing here
-                    console.log('CSV file uploaded:', file);
-                  }
-                }}
-              />
-              <p className="text-xs text-gray-500 mt-2">Format: name,description,price</p>
-            </div>
-          </Card>
-        </div>
-
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-4">
-            <div className="h-px bg-gray-300 flex-1"></div>
-            <span className="text-gray-500 font-medium">OR</span>
-            <div className="h-px bg-gray-300 flex-1"></div>
-          </div>
-        </div>
-
-        {/* Add New Item Form */}
-        <Card className="p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Item</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Item Name *</label>
-              <Input
-                type="text"
-                placeholder="e.g. Signature Latte"
-                value={newItem.name}
-                onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-              <Input
-                type="text"
-                placeholder="Brief description"
-                value={newItem.description}
-                onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Price *</label>
-              <div className="flex">
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="9.99"
-                  value={newItem.price}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={addMenuItem}
-                  disabled={!newItem.name || !newItem.price}
-                  className="ml-2 bg-teal-500 hover:bg-teal-600"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Menu Items List */}
-        {formData.menuItems.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-lg font-bold text-gray-900">Your Menu Items</h3>
-            {formData.menuItems.map((item, index) => (
-              <Card key={index} className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                    {item.description && (
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg font-bold text-teal-600">${item.price}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeMenuItem(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const ContactSocialStep = () => {
-    const contactMethods = [
-      { id: 'phone', icon: <Phone className="w-5 h-5" />, label: 'Phone', placeholder: '+1 (555) 123-4567' },
-      { id: 'email', icon: <Mail className="w-5 h-5" />, label: 'Email', placeholder: 'hello@yourbusiness.com' },
-      { id: 'address', icon: <MapPin className="w-5 h-5" />, label: 'Address', placeholder: '123 Main St, City, State' }
-    ];
-
-    const socialPlatforms = [
-      { id: 'instagram', icon: <Instagram className="w-5 h-5" />, label: 'Instagram', placeholder: '@yourbusiness' },
-      { id: 'facebook', icon: <Facebook className="w-5 h-5" />, label: 'Facebook', placeholder: 'facebook.com/yourbusiness' }
-    ];
-
-    const getContactValue = (methodId: string) => {
-      if (!formData.contactMethods) return '';
-      if (Array.isArray(formData.contactMethods)) {
-        const contact = formData.contactMethods.find(c => c.type === methodId);
-        return contact ? contact.value : '';
-      }
-      return formData.contactMethods[methodId] || '';
-    };
-
-    const getSocialValue = (platformId: string) => {
-      if (!formData.socialMedia) return '';
-      return formData.socialMedia[platformId] || '';
-    };
-
-    return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Contact & social media
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            How can customers reach you? Add your contact information and social media links.
-          </p>
-        </div>
-
-        <div className="space-y-8">
-          {/* Contact Information */}
-          <Card className="p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Contact Information</h3>
-            <div className="space-y-4">
-              {contactMethods.map((method) => (
-                <div key={method.id}>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">{method.label}</label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-3 text-gray-400">
-                      {method.icon}
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder={method.placeholder}
-                      defaultValue={getContactValue(method.id)}
-                      ref={setInputRef(`contact_${method.id}`)}
-                      onBlur={handleInputBlur(`contact_${method.id}`)}
-                      className="pl-12"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Social Media */}
-          <Card className="p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Social Media</h3>
-            <div className="space-y-4">
-              {socialPlatforms.map((platform) => (
-                <div key={platform.id}>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">{platform.label}</label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-3 text-gray-400">
-                      {platform.icon}
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder={platform.placeholder}
-                      defaultValue={getSocialValue(platform.id)}
-                      ref={setInputRef(`social_${platform.id}`)}
-                      onBlur={handleInputBlur(`social_${platform.id}`)}
-                      className="pl-12"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Instagram Sync */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-md font-bold text-gray-900">Instagram Integration</h4>
-                  <p className="text-sm text-gray-600">Automatically sync your Instagram posts to your website</p>
-                </div>
-                <Button
-                  variant={formData.instagramSync ? "default" : "outline"}
-                  onClick={() => updateFormData('instagramSync', !formData.instagramSync)}
-                  className={formData.instagramSync ? 'bg-teal-500 hover:bg-teal-600' : ''}
-                >
-                  {formData.instagramSync ? 'Enabled' : 'Disabled'}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  // Render step content based on current step
-  const renderStepContent = () => {
     const currentStepConfig = configuratorSteps[currentStep];
     if (!currentStepConfig) return null;
 
@@ -1811,17 +1453,8 @@ export default function Configurator() {
         return <TemplateStep />;
       case 'business-info':
         return <BusinessInfoStep />;
-      case 'branding':
-        return <BrandingStep />;
-      case 'page-structure':
-        return <PageStructureStep />;
-      case 'opening-hours':
-        return <OpeningHoursStep />;
-      case 'menu-products':
-        return <MenuProductsStep />;
-      case 'contact-social':
-        return <ContactSocialStep />;
-      // Add other step components here...
+      case 'design-customization':
+        return <DesignCustomizationStep />;
       default:
         return (
           <div className="py-16 text-center">
@@ -1851,23 +1484,30 @@ export default function Configurator() {
 
   return (
     <div className={`min-h-screen bg-white transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      <Navigation />
+      {/* Only show navigation when in configurator steps */}
+      {currentStep >= 0 && <Navigation />}
       
-      <div className="pt-20">
-        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <div className="min-h-[80vh]">
-              {renderStepContent()}
+      {currentStep === -1 ? (
+        // Welcome page takes full screen
+        renderMainContent()
+      ) : (
+        // Configurator steps with live preview
+        <div className="pt-20">
+          <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2">
+              <div className="min-h-[80vh]">
+                {renderMainContent()}
+              </div>
+            </div>
+            
+            {/* Live Preview */}
+            <div className="hidden lg:block">
+              <LivePreview />
             </div>
           </div>
-          
-          {/* Live Preview */}
-          <div className="hidden lg:block">
-            <LivePreview />
-          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
