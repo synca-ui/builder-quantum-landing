@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers } from "lucide-react";
+import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { sessionApi } from "@/lib/api";
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
@@ -151,6 +152,7 @@ export default function Index() {
   const Navigation = () => {
     const [scrolled, setScrolled] = useState(false);
     const [hoveredItem, setHoveredItem] = useState(null);
+    const [hasSavedSites, setHasSavedSites] = useState(false);
 
     useEffect(() => {
       const handleScroll = () => {
@@ -160,10 +162,24 @@ export default function Index() {
       return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Check if user has saved configurations
+    useEffect(() => {
+      const checkSavedSites = async () => {
+        try {
+          const hasConfigs = await sessionApi.hasSavedConfigurations();
+          setHasSavedSites(hasConfigs);
+        } catch (error) {
+          console.log('Error checking saved configurations:', error);
+        }
+      };
+      checkSavedSites();
+    }, []);
+
     const navItems = [
       { id: 'features', label: 'Features', icon: <Layers className="w-4 h-4" />, href: '#features' },
       { id: 'demo', label: 'Demo', icon: <Play className="w-4 h-4" />, href: '#demo' },
-      { id: 'pricing', label: 'Pricing', icon: <Crown className="w-4 h-4" />, href: '#pricing' }
+      { id: 'pricing', label: 'Pricing', icon: <Crown className="w-4 h-4" />, href: '#pricing' },
+      ...(hasSavedSites ? [{ id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/dashboard' }] : [])
     ];
 
     return (
@@ -222,8 +238,22 @@ export default function Index() {
               </div>
             </div>
 
-            {/* CTA Button with enhanced animation */}
-            <div className="hidden md:block">
+            {/* CTA Buttons with enhanced animation */}
+            <div className="hidden md:flex items-center space-x-3">
+              {hasSavedSites && (
+                <a href="/dashboard">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
+                  >
+                    <div className="relative flex items-center space-x-2">
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span>Dashboard</span>
+                    </div>
+                  </Button>
+                </a>
+              )}
               <a href="/configurator">
                 <Button
                   size="sm"
@@ -237,7 +267,7 @@ export default function Index() {
                     <div className="transition-all duration-300 group-hover:rotate-45">
                       <Settings className="w-4 h-4" />
                     </div>
-                    <span>Start Building</span>
+                    <span>{hasSavedSites ? 'New Site' : 'Start Building'}</span>
                     <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
                   </div>
                 </Button>
