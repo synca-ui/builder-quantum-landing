@@ -1306,8 +1306,8 @@ export default function Configurator() {
             <Input
               type="text"
               placeholder="123 Main Street, City, State"
-              value={formData.location}
-              onChange={inputHandlers.location}
+              defaultValue={formData.location}
+              onChange={handleInputChange('location')}
               onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
               className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
               autoComplete="street-address"
@@ -1321,8 +1321,8 @@ export default function Configurator() {
           <Input
             type="text"
             placeholder="e.g. The best coffee in town"
-            value={formData.slogan}
-            onChange={inputHandlers.slogan}
+            defaultValue={formData.slogan}
+            onChange={handleInputChange('slogan')}
             onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
             className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
           />
@@ -1333,8 +1333,8 @@ export default function Configurator() {
           <label className="block text-sm font-bold text-gray-700 mb-2">What makes your business unique?</label>
           <Textarea
             placeholder="Tell us what sets you apart from the competition..."
-            value={formData.uniqueDescription}
-            onChange={inputHandlers.uniqueDescription}
+            defaultValue={formData.uniqueDescription}
+            onChange={handleInputChange('uniqueDescription')}
             className="w-full px-4 py-3 h-24 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
           />
         </div>
