@@ -604,10 +604,12 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Business Name *</label>
           <Input
+            key="business-name-input"
             type="text"
             placeholder="e.g. Bella's Café"
             value={formData.businessName}
             onChange={(e) => updateFormData('businessName', e.target.value)}
+            onFocus={(e) => e.stopPropagation()}
             className="w-full px-4 py-3 text-lg"
           />
         </div>
