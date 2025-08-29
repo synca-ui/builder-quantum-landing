@@ -2581,16 +2581,6 @@ export default function Configurator() {
     <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} overflow-hidden`}>
       <Navigation />
       
-      {/* Interactive cursor follower */}
-      <div 
-        className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
-        style={{ 
-          left: mousePosition.x - 6, 
-          top: mousePosition.y - 6,
-          transform: `translate3d(0, 0, 0) scale(0.8)`,
-          transition: 'transform 0.1s ease-out'
-        }}
-      />
       
       {/* Main Content */}
       <div className="pt-20">
