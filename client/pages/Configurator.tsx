@@ -208,94 +208,94 @@ export default function Configurator() {
     { value: 'bar', label: 'Bar', icon: <ShoppingBag className="w-6 h-6" />, gradient: 'from-purple-500 to-indigo-600' }
   ];
 
-  // Modern App-Style Templates for Café, Restaurant, Bar
+  // Professional App-Style Templates - Minimalistic, Modern, Clean, Fancy
   const templates = [
     {
-      id: 'cafe-modern',
-      name: 'Café Modern',
-      description: 'Instagram-worthy design perfect for trendy coffee shops and cafés',
-      preview: 'bg-gradient-to-br from-amber-100 to-orange-200',
-      businessTypes: ['cafe'],
-      style: {
-        background: '#FEFBF3',
-        accent: '#F59E0B',
-        text: '#1F2937',
-        secondary: '#FEF3C7',
-        layout: 'card-grid',
-        navigation: 'clean-top',
-        typography: 'modern-sans'
-      },
-      features: ['Instagram Ready', 'Mobile First', 'Minimalist'],
-      mockup: {
-        nav: { bg: 'bg-white', text: 'text-gray-900', border: 'border-amber-100' },
-        hero: { bg: 'bg-amber-50', text: 'text-gray-900' },
-        cards: { bg: 'bg-white', border: 'border-amber-200', text: 'text-gray-600' }
-      }
-    },
-    {
-      id: 'restaurant-elegant',
-      name: 'Restaurant Elite',
-      description: 'Sophisticated design for upscale restaurants and fine dining',
-      preview: 'bg-gradient-to-br from-slate-100 to-gray-200',
-      businessTypes: ['restaurant'],
+      id: 'minimalistic',
+      name: 'Minimalistic',
+      description: 'Clean, simple design focusing on content with perfect readability',
+      preview: 'bg-gradient-to-br from-white to-gray-100',
+      businessTypes: ['cafe', 'restaurant', 'bar'],
       style: {
         background: '#FFFFFF',
-        accent: '#DC2626',
-        text: '#111827',
-        secondary: '#F8FAFC',
-        layout: 'elegant-grid',
-        navigation: 'classic-top',
-        typography: 'elegant-serif'
+        accent: '#000000',
+        text: '#1A1A1A',
+        secondary: '#F8F9FA',
+        layout: 'minimal-grid',
+        navigation: 'borderless-clean',
+        typography: 'minimal-sans'
       },
-      features: ['Fine Dining', 'Reservations', 'Menu Focus'],
+      features: ['Ultra Clean', 'Fast Loading', 'Content Focus'],
       mockup: {
-        nav: { bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-200' },
-        hero: { bg: 'bg-gray-50', text: 'text-gray-900' },
-        cards: { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-600' }
+        nav: { bg: 'bg-white', text: 'text-black', border: 'border-transparent' },
+        hero: { bg: 'bg-white', text: 'text-black' },
+        cards: { bg: 'bg-gray-50', border: 'border-gray-100', text: 'text-gray-800' }
       }
     },
     {
-      id: 'bar-vibrant',
-      name: 'Bar Vibrant',
-      description: 'Bold and energetic design perfect for bars and nightlife venues',
-      preview: 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500',
-      businessTypes: ['bar'],
+      id: 'modern',
+      name: 'Modern',
+      description: 'Contemporary design with bold colors and sleek animations',
+      preview: 'bg-gradient-to-br from-blue-500 to-purple-600',
+      businessTypes: ['cafe', 'restaurant', 'bar'],
       style: {
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        accent: '#EC4899',
+        accent: '#4F46E5',
         text: '#FFFFFF',
-        secondary: '#8B5CF6',
-        layout: 'creative-grid',
-        navigation: 'overlay-modern',
-        typography: 'bold-display'
+        secondary: '#6366F1',
+        layout: 'modern-cards',
+        navigation: 'glassmorphism',
+        typography: 'modern-geometric'
       },
-      features: ['Nightlife Vibe', 'Event Focus', 'Social Media'],
+      features: ['Gradient Backgrounds', 'Glass Effects', 'Bold Typography'],
       mockup: {
-        nav: { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-400' },
-        hero: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white' },
-        cards: { bg: 'bg-white/10 backdrop-blur-sm', border: 'border-white/20', text: 'text-white' }
+        nav: { bg: 'bg-white/10 backdrop-blur-md', text: 'text-white', border: 'border-white/20' },
+        hero: { bg: 'bg-gradient-to-r from-blue-500 to-purple-600', text: 'text-white' },
+        cards: { bg: 'bg-white/15 backdrop-blur-sm', border: 'border-white/30', text: 'text-white' }
       }
     },
     {
-      id: 'modern-dark',
-      name: 'Premium Dark',
-      description: 'Luxurious dark theme for high-end establishments',
-      preview: 'bg-gradient-to-br from-gray-800 via-gray-900 to-black',
-      businessTypes: ['restaurant', 'bar'],
+      id: 'clean',
+      name: 'Clean',
+      description: 'Fresh, airy design with excellent spacing and soft colors',
+      preview: 'bg-gradient-to-br from-emerald-50 to-teal-100',
+      businessTypes: ['cafe', 'restaurant', 'bar'],
       style: {
-        background: '#111827',
-        accent: '#10B981',
-        text: '#FFFFFF',
-        secondary: '#1F2937',
-        layout: 'luxury-cards',
-        navigation: 'floating-modern',
-        typography: 'luxury-sans'
+        background: '#FAFAFA',
+        accent: '#059669',
+        text: '#0F172A',
+        secondary: '#F0FDF4',
+        layout: 'spacious-grid',
+        navigation: 'soft-shadow',
+        typography: 'clean-readable'
       },
-      features: ['Premium Feel', 'Dark Theme', 'Luxury'],
+      features: ['Soft Colors', 'Great Spacing', 'Easy Reading'],
       mockup: {
-        nav: { bg: 'bg-gray-900', text: 'text-white', border: 'border-gray-700' },
-        hero: { bg: 'bg-gray-800', text: 'text-white' },
-        cards: { bg: 'bg-gray-800', border: 'border-gray-600', text: 'text-gray-300' }
+        nav: { bg: 'bg-white', text: 'text-slate-800', border: 'border-emerald-100' },
+        hero: { bg: 'bg-emerald-50', text: 'text-slate-800' },
+        cards: { bg: 'bg-white', border: 'border-emerald-200', text: 'text-slate-600' }
+      }
+    },
+    {
+      id: 'fancy',
+      name: 'Fancy',
+      description: 'Luxurious design with gold accents and premium aesthetics',
+      preview: 'bg-gradient-to-br from-amber-100 via-yellow-200 to-orange-300',
+      businessTypes: ['cafe', 'restaurant', 'bar'],
+      style: {
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        accent: '#F59E0B',
+        text: '#FFFFFF',
+        secondary: '#292524',
+        layout: 'luxury-showcase',
+        navigation: 'premium-floating',
+        typography: 'luxury-serif'
+      },
+      features: ['Gold Accents', 'Premium Feel', 'Luxury Design'],
+      mockup: {
+        nav: { bg: 'bg-slate-900', text: 'text-white', border: 'border-amber-500/30' },
+        hero: { bg: 'bg-gradient-to-r from-slate-800 to-slate-900', text: 'text-white' },
+        cards: { bg: 'bg-slate-800/80 backdrop-blur', border: 'border-amber-500/40', text: 'text-amber-100' }
       }
     }
   ];
@@ -613,10 +613,10 @@ export default function Configurator() {
       if (formData.businessName) return formData.businessName;
       // Template-specific business names
       const templateNames = {
-        'cafe-modern': 'Bean & Brew',
-        'restaurant-elegant': 'Ristorante Bella',
-        'bar-vibrant': 'NIGHTLIFE',
-        'modern-dark': 'NOIR'
+        'minimalistic': 'Simple',
+        'modern': 'FLUX',
+        'clean': 'Pure',
+        'fancy': 'LUXE'
       };
       const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
       return templateNames[selectedId] || 'Your Business';
@@ -648,49 +648,49 @@ export default function Configurator() {
     // Template-specific content
     const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
     const templateContent = {
-      'cafe-modern': {
+      'minimalistic': {
         items: [
-          { name: 'Signature Latte', description: 'House blend espresso with oat milk', price: '4.50', emoji: '☕' },
-          { name: 'Avocado Toast', description: 'Sourdough, avocado, hemp seeds', price: '8.00', emoji: '🥑' },
-          { name: 'Acai Bowl', description: 'Organic acai with fresh berries', price: '9.50', emoji: '🫐' }
+          { name: 'Coffee', description: 'Fresh brewed', price: '3.50', emoji: '☕' },
+          { name: 'Sandwich', description: 'Daily special', price: '7.00', emoji: '🥪' },
+          { name: 'Salad', description: 'Mixed greens', price: '6.50', emoji: '🥗' }
         ],
-        tagline: 'Artisan Coffee & Fresh Eats',
-        hours: 'Open 7:00 - 19:00',
-        special: '🌱 Organic & Local'
+        tagline: 'Simple. Fresh. Good.',
+        hours: '8:00 - 18:00',
+        special: 'Daily Fresh'
       },
-      'restaurant-elegant': {
+      'modern': {
         items: [
-          { name: 'Wagyu Steak', description: 'Prime cut with truffle sauce', price: '65.00', emoji: '🥩' },
-          { name: 'Lobster Risotto', description: 'Maine lobster, saffron arborio', price: '42.00', emoji: '🦞' },
-          { name: 'Chocolate Soufflé', description: 'Dark chocolate, gold leaf', price: '18.00', emoji: '🍫' }
+          { name: 'Artisan Brew', description: 'Single origin specialty coffee', price: '5.50', emoji: '☕' },
+          { name: 'Power Bowl', description: 'Quinoa, avocado, superfoods', price: '12.00', emoji: '🥗' },
+          { name: 'Craft Burger', description: 'House blend, local ingredients', price: '15.00', emoji: '🍔' }
         ],
-        tagline: 'Fine Dining Excellence',
-        hours: 'Dinner from 18:00',
-        special: '⭐ Michelin Guide'
+        tagline: 'Modern Flavors, Bold Choices',
+        hours: '7:00 - 22:00',
+        special: '✨ Innovative Menu'
       },
-      'bar-vibrant': {
+      'clean': {
         items: [
-          { name: 'Neon Mojito', description: 'Premium rum, fresh mint, LED ice', price: '14.00', emoji: '🍸' },
-          { name: 'Dragon Shots', description: 'Spicy tequila blend', price: '8.00', emoji: '🔥' },
-          { name: 'Cosmic Bowl', description: 'Sharing cocktail for groups', price: '35.00', emoji: '🌟' }
+          { name: 'Organic Latte', description: 'Fair trade beans, oat milk', price: '4.75', emoji: '☕' },
+          { name: 'Fresh Wrap', description: 'Seasonal vegetables, herbs', price: '8.50', emoji: '🌯' },
+          { name: 'Green Smoothie', description: 'Spinach, apple, ginger', price: '6.00', emoji: '🥤' }
         ],
-        tagline: 'Nightlife & Cocktails',
-        hours: 'Open 20:00 - 03:00',
-        special: '🎵 Live DJ Sets'
+        tagline: 'Fresh, Healthy, Natural',
+        hours: '6:30 - 19:30',
+        special: '🌱 100% Organic'
       },
-      'modern-dark': {
+      'fancy': {
         items: [
-          { name: 'NITRO ESPRESSO', description: 'Cold nitrogen-infused shot', price: '6.00', emoji: '⚡' },
-          { name: 'WAGYU SLIDER', description: 'Premium beef, black bun', price: '18.00', emoji: '🖤' },
-          { name: 'GOLD COCKTAIL', description: '24k gold leaf premium mix', price: '45.00', emoji: '✨' }
+          { name: 'Royal Espresso', description: 'Gold-filtered premium blend', price: '8.00', emoji: '👑' },
+          { name: 'Truffle Pasta', description: 'Fresh pasta, white truffle', price: '28.00', emoji: '🍝' },
+          { name: 'Champagne Cocktail', description: 'Dom Pérignon, gold flakes', price: '35.00', emoji: '🥂' }
         ],
-        tagline: 'LUXURY REDEFINED',
-        hours: 'EXCLUSIVE HOURS',
-        special: '💎 MEMBERS ONLY'
+        tagline: 'Luxury Dining Experience',
+        hours: 'By Reservation',
+        special: '👑 VIP Service'
       }
     };
 
-    const currentContent = templateContent[selectedId] || templateContent['cafe-modern'];
+    const currentContent = templateContent[selectedId] || templateContent['minimalistic'];
 
     const LogoDisplay = () => {
       if (formData.logo) {
