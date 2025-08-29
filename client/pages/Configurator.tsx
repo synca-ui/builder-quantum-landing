@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { ChevronRight, ArrowLeft, Sparkles, Rocket, Menu, X, Settings, Smartphone, Globe, Palette, MapPin, Phone, Mail, Upload, Coffee, Utensils, Building, Check, Star, Heart, Monitor, Cloud, AlertCircle, Camera, Home, Crown, Zap, ChevronDown, Plus } from "lucide-react";
+import { ChevronRight, ArrowLeft, Sparkles, Rocket, Crown, Menu, X, Settings, Smartphone, Globe, Palette, MapPin, Phone, Mail, Upload, Clock, Calendar, Users, Camera, Instagram, Facebook, Share2, Coffee, ShoppingBag, Utensils, Store, Building, Plus, Check, Star, Heart, Zap, Play, Eye, ChevronDown, Monitor, Wifi, Shield, Home, Save, Cloud, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,16 +16,10 @@ export default function Configurator() {
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    // Template and Design
+    // Template Selection (NEW FIRST STEP)
     template: '',
-    primaryColor: '#2563EB',
-    secondaryColor: '#7C3AED',
-    fontFamily: 'sans-serif',
-    backgroundType: 'color', // 'color' or 'image'
-    backgroundColor: '#FFFFFF',
-    backgroundImage: null,
     
-    // Business Information
+    // Phase 1: Business Basics
     businessName: '',
     businessType: '',
     location: '',
@@ -33,63 +27,176 @@ export default function Configurator() {
     slogan: '',
     uniqueDescription: '',
     
-    // Contact and Social
-    contactMethods: [],
-    socialMedia: {},
-    
-    // Files and Media
-    menuFile: null, // For file upload
-    csvFile: null,  // For CSV upload
-    gallery: [],
-    
-    // Generated/Derived Data
+    // Phase 2: Design & Style
+    primaryColor: '#2563EB',
+    secondaryColor: '#7C3AED',
+    fontFamily: 'sans-serif',
+    backgroundType: 'color',
+    backgroundColor: '#FFFFFF',
+    backgroundImage: null,
     selectedPages: ['home'],
+    customPages: [],
+    
+    // Phase 3: Content & Features
     openingHours: {},
     menuItems: [],
-    reservationsEnabled: false
+    menuPdf: null,
+    reservationsEnabled: false,
+    timeSlots: [],
+    maxGuests: 10,
+    notificationMethod: 'email',
+    contactMethods: [],
+    socialMedia: {},
+    instagramSync: false,
+    
+    // Phase 4: Media & Advanced
+    gallery: [],
+    onlineOrdering: false,
+    onlineStore: false,
+    teamArea: false,
+    
+    // Phase 5: Domain & Publishing
+    hasDomain: false,
+    domainName: '',
+    selectedDomain: ''
   });
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  // Simplified 3-step configurator structure
+  // REORDERED Configuration steps with Template Selection FIRST
   const configuratorSteps = [
+    // NEW FIRST STEP: Template Selection
     {
-      id: 'template-selection',
-      title: "Choose Your Template",
-      description: "Start by selecting a stunning, professional template",
-      component: 'template-selection'
+      id: 'template',
+      title: "Choose your template",
+      description: "Select a design that matches your vision",
+      phase: 0,
+      phaseTitle: "Template Selection",
+      component: 'template'
+    },
+    
+    // Phase 1: Business Basics
+    {
+      id: 'business-info',
+      title: "Tell us about your business",
+      description: "Basic information to get started",
+      phase: 1,
+      phaseTitle: "Business Basics",
+      component: 'business-info'
+    },
+    
+    // Phase 2: Design & Visual Style
+    {
+      id: 'branding',
+      title: "Define your brand colors & fonts",
+      description: "Choose colors, fonts and styling that represent your business",
+      phase: 2,
+      phaseTitle: "Design & Visual Style",
+      component: 'branding'
     },
     {
-      id: 'design-personalization',
-      title: "Personalize Your Design",
-      description: "Customize colors, fonts, logo, and background",
-      component: 'design-personalization'
+      id: 'page-structure',
+      title: "Select your pages",
+      description: "Choose which pages your website will include",
+      phase: 2,
+      phaseTitle: "Design & Visual Style",
+      component: 'page-structure'
+    },
+    
+    // Phase 3: Content & Features
+    {
+      id: 'opening-hours',
+      title: "Set your opening hours",
+      description: "When are you open for business?",
+      phase: 3,
+      phaseTitle: "Content & Features",
+      component: 'opening-hours'
     },
     {
-      id: 'business-information',
-      title: "Add Your Business Information",
-      description: "Complete your website with business details and file uploads",
-      component: 'business-information'
+      id: 'menu-products',
+      title: "Add your menu or products",
+      description: "Showcase what you offer",
+      phase: 3,
+      phaseTitle: "Content & Features",
+      component: 'menu-products'
+    },
+    {
+      id: 'reservations',
+      title: "Setup reservations",
+      description: "Enable table bookings for your business",
+      phase: 3,
+      phaseTitle: "Content & Features",
+      component: 'reservations'
+    },
+    {
+      id: 'contact-social',
+      title: "Contact & social media",
+      description: "How can customers reach you?",
+      phase: 3,
+      phaseTitle: "Content & Features",
+      component: 'contact-social'
+    },
+    
+    // Phase 4: Media & Advanced Options
+    {
+      id: 'media-gallery',
+      title: "Upload your photos",
+      description: "Show off your space, food, and atmosphere",
+      phase: 4,
+      phaseTitle: "Media & Advanced Options",
+      component: 'media-gallery'
+    },
+    {
+      id: 'advanced-features',
+      title: "Optional features",
+      description: "Enable advanced functionality",
+      phase: 4,
+      phaseTitle: "Media & Advanced Options",
+      component: 'advanced-features'
+    },
+    
+    // Phase 5: Domain, Preview & Publishing
+    {
+      id: 'domain-hosting',
+      title: "Choose your domain",
+      description: "Select how customers will find your website",
+      phase: 5,
+      phaseTitle: "Domain, Preview & Publishing",
+      component: 'domain-hosting'
+    },
+    {
+      id: 'preview-adjustments',
+      title: "Preview & final tweaks",
+      description: "Review and make final adjustments",
+      phase: 5,
+      phaseTitle: "Domain, Preview & Publishing",
+      component: 'preview-adjustments'
+    },
+    {
+      id: 'publish',
+      title: "Publish your website",
+      description: "Make your website live!",
+      phase: 5,
+      phaseTitle: "Domain, Preview & Publishing",
+      component: 'publish'
     }
   ];
 
   // Business type options
   const businessTypes = [
     { value: 'cafe', label: 'Café', icon: <Coffee className="w-6 h-6" />, gradient: 'from-orange-400 to-yellow-500' },
-    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' },
-    { value: 'business', label: 'Business', icon: <Building className="w-6 h-6" />, gradient: 'from-blue-400 to-purple-500' }
+    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' }
   ];
 
-  // Enhanced professional templates with distinct visual styles
+  // Enhanced professional templates
   const templates = [
     {
       id: 'minimalist',
       name: 'Minimalist Clean',
       description: 'Clean lines, ample white space, perfect for modern cafés and professional services',
       preview: 'bg-gradient-to-br from-gray-50 to-white',
-      thumbnail: '/api/placeholder/300/200',
       style: {
         background: '#FFFFFF',
         accent: '#374151',
@@ -106,7 +213,6 @@ export default function Configurator() {
       name: 'Vibrant & Bold',
       description: 'Eye-catching colors, dynamic layouts, perfect for creative businesses and restaurants',
       preview: 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500',
-      thumbnail: '/api/placeholder/300/200',
       style: {
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         accent: '#EC4899',
@@ -123,7 +229,6 @@ export default function Configurator() {
       name: 'Professional Elite',
       description: 'Sophisticated design, traditional elegance, ideal for upscale establishments',
       preview: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
-      thumbnail: '/api/placeholder/300/200',
       style: {
         background: '#FFFFFF',
         accent: '#2563EB',
@@ -140,7 +245,6 @@ export default function Configurator() {
       name: 'Modern Dark',
       description: 'Sleek dark theme, contemporary aesthetics, perfect for trendy venues',
       preview: 'bg-gradient-to-br from-gray-800 via-gray-900 to-black',
-      thumbnail: '/api/placeholder/300/200',
       style: {
         background: '#111827',
         accent: '#10B981',
@@ -154,18 +258,21 @@ export default function Configurator() {
     }
   ];
 
-  // Font options
+  // Font options with working functionality
   const fontOptions = [
     { id: 'sans-serif', name: 'Sans Serif', class: 'font-sans', preview: 'Modern & Clean', description: 'Perfect for digital readability' },
     { id: 'serif', name: 'Serif', class: 'font-serif', preview: 'Classic & Elegant', description: 'Traditional and sophisticated' },
     { id: 'display', name: 'Display', class: 'font-mono', preview: 'Bold & Creative', description: 'Eye-catching and unique' }
   ];
 
-  // Background options
-  const backgroundOptions = [
-    { id: 'solid', name: 'Solid Color', type: 'color', preview: 'bg-white border-2 border-gray-300' },
-    { id: 'gradient', name: 'Gradient', type: 'gradient', preview: 'bg-gradient-to-br from-blue-400 to-purple-600' },
-    { id: 'image', name: 'Custom Image', type: 'image', preview: 'bg-gray-200 bg-[url("/api/placeholder/100/100")] bg-cover' }
+  // Page options
+  const pageOptions = [
+    { id: 'home', name: 'Home', required: true, icon: <Home className="w-4 h-4" /> },
+    { id: 'menu', name: 'Menu', icon: <Coffee className="w-4 h-4" />, condition: ['cafe', 'restaurant', 'bar'] },
+    { id: 'gallery', name: 'Gallery', icon: <Camera className="w-4 h-4" /> },
+    { id: 'about', name: 'About', icon: <Heart className="w-4 h-4" /> },
+    { id: 'reservations', name: 'Reservations', icon: <Calendar className="w-4 h-4" />, condition: ['restaurant', 'bar'] },
+    { id: 'contact', name: 'Contact', icon: <Phone className="w-4 h-4" /> }
   ];
 
   // Input handling
@@ -245,8 +352,8 @@ export default function Configurator() {
     }
   }, [currentStep, updateFormDataFromInputs]);
 
-  // Back to Step 1 function - available throughout the flow
-  const backToStep1 = useCallback(() => {
+  // Back to Step 1 (Template) function
+  const backToTemplates = useCallback(() => {
     updateFormDataFromInputs();
     setCurrentStep(0);
   }, [updateFormDataFromInputs]);
@@ -306,6 +413,11 @@ export default function Configurator() {
     return ((currentStep + 1) / configuratorSteps.length) * 100;
   }, [currentStep, configuratorSteps.length]);
 
+  // Current phase data
+  const currentPhase = useMemo(() => {
+    return configuratorSteps[currentStep] || null;
+  }, [currentStep, configuratorSteps]);
+
   // Enhanced Navigation component
   const Navigation = () => (
     <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm">
@@ -356,16 +468,26 @@ export default function Configurator() {
                 </div>
               )}
             </div>
+
+            {/* Phase indicator */}
+            {currentPhase && (
+              <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-teal-500/10 to-purple-500/10 px-3 py-1 rounded-full border border-teal-500/20">
+                <Crown className="w-3 h-3 text-teal-600" />
+                <span className="text-xs font-bold text-teal-700">
+                  {currentPhase.phaseTitle}
+                </span>
+              </div>
+            )}
           </div>
           
           <div className="hidden md:block">
             <div className="flex items-center space-x-6">
-              {/* Back to Step 1 button - always visible after step 1 */}
+              {/* Back to Templates button - always visible after step 0 */}
               {currentStep > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={backToStep1}
+                  onClick={backToTemplates}
                   className="border-purple-200 text-purple-700 hover:bg-purple-50"
                 >
                   <Home className="w-4 h-4 mr-2" />
@@ -464,11 +586,14 @@ export default function Configurator() {
         );
       }
 
+      // Apply font family based on user selection
+      const fontClass = fontOptions.find(f => f.id === formData.fontFamily)?.class || 'font-sans';
+
       // Render different templates based on selection
       switch (formData.template) {
         case 'minimalist':
           return (
-            <div className="h-full overflow-y-auto bg-white font-light">
+            <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
               <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -479,7 +604,7 @@ export default function Configurator() {
                   </div>
                 </div>
               </nav>
-              <div className="px-6 py-8">
+              <div className="px-6 py-8" style={{ backgroundColor: formData.backgroundColor }}>
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center" 
                        style={{ backgroundColor: `${styles.userPrimary}15` }}>
@@ -492,21 +617,14 @@ export default function Configurator() {
                     <p className="text-gray-500 text-sm">{formData.slogan}</p>
                   )}
                 </div>
-                <div className="space-y-4">
-                  <div className="text-center border-b border-gray-100 pb-4">
-                    <h4 className="font-medium text-gray-900 mb-1">Featured Item</h4>
-                    <p className="text-sm text-gray-500 mb-2">Perfect for your taste</p>
-                    <span className="text-lg font-light" style={{ color: styles.userPrimary }}>$12.50</span>
-                  </div>
-                </div>
               </div>
             </div>
           );
 
         case 'vibrant':
           return (
-            <div className="h-full overflow-y-auto text-white" 
-                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <div className={`h-full overflow-y-auto text-white ${fontClass}`} 
+                 style={{ background: formData.backgroundType === 'color' ? formData.backgroundColor : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
               <nav className="p-4">
                 <div className="flex items-center justify-between">
                   <h1 className="text-xl font-black text-white">{getBusinessName()}</h1>
@@ -531,7 +649,7 @@ export default function Configurator() {
 
         case 'professional':
           return (
-            <div className="h-full overflow-y-auto bg-white">
+            <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
               <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -549,16 +667,12 @@ export default function Configurator() {
                   </div>
                 </div>
               </nav>
-              <div className="p-4">
+              <div className="p-4" style={{ backgroundColor: formData.backgroundColor }}>
                 <div className="text-center py-8 border-b border-gray-100">
                   <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
                   {formData.slogan && (
                     <p className="text-gray-600">{formData.slogan}</p>
                   )}
-                </div>
-                <div className="py-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Welcome</h2>
-                  <p className="text-gray-600">Experience excellence in every detail.</p>
                 </div>
               </div>
             </div>
@@ -566,7 +680,7 @@ export default function Configurator() {
 
         case 'modern-dark':
           return (
-            <div className="h-full overflow-y-auto bg-gray-900 text-white">
+            <div className={`h-full overflow-y-auto bg-gray-900 text-white ${fontClass}`}>
               <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 sticky top-0 z-50">
                 <div className="px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -580,7 +694,7 @@ export default function Configurator() {
                   </div>
                 </div>
               </nav>
-              <div className="p-4">
+              <div className="p-4" style={{ backgroundColor: formData.backgroundType === 'color' && formData.backgroundColor !== '#FFFFFF' ? formData.backgroundColor : undefined }}>
                 <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
@@ -637,14 +751,19 @@ export default function Configurator() {
     );
   };
 
-  // Step 1: Template Selection
-  const TemplateSelectionStep = () => {
+  // Step 1: Template Selection (NEW FIRST STEP)
+  const TemplateStep = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(formData.template);
 
     const handleTemplateSelect = useCallback((templateId: string) => {
       setSelectedTemplate(templateId);
       updateFormData('template', templateId);
-    }, [updateFormData]);
+
+      // Auto-redirect to next step after template selection
+      setTimeout(() => {
+        nextStep();
+      }, 500);
+    }, [updateFormData, nextStep]);
 
     return (
       <div className="py-12">
@@ -755,485 +874,558 @@ export default function Configurator() {
     );
   };
 
-  // Step 2: Design Personalization
-  const DesignPersonalizationStep = () => {
-    const [logoFile, setLogoFile] = useState<File | null>(null);
-    const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
-
-    const colorPresets = [
-      { name: 'Ocean', primary: '#2563EB', secondary: '#7C3AED' },
-      { name: 'Forest', primary: '#059669', secondary: '#10B981' },
-      { name: 'Sunset', primary: '#DC2626', secondary: '#F59E0B' },
-      { name: 'Purple', primary: '#7C3AED', secondary: '#EC4899' },
-      { name: 'Teal', primary: '#0891B2', secondary: '#06B6D4' },
-      { name: 'Rose', primary: '#E11D48', secondary: '#F43F5E' }
-    ];
-
-    return (
-      <div className="py-12 max-w-5xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Personalize Your Design
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Make it yours with custom colors, fonts, logo, and background. See changes instantly in the live preview.
-          </p>
+  // Step 2: Business Information
+  const BusinessInfoStep = () => (
+    <div className="py-8 max-w-2xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Tell us about your business
+        </h2>
+        <p className="text-lg text-gray-600">
+          Basic information to get started with your website
+        </p>
+      </div>
+      
+      <div className="space-y-6">
+        {/* Business Name */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Business Name *</label>
+          <Input
+            type="text"
+            placeholder="e.g. Bella's Café"
+            defaultValue={formData.businessName}
+            ref={setInputRef('businessName')}
+            onBlur={handleInputBlur('businessName')}
+            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+            className="w-full px-4 py-3 text-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+            autoComplete="organization"
+          />
         </div>
 
-        <div className="space-y-12">
-          {/* Color Themes */}
-          <Card className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Brand Colors</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-              {colorPresets.map((preset, index) => {
-                const isSelected = formData.primaryColor === preset.primary && formData.secondaryColor === preset.secondary;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      updateFormData('primaryColor', preset.primary);
-                      updateFormData('secondaryColor', preset.secondary);
-                    }}
-                    className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
-                      isSelected 
-                        ? 'border-teal-500 bg-teal-50 shadow-lg scale-105' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="relative mb-3">
-                      <div className="flex space-x-1">
-                        <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.primary }}></div>
-                        <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.secondary }}></div>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute -top-1 -right-1">
-                          <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5 text-white" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <span className={`text-sm font-medium ${isSelected ? 'text-teal-700' : 'text-gray-700'}`}>
-                      {preset.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* Business Type */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Business Type *</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {businessTypes.map((type) => (
+              <Card
+                key={type.value}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  formData.businessType === type.value ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                }`}
+                onClick={() => updateFormData('businessType', type.value)}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className={`w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-r ${type.gradient} flex items-center justify-center text-white`}>
+                    {type.icon}
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-900">{type.label}</h3>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
 
-            {/* Custom Colors */}
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4">Custom Colors</h4>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">Primary Color</label>
-                  <div className="flex items-center space-x-4">
-                    <input
-                      type="color"
-                      value={formData.primaryColor}
-                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
-                      className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300"
-                    />
-                    <Input
-                      type="text"
-                      value={formData.primaryColor}
-                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
-                      className="font-mono"
-                      placeholder="#2563EB"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">Secondary Color</label>
-                  <div className="flex items-center space-x-4">
-                    <input
-                      type="color"
-                      value={formData.secondaryColor}
-                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
-                      className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300"
-                    />
-                    <Input
-                      type="text"
-                      value={formData.secondaryColor}
-                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
-                      className="font-mono"
-                      placeholder="#7C3AED"
-                    />
-                  </div>
-                </div>
+        {/* Location */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="123 Main Street, City, State"
+              defaultValue={formData.location}
+              ref={setInputRef('location')}
+              onBlur={handleInputBlur('location')}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+              autoComplete="street-address"
+            />
+          </div>
+        </div>
+
+        {/* Logo Upload - FIXED */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Business Logo (Optional)</label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-teal-400 transition-colors">
+            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600 mb-2">Upload your logo</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => document.getElementById('logo-upload')?.click()}
+            >
+              Choose File
+            </Button>
+            <input
+              id="logo-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  updateFormData('logo', file);
+                }
+              }}
+            />
+            <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 2MB</p>
+            {formData.logo && (
+              <div className="mt-3 p-2 bg-teal-50 rounded border border-teal-200">
+                <p className="text-xs text-teal-700">✓ Logo uploaded</p>
               </div>
-            </div>
-          </Card>
+            )}
+          </div>
+        </div>
 
-          {/* Fonts */}
-          <Card className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Typography</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {fontOptions.map((font) => (
-                <Card
-                  key={font.id}
-                  className={`cursor-pointer transition-all duration-300 border-2 ${
-                    formData.fontFamily === font.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+        {/* Slogan */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Slogan (Optional)</label>
+          <Input
+            type="text"
+            placeholder="e.g. The best coffee in town"
+            defaultValue={formData.slogan}
+            ref={setInputRef('slogan')}
+            onBlur={handleInputBlur('slogan')}
+            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+            className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+          />
+        </div>
+
+        {/* Unique Description */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">What makes your business unique?</label>
+          <Textarea
+            placeholder="Tell us what sets you apart from the competition..."
+            defaultValue={formData.uniqueDescription}
+            ref={setInputRef('uniqueDescription')}
+            onBlur={handleInputBlur('uniqueDescription')}
+            className="w-full px-4 py-3 h-24 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
+          />
+        </div>
+      </div>
+      
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button 
+          onClick={nextStep} 
+          disabled={!formData.businessName || !formData.businessType}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Step 3: Branding (FIXED Typography and Background)
+  const BrandingStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Define your brand identity
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose colors, fonts and styling that represent your business personality and create a memorable brand experience.
+        </p>
+      </div>
+
+      <div className="space-y-12">
+        {/* Color Themes */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Color Themes</label>
+          <p className="text-sm text-gray-500 mb-6">Choose a preset or customize your own colors below</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { primary: '#2563EB', secondary: '#7C3AED', name: 'Ocean', accent: '#0EA5E9' },
+              { primary: '#059669', secondary: '#10B981', name: 'Forest', accent: '#22C55E' },
+              { primary: '#DC2626', secondary: '#F59E0B', name: 'Sunset', accent: '#F97316' },
+              { primary: '#7C2D12', secondary: '#EA580C', name: 'Autumn', accent: '#F59E0B' },
+              { primary: '#1F2937', secondary: '#374151', name: 'Elegant', accent: '#6B7280' },
+              { primary: '#BE185D', secondary: '#EC4899', name: 'Vibrant', accent: '#F472B6' },
+              { primary: '#6366F1', secondary: '#8B5CF6', name: 'Purple', accent: '#A855F7' },
+              { primary: '#0891B2', secondary: '#06B6D4', name: 'Sky', accent: '#38BDF8' }
+            ].map((preset, index) => {
+              const isSelected = formData.primaryColor === preset.primary && formData.secondaryColor === preset.secondary;
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    updateFormData('primaryColor', preset.primary);
+                    updateFormData('secondaryColor', preset.secondary);
+                  }}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                    isSelected 
+                      ? 'border-teal-500 bg-teal-50 shadow-lg transform scale-105' 
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
-                  onClick={() => updateFormData('fontFamily', font.id)}
                 >
-                  <CardContent className="p-4 text-center">
-                    <div className={`text-lg font-bold mb-2 ${font.class}`}>{font.name}</div>
-                    <div className={`text-sm text-gray-600 ${font.class}`}>{font.preview}</div>
-                    <div className="text-xs text-gray-500 mt-2">{font.description}</div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </Card>
-
-          {/* Logo Upload */}
-          <Card className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Business Logo</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-teal-400 transition-colors">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">Upload Your Logo</h4>
-                  <p className="text-gray-600 text-sm mb-4">PNG, JPG up to 5MB</p>
-                  <Button 
-                    variant="outline"
-                    className="border-teal-500 text-teal-600 hover:bg-teal-50"
-                  >
-                    Choose Logo File
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <div className="bg-gray-50 rounded-xl p-6">
-                  <h4 className="text-lg font-bold text-gray-900 mb-4">Logo Preview</h4>
-                  <div className="w-32 h-32 bg-white rounded-xl border-2 border-gray-200 flex items-center justify-center">
-                    {logoFile ? (
-                      <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="max-w-full max-h-full object-contain" />
-                    ) : (
-                      <div className="text-center">
-                        <Building className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <span className="text-xs text-gray-500">No logo uploaded</span>
+                  <div className="relative mb-3">
+                    <div className="flex space-x-1">
+                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.primary }}></div>
+                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.secondary }}></div>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1">
+                        <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5 text-white" />
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-            </div>
-          </Card>
+                  <span className={`text-sm font-medium transition-colors ${
+                    isSelected ? 'text-teal-700' : 'text-gray-700'
+                  }`}>
+                    {preset.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-          {/* Background */}
-          <Card className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Background Style</h3>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {backgroundOptions.map((bg) => (
-                <Card
-                  key={bg.id}
-                  className={`cursor-pointer transition-all duration-300 border-2 ${
-                    formData.backgroundType === bg.type ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-                  }`}
-                  onClick={() => updateFormData('backgroundType', bg.type)}
-                >
-                  <CardContent className="p-4 text-center">
-                    <div className={`w-full h-16 rounded-lg mb-3 ${bg.preview}`}></div>
-                    <div className="text-sm font-bold text-gray-900">{bg.name}</div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {formData.backgroundType === 'color' && (
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-3">Background Color</label>
-                <div className="flex items-center space-x-4">
+        {/* Custom Color Section */}
+        <div className="bg-gray-50 rounded-2xl p-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Custom Colors</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Primary Color */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-4">Primary Color</label>
+              <div className="flex items-center space-x-4">
+                <div className="relative">
                   <input
                     type="color"
-                    value={formData.backgroundColor}
-                    onChange={(e) => updateFormData('backgroundColor', e.target.value)}
-                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300"
+                    value={formData.primaryColor}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      updateFormData('primaryColor', e.target.value);
+                    }}
+                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
+                    style={{ WebkitAppearance: 'none', padding: '4px' }}
                   />
+                </div>
+                <div className="flex-1">
                   <Input
                     type="text"
-                    value={formData.backgroundColor}
-                    onChange={(e) => updateFormData('backgroundColor', e.target.value)}
-                    className="font-mono"
-                    placeholder="#FFFFFF"
+                    value={formData.primaryColor}
+                    onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                    placeholder="#2563EB"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Main brand color</p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {formData.backgroundType === 'image' && (
-              <div>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-teal-400 transition-colors">
-                  <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600 mb-2">Upload background image</p>
-                  <Button variant="outline" size="sm">
-                    Choose Image
-                  </Button>
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
-
-        <div className="flex justify-between mt-12">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back to Templates
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue to Business Info
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  // Step 3: Business Information
-  const BusinessInformationStep = () => {
-    const [menuFile, setMenuFile] = useState<File | null>(null);
-    const [csvFile, setCsvFile] = useState<File | null>(null);
-
-    const contactMethods = [
-      { id: 'phone', icon: <Phone className="w-5 h-5" />, label: 'Phone', placeholder: '+1 (555) 123-4567' },
-      { id: 'email', icon: <Mail className="w-5 h-5" />, label: 'Email', placeholder: 'hello@yourbusiness.com' },
-      { id: 'address', icon: <MapPin className="w-5 h-5" />, label: 'Address', placeholder: '123 Main St, City, State' }
-    ];
-
-    return (
-      <div className="py-12 max-w-5xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Complete Your Business Information
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Add your business details and upload files to complete your website. Your information will appear across your site.
-          </p>
-        </div>
-
-        <div className="space-y-12">
-          {/* Business Basics */}
-          <Card className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Business Details</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Business Name *</label>
-                <Input
-                  type="text"
-                  placeholder="e.g. Bella's Café"
-                  defaultValue={formData.businessName}
-                  ref={setInputRef('businessName')}
-                  onBlur={handleInputBlur('businessName')}
-                  className="text-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Business Type *</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {businessTypes.map((type) => (
-                    <Card
-                      key={type.value}
-                      className={`cursor-pointer transition-all duration-300 border-2 ${
-                        formData.businessType === type.value ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-                      }`}
-                      onClick={() => updateFormData('businessType', type.value)}
-                    >
-                      <CardContent className="p-3 text-center">
-                        <div className={`w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-r ${type.gradient} flex items-center justify-center text-white`}>
-                          {type.icon}
-                        </div>
-                        <div className="text-xs font-bold text-gray-900">{type.label}</div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+            {/* Secondary Color */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-4">Secondary Color</label>
+              <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="123 Main Street, City, State"
-                    defaultValue={formData.location}
-                    ref={setInputRef('location')}
-                    onBlur={handleInputBlur('location')}
-                    className="pl-12"
+                  <input
+                    type="color"
+                    value={formData.secondaryColor}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      updateFormData('secondaryColor', e.target.value);
+                    }}
+                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
+                    style={{ WebkitAppearance: 'none', padding: '4px' }}
                   />
                 </div>
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    value={formData.secondaryColor}
+                    onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                    placeholder="#7C3AED"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Accent color</p>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Business Slogan</label>
+            </div>
+          </div>
+        </div>
+
+        {/* Font Selection - FIXED */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Typography Style</label>
+          <div className="grid grid-cols-3 gap-4">
+            {fontOptions.map((font) => (
+              <Card
+                key={font.id}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  formData.fontFamily === font.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                }`}
+                onClick={() => updateFormData('fontFamily', font.id)}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className={`text-lg font-bold mb-2 ${font.class}`}>{font.name}</div>
+                  <div className={`text-sm text-gray-600 ${font.class}`}>{font.preview}</div>
+                  <div className="text-xs text-gray-500 mt-2">{font.description}</div>
+                  {formData.fontFamily === font.id && (
+                    <div className="mt-2">
+                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Background Style - FIXED */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Background Style</label>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <Card
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                formData.backgroundType === 'color' ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              }`}
+              onClick={() => updateFormData('backgroundType', 'color')}
+            >
+              <CardContent className="p-4 text-center">
+                <div className="w-full h-16 rounded-lg mb-3 bg-white border-2 border-gray-300"></div>
+                <div className="text-sm font-bold text-gray-900">Solid Color</div>
+                {formData.backgroundType === 'color' && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                formData.backgroundType === 'gradient' ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              }`}
+              onClick={() => updateFormData('backgroundType', 'gradient')}
+            >
+              <CardContent className="p-4 text-center">
+                <div className="w-full h-16 rounded-lg mb-3 bg-gradient-to-br from-blue-400 to-purple-600"></div>
+                <div className="text-sm font-bold text-gray-900">Gradient</div>
+                {formData.backgroundType === 'gradient' && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                formData.backgroundType === 'image' ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              }`}
+              onClick={() => updateFormData('backgroundType', 'image')}
+            >
+              <CardContent className="p-4 text-center">
+                <div className="w-full h-16 rounded-lg mb-3 bg-gray-200 bg-[url('/api/placeholder/100/100')] bg-cover"></div>
+                <div className="text-sm font-bold text-gray-900">Custom Image</div>
+                {formData.backgroundType === 'image' && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {formData.backgroundType === 'color' && (
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-3">Background Color</label>
+              <div className="flex items-center space-x-4">
+                <input
+                  type="color"
+                  value={formData.backgroundColor}
+                  onChange={(e) => updateFormData('backgroundColor', e.target.value)}
+                  className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300"
+                />
                 <Input
                   type="text"
-                  placeholder="e.g. The best coffee in town"
-                  defaultValue={formData.slogan}
-                  ref={setInputRef('slogan')}
-                  onBlur={handleInputBlur('slogan')}
+                  value={formData.backgroundColor}
+                  onChange={(e) => updateFormData('backgroundColor', e.target.value)}
+                  className="font-mono"
+                  placeholder="#FFFFFF"
                 />
               </div>
             </div>
-            <div className="mt-6">
-              <label className="block text-sm font-bold text-gray-700 mb-2">What makes your business unique?</label>
-              <Textarea
-                placeholder="Tell us what sets you apart from the competition..."
-                defaultValue={formData.uniqueDescription}
-                ref={setInputRef('uniqueDescription')}
-                onBlur={handleInputBlur('uniqueDescription')}
-                className="h-24 resize-none"
-              />
-            </div>
-          </Card>
+          )}
 
-          {/* File Uploads */}
-          <Card className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Menu & Content Upload</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Menu Image Upload */}
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-4">Menu Image</h4>
-                <div className="border-2 border-dashed border-orange-300 rounded-xl p-6 text-center hover:border-orange-400 transition-colors">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-orange-100 rounded-xl flex items-center justify-center">
-                    <Camera className="w-6 h-6 text-orange-600" />
+          {formData.backgroundType === 'image' && (
+            <div>
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-teal-400 transition-colors">
+                <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-2">Upload background image</p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => document.getElementById('bg-upload')?.click()}
+                >
+                  Choose Image
+                </Button>
+                <input
+                  id="bg-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      updateFormData('backgroundImage', file);
+                    }
+                  }}
+                />
+                {formData.backgroundImage && (
+                  <div className="mt-3 p-2 bg-teal-50 rounded border border-teal-200">
+                    <p className="text-xs text-teal-700">✓ Background image uploaded</p>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">Upload a photo of your menu</p>
-                  <Button
-                    variant="outline"
-                    className="border-orange-300 text-orange-700 hover:bg-orange-50"
-                    onClick={() => document.getElementById('menu-upload')?.click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose Menu Image
-                  </Button>
-                  <input
-                    id="menu-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setMenuFile(file);
-                        updateFormData('menuFile', file);
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-2">PNG, JPG, JPEG up to 10MB</p>
-                  {menuFile && (
-                    <div className="mt-3 p-2 bg-orange-50 rounded border border-orange-200">
-                      <p className="text-xs text-orange-700">✓ {menuFile.name}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* CSV Upload */}
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-4">Menu Data (CSV)</h4>
-                <div className="border-2 border-dashed border-green-300 rounded-xl p-6 text-center hover:border-green-400 transition-colors">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-xl flex items-center justify-center">
-                    <Upload className="w-6 h-6 text-green-600" />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">Upload structured menu data</p>
-                  <Button
-                    variant="outline"
-                    className="border-green-300 text-green-700 hover:bg-green-50"
-                    onClick={() => document.getElementById('csv-upload')?.click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose CSV File
-                  </Button>
-                  <input
-                    id="csv-upload"
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setCsvFile(file);
-                        updateFormData('csvFile', file);
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-2">Format: name,description,price</p>
-                  {csvFile && (
-                    <div className="mt-3 p-2 bg-green-50 rounded border border-green-200">
-                      <p className="text-xs text-green-700">✓ {csvFile.name}</p>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
-          </Card>
-
-          {/* Contact Information */}
-          <Card className="p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Contact Information</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              {contactMethods.map((method) => (
-                <div key={method.id}>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">{method.label}</label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-3 text-gray-400">
-                      {method.icon}
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder={method.placeholder}
-                      defaultValue={Array.isArray(formData.contactMethods) 
-                        ? formData.contactMethods.find(c => c.type === method.id)?.value || ''
-                        : ''}
-                      ref={setInputRef(`contact_${method.id}`)}
-                      onBlur={handleInputBlur(`contact_${method.id}`)}
-                      className="pl-12"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        <div className="flex justify-between mt-12">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back to Design
-          </Button>
-          <Button
-            onClick={() => {
-              updateFormDataFromInputs();
-              saveToBackend(formData as Partial<Configuration>);
-            }}
-            disabled={!formData.businessName || !formData.businessType}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600"
-          >
-            <Rocket className="mr-2 w-5 h-5" />
-            Complete & Save Website
-          </Button>
+          )}
         </div>
       </div>
-    );
-  };
 
-  // Main render function
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Rest of the original steps...
+  const PageStructureStep = () => (
+    <div className="py-8 max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          Select your pages
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose which pages your website will include. You can always add more later.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {pageOptions.map((page) => {
+          const isSelected = formData.selectedPages.includes(page.id);
+          const isVisible = !page.condition || page.condition.includes(formData.businessType);
+
+          if (!isVisible) return null;
+
+          return (
+            <Card
+              key={page.id}
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              } ${page.required ? 'opacity-75' : ''}`}
+              onClick={() => {
+                if (page.required) return;
+                const newPages = isSelected
+                  ? formData.selectedPages.filter(p => p !== page.id)
+                  : [...formData.selectedPages, page.id];
+                updateFormData('selectedPages', newPages);
+              }}
+            >
+              <CardContent className="p-6 text-center">
+                <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-r ${
+                  isSelected ? 'from-teal-500 to-purple-500' : 'from-gray-400 to-gray-500'
+                } flex items-center justify-center text-white`}>
+                  {page.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{page.name}</h3>
+                {page.required && (
+                  <p className="text-xs text-gray-500">Required</p>
+                )}
+                {isSelected && !page.required && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <Button onClick={prevStep} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={nextStep}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Render step content based on current step
   const renderStepContent = () => {
-    switch (configuratorSteps[currentStep]?.component) {
-      case 'template-selection':
-        return <TemplateSelectionStep />;
-      case 'design-personalization':
-        return <DesignPersonalizationStep />;
-      case 'business-information':
-        return <BusinessInformationStep />;
+    const currentStepConfig = configuratorSteps[currentStep];
+    if (!currentStepConfig) return null;
+
+    switch (currentStepConfig.component) {
+      case 'template':
+        return <TemplateStep />;
+      case 'business-info':
+        return <BusinessInfoStep />;
+      case 'branding':
+        return <BrandingStep />;
+      case 'page-structure':
+        return <PageStructureStep />;
+      // Add other step components here...
       default:
-        return <TemplateSelectionStep />;
+        return (
+          <div className="py-16 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              {currentStepConfig.title}
+            </h2>
+            <p className="text-gray-600 mb-8">
+              {currentStepConfig.description}
+            </p>
+            <p className="text-sm text-gray-500 mb-8">
+              Step component '{currentStepConfig.component}' is coming soon...
+            </p>
+            <div className="flex justify-between max-w-lg mx-auto">
+              <Button onClick={prevStep} variant="outline" size="lg">
+                <ArrowLeft className="mr-2 w-5 h-5" />
+                Back
+              </Button>
+              <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">
+                Continue
+                <ChevronRight className="ml-2 w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        );
     }
   };
 
