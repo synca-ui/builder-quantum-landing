@@ -1362,9 +1362,9 @@ export default function Configurator() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 mb-4">
-                {currentContent.items.slice(0, 4).map((item, index) => (
+                {(formData.menuItems.length > 0 ? formData.menuItems : currentContent.items).slice(0, 4).map((item, index) => (
                   <div key={index} className={templateStyles.homeCard}>
-                    <div className="text-lg mb-1">{item.emoji}</div>
+                    <div className="text-lg mb-1">{item.emoji || "🍽️"}</div>
                     <h3
                       className={templateStyles.itemName + " text-xs truncate"}
                     >
@@ -1376,6 +1376,15 @@ export default function Configurator() {
                     >
                       ${item.price}
                     </p>
+                    {/* Show + icon if ordering is enabled */}
+                    {formData.onlineOrdering && (
+                      <button
+                        className="absolute top-1 right-1 w-4 h-4 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs"
+                        onClick={() => {/* Handle add to cart */}}
+                      >
+                        <Plus className="w-2 h-2" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
