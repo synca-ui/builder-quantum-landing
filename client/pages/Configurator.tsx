@@ -1244,6 +1244,23 @@ export default function Configurator() {
                 ))}
               </div>
 
+              {/* Reservation Button */}
+              {formData.reservationsEnabled && (
+                <div className="text-center mt-4">
+                  <button
+                    className="px-4 py-2 rounded-lg text-xs font-medium transition-colors"
+                    style={{
+                      backgroundColor: styles.userPrimary,
+                      color: '#FFFFFF'
+                    }}
+                    onClick={() => {/* Handle reservation */}}
+                  >
+                    <Calendar className="w-3 h-3 mr-1 inline" />
+                    Reserve Table
+                  </button>
+                </div>
+              )}
+
               {/* Small Opening Hours at Bottom */}
               {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
                 <div className="text-center mt-6 pt-4 border-t border-gray-100">
