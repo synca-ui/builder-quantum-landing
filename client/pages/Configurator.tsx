@@ -316,10 +316,14 @@ export default function Configurator() {
   // Initialize auto-saver with longer debounce for better UX
   useEffect(() => {
     autoSaverRef.current = new AutoSaver(saveToBackend, 5000); // 5 second debounce for better input stability
-    
+
     return () => {
       if (autoSaverRef.current) {
         autoSaverRef.current.destroy();
+      }
+      // Clean up debounce timeout
+      if (debouncedSaveRef.current) {
+        clearTimeout(debouncedSaveRef.current);
       }
     };
   }, [saveToBackend]);
