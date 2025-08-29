@@ -807,20 +807,35 @@ export default function Configurator() {
                     </div>
                   )}
 
-                  {/* Opening Hours */}
+                  {/* Enhanced Opening Hours Display */}
                   {Object.keys(sampleContent.hours).length > 0 && (
-                    <div className="mt-12 pt-8 border-t border-gray-100">
-                      <h3 className="text-lg font-medium text-gray-900 mb-6 text-center">Opening Hours</h3>
-                      <div className="space-y-3">
-                        {Object.entries(sampleContent.hours).map(([day, hours]: [string, any]) => (
-                          <div key={day} className="flex justify-between items-center py-2 border-b border-gray-50">
-                            <span className="text-gray-700 font-medium">{day}</span>
-                            <span className="text-gray-600">
-                              {hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
-                            </span>
+                    <div className="mt-8">
+                      <Card className="p-4 bg-gray-50/50 border border-gray-200">
+                        <div className="flex items-center justify-center mb-4">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                               style={{ backgroundColor: `${styles.userPrimary}15` }}>
+                            <Clock className="w-4 h-4" style={{ color: styles.userPrimary }} />
                           </div>
-                        ))}
-                      </div>
+                          <h3 className="text-md font-medium text-gray-900">Opening Hours</h3>
+                        </div>
+                        <div className="space-y-2">
+                          {Object.entries(sampleContent.hours).slice(0, 3).map(([day, hours]: [string, any]) => (
+                            <div key={day} className="flex justify-between items-center py-1">
+                              <span className="text-gray-700 text-sm font-medium">{day}</span>
+                              <span className="text-gray-600 text-sm font-mono">
+                                {hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
+                              </span>
+                            </div>
+                          ))}
+                          {Object.keys(sampleContent.hours).length > 3 && (
+                            <div className="text-center pt-2">
+                              <span className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                                View all hours →
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
                     </div>
                   )}
                 </div>
