@@ -1267,7 +1267,7 @@ export default function Configurator() {
       // Render different templates based on selection with INTERACTIVE FEATURES
       const selectedIdForSwitch = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
       switch (selectedIdForSwitch) {
-        case 'minimalist':
+        case 'minimalistic':
           return (
             <div className={`h-full overflow-y-auto bg-white ${fontClass}`}>
               {/* Interactive Navigation */}
