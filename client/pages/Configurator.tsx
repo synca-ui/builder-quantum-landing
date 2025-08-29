@@ -324,18 +324,41 @@ export default function Configurator() {
     };
   }, [saveToBackend]);
 
-  // Optimized form data updates with proper debouncing
-  const updateFormData = useCallback((field: string, value: any) => {
-    setFormData(prev => {
-      const newFormData = { ...prev, [field]: value };
-      return newFormData;
-    });
-
-    // Debounced auto-save to prevent performance issues
-    if (autoSaverRef.current) {
-      autoSaverRef.current.save({ ...formData, [field]: value } as Partial<Configuration>);
-    }
+  // Create a separate debounced save function for inputs to prevent focus loss
+  const debouncedInputSave = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return (field: string, value: any) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (autoSaverRef.current) {
+          autoSaverRef.current.save({ ...formData, [field]: value } as Partial<Configuration>);
+        }
+      }, 1000); // 1 second delay for text inputs
+    };
   }, [formData]);
+
+  // Optimized form data updates - immediate UI update, debounced save
+  const updateFormData = useCallback((field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    // For text inputs, use debounced save to prevent focus loss
+    if (typeof value === 'string' && field !== 'template') {
+      debouncedInputSave(field, value);
+    } else {
+      // For non-text inputs (like template selection), save immediately
+      if (autoSaverRef.current) {
+        autoSaverRef.current.save({ ...formData, [field]: value } as Partial<Configuration>);
+      }
+    }
+  }, [formData, debouncedInputSave]);
+
+  // Optimized input handlers to prevent unnecessary re-renders
+  const createInputHandler = useCallback((field: string) => {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      updateFormData(field, value);
+    };
+  }, [updateFormData]);
 
   // Load persisted data on component mount
   useEffect(() => {
@@ -1109,13 +1132,12 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Business Name *</label>
           <Input
-            key="business-name-input"
             type="text"
             placeholder="e.g. Bella's Café"
             value={formData.businessName}
-            onChange={(e) => updateFormData('businessName', e.target.value)}
-            onFocus={(e) => e.stopPropagation()}
-            className="w-full px-4 py-3 text-lg"
+            onChange={createInputHandler('businessName')}
+            className="w-full px-4 py-3 text-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+            autoComplete="organization"
           />
         </div>
 
@@ -1148,13 +1170,12 @@ export default function Configurator() {
           <div className="relative">
             <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
             <Input
-              key="location-input"
               type="text"
               placeholder="123 Main Street, City, State"
               value={formData.location}
-              onChange={(e) => updateFormData('location', e.target.value)}
-              onFocus={(e) => e.stopPropagation()}
-              className="w-full pl-10 px-4 py-3"
+              onChange={createInputHandler('location')}
+              className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+              autoComplete="street-address"
             />
           </div>
         </div>
@@ -1163,13 +1184,11 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Slogan (Optional)</label>
           <Input
-            key="slogan-input"
             type="text"
             placeholder="e.g. The best coffee in town"
             value={formData.slogan}
-            onChange={(e) => updateFormData('slogan', e.target.value)}
-            onFocus={(e) => e.stopPropagation()}
-            className="w-full px-4 py-3"
+            onChange={createInputHandler('slogan')}
+            className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
           />
         </div>
 
@@ -1177,12 +1196,10 @@ export default function Configurator() {
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">What makes your business unique?</label>
           <Textarea
-            key="description-input"
             placeholder="Tell us what sets you apart from the competition..."
             value={formData.uniqueDescription}
-            onChange={(e) => updateFormData('uniqueDescription', e.target.value)}
-            onFocus={(e) => e.stopPropagation()}
-            className="w-full px-4 py-3 h-24"
+            onChange={createInputHandler('uniqueDescription')}
+            className="w-full px-4 py-3 h-24 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
           />
         </div>
       </div>
