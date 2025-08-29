@@ -365,10 +365,13 @@ export default function Configurator() {
                 <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
                   Step {currentStep + 1} of {configuratorSteps.length}
                 </span>
-                <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                  <div 
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: `${((currentStep + 1) / configuratorSteps.length) * 100}%` }}
+                <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-transform duration-500 ease-out"
+                    style={{
+                      transform: `translateX(${progressPercentage - 100}%)`,
+                      willChange: 'transform'
+                    }}
                   ></div>
                 </div>
               </div>
