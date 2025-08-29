@@ -1709,9 +1709,9 @@ export default function Configurator() {
           
           <div className="flex-1 flex items-center justify-center">
             <div className="relative">
-              <div className="w-64 h-[520px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
-                <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+              <div className="w-56 h-[420px] bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl">
+                <div className="w-full h-full bg-white rounded-[1.75rem] overflow-hidden relative">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-5 bg-gray-900 rounded-b-lg z-20"></div>
                   <div className="h-full relative transition-all duration-500 ease-in-out">
                     {renderPreviewContent()}
                   </div>
