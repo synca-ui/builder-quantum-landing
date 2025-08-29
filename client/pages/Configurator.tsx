@@ -1292,6 +1292,24 @@ export default function Configurator() {
             </div>
           </div>
         )}
+
+        {/* Gallery Page for Modern template */}
+        {previewState.activePage === 'gallery' && formData.selectedPages.includes('gallery') && (
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-white mb-6 font-mono">./gallery</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {sampleContent.galleryImages.map((image, index) => (
+                <div key={index} className="aspect-square bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+                  <img
+                    src={image.url}
+                    alt={image.alt}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
 
