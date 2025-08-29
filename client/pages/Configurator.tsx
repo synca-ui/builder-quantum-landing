@@ -2469,7 +2469,7 @@ export default function Configurator() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setShowOptionalFields(false)}
+                  onClick={() => updateFormData("showOptionalFields", false)}
                   className="text-gray-500 hover:text-gray-700 text-sm"
                 >
                   Hide optional fields
