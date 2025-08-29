@@ -825,9 +825,8 @@ export default function Configurator() {
                       </div>
                     </div>
                     <h2 className="text-2xl font-light text-gray-900 mb-2">{getBusinessName()}</h2>
-                    {formData.slogan && (
-                      <p className="text-gray-500 text-sm">{formData.slogan}</p>
-                    )}
+                    <p className="text-gray-500 text-sm">{sampleContent.tagline}</p>
+                    <p className="text-gray-400 text-xs mt-1">{sampleContent.businessDescription}</p>
                   </div>
 
                   {/* Interactive Menu Items */}
