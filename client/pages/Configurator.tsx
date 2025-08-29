@@ -1590,12 +1590,25 @@ export default function Configurator() {
                     {getBusinessName()}
                   </h1>
                 </div>
-                <button
-                  onClick={toggleMenu}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                >
-                  <Menu className="w-5 h-5 text-white" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  {formData.onlineOrdering && (
+                    <button
+                      className="p-2 hover:bg-white/10 rounded-xl transition-colors relative"
+                      onClick={() => {/* Handle cart */}}
+                    >
+                      <ShoppingBag className="w-5 h-5 text-white" />
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
+                        0
+                      </span>
+                    </button>
+                  )}
+                  <button
+                    onClick={toggleMenu}
+                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                  >
+                    <Menu className="w-5 h-5 text-white" />
+                  </button>
+                </div>
               </div>
 
               {/* Dropdown Menu */}
