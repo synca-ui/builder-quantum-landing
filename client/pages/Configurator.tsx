@@ -1338,6 +1338,29 @@ export default function Configurator() {
                   </div>
                 </div>
               )}
+
+              {/* Social Media Icons */}
+              {formData.socialMedia && (Object.keys(formData.socialMedia).length > 0 || formData.instagramSync) && (
+                <div className="text-center mt-4">
+                  <div className="flex justify-center space-x-4">
+                    {formData.socialMedia.instagram && (
+                      <a href={formData.socialMedia.instagram} className="text-pink-500 hover:text-pink-600 transition-colors">
+                        <Instagram className="w-4 h-4" />
+                      </a>
+                    )}
+                    {formData.socialMedia.facebook && (
+                      <a href={formData.socialMedia.facebook} className="text-blue-500 hover:text-blue-600 transition-colors">
+                        <Facebook className="w-4 h-4" />
+                      </a>
+                    )}
+                    {formData.instagramSync && !formData.socialMedia.instagram && (
+                      <div className="text-pink-500">
+                        <Instagram className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
       }
