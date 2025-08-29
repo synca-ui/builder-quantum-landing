@@ -1432,7 +1432,7 @@ export default function Configurator() {
                   <Input
                     type="text"
                     value={formData.secondaryColor}
-                    onChange={createInputHandler('secondaryColor')}
+                    onChange={inputHandlers.secondaryColor}
                     className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                     placeholder="#7C3AED"
                   />
