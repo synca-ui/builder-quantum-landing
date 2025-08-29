@@ -465,6 +465,9 @@ export default function Configurator() {
 
   const nextStep = useCallback(() => {
     if (currentStep < configuratorSteps.length - 1) {
+      // Collect current form values before moving to next step
+      updateFormDataFromInputs();
+
       const newStep = currentStep + 1;
       setCurrentStep(newStep);
       try {
@@ -474,11 +477,13 @@ export default function Configurator() {
       }
 
       // Force save current progress when moving to next step
-      if (autoSaverRef.current) {
-        autoSaverRef.current.saveNow(formData as Partial<Configuration>);
-      }
+      setTimeout(() => {
+        if (autoSaverRef.current) {
+          autoSaverRef.current.saveNow(formDataRef.current as Partial<Configuration>);
+        }
+      }, 100); // Small delay to ensure form data is updated
     }
-  }, [currentStep, configuratorSteps.length, formData]);
+  }, [currentStep, configuratorSteps.length, updateFormDataFromInputs]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
