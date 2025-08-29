@@ -706,6 +706,23 @@ export default function Configurator() {
       }
     };
 
+    // Get pages that should be shown in navigation based on user selection
+    const getAvailablePages = () => {
+      const pageMap = {
+        'home': 'Home',
+        'menu': 'Menu',
+        'gallery': 'Gallery',
+        'about': 'About',
+        'reservations': 'Reservations',
+        'contact': 'Contact'
+      };
+
+      return formData.selectedPages.map(pageId => ({
+        id: pageId,
+        name: pageMap[pageId] || pageId.charAt(0).toUpperCase() + pageId.slice(1)
+      }));
+    };
+
     // Sample content for realistic previews
     const sampleContent = {
       menuItems: formData.menuItems.length > 0 ? formData.menuItems : [
@@ -721,7 +738,13 @@ export default function Configurator() {
         Monday: { open: '7:00', close: '19:00' },
         Tuesday: { open: '7:00', close: '19:00' },
         Wednesday: { open: '7:00', close: '19:00' }
-      }
+      },
+      galleryImages: formData.gallery.length > 0 ? formData.gallery : [
+        { url: '/api/placeholder/300/300', alt: 'Our cozy interior' },
+        { url: '/api/placeholder/300/300', alt: 'Fresh coffee being brewed' },
+        { url: '/api/placeholder/300/300', alt: 'Delicious pastries' },
+        { url: '/api/placeholder/300/300', alt: 'Our friendly team' }
+      ]
     };
 
     // Realistic Minimalist Template
