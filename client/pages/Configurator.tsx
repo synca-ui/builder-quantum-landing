@@ -1403,7 +1403,7 @@ export default function Configurator() {
                   <Input
                     type="text"
                     value={formData.primaryColor}
-                    onChange={createInputHandler('primaryColor')}
+                    onChange={inputHandlers.primaryColor}
                     className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                     placeholder="#2563EB"
                   />
