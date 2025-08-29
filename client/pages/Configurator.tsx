@@ -2700,7 +2700,10 @@ export default function Configurator() {
           </div>
 
           {formData.hasDomain && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div
+              className="mt-4 pt-4 border-t border-gray-200"
+              onClick={(e) => e.stopPropagation()} // Prevent card click when interacting with input
+            >
               <label className="block text-sm font-bold text-gray-700 mb-2">Your domain name</label>
               <Input
                 type="text"
@@ -2708,11 +2711,25 @@ export default function Configurator() {
                 defaultValue={formData.domainName}
                 ref={setInputRef('domainName')}
                 onBlur={handleInputBlur('domainName')}
-                className="w-full"
+                onKeyDown={(e) => {
+                  e.stopPropagation(); // Prevent any parent handlers
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleInputBlur('domainName')(); // Save on Enter
+                  }
+                }}
+                className="w-full focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                autoComplete="url"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Don't worry - we'll help you connect this later
-              </p>
+              <div className="flex items-start justify-between mt-2">
+                <p className="text-xs text-gray-500">
+                  Don't worry - we'll help you connect this later
+                </p>
+                <div className="text-xs text-gray-400 ml-2">
+                  <Globe className="w-3 h-3 inline mr-1" />
+                  Custom domain
+                </div>
+              </div>
             </div>
           )}
         </Card>
