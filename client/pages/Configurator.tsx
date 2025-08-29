@@ -786,11 +786,14 @@ export default function Configurator() {
       const selected = templates.find((t) => t.id === selectedId);
       const baseStyles = selected ? selected.style : templates[0].style;
 
+      // For dark background templates, force white text for visibility
+      const forcedTextColor = (selectedId === "modern" || selectedId === "fancy") ? "#FFFFFF" : formData.fontColor;
+
       return {
         ...baseStyles,
         userPrimary: formData.primaryColor,
         userSecondary: formData.secondaryColor,
-        userFontColor: formData.fontColor,
+        userFontColor: forcedTextColor,
         userFontSize: formData.fontSize,
       };
     };
@@ -1761,11 +1764,14 @@ export default function Configurator() {
       const selected = templates.find((t) => t.id === selectedId);
       const baseStyles = selected ? selected.style : templates[0].style;
 
+      // For dark background templates, force white text for visibility
+      const forcedTextColor = (selectedId === "modern" || selectedId === "fancy") ? "#FFFFFF" : formData.fontColor;
+
       return {
         ...baseStyles,
         userPrimary: formData.primaryColor,
         userSecondary: formData.secondaryColor,
-        userFontColor: formData.fontColor,
+        userFontColor: forcedTextColor,
         userFontSize: formData.fontSize,
       };
     };
