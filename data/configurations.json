@@ -7,9 +7,9 @@
     "location": "sssss",
     "slogan": "ss",
     "uniqueDescription": "ssss",
-    "template": "minimalist",
-    "primaryColor": "#7C2D12",
-    "secondaryColor": "#EA580C",
+    "template": "modern",
+    "primaryColor": "#059669",
+    "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
     "selectedPages": [
       "home",
@@ -47,7 +47,7 @@
     "domainName": "",
     "selectedDomain": "",
     "createdAt": "2025-08-29T10:37:02.078Z",
-    "updatedAt": "2025-08-29T11:17:25.513Z",
+    "updatedAt": "2025-08-29T11:21:32.563Z",
     "status": "draft"
   }
 ]
