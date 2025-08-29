@@ -1399,7 +1399,12 @@ export default function Configurator() {
     const handleTemplateSelect = useCallback((templateId: string) => {
       setSelectedTemplate(templateId);
       updateFormData('template', templateId);
-    }, [updateFormData]);
+
+      // Auto-redirect to customization step after template selection
+      setTimeout(() => {
+        nextStep();
+      }, 500); // Small delay to show the selection feedback
+    }, [updateFormData, nextStep]);
 
     return (
       <div className="py-8">
