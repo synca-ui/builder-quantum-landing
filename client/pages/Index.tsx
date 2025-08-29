@@ -162,17 +162,29 @@ export default function Index() {
       return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Check if user has saved configurations
+    // Check API health and saved configurations
     useEffect(() => {
       const checkSavedSites = async () => {
         try {
+          // First check if API is available
+          const apiHealthy = await sessionApi.checkApiHealth();
+          if (!apiHealthy) {
+            console.warn('API server is not available, using offline mode');
+            // Still try to check saved configurations (will use localStorage fallback)
+          }
+
           const hasConfigs = await sessionApi.hasSavedConfigurations();
           setHasSavedSites(hasConfigs);
         } catch (error) {
-          console.log('Error checking saved configurations:', error);
+          console.warn('Error checking saved configurations, continuing in offline mode:', error);
+          // Don't throw error, just continue without dashboard link
+          setHasSavedSites(false);
         }
       };
-      checkSavedSites();
+
+      // Add a small delay to avoid blocking the initial render
+      const timeoutId = setTimeout(checkSavedSites, 100);
+      return () => clearTimeout(timeoutId);
     }, []);
 
     const navItems = [
