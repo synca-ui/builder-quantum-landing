@@ -10,7 +10,7 @@ export default function Configurator() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Dark mode removed as per requirements
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
@@ -186,13 +186,10 @@ export default function Configurator() {
     }
   ];
 
-  // Business type options
+  // Business type options - focused on Café and Restaurant as requested
   const businessTypes = [
     { value: 'cafe', label: 'Café', icon: <Coffee className="w-6 h-6" />, gradient: 'from-orange-400 to-yellow-500' },
-    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' },
-    { value: 'bar', label: 'Bar', icon: <Heart className="w-6 h-6" />, gradient: 'from-purple-400 to-pink-500' },
-    { value: 'store', label: 'Store', icon: <ShoppingBag className="w-6 h-6" />, gradient: 'from-blue-400 to-indigo-500' },
-    { value: 'other', label: 'Other', icon: <Building className="w-6 h-6" />, gradient: 'from-gray-400 to-gray-600' }
+    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' }
   ];
 
   // Template options with dramatically different designs
@@ -276,7 +273,7 @@ export default function Configurator() {
     { id: 'contact', name: 'Contact', icon: <Phone className="w-4 h-4" /> }
   ];
 
-  // Auto-save to backend
+  // Manual save to backend (auto-save removed as per requirements)
   const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
     setSaveStatus('saving');
     try {
@@ -284,17 +281,17 @@ export default function Configurator() {
         ...data,
         userId: sessionApi.getUserId()
       };
-      
+
       if (currentConfigId) {
         configData.id = currentConfigId;
       }
-      
+
       const result = await configurationApi.save(configData);
-      
+
       if (result.success && result.data) {
         setCurrentConfigId(result.data.id || null);
         setSaveStatus('saved');
-        
+
         // Also save to localStorage as backup
         try {
           localStorage.setItem('configuratorData', JSON.stringify(data));
@@ -313,20 +310,15 @@ export default function Configurator() {
     }
   }, [currentConfigId, currentStep]);
 
-  // Initialize auto-saver with longer debounce for better UX
+  // Auto-saver removed as per requirements - manual save only
   useEffect(() => {
-    autoSaverRef.current = new AutoSaver(saveToBackend, 5000); // 5 second debounce for better input stability
-
+    // Clean up debounce timeout on unmount
     return () => {
-      if (autoSaverRef.current) {
-        autoSaverRef.current.destroy();
-      }
-      // Clean up debounce timeout
       if (debouncedSaveRef.current) {
         clearTimeout(debouncedSaveRef.current);
       }
     };
-  }, [saveToBackend]);
+  }, []);
 
   // Use a ref to store the latest form data to avoid dependency cycles
   const formDataRef = useRef(formData);
@@ -345,12 +337,8 @@ export default function Configurator() {
       clearTimeout(debouncedSaveRef.current);
     }
 
-    debouncedSaveRef.current = setTimeout(() => {
-      if (autoSaverRef.current) {
-        const currentData = { ...formDataRef.current, [field]: value };
-        autoSaverRef.current.save(currentData as Partial<Configuration>);
-      }
-    }, 1000); // 1 second debounce for all fields
+    // Note: Auto-save removed as per requirements
+    // Data will be saved on step transitions and final publish
   }, []); // Empty dependency array for complete stability
 
   // Input refs for completely uncontrolled components
@@ -407,17 +395,7 @@ export default function Configurator() {
       return newData;
     });
 
-    // Save to backend
-    if (debouncedSaveRef.current) {
-      clearTimeout(debouncedSaveRef.current);
-    }
-
-    debouncedSaveRef.current = setTimeout(() => {
-      if (autoSaverRef.current) {
-        const currentData = { ...formDataRef.current, ...processedData };
-        autoSaverRef.current.save(currentData as Partial<Configuration>);
-      }
-    }, 500);
+    // Note: Auto-save removed as per requirements - data is saved manually or on step transitions
   }, [collectFormValues]);
 
   // Input blur handler - only updates state when user finishes typing
@@ -505,11 +483,9 @@ export default function Configurator() {
         console.warn('Failed to save step to localStorage:', error);
       }
 
-      // Force save current progress when moving to next step
+      // Manual save when moving to next step
       setTimeout(() => {
-        if (autoSaverRef.current) {
-          autoSaverRef.current.saveNow(formDataRef.current as Partial<Configuration>);
-        }
+        saveToBackend(formDataRef.current as Partial<Configuration>);
       }, 100); // Small delay to ensure form data is updated
     }
   }, [currentStep, configuratorSteps.length, updateFormDataFromInputs]);
@@ -567,7 +543,7 @@ export default function Configurator() {
   // Enhanced Navigation component
   const Navigation = () => (
     <nav
-      className={`fixed top-0 w-full z-50 ${isDarkMode ? 'bg-gray-900/90' : 'glass'} border-b ${isDarkMode ? 'border-gray-700' : 'border-white/20'} backdrop-blur-xl transition-colors duration-300`}
+      className="fixed top-0 w-full z-50 glass border-b border-white/20 backdrop-blur-xl"
       style={{
         transform: 'translate3d(0, 0, 0)',
         willChange: 'transform'
@@ -585,8 +561,8 @@ export default function Configurator() {
             <div className="hidden md:flex items-center ml-8">
               <div className="flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
                 <Settings className="w-4 h-4 text-teal-500" />
-                <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
-                  Step {currentStep + 1} of {configuratorSteps.length}
+                <span className="text-sm font-bold text-gray-700">
+                  {currentStep === 0 ? 'Let\'s Get Started' : `Step ${currentStep} of ${configuratorSteps.length - 1}`}
                 </span>
                 <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden">
                   <div
@@ -636,14 +612,7 @@ export default function Configurator() {
           <div className="hidden md:block">
             <div className="flex items-center space-x-6">
               {/* Dark mode toggle */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`p-2 rounded-full transition-all duration-300 ${isDarkMode ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </Button>
+              {/* Dark mode toggle removed as per requirements */}
               
               <div className="flex items-center space-x-2">
                 {publishStatus === 'published' && publishedUrl ? (
@@ -684,7 +653,7 @@ export default function Configurator() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`${isDarkMode ? 'text-white' : 'text-gray-700'}`}
+              className="text-gray-700"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </Button>
@@ -1235,7 +1204,7 @@ export default function Configurator() {
       <div className="sticky top-24 h-[calc(100vh-6rem)]">
         <div className="h-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Live Preview</h3>
+            <h3 className="text-lg font-bold text-gray-900">Live Preview</h3>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" className="p-2">
                 <Smartphone className="w-4 h-4" />
@@ -1348,7 +1317,7 @@ export default function Configurator() {
           </div>
         </div>
 
-        {/* Location */}
+        {/* Location - emoji removed as per requirements */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
           <div className="relative">
@@ -1363,6 +1332,19 @@ export default function Configurator() {
               className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
               autoComplete="street-address"
             />
+          </div>
+        </div>
+
+        {/* Logo Upload */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Business Logo (Optional)</label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-teal-400 transition-colors">
+            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600 mb-2">Upload your logo</p>
+            <Button variant="outline" size="sm">
+              Choose File
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 2MB</p>
           </div>
         </div>
 
