@@ -1228,8 +1228,35 @@ export default function Configurator() {
                   </div>
                 )}
 
+                {/* Social Media */}
+                {formData.socialMedia && (Object.keys(formData.socialMedia).length > 0 || formData.instagramSync) && (
+                  <div className="mt-4">
+                    <h3 className={templateStyles.itemName + " mb-2"}>Follow Us</h3>
+                    <div className="flex space-x-3">
+                      {formData.socialMedia.instagram && (
+                        <a href={formData.socialMedia.instagram} className="flex items-center space-x-1 text-pink-600 hover:text-pink-700">
+                          <Instagram className="w-4 h-4" />
+                          <span className="text-xs">Instagram</span>
+                        </a>
+                      )}
+                      {formData.socialMedia.facebook && (
+                        <a href={formData.socialMedia.facebook} className="flex items-center space-x-1 text-blue-600 hover:text-blue-700">
+                          <Facebook className="w-4 h-4" />
+                          <span className="text-xs">Facebook</span>
+                        </a>
+                      )}
+                      {formData.instagramSync && !formData.socialMedia.instagram && (
+                        <div className="flex items-center space-x-1 text-pink-600">
+                          <Instagram className="w-4 h-4" />
+                          <span className="text-xs">Instagram</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Default fallback if no contact info */}
-                {(!formData.contactMethods || formData.contactMethods.length === 0) && !formData.location && (
+                {(!formData.contactMethods || formData.contactMethods.length === 0) && !formData.location && !formData.socialMedia && (
                   <div className="text-center py-4">
                     <p className={templateStyles.itemDesc}>Contact information will appear here</p>
                   </div>
