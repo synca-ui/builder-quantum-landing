@@ -169,29 +169,45 @@ export default function Index() {
       return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Check API health and saved configurations
+    // Check API health and saved configurations with performance optimization
     useEffect(() => {
+      let isCanceled = false;
+
       const checkSavedSites = async () => {
         try {
-          // First check if API is available
-          const apiHealthy = await sessionApi.checkApiHealth();
-          if (!apiHealthy) {
-            console.warn('API server is not available, using offline mode');
-            // Still try to check saved configurations (will use localStorage fallback)
+          // Check localStorage first for instant response
+          const cachedResult = localStorage.getItem('hasSavedSites');
+          if (cachedResult && !isCanceled) {
+            setHasSavedSites(cachedResult === 'true');
           }
 
-          const hasConfigs = await sessionApi.hasSavedConfigurations();
-          setHasSavedSites(hasConfigs);
+          // Then check API with timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('API timeout')), 2000)
+          );
+
+          const apiPromise = sessionApi.hasSavedConfigurations();
+          const hasConfigs = await Promise.race([apiPromise, timeoutPromise]);
+
+          if (!isCanceled) {
+            setHasSavedSites(hasConfigs as boolean);
+            // Cache the result for future visits
+            localStorage.setItem('hasSavedSites', String(hasConfigs));
+          }
         } catch (error) {
-          console.warn('Error checking saved configurations, continuing in offline mode:', error);
-          // Don't throw error, just continue without dashboard link
-          setHasSavedSites(false);
+          // Silent fail - don't block navigation
+          if (!isCanceled) {
+            setHasSavedSites(false);
+          }
         }
       };
 
-      // Add a small delay to avoid blocking the initial render
-      const timeoutId = setTimeout(checkSavedSites, 100);
-      return () => clearTimeout(timeoutId);
+      // Delay to not block initial render
+      const timeoutId = setTimeout(checkSavedSites, 300);
+      return () => {
+        isCanceled = true;
+        clearTimeout(timeoutId);
+      };
     }, []);
 
     const navItems = [
