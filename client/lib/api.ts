@@ -51,22 +51,36 @@ function getUserId(): string {
   return userId;
 }
 
-// Base API request function
+// Base API request function with improved error handling
 async function apiRequest<T>(
-  endpoint: string, 
+  endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   try {
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch(`/api${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
         'x-user-id': getUserId(),
         ...options.headers,
       },
+      signal: controller.signal,
       ...options,
     });
 
-    const data = await response.json();
+    clearTimeout(timeoutId);
+
+    // Handle non-JSON responses
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.warn('Failed to parse JSON response:', jsonError);
+      data = { error: 'Invalid server response' };
+    }
 
     if (!response.ok) {
       return {
@@ -81,9 +95,31 @@ async function apiRequest<T>(
       message: data.message,
     };
   } catch (error) {
+    console.warn('API request failed:', { endpoint, error });
+
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        return {
+          success: false,
+          error: 'Request timeout - server may be unavailable',
+        };
+      }
+      if (error.message.includes('Failed to fetch')) {
+        return {
+          success: false,
+          error: 'Unable to connect to server - API may be unavailable',
+        };
+      }
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Network error',
+      error: 'Unknown network error',
     };
   }
 }
@@ -200,10 +236,22 @@ export const sessionApi = {
   // Get current user ID
   getUserId,
 
-  // Check if user has saved configurations
+  // Check if user has saved configurations with fallback
   async hasSavedConfigurations(): Promise<boolean> {
-    const result = await configurationApi.getAll();
-    return result.success && result.data && result.data.length > 0;
+    try {
+      const result = await configurationApi.getAll();
+      return result.success && result.data && result.data.length > 0;
+    } catch (error) {
+      console.warn('Failed to check saved configurations, falling back to localStorage:', error);
+      // Fallback to localStorage check
+      try {
+        const savedData = localStorage.getItem('configuratorData');
+        return savedData !== null;
+      } catch (storageError) {
+        console.warn('localStorage also unavailable:', storageError);
+        return false;
+      }
+    }
   },
 
   // Get user's latest configuration
