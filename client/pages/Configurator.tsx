@@ -965,6 +965,234 @@ export default function Configurator() {
     </div>
   );
 
+  const OpeningHoursStep = () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    const updateHours = (day: string, field: string, value: string) => {
+      const newHours = {
+        ...formData.openingHours,
+        [day]: {
+          ...formData.openingHours[day as keyof typeof formData.openingHours],
+          [field]: value
+        }
+      };
+      updateFormData('openingHours', newHours);
+    };
+
+    const toggleDay = (day: string) => {
+      const dayData = formData.openingHours[day as keyof typeof formData.openingHours];
+      if (dayData?.closed) {
+        updateHours(day, 'closed', false);
+        updateHours(day, 'open', '09:00');
+        updateHours(day, 'close', '17:00');
+      } else {
+        updateHours(day, 'closed', true);
+      }
+    };
+
+    return (
+      <div className="py-8 max-w-2xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Set your opening hours
+          </h2>
+          <p className="text-lg text-gray-600">
+            When are you open for business?
+          </p>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          {days.map((day) => {
+            const dayData = formData.openingHours[day as keyof typeof formData.openingHours] || {};
+            return (
+              <Card key={day} className="border-2 border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <h3 className="text-lg font-bold text-gray-900 w-24">{day}</h3>
+                      <Button
+                        variant={dayData.closed ? "outline" : "default"}
+                        size="sm"
+                        onClick={() => toggleDay(day)}
+                        className={dayData.closed ? "text-red-600 border-red-300" : "bg-teal-500 text-white"}
+                      >
+                        {dayData.closed ? 'Closed' : 'Open'}
+                      </Button>
+                    </div>
+
+                    {!dayData.closed && (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="time"
+                          value={dayData.open || '09:00'}
+                          onChange={(e) => updateHours(day, 'open', e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                        <span className="text-gray-500">to</span>
+                        <input
+                          type="time"
+                          value={dayData.close || '17:00'}
+                          onChange={(e) => updateHours(day, 'close', e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+          <div className="flex items-start space-x-2">
+            <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-bold text-blue-900 mb-1">Pro Tip</h4>
+              <p className="text-sm text-blue-700">You can always update your hours later. Consider adding special holiday hours or seasonal changes.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const MenuProductsStep = () => {
+    const [newItem, setNewItem] = useState({ name: '', description: '', price: '', category: '' });
+
+    const addMenuItem = () => {
+      if (newItem.name && newItem.price) {
+        const updatedItems = [...formData.menuItems, { ...newItem, id: Date.now() }];
+        updateFormData('menuItems', updatedItems);
+        setNewItem({ name: '', description: '', price: '', category: '' });
+      }
+    };
+
+    const removeMenuItem = (id: number) => {
+      const updatedItems = formData.menuItems.filter((item: any) => item.id !== id);
+      updateFormData('menuItems', updatedItems);
+    };
+
+    return (
+      <div className="py-8 max-w-2xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Add your {formData.businessType === 'store' ? 'products' : 'menu'}
+          </h2>
+          <p className="text-lg text-gray-600">
+            Showcase what you offer to attract customers
+          </p>
+        </div>
+
+        {/* Quick Add Form */}
+        <Card className="mb-8 border-2 border-dashed border-gray-300">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Add {formData.businessType === 'store' ? 'Product' : 'Menu Item'}
+            </h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <Input
+                placeholder={formData.businessType === 'store' ? 'Product name' : 'Dish name'}
+                value={newItem.name}
+                onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+              />
+              <Input
+                placeholder="Price"
+                value={newItem.price}
+                onChange={(e) => setNewItem({...newItem, price: e.target.value})}
+              />
+            </div>
+            <Textarea
+              placeholder="Description (optional)"
+              value={newItem.description}
+              onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+              className="mb-4"
+            />
+            <Button onClick={addMenuItem} className="w-full bg-teal-500 hover:bg-teal-600">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Item
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Menu Items List */}
+        {formData.menuItems.length > 0 && (
+          <div className="space-y-3 mb-8">
+            <h3 className="text-lg font-bold text-gray-900">Your Items</h3>
+            {formData.menuItems.map((item: any) => (
+              <Card key={item.id} className="border border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-900">{item.name}</h4>
+                      {item.description && (
+                        <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-teal-600">${item.price}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeMenuItem(item.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* PDF Upload Option */}
+        <Card className="mb-8 bg-gray-50">
+          <CardContent className="p-6 text-center">
+            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Or upload your existing menu</h3>
+            <p className="text-gray-600 mb-4">Have a PDF menu? Upload it and we'll add it to your site</p>
+            <Button variant="outline">
+              <Upload className="w-4 h-4 mr-2" />
+              Upload PDF Menu
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-between">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   const renderCurrentStep = () => {
     const step = configuratorSteps[currentStep];
     if (!step) return null;
