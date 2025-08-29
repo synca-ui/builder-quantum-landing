@@ -1,23 +1,31 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { ChevronRight, ArrowLeft, Sparkles, Rocket, Crown, Menu, X, Settings, Smartphone, Globe, Palette, MapPin, Phone, Mail, Upload, Clock, Calendar, Users, Camera, Instagram, Facebook, Share2, Coffee, ShoppingBag, Utensils, Store, Building, Plus, Check, Star, Heart, Zap, Play, Eye, ChevronDown, Monitor, Wifi, Shield, Home, Save, Cloud, AlertCircle } from "lucide-react";
+import { ChevronRight, ArrowLeft, Sparkles, Rocket, Menu, X, Settings, Smartphone, Globe, Palette, MapPin, Phone, Mail, Upload, Coffee, Utensils, Building, Check, Star, Heart, Monitor, Cloud, AlertCircle, Camera, Home, Crown, Zap, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { configurationApi, AutoSaver, sessionApi, handleApiError, type Configuration } from "@/lib/api";
+import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
 
 export default function Configurator() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  // Dark mode removed as per requirements
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
-  const autoSaverRef = useRef<AutoSaver | null>(null);
+  
   const [formData, setFormData] = useState({
-    // Phase 1: Business Basics
+    // Template and Design
+    template: '',
+    primaryColor: '#2563EB',
+    secondaryColor: '#7C3AED',
+    fontFamily: 'sans-serif',
+    backgroundType: 'color', // 'color' or 'image'
+    backgroundColor: '#FFFFFF',
+    backgroundImage: null,
+    
+    // Business Information
     businessName: '',
     businessType: '',
     location: '',
@@ -25,326 +33,144 @@ export default function Configurator() {
     slogan: '',
     uniqueDescription: '',
     
-    // Phase 2: Design & Style
-    template: '',
-    primaryColor: '#2563EB',
-    secondaryColor: '#7C3AED',
-    fontFamily: 'sans-serif',
-    selectedPages: ['home'],
-    customPages: [],
-    
-    // Phase 3: Content & Features
-    openingHours: {},
-    menuItems: [],
-    menuPdf: null,
-    reservationsEnabled: false,
-    timeSlots: [],
-    maxGuests: 10,
-    notificationMethod: 'email',
+    // Contact and Social
     contactMethods: [],
     socialMedia: {},
-    instagramSync: false,
     
-    // Phase 4: Media & Advanced
+    // Files and Media
+    menuFile: null, // For file upload
+    csvFile: null,  // For CSV upload
     gallery: [],
-    onlineOrdering: false,
-    onlineStore: false,
-    teamArea: false,
     
-    // Phase 5: Domain & Publishing
-    hasDomain: false,
-    domainName: '',
-    selectedDomain: ''
+    // Generated/Derived Data
+    selectedPages: ['home'],
+    openingHours: {},
+    menuItems: [],
+    reservationsEnabled: false
   });
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  // Configuration steps definition
+  // Simplified 3-step configurator structure
   const configuratorSteps = [
-    // Phase 1: Introduction & Business Basics
     {
-      id: 'welcome',
-      title: "Let's build your perfect digital space",
-      description: "Create a stunning website for your business in minutes",
-      phase: 1,
-      phaseTitle: "Introduction & Business Basics",
-      component: 'welcome'
+      id: 'template-selection',
+      title: "Choose Your Template",
+      description: "Start by selecting a stunning, professional template",
+      component: 'template-selection'
     },
     {
-      id: 'business-info',
-      title: "Tell us about your business",
-      description: "Basic information to get started",
-      phase: 1,
-      phaseTitle: "Introduction & Business Basics",
-      component: 'business-info'
-    },
-    
-    // Phase 2: Design & Visual Style
-    {
-      id: 'template',
-      title: "Choose your template",
-      description: "Select a design that matches your vision",
-      phase: 2,
-      phaseTitle: "Design & Visual Style",
-      component: 'template'
+      id: 'design-personalization',
+      title: "Personalize Your Design",
+      description: "Customize colors, fonts, logo, and background",
+      component: 'design-personalization'
     },
     {
-      id: 'branding',
-      title: "Define your brand colors",
-      description: "Choose colors and fonts that represent your business",
-      phase: 2,
-      phaseTitle: "Design & Visual Style",
-      component: 'branding'
-    },
-    {
-      id: 'page-structure',
-      title: "Select your pages",
-      description: "Choose which pages your website will include",
-      phase: 2,
-      phaseTitle: "Design & Visual Style",
-      component: 'page-structure'
-    },
-    
-    // Phase 3: Content & Features
-    {
-      id: 'opening-hours',
-      title: "Set your opening hours",
-      description: "When are you open for business?",
-      phase: 3,
-      phaseTitle: "Content & Features",
-      component: 'opening-hours'
-    },
-    {
-      id: 'menu-products',
-      title: "Add your menu or products",
-      description: "Showcase what you offer",
-      phase: 3,
-      phaseTitle: "Content & Features",
-      component: 'menu-products'
-    },
-    {
-      id: 'reservations',
-      title: "Setup reservations",
-      description: "Enable table bookings for your business",
-      phase: 3,
-      phaseTitle: "Content & Features",
-      component: 'reservations'
-    },
-    {
-      id: 'contact-social',
-      title: "Contact & social media",
-      description: "How can customers reach you?",
-      phase: 3,
-      phaseTitle: "Content & Features",
-      component: 'contact-social'
-    },
-    
-    // Phase 4: Media & Advanced Options
-    {
-      id: 'media-gallery',
-      title: "Upload your photos",
-      description: "Show off your space, food, and atmosphere",
-      phase: 4,
-      phaseTitle: "Media & Advanced Options",
-      component: 'media-gallery'
-    },
-    {
-      id: 'advanced-features',
-      title: "Optional features",
-      description: "Enable advanced functionality",
-      phase: 4,
-      phaseTitle: "Media & Advanced Options",
-      component: 'advanced-features'
-    },
-    
-    // Phase 5: Domain, Preview & Publishing
-    {
-      id: 'domain-hosting',
-      title: "Choose your domain",
-      description: "Select how customers will find your website",
-      phase: 5,
-      phaseTitle: "Domain, Preview & Publishing",
-      component: 'domain-hosting'
-    },
-    {
-      id: 'preview-adjustments',
-      title: "Preview & final tweaks",
-      description: "Review and make final adjustments",
-      phase: 5,
-      phaseTitle: "Domain, Preview & Publishing",
-      component: 'preview-adjustments'
-    },
-    {
-      id: 'publish',
-      title: "Publish your website",
-      description: "Make your website live!",
-      phase: 5,
-      phaseTitle: "Domain, Preview & Publishing",
-      component: 'publish'
+      id: 'business-information',
+      title: "Add Your Business Information",
+      description: "Complete your website with business details and file uploads",
+      component: 'business-information'
     }
   ];
 
-  // Business type options - focused on Café and Restaurant as requested
+  // Business type options
   const businessTypes = [
     { value: 'cafe', label: 'Café', icon: <Coffee className="w-6 h-6" />, gradient: 'from-orange-400 to-yellow-500' },
-    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' }
+    { value: 'restaurant', label: 'Restaurant', icon: <Utensils className="w-6 h-6" />, gradient: 'from-red-400 to-orange-500' },
+    { value: 'business', label: 'Business', icon: <Building className="w-6 h-6" />, gradient: 'from-blue-400 to-purple-500' }
   ];
 
-  // Template options with dramatically different designs
+  // Enhanced professional templates with distinct visual styles
   const templates = [
     {
       id: 'minimalist',
-      name: 'Minimalist',
-      description: 'Clean lines, ample white space, simple navigation, single-column layout',
+      name: 'Minimalist Clean',
+      description: 'Clean lines, ample white space, perfect for modern cafés and professional services',
       preview: 'bg-gradient-to-br from-gray-50 to-white',
+      thumbnail: '/api/placeholder/300/200',
       style: {
         background: '#FFFFFF',
         accent: '#374151',
         text: '#111827',
         secondary: '#F9FAFB',
         layout: 'single-column',
-        navigation: 'floating-minimal',
-        typography: 'clean'
-      }
+        navigation: 'minimal-top',
+        typography: 'clean-sans'
+      },
+      features: ['Clean Design', 'Mobile First', 'Fast Loading']
     },
     {
-      id: 'creative',
-      name: 'Creative & Bold',
-      description: 'Vibrant colors, large typography, dynamic full-screen images, creative animations, multi-column layout',
-      preview: 'bg-gradient-to-br from-purple-400 to-pink-500',
+      id: 'vibrant',
+      name: 'Vibrant & Bold',
+      description: 'Eye-catching colors, dynamic layouts, perfect for creative businesses and restaurants',
+      preview: 'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500',
+      thumbnail: '/api/placeholder/300/200',
       style: {
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         accent: '#EC4899',
         text: '#FFFFFF',
         secondary: '#8B5CF6',
-        layout: 'multi-column',
-        navigation: 'full-screen-creative',
-        typography: 'bold-experimental'
-      }
+        layout: 'creative-grid',
+        navigation: 'overlay-creative',
+        typography: 'bold-display'
+      },
+      features: ['Bold Colors', 'Creative Layout', 'Instagram Ready']
     },
     {
       id: 'professional',
-      name: 'Professional & Elegant',
-      description: 'Subtle colors, classic typography, balanced whitespace, traditional navigation',
-      preview: 'bg-gradient-to-br from-blue-50 to-indigo-100',
+      name: 'Professional Elite',
+      description: 'Sophisticated design, traditional elegance, ideal for upscale establishments',
+      preview: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50',
+      thumbnail: '/api/placeholder/300/200',
       style: {
         background: '#FFFFFF',
         accent: '#2563EB',
         text: '#1F2937',
         secondary: '#F8FAFC',
         layout: 'traditional-grid',
-        navigation: 'top-traditional',
-        typography: 'classic-serif'
-      }
+        navigation: 'classic-top',
+        typography: 'elegant-serif'
+      },
+      features: ['Professional', 'Trustworthy', 'Classic Appeal']
     },
     {
-      id: 'modern',
-      name: 'Modern & Sleek',
-      description: 'Dark mode, sharp lines, subtle animations, sleek menu transitions, modular grid layout',
-      preview: 'bg-gradient-to-br from-gray-800 to-black',
+      id: 'modern-dark',
+      name: 'Modern Dark',
+      description: 'Sleek dark theme, contemporary aesthetics, perfect for trendy venues',
+      preview: 'bg-gradient-to-br from-gray-800 via-gray-900 to-black',
+      thumbnail: '/api/placeholder/300/200',
       style: {
         background: '#111827',
         accent: '#10B981',
         text: '#FFFFFF',
         secondary: '#1F2937',
-        layout: 'modular-grid',
-        navigation: 'sticky-side',
-        typography: 'modern-sans'
-      }
+        layout: 'modular-cards',
+        navigation: 'floating-modern',
+        typography: 'tech-mono'
+      },
+      features: ['Dark Theme', 'Modern UI', 'Tech-Forward']
     }
   ];
 
   // Font options
   const fontOptions = [
-    { id: 'sans-serif', name: 'Sans Serif', class: 'font-sans', preview: 'Modern & Clean' },
-    { id: 'serif', name: 'Serif', class: 'font-serif', preview: 'Classic & Elegant' },
-    { id: 'display', name: 'Display', class: 'font-mono', preview: 'Bold & Creative' }
+    { id: 'sans-serif', name: 'Sans Serif', class: 'font-sans', preview: 'Modern & Clean', description: 'Perfect for digital readability' },
+    { id: 'serif', name: 'Serif', class: 'font-serif', preview: 'Classic & Elegant', description: 'Traditional and sophisticated' },
+    { id: 'display', name: 'Display', class: 'font-mono', preview: 'Bold & Creative', description: 'Eye-catching and unique' }
   ];
 
-  // Page options
-  const pageOptions = [
-    { id: 'home', name: 'Home', required: true, icon: <Home className="w-4 h-4" /> },
-    { id: 'menu', name: 'Menu', icon: <Coffee className="w-4 h-4" />, condition: ['cafe', 'restaurant', 'bar'] },
-    { id: 'gallery', name: 'Gallery', icon: <Camera className="w-4 h-4" /> },
-    { id: 'about', name: 'About', icon: <Heart className="w-4 h-4" /> },
-    { id: 'reservations', name: 'Reservations', icon: <Calendar className="w-4 h-4" />, condition: ['restaurant', 'bar'] },
-    { id: 'contact', name: 'Contact', icon: <Phone className="w-4 h-4" /> }
+  // Background options
+  const backgroundOptions = [
+    { id: 'solid', name: 'Solid Color', type: 'color', preview: 'bg-white border-2 border-gray-300' },
+    { id: 'gradient', name: 'Gradient', type: 'gradient', preview: 'bg-gradient-to-br from-blue-400 to-purple-600' },
+    { id: 'image', name: 'Custom Image', type: 'image', preview: 'bg-gray-200 bg-[url("/api/placeholder/100/100")] bg-cover' }
   ];
 
-  // Manual save to backend (auto-save removed as per requirements)
-  const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
-    setSaveStatus('saving');
-    try {
-      const configData = {
-        ...data,
-        userId: sessionApi.getUserId()
-      };
-
-      if (currentConfigId) {
-        configData.id = currentConfigId;
-      }
-
-      const result = await configurationApi.save(configData);
-
-      if (result.success && result.data) {
-        setCurrentConfigId(result.data.id || null);
-        setSaveStatus('saved');
-
-        // Also save to localStorage as backup
-        try {
-          localStorage.setItem('configuratorData', JSON.stringify(data));
-          localStorage.setItem('configuratorStep', currentStep.toString());
-          localStorage.setItem('currentConfigId', result.data.id || '');
-        } catch (error) {
-          console.warn('Failed to save to localStorage:', error);
-        }
-      } else {
-        setSaveStatus('error');
-        console.error('Save failed:', result.error);
-      }
-    } catch (error) {
-      setSaveStatus('error');
-      console.error('Save error:', error);
-    }
-  }, [currentConfigId, currentStep]);
-
-  // Auto-saver removed as per requirements - manual save only
-  useEffect(() => {
-    // Clean up debounce timeout on unmount
-    return () => {
-      if (debouncedSaveRef.current) {
-        clearTimeout(debouncedSaveRef.current);
-      }
-    };
-  }, []);
-
-  // Use a ref to store the latest form data to avoid dependency cycles
-  const formDataRef = useRef(formData);
-  formDataRef.current = formData;
-
-  // Simple debounced save that doesn't cause re-renders
-  const debouncedSaveRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Stable form update function that doesn't change between renders
-  const updateFormData = useCallback((field: string, value: any) => {
-    // Update form data immediately for responsive UI
-    setFormData(prev => ({ ...prev, [field]: value }));
-
-    // Debounce saves to prevent rapid API calls
-    if (debouncedSaveRef.current) {
-      clearTimeout(debouncedSaveRef.current);
-    }
-
-    // Note: Auto-save removed as per requirements
-    // Data will be saved on step transitions and final publish
-  }, []); // Empty dependency array for complete stability
-
-  // Input refs for completely uncontrolled components
+  // Input handling
   const inputRefs = useRef<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>({});
 
-  // Collect values from all input refs without causing re-renders
   const collectFormValues = useCallback(() => {
     const values: any = {};
     Object.keys(inputRefs.current).forEach(field => {
@@ -356,11 +182,8 @@ export default function Configurator() {
     return values;
   }, []);
 
-  // Update form data only when needed (on blur, step change, etc.) - NOT during typing
   const updateFormDataFromInputs = useCallback(() => {
     const inputValues = collectFormValues();
-
-    // Process contact methods into array format for backend compatibility
     const contactMethods: any[] = [];
     const socialMedia: any = {};
     const regularFields: any = {};
@@ -389,126 +212,75 @@ export default function Configurator() {
       ...(Object.keys(socialMedia).length > 0 && { socialMedia })
     };
 
-    setFormData(prev => {
-      const newData = { ...prev, ...processedData };
-      formDataRef.current = newData; // Keep ref in sync
-      return newData;
-    });
-
-    // Note: Auto-save removed as per requirements - data is saved manually or on step transitions
+    setFormData(prev => ({ ...prev, ...processedData }));
   }, [collectFormValues]);
 
-  // Input blur handler - only updates state when user finishes typing
   const handleInputBlur = useCallback((field: string) => {
-    return () => {
-      updateFormDataFromInputs();
-    };
+    return () => updateFormDataFromInputs();
   }, [updateFormDataFromInputs]);
 
-  // Simple ref setter for inputs - NO state updates during typing
   const setInputRef = useCallback((field: string) => {
     return (element: HTMLInputElement | HTMLTextAreaElement | null) => {
       inputRefs.current[field] = element;
     };
   }, []);
 
-  // Load persisted data on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Try to load from backend first
-        const latestConfig = await sessionApi.getLatestConfiguration();
-
-        if (latestConfig) {
-          setFormData(prev => ({ ...prev, ...latestConfig }));
-          setCurrentConfigId(latestConfig.id || null);
-          setSaveStatus('saved');
-
-          if (latestConfig.publishedUrl) {
-            setPublishedUrl(latestConfig.publishedUrl);
-            setPublishStatus('published');
-          }
-        } else {
-          // Fallback to localStorage
-          const savedData = localStorage.getItem('configuratorData');
-          const savedConfigId = localStorage.getItem('currentConfigId');
-
-          if (savedData) {
-            try {
-              const parsedData = JSON.parse(savedData);
-              setFormData(prev => ({ ...prev, ...parsedData }));
-              setCurrentConfigId(savedConfigId);
-            } catch (error) {
-              console.log('Error loading saved data:', error);
-            }
-          }
-        }
-
-        // Load saved step
-        const savedStep = localStorage.getItem('configuratorStep');
-        if (savedStep) {
-          const stepNumber = parseInt(savedStep);
-          if (!isNaN(stepNumber) && stepNumber > 0) {
-            setCurrentStep(stepNumber);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading configuration:', error);
-        // Fallback to localStorage on error
-        const savedData = localStorage.getItem('configuratorData');
-        if (savedData) {
-          try {
-            const parsedData = JSON.parse(savedData);
-            setFormData(prev => ({ ...prev, ...parsedData }));
-          } catch (e) {
-            console.log('Error loading saved data:', e);
-          }
-        }
-      }
-    };
-
-    loadData();
+  // Form data update helper
+  const updateFormData = useCallback((field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
+  // Navigation functions
   const nextStep = useCallback(() => {
     if (currentStep < configuratorSteps.length - 1) {
-      // Collect current form values before moving to next step
       updateFormDataFromInputs();
-
-      const newStep = currentStep + 1;
-      setCurrentStep(newStep);
-      try {
-        localStorage.setItem('configuratorStep', newStep.toString());
-      } catch (error) {
-        console.warn('Failed to save step to localStorage:', error);
-      }
-
-      // Manual save when moving to next step
-      setTimeout(() => {
-        saveToBackend(formDataRef.current as Partial<Configuration>);
-      }, 100); // Small delay to ensure form data is updated
+      setCurrentStep(prev => prev + 1);
     }
   }, [currentStep, configuratorSteps.length, updateFormDataFromInputs]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
-      // Collect current form values before moving to previous step
       updateFormDataFromInputs();
-
-      const newStep = currentStep - 1;
-      setCurrentStep(newStep);
-      try {
-        localStorage.setItem('configuratorStep', newStep.toString());
-      } catch (error) {
-        console.warn('Failed to save step to localStorage:', error);
-      }
+      setCurrentStep(prev => prev - 1);
     }
   }, [currentStep, updateFormDataFromInputs]);
 
-  // Publish configuration
+  // Back to Step 1 function - available throughout the flow
+  const backToStep1 = useCallback(() => {
+    updateFormDataFromInputs();
+    setCurrentStep(0);
+  }, [updateFormDataFromInputs]);
+
+  // Save and publish functions
+  const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
+    setSaveStatus('saving');
+    try {
+      const configData = {
+        ...data,
+        userId: sessionApi.getUserId()
+      };
+
+      if (currentConfigId) {
+        configData.id = currentConfigId;
+      }
+
+      const result = await configurationApi.save(configData);
+
+      if (result.success && result.data) {
+        setCurrentConfigId(result.data.id || null);
+        setSaveStatus('saved');
+        localStorage.setItem('configuratorData', JSON.stringify(data));
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('Save error:', error);
+    }
+  }, [currentConfigId]);
+
   const publishConfiguration = useCallback(async () => {
     if (!currentConfigId) {
-      // Save first if not saved
       await saveToBackend(formData as Partial<Configuration>);
       return;
     }
@@ -522,7 +294,6 @@ export default function Configurator() {
         setPublishedUrl(result.data.publishedUrl || null);
       } else {
         setPublishStatus('error');
-        console.error('Publish failed:', result.error);
       }
     } catch (error) {
       setPublishStatus('error');
@@ -530,53 +301,41 @@ export default function Configurator() {
     }
   }, [currentConfigId, formData, saveToBackend]);
 
-  // Memoized progress percentage to prevent recalculation
+  // Progress calculation
   const progressPercentage = useMemo(() => {
     return ((currentStep + 1) / configuratorSteps.length) * 100;
   }, [currentStep, configuratorSteps.length]);
 
-  // Memoized current phase data
-  const currentPhase = useMemo(() => {
-    return currentStep > 0 ? configuratorSteps[currentStep] : null;
-  }, [currentStep, configuratorSteps]);
-
   // Enhanced Navigation component
   const Navigation = () => (
-    <nav
-      className="fixed top-0 w-full z-50 glass border-b border-white/20 backdrop-blur-xl"
-      style={{
-        transform: 'translate3d(0, 0, 0)',
-        willChange: 'transform'
-      }}
-    >
+    <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <a href="/" className="text-3xl font-black text-gradient animate-pulse">sync.a</a>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce"></div>
+              <a href="/" className="text-3xl font-black bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">
+                sync.a
+              </a>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full opacity-75"></div>
             </div>
             
             {/* Progress indicator */}
             <div className="hidden md:flex items-center ml-8">
-              <div className="flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+              <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-full">
                 <Settings className="w-4 h-4 text-teal-500" />
                 <span className="text-sm font-bold text-gray-700">
-                  {currentStep === 0 ? 'Let\'s Get Started' : `Step ${currentStep} of ${configuratorSteps.length - 1}`}
+                  Step {currentStep + 1} of {configuratorSteps.length}
                 </span>
                 <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-transform duration-500 ease-out"
-                    style={{
-                      transform: `translateX(${progressPercentage - 100}%)`,
-                      willChange: 'transform'
-                    }}
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-transform duration-300 ease-out"
+                    style={{ width: `${progressPercentage}%` }}
                   ></div>
                 </div>
               </div>
             </div>
             
-            {/* Save Status Indicator */}
+            {/* Save Status */}
             <div className="hidden lg:flex items-center space-x-2 ml-4">
               {saveStatus === 'saving' && (
                 <div className="flex items-center space-x-2 text-orange-600">
@@ -597,39 +356,39 @@ export default function Configurator() {
                 </div>
               )}
             </div>
-            
-            {/* Phase indicator */}
-            {currentPhase && (
-              <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-teal-500/10 to-purple-500/10 px-3 py-1 rounded-full border border-teal-500/20">
-                <Crown className="w-3 h-3 text-teal-600" />
-                <span className="text-xs font-bold text-teal-700">
-                  Phase {currentPhase.phase}: {currentPhase.phaseTitle}
-                </span>
-              </div>
-            )}
           </div>
           
           <div className="hidden md:block">
             <div className="flex items-center space-x-6">
-              {/* Dark mode toggle */}
-              {/* Dark mode toggle removed as per requirements */}
+              {/* Back to Step 1 button - always visible after step 1 */}
+              {currentStep > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={backToStep1}
+                  className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Back to Templates
+                </Button>
+              )}
               
               <div className="flex items-center space-x-2">
                 {publishStatus === 'published' && publishedUrl ? (
                   <Button 
                     size="sm"
                     onClick={() => window.open(publishedUrl, '_blank')}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
                   >
                     <Globe className="w-4 h-4 mr-2" />
-                    Live Site
+                    View Live Site
                   </Button>
                 ) : (
                   <Button 
                     size="sm"
                     onClick={publishConfiguration}
                     disabled={publishStatus === 'publishing'}
-                    className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg animate-glow"
+                    className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg"
                   >
                     {publishStatus === 'publishing' ? (
                       <>
@@ -639,7 +398,7 @@ export default function Configurator() {
                     ) : (
                       <>
                         <Rocket className="w-4 h-4 mr-2" />
-                        Publish
+                        Publish Website
                       </>
                     )}
                   </Button>
@@ -663,21 +422,11 @@ export default function Configurator() {
     </nav>
   );
 
-  // Color theme presets for quick switching
-  const colorPresets = [
-    { name: 'Ocean', primary: '#2563EB', secondary: '#7C3AED', accent: '#0891B2' },
-    { name: 'Forest', primary: '#059669', secondary: '#10B981', accent: '#34D399' },
-    { name: 'Sunset', primary: '#DC2626', secondary: '#F59E0B', accent: '#FB923C' },
-    { name: 'Purple', primary: '#7C3AED', secondary: '#EC4899', accent: '#A855F7' }
-  ];
-
-  // COMPLETELY REDESIGNED Live Preview Component with Realistic Templates
+  // Enhanced Live Preview Component
   const LivePreview = () => {
     const [previewState, setPreviewState] = useState({
       menuOpen: false,
-      activePage: 'home',
-      hoveredItem: null,
-      scrollY: 0
+      activePage: 'home'
     });
     
     const getBusinessName = () => formData.businessName || 'Your Business';
@@ -686,7 +435,6 @@ export default function Configurator() {
       const selected = templates.find(t => t.id === formData.template);
       const baseStyles = selected ? selected.style : templates[0].style;
       
-      // Apply user's custom colors to the template
       return {
         ...baseStyles,
         userPrimary: formData.primaryColor,
@@ -700,623 +448,14 @@ export default function Configurator() {
       switch (formData.businessType) {
         case 'cafe': return <Coffee className="w-5 h-5" />;
         case 'restaurant': return <Utensils className="w-5 h-5" />;
-        case 'bar': return <Heart className="w-5 h-5" />;
-        case 'store': return <ShoppingBag className="w-5 h-5" />;
         default: return <Building className="w-5 h-5" />;
       }
     };
 
-    // Get pages that should be shown in navigation based on user selection
-    const getAvailablePages = () => {
-      const pageMap = {
-        'home': 'Home',
-        'menu': 'Menu',
-        'gallery': 'Gallery',
-        'about': 'About',
-        'reservations': 'Reservations',
-        'contact': 'Contact'
-      };
-
-      return formData.selectedPages.map(pageId => ({
-        id: pageId,
-        name: pageMap[pageId] || pageId.charAt(0).toUpperCase() + pageId.slice(1)
-      }));
-    };
-
-    // Sample content for realistic previews
-    const sampleContent = {
-      menuItems: formData.menuItems.length > 0 ? formData.menuItems : [
-        { name: 'Signature Latte', description: 'Our house special with organic beans', price: '4.50' },
-        { name: 'Artisan Sandwich', description: 'Fresh ingredients, homemade bread', price: '8.00' },
-        { name: 'Chocolate Croissant', description: 'Buttery, flaky pastry with dark chocolate', price: '3.25' }
-      ],
-      reviews: [
-        { name: 'Sarah M.', rating: 5, text: 'Amazing coffee and friendly staff!' },
-        { name: 'John D.', rating: 5, text: 'Love the atmosphere here.' }
-      ],
-      hours: formData.openingHours?.Monday ? formData.openingHours : {
-        Monday: { open: '7:00', close: '19:00' },
-        Tuesday: { open: '7:00', close: '19:00' },
-        Wednesday: { open: '7:00', close: '19:00' }
-      },
-      galleryImages: formData.gallery.length > 0 ? formData.gallery : [
-        { url: '/api/placeholder/300/300', alt: 'Our cozy interior' },
-        { url: '/api/placeholder/300/300', alt: 'Fresh coffee being brewed' },
-        { url: '/api/placeholder/300/300', alt: 'Delicious pastries' },
-        { url: '/api/placeholder/300/300', alt: 'Our friendly team' }
-      ]
-    };
-
-    // Realistic Minimalist Template
-    const renderMinimalistTemplate = () => (
-      <div className="h-full overflow-y-auto bg-white font-light">
-        {/* Clean Top Navigation */}
-        <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between">
-              <h1 className="text-lg font-medium text-gray-900">{getBusinessName()}</h1>
-              <button
-                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-                className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <Menu className="w-4 h-4 text-gray-600" />
-              </button>
-            </div>
-            
-            {/* Navigation Menu - Dynamic based on selected pages */}
-            {previewState.menuOpen && (
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <div className="space-y-1">
-                  {getAvailablePages().map((page) => (
-                    <button
-                      key={page.id}
-                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
-                      className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                        previewState.activePage === page.id
-                          ? 'bg-gray-100 text-gray-900 font-medium'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </nav>
-
-        {/* Page Content */}
-        {previewState.activePage === 'home' && (
-          <div className="px-6 py-8">
-            {/* Hero Section */}
-            <div className="text-center mb-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center" 
-                   style={{ backgroundColor: `${styles.userPrimary}15` }}>
-                <div style={{ color: styles.userPrimary }}>
-                  {getBusinessIcon()}
-                </div>
-              </div>
-              <h2 className="text-2xl font-light text-gray-900 mb-2">{getBusinessName()}</h2>
-              {formData.slogan && (
-                <p className="text-gray-500 text-sm">{formData.slogan}</p>
-              )}
-            </div>
-
-            {/* Featured Items */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium text-gray-900 text-center">Featured</h3>
-              {sampleContent.menuItems.slice(0, 2).map((item, index) => (
-                <div key={index} className="text-center border-b border-gray-100 pb-6">
-                  <h4 className="font-medium text-gray-900 mb-1">{item.name}</h4>
-                  <p className="text-sm text-gray-500 mb-2">{item.description}</p>
-                  <span className="text-lg font-light" style={{ color: styles.userPrimary }}>${item.price}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Reserve a Table Button - only if reservations enabled */}
-            {formData.reservationsEnabled && (
-              <div className="mt-8 text-center">
-                <Button
-                  className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-3 rounded-full font-medium"
-                  style={{ backgroundColor: styles.userPrimary }}
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Reserve a Table
-                </Button>
-              </div>
-            )}
-
-            {/* Opening Hours at bottom of homepage */}
-            {Object.keys(sampleContent.hours).length > 0 && (
-              <div className="mt-12 pt-8 border-t border-gray-100">
-                <h3 className="text-lg font-medium text-gray-900 mb-6 text-center">Opening Hours</h3>
-                <div className="space-y-3">
-                  {Object.entries(sampleContent.hours).map(([day, hours]: [string, any]) => (
-                    <div key={day} className="flex justify-between items-center py-2 border-b border-gray-50">
-                      <span className="text-gray-700 font-medium">{day}</span>
-                      <span className="text-gray-600">
-                        {hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Instagram Integration */}
-            {formData.socialMedia?.instagram && (
-              <div className="mt-8 text-center">
-                <a
-                  href={`https://instagram.com/${formData.socialMedia.instagram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 text-gray-600 hover:text-pink-600 transition-colors"
-                >
-                  <Instagram className="w-5 h-5" />
-                  <span>Follow us on Instagram</span>
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {previewState.activePage === 'menu' && (
-          <div className="px-6 py-8">
-            <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Menu</h2>
-            <div className="space-y-6">
-              {sampleContent.menuItems.map((item, index) => (
-                <div key={index} className="border-b border-gray-100 pb-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-                    </div>
-                    <span className="font-light text-lg ml-4" style={{ color: styles.userPrimary }}>${item.price}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {previewState.activePage === 'about' && (
-          <div className="px-6 py-8">
-            <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">About Us</h2>
-            <div className="space-y-4 text-center">
-              <p className="text-gray-600">
-                {formData.uniqueDescription || 'We are passionate about creating exceptional experiences for our customers.'}
-              </p>
-              <div className="mt-8">
-                <h3 className="font-medium text-gray-900 mb-4">Hours</h3>
-                <div className="space-y-2 text-sm">
-                  {Object.entries(sampleContent.hours).slice(0, 3).map(([day, hours]: [string, any]) => (
-                    <div key={day} className="flex justify-between">
-                      <span className="text-gray-600">{day}</span>
-                      <span className="text-gray-900">{hours.open} - {hours.close}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {previewState.activePage === 'contact' && (
-          <div className="px-6 py-8">
-            <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Contact</h2>
-            <div className="space-y-4 text-center">
-              {formData.location && (
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Location</h3>
-                  <p className="text-gray-600 text-sm">{formData.location}</p>
-                </div>
-              )}
-              <div className="pt-4">
-                <h3 className="font-medium text-gray-900 mb-2">Get in Touch</h3>
-                <p className="text-gray-600 text-sm">Visit us today!</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Gallery Page - only shows when Gallery is selected */}
-        {previewState.activePage === 'gallery' && formData.selectedPages.includes('gallery') && (
-          <div className="px-6 py-8">
-            <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Gallery</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {sampleContent.galleryImages.map((image, index) => (
-                <div key={index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={image.url}
-                    alt={image.alt}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-
-    // Realistic Creative Template
-    const renderCreativeTemplate = () => (
-      <div className="h-full overflow-y-auto text-white" 
-           style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        {/* Bold Header */}
-        <div className="relative">
-          <nav className="absolute top-0 left-0 right-0 z-50 p-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-black text-white">{getBusinessName()}</h1>
-              <button
-                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-                className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center transition-all hover:bg-white/30"
-              >
-                <Menu className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          </nav>
-
-          {/* Full-Screen Menu Overlay */}
-          {previewState.menuOpen && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-              <div className="text-center space-y-6">
-                {getAvailablePages().map((page, index) => (
-                  <button
-                    key={page.id}
-                    onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
-                    className="block text-3xl font-black text-white hover:text-pink-300 transition-all duration-300 hover:scale-110"
-                    style={{
-                      animationDelay: `${index * 100}ms`,
-                    }}
-                  >
-                    {page.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Hero Section */}
-          {previewState.activePage === 'home' && (
-            <div className="pt-16 pb-8 px-4 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <div style={{ color: styles.userPrimary }}>
-                  {getBusinessIcon()}
-                </div>
-              </div>
-              <h1 className="text-3xl font-black text-white mb-3">{getBusinessName()}</h1>
-              {formData.slogan && (
-                <p className="text-xl font-bold text-white/90 mb-6">{formData.slogan}</p>
-              )}
-              
-              {/* Creative Grid Layout */}
-              <div className="grid grid-cols-2 gap-3 mt-8">
-                {sampleContent.menuItems.slice(0, 4).map((item, index) => (
-                  <div key={index} className="bg-white/20 backdrop-blur rounded-2xl p-4 hover:bg-white/30 transition-all">
-                    <h3 className="text-sm font-bold text-white">{item.name}</h3>
-                    <p className="text-xs text-white/80 mt-1">{item.description}</p>
-                    <div className="text-lg font-black mt-2" style={{ color: styles.userSecondary }}>${item.price}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {previewState.activePage === 'menu' && (
-            <div className="pt-16 px-4">
-              <h2 className="text-2xl font-black text-white mb-6 text-center">Our Menu</h2>
-              <div className="grid grid-cols-1 gap-4">
-                {sampleContent.menuItems.map((item, index) => (
-                  <div key={index} className="bg-white/20 backdrop-blur rounded-2xl p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-white">{item.name}</h3>
-                        <p className="text-sm text-white/80 mt-1">{item.description}</p>
-                      </div>
-                      <span className="text-xl font-black" style={{ color: styles.userSecondary }}>${item.price}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Gallery Page for Creative template */}
-          {previewState.activePage === 'gallery' && formData.selectedPages.includes('gallery') && (
-            <div className="pt-16 px-4">
-              <h2 className="text-2xl font-black text-white mb-6 text-center">Gallery</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {sampleContent.galleryImages.map((image, index) => (
-                  <div key={index} className="aspect-square bg-white/10 backdrop-blur rounded-2xl overflow-hidden">
-                    <img
-                      src={image.url}
-                      alt={image.alt}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-
-    // Realistic Professional Template
-    const renderProfessionalTemplate = () => (
-      <div className="h-full overflow-y-auto bg-white">
-        {/* Traditional Top Navigation */}
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
-                  <div style={{ color: styles.userPrimary }}>
-                    {getBusinessIcon()}
-                  </div>
-                </div>
-                <h1 className="text-lg font-semibold text-gray-900">{getBusinessName()}</h1>
-              </div>
-              <button
-                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-                className="p-2 hover:bg-gray-100 rounded transition-colors"
-              >
-                <Menu className="w-4 h-4 text-gray-600" />
-              </button>
-            </div>
-            
-            {/* Professional Dropdown */}
-            {previewState.menuOpen && (
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <div className="grid grid-cols-2 gap-2">
-                  {getAvailablePages().map((page) => (
-                    <button
-                      key={page.id}
-                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
-                      className={`text-left px-3 py-2 text-sm rounded transition-colors ${
-                        previewState.activePage === page.id
-                          ? 'bg-blue-50 text-blue-900 font-semibold'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </nav>
-
-        {/* Professional Content */}
-        {previewState.activePage === 'home' && (
-          <div className="p-4">
-            <div className="text-center py-8 border-b border-gray-100">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
-              {formData.slogan && (
-                <p className="text-gray-600">{formData.slogan}</p>
-              )}
-            </div>
-
-            <div className="py-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Featured Items</h2>
-              <div className="space-y-4">
-                {sampleContent.menuItems.slice(0, 3).map((item, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                      </div>
-                      <div className="text-lg font-bold ml-4" style={{ color: styles.userPrimary }}>${item.price}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="py-6 border-t border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Customer Reviews</h2>
-              <div className="space-y-3">
-                {sampleContent.reviews.map((review, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-3">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
-                      <span className="text-sm font-medium text-gray-900">{review.name}</span>
-                      <div className="flex">
-                        {[...Array(review.rating)].map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600">{review.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {previewState.activePage === 'menu' && (
-          <div className="p-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Our Menu</h2>
-            <div className="space-y-4">
-              {sampleContent.menuItems.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                    </div>
-                    <span className="text-lg font-bold" style={{ color: styles.userPrimary }}>${item.price}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Gallery Page for Professional template */}
-        {previewState.activePage === 'gallery' && formData.selectedPages.includes('gallery') && (
-          <div className="p-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Gallery</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {sampleContent.galleryImages.map((image, index) => (
-                <div key={index} className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
-                  <img
-                    src={image.url}
-                    alt={image.alt}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-
-    // Realistic Modern Template
-    const renderModernTemplate = () => (
-      <div className="h-full overflow-y-auto bg-gray-900 text-white">
-        {/* Modern Header */}
-        <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 sticky top-0 z-50">
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: styles.userPrimary }}></div>
-                <h1 className="text-white font-mono text-lg">{getBusinessName()}</h1>
-              </div>
-              <button
-                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-                className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center transition-colors"
-              >
-                <Menu className="w-4 h-4 text-gray-300" />
-              </button>
-            </div>
-            
-            {/* Modern Slide Menu */}
-            {previewState.menuOpen && (
-              <div className="mt-3 pt-3 border-t border-gray-700">
-                <div className="space-y-1">
-                  {getAvailablePages().map((page) => (
-                    <button
-                      key={page.id}
-                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.id, menuOpen: false }))}
-                      className={`w-full text-left px-3 py-2 text-sm font-mono rounded transition-all ${
-                        previewState.activePage === page.id
-                          ? 'bg-green-500/20 text-green-400 border-l-2 border-green-400'
-                          : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                      }`}
-                    >
-                      {page.id}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </nav>
-
-        {/* Modern Content */}
-        {previewState.activePage === 'home' && (
-          <div className="p-4">
-            {/* Hero Card */}
-            <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
-                  <div style={{ color: styles.userPrimary }}>
-                    {getBusinessIcon()}
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">{getBusinessName()}</h1>
-                  {formData.slogan && (
-                    <p className="text-sm text-gray-400">{formData.slogan}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Modular Grid */}
-            <div className="grid gap-3">
-              {sampleContent.menuItems.slice(0, 3).map((item, index) => (
-                <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-colors">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-sm font-semibold text-white">{item.name}</h3>
-                      <p className="text-xs text-gray-400 mt-1">{item.description}</p>
-                    </div>
-                    <div className="text-sm font-mono font-bold text-green-400">${item.price}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Status Cards */}
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-mono text-gray-400">OPEN NOW</span>
-                </div>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-3 h-3 text-blue-400" />
-                  <span className="text-xs font-mono text-gray-400">FAST SERVICE</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {previewState.activePage === 'menu' && (
-          <div className="p-4">
-            <h2 className="text-xl font-bold text-white mb-6 font-mono">./menu</h2>
-            <div className="space-y-3">
-              {sampleContent.menuItems.map((item, index) => (
-                <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-green-500/50 transition-all">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-white font-mono">{item.name}</h3>
-                      <p className="text-sm text-gray-400 mt-1">{item.description}</p>
-                    </div>
-                    <span className="text-green-400 font-mono font-bold">${item.price}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Gallery Page for Modern template */}
-        {previewState.activePage === 'gallery' && formData.selectedPages.includes('gallery') && (
-          <div className="p-4">
-            <h2 className="text-xl font-bold text-white mb-6 font-mono">./gallery</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {sampleContent.galleryImages.map((image, index) => (
-                <div key={index} className="aspect-square bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-                  <img
-                    src={image.url}
-                    alt={image.alt}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-
     const renderPreviewContent = () => {
       if (!formData.template) {
         return (
-          <div className="pt-8 h-full flex items-center justify-center bg-gray-50">
+          <div className="h-full flex items-center justify-center bg-gray-50">
             <div className="text-center">
               <Palette className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-sm text-gray-500">Choose a template to see preview</p>
@@ -1325,18 +464,144 @@ export default function Configurator() {
         );
       }
 
-      // Render dramatically different templates
+      // Render different templates based on selection
       switch (formData.template) {
         case 'minimalist':
-          return renderMinimalistTemplate();
-        case 'creative':
-          return renderCreativeTemplate();
+          return (
+            <div className="h-full overflow-y-auto bg-white font-light">
+              <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <h1 className="text-lg font-medium text-gray-900">{getBusinessName()}</h1>
+                    <button className="p-2 hover:bg-gray-50 rounded-lg">
+                      <Menu className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+              </nav>
+              <div className="px-6 py-8">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center" 
+                       style={{ backgroundColor: `${styles.userPrimary}15` }}>
+                    <div style={{ color: styles.userPrimary }}>
+                      {getBusinessIcon()}
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-light text-gray-900 mb-2">{getBusinessName()}</h2>
+                  {formData.slogan && (
+                    <p className="text-gray-500 text-sm">{formData.slogan}</p>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  <div className="text-center border-b border-gray-100 pb-4">
+                    <h4 className="font-medium text-gray-900 mb-1">Featured Item</h4>
+                    <p className="text-sm text-gray-500 mb-2">Perfect for your taste</p>
+                    <span className="text-lg font-light" style={{ color: styles.userPrimary }}>$12.50</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'vibrant':
+          return (
+            <div className="h-full overflow-y-auto text-white" 
+                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+              <nav className="p-4">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-xl font-black text-white">{getBusinessName()}</h1>
+                  <button className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
+                    <Menu className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </nav>
+              <div className="pt-8 px-4 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center">
+                  <div style={{ color: styles.userPrimary }}>
+                    {getBusinessIcon()}
+                  </div>
+                </div>
+                <h1 className="text-3xl font-black text-white mb-3">{getBusinessName()}</h1>
+                {formData.slogan && (
+                  <p className="text-xl font-bold text-white/90">{formData.slogan}</p>
+                )}
+              </div>
+            </div>
+          );
+
         case 'professional':
-          return renderProfessionalTemplate();
-        case 'modern':
-          return renderModernTemplate();
+          return (
+            <div className="h-full overflow-y-auto bg-white">
+              <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+                        <div style={{ color: styles.userPrimary }}>
+                          {getBusinessIcon()}
+                        </div>
+                      </div>
+                      <h1 className="text-lg font-semibold text-gray-900">{getBusinessName()}</h1>
+                    </div>
+                    <button className="p-2 hover:bg-gray-100 rounded">
+                      <Menu className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+              </nav>
+              <div className="p-4">
+                <div className="text-center py-8 border-b border-gray-100">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
+                  {formData.slogan && (
+                    <p className="text-gray-600">{formData.slogan}</p>
+                  )}
+                </div>
+                <div className="py-6">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Welcome</h2>
+                  <p className="text-gray-600">Experience excellence in every detail.</p>
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'modern-dark':
+          return (
+            <div className="h-full overflow-y-auto bg-gray-900 text-white">
+              <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 sticky top-0 z-50">
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: styles.userPrimary }}></div>
+                      <h1 className="text-white font-mono text-lg">{getBusinessName()}</h1>
+                    </div>
+                    <button className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center">
+                      <Menu className="w-4 h-4 text-gray-300" />
+                    </button>
+                  </div>
+                </div>
+              </nav>
+              <div className="p-4">
+                <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
+                      <div style={{ color: styles.userPrimary }}>
+                        {getBusinessIcon()}
+                      </div>
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold text-white">{getBusinessName()}</h1>
+                      {formData.slogan && (
+                        <p className="text-sm text-gray-400">{formData.slogan}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
         default:
-          return renderMinimalistTemplate();
+          return renderPreviewContent();
       }
     };
 
@@ -1355,17 +620,12 @@ export default function Configurator() {
             </div>
           </div>
           
-          {/* iPhone 16 Pro mockup */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative">
-              {/* iPhone frame */}
               <div className="w-64 h-[520px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
                 <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                  {/* iPhone notch */}
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
-                  
-                  {/* Website preview */}
-                  <div className="h-full relative transition-all duration-700 ease-in-out">
+                  <div className="h-full relative transition-all duration-500 ease-in-out">
                     {renderPreviewContent()}
                   </div>
                 </div>
@@ -1377,205 +637,51 @@ export default function Configurator() {
     );
   };
 
-  // Step Components
-  const WelcomeStep = () => (
-    <div className="text-center py-16">
-      <div className="mb-8">
-        <div className="w-32 h-32 mx-auto mb-6 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
-          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-            <Rocket className="w-16 h-16 text-teal-500 animate-bounce" />
-          </div>
-        </div>
-        <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
-          Let's build your <span className="text-gradient">perfect digital space</span>
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-          Create a stunning website for your business in minutes. No technical skills needed - we'll guide you every step of the way.
-        </p>
-      </div>
-      
-      <Button 
-        onClick={nextStep}
-        size="lg"
-        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-2xl animate-glow"
-      >
-        <Sparkles className="mr-3 w-6 h-6" />
-        Let's Go
-        <ChevronRight className="ml-3 w-6 h-6" />
-      </Button>
-    </div>
-  );
-
-  const BusinessInfoStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Tell us about your business
-        </h2>
-        <p className="text-lg text-gray-600">
-          Basic information to get started with your website
-        </p>
-      </div>
-      
-      <div className="space-y-6">
-        {/* Business Name */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Business Name *</label>
-          <Input
-            type="text"
-            placeholder="e.g. Bella's Café"
-            defaultValue={formData.businessName}
-            ref={setInputRef('businessName')}
-            onBlur={handleInputBlur('businessName')}
-            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-            className="w-full px-4 py-3 text-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-            autoComplete="organization"
-          />
-        </div>
-
-        {/* Business Type */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Business Type *</label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {businessTypes.map((type) => (
-              <Card
-                key={type.value}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  formData.businessType === type.value ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-                }`}
-                onClick={() => updateFormData('businessType', type.value)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className={`w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-r ${type.gradient} flex items-center justify-center text-white`}>
-                    {type.icon}
-                  </div>
-                  <h3 className="text-sm font-bold text-gray-900">{type.label}</h3>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Location - emoji removed as per requirements */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="123 Main Street, City, State"
-              defaultValue={formData.location}
-              ref={setInputRef('location')}
-              onBlur={handleInputBlur('location')}
-              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-              className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-              autoComplete="street-address"
-            />
-          </div>
-        </div>
-
-        {/* Logo Upload */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Business Logo (Optional)</label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-teal-400 transition-colors">
-            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-2">Upload your logo</p>
-            <Button variant="outline" size="sm">
-              Choose File
-            </Button>
-            <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 2MB</p>
-          </div>
-        </div>
-
-        {/* Slogan */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Slogan (Optional)</label>
-          <Input
-            type="text"
-            placeholder="e.g. The best coffee in town"
-            defaultValue={formData.slogan}
-            ref={setInputRef('slogan')}
-            onBlur={handleInputBlur('slogan')}
-            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-            className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-          />
-        </div>
-
-        {/* Unique Description */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">What makes your business unique?</label>
-          <Textarea
-            placeholder="Tell us what sets you apart from the competition..."
-            defaultValue={formData.uniqueDescription}
-            ref={setInputRef('uniqueDescription')}
-            onBlur={handleInputBlur('uniqueDescription')}
-            className="w-full px-4 py-3 h-24 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
-          />
-        </div>
-      </div>
-      
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button 
-          onClick={nextStep} 
-          disabled={!formData.businessName || !formData.businessType}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const TemplateStep = () => {
+  // Step 1: Template Selection
+  const TemplateSelectionStep = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(formData.template);
 
     const handleTemplateSelect = useCallback((templateId: string) => {
       setSelectedTemplate(templateId);
       updateFormData('template', templateId);
-
-      // Auto-redirect to customization step after template selection
-      setTimeout(() => {
-        nextStep();
-      }, 500); // Small delay to show the selection feedback
-    }, [updateFormData, nextStep]);
+    }, [updateFormData]);
 
     return (
-      <div className="py-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Choose your template
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Select a design that matches your vision. Each template offers a unique look and feel.
-          </p>
+      <div className="py-12">
+        <div className="text-center mb-16">
+          <div className="mb-8">
+            <div className="w-20 h-20 mx-auto mb-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-2xl opacity-20"></div>
+              <div className="absolute inset-2 bg-white rounded-xl flex items-center justify-center">
+                <Palette className="w-10 h-10 text-teal-500" />
+              </div>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
+              Choose Your Perfect <span className="bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">Template</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Start with a professionally designed template that matches your business style. Each template is crafted for maximum impact and user experience.
+            </p>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
           {templates.map((template) => (
             <Card
               key={template.id}
-              className={`group cursor-pointer transition-all duration-300 hover:shadow-xl border-2 hover:border-teal-300 ${
+              className={`group cursor-pointer transition-all duration-500 hover:shadow-2xl border-2 ${
                 selectedTemplate === template.id 
-                  ? 'border-teal-500 shadow-xl transform scale-[1.02] bg-teal-50/30' 
-                  : 'border-gray-200 hover:bg-gray-50/50'
+                  ? 'border-teal-500 shadow-2xl scale-[1.02] bg-gradient-to-br from-teal-50/50 to-purple-50/50' 
+                  : 'border-gray-200 hover:border-teal-300 hover:scale-[1.01]'
               }`}
               onClick={() => handleTemplateSelect(template.id)}
             >
               <CardContent className="p-0">
-                <div className={`w-full h-52 rounded-t-lg ${template.preview} relative overflow-hidden`}>
-                  {/* Template Preview Content */}
+                <div className={`w-full h-48 rounded-t-lg ${template.preview} relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10"></div>
                   
-                  {/* Template Name Badge */}
                   <div className="absolute top-4 left-4">
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
                       selectedTemplate === template.id 
                         ? 'bg-teal-500 text-white' 
                         : 'bg-white/90 text-gray-700'
@@ -1584,25 +690,21 @@ export default function Configurator() {
                     </div>
                   </div>
 
-                  {/* Selection Indicator */}
                   {selectedTemplate === template.id && (
                     <div className="absolute top-4 right-4">
-                      <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center shadow-lg animate-in zoom-in duration-200">
+                      <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center shadow-lg">
                         <Check className="w-5 h-5 text-white" />
                       </div>
                     </div>
                   )}
 
-                  {/* Interactive Preview Elements */}
                   <div className="absolute bottom-4 left-4 right-4">
                     <div className="space-y-2">
-                      {/* Mock navigation */}
                       <div className="flex space-x-1">
                         {[1, 2, 3].map(i => (
                           <div key={i} className="w-8 h-1 bg-white/60 rounded-full"></div>
                         ))}
                       </div>
-                      {/* Mock content */}
                       <div className="space-y-1">
                         <div className="w-20 h-2 bg-white/80 rounded"></div>
                         <div className="w-16 h-1 bg-white/60 rounded"></div>
@@ -1617,20 +719,14 @@ export default function Configurator() {
                   }`}>
                     {template.name}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{template.description}</p>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">{template.description}</p>
                   
-                  {/* Template Features */}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {template.style.layout && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                        {template.style.layout.replace('-', ' ')}
+                  <div className="flex flex-wrap gap-2">
+                    {template.features.map((feature, index) => (
+                      <span key={index} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                        {feature}
                       </span>
-                    )}
-                    {template.style.navigation && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                        {template.style.navigation.replace('-', ' ')}
-                      </span>
-                    )}
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -1638,528 +734,260 @@ export default function Configurator() {
           ))}
         </div>
 
-        <div className="flex justify-between">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
+        <div className="flex justify-center">
           <Button
             onClick={nextStep}
             disabled={!selectedTemplate}
             size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
+            {selectedTemplate ? (
+              <>
+                Customize This Template
+                <ChevronRight className="ml-3 w-6 h-6" />
+              </>
+            ) : (
+              'Select a Template First'
+            )}
           </Button>
         </div>
       </div>
     );
   };
 
-  const BrandingStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Define your brand identity
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose colors and fonts that represent your business personality and create a memorable brand experience.
-        </p>
-      </div>
+  // Step 2: Design Personalization
+  const DesignPersonalizationStep = () => {
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
 
-      <div className="space-y-12">
-        {/* Color Themes */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Color Themes</label>
-          <p className="text-sm text-gray-500 mb-6">Choose a preset or customize your own colors below</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { primary: '#2563EB', secondary: '#7C3AED', name: 'Ocean', accent: '#0EA5E9' },
-              { primary: '#059669', secondary: '#10B981', name: 'Forest', accent: '#22C55E' },
-              { primary: '#DC2626', secondary: '#F59E0B', name: 'Sunset', accent: '#F97316' },
-              { primary: '#7C2D12', secondary: '#EA580C', name: 'Autumn', accent: '#F59E0B' },
-              { primary: '#1F2937', secondary: '#374151', name: 'Elegant', accent: '#6B7280' },
-              { primary: '#BE185D', secondary: '#EC4899', name: 'Vibrant', accent: '#F472B6' },
-              { primary: '#6366F1', secondary: '#8B5CF6', name: 'Purple', accent: '#A855F7' },
-              { primary: '#0891B2', secondary: '#06B6D4', name: 'Sky', accent: '#38BDF8' }
-            ].map((preset, index) => {
-              const isSelected = formData.primaryColor === preset.primary && formData.secondaryColor === preset.secondary;
-              return (
-                <button
-                  key={index}
-                  onClick={() => {
-                    updateFormData('primaryColor', preset.primary);
-                    updateFormData('secondaryColor', preset.secondary);
-                  }}
-                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
-                    isSelected 
-                      ? 'border-teal-500 bg-teal-50 shadow-lg transform scale-105' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="relative mb-3">
-                    <div className="flex space-x-1">
-                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.primary }}></div>
-                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.secondary }}></div>
-                    </div>
-                    {isSelected && (
-                      <div className="absolute -top-1 -right-1">
-                        <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-white" />
+    const colorPresets = [
+      { name: 'Ocean', primary: '#2563EB', secondary: '#7C3AED' },
+      { name: 'Forest', primary: '#059669', secondary: '#10B981' },
+      { name: 'Sunset', primary: '#DC2626', secondary: '#F59E0B' },
+      { name: 'Purple', primary: '#7C3AED', secondary: '#EC4899' },
+      { name: 'Teal', primary: '#0891B2', secondary: '#06B6D4' },
+      { name: 'Rose', primary: '#E11D48', secondary: '#F43F5E' }
+    ];
+
+    return (
+      <div className="py-12 max-w-5xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Personalize Your Design
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Make it yours with custom colors, fonts, logo, and background. See changes instantly in the live preview.
+          </p>
+        </div>
+
+        <div className="space-y-12">
+          {/* Color Themes */}
+          <Card className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Brand Colors</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+              {colorPresets.map((preset, index) => {
+                const isSelected = formData.primaryColor === preset.primary && formData.secondaryColor === preset.secondary;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      updateFormData('primaryColor', preset.primary);
+                      updateFormData('secondaryColor', preset.secondary);
+                    }}
+                    className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                      isSelected 
+                        ? 'border-teal-500 bg-teal-50 shadow-lg scale-105' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="relative mb-3">
+                      <div className="flex space-x-1">
+                        <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.primary }}></div>
+                        <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.secondary }}></div>
+                      </div>
+                      {isSelected && (
+                        <div className="absolute -top-1 -right-1">
+                          <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </div>
                         </div>
+                      )}
+                    </div>
+                    <span className={`text-sm font-medium ${isSelected ? 'text-teal-700' : 'text-gray-700'}`}>
+                      {preset.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom Colors */}
+            <div className="bg-gray-50 rounded-2xl p-6">
+              <h4 className="text-lg font-bold text-gray-900 mb-4">Custom Colors</h4>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">Primary Color</label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="color"
+                      value={formData.primaryColor}
+                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                      className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.primaryColor}
+                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                      className="font-mono"
+                      placeholder="#2563EB"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">Secondary Color</label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="color"
+                      value={formData.secondaryColor}
+                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                      className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.secondaryColor}
+                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
+                      className="font-mono"
+                      placeholder="#7C3AED"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Fonts */}
+          <Card className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Typography</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {fontOptions.map((font) => (
+                <Card
+                  key={font.id}
+                  className={`cursor-pointer transition-all duration-300 border-2 ${
+                    formData.fontFamily === font.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                  }`}
+                  onClick={() => updateFormData('fontFamily', font.id)}
+                >
+                  <CardContent className="p-4 text-center">
+                    <div className={`text-lg font-bold mb-2 ${font.class}`}>{font.name}</div>
+                    <div className={`text-sm text-gray-600 ${font.class}`}>{font.preview}</div>
+                    <div className="text-xs text-gray-500 mt-2">{font.description}</div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </Card>
+
+          {/* Logo Upload */}
+          <Card className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Business Logo</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-teal-400 transition-colors">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">Upload Your Logo</h4>
+                  <p className="text-gray-600 text-sm mb-4">PNG, JPG up to 5MB</p>
+                  <Button 
+                    variant="outline"
+                    className="border-teal-500 text-teal-600 hover:bg-teal-50"
+                  >
+                    Choose Logo File
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4">Logo Preview</h4>
+                  <div className="w-32 h-32 bg-white rounded-xl border-2 border-gray-200 flex items-center justify-center">
+                    {logoFile ? (
+                      <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                    ) : (
+                      <div className="text-center">
+                        <Building className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <span className="text-xs text-gray-500">No logo uploaded</span>
                       </div>
                     )}
                   </div>
-                  <span className={`text-sm font-medium transition-colors ${
-                    isSelected ? 'text-teal-700' : 'text-gray-700'
-                  }`}>
-                    {preset.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Custom Color Section */}
-        <div className="bg-gray-50 rounded-2xl p-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Custom Colors</h3>
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Primary Color */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-4">Primary Color</label>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={formData.primaryColor}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      updateFormData('primaryColor', e.target.value);
-                    }}
-                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
-                    style={{ WebkitAppearance: 'none', padding: '4px' }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    defaultValue={formData.primaryColor}
-                    ref={setInputRef('primaryColor')}
-                    onBlur={handleInputBlur('primaryColor')}
-                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                    placeholder="#2563EB"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Main brand color</p>
                 </div>
               </div>
-            </div>
-
-            {/* Secondary Color */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-4">Secondary Color</label>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={formData.secondaryColor}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      updateFormData('secondaryColor', e.target.value);
-                    }}
-                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
-                    style={{ WebkitAppearance: 'none', padding: '4px' }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    defaultValue={formData.secondaryColor}
-                    ref={setInputRef('secondaryColor')}
-                    onBlur={handleInputBlur('secondaryColor')}
-                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                    placeholder="#7C3AED"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Accent color</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Font Selection */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Font Style</label>
-          <div className="grid grid-cols-3 gap-4">
-            {fontOptions.map((font) => (
-              <Card
-                key={font.id}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  formData.fontFamily === font.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-                }`}
-                onClick={() => updateFormData('fontFamily', font.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className={`text-lg font-bold mb-2 ${font.class}`}>{font.name}</div>
-                  <div className={`text-sm text-gray-600 ${font.class}`}>{font.preview}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const PageStructureStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Select your pages
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose which pages your website will include. You can always add more later.
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {pageOptions.map((page) => {
-          const isSelected = formData.selectedPages.includes(page.id);
-          const isVisible = !page.condition || page.condition.includes(formData.businessType);
-
-          if (!isVisible) return null;
-
-          return (
-            <Card
-              key={page.id}
-              className={`cursor-pointer transition-all duration-300 border-2 ${
-                isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-              } ${page.required ? 'opacity-75' : ''}`}
-              onClick={() => {
-                if (page.required) return;
-                const newPages = isSelected
-                  ? formData.selectedPages.filter(p => p !== page.id)
-                  : [...formData.selectedPages, page.id];
-                updateFormData('selectedPages', newPages);
-              }}
-            >
-              <CardContent className="p-6 text-center">
-                <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-r ${
-                  isSelected ? 'from-teal-500 to-purple-500' : 'from-gray-400 to-gray-500'
-                } flex items-center justify-center text-white`}>
-                  {page.icon}
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">{page.name}</h3>
-                {page.required && (
-                  <p className="text-xs text-gray-500">Required</p>
-                )}
-                {isSelected && !page.required && (
-                  <div className="mt-2">
-                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const OpeningHoursStep = () => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-    return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Set your opening hours
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            When are you open for business? This helps customers know when to visit.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {days.map((day) => {
-            const hours = formData.openingHours[day] || { open: '09:00', close: '17:00', closed: false };
-
-            return (
-              <Card key={day} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-24">
-                      <h3 className="font-semibold text-gray-900">{day}</h3>
-                    </div>
-                    <Button
-                      variant={hours.closed ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        const newHours = {
-                          ...formData.openingHours,
-                          [day]: { ...hours, closed: !hours.closed }
-                        };
-                        updateFormData('openingHours', newHours);
-                      }}
-                    >
-                      {hours.closed ? 'Closed' : 'Open'}
-                    </Button>
-                  </div>
-
-                  {!hours.closed && (
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="time"
-                        defaultValue={hours.open}
-                        onChange={(e) => {
-                          const newHours = {
-                            ...formData.openingHours,
-                            [day]: { ...hours, open: e.target.value }
-                          };
-                          updateFormData('openingHours', newHours);
-                        }}
-                        className="w-32"
-                      />
-                      <span className="text-gray-500">to</span>
-                      <Input
-                        type="time"
-                        defaultValue={hours.close}
-                        onChange={(e) => {
-                          const newHours = {
-                            ...formData.openingHours,
-                            [day]: { ...hours, close: e.target.value }
-                          };
-                          updateFormData('openingHours', newHours);
-                        }}
-                        className="w-32"
-                      />
-                    </div>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const MenuProductsStep = () => {
-    const [newItem, setNewItem] = useState({ name: '', description: '', price: '' });
-
-    const addMenuItem = () => {
-      if (newItem.name && newItem.price) {
-        const updatedItems = [...formData.menuItems, { ...newItem, id: Date.now().toString() }];
-        updateFormData('menuItems', updatedItems);
-        setNewItem({ name: '', description: '', price: '' });
-      }
-    };
-
-    const removeMenuItem = (index: number) => {
-      const updatedItems = formData.menuItems.filter((_, i) => i !== index);
-      updateFormData('menuItems', updatedItems);
-    };
-
-    return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Add your menu or products
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Showcase what you offer. You can add items manually or upload your menu.
-          </p>
-        </div>
-
-        {/* Upload Options */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Image Upload */}
-          <Card className="p-6">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <Camera className="w-8 h-8 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Menu Image</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Upload a photo of your existing menu
-              </p>
-              <Button
-                variant="outline"
-                className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Choose Image File
-              </Button>
-              <p className="text-xs text-gray-500 mt-2">JPG, PNG up to 10MB</p>
             </div>
           </Card>
 
-          {/* CSV Upload */}
-          <Card className="p-6">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-2xl flex items-center justify-center">
-                <Upload className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Upload CSV File</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Upload structured menu data as CSV
-              </p>
-              <Button
-                variant="outline"
-                className="w-full border-2 border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 text-green-700"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Choose CSV File
-              </Button>
-              <p className="text-xs text-gray-500 mt-2">Format: name,description,price</p>
-            </div>
-          </Card>
-        </div>
-
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-4">
-            <div className="h-px bg-gray-300 flex-1"></div>
-            <span className="text-gray-500 font-medium">OR</span>
-            <div className="h-px bg-gray-300 flex-1"></div>
-          </div>
-        </div>
-
-        {/* Add New Item Form */}
-        <Card className="p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Item</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Item Name *</label>
-              <Input
-                type="text"
-                placeholder="e.g. Signature Latte"
-                value={newItem.name}
-                onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-              <Input
-                type="text"
-                placeholder="Brief description"
-                value={newItem.description}
-                onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Price *</label>
-              <div className="flex">
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="9.99"
-                  value={newItem.price}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, price: e.target.value }))}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={addMenuItem}
-                  disabled={!newItem.name || !newItem.price}
-                  className="ml-2 bg-teal-500 hover:bg-teal-600"
+          {/* Background */}
+          <Card className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Background Style</h3>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {backgroundOptions.map((bg) => (
+                <Card
+                  key={bg.id}
+                  className={`cursor-pointer transition-all duration-300 border-2 ${
+                    formData.backgroundType === bg.type ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                  }`}
+                  onClick={() => updateFormData('backgroundType', bg.type)}
                 >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+                  <CardContent className="p-4 text-center">
+                    <div className={`w-full h-16 rounded-lg mb-3 ${bg.preview}`}></div>
+                    <div className="text-sm font-bold text-gray-900">{bg.name}</div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </div>
-        </Card>
 
-        {/* Menu Items List */}
-        {formData.menuItems.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-lg font-bold text-gray-900">Your Menu Items</h3>
-            {formData.menuItems.map((item, index) => (
-              <Card key={index} className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                    {item.description && (
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg font-bold text-teal-600">${item.price}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeMenuItem(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+            {formData.backgroundType === 'color' && (
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">Background Color</label>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="color"
+                    value={formData.backgroundColor}
+                    onChange={(e) => updateFormData('backgroundColor', e.target.value)}
+                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300"
+                  />
+                  <Input
+                    type="text"
+                    value={formData.backgroundColor}
+                    onChange={(e) => updateFormData('backgroundColor', e.target.value)}
+                    className="font-mono"
+                    placeholder="#FFFFFF"
+                  />
                 </div>
-              </Card>
-            ))}
-          </div>
-        )}
+              </div>
+            )}
 
-        <div className="flex justify-between mt-8">
+            {formData.backgroundType === 'image' && (
+              <div>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-teal-400 transition-colors">
+                  <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Upload background image</p>
+                  <Button variant="outline" size="sm">
+                    Choose Image
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <div className="flex justify-between mt-12">
           <Button onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
+            Back to Templates
           </Button>
           <Button
             onClick={nextStep}
             size="lg"
             className="bg-gradient-to-r from-teal-500 to-purple-500"
           >
-            Continue
+            Continue to Business Info
             <ChevronRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
@@ -2167,161 +995,188 @@ export default function Configurator() {
     );
   };
 
-  const ReservationsStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Setup reservations
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Enable table bookings for your business. Perfect for restaurants and cafés.
-        </p>
-      </div>
+  // Step 3: Business Information
+  const BusinessInformationStep = () => {
+    const [menuFile, setMenuFile] = useState<File | null>(null);
+    const [csvFile, setCsvFile] = useState<File | null>(null);
 
-      <div className="space-y-8">
-        {/* Enable Reservations Toggle */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Enable Reservations</h3>
-              <p className="text-gray-600">Allow customers to book tables online</p>
-            </div>
-            <Button
-              variant={formData.reservationsEnabled ? "default" : "outline"}
-              onClick={() => updateFormData('reservationsEnabled', !formData.reservationsEnabled)}
-              className={formData.reservationsEnabled ? 'bg-teal-500 hover:bg-teal-600' : ''}
-            >
-              {formData.reservationsEnabled ? 'Enabled' : 'Disabled'}
-            </Button>
-          </div>
-        </Card>
-
-        {formData.reservationsEnabled && (
-          <>
-            {/* Maximum Guests */}
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Booking Settings</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Maximum party size</label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="50"
-                    defaultValue={formData.maxGuests.toString()}
-                    onChange={(e) => updateFormData('maxGuests', parseInt(e.target.value) || 10)}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Notification method</label>
-                  <select
-                    value={formData.notificationMethod}
-                    onChange={(e) => updateFormData('notificationMethod', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  >
-                    <option value="email">Email</option>
-                    <option value="phone">Phone</option>
-                    <option value="both">Email & Phone</option>
-                  </select>
-                </div>
-              </div>
-            </Card>
-
-            {/* Time Slots */}
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Available Time Slots</h3>
-              <p className="text-gray-600 mb-4">Set the times when customers can make reservations</p>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {Array.from({ length: 14 }, (_, i) => {
-                  const hour = 10 + i;
-                  const time = `${hour}:00`;
-                  const isSelected = formData.timeSlots.includes(time);
-
-                  return (
-                    <Button
-                      key={time}
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        const newSlots = isSelected
-                          ? formData.timeSlots.filter(slot => slot !== time)
-                          : [...formData.timeSlots, time];
-                        updateFormData('timeSlots', newSlots);
-                      }}
-                      className={isSelected ? 'bg-teal-500 hover:bg-teal-600' : ''}
-                    >
-                      {time}
-                    </Button>
-                  );
-                })}
-              </div>
-            </Card>
-          </>
-        )}
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const ContactSocialStep = () => {
     const contactMethods = [
       { id: 'phone', icon: <Phone className="w-5 h-5" />, label: 'Phone', placeholder: '+1 (555) 123-4567' },
       { id: 'email', icon: <Mail className="w-5 h-5" />, label: 'Email', placeholder: 'hello@yourbusiness.com' },
       { id: 'address', icon: <MapPin className="w-5 h-5" />, label: 'Address', placeholder: '123 Main St, City, State' }
     ];
 
-    const socialPlatforms = [
-      { id: 'instagram', icon: <Instagram className="w-5 h-5" />, label: 'Instagram', placeholder: '@yourbusiness' },
-      { id: 'facebook', icon: <Facebook className="w-5 h-5" />, label: 'Facebook', placeholder: 'facebook.com/yourbusiness' }
-    ];
-
-    // Get current contact values (array format for backend compatibility)
-    const getContactValue = (methodId: string) => {
-      if (!formData.contactMethods) return '';
-      if (Array.isArray(formData.contactMethods)) {
-        const contact = formData.contactMethods.find(c => c.type === methodId);
-        return contact ? contact.value : '';
-      }
-      // Fallback for old object format
-      return formData.contactMethods[methodId] || '';
-    };
-
-    const getSocialValue = (platformId: string) => {
-      if (!formData.socialMedia) return '';
-      return formData.socialMedia[platformId] || '';
-    };
-
     return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
+      <div className="py-12 max-w-5xl mx-auto">
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Contact & social media
+            Complete Your Business Information
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            How can customers reach you? Add your contact information and social media links.
+            Add your business details and upload files to complete your website. Your information will appear across your site.
           </p>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-12">
+          {/* Business Basics */}
+          <Card className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Business Details</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Business Name *</label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Bella's Café"
+                  defaultValue={formData.businessName}
+                  ref={setInputRef('businessName')}
+                  onBlur={handleInputBlur('businessName')}
+                  className="text-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Business Type *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {businessTypes.map((type) => (
+                    <Card
+                      key={type.value}
+                      className={`cursor-pointer transition-all duration-300 border-2 ${
+                        formData.businessType === type.value ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                      }`}
+                      onClick={() => updateFormData('businessType', type.value)}
+                    >
+                      <CardContent className="p-3 text-center">
+                        <div className={`w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-r ${type.gradient} flex items-center justify-center text-white`}>
+                          {type.icon}
+                        </div>
+                        <div className="text-xs font-bold text-gray-900">{type.label}</div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="123 Main Street, City, State"
+                    defaultValue={formData.location}
+                    ref={setInputRef('location')}
+                    onBlur={handleInputBlur('location')}
+                    className="pl-12"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Business Slogan</label>
+                <Input
+                  type="text"
+                  placeholder="e.g. The best coffee in town"
+                  defaultValue={formData.slogan}
+                  ref={setInputRef('slogan')}
+                  onBlur={handleInputBlur('slogan')}
+                />
+              </div>
+            </div>
+            <div className="mt-6">
+              <label className="block text-sm font-bold text-gray-700 mb-2">What makes your business unique?</label>
+              <Textarea
+                placeholder="Tell us what sets you apart from the competition..."
+                defaultValue={formData.uniqueDescription}
+                ref={setInputRef('uniqueDescription')}
+                onBlur={handleInputBlur('uniqueDescription')}
+                className="h-24 resize-none"
+              />
+            </div>
+          </Card>
+
+          {/* File Uploads */}
+          <Card className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Menu & Content Upload</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Menu Image Upload */}
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-4">Menu Image</h4>
+                <div className="border-2 border-dashed border-orange-300 rounded-xl p-6 text-center hover:border-orange-400 transition-colors">
+                  <div className="w-12 h-12 mx-auto mb-3 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Upload a photo of your menu</p>
+                  <Button
+                    variant="outline"
+                    className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                    onClick={() => document.getElementById('menu-upload')?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Menu Image
+                  </Button>
+                  <input
+                    id="menu-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setMenuFile(file);
+                        updateFormData('menuFile', file);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-gray-500 mt-2">PNG, JPG, JPEG up to 10MB</p>
+                  {menuFile && (
+                    <div className="mt-3 p-2 bg-orange-50 rounded border border-orange-200">
+                      <p className="text-xs text-orange-700">✓ {menuFile.name}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* CSV Upload */}
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-4">Menu Data (CSV)</h4>
+                <div className="border-2 border-dashed border-green-300 rounded-xl p-6 text-center hover:border-green-400 transition-colors">
+                  <div className="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-xl flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-green-600" />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Upload structured menu data</p>
+                  <Button
+                    variant="outline"
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    onClick={() => document.getElementById('csv-upload')?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose CSV File
+                  </Button>
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setCsvFile(file);
+                        updateFormData('csvFile', file);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Format: name,description,price</p>
+                  {csvFile && (
+                    <div className="mt-3 p-2 bg-green-50 rounded border border-green-200">
+                      <p className="text-xs text-green-700">✓ {csvFile.name}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+
           {/* Contact Information */}
-          <Card className="p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Contact Information</h3>
-            <div className="space-y-4">
+          <Card className="p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Contact Information</h3>
+            <div className="grid md:grid-cols-2 gap-6">
               {contactMethods.map((method) => (
                 <div key={method.id}>
                   <label className="block text-sm font-bold text-gray-700 mb-2">{method.label}</label>
@@ -2332,7 +1187,9 @@ export default function Configurator() {
                     <Input
                       type="text"
                       placeholder={method.placeholder}
-                      defaultValue={getContactValue(method.id)}
+                      defaultValue={Array.isArray(formData.contactMethods) 
+                        ? formData.contactMethods.find(c => c.type === method.id)?.value || ''
+                        : ''}
                       ref={setInputRef(`contact_${method.id}`)}
                       onBlur={handleInputBlur(`contact_${method.id}`)}
                       className="pl-12"
@@ -2342,847 +1199,60 @@ export default function Configurator() {
               ))}
             </div>
           </Card>
-
-          {/* Social Media */}
-          <Card className="p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Social Media</h3>
-            <div className="space-y-4">
-              {socialPlatforms.map((platform) => (
-                <div key={platform.id}>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">{platform.label}</label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-3 text-gray-400">
-                      {platform.icon}
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder={platform.placeholder}
-                      defaultValue={getSocialValue(platform.id)}
-                      ref={setInputRef(`social_${platform.id}`)}
-                      onBlur={handleInputBlur(`social_${platform.id}`)}
-                      className="pl-12"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Instagram Sync */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-md font-bold text-gray-900">Instagram Integration</h4>
-                  <p className="text-sm text-gray-600">Automatically sync your Instagram posts to your website</p>
-                </div>
-                <Button
-                  variant={formData.instagramSync ? "default" : "outline"}
-                  onClick={() => updateFormData('instagramSync', !formData.instagramSync)}
-                  className={formData.instagramSync ? 'bg-teal-500 hover:bg-teal-600' : ''}
-                >
-                  {formData.instagramSync ? 'Enabled' : 'Disabled'}
-                </Button>
-              </div>
-            </div>
-          </Card>
         </div>
 
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between mt-12">
           <Button onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
+            Back to Design
           </Button>
           <Button
-            onClick={nextStep}
+            onClick={() => {
+              updateFormDataFromInputs();
+              saveToBackend(formData as Partial<Configuration>);
+            }}
+            disabled={!formData.businessName || !formData.businessType}
             size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
+            className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600"
           >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
+            <Rocket className="mr-2 w-5 h-5" />
+            Complete & Save Website
           </Button>
         </div>
       </div>
     );
   };
 
-  const MediaGalleryStep = () => {
-    return (
-      <div className="py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Gallery & Photos
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Showcase your business with beautiful photos when you enable the Gallery page.
-          </p>
-        </div>
-
-        {/* Only show upload area if Gallery page is selected */}
-        {formData.selectedPages.includes('gallery') ? (
-          <div className="space-y-8">
-            {/* Photo Upload Area */}
-            <Card className="p-8">
-              <div className="text-center">
-                <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Photos for Gallery</h3>
-                <p className="text-gray-600 mb-6">Drag and drop images or click to browse. Images will be displayed in square format.</p>
-                <Button className="bg-teal-500 hover:bg-teal-600">
-                  <Camera className="w-4 h-4 mr-2" />
-                  Choose Photos
-                </Button>
-                <p className="text-xs text-gray-500 mt-2">
-                  Supports JPG, PNG up to 10MB each. Images will be cropped to 1:1 square format automatically.
-                </p>
-              </div>
-            </Card>
-
-            {/* Gallery Preview - Square 1:1 format */}
-            {formData.gallery.length > 0 && (
-              <Card className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Your Gallery (Square Format)</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {formData.gallery.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden border-2 border-teal-200">
-                        <img
-                          src={image.url}
-                          alt={image.alt || `Gallery image ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white"
-                        onClick={() => {
-                          const newGallery = formData.gallery.filter((_, i) => i !== index);
-                          updateFormData('gallery', newGallery);
-                        }}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* Tips */}
-            <Card className="p-6 bg-teal-50 border-teal-200">
-              <h3 className="text-lg font-bold text-teal-900 mb-4">📸 Photo Tips</h3>
-              <ul className="space-y-2 text-sm text-teal-800">
-                <li>• Use natural lighting when possible</li>
-                <li>• Show your products, space, and team in action</li>
-                <li>• Include wide shots of your interior/exterior</li>
-                <li>• Capture the atmosphere and mood of your business</li>
-                <li>• Avoid blurry or dark photos</li>
-                <li>• Images will be automatically cropped to square (1:1) format for gallery display</li>
-              </ul>
-            </Card>
-          </div>
-        ) : (
-          /* Show message when Gallery page is not selected */
-          <Card className="p-8">
-            <div className="text-center">
-              <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Gallery Page Not Selected</h3>
-              <p className="text-gray-600 mb-6">
-                To upload photos, first enable the "Gallery" page in the page selection step.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => setCurrentStep(configuratorSteps.findIndex(step => step.id === 'page-structure'))}
-                className="border-teal-500 text-teal-600 hover:bg-teal-50"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Go Back to Select Pages
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const AdvancedFeaturesStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Advanced features
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Enable additional functionality to enhance your website and business operations.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {/* Online Ordering */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Online Ordering</h3>
-                <p className="text-gray-600">Allow customers to order food for pickup or delivery</p>
-                <div className="mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                  <p className="text-sm text-orange-800">
-                    💡 <strong>What this does:</strong> Customers can browse your menu, add items to cart, and place orders directly through your website. Perfect for restaurants and cafés wanting to reduce phone orders and increase sales.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <Button
-              variant={formData.onlineOrdering ? "default" : "outline"}
-              onClick={() => updateFormData('onlineOrdering', !formData.onlineOrdering)}
-              className={formData.onlineOrdering ? 'bg-teal-500 hover:bg-teal-600' : ''}
-            >
-              {formData.onlineOrdering ? 'Enabled' : 'Enable'}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Online Store */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Store className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Online Store</h3>
-                <p className="text-gray-600">Sell products online with integrated payments</p>
-                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    💡 <strong>What this does:</strong> Transform your website into a full e-commerce store. Sell merchandise, gift cards, or retail products with secure payment processing, inventory management, and order tracking.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <Button
-              variant={formData.onlineStore ? "default" : "outline"}
-              onClick={() => updateFormData('onlineStore', !formData.onlineStore)}
-              className={formData.onlineStore ? 'bg-teal-500 hover:bg-teal-600' : ''}
-            >
-              {formData.onlineStore ? 'Enabled' : 'Enable'}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Team/Staff Area */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Team Showcase</h3>
-                <p className="text-gray-600">Display your team members and their roles</p>
-              </div>
-            </div>
-            <Button
-              variant={formData.teamArea ? "default" : "outline"}
-              onClick={() => updateFormData('teamArea', !formData.teamArea)}
-              className={formData.teamArea ? 'bg-teal-500 hover:bg-teal-600' : ''}
-            >
-              {formData.teamArea ? 'Enabled' : 'Enable'}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Analytics & Insights */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Zap className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Analytics & Insights</h3>
-                <p className="text-gray-600">Track website visitors and customer behavior</p>
-              </div>
-            </div>
-            <Button
-              variant="default"
-              className="bg-teal-500 hover:bg-teal-600"
-            >
-              Included
-            </Button>
-          </div>
-        </Card>
-
-        {/* SEO Optimization */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                <Eye className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">SEO Optimization</h3>
-                <p className="text-gray-600">Help customers find you on Google and search engines</p>
-              </div>
-            </div>
-            <Button
-              variant="default"
-              className="bg-teal-500 hover:bg-teal-600"
-            >
-              Included
-            </Button>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const DomainHostingStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Choose your domain
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Select how customers will find your website online. You can use your own domain or get started with a free subdomain.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {/* Use Existing Domain */}
-        <Card className={`p-6 cursor-pointer border-2 transition-all ${
-          formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-        }`} onClick={() => updateFormData('hasDomain', true)}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Globe className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Use my own domain</h3>
-                <p className="text-gray-600">Connect your existing domain (e.g., yourbusiness.com)</p>
-              </div>
-            </div>
-            {formData.hasDomain && (
-              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-            )}
-          </div>
-
-          {formData.hasDomain && (
-            <div
-              className="mt-4 pt-4 border-t border-gray-200"
-              onClick={(e) => e.stopPropagation()} // Prevent card click when interacting with input
-            >
-              <label className="block text-sm font-bold text-gray-700 mb-2">Your domain name</label>
-              <Input
-                type="text"
-                placeholder="yourbusiness.com"
-                defaultValue={formData.domainName}
-                ref={setInputRef('domainName')}
-                onBlur={handleInputBlur('domainName')}
-                onKeyDown={(e) => {
-                  e.stopPropagation(); // Prevent any parent handlers
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleInputBlur('domainName')(); // Save on Enter
-                  }
-                }}
-                className="w-full focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                autoComplete="url"
-              />
-              <div className="flex items-start justify-between mt-2">
-                <p className="text-xs text-gray-500">
-                  Don't worry - we'll help you connect this later
-                </p>
-                <div className="text-xs text-gray-400 ml-2">
-                  <Globe className="w-3 h-3 inline mr-1" />
-                  Custom domain
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Free Subdomain */}
-        <Card className={`p-6 cursor-pointer border-2 transition-all ${
-          !formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-        }`} onClick={() => updateFormData('hasDomain', false)}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Zap className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Free subdomain</h3>
-                <p className="text-gray-600">Get started with a free .synca.app subdomain</p>
-              </div>
-            </div>
-            {!formData.hasDomain && (
-              <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
-              </div>
-            )}
-          </div>
-
-          {!formData.hasDomain && (
-            <div
-              className="mt-4 pt-4 border-t border-gray-200"
-              onClick={(e) => e.stopPropagation()} // Prevent card click when interacting with input
-            >
-              <label className="block text-sm font-bold text-gray-700 mb-2">Choose your subdomain</label>
-              <div className="flex items-center bg-gray-50 rounded-lg border border-gray-300 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
-                <Input
-                  type="text"
-                  placeholder="yourbusiness"
-                  defaultValue={formData.selectedDomain}
-                  ref={setInputRef('selectedDomain')}
-                  onBlur={handleInputBlur('selectedDomain')}
-                  onKeyDown={(e) => {
-                    e.stopPropagation(); // Prevent any parent handlers
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleInputBlur('selectedDomain')(); // Save on Enter
-                    }
-                    // Only allow valid subdomain characters
-                    if (!/[a-zA-Z0-9-]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="flex-1 border-0 bg-transparent focus:ring-0 focus:border-0"
-                  autoComplete="username"
-                />
-                <span className="pr-3 text-gray-500 font-mono text-sm">.synca.app</span>
-              </div>
-              <div className="flex items-start justify-between mt-2">
-                <p className="text-xs text-gray-500">
-                  Your website will be available at <span className="font-mono font-medium">{formData.selectedDomain || 'yourbusiness'}.synca.app</span>
-                </p>
-                <div className="text-xs text-green-600 ml-2">
-                  <Zap className="w-3 h-3 inline mr-1" />
-                  Free
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Domain Features */}
-        <Card className="p-6 bg-gray-50">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">What's included with hosting</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex items-center space-x-3">
-              <Shield className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-gray-700">SSL security (HTTPS)</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Zap className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-gray-700">Fast global CDN</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Cloud className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-gray-700">Automatic backups</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Wifi className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-gray-700">99.9% uptime</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const PreviewAdjustmentsStep = () => (
-    <div className="py-8 max-w-6xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Preview & final tweaks
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Review your website and make any final adjustments before publishing.
-        </p>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Website Preview */}
-        <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Website Preview</h3>
-          <Card className="p-4">
-            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-              <div className="w-full h-full bg-gradient-to-br from-teal-50 to-purple-50 flex items-center justify-center">
-                <div className="text-center">
-                  <Play className="w-16 h-16 text-teal-500 mx-auto mb-4" />
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">{formData.businessName || 'Your Business'}</h4>
-                  <p className="text-gray-600">{formData.slogan || 'Your website preview'}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-center mt-4">
-              <Button className="bg-teal-500 hover:bg-teal-600">
-                <Eye className="w-4 h-4 mr-2" />
-                Full Preview
-              </Button>
-            </div>
-          </Card>
-        </div>
-
-        {/* Quick Settings */}
-        <div>
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Adjustments</h3>
-          <div className="space-y-4">
-            {/* Business Name */}
-            <Card className="p-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Business Name</label>
-              <Input
-                type="text"
-                defaultValue={formData.businessName}
-                ref={setInputRef('businessName')}
-                onBlur={handleInputBlur('businessName')}
-                className="w-full"
-              />
-            </Card>
-
-            {/* Colors */}
-            <Card className="p-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Brand Colors</label>
-              <div className="flex space-x-4">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="color"
-                      value={formData.primaryColor}
-                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
-                      className="w-10 h-10 rounded border-2 border-gray-300"
-                    />
-                    <span className="text-sm text-gray-600">Primary</span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="color"
-                      value={formData.secondaryColor}
-                      onChange={(e) => updateFormData('secondaryColor', e.target.value)}
-                      className="w-10 h-10 rounded border-2 border-gray-300"
-                    />
-                    <span className="text-sm text-gray-600">Secondary</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Template */}
-            <Card className="p-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Template Style</label>
-              <select
-                value={formData.template}
-                onChange={(e) => updateFormData('template', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              >
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-            </Card>
-
-            {/* Domain */}
-            <Card className="p-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Website URL</label>
-              <div className="flex items-center">
-                {formData.hasDomain ? (
-                  <Input
-                    type="text"
-                    defaultValue={formData.domainName}
-                    ref={setInputRef('domainName')}
-                    onBlur={handleInputBlur('domainName')}
-                    className="flex-1"
-                  />
-                ) : (
-                  <>
-                    <Input
-                      type="text"
-                      defaultValue={formData.selectedDomain}
-                      ref={setInputRef('selectedDomain')}
-                      onBlur={handleInputBlur('selectedDomain')}
-                      className="flex-1"
-                    />
-                    <span className="ml-2 text-gray-500">.synca.app</span>
-                  </>
-                )}
-              </div>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Ready to Publish
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const PublishStep = () => (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <div className="w-24 h-24 mx-auto mb-6 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
-          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-            <Rocket className="w-12 h-12 text-teal-500" />
-          </div>
-        </div>
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Publish your website
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          You're all set! Your website is ready to go live and start attracting customers.
-        </p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <Card className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Website Summary</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Business:</span>
-              <span className="font-semibold">{formData.businessName || 'Your Business'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Type:</span>
-              <span className="font-semibold">{businessTypes.find(t => t.value === formData.businessType)?.label || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Template:</span>
-              <span className="font-semibold">{templates.find(t => t.id === formData.template)?.name || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Pages:</span>
-              <span className="font-semibold">{formData.selectedPages.length} pages</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Your URL</h3>
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <p className="text-lg font-mono text-gray-900">
-              {formData.hasDomain
-                ? formData.domainName || 'yourdomain.com'
-                : `${formData.selectedDomain || 'yourbusiness'}.synca.app`
-              }
-            </p>
-          </div>
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex items-center space-x-2">
-              <Shield className="w-4 h-4 text-green-600" />
-              <span>SSL secured (HTTPS)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Globe className="w-4 h-4 text-green-600" />
-              <span>Mobile responsive</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Zap className="w-4 h-4 text-green-600" />
-              <span>Fast loading</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Publish Actions */}
-      <div className="space-y-6">
-        {publishStatus === 'published' && publishedUrl ? (
-          <Card className="p-8 text-center bg-green-50 border-green-200">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-green-900 mb-2">🎉 Your website is live!</h3>
-            <p className="text-green-700 mb-6">Congratulations! Your website has been successfully published.</p>
-            <div className="space-y-4">
-              <Button
-                size="lg"
-                onClick={() => window.open(publishedUrl, '_blank')}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Globe className="w-5 h-5 mr-2" />
-                Visit Your Website
-              </Button>
-              <div className="flex justify-center space-x-4">
-                <Button variant="outline" size="sm">
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Edit
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ) : (
-          <Card className="p-8 text-center">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Ready to launch?</h3>
-            <p className="text-gray-600 mb-6">
-              Your website will be live in seconds. You can always make changes later.
-            </p>
-            <Button
-              size="lg"
-              onClick={publishConfiguration}
-              disabled={publishStatus === 'publishing'}
-              className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-4 text-xl font-bold rounded-full shadow-2xl animate-glow"
-            >
-              {publishStatus === 'publishing' ? (
-                <>
-                  <Cloud className="w-6 h-6 mr-3 animate-pulse" />
-                  Publishing...
-                </>
-              ) : (
-                <>
-                  <Rocket className="w-6 h-6 mr-3" />
-                  Publish Website
-                </>
-              )}
-            </Button>
-          </Card>
-        )}
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        {publishStatus === 'published' && (
-          <Button
-            size="lg"
-            onClick={() => window.location.href = '/dashboard'}
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Go to Dashboard
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-
-  // Render current step
-  const renderCurrentStep = () => {
-    const step = configuratorSteps[currentStep];
-    
-    switch (step.component) {
-      case 'welcome': return <WelcomeStep />;
-      case 'business-info': return <BusinessInfoStep />;
-      case 'template': return <TemplateStep />;
-      case 'branding': return <BrandingStep />;
-      case 'page-structure': return <PageStructureStep />;
-      case 'opening-hours': return <OpeningHoursStep />;
-      case 'menu-products': return <MenuProductsStep />;
-      case 'reservations': return <ReservationsStep />;
-      case 'contact-social': return <ContactSocialStep />;
-      case 'media-gallery': return <MediaGalleryStep />;
-      case 'advanced-features': return <AdvancedFeaturesStep />;
-      case 'domain-hosting': return <DomainHostingStep />;
-      case 'preview-adjustments': return <PreviewAdjustmentsStep />;
-      case 'publish': return <PublishStep />;
-      default: return (
-        <div className="py-16 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h2>
-          <p className="text-gray-600 mb-8">{step.description}</p>
-          <div className="text-sm text-gray-500 mb-8">This step is coming soon...</div>
-          <div className="flex justify-between max-w-md mx-auto">
-            <Button onClick={prevStep} variant="outline" size="lg">
-              <ArrowLeft className="mr-2 w-5 h-5" />
-              Back
-            </Button>
-            <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">
-              Continue
-              <ChevronRight className="ml-2 w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-      );
+  // Main render function
+  const renderStepContent = () => {
+    switch (configuratorSteps[currentStep]?.component) {
+      case 'template-selection':
+        return <TemplateSelectionStep />;
+      case 'design-personalization':
+        return <DesignPersonalizationStep />;
+      case 'business-information':
+        return <BusinessInformationStep />;
+      default:
+        return <TemplateSelectionStep />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className={`min-h-screen bg-white transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       <Navigation />
-
-      {/* Main Content */}
+      
       <div className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Configurator Content */}
-            <div className="lg:col-span-2">
-              <div className="min-h-[80vh] text-gray-900">
-                {renderCurrentStep()}
-              </div>
+        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <div className="min-h-[80vh]">
+              {renderStepContent()}
             </div>
-
-            {/* Live Preview Sidebar */}
-            <div className="hidden lg:block">
-              <LivePreview />
-            </div>
+          </div>
+          
+          {/* Live Preview */}
+          <div className="hidden lg:block">
+            <LivePreview />
           </div>
         </div>
       </div>
