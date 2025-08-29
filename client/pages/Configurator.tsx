@@ -131,13 +131,13 @@ export default function Configurator() {
 
   // Add to cart function
   const addToCart = useCallback((item: any) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(cartItem => cartItem.name === item.name);
+    setCartItems((prev) => {
+      const existingItem = prev.find((cartItem) => cartItem.name === item.name);
       if (existingItem) {
-        return prev.map(cartItem =>
+        return prev.map((cartItem) =>
           cartItem.name === item.name
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
+            : cartItem,
         );
       }
       return [...prev, { ...item, quantity: 1 }];
@@ -146,7 +146,7 @@ export default function Configurator() {
 
   // Remove from cart function
   const removeFromCart = useCallback((itemName: string) => {
-    setCartItems(prev => prev.filter(item => item.name !== itemName));
+    setCartItems((prev) => prev.filter((item) => item.name !== itemName));
   }, []);
 
   // Get total cart items count
@@ -156,7 +156,10 @@ export default function Configurator() {
 
   // Get cart total price
   const cartTotal = useMemo(() => {
-    return cartItems.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0);
+    return cartItems.reduce(
+      (total, item) => total + parseFloat(item.price) * item.quantity,
+      0,
+    );
   }, [cartItems]);
 
   // COMPLETE Configuration steps
@@ -830,7 +833,10 @@ export default function Configurator() {
       const baseStyles = selected ? selected.style : templates[0].style;
 
       // For dark background templates, force white text for visibility
-      const forcedTextColor = (selectedId === "modern" || selectedId === "fancy") ? "#FFFFFF" : formData.fontColor;
+      const forcedTextColor =
+        selectedId === "modern" || selectedId === "fancy"
+          ? "#FFFFFF"
+          : formData.fontColor;
 
       return {
         ...baseStyles,
@@ -1075,7 +1081,8 @@ export default function Configurator() {
           case "modern":
             return {
               page: "p-4",
-              title: "text-lg font-bold mb-4 text-center text-white drop-shadow-lg",
+              title:
+                "text-lg font-bold mb-4 text-center text-white drop-shadow-lg",
               itemCard:
                 "bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/40 shadow-xl",
               itemName: "font-bold text-sm text-white drop-shadow-md",
@@ -1159,7 +1166,10 @@ export default function Configurator() {
           }
 
           // Use user's actual menu items if they exist, otherwise show template items
-          const menuItemsToShow = formData.menuItems.length > 0 ? formData.menuItems : currentContent.items;
+          const menuItemsToShow =
+            formData.menuItems.length > 0
+              ? formData.menuItems
+              : currentContent.items;
 
           return (
             <div className={templateStyles.page}>
@@ -1200,7 +1210,8 @@ export default function Configurator() {
                 {menuItemsToShow.length === 0 && (
                   <div className="text-center py-8">
                     <p className={templateStyles.itemDesc}>
-                      No menu items added yet. Add items in the menu step to see them here.
+                      No menu items added yet. Add items in the menu step to see
+                      them here.
                     </p>
                   </div>
                 )}
@@ -1225,24 +1236,27 @@ export default function Configurator() {
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Gallery</h2>
               <div className="grid grid-cols-2 gap-2">
-                {formData.gallery.length > 0 ? (
-                  formData.gallery.map((image, index) => (
-                    <div key={index} className={templateStyles.galleryItem + " overflow-hidden"}>
-                      <img
-                        src={image.url}
-                        alt={image.alt}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))
-                ) : (
-                  [1, 2, 3, 4].map((i) => (
-                    <div key={i} className={templateStyles.galleryItem}>
-                      <Camera className="w-6 h-6 text-gray-400" />
-                      <p className="text-xs text-gray-500 mt-1">Photo {i}</p>
-                    </div>
-                  ))
-                )}
+                {formData.gallery.length > 0
+                  ? formData.gallery.map((image, index) => (
+                      <div
+                        key={index}
+                        className={
+                          templateStyles.galleryItem + " overflow-hidden"
+                        }
+                      >
+                        <img
+                          src={image.url}
+                          alt={image.alt}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))
+                  : [1, 2, 3, 4].map((i) => (
+                      <div key={i} className={templateStyles.galleryItem}>
+                        <Camera className="w-6 h-6 text-gray-400" />
+                        <p className="text-xs text-gray-500 mt-1">Photo {i}</p>
+                      </div>
+                    ))}
               </div>
               {formData.gallery.length === 0 && (
                 <div className="text-center py-4">
@@ -1428,31 +1442,41 @@ export default function Configurator() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 mb-4">
-                {(formData.menuItems.length > 0 ? formData.menuItems : currentContent.items).slice(0, 4).map((item, index) => (
-                  <div key={index} className={`${templateStyles.homeCard} relative`}>
-                    <div className="text-lg mb-1">{item.emoji || "🍽️"}</div>
-                    <h3
-                      className={templateStyles.itemName + " text-xs truncate"}
+                {(formData.menuItems.length > 0
+                  ? formData.menuItems
+                  : currentContent.items
+                )
+                  .slice(0, 4)
+                  .map((item, index) => (
+                    <div
+                      key={index}
+                      className={`${templateStyles.homeCard} relative`}
                     >
-                      {item.name}
-                    </h3>
-                    <p
-                      className={templateStyles.itemPrice + " text-xs"}
-                      style={{ color: styles.userPrimary }}
-                    >
-                      ${item.price}
-                    </p>
-                    {/* Show + icon if ordering is enabled */}
-                    {formData.onlineOrdering && (
-                      <button
-                        className="absolute top-1 right-1 w-4 h-4 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
-                        onClick={() => addToCart(item)}
+                      <div className="text-lg mb-1">{item.emoji || "🍽️"}</div>
+                      <h3
+                        className={
+                          templateStyles.itemName + " text-xs truncate"
+                        }
                       >
-                        <Plus className="w-2 h-2" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                        {item.name}
+                      </h3>
+                      <p
+                        className={templateStyles.itemPrice + " text-xs"}
+                        style={{ color: styles.userPrimary }}
+                      >
+                        ${item.price}
+                      </p>
+                      {/* Show + icon if ordering is enabled */}
+                      {formData.onlineOrdering && (
+                        <button
+                          className="absolute top-1 right-1 w-4 h-4 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
+                          onClick={() => addToCart(item)}
+                        >
+                          <Plus className="w-2 h-2" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
               </div>
 
               {/* Reservation Button */}
@@ -1460,8 +1484,11 @@ export default function Configurator() {
                 <div className="text-center mt-4">
                   <button
                     className={`px-4 py-2 text-xs font-medium transition-colors ${
-                      formData.reservationButtonShape === "rounded" ? "rounded-lg" :
-                      formData.reservationButtonShape === "pill" ? "rounded-full" : "rounded-none"
+                      formData.reservationButtonShape === "rounded"
+                        ? "rounded-lg"
+                        : formData.reservationButtonShape === "pill"
+                          ? "rounded-full"
+                          : "rounded-none"
                     }`}
                     style={{
                       backgroundColor: formData.reservationButtonColor,
@@ -1570,7 +1597,13 @@ export default function Configurator() {
                   </div>
                   <h1
                     className={`${getFontSizeClass("text-lg")} font-medium`}
-                    style={{ color: selectedIdForSwitch === "modern" || selectedIdForSwitch === "fancy" ? "#FFFFFF" : styles.userFontColor }}
+                    style={{
+                      color:
+                        selectedIdForSwitch === "modern" ||
+                        selectedIdForSwitch === "fancy"
+                          ? "#FFFFFF"
+                          : styles.userFontColor,
+                    }}
                   >
                     {getBusinessName()}
                   </h1>
@@ -1864,7 +1897,10 @@ export default function Configurator() {
 
     return (
       <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
-        <div className="absolute inset-0 bg-black/20" onClick={() => setShowCart(false)} />
+        <div
+          className="absolute inset-0 bg-black/20"
+          onClick={() => setShowCart(false)}
+        />
         <div className="relative w-80 bg-white rounded-lg shadow-xl border border-gray-200">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
@@ -1884,25 +1920,40 @@ export default function Configurator() {
               <div className="text-center py-8">
                 <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500">Your cart is empty</p>
-                <p className="text-sm text-gray-400 mt-1">Add items from the menu to get started</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Add items from the menu to get started
+                </p>
               </div>
             ) : (
               <>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {cartItems.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{item.name}</h4>
+                        <h4 className="font-medium text-gray-900">
+                          {item.name}
+                        </h4>
                         {item.description && (
-                          <p className="text-sm text-gray-600">{item.description}</p>
+                          <p className="text-sm text-gray-600">
+                            {item.description}
+                          </p>
                         )}
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-sm text-gray-500">Qty: {item.quantity}</span>
-                          <span className="text-sm font-medium text-teal-600">${item.price} each</span>
+                          <span className="text-sm text-gray-500">
+                            Qty: {item.quantity}
+                          </span>
+                          <span className="text-sm font-medium text-teal-600">
+                            ${item.price} each
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-lg">${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                        <span className="font-bold text-lg">
+                          ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                        </span>
                         <button
                           onClick={() => removeFromCart(item.name)}
                           className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
@@ -1917,7 +1968,9 @@ export default function Configurator() {
                 <div className="border-t border-gray-200 pt-4 mt-4">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-lg font-bold">Total:</span>
-                    <span className="text-xl font-bold text-teal-600">${cartTotal.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-teal-600">
+                      ${cartTotal.toFixed(2)}
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -1982,7 +2035,10 @@ export default function Configurator() {
       const baseStyles = selected ? selected.style : templates[0].style;
 
       // For dark background templates, force white text for visibility
-      const forcedTextColor = (selectedId === "modern" || selectedId === "fancy") ? "#FFFFFF" : formData.fontColor;
+      const forcedTextColor =
+        selectedId === "modern" || selectedId === "fancy"
+          ? "#FFFFFF"
+          : formData.fontColor;
 
       return {
         ...baseStyles,
@@ -2478,7 +2534,6 @@ export default function Configurator() {
 
   // Business Information (Step 1) - Minimalistic
   const BusinessInfoStep = () => {
-
     return (
       <div className="py-8 max-w-xl mx-auto">
         <div className="text-center mb-8">
@@ -3284,7 +3339,10 @@ export default function Configurator() {
 
     // Auto-load default opening hours when reaching this step
     useEffect(() => {
-      if (!formData.openingHours || Object.keys(formData.openingHours).length === 0) {
+      if (
+        !formData.openingHours ||
+        Object.keys(formData.openingHours).length === 0
+      ) {
         const defaultHours = {
           open: "09:00",
           close: "17:00",
@@ -3298,7 +3356,11 @@ export default function Configurator() {
         });
         // Set weekends to closed by default
         weekends.forEach((day) => {
-          defaultOpeningHours[day] = { open: "10:00", close: "16:00", closed: true };
+          defaultOpeningHours[day] = {
+            open: "10:00",
+            close: "16:00",
+            closed: true,
+          };
         });
 
         updateFormData("openingHours", defaultOpeningHours);
@@ -3900,13 +3962,17 @@ export default function Configurator() {
                     <input
                       type="color"
                       value={formData.reservationButtonColor}
-                      onChange={(e) => updateFormData("reservationButtonColor", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("reservationButtonColor", e.target.value)
+                      }
                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
                     />
                     <Input
                       type="text"
                       value={formData.reservationButtonColor}
-                      onChange={(e) => updateFormData("reservationButtonColor", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("reservationButtonColor", e.target.value)
+                      }
                       className="font-mono flex-1"
                       placeholder="#2563EB"
                     />
@@ -3920,13 +3986,19 @@ export default function Configurator() {
                     {[
                       { id: "rounded", name: "Rounded", class: "rounded-lg" },
                       { id: "pill", name: "Pill", class: "rounded-full" },
-                      { id: "square", name: "Square", class: "rounded-none" }
+                      { id: "square", name: "Square", class: "rounded-none" },
                     ].map((shape) => (
                       <Button
                         key={shape.id}
-                        variant={formData.reservationButtonShape === shape.id ? "default" : "outline"}
+                        variant={
+                          formData.reservationButtonShape === shape.id
+                            ? "default"
+                            : "outline"
+                        }
                         size="sm"
-                        onClick={() => updateFormData("reservationButtonShape", shape.id)}
+                        onClick={() =>
+                          updateFormData("reservationButtonShape", shape.id)
+                        }
                         className={`${shape.class} ${formData.reservationButtonShape === shape.id ? "bg-teal-500 hover:bg-teal-600" : ""}`}
                       >
                         {shape.name}
@@ -3937,11 +4009,16 @@ export default function Configurator() {
               </div>
               {/* Button Preview */}
               <div className="mt-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Preview</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Preview
+                </label>
                 <button
                   className={`px-6 py-3 text-white font-medium transition-colors ${
-                    formData.reservationButtonShape === "rounded" ? "rounded-lg" :
-                    formData.reservationButtonShape === "pill" ? "rounded-full" : "rounded-none"
+                    formData.reservationButtonShape === "rounded"
+                      ? "rounded-lg"
+                      : formData.reservationButtonShape === "pill"
+                        ? "rounded-full"
+                        : "rounded-none"
                   }`}
                   style={{ backgroundColor: formData.reservationButtonColor }}
                 >
