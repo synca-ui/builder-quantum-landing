@@ -324,40 +324,66 @@ export default function Configurator() {
     };
   }, [saveToBackend]);
 
-  // Create a separate debounced save function for inputs to prevent focus loss
-  const debouncedInputSave = useMemo(() => {
+  // Use a ref to store the latest form data to avoid dependency cycles
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
+
+  // Create stable debounced save function that doesn't depend on formData
+  const debouncedInputSave = useCallback(() => {
     let timeoutId: NodeJS.Timeout;
     return (field: string, value: any) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         if (autoSaverRef.current) {
-          autoSaverRef.current.save({ ...formData, [field]: value } as Partial<Configuration>);
+          const currentData = { ...formDataRef.current, [field]: value };
+          autoSaverRef.current.save(currentData as Partial<Configuration>);
         }
-      }, 1000); // 1 second delay for text inputs
+      }, 1500); // Increased delay for better stability
     };
-  }, [formData]);
+  }, []);
 
-  // Optimized form data updates - immediate UI update, debounced save
+  // Initialize the debounced save function once
+  const debouncedSaveRef = useRef(debouncedInputSave());
+
+  // Stable form update function that doesn't change between renders
   const updateFormData = useCallback((field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      return newData;
+    });
 
     // For text inputs, use debounced save to prevent focus loss
     if (typeof value === 'string' && field !== 'template') {
-      debouncedInputSave(field, value);
+      debouncedSaveRef.current(field, value);
     } else {
       // For non-text inputs (like template selection), save immediately
       if (autoSaverRef.current) {
-        autoSaverRef.current.save({ ...formData, [field]: value } as Partial<Configuration>);
+        const currentData = { ...formDataRef.current, [field]: value };
+        autoSaverRef.current.save(currentData as Partial<Configuration>);
       }
     }
-  }, [formData, debouncedInputSave]);
+  }, []); // Empty dependency array for stability
 
-  // Optimized input handlers to prevent unnecessary re-renders
-  const createInputHandler = useCallback((field: string) => {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const value = e.target.value;
-      updateFormData(field, value);
+  // Create stable input handlers that don't change between renders
+  const inputHandlers = useMemo(() => {
+    const handlers: Record<string, (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void> = {};
+
+    const createHandler = (field: string) => {
+      return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const value = e.target.value;
+        updateFormData(field, value);
+      };
     };
+
+    // Pre-create handlers for common fields
+    const fields = ['businessName', 'location', 'slogan', 'uniqueDescription', 'primaryColor', 'secondaryColor'];
+    fields.forEach(field => {
+      handlers[field] = createHandler(field);
+    });
+
+    return handlers;
   }, [updateFormData]);
 
   // Load persisted data on component mount
