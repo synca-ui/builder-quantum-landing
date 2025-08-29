@@ -60,32 +60,6 @@ export default function Configurator() {
 
   useEffect(() => {
     setIsVisible(true);
-
-    let animationFrame: number;
-    let lastUpdate = 0;
-    const throttleDelay = 16; // ~60fps max
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const now = Date.now();
-      if (now - lastUpdate < throttleDelay) return;
-
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-
-      animationFrame = requestAnimationFrame(() => {
-        setMousePosition({ x: e.clientX, y: e.clientY });
-        lastUpdate = now;
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-    };
   }, []);
 
   // Configuration steps definition
@@ -340,9 +314,9 @@ export default function Configurator() {
     }
   }, [currentConfigId, currentStep]);
 
-  // Initialize auto-saver
+  // Initialize auto-saver with longer debounce for better UX
   useEffect(() => {
-    autoSaverRef.current = new AutoSaver(saveToBackend, 3000); // 3 second debounce
+    autoSaverRef.current = new AutoSaver(saveToBackend, 5000); // 5 second debounce for better input stability
 
     return () => {
       if (autoSaverRef.current) {
@@ -351,19 +325,18 @@ export default function Configurator() {
     };
   }, [saveToBackend]);
 
-  // State management functions with useCallback to prevent re-renders
+  // Optimized form data updates with proper debouncing
   const updateFormData = useCallback((field: string, value: any) => {
     setFormData(prev => {
       const newFormData = { ...prev, [field]: value };
-
-      // Auto-save to backend
-      if (autoSaverRef.current) {
-        autoSaverRef.current.save(newFormData as Partial<Configuration>);
-      }
-
       return newFormData;
     });
-  }, []);
+
+    // Debounced auto-save to prevent performance issues
+    if (autoSaverRef.current) {
+      autoSaverRef.current.save({ ...formData, [field]: value } as Partial<Configuration>);
+    }
+  }, [formData]);
 
   // Load persisted data on component mount
   useEffect(() => {
