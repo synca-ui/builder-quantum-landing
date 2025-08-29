@@ -4,7 +4,7 @@
     "userId": "user_mewod4t90763iqgq366k",
     "businessName": "Julian Cafe",
     "businessType": "cafe",
-    "location": "sssss",
+    "location": "",
     "slogan": "ss",
     "uniqueDescription": "ssss",
     "template": "modern",
@@ -47,7 +47,7 @@
     "domainName": "",
     "selectedDomain": "",
     "createdAt": "2025-08-29T10:37:02.078Z",
-    "updatedAt": "2025-08-29T11:26:17.080Z",
+    "updatedAt": "2025-08-29T11:26:49.971Z",
     "status": "draft"
   }
 ]

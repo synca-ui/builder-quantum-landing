@@ -12,23 +12,22 @@ export default function Index() {
 
   useEffect(() => {
     setIsVisible(true);
-    
-    let animationFrame: number;
+
+    // Throttle mouse tracking to reduce re-renders and improve performance
+    let lastUpdate = 0;
+    const throttleMs = 50; // Only update every 50ms for better performance
+
     const handleMouseMove = (e: MouseEvent) => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-      animationFrame = requestAnimationFrame(() => {
+      const now = Date.now();
+      if (now - lastUpdate >= throttleMs) {
         setMousePosition({ x: e.clientX, y: e.clientY });
-      });
+        lastUpdate = now;
+      }
     };
-    
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
     };
   }, []);
 
