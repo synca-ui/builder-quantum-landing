@@ -99,8 +99,10 @@ async function apiRequest<T>(
   } catch (error) {
     console.warn('API request failed:', { endpoint, error });
 
-    // Provide more specific error messages
+    // Use debug utilities for better error handling
     if (error instanceof Error) {
+      handleFetchError(error, `API request to ${endpoint}`);
+
       if (error.name === 'AbortError') {
         return {
           success: false,
