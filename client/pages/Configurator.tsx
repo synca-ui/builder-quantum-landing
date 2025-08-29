@@ -2420,12 +2420,12 @@ export default function Configurator() {
           </div>
 
           {/* Optional Fields Toggle */}
-          {!showOptionalFields && (
+          {!formData.showOptionalFields && (
             <div className="text-center pt-2">
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setShowOptionalFields(true)}
+                onClick={() => updateFormData("showOptionalFields", true)}
                 className="text-teal-600 hover:text-teal-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -2435,7 +2435,7 @@ export default function Configurator() {
           )}
 
           {/* Optional Fields */}
-          {showOptionalFields && (
+          {formData.showOptionalFields && (
             <div className="space-y-4 pt-2 border-t border-gray-100">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
