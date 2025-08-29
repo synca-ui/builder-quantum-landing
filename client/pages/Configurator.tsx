@@ -604,7 +604,18 @@ export default function Configurator() {
       hoveredItem: null
     });
     
-    const getBusinessName = () => formData.businessName || 'Your Business';
+    const getBusinessName = () => {
+      if (formData.businessName) return formData.businessName;
+      // Use realistic names based on selected template for preview
+      const templateNames = {
+        'minimalist': 'Brew & Bean',
+        'vibrant': 'Fusion Kitchen',
+        'professional': 'Sterling Restaurant',
+        'modern-dark': 'NEXUS Coffee'
+      };
+      const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
+      return templateNames[selectedId] || 'Your Business';
+    };
     
     const getTemplateStyles = () => {
       const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
