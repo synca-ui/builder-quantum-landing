@@ -2450,7 +2450,8 @@ export default function Configurator() {
                 type="text"
                 placeholder="yourbusiness.com"
                 defaultValue={formData.domainName}
-                onChange={handleInputChange('domainName')}
+                ref={setInputRef('domainName')}
+                onBlur={handleInputBlur('domainName')}
                 className="w-full"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -2489,7 +2490,8 @@ export default function Configurator() {
                   type="text"
                   placeholder="yourbusiness"
                   defaultValue={formData.selectedDomain}
-                  onChange={handleInputChange('selectedDomain')}
+                  ref={setInputRef('selectedDomain')}
+                  onBlur={handleInputBlur('selectedDomain')}
                   className="flex-1"
                 />
                 <span className="ml-2 text-gray-500">.synca.app</span>
@@ -2586,7 +2588,8 @@ export default function Configurator() {
               <Input
                 type="text"
                 defaultValue={formData.businessName}
-                onChange={handleInputChange('businessName')}
+                ref={setInputRef('businessName')}
+                onBlur={handleInputBlur('businessName')}
                 className="w-full"
               />
             </Card>
@@ -2644,7 +2647,8 @@ export default function Configurator() {
                   <Input
                     type="text"
                     defaultValue={formData.domainName}
-                    onChange={handleInputChange('domainName')}
+                    ref={setInputRef('domainName')}
+                    onBlur={handleInputBlur('domainName')}
                     className="flex-1"
                   />
                 ) : (
@@ -2652,7 +2656,8 @@ export default function Configurator() {
                     <Input
                       type="text"
                       defaultValue={formData.selectedDomain}
-                      onChange={handleInputChange('selectedDomain')}
+                      ref={setInputRef('selectedDomain')}
+                      onBlur={handleInputBlur('selectedDomain')}
                       className="flex-1"
                     />
                     <span className="ml-2 text-gray-500">.synca.app</span>
