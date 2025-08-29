@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { ChevronRight, ArrowLeft, Sparkles, Rocket, Crown, Menu, X, Settings, Smartphone, Globe, Palette, MapPin, Phone, Mail, Upload, Clock, Calendar, Users, Camera, Instagram, Facebook, Share2, Coffee, ShoppingBag, Utensils, Store, Building, Plus, Check, Star, Heart, Zap, Play, Eye, ChevronDown, Monitor, Wifi, Shield, Home } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { ChevronRight, ArrowLeft, Sparkles, Rocket, Crown, Menu, X, Settings, Smartphone, Globe, Palette, MapPin, Phone, Mail, Upload, Clock, Calendar, Users, Camera, Instagram, Facebook, Share2, Coffee, ShoppingBag, Utensils, Store, Building, Plus, Check, Star, Heart, Zap, Play, Eye, ChevronDown, Monitor, Wifi, Shield, Home, Save, Cloud, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { configurationApi, AutoSaver, sessionApi, handleApiError, type Configuration } from "@/lib/api";
 
 export default function Configurator() {
   const [isVisible, setIsVisible] = useState(false);
@@ -11,6 +12,11 @@ export default function Configurator() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
+  const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const autoSaverRef = useRef<AutoSaver | null>(null);
   const [formData, setFormData] = useState({
     // Phase 1: Business Basics
     businessName: '',
@@ -297,52 +303,124 @@ export default function Configurator() {
     { id: 'contact', name: 'Contact', icon: <Phone className="w-4 h-4" /> }
   ];
 
-  // Debounced localStorage save to prevent blocking UI
-  const debouncedSave = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
-    return (data: any, step: number) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
+  // Auto-save to backend
+  const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
+    setSaveStatus('saving');
+    try {
+      const configData = {
+        ...data,
+        userId: sessionApi.getUserId()
+      };
+
+      if (currentConfigId) {
+        configData.id = currentConfigId;
+      }
+
+      const result = await configurationApi.save(configData);
+
+      if (result.success && result.data) {
+        setCurrentConfigId(result.data.id || null);
+        setSaveStatus('saved');
+
+        // Also save to localStorage as backup
         try {
           localStorage.setItem('configuratorData', JSON.stringify(data));
-          localStorage.setItem('configuratorStep', step.toString());
+          localStorage.setItem('configuratorStep', currentStep.toString());
+          localStorage.setItem('currentConfigId', result.data.id || '');
         } catch (error) {
           console.warn('Failed to save to localStorage:', error);
         }
-      }, 300); // 300ms debounce
+      } else {
+        setSaveStatus('error');
+        console.error('Save failed:', result.error);
+      }
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('Save error:', error);
+    }
+  }, [currentConfigId, currentStep]);
+
+  // Initialize auto-saver
+  useEffect(() => {
+    autoSaverRef.current = new AutoSaver(saveToBackend, 3000); // 3 second debounce
+
+    return () => {
+      if (autoSaverRef.current) {
+        autoSaverRef.current.destroy();
+      }
     };
-  }, []);
+  }, [saveToBackend]);
 
   // State management functions with useCallback to prevent re-renders
   const updateFormData = useCallback((field: string, value: any) => {
     setFormData(prev => {
       const newFormData = { ...prev, [field]: value };
-      // Debounced save to localStorage
-      debouncedSave(newFormData, currentStep);
+
+      // Auto-save to backend
+      if (autoSaverRef.current) {
+        autoSaverRef.current.save(newFormData as Partial<Configuration>);
+      }
+
       return newFormData;
     });
-  }, [currentStep, debouncedSave]);
+  }, []);
 
   // Load persisted data on component mount
   useEffect(() => {
-    const savedData = localStorage.getItem('configuratorData');
-    const savedStep = localStorage.getItem('configuratorStep');
-    
-    if (savedData) {
+    const loadData = async () => {
       try {
-        const parsedData = JSON.parse(savedData);
-        setFormData(prev => ({ ...prev, ...parsedData }));
+        // Try to load from backend first
+        const latestConfig = await sessionApi.getLatestConfiguration();
+
+        if (latestConfig) {
+          setFormData(prev => ({ ...prev, ...latestConfig }));
+          setCurrentConfigId(latestConfig.id || null);
+          setSaveStatus('saved');
+
+          if (latestConfig.publishedUrl) {
+            setPublishedUrl(latestConfig.publishedUrl);
+            setPublishStatus('published');
+          }
+        } else {
+          // Fallback to localStorage
+          const savedData = localStorage.getItem('configuratorData');
+          const savedConfigId = localStorage.getItem('currentConfigId');
+
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              setFormData(prev => ({ ...prev, ...parsedData }));
+              setCurrentConfigId(savedConfigId);
+            } catch (error) {
+              console.log('Error loading saved data:', error);
+            }
+          }
+        }
+
+        // Load saved step
+        const savedStep = localStorage.getItem('configuratorStep');
+        if (savedStep) {
+          const stepNumber = parseInt(savedStep);
+          if (!isNaN(stepNumber) && stepNumber > 0) {
+            setCurrentStep(stepNumber);
+          }
+        }
       } catch (error) {
-        console.log('Error loading saved data:', error);
+        console.error('Error loading configuration:', error);
+        // Fallback to localStorage on error
+        const savedData = localStorage.getItem('configuratorData');
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            setFormData(prev => ({ ...prev, ...parsedData }));
+          } catch (e) {
+            console.log('Error loading saved data:', e);
+          }
+        }
       }
-    }
-    
-    if (savedStep) {
-      const stepNumber = parseInt(savedStep);
-      if (!isNaN(stepNumber) && stepNumber > 0) {
-        setCurrentStep(stepNumber);
-      }
-    }
+    };
+
+    loadData();
   }, []);
 
   const nextStep = useCallback(() => {
@@ -354,8 +432,13 @@ export default function Configurator() {
       } catch (error) {
         console.warn('Failed to save step to localStorage:', error);
       }
+
+      // Force save current progress when moving to next step
+      if (autoSaverRef.current) {
+        autoSaverRef.current.saveNow(formData as Partial<Configuration>);
+      }
     }
-  }, [currentStep, configuratorSteps.length]);
+  }, [currentStep, configuratorSteps.length, formData]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
@@ -368,6 +451,31 @@ export default function Configurator() {
       }
     }
   }, [currentStep]);
+
+  // Publish configuration
+  const publishConfiguration = useCallback(async () => {
+    if (!currentConfigId) {
+      // Save first if not saved
+      await saveToBackend(formData as Partial<Configuration>);
+      return;
+    }
+
+    setPublishStatus('publishing');
+    try {
+      const result = await configurationApi.publish(currentConfigId);
+
+      if (result.success && result.data) {
+        setPublishStatus('published');
+        setPublishedUrl(result.data.publishedUrl || null);
+      } else {
+        setPublishStatus('error');
+        console.error('Publish failed:', result.error);
+      }
+    } catch (error) {
+      setPublishStatus('error');
+      console.error('Publish error:', error);
+    }
+  }, [currentConfigId, formData, saveToBackend]);
 
   // Memoized progress percentage to prevent recalculation
   const progressPercentage = useMemo(() => {
@@ -414,6 +522,28 @@ export default function Configurator() {
                 </div>
               </div>
             </div>
+
+            {/* Save Status Indicator */}
+            <div className="hidden lg:flex items-center space-x-2 ml-4">
+              {saveStatus === 'saving' && (
+                <div className="flex items-center space-x-2 text-orange-600">
+                  <Cloud className="w-4 h-4 animate-pulse" />
+                  <span className="text-xs">Saving...</span>
+                </div>
+              )}
+              {saveStatus === 'saved' && (
+                <div className="flex items-center space-x-2 text-green-600">
+                  <Check className="w-4 h-4" />
+                  <span className="text-xs">Saved</span>
+                </div>
+              )}
+              {saveStatus === 'error' && (
+                <div className="flex items-center space-x-2 text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-xs">Save failed</span>
+                </div>
+              )}
+            </div>
             
             {/* Phase indicator */}
             {currentPhase && (
@@ -438,13 +568,37 @@ export default function Configurator() {
                 {isDarkMode ? '☀️' : '🌙'}
               </Button>
               
-              <Button 
-                size="sm"
-                className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg animate-glow"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
+              <div className="flex items-center space-x-2">
+                {publishStatus === 'published' && publishedUrl ? (
+                  <Button
+                    size="sm"
+                    onClick={() => window.open(publishedUrl, '_blank')}
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
+                  >
+                    <Globe className="w-4 h-4 mr-2" />
+                    Live Site
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={publishConfiguration}
+                    disabled={publishStatus === 'publishing'}
+                    className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg animate-glow"
+                  >
+                    {publishStatus === 'publishing' ? (
+                      <>
+                        <Cloud className="w-4 h-4 mr-2 animate-pulse" />
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="w-4 h-4 mr-2" />
+                        Publish
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
