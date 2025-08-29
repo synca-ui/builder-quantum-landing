@@ -1362,28 +1362,19 @@ export default function Configurator() {
                 }`}
                 onClick={() => handleTemplateClick(template.id)}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-3">
-                        <div className={`w-4 h-4 rounded-full mr-3 ${template.preview}`}></div>
-                        <h4 className="text-lg font-bold text-gray-900">{template.name}</h4>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full ${template.preview} flex-shrink-0`}></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="text-md font-bold text-gray-900 truncate">{template.name}</h4>
                         {selectedTemplate === template.id && (
-                          <Check className="w-5 h-5 text-teal-600 ml-2" />
+                          <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-gray-600 text-sm mb-3">{template.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {template.features.map((feature, index) => (
-                          <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
+                      <p className="text-gray-600 text-xs mt-1 line-clamp-2">{template.description}</p>
                     </div>
-                    <div className="ml-4">
-                      <Eye className={`w-6 h-6 ${selectedTemplate === template.id ? 'text-teal-600' : 'text-gray-400'}`} />
-                    </div>
+                    <Eye className={`w-5 h-5 flex-shrink-0 ${selectedTemplate === template.id ? 'text-teal-600' : 'text-gray-400'}`} />
                   </div>
                 </CardContent>
               </Card>
@@ -1391,20 +1382,18 @@ export default function Configurator() {
 
             {/* Use Template Button */}
             {selectedTemplate && (
-              <Card className="p-6 bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200">
+              <Card className="p-4 bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200">
                 <div className="text-center">
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">Ready to use this template?</h4>
-                  <p className="text-gray-600 text-sm mb-4">
-                    You're previewing: <strong>{templates.find(t => t.id === selectedTemplate)?.name}</strong>
+                  <p className="text-gray-600 text-sm mb-3">
+                    Previewing: <strong>{templates.find(t => t.id === selectedTemplate)?.name}</strong>
                   </p>
                   <Button
                     onClick={handleUseTemplate}
-                    size="lg"
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold"
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold w-full"
                   >
-                    <Sparkles className="mr-2 w-5 h-5" />
+                    <Sparkles className="mr-2 w-4 h-4" />
                     Use This Template
-                    <ChevronRight className="ml-2 w-5 h-5" />
+                    <ChevronRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>
               </Card>
