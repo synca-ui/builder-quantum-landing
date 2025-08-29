@@ -2361,6 +2361,76 @@ export default function Configurator() {
           </div>
         </div>
 
+        {/* Font Color */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">
+            Text Color
+          </label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="color"
+              value={formData.fontColor}
+              onChange={(e) => updateFormData("fontColor", e.target.value)}
+              className="w-12 h-12 rounded-lg border-2 border-gray-300 cursor-pointer"
+            />
+            <div className="flex-1">
+              <input
+                type="text"
+                value={formData.fontColor}
+                onChange={(e) => updateFormData("fontColor", e.target.value)}
+                placeholder="#000000"
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter a hex color code or use the color picker
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Font Size */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">
+            Text Size
+          </label>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { id: "small", name: "Small", description: "Compact and minimal" },
+              { id: "medium", name: "Medium", description: "Standard readability" },
+              { id: "large", name: "Large", description: "Bold and prominent" }
+            ].map((size) => (
+              <Card
+                key={size.id}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  formData.fontSize === size.id
+                    ? "border-teal-500 bg-teal-50"
+                    : "border-gray-200 hover:border-teal-300"
+                }`}
+                onClick={() => updateFormData("fontSize", size.id)}
+              >
+                <CardContent className="p-4 text-center">
+                  <div className={`font-bold mb-2 ${
+                    size.id === "small" ? "text-sm" :
+                    size.id === "medium" ? "text-base" : "text-lg"
+                  }`}>
+                    {size.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {size.description}
+                  </div>
+                  {formData.fontSize === size.id && (
+                    <div className="mt-2">
+                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         {/* Background Style - Only Color and Gradient */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">
