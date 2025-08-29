@@ -353,45 +353,45 @@ export default function Configurator() {
     }, 1000); // 1 second debounce for all fields
   }, []); // Empty dependency array for complete stability
 
-  // Create completely stable input handlers using refs to avoid any dependencies
-  const inputHandlersRef = useRef<Record<string, (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void>>({});
+  // Input refs for uncontrolled components to completely avoid focus loss
+  const inputRefs = useRef<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>({});
 
-  // Initialize handlers once and never recreate them
-  if (Object.keys(inputHandlersRef.current).length === 0) {
-    const createHandler = (field: string) => {
-      return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const value = e.target.value;
+  // Update form data from input refs without causing re-renders during typing
+  const updateFieldFromRef = useCallback((field: string) => {
+    const element = inputRefs.current[field];
+    if (element) {
+      const value = element.value;
 
-        // Update form data using the ref to get latest value
-        setFormData(prev => {
-          const newData = { ...prev, [field]: value };
-          formDataRef.current = newData; // Keep ref in sync
-          return newData;
-        });
+      // Update state without triggering re-renders that could cause focus loss
+      setFormData(prev => {
+        const newData = { ...prev, [field]: value };
+        formDataRef.current = newData; // Keep ref in sync
+        return newData;
+      });
 
-        // Debounce saves to prevent rapid API calls
-        if (debouncedSaveRef.current) {
-          clearTimeout(debouncedSaveRef.current);
+      // Debounce saves to prevent rapid API calls
+      if (debouncedSaveRef.current) {
+        clearTimeout(debouncedSaveRef.current);
+      }
+
+      debouncedSaveRef.current = setTimeout(() => {
+        if (autoSaverRef.current) {
+          const currentData = { ...formDataRef.current, [field]: value };
+          autoSaverRef.current.save(currentData as Partial<Configuration>);
         }
+      }, 1000);
+    }
+  }, []);
 
-        debouncedSaveRef.current = setTimeout(() => {
-          if (autoSaverRef.current) {
-            const currentData = { ...formDataRef.current, [field]: value };
-            autoSaverRef.current.save(currentData as Partial<Configuration>);
-          }
-        }, 1000);
-      };
+  // Create stable input handlers that don't depend on formData
+  const handleInputChange = useCallback((field: string) => {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      // Store the element ref for later access
+      inputRefs.current[field] = e.target;
+      // Update form data immediately
+      updateFieldFromRef(field);
     };
-
-    // Pre-create handlers for common fields once
-    const fields = ['businessName', 'location', 'slogan', 'uniqueDescription', 'primaryColor', 'secondaryColor'];
-    fields.forEach(field => {
-      inputHandlersRef.current[field] = createHandler(field);
-    });
-  }
-
-  // Always return the same handler references
-  const inputHandlers = inputHandlersRef.current;
+  }, [updateFieldFromRef]);
 
   // Load persisted data on component mount
   useEffect(() => {
