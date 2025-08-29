@@ -814,6 +814,51 @@ export default function Configurator() {
                 </div>
               ))}
             </div>
+
+            {/* Reserve a Table Button - only if reservations enabled */}
+            {formData.reservationsEnabled && (
+              <div className="mt-8 text-center">
+                <Button
+                  className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-3 rounded-full font-medium"
+                  style={{ backgroundColor: styles.userPrimary }}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Reserve a Table
+                </Button>
+              </div>
+            )}
+
+            {/* Opening Hours at bottom of homepage */}
+            {Object.keys(sampleContent.hours).length > 0 && (
+              <div className="mt-12 pt-8 border-t border-gray-100">
+                <h3 className="text-lg font-medium text-gray-900 mb-6 text-center">Opening Hours</h3>
+                <div className="space-y-3">
+                  {Object.entries(sampleContent.hours).map(([day, hours]: [string, any]) => (
+                    <div key={day} className="flex justify-between items-center py-2 border-b border-gray-50">
+                      <span className="text-gray-700 font-medium">{day}</span>
+                      <span className="text-gray-600">
+                        {hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Instagram Integration */}
+            {formData.socialMedia?.instagram && (
+              <div className="mt-8 text-center">
+                <a
+                  href={`https://instagram.com/${formData.socialMedia.instagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 text-gray-600 hover:text-pink-600 transition-colors"
+                >
+                  <Instagram className="w-5 h-5" />
+                  <span>Follow us on Instagram</span>
+                </a>
+              </div>
+            )}
           </div>
         )}
 
