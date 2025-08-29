@@ -3597,7 +3597,7 @@ export default function Configurator() {
                       </div>
                     </div>
                     <div className="h-full overflow-hidden">
-                      <LivePreview />
+                      <TemplatePreviewContent />
                     </div>
                   </div>
                 )}
