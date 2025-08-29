@@ -1124,10 +1124,10 @@ export default function Configurator() {
       if (formData.businessName) return formData.businessName;
       // Use realistic names based on selected template for preview
       const templateNames = {
-        'minimalist': 'Brew & Bean',
-        'vibrant': 'Fusion Kitchen',
-        'professional': 'Sterling Restaurant',
-        'modern-dark': 'NEXUS Coffee'
+        'minimalistic': 'Simple',
+        'modern': 'FLUX',
+        'clean': 'Pure',
+        'fancy': 'LUXE'
       };
       const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
       return templateNames[selectedId] || 'Your Business';
@@ -1175,45 +1175,45 @@ export default function Configurator() {
     // Sample content for realistic previews - template specific
     const selectedId = currentStep === 0 ? (previewTemplateId || formData.template) : formData.template;
     const templateContent = {
-      'minimalist': {
+      'minimalistic': {
         items: [
-          { name: 'Artisan Coffee', description: 'Single origin, carefully roasted', price: '4.50' },
-          { name: 'Avocado Toast', description: 'Fresh sourdough, organic avocado', price: '8.00' },
-          { name: 'Matcha Latte', description: 'Premium ceremonial grade matcha', price: '5.25' }
+          { name: 'Coffee', description: 'Fresh brewed', price: '3.50' },
+          { name: 'Sandwich', description: 'Daily special', price: '7.00' },
+          { name: 'Salad', description: 'Mixed greens', price: '6.50' }
         ],
-        tagline: 'Simplicity meets excellence',
+        tagline: 'Simple. Fresh. Good.',
         description: 'Minimal design, maximum flavor'
       },
-      'vibrant': {
+      'modern': {
         items: [
-          { name: 'Dragon Bowl', description: 'Colorful superfood fusion bowl', price: '12.50' },
-          { name: 'Neon Smoothie', description: 'Rainbow fruit blend, energizing', price: '7.00' },
-          { name: 'Fusion Tacos', description: 'Asian-Mexican creative fusion', price: '9.25' }
+          { name: 'Artisan Brew', description: 'Single origin specialty coffee', price: '5.50' },
+          { name: 'Power Bowl', description: 'Quinoa, avocado, superfoods', price: '12.00' },
+          { name: 'Craft Burger', description: 'House blend, local ingredients', price: '15.00' }
         ],
-        tagline: 'Bold flavors, vibrant experience',
+        tagline: 'Modern Flavors, Bold Choices',
         description: 'Where creativity meets cuisine'
       },
-      'professional': {
+      'clean': {
         items: [
-          { name: 'Prime Ribeye', description: 'Aged 28 days, chef signature', price: '42.00' },
-          { name: 'Lobster Risotto', description: 'Maine lobster, saffron arborio', price: '36.00' },
-          { name: 'Chocolate Soufflé', description: 'Classic French technique', price: '14.00' }
+          { name: 'Organic Latte', description: 'Fair trade beans, oat milk', price: '4.75' },
+          { name: 'Fresh Wrap', description: 'Seasonal vegetables, herbs', price: '8.50' },
+          { name: 'Green Smoothie', description: 'Spinach, apple, ginger', price: '6.00' }
         ],
-        tagline: 'Excellence in every detail',
+        tagline: 'Fresh, Healthy, Natural',
         description: 'Fine dining at its finest'
       },
-      'modern-dark': {
+      'fancy': {
         items: [
-          { name: 'NITRO COLD BREW', description: 'Smooth nitrogen-infused coffee', price: '5.50' },
-          { name: 'TECH BOWL', description: 'Future food, plant-based protein', price: '11.00' },
-          { name: 'DARK ROAST', description: 'Bold, intense, uncompromising', price: '4.25' }
+          { name: 'Royal Espresso', description: 'Gold-filtered premium blend', price: '8.00' },
+          { name: 'Truffle Pasta', description: 'Fresh pasta, white truffle', price: '28.00' },
+          { name: 'Champagne Cocktail', description: 'Dom Pérignon, gold flakes', price: '35.00' }
         ],
-        tagline: 'FUTURE OF COFFEE',
+        tagline: 'Luxury Dining Experience',
         description: 'Next-gen café experience'
       }
     };
 
-    const currentContent = templateContent[selectedId] || templateContent['minimalist'];
+    const currentContent = templateContent[selectedId] || templateContent['minimalistic'];
 
     const sampleContent = {
       menuItems: formData.menuItems.length > 0 ? formData.menuItems : currentContent.items,
