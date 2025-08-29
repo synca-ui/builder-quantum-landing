@@ -284,17 +284,17 @@ export default function Configurator() {
         ...data,
         userId: sessionApi.getUserId()
       };
-
+      
       if (currentConfigId) {
         configData.id = currentConfigId;
       }
-
+      
       const result = await configurationApi.save(configData);
-
+      
       if (result.success && result.data) {
         setCurrentConfigId(result.data.id || null);
         setSaveStatus('saved');
-
+        
         // Also save to localStorage as backup
         try {
           localStorage.setItem('configuratorData', JSON.stringify(data));
@@ -316,7 +316,7 @@ export default function Configurator() {
   // Initialize auto-saver with longer debounce for better UX
   useEffect(() => {
     autoSaverRef.current = new AutoSaver(saveToBackend, 5000); // 5 second debounce for better input stability
-
+    
     return () => {
       if (autoSaverRef.current) {
         autoSaverRef.current.destroy();
@@ -351,7 +351,7 @@ export default function Configurator() {
       const newData = { ...prev, [field]: value };
       return newData;
     });
-
+    
     // For text inputs, use debounced save to prevent focus loss
     if (typeof value === 'string' && field !== 'template') {
       debouncedSaveRef.current(field, value);
@@ -367,7 +367,7 @@ export default function Configurator() {
   // Create stable input handlers that don't change between renders
   const inputHandlers = useMemo(() => {
     const handlers: Record<string, (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void> = {};
-
+    
     const createHandler = (field: string) => {
       return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         e.preventDefault();
@@ -480,11 +480,11 @@ export default function Configurator() {
       await saveToBackend(formData as Partial<Configuration>);
       return;
     }
-
+    
     setPublishStatus('publishing');
     try {
       const result = await configurationApi.publish(currentConfigId);
-
+      
       if (result.success && result.data) {
         setPublishStatus('published');
         setPublishedUrl(result.data.publishedUrl || null);
@@ -543,7 +543,7 @@ export default function Configurator() {
                 </div>
               </div>
             </div>
-
+            
             {/* Save Status Indicator */}
             <div className="hidden lg:flex items-center space-x-2 ml-4">
               {saveStatus === 'saving' && (
@@ -591,7 +591,7 @@ export default function Configurator() {
               
               <div className="flex items-center space-x-2">
                 {publishStatus === 'published' && publishedUrl ? (
-                  <Button
+                  <Button 
                     size="sm"
                     onClick={() => window.open(publishedUrl, '_blank')}
                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
@@ -600,7 +600,7 @@ export default function Configurator() {
                     Live Site
                   </Button>
                 ) : (
-                  <Button
+                  <Button 
                     size="sm"
                     onClick={publishConfiguration}
                     disabled={publishStatus === 'publishing'}
@@ -646,21 +646,21 @@ export default function Configurator() {
     { name: 'Purple', primary: '#7C3AED', secondary: '#EC4899', accent: '#A855F7' }
   ];
 
-  // Enhanced Live Preview Component with Dramatically Different Template Designs
+  // COMPLETELY REDESIGNED Live Preview Component with Realistic Templates
   const LivePreview = () => {
     const [previewState, setPreviewState] = useState({
       menuOpen: false,
-      activeSection: 'home',
+      activePage: 'home',
       hoveredItem: null,
       scrollY: 0
     });
-
+    
     const getBusinessName = () => formData.businessName || 'Your Business';
-
+    
     const getTemplateStyles = () => {
       const selected = templates.find(t => t.id === formData.template);
       const baseStyles = selected ? selected.style : templates[0].style;
-
+      
       // Apply user's custom colors to the template
       return {
         ...baseStyles,
@@ -673,377 +673,478 @@ export default function Configurator() {
 
     const getBusinessIcon = () => {
       switch (formData.businessType) {
-        case 'cafe': return <Coffee className="w-8 h-8" />;
-        case 'restaurant': return <Utensils className="w-8 h-8" />;
-        case 'bar': return <Heart className="w-8 h-8" />;
-        case 'store': return <ShoppingBag className="w-8 h-8" />;
-        default: return <Building className="w-8 h-8" />;
+        case 'cafe': return <Coffee className="w-5 h-5" />;
+        case 'restaurant': return <Utensils className="w-5 h-5" />;
+        case 'bar': return <Heart className="w-5 h-5" />;
+        case 'store': return <ShoppingBag className="w-5 h-5" />;
+        default: return <Building className="w-5 h-5" />;
       }
     };
 
+    // Sample content for realistic previews
+    const sampleContent = {
+      menuItems: formData.menuItems.length > 0 ? formData.menuItems : [
+        { name: 'Signature Latte', description: 'Our house special with organic beans', price: '4.50' },
+        { name: 'Artisan Sandwich', description: 'Fresh ingredients, homemade bread', price: '8.00' },
+        { name: 'Chocolate Croissant', description: 'Buttery, flaky pastry with dark chocolate', price: '3.25' }
+      ],
+      reviews: [
+        { name: 'Sarah M.', rating: 5, text: 'Amazing coffee and friendly staff!' },
+        { name: 'John D.', rating: 5, text: 'Love the atmosphere here.' }
+      ],
+      hours: formData.openingHours?.Monday ? formData.openingHours : {
+        Monday: { open: '7:00', close: '19:00' },
+        Tuesday: { open: '7:00', close: '19:00' },
+        Wednesday: { open: '7:00', close: '19:00' }
+      }
+    };
+
+    // Realistic Minimalist Template
     const renderMinimalistTemplate = () => (
-      <div className="h-full overflow-y-auto bg-white transition-all duration-700 ease-in-out">
-        {/* Floating minimal navigation */}
-        <div className="absolute top-8 left-4 right-4 z-10">
-          <div className={`bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg border border-gray-200 transition-all duration-300 ${
-            previewState.menuOpen ? 'shadow-xl scale-105' : ''
-          }`}>
+      <div className="h-full overflow-y-auto bg-white font-light">
+        {/* Clean Top Navigation */}
+        <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
+          <div className="px-4 py-3">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-bold text-gray-900">{getBusinessName()}</div>
+              <h1 className="text-lg font-medium text-gray-900">{getBusinessName()}</h1>
               <button
                 onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-                className={`w-6 h-6 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 ${
-                  previewState.menuOpen ? 'rotate-90' : ''
-                }`}
+                className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
               >
-                <Menu className="w-3 h-3 text-gray-600" />
+                <Menu className="w-4 h-4 text-gray-600" />
               </button>
             </div>
-
-            {/* Dropdown menu */}
+            
+            {/* Navigation Menu */}
             {previewState.menuOpen && (
-              <div className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="space-y-2">
-                  {['Home', 'Menu', 'About', 'Contact'].map((item, index) => (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="space-y-1">
+                  {['Home', 'Menu', 'About', 'Contact'].map((page) => (
                     <button
-                      key={item}
-                      onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
-                      className={`w-full text-left px-2 py-1 text-xs rounded-lg transition-colors ${
-                        previewState.activeSection === item.toLowerCase()
+                      key={page}
+                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.toLowerCase(), menuOpen: false }))}
+                      className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
+                        previewState.activePage === page.toLowerCase()
                           ? 'bg-gray-100 text-gray-900 font-medium'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          : 'text-gray-600 hover:bg-gray-50'
                       }`}
-                      style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      {item}
+                      {page}
                     </button>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </nav>
 
-        {/* Single column layout with lots of whitespace */}
-        <div className="pt-20 px-6">
-          {/* Hero - very minimal */}
-          <div className="text-center py-12">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
-              <div className="w-10 h-10 rounded-full" style={{ backgroundColor: styles.userPrimary }}>
-                <div className="w-full h-full flex items-center justify-center text-white text-xs">
+        {/* Page Content */}
+        {previewState.activePage === 'home' && (
+          <div className="px-6 py-8">
+            {/* Hero Section */}
+            <div className="text-center mb-12">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center" 
+                   style={{ backgroundColor: `${styles.userPrimary}15` }}>
+                <div style={{ color: styles.userPrimary }}>
                   {getBusinessIcon()}
                 </div>
               </div>
+              <h2 className="text-2xl font-light text-gray-900 mb-2">{getBusinessName()}</h2>
+              {formData.slogan && (
+                <p className="text-gray-500 text-sm">{formData.slogan}</p>
+              )}
             </div>
-            <h1 className="text-xl font-light text-gray-900 mb-2">{getBusinessName()}</h1>
-            {formData.slogan && (
-              <p className="text-sm text-gray-500 font-light">{formData.slogan}</p>
-            )}
-          </div>
 
-          {/* Minimal menu display */}
-          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
-            <div className="py-8">
-              <div className="space-y-6">
-                {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                    onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                    onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
-                    className={`w-full border-b border-gray-100 pb-4 transition-all duration-200 ${
-                      previewState.hoveredItem === item.name ? 'transform scale-105 bg-gray-50 rounded-lg px-2 py-2' : ''
-                    }`}
-                  >
-                    <div className="flex justify-between items-baseline">
-                      <div className="text-left">
-                        <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
-                        <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-                      </div>
-                      <div className={`text-sm font-light transition-colors ${
-                        previewState.hoveredItem === item.name ? 'text-blue-600 font-medium' : 'text-gray-600'
-                      }`}>${item.price}</div>
+            {/* Featured Items */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium text-gray-900 text-center">Featured</h3>
+              {sampleContent.menuItems.slice(0, 2).map((item, index) => (
+                <div key={index} className="text-center border-b border-gray-100 pb-6">
+                  <h4 className="font-medium text-gray-900 mb-1">{item.name}</h4>
+                  <p className="text-sm text-gray-500 mb-2">{item.description}</p>
+                  <span className="text-lg font-light" style={{ color: styles.userPrimary }}>${item.price}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {previewState.activePage === 'menu' && (
+          <div className="px-6 py-8">
+            <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Menu</h2>
+            <div className="space-y-6">
+              {sampleContent.menuItems.map((item, index) => (
+                <div key={index} className="border-b border-gray-100 pb-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{item.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                     </div>
-                  </button>
-                ))}
+                    <span className="font-light text-lg ml-4" style={{ color: styles.userPrimary }}>${item.price}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {previewState.activePage === 'about' && (
+          <div className="px-6 py-8">
+            <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">About Us</h2>
+            <div className="space-y-4 text-center">
+              <p className="text-gray-600">
+                {formData.uniqueDescription || 'We are passionate about creating exceptional experiences for our customers.'}
+              </p>
+              <div className="mt-8">
+                <h3 className="font-medium text-gray-900 mb-4">Hours</h3>
+                <div className="space-y-2 text-sm">
+                  {Object.entries(sampleContent.hours).slice(0, 3).map(([day, hours]: [string, any]) => (
+                    <div key={day} className="flex justify-between">
+                      <span className="text-gray-600">{day}</span>
+                      <span className="text-gray-900">{hours.open} - {hours.close}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {previewState.activePage === 'contact' && (
+          <div className="px-6 py-8">
+            <h2 className="text-xl font-medium text-gray-900 mb-6 text-center">Contact</h2>
+            <div className="space-y-4 text-center">
+              {formData.location && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">Location</h3>
+                  <p className="text-gray-600 text-sm">{formData.location}</p>
+                </div>
+              )}
+              <div className="pt-4">
+                <h3 className="font-medium text-gray-900 mb-2">Get in Touch</h3>
+                <p className="text-gray-600 text-sm">Visit us today!</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
 
+    // Realistic Creative Template
     const renderCreativeTemplate = () => (
-      <div className="h-full overflow-y-auto transition-all duration-700 ease-in-out"
+      <div className="h-full overflow-y-auto text-white" 
            style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        {/* Full-screen creative navigation */}
+        {/* Bold Header */}
         <div className="relative">
-          {/* Bold header with overlay */}
-          <div className="absolute top-0 left-0 right-0 z-20 p-4">
+          <nav className="absolute top-0 left-0 right-0 z-50 p-4">
             <div className="flex items-center justify-between">
-              <div className="text-white font-black text-lg">{getBusinessName()}</div>
+              <h1 className="text-xl font-black text-white">{getBusinessName()}</h1>
               <button
                 onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-                className={`w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/30 hover:scale-110 ${
-                  previewState.menuOpen ? 'rotate-180 bg-white/40' : ''
-                }`}
+                className="w-10 h-10 bg-white/20 backdrop-blur rounded-full flex items-center justify-center transition-all hover:bg-white/30"
               >
                 <Menu className="w-4 h-4 text-white" />
               </button>
             </div>
+          </nav>
 
-            {/* Creative full-screen menu overlay */}
-            {previewState.menuOpen && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 animate-in fade-in duration-300">
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center space-y-8">
-                    {['Home', 'Menu', 'Gallery', 'Contact'].map((item, index) => (
-                      <button
-                        key={item}
-                        onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
-                        className="block text-4xl font-black text-white hover:text-pink-300 transition-all duration-300 hover:scale-110"
-                        style={{
-                          animationDelay: `${index * 100}ms`,
-                          animation: 'slideInLeft 0.5s ease-out forwards'
-                        }}
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
+          {/* Full-Screen Menu Overlay */}
+          {previewState.menuOpen && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="text-center space-y-6">
+                {['Home', 'Menu', 'Gallery', 'Contact'].map((page, index) => (
+                  <button
+                    key={page}
+                    onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.toLowerCase(), menuOpen: false }))}
+                    className="block text-3xl font-black text-white hover:text-pink-300 transition-all duration-300 hover:scale-110"
+                    style={{ 
+                      animationDelay: `${index * 100}ms`,
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hero Section */}
+          {previewState.activePage === 'home' && (
+            <div className="pt-16 pb-8 px-4 text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <div style={{ color: styles.userPrimary }}>
+                  {getBusinessIcon()}
                 </div>
               </div>
-            )}
-          </div>
+              <h1 className="text-3xl font-black text-white mb-3">{getBusinessName()}</h1>
+              {formData.slogan && (
+                <p className="text-xl font-bold text-white/90 mb-6">{formData.slogan}</p>
+              )}
+              
+              {/* Creative Grid Layout */}
+              <div className="grid grid-cols-2 gap-3 mt-8">
+                {sampleContent.menuItems.slice(0, 4).map((item, index) => (
+                  <div key={index} className="bg-white/20 backdrop-blur rounded-2xl p-4 hover:bg-white/30 transition-all">
+                    <h3 className="text-sm font-bold text-white">{item.name}</h3>
+                    <p className="text-xs text-white/80 mt-1">{item.description}</p>
+                    <div className="text-lg font-black mt-2" style={{ color: styles.userSecondary }}>${item.price}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-          {/* Dynamic hero with large typography */}
-          <div className="relative pt-16 pb-8 px-4 text-center">
-            <div className="relative z-10">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <div className="w-16 h-16 rounded-2xl" style={{ backgroundColor: styles.userPrimary }}>
-                  <div className="w-full h-full flex items-center justify-center text-white">
+          {previewState.activePage === 'menu' && (
+            <div className="pt-16 px-4">
+              <h2 className="text-2xl font-black text-white mb-6 text-center">Our Menu</h2>
+              <div className="grid grid-cols-1 gap-4">
+                {sampleContent.menuItems.map((item, index) => (
+                  <div key={index} className="bg-white/20 backdrop-blur rounded-2xl p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-white">{item.name}</h3>
+                        <p className="text-sm text-white/80 mt-1">{item.description}</p>
+                      </div>
+                      <span className="text-xl font-black" style={{ color: styles.userSecondary }}>${item.price}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    // Realistic Professional Template
+    const renderProfessionalTemplate = () => (
+      <div className="h-full overflow-y-auto bg-white">
+        {/* Traditional Top Navigation */}
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+                  <div style={{ color: styles.userPrimary }}>
                     {getBusinessIcon()}
                   </div>
                 </div>
+                <h1 className="text-lg font-semibold text-gray-900">{getBusinessName()}</h1>
               </div>
-              <h1 className="text-2xl font-black text-white mb-3">{getBusinessName()}</h1>
+              <button
+                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                className="p-2 hover:bg-gray-100 rounded transition-colors"
+              >
+                <Menu className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+            
+            {/* Professional Dropdown */}
+            {previewState.menuOpen && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="grid grid-cols-2 gap-2">
+                  {['Home', 'Menu', 'About', 'Contact'].map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.toLowerCase(), menuOpen: false }))}
+                      className={`text-left px-3 py-2 text-sm rounded transition-colors ${
+                        previewState.activePage === page.toLowerCase() 
+                          ? 'bg-blue-50 text-blue-900 font-semibold'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </nav>
+
+        {/* Professional Content */}
+        {previewState.activePage === 'home' && (
+          <div className="p-4">
+            <div className="text-center py-8 border-b border-gray-100">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
               {formData.slogan && (
-                <p className="text-lg font-bold text-white/90">{formData.slogan}</p>
+                <p className="text-gray-600">{formData.slogan}</p>
               )}
             </div>
 
-            {/* Floating geometric shapes */}
-            <div className="absolute top-20 left-8 w-12 h-12 bg-white/10 rounded-2xl transform rotate-12 animate-pulse"></div>
-            <div className="absolute bottom-12 right-6 w-8 h-8 bg-white/15 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
-          </div>
-
-          {/* Multi-column creative layout */}
-          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
-            <div className="px-4 pb-8">
-              <div className="grid grid-cols-2 gap-3">
-                {formData.menuItems.slice(0, 4).map((item: any, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                    onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                    onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
-                    className={`bg-white/20 backdrop-blur-sm rounded-2xl p-4 transition-all duration-300 hover:bg-white/30 hover:scale-105 ${
-                      previewState.hoveredItem === item.name ? 'transform scale-105 bg-white/30 shadow-lg' : ''
-                    }`}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="text-white">
-                      <h3 className="text-sm font-bold">{item.name}</h3>
-                      <p className="text-xs text-white/80 mt-1">{item.description}</p>
-                      <div className="text-lg font-black mt-2" style={{ color: styles.userSecondary }}>${item.price}</div>
+            <div className="py-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Featured Items</h2>
+              <div className="space-y-4">
+                {sampleContent.menuItems.slice(0, 3).map((item, index) => (
+                  <div key={index} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                      </div>
+                      <div className="text-lg font-bold ml-4" style={{ color: styles.userPrimary }}>${item.price}</div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="py-6 border-t border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Customer Reviews</h2>
+              <div className="space-y-3">
+                {sampleContent.reviews.map((review, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-900">{review.name}</span>
+                      <div className="flex">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600">{review.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {previewState.activePage === 'menu' && (
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Our Menu</h2>
+            <div className="space-y-4">
+              {sampleContent.menuItems.map((item, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                    </div>
+                    <span className="text-lg font-bold" style={{ color: styles.userPrimary }}>${item.price}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
 
-    const renderProfessionalTemplate = () => (
-      <div className="h-full overflow-y-auto bg-white transition-all duration-700 ease-in-out">
-        {/* Traditional top navigation */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center transition-colors hover:bg-gray-200">
-                <div className="w-5 h-5" style={{ color: styles.userPrimary }}>
-                  {getBusinessIcon()}
+    // Realistic Modern Template
+    const renderModernTemplate = () => (
+      <div className="h-full overflow-y-auto bg-gray-900 text-white">
+        {/* Modern Header */}
+        <nav className="bg-gray-800/90 backdrop-blur border-b border-gray-700 sticky top-0 z-50">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: styles.userPrimary }}></div>
+                <h1 className="text-white font-mono text-lg">{getBusinessName()}</h1>
+              </div>
+              <button
+                onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
+                className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center transition-colors"
+              >
+                <Menu className="w-4 h-4 text-gray-300" />
+              </button>
+            </div>
+            
+            {/* Modern Slide Menu */}
+            {previewState.menuOpen && (
+              <div className="mt-3 pt-3 border-t border-gray-700">
+                <div className="space-y-1">
+                  {['Home', 'Menu', 'Tech', 'Contact'].map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setPreviewState(prev => ({ ...prev, activePage: page.toLowerCase(), menuOpen: false }))}
+                      className={`w-full text-left px-3 py-2 text-sm font-mono rounded transition-all ${
+                        previewState.activePage === page.toLowerCase() 
+                          ? 'bg-green-500/20 text-green-400 border-l-2 border-green-400'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      }`}
+                    >
+                      {page.toLowerCase()}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="text-base font-semibold text-gray-900">{getBusinessName()}</div>
-            </div>
-            <button
-              onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-            >
-              <Menu className="w-4 h-4 text-gray-600" />
-            </button>
-          </div>
-
-          {/* Professional dropdown menu */}
-          {previewState.menuOpen && (
-            <div className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
-              <div className="grid grid-cols-2 gap-2">
-                {['Home', 'Menu', 'About', 'Contact'].map((item, index) => (
-                  <button
-                    key={item}
-                    onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
-                    className={`text-left px-3 py-2 text-sm rounded transition-colors ${
-                      previewState.activeSection === item.toLowerCase()
-                        ? 'bg-blue-50 text-blue-900 font-semibold'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Traditional grid layout */}
-        <div className="p-4">
-          {/* Professional hero */}
-          <div className="text-center py-8 border-b border-gray-100">
-            <h1 className="text-xl font-bold text-gray-900 mb-2">{getBusinessName()}</h1>
-            {formData.slogan && (
-              <p className="text-sm text-gray-600">{formData.slogan}</p>
             )}
           </div>
+        </nav>
 
-          {/* Traditional menu layout */}
-          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
-            <div className="py-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Our Menu</h2>
-              <div className="space-y-4">
-                {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                    onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                    onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
-                    className={`w-full bg-gray-50 rounded-lg p-4 transition-all duration-200 hover:bg-gray-100 hover:shadow-md ${
-                      previewState.hoveredItem === item.name ? 'transform scale-102 bg-gray-100 shadow-md border-l-4' : ''
-                    }`}
-                    style={previewState.hoveredItem === item.name ? { borderLeftColor: styles.userPrimary } : {}}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 text-left">
-                        <h3 className="text-sm font-semibold text-gray-900">{item.name}</h3>
-                        <p className="text-xs text-gray-600 mt-1">{item.description}</p>
-                      </div>
-                      <div className={`text-sm font-bold ml-4 transition-colors ${
-                        previewState.hoveredItem === item.name ? 'scale-110' : ''
-                      }`} style={{ color: styles.userPrimary }}>${item.price}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-
-    const renderModernTemplate = () => (
-      <div className="h-full overflow-y-auto bg-gray-900 transition-all duration-700 ease-in-out">
-        {/* Sticky side navigation indicator */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 z-20" style={{ backgroundColor: styles.userPrimary }}></div>
-
-        {/* Modern header */}
-        <div className="bg-gray-800/90 backdrop-blur-sm px-4 py-3 border-b border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: styles.userPrimary }}></div>
-              <div className="text-white font-mono text-sm">{getBusinessName()}</div>
-            </div>
-            <button
-              onClick={() => setPreviewState(prev => ({ ...prev, menuOpen: !prev.menuOpen }))}
-              className={`w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center transition-all duration-200 ${
-                previewState.menuOpen ? 'rotate-90' : ''
-              }`}
-            >
-              <Menu className="w-3 h-3 text-gray-300" />
-            </button>
-          </div>
-
-          {/* Modern slide-down menu */}
-          {previewState.menuOpen && (
-            <div className="mt-3 pt-3 border-t border-gray-700 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="space-y-1">
-                {['Home', 'Menu', 'Gallery', 'Contact'].map((item, index) => (
-                  <button
-                    key={item}
-                    onClick={() => setPreviewState(prev => ({ ...prev, activeSection: item.toLowerCase(), menuOpen: false }))}
-                    className={`w-full text-left px-3 py-2 text-xs font-mono rounded transition-all duration-200 ${
-                      previewState.activeSection === item.toLowerCase()
-                        ? 'bg-green-500/20 text-green-400 border-l-2 border-green-400'
-                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                    }`}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    {item.toLowerCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Modular grid layout */}
-        <div className="p-4">
-          {/* Modern hero card */}
-          <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
-                <div className="w-6 h-6" style={{ color: styles.userPrimary }}>
-                  {getBusinessIcon()}
+        {/* Modern Content */}
+        {previewState.activePage === 'home' && (
+          <div className="p-4">
+            {/* Hero Card */}
+            <div className="bg-gray-800 rounded-2xl p-6 mb-4 border border-gray-700">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
+                  <div style={{ color: styles.userPrimary }}>
+                    {getBusinessIcon()}
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-white">{getBusinessName()}</h1>
+                  {formData.slogan && (
+                    <p className="text-sm text-gray-400">{formData.slogan}</p>
+                  )}
                 </div>
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">{getBusinessName()}</h1>
-                {formData.slogan && (
-                  <p className="text-sm text-gray-400">{formData.slogan}</p>
-                )}
-              </div>
             </div>
-          </div>
 
-          {/* Modular content cards */}
-          {formData.selectedPages.includes('menu') && formData.menuItems.length > 0 && (
+            {/* Modular Grid */}
             <div className="grid gap-3">
-              {formData.menuItems.slice(0, 3).map((item: any, index: number) => (
-                <button
-                  key={index}
-                  onClick={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                  onMouseEnter={() => setPreviewState(prev => ({ ...prev, hoveredItem: item.name }))}
-                  onMouseLeave={() => setPreviewState(prev => ({ ...prev, hoveredItem: null }))}
-                  className={`w-full bg-gray-800 rounded-xl p-4 border border-gray-700 transition-all duration-200 hover:border-gray-600 hover:bg-gray-750 ${
-                    previewState.hoveredItem === item.name ? 'transform scale-105 border-green-500 bg-gray-750 shadow-lg' : ''
-                  }`}
-                >
+              {sampleContent.menuItems.slice(0, 3).map((item, index) => (
+                <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-colors">
                   <div className="flex justify-between items-center">
-                    <div className="text-left">
+                    <div>
                       <h3 className="text-sm font-semibold text-white">{item.name}</h3>
                       <p className="text-xs text-gray-400 mt-1">{item.description}</p>
                     </div>
-                    <div className={`text-sm font-mono font-bold text-green-400 transition-transform ${
-                      previewState.hoveredItem === item.name ? 'scale-110' : ''
-                    }`}>${item.price}</div>
+                    <div className="text-sm font-mono font-bold text-green-400">${item.price}</div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
-          )}
-        </div>
+
+            {/* Status Cards */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-mono text-gray-400">OPEN NOW</span>
+                </div>
+              </div>
+              <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-3 h-3 text-blue-400" />
+                  <span className="text-xs font-mono text-gray-400">FAST SERVICE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {previewState.activePage === 'menu' && (
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-white mb-6 font-mono">./menu</h2>
+            <div className="space-y-3">
+              {sampleContent.menuItems.map((item, index) => (
+                <div key={index} className="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-green-500/50 transition-all">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-white font-mono">{item.name}</h3>
+                      <p className="text-sm text-gray-400 mt-1">{item.description}</p>
+                    </div>
+                    <span className="text-green-400 font-mono font-bold">${item.price}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
 
@@ -1088,7 +1189,7 @@ export default function Configurator() {
               </Button>
             </div>
           </div>
-
+          
           {/* iPhone 16 Pro mockup */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative">
@@ -1097,14 +1198,13 @@ export default function Configurator() {
                 <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
                   {/* iPhone notch */}
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
-
+                  
                   {/* Website preview */}
                   <div className="h-full relative transition-all duration-700 ease-in-out">
                     {renderPreviewContent()}
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -1272,8 +1372,8 @@ export default function Configurator() {
             <Card
               key={template.id}
               className={`group cursor-pointer transition-all duration-300 hover:shadow-xl border-2 hover:border-teal-300 ${
-                selectedTemplate === template.id
-                  ? 'border-teal-500 shadow-xl transform scale-[1.02] bg-teal-50/30'
+                selectedTemplate === template.id 
+                  ? 'border-teal-500 shadow-xl transform scale-[1.02] bg-teal-50/30' 
                   : 'border-gray-200 hover:bg-gray-50/50'
               }`}
               onClick={() => handleTemplateSelect(template.id)}
@@ -1282,12 +1382,12 @@ export default function Configurator() {
                 <div className={`w-full h-52 rounded-t-lg ${template.preview} relative overflow-hidden`}>
                   {/* Template Preview Content */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10"></div>
-
+                  
                   {/* Template Name Badge */}
                   <div className="absolute top-4 left-4">
                     <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      selectedTemplate === template.id
-                        ? 'bg-teal-500 text-white'
+                      selectedTemplate === template.id 
+                        ? 'bg-teal-500 text-white' 
                         : 'bg-white/90 text-gray-700'
                     }`}>
                       {template.name}
@@ -1320,7 +1420,7 @@ export default function Configurator() {
                     </div>
                   </div>
                 </div>
-
+                
                 <div className="p-6">
                   <h3 className={`text-xl font-bold mb-2 transition-colors ${
                     selectedTemplate === template.id ? 'text-teal-700' : 'text-gray-900'
@@ -1328,7 +1428,7 @@ export default function Configurator() {
                     {template.name}
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed">{template.description}</p>
-
+                  
                   {/* Template Features */}
                   <div className="mt-4 flex flex-wrap gap-2">
                     {template.style.layout && (
@@ -1379,6 +1479,59 @@ export default function Configurator() {
       </div>
 
       <div className="space-y-12">
+        {/* Color Themes */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Color Themes</label>
+          <p className="text-sm text-gray-500 mb-6">Choose a preset or customize your own colors below</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { primary: '#2563EB', secondary: '#7C3AED', name: 'Ocean', accent: '#0EA5E9' },
+              { primary: '#059669', secondary: '#10B981', name: 'Forest', accent: '#22C55E' },
+              { primary: '#DC2626', secondary: '#F59E0B', name: 'Sunset', accent: '#F97316' },
+              { primary: '#7C2D12', secondary: '#EA580C', name: 'Autumn', accent: '#F59E0B' },
+              { primary: '#1F2937', secondary: '#374151', name: 'Elegant', accent: '#6B7280' },
+              { primary: '#BE185D', secondary: '#EC4899', name: 'Vibrant', accent: '#F472B6' },
+              { primary: '#6366F1', secondary: '#8B5CF6', name: 'Purple', accent: '#A855F7' },
+              { primary: '#0891B2', secondary: '#06B6D4', name: 'Sky', accent: '#38BDF8' }
+            ].map((preset, index) => {
+              const isSelected = formData.primaryColor === preset.primary && formData.secondaryColor === preset.secondary;
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    updateFormData('primaryColor', preset.primary);
+                    updateFormData('secondaryColor', preset.secondary);
+                  }}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                    isSelected 
+                      ? 'border-teal-500 bg-teal-50 shadow-lg transform scale-105' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="relative mb-3">
+                    <div className="flex space-x-1">
+                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.primary }}></div>
+                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.secondary }}></div>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1">
+                        <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${
+                    isSelected ? 'text-teal-700' : 'text-gray-700'
+                  }`}>
+                    {preset.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Custom Color Section */}
         <div className="bg-gray-50 rounded-2xl p-8">
           <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Custom Colors</h3>
@@ -1443,59 +1596,6 @@ export default function Configurator() {
           </div>
         </div>
 
-        {/* Color Presets */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Color Themes</label>
-          <p className="text-sm text-gray-500 mb-6">Choose a preset or customize your own colors below</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { primary: '#2563EB', secondary: '#7C3AED', name: 'Ocean', accent: '#0EA5E9' },
-              { primary: '#059669', secondary: '#10B981', name: 'Forest', accent: '#22C55E' },
-              { primary: '#DC2626', secondary: '#F59E0B', name: 'Sunset', accent: '#F97316' },
-              { primary: '#7C2D12', secondary: '#EA580C', name: 'Autumn', accent: '#F59E0B' },
-              { primary: '#1F2937', secondary: '#374151', name: 'Elegant', accent: '#6B7280' },
-              { primary: '#BE185D', secondary: '#EC4899', name: 'Vibrant', accent: '#F472B6' },
-              { primary: '#6366F1', secondary: '#8B5CF6', name: 'Purple', accent: '#A855F7' },
-              { primary: '#0891B2', secondary: '#06B6D4', name: 'Sky', accent: '#38BDF8' }
-            ].map((preset, index) => {
-              const isSelected = formData.primaryColor === preset.primary && formData.secondaryColor === preset.secondary;
-              return (
-                <button
-                  key={index}
-                  onClick={() => {
-                    updateFormData('primaryColor', preset.primary);
-                    updateFormData('secondaryColor', preset.secondary);
-                  }}
-                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
-                    isSelected
-                      ? 'border-teal-500 bg-teal-50 shadow-lg transform scale-105'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="relative mb-3">
-                    <div className="flex space-x-1">
-                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.primary }}></div>
-                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.secondary }}></div>
-                    </div>
-                    {isSelected && (
-                      <div className="absolute -top-1 -right-1">
-                        <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
-                          <Check className="w-2.5 h-2.5 text-white" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <span className={`text-sm font-medium transition-colors ${
-                    isSelected ? 'text-teal-700' : 'text-gray-700'
-                  }`}>
-                    {preset.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Font Selection */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">Font Style</label>
@@ -1535,1145 +1635,15 @@ export default function Configurator() {
     </div>
   );
 
-  const PageStructureStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Select your pages
-        </h2>
-        <p className="text-lg text-gray-600">
-          Choose which pages your website will include
-        </p>
-      </div>
-
-      <div className="space-y-4 mb-8">
-        {pageOptions.filter(page =>
-          !page.condition || page.condition.includes(formData.businessType)
-        ).map((page) => (
-          <Card
-            key={page.id}
-            className={`cursor-pointer transition-all duration-300 border-2 ${
-              formData.selectedPages.includes(page.id) ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-            } ${page.required ? 'opacity-75' : ''}`}
-            onClick={() => {
-              if (page.required) return;
-              const newPages = formData.selectedPages.includes(page.id)
-                ? formData.selectedPages.filter(p => p !== page.id)
-                : [...formData.selectedPages, page.id];
-              updateFormData('selectedPages', newPages);
-            }}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-r from-teal-400 to-purple-500 flex items-center justify-center text-white`}>
-                    {page.icon}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{page.name}</h3>
-                    {page.required && <span className="text-sm text-gray-500">Required</span>}
-                  </div>
-                </div>
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  formData.selectedPages.includes(page.id) || page.required ? 'border-teal-500 bg-teal-500' : 'border-gray-300'
-                }`}>
-                  {(formData.selectedPages.includes(page.id) || page.required) && <Check className="w-4 h-4 text-white" />}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Custom Pages */}
-      <div className="mb-8">
-        <label className="block text-sm font-bold text-gray-700 mb-4">Custom Pages (Optional)</label>
-        <div className="flex space-x-2">
-          <Input
-            type="text"
-            placeholder="e.g. Events, Catering, Gift Cards"
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                const newCustomPages = [...formData.customPages, e.currentTarget.value.trim()];
-                updateFormData('customPages', newCustomPages);
-                e.currentTarget.value = '';
-              }
-            }}
-            className="flex-1"
-          />
-          <Button
-            variant="outline"
-            onClick={(e) => {
-              const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
-              if (input && input.value.trim()) {
-                const newCustomPages = [...formData.customPages, input.value.trim()];
-                updateFormData('customPages', newCustomPages);
-                input.value = '';
-              }
-            }}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-        {formData.customPages.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {formData.customPages.map((page, index) => (
-              <div key={index} className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full">
-                <span className="text-sm text-gray-700">{page}</span>
-                <button
-                  onClick={() => {
-                    const newCustomPages = formData.customPages.filter((_, i) => i !== index);
-                    updateFormData('customPages', newCustomPages);
-                  }}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const OpeningHoursStep = () => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-    const updateHours = (day: string, field: string, value: string) => {
-      const newHours = {
-        ...formData.openingHours,
-        [day]: {
-          ...formData.openingHours[day as keyof typeof formData.openingHours],
-          [field]: value
-        }
-      };
-      updateFormData('openingHours', newHours);
-    };
-
-    const toggleDay = (day: string) => {
-      const dayData = formData.openingHours[day as keyof typeof formData.openingHours];
-      if (dayData?.closed) {
-        updateHours(day, 'closed', false);
-        updateHours(day, 'open', '09:00');
-        updateHours(day, 'close', '17:00');
-      } else {
-        updateHours(day, 'closed', true);
-      }
-    };
-
-    return (
-      <div className="py-8 max-w-2xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Set your opening hours
-          </h2>
-          <p className="text-lg text-gray-600">
-            When are you open for business?
-          </p>
-        </div>
-
-        <div className="space-y-4 mb-8">
-          {days.map((day) => {
-            const dayData = formData.openingHours[day as keyof typeof formData.openingHours] || {};
-            return (
-              <Card key={day} className="border-2 border-gray-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="text-lg font-bold text-gray-900 w-24">{day}</h3>
-                      <Button
-                        variant={dayData.closed ? "outline" : "default"}
-                        size="sm"
-                        onClick={() => toggleDay(day)}
-                        className={dayData.closed ? "text-red-600 border-red-300" : "bg-teal-500 text-white"}
-                      >
-                        {dayData.closed ? 'Closed' : 'Open'}
-                      </Button>
-                    </div>
-
-                    {!dayData.closed && (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="time"
-                          value={dayData.open || '09:00'}
-                          onChange={(e) => updateHours(day, 'open', e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg"
-                        />
-                        <span className="text-gray-500">to</span>
-                        <input
-                          type="time"
-                          value={dayData.close || '17:00'}
-                          onChange={(e) => updateHours(day, 'close', e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-          <div className="flex items-start space-x-2">
-            <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div>
-              <h4 className="text-sm font-bold text-blue-900 mb-1">Pro Tip</h4>
-              <p className="text-sm text-blue-700">You can always update your hours later. Consider adding special holiday hours or seasonal changes.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-between">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const MenuProductsStep = () => {
-    const [newItem, setNewItem] = useState({ name: '', description: '', price: '', category: '' });
-
-    const addMenuItem = () => {
-      if (newItem.name && newItem.price) {
-        const updatedItems = [...formData.menuItems, { ...newItem, id: Date.now() }];
-        updateFormData('menuItems', updatedItems);
-        setNewItem({ name: '', description: '', price: '', category: '' });
-      }
-    };
-
-    const removeMenuItem = (id: number) => {
-      const updatedItems = formData.menuItems.filter((item: any) => item.id !== id);
-      updateFormData('menuItems', updatedItems);
-    };
-
-    return (
-      <div className="py-8 max-w-2xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Add your {formData.businessType === 'store' ? 'products' : 'menu'}
-          </h2>
-          <p className="text-lg text-gray-600">
-            Showcase what you offer to attract customers
-          </p>
-        </div>
-
-        {/* Quick Add Form */}
-        <Card className="mb-8 border-2 border-dashed border-gray-300">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Add {formData.businessType === 'store' ? 'Product' : 'Menu Item'}
-            </h3>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <Input
-                placeholder={formData.businessType === 'store' ? 'Product name' : 'Dish name'}
-                value={newItem.name}
-                onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-              />
-              <Input
-                placeholder="Price"
-                value={newItem.price}
-                onChange={(e) => setNewItem({...newItem, price: e.target.value})}
-              />
-            </div>
-            <Textarea
-              placeholder="Description (optional)"
-              value={newItem.description}
-              onChange={(e) => setNewItem({...newItem, description: e.target.value})}
-              className="mb-4"
-            />
-            <Button onClick={addMenuItem} className="w-full bg-teal-500 hover:bg-teal-600">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Item
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Menu Items List */}
-        {formData.menuItems.length > 0 && (
-          <div className="space-y-3 mb-8">
-            <h3 className="text-lg font-bold text-gray-900">Your Items</h3>
-            {formData.menuItems.map((item: any) => (
-              <Card key={item.id} className="border border-gray-200">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-900">{item.name}</h4>
-                      {item.description && (
-                        <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-teal-600">${item.price}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeMenuItem(item.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* PDF Upload Option */}
-        <Card className="mb-8 bg-gray-50">
-          <CardContent className="p-6 text-center">
-            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Or upload your existing menu</h3>
-            <p className="text-gray-600 mb-4">Have a PDF menu? Upload it and we'll add it to your site</p>
-            <Button variant="outline">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload PDF Menu
-            </Button>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-between">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const ReservationsStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Setup reservations
-        </h2>
-        <p className="text-lg text-gray-600">
-          Enable table bookings for your business
-        </p>
-      </div>
-
-      {/* Enable/Disable Toggle */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Enable Reservations</h3>
-              <p className="text-gray-600">Allow customers to book tables online</p>
-            </div>
-            <Button
-              variant={formData.reservationsEnabled ? "default" : "outline"}
-              onClick={() => updateFormData('reservationsEnabled', !formData.reservationsEnabled)}
-              className={formData.reservationsEnabled ? "bg-teal-500 hover:bg-teal-600" : ""}
-            >
-              {formData.reservationsEnabled ? 'Enabled' : 'Disabled'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {formData.reservationsEnabled && (
-        <div className="space-y-6">
-          {/* Max Guests */}
-          <Card>
-            <CardContent className="p-6">
-              <label className="block text-sm font-bold text-gray-700 mb-4">Maximum Party Size</label>
-              <div className="flex items-center space-x-4">
-                <Users className="w-5 h-5 text-gray-400" />
-                <Input
-                  type="number"
-                  value={formData.maxGuests}
-                  onChange={(e) => updateFormData('maxGuests', parseInt(e.target.value))}
-                  className="w-24"
-                  min="1"
-                  max="20"
-                />
-                <span className="text-gray-600">guests</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Notification Method */}
-          <Card>
-            <CardContent className="p-6">
-              <label className="block text-sm font-bold text-gray-700 mb-4">How would you like to receive reservations?</label>
-              <div className="grid grid-cols-1 gap-3">
-                {[
-                  { id: 'email', label: 'Email', icon: <Mail className="w-4 h-4" /> },
-                  { id: 'sms', label: 'SMS', icon: <Phone className="w-4 h-4" /> },
-                  { id: 'whatsapp', label: 'WhatsApp', icon: <Share2 className="w-4 h-4" /> }
-                ].map((method) => (
-                  <Card
-                    key={method.id}
-                    className={`cursor-pointer transition-all duration-300 border-2 ${
-                      formData.notificationMethod === method.id ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-                    }`}
-                    onClick={() => updateFormData('notificationMethod', method.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                          {method.icon}
-                        </div>
-                        <span className="font-medium text-gray-900">{method.label}</span>
-                        {formData.notificationMethod === method.id && (
-                          <Check className="w-5 h-5 text-teal-500 ml-auto" />
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const ContactSocialStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Contact & social media
-        </h2>
-        <p className="text-lg text-gray-600">
-          How can customers reach you?
-        </p>
-      </div>
-
-      {/* Contact Methods */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Contact Methods</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { id: 'phone', label: 'Phone', icon: <Phone className="w-4 h-4" /> },
-              { id: 'email', label: 'Email', icon: <Mail className="w-4 h-4" /> },
-              { id: 'form', label: 'Contact Form', icon: <Users className="w-4 h-4" /> },
-              { id: 'whatsapp', label: 'WhatsApp', icon: <Share2 className="w-4 h-4" /> }
-            ].map((method) => (
-              <Card
-                key={method.id}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  formData.contactMethods.includes(method.id) ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-                }`}
-                onClick={() => {
-                  const newMethods = formData.contactMethods.includes(method.id)
-                    ? formData.contactMethods.filter((m: string) => m !== method.id)
-                    : [...formData.contactMethods, method.id];
-                  updateFormData('contactMethods', newMethods);
-                }}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                    {method.icon}
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">{method.label}</span>
-                  {formData.contactMethods.includes(method.id) && (
-                    <Check className="w-4 h-4 text-teal-500 mx-auto mt-2" />
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Social Media */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
-          <div className="space-y-4">
-            {[
-              { key: 'instagram', name: 'Instagram', icon: <Instagram className="w-5 h-5" />, color: 'from-pink-500 to-purple-500' },
-              { key: 'facebook', name: 'Facebook', icon: <Facebook className="w-5 h-5" />, color: 'from-blue-500 to-blue-600' },
-              { key: 'tiktok', name: 'TikTok', icon: <Play className="w-5 h-5" />, color: 'from-black to-gray-700' }
-            ].map((platform) => (
-              <div key={platform.key} className="flex items-center space-x-4">
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${platform.color} flex items-center justify-center text-white`}>
-                  {platform.icon}
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="url"
-                    placeholder={`Your ${platform.name} URL`}
-                    value={formData.socialMedia[platform.key] || ''}
-                    onChange={(e) => updateFormData('socialMedia', {
-                      ...formData.socialMedia,
-                      [platform.key]: e.target.value
-                    })}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Instagram Sync Option */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-bold text-gray-900 mb-1">Auto-sync Instagram photos</h4>
-                <p className="text-xs text-gray-600">Automatically display your latest Instagram posts on your website</p>
-              </div>
-              <Button
-                variant={formData.instagramSync ? "default" : "outline"}
-                size="sm"
-                onClick={() => updateFormData('instagramSync', !formData.instagramSync)}
-                className={formData.instagramSync ? "bg-pink-500 hover:bg-pink-600" : ""}
-              >
-                {formData.instagramSync ? 'On' : 'Off'}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  // Phase 4: Media & Advanced Options
-  const MediaGalleryStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Upload your photos
-        </h2>
-        <p className="text-lg text-gray-600">
-          Show off your space, food, and atmosphere
-        </p>
-      </div>
-
-      {/* Photo Upload Area */}
-      <Card className="mb-8 border-2 border-dashed border-gray-300 hover:border-teal-400 transition-colors">
-        <CardContent className="p-12 text-center">
-          <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Upload high-quality photos</h3>
-          <p className="text-gray-600 mb-6">
-            Drag and drop images or click to select. Show your space, food, team, and atmosphere.
-          </p>
-          <Button variant="outline" size="lg">
-            <Upload className="w-5 h-5 mr-2" />
-            Choose Photos
-          </Button>
-          <p className="text-xs text-gray-500 mt-3">
-            Supports JPG, PNG up to 10MB each. Recommended: 1200x800px or higher
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Gallery Grid */}
-      {formData.gallery.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Your Gallery ({formData.gallery.length} photos)</h3>
-          <div className="grid grid-cols-3 gap-4">
-            {formData.gallery.map((photo: any, index: number) => (
-              <div key={index} className="relative aspect-square bg-gray-200 rounded-lg overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-400/20 to-purple-500/20"></div>
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-8 h-8 p-0 bg-white/90 hover:bg-white"
-                    onClick={() => {
-                      const newGallery = formData.gallery.filter((_: any, i: number) => i !== index);
-                      updateFormData('gallery', newGallery);
-                    }}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Instagram Sync */}
-      {formData.instagramSync && (
-        <Card className="mb-8 bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-3 mb-3">
-              <Instagram className="w-6 h-6 text-pink-600" />
-              <h3 className="text-lg font-bold text-gray-900">Instagram Integration</h3>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Your latest Instagram posts will automatically appear in your gallery. We'll sync 12 of your most recent photos.
-            </p>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-green-700 font-medium">Connected and syncing</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const AdvancedFeaturesStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Optional features
-        </h2>
-        <p className="text-lg text-gray-600">
-          Enable advanced functionality for your business
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {/* Online Ordering */}
-        <Card className={`transition-all duration-300 border-2 ${formData.onlineOrdering ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center text-white">
-                  <ShoppingBag className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Online Ordering</h3>
-                  <p className="text-gray-600">Enable pickup and delivery orders</p>
-                </div>
-              </div>
-              <Button
-                variant={formData.onlineOrdering ? "default" : "outline"}
-                onClick={() => updateFormData('onlineOrdering', !formData.onlineOrdering)}
-                className={formData.onlineOrdering ? "bg-teal-500 hover:bg-teal-600" : ""}
-              >
-                {formData.onlineOrdering ? 'Enabled' : 'Enable'}
-              </Button>
-            </div>
-            {formData.onlineOrdering && (
-              <div className="mt-4 p-3 bg-white rounded-lg border border-teal-200">
-                <p className="text-sm text-teal-700">
-                  ��� Customers can order directly from your website. Includes payment processing, order management, and delivery tracking.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Online Store */}
-        <Card className={`transition-all duration-300 border-2 ${formData.onlineStore ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white">
-                  <Store className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Online Store</h3>
-                  <p className="text-gray-600">Sell merchandise, gift cards, or products</p>
-                </div>
-              </div>
-              <Button
-                variant={formData.onlineStore ? "default" : "outline"}
-                onClick={() => updateFormData('onlineStore', !formData.onlineStore)}
-                className={formData.onlineStore ? "bg-teal-500 hover:bg-teal-600" : ""}
-              >
-                {formData.onlineStore ? 'Enabled' : 'Enable'}
-              </Button>
-            </div>
-            {formData.onlineStore && (
-              <div className="mt-4 p-3 bg-white rounded-lg border border-teal-200">
-                <p className="text-sm text-teal-700">
-                  🛍️ Perfect for selling branded merchandise, gift cards, or specialty products. Full e-commerce functionality included.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Team Area */}
-        <Card className={`transition-all duration-300 border-2 ${formData.teamArea ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Internal Team Area</h3>
-                  <p className="text-gray-600">Staff schedules, notes, and internal tools</p>
-                </div>
-              </div>
-              <Button
-                variant={formData.teamArea ? "default" : "outline"}
-                onClick={() => updateFormData('teamArea', !formData.teamArea)}
-                className={formData.teamArea ? "bg-teal-500 hover:bg-teal-600" : ""}
-              >
-                {formData.teamArea ? 'Enabled' : 'Enable'}
-              </Button>
-            </div>
-            {formData.teamArea && (
-              <div className="mt-4 p-3 bg-white rounded-lg border border-teal-200">
-                <p className="text-sm text-teal-700">
-                  👥 Private area for your team to manage schedules, share notes, and access internal resources.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="flex items-start space-x-2">
-          <Zap className="w-5 h-5 text-blue-600 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-bold text-blue-900 mb-1">Pro Tip</h4>
-            <p className="text-sm text-blue-700">You can always enable or disable these features later from your dashboard. Start simple and add more as your business grows!</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  // Phase 5: Domain, Preview & Publishing
-  const DomainHostingStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Choose your domain
-        </h2>
-        <p className="text-lg text-gray-600">
-          Select how customers will find your website
-        </p>
-      </div>
-
-      {/* Domain Options */}
-      <div className="space-y-6 mb-8">
-        {/* Existing Domain */}
-        <Card
-          className={`cursor-pointer transition-all duration-300 border-2 ${
-            formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-          }`}
-          onClick={() => updateFormData('hasDomain', true)}
-        >
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white">
-                  <Globe className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">I have my own domain</h3>
-                  <p className="text-gray-600">Connect your existing domain name</p>
-                </div>
-              </div>
-              {formData.hasDomain && (
-                <Check className="w-6 h-6 text-teal-500" />
-              )}
-            </div>
-            {formData.hasDomain && (
-              <div className="mt-4">
-                <Input
-                  type="text"
-                  placeholder="yourbusiness.com"
-                  value={formData.domainName}
-                  onChange={(e) => updateFormData('domainName', e.target.value)}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Sync.a Subdomain */}
-        <Card
-          className={`cursor-pointer transition-all duration-300 border-2 ${
-            !formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
-          }`}
-          onClick={() => updateFormData('hasDomain', false)}
-        >
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-teal-400 to-purple-500 flex items-center justify-center text-white">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Use a sync.a domain</h3>
-                  <p className="text-gray-600">Get started instantly with a free subdomain</p>
-                </div>
-              </div>
-              {!formData.hasDomain && (
-                <Check className="w-6 h-6 text-teal-500" />
-              )}
-            </div>
-            {!formData.hasDomain && (
-              <div className="mt-4">
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="text"
-                    placeholder="yourbusiness"
-                    value={formData.selectedDomain}
-                    onChange={(e) => updateFormData('selectedDomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    className="flex-1"
-                  />
-                  <span className="text-gray-600 font-mono">.sync.app</span>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  Your website will be available at: <strong>{formData.selectedDomain || 'yourbusiness'}.sync.app</strong>
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Hosting Benefits */}
-      <Card className="mb-8 bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-            <Shield className="w-5 h-5 mr-2 text-teal-600" />
-            What's included with sync.a hosting
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { icon: <Wifi className="w-4 h-4" />, text: 'Lightning-fast CDN' },
-              { icon: <Shield className="w-4 h-4" />, text: 'SSL Certificate' },
-              { icon: <Zap className="w-4 h-4" />, text: '99.9% Uptime guarantee' },
-              { icon: <Settings className="w-4 h-4" />, text: 'Automatic updates' }
-            ].map((benefit, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-teal-100 rounded flex items-center justify-center text-teal-600">
-                  {benefit.icon}
-                </div>
-                <span className="text-sm text-gray-700">{benefit.text}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const PreviewAdjustmentsStep = () => (
-    <div className="py-8">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Preview & final tweaks
-        </h2>
-        <p className="text-lg text-gray-600">
-          Review your website and make any final adjustments before going live
-        </p>
-      </div>
-
-      {/* Preview Toggle */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-gray-100 p-1 rounded-full">
-          <Button variant="default" size="sm" className="bg-white shadow-sm">
-            <Smartphone className="w-4 h-4 mr-2" />
-            Mobile
-          </Button>
-          <Button variant="ghost" size="sm">
-            <Monitor className="w-4 h-4 mr-2" />
-            Desktop
-          </Button>
-        </div>
-      </div>
-
-      {/* Full Preview */}
-      <div className="max-w-lg mx-auto mb-8">
-        <div className="relative">
-          <div className="w-full max-w-sm mx-auto">
-            <div className="w-full h-[600px] bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl">
-              <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
-
-                <div className="pt-8 h-full overflow-y-auto">
-                  {/* Preview of the actual website */}
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="text-lg font-bold text-gray-900">
-                        {formData.businessName || 'Your Business'}
-                      </div>
-                      <Menu className="w-4 h-4 text-gray-600" />
-                    </div>
-                  </div>
-
-                  <div className="px-4 py-6 text-center bg-gradient-to-br from-gray-50 to-white">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-teal-400 to-purple-500 flex items-center justify-center">
-                      {businessTypes.find(t => t.value === formData.businessType)?.icon || <Store className="w-8 h-8 text-white" />}
-                    </div>
-                    <h2 className="text-lg font-bold text-gray-900 mb-2">
-                      {formData.businessName || 'Your Business'}
-                    </h2>
-                    {formData.slogan && (
-                      <p className="text-sm text-gray-600">{formData.slogan}</p>
-                    )}
-                  </div>
-
-                  <div className="px-4 space-y-4">
-                    {formData.menuItems.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-2">Menu Highlights</h3>
-                        {formData.menuItems.slice(0, 2).map((item: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                            <div>
-                              <div className="text-xs font-medium text-gray-900">{item.name}</div>
-                              <div className="text-xs text-gray-600">{item.description}</div>
-                            </div>
-                            <div className="text-xs font-bold text-teal-600">${item.price}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Adjustments */}
-      <Card className="max-w-2xl mx-auto mb-8">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Adjustments</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Primary Color</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={formData.primaryColor}
-                  onChange={(e) => updateFormData('primaryColor', e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer"
-                />
-                <span className="text-sm text-gray-600 font-mono">{formData.primaryColor}</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Template</label>
-              <select
-                value={formData.template}
-                onChange={(e) => updateFormData('template', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              >
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-between max-w-2xl mx-auto">
-        <Button onClick={prevStep} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Ready to Publish
-          <Rocket className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  const PublishStep = () => (
-    <div className="text-center py-16">
-      <div className="mb-8">
-        <div className="w-32 h-32 mx-auto mb-6 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-purple-500 rounded-full animate-pulse"></div>
-          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-            <Rocket className="w-16 h-16 text-teal-500 animate-bounce" />
-          </div>
-        </div>
-        <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
-          <span className="text-gradient">Congratulations!</span>
-          <br />Your website is ready to launch!
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-          Your beautiful website for <strong>{formData.businessName || 'your business'}</strong> is ready to go live and start attracting customers.
-        </p>
-      </div>
-
-      {/* Final Website URL */}
-      <Card className="max-w-lg mx-auto mb-8 bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Your website will be live at:</h3>
-          <div className="text-2xl font-bold text-teal-600 font-mono bg-white px-4 py-2 rounded-lg">
-            {formData.hasDomain
-              ? formData.domainName || 'yourdomain.com'
-              : `${formData.selectedDomain || 'yourbusiness'}.sync.app`
-            }
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-        <Button
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-2xl animate-glow"
-          onClick={() => {
-            // Handle actual publishing logic here
-            alert('🎉 Website published successfully! Check your email for next steps.');
-          }}
-        >
-          <Rocket className="mr-3 w-6 h-6" />
-          Publish My Website
-          <Sparkles className="ml-3 w-6 h-6" />
-        </Button>
-
-        <Button
-          onClick={() => setCurrentStep(configuratorSteps.length - 2)}
-          variant="outline"
-          size="lg"
-          className="px-8 py-4 text-lg font-bold rounded-full"
-        >
-          <Eye className="mr-2 w-5 h-5" />
-          Preview Again
-        </Button>
-      </div>
-
-      <div className="mt-12 text-center">
-        <p className="text-gray-500 font-medium">
-          ✨ Instant deployment • 🚀 SSL security included • 💎 30-day money-back guarantee
-        </p>
-      </div>
-    </div>
-  );
-
+  // Render current step
   const renderCurrentStep = () => {
     const step = configuratorSteps[currentStep];
-    if (!step) return null;
-
+    
     switch (step.component) {
       case 'welcome': return <WelcomeStep />;
       case 'business-info': return <BusinessInfoStep />;
       case 'template': return <TemplateStep />;
       case 'branding': return <BrandingStep />;
-      case 'page-structure': return <PageStructureStep />;
-      case 'opening-hours': return <OpeningHoursStep />;
-      case 'menu-products': return <MenuProductsStep />;
-      case 'reservations': return <ReservationsStep />;
-      case 'contact-social': return <ContactSocialStep />;
-      case 'media-gallery': return <MediaGalleryStep />;
-      case 'advanced-features': return <AdvancedFeaturesStep />;
-      case 'domain-hosting': return <DomainHostingStep />;
-      case 'preview-adjustments': return <PreviewAdjustmentsStep />;
-      case 'publish': return <PublishStep />;
       default: return (
         <div className="py-16 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h2>
@@ -2697,7 +1667,6 @@ export default function Configurator() {
   return (
     <div className={`min-h-screen transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} overflow-hidden`}>
       <Navigation />
-      
       
       {/* Main Content */}
       <div className="pt-20">
