@@ -899,7 +899,7 @@ export default function Configurator() {
         ],
         tagline: "Fresh, Healthy, Natural",
         hours: "6:30 - 19:30",
-        special: "🌱 100% Organic",
+        special: "���� 100% Organic",
       },
       fancy: {
         items: [
@@ -1241,7 +1241,7 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white shadow-sm border-t border-gray-100 z-50">
                   <div className="py-1">
-                    {["home", "menu", "gallery", "about", "contact"].map(
+                    {formData.selectedPages.map(
                       (page) => (
                         <button
                           key={page}
@@ -1306,7 +1306,7 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white/15 backdrop-blur-md border-t border-white/30 z-50">
                   <div className="py-1">
-                    {["home", "menu", "gallery", "about", "contact"].map(
+                    {formData.selectedPages.map(
                       (page) => (
                         <button
                           key={page}
@@ -1362,7 +1362,7 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-emerald-100 z-50">
                   <div className="py-1">
-                    {["home", "menu", "gallery", "about", "contact"].map(
+                    {formData.selectedPages.map(
                       (page) => (
                         <button
                           key={page}
@@ -1425,7 +1425,7 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-slate-800/90 backdrop-blur border-t border-amber-500/40 z-50">
                   <div className="py-1">
-                    {["home", "menu", "gallery", "about", "contact"].map(
+                    {formData.selectedPages.map(
                       (page) => (
                         <button
                           key={page}
