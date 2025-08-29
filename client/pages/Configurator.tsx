@@ -1111,15 +1111,19 @@ export default function Configurator() {
               </div>
             );
           }
+
+          // Use user's actual menu items if they exist, otherwise show template items
+          const menuItemsToShow = formData.menuItems.length > 0 ? formData.menuItems : currentContent.items;
+
           return (
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Menu</h2>
               <div className="space-y-3">
-                {currentContent.items.map((item, index) => (
+                {menuItemsToShow.map((item, index) => (
                   <div key={index} className={templateStyles.itemCard}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-2">
-                        <span className="text-lg">{item.emoji}</span>
+                        <span className="text-lg">{item.emoji || "🍽️"}</span>
                         <div>
                           <h3 className={templateStyles.itemName}>
                             {item.name}
@@ -1135,9 +1139,25 @@ export default function Configurator() {
                       >
                         ${item.price}
                       </span>
+                      {/* Show + icon if ordering is enabled */}
+                      {formData.onlineOrdering && (
+                        <button
+                          className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs"
+                          onClick={() => {/* Handle add to cart */}}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
+                {menuItemsToShow.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className={templateStyles.itemDesc}>
+                      No menu items added yet. Add items in the menu step to see them here.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           );
