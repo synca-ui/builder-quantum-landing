@@ -216,35 +216,67 @@ export default function Configurator() {
     { value: 'other', label: 'Other', icon: <Building className="w-6 h-6" />, gradient: 'from-gray-400 to-gray-600' }
   ];
 
-  // Template options
+  // Template options with dramatically different designs
   const templates = [
     {
-      id: 'minimalistic',
-      name: 'Minimalistic',
-      description: 'Clean, spacious, modern typography',
+      id: 'minimalist',
+      name: 'Minimalist',
+      description: 'Clean lines, ample white space, simple navigation, single-column layout',
       preview: 'bg-gradient-to-br from-gray-50 to-white',
-      style: { background: '#FFFFFF', accent: '#374151', text: '#111827' }
+      style: {
+        background: '#FFFFFF',
+        accent: '#374151',
+        text: '#111827',
+        secondary: '#F9FAFB',
+        layout: 'single-column',
+        navigation: 'floating-minimal',
+        typography: 'clean'
+      }
+    },
+    {
+      id: 'creative',
+      name: 'Creative & Bold',
+      description: 'Vibrant colors, large typography, dynamic full-screen images, creative animations, multi-column layout',
+      preview: 'bg-gradient-to-br from-purple-400 to-pink-500',
+      style: {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        accent: '#EC4899',
+        text: '#FFFFFF',
+        secondary: '#8B5CF6',
+        layout: 'multi-column',
+        navigation: 'full-screen-creative',
+        typography: 'bold-experimental'
+      }
+    },
+    {
+      id: 'professional',
+      name: 'Professional & Elegant',
+      description: 'Subtle colors, classic typography, balanced whitespace, traditional navigation',
+      preview: 'bg-gradient-to-br from-blue-50 to-indigo-100',
+      style: {
+        background: '#FFFFFF',
+        accent: '#2563EB',
+        text: '#1F2937',
+        secondary: '#F8FAFC',
+        layout: 'traditional-grid',
+        navigation: 'top-traditional',
+        typography: 'classic-serif'
+      }
     },
     {
       id: 'modern',
-      name: 'Modern',
-      description: 'Grid layout, bold text, smooth transitions',
-      preview: 'bg-gradient-to-br from-blue-50 to-indigo-100',
-      style: { background: '#1E40AF', accent: '#3B82F6', text: '#FFFFFF' }
-    },
-    {
-      id: 'intuitive',
-      name: 'Intuitive',
-      description: 'User-focused, clear navigation, soft colors',
-      preview: 'bg-gradient-to-br from-teal-50 to-emerald-100',
-      style: { background: '#059669', accent: '#10B981', text: '#FFFFFF' }
-    },
-    {
-      id: 'fancy',
-      name: 'Fancy',
-      description: 'Rich visuals, creative layout, animations',
-      preview: 'bg-gradient-to-br from-purple-50 to-pink-100',
-      style: { background: '#7C3AED', accent: '#EC4899', text: '#FFFFFF' }
+      name: 'Modern & Sleek',
+      description: 'Dark mode, sharp lines, subtle animations, sleek menu transitions, modular grid layout',
+      preview: 'bg-gradient-to-br from-gray-800 to-black',
+      style: {
+        background: '#111827',
+        accent: '#10B981',
+        text: '#FFFFFF',
+        secondary: '#1F2937',
+        layout: 'modular-grid',
+        navigation: 'sticky-side',
+        typography: 'modern-sans'
+      }
     }
   ];
 
