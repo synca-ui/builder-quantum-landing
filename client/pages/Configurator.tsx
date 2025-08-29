@@ -2317,6 +2317,11 @@ export default function Configurator() {
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Online Ordering</h3>
                 <p className="text-gray-600">Allow customers to order food for pickup or delivery</p>
+                <div className="mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <p className="text-sm text-orange-800">
+                    💡 <strong>What this does:</strong> Customers can browse your menu, add items to cart, and place orders directly through your website. Perfect for restaurants and cafés wanting to reduce phone orders and increase sales.
+                  </p>
+                </div>
               </div>
             </div>
             <Button
