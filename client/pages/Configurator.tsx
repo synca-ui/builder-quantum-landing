@@ -1225,7 +1225,7 @@ export default function Configurator() {
                   <div className="w-6 h-6 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-medium text-black">
+                  <h1 className={`${getFontSizeClass('text-lg')} font-medium`} style={{ color: styles.userFontColor }}>
                     {getBusinessName()}
                   </h1>
                 </div>
