@@ -2375,6 +2375,667 @@ export default function Configurator() {
     );
   };
 
+  // Media Gallery Step (Step 9)
+  const MediaGalleryStep = () => {
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+    const handleFileUpload = (files: FileList | null) => {
+      if (files) {
+        const newFiles = Array.from(files);
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+        const updatedGallery = [...formData.gallery, ...newFiles.map(file => ({
+          url: URL.createObjectURL(file),
+          alt: file.name,
+          file: file
+        }))];
+        updateFormData('gallery', updatedGallery);
+      }
+    };
+
+    const removeImage = (index: number) => {
+      const updatedGallery = formData.gallery.filter((_, i) => i !== index);
+      updateFormData('gallery', updatedGallery);
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Upload your photos
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Show off your space, food, and atmosphere. High-quality images help attract customers and showcase your business personality.
+          </p>
+        </div>
+
+        {/* Upload Zone */}
+        <Card className="p-8 mb-8">
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-teal-400 transition-colors">
+            <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Upload Photos</h3>
+            <p className="text-gray-600 mb-4">Drag and drop your images or click to browse</p>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => document.getElementById('gallery-upload')?.click()}
+              className="border-2 border-teal-300 hover:border-teal-400 hover:bg-teal-50 text-teal-700"
+            >
+              <Upload className="w-5 h-5 mr-2" />
+              Choose Images
+            </Button>
+            <input
+              id="gallery-upload"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileUpload(e.target.files)}
+            />
+            <p className="text-xs text-gray-500 mt-4">JPG, PNG up to 5MB each • Maximum 20 images</p>
+          </div>
+        </Card>
+
+        {/* Gallery Preview */}
+        {formData.gallery.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Your Gallery</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {formData.gallery.map((image, index) => (
+                <div key={index} className="relative group">
+                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    <img
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeImage(index)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Advanced Features Step (Step 10)
+  const AdvancedFeaturesStep = () => {
+    const features = [
+      {
+        id: 'onlineOrdering',
+        title: 'Online Ordering',
+        description: 'Allow customers to place orders directly from your website',
+        icon: <ShoppingBag className="w-8 h-8" />,
+        premium: false
+      },
+      {
+        id: 'onlineStore',
+        title: 'Online Store',
+        description: 'Sell products and merchandise online with payment processing',
+        icon: <Store className="w-8 h-8" />,
+        premium: true
+      },
+      {
+        id: 'teamArea',
+        title: 'Team Section',
+        description: 'Showcase your team members and their roles',
+        icon: <Users className="w-8 h-8" />,
+        premium: false
+      }
+    ];
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Optional features
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Enable advanced functionality to enhance your website and provide better customer experience.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature) => {
+            const isEnabled = formData[feature.id];
+            return (
+              <Card
+                key={feature.id}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  isEnabled ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+                }`}
+                onClick={() => updateFormData(feature.id, !isEnabled)}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
+                    isEnabled ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                  {feature.premium && (
+                    <div className="mb-2">
+                      <span className="px-2 py-1 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold rounded-full">
+                        Premium
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-gray-600 text-sm mb-4">{feature.description}</p>
+                  {isEnabled && (
+                    <div className="mt-2">
+                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Domain & Hosting Step (Step 11)
+  const DomainHostingStep = () => {
+    const [domainSearch, setDomainSearch] = useState('');
+    const [availableDomains, setAvailableDomains] = useState([
+      { domain: 'yourbusiness.com', available: true, price: '$12.99/year' },
+      { domain: 'yourbusiness.net', available: true, price: '$13.99/year' },
+      { domain: 'yourbusiness.org', available: false, price: 'Taken' }
+    ]);
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Choose your domain
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Select how customers will find your website. You can use your own domain or get a free subdomain.
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Domain Options */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                !formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              }`}
+              onClick={() => updateFormData('hasDomain', false)}
+            >
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-2xl flex items-center justify-center">
+                  <Zap className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Free Subdomain</h3>
+                <p className="text-gray-600 text-sm mb-4">Get started quickly with a free subdomain</p>
+                <div className="text-green-600 font-bold">FREE</div>
+                {!formData.hasDomain && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                formData.hasDomain ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-300'
+              }`}
+              onClick={() => updateFormData('hasDomain', true)}
+            >
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-2xl flex items-center justify-center">
+                  <Globe className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Custom Domain</h3>
+                <p className="text-gray-600 text-sm mb-4">Professional domain for your business</p>
+                <div className="text-blue-600 font-bold">From $12.99/year</div>
+                {formData.hasDomain && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Free Subdomain Setup */}
+          {!formData.hasDomain && (
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Your Free Website URL</h3>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="text"
+                  placeholder="yourbusiness"
+                  defaultValue={formData.businessName.toLowerCase().replace(/\s+/g, '')}
+                  onChange={(e) => updateFormData('selectedDomain', e.target.value)}
+                  className="flex-1"
+                />
+                <span className="text-gray-500 font-mono">.sync-a.com</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Your website will be available at: {(formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, ''))}.sync-a.com
+              </p>
+            </Card>
+          )}
+
+          {/* Custom Domain Setup */}
+          {formData.hasDomain && (
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Find Your Perfect Domain</h3>
+              <div className="flex space-x-2 mb-4">
+                <Input
+                  type="text"
+                  placeholder="Enter domain name"
+                  value={domainSearch}
+                  onChange={(e) => setDomainSearch(e.target.value)}
+                  className="flex-1"
+                />
+                <Button variant="outline">
+                  Search
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {availableDomains.map((domain, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-3 h-3 rounded-full ${domain.available ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      <span className="font-mono font-medium">{domain.domain}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <span className={`text-sm ${domain.available ? 'text-green-600' : 'text-red-600'}`}>
+                        {domain.price}
+                      </span>
+                      {domain.available && (
+                        <Button
+                          size="sm"
+                          className="bg-teal-500 hover:bg-teal-600"
+                          onClick={() => updateFormData('domainName', domain.domain)}
+                        >
+                          Select
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Preview & Adjustments Step (Step 12)
+  const PreviewAdjustmentsStep = () => {
+    const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
+
+    return (
+      <div className="py-8 max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Preview & final tweaks
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Review your website and make any final adjustments before going live.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Quick Settings */}
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Adjustments</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Website Title</label>
+                  <Input
+                    type="text"
+                    defaultValue={formData.businessName}
+                    onChange={(e) => updateFormData('businessName', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Tagline</label>
+                  <Input
+                    type="text"
+                    defaultValue={formData.slogan}
+                    onChange={(e) => updateFormData('slogan', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Primary Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={formData.primaryColor}
+                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.primaryColor}
+                      onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Performance Score</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Speed</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full w-4/5"></div>
+                    </div>
+                    <span className="text-sm font-bold text-green-600">95</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">SEO</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full w-5/6"></div>
+                    </div>
+                    <span className="text-sm font-bold text-blue-600">92</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Mobile</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                      <div className="bg-purple-500 h-2 rounded-full w-full"></div>
+                    </div>
+                    <span className="text-sm font-bold text-purple-600">100</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Enhanced Preview */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-100 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">Live Preview</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    variant={previewMode === 'mobile' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setPreviewMode('mobile')}
+                  >
+                    <Smartphone className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={previewMode === 'desktop' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setPreviewMode('desktop')}
+                  >
+                    <Monitor className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                {previewMode === 'mobile' ? (
+                  <div className="w-64 h-[480px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
+                    <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
+                      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+                      <div className="h-full relative">
+                        <LivePreview />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full max-w-4xl h-96 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
+                    <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center px-4">
+                      <div className="flex space-x-2">
+                        <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                        <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      </div>
+                      <div className="flex-1 text-center">
+                        <span className="text-xs text-gray-600 font-mono">
+                          {formData.hasDomain ? formData.domainName : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, '')}.sync-a.com`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-full overflow-hidden">
+                      <LivePreview />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Ready to Publish
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Publish Step (Step 13)
+  const PublishStep = () => {
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [isPublished, setIsPublished] = useState(false);
+
+    const handlePublish = async () => {
+      setIsPublishing(true);
+      await saveToBackend(formData as Partial<Configuration>);
+      await publishConfiguration();
+      setIsPublishing(false);
+      setIsPublished(true);
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Publish your website
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Everything looks perfect! Ready to make your website live and start attracting customers?
+          </p>
+        </div>
+
+        {!isPublished ? (
+          <div className="space-y-8">
+            {/* Pre-Launch Checklist */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-6">Pre-Launch Checklist</h3>
+              <div className="space-y-4">
+                {[
+                  { item: 'Business information completed', checked: !!formData.businessName },
+                  { item: 'Template and design customized', checked: !!formData.template },
+                  { item: 'Pages and content configured', checked: formData.selectedPages.length > 0 },
+                  { item: 'Contact information added', checked: formData.contactMethods && formData.contactMethods.length > 0 },
+                  { item: 'Domain or subdomain selected', checked: !!formData.selectedDomain || !!formData.domainName }
+                ].map((check, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      check.checked ? 'bg-green-500' : 'bg-gray-300'
+                    }`}>
+                      {check.checked && <Check className="w-4 h-4 text-white" />}
+                    </div>
+                    <span className={`${check.checked ? 'text-gray-900' : 'text-gray-500'}`}>
+                      {check.item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Website Summary */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-6">Your Website Summary</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Business Details</h4>
+                  <p className="text-gray-600 text-sm mb-1">Name: {formData.businessName}</p>
+                  <p className="text-gray-600 text-sm mb-1">Type: {formData.businessType}</p>
+                  <p className="text-gray-600 text-sm">Location: {formData.location}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Website Features</h4>
+                  <p className="text-gray-600 text-sm mb-1">Template: {formData.template}</p>
+                  <p className="text-gray-600 text-sm mb-1">Pages: {formData.selectedPages.length}</p>
+                  <p className="text-gray-600 text-sm">Domain: {formData.hasDomain ? formData.domainName : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, '')}.sync-a.com`}</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Publish Button */}
+            <div className="text-center">
+              <Button
+                onClick={handlePublish}
+                disabled={isPublishing}
+                size="lg"
+                className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-16 py-8 text-2xl font-bold rounded-full shadow-2xl hover:scale-105 transition-all duration-300"
+              >
+                {isPublishing ? (
+                  <>
+                    <Cloud className="mr-4 w-8 h-8 animate-pulse" />
+                    Publishing...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="mr-4 w-8 h-8" />
+                    Publish Website
+                  </>
+                )}
+              </Button>
+              <p className="text-sm text-gray-500 mt-4">
+                Your website will be live in seconds!
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center space-y-8">
+            <div className="w-32 h-32 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+              <Check className="w-16 h-16 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">🎉 Congratulations!</h3>
+              <p className="text-lg text-gray-600 mb-6">Your website is now live and ready for customers!</p>
+              <div className="space-y-4">
+                <Button
+                  onClick={() => window.open(publishedUrl || '#', '_blank')}
+                  size="lg"
+                  className="bg-green-500 hover:bg-green-600 text-white mr-4"
+                >
+                  <Eye className="mr-2 w-5 h-5" />
+                  View Live Website
+                </Button>
+                <Button
+                  onClick={() => window.location.href = '/'}
+                  variant="outline"
+                  size="lg"
+                >
+                  <Home className="mr-2 w-5 h-5" />
+                  Back to Dashboard
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isPublished && (
+          <div className="flex justify-between mt-8">
+            <Button onClick={prevStep} variant="outline" size="lg">
+              <ArrowLeft className="mr-2 w-5 h-5" />
+              Back
+            </Button>
+            <div></div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Render main content based on current step
   const renderMainContent = () => {
     if (currentStep === -1) {
