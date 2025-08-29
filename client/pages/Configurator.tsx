@@ -1342,79 +1342,79 @@ export default function Configurator() {
   };
 
   const BrandingStep = () => (
-    <div className="py-8 max-w-2xl mx-auto">
+    <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Define your brand colors
+          Define your brand identity
         </h2>
-        <p className="text-lg text-gray-600">
-          Choose colors and fonts that represent your business personality
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Choose colors and fonts that represent your business personality and create a memorable brand experience.
         </p>
       </div>
 
-      <div className="space-y-8">
-        {/* Primary Color */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Primary Color</label>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <input
-                key="primary-color-picker"
-                type="color"
-                value={formData.primaryColor}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  updateFormData('primaryColor', e.target.value);
-                }}
-                onFocus={(e) => e.stopPropagation()}
-                onBlur={(e) => e.stopPropagation()}
-                className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-colors"
-                style={{ WebkitAppearance: 'none', padding: '2px' }}
-              />
+      <div className="space-y-12">
+        {/* Custom Color Section */}
+        <div className="bg-gray-50 rounded-2xl p-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Custom Colors</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Primary Color */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-4">Primary Color</label>
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={formData.primaryColor}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      updateFormData('primaryColor', e.target.value);
+                    }}
+                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
+                    style={{ WebkitAppearance: 'none', padding: '4px' }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    value={formData.primaryColor}
+                    onChange={createInputHandler('primaryColor')}
+                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                    placeholder="#2563EB"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Main brand color</p>
+                </div>
+              </div>
             </div>
-            <div className="flex-1">
-              <Input
-                type="text"
-                value={formData.primaryColor}
-                onChange={createInputHandler('primaryColor')}
-                className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                placeholder="#2563EB"
-              />
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">This will be your main brand color for buttons and accents</p>
-        </div>
 
-        {/* Secondary Color */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Secondary Color</label>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <input
-                key="secondary-color-picker"
-                type="color"
-                value={formData.secondaryColor}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  updateFormData('secondaryColor', e.target.value);
-                }}
-                onFocus={(e) => e.stopPropagation()}
-                onBlur={(e) => e.stopPropagation()}
-                className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-colors"
-                style={{ WebkitAppearance: 'none', padding: '2px' }}
-              />
-            </div>
-            <div className="flex-1">
-              <Input
-                type="text"
-                value={formData.secondaryColor}
-                onChange={createInputHandler('secondaryColor')}
-                className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                placeholder="#7C3AED"
-              />
+            {/* Secondary Color */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-4">Secondary Color</label>
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={formData.secondaryColor}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      updateFormData('secondaryColor', e.target.value);
+                    }}
+                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
+                    style={{ WebkitAppearance: 'none', padding: '4px' }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    value={formData.secondaryColor}
+                    onChange={createInputHandler('secondaryColor')}
+                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                    placeholder="#7C3AED"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Accent color</p>
+                </div>
+              </div>
             </div>
           </div>
-          <p className="text-sm text-gray-500 mt-2">Supporting color for gradients and highlights</p>
         </div>
 
         {/* Color Presets */}
