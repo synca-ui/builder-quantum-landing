@@ -3141,6 +3141,29 @@ export default function Configurator() {
       closed: false,
     });
 
+    // Auto-load default opening hours when reaching this step
+    useEffect(() => {
+      if (!formData.openingHours || Object.keys(formData.openingHours).length === 0) {
+        const defaultHours = {
+          open: "09:00",
+          close: "17:00",
+          closed: false,
+        };
+
+        const defaultOpeningHours = {};
+        // Set weekdays to default hours
+        weekdays.forEach((day) => {
+          defaultOpeningHours[day] = { ...defaultHours };
+        });
+        // Set weekends to closed by default
+        weekends.forEach((day) => {
+          defaultOpeningHours[day] = { open: "10:00", close: "16:00", closed: true };
+        });
+
+        updateFormData("openingHours", defaultOpeningHours);
+      }
+    }, []);
+
     const applyWeekdaySchedule = () => {
       const newHours = { ...formData.openingHours };
       weekdays.forEach((day) => {
