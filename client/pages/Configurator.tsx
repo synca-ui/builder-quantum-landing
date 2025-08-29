@@ -1374,12 +1374,10 @@ export default function Configurator() {
             </div>
             <div className="flex-1">
               <Input
-                key="primary-color-text"
                 type="text"
                 value={formData.primaryColor}
-                onChange={(e) => updateFormData('primaryColor', e.target.value)}
-                onFocus={(e) => e.stopPropagation()}
-                className="font-mono"
+                onChange={createInputHandler('primaryColor')}
+                className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                 placeholder="#2563EB"
               />
             </div>
@@ -1408,12 +1406,10 @@ export default function Configurator() {
             </div>
             <div className="flex-1">
               <Input
-                key="secondary-color-text"
                 type="text"
                 value={formData.secondaryColor}
-                onChange={(e) => updateFormData('secondaryColor', e.target.value)}
-                onFocus={(e) => e.stopPropagation()}
-                className="font-mono"
+                onChange={createInputHandler('secondaryColor')}
+                className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                 placeholder="#7C3AED"
               />
             </div>
@@ -1423,33 +1419,54 @@ export default function Configurator() {
 
         {/* Color Presets */}
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Quick Presets</label>
-          <div className="grid grid-cols-4 gap-3">
+          <label className="block text-sm font-bold text-gray-700 mb-4">Color Themes</label>
+          <p className="text-sm text-gray-500 mb-6">Choose a preset or customize your own colors below</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { primary: '#2563EB', secondary: '#7C3AED', name: 'Ocean' },
-              { primary: '#059669', secondary: '#10B981', name: 'Forest' },
-              { primary: '#DC2626', secondary: '#F59E0B', name: 'Sunset' },
-              { primary: '#7C2D12', secondary: '#EA580C', name: 'Autumn' },
-              { primary: '#1F2937', secondary: '#374151', name: 'Elegant' },
-              { primary: '#BE185D', secondary: '#EC4899', name: 'Vibrant' },
-              { primary: '#6366F1', secondary: '#8B5CF6', name: 'Purple' },
-              { primary: '#0891B2', secondary: '#06B6D4', name: 'Sky' }
-            ].map((preset, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  updateFormData('primaryColor', preset.primary);
-                  updateFormData('secondaryColor', preset.secondary);
-                }}
-                className="flex flex-col items-center p-3 rounded-lg border-2 border-gray-200 hover:border-gray-300 transition-colors"
-              >
-                <div className="flex space-x-1 mb-2">
-                  <div className="w-6 h-6 rounded" style={{ backgroundColor: preset.primary }}></div>
-                  <div className="w-6 h-6 rounded" style={{ backgroundColor: preset.secondary }}></div>
-                </div>
-                <span className="text-xs font-medium text-gray-700">{preset.name}</span>
-              </button>
-            ))}
+              { primary: '#2563EB', secondary: '#7C3AED', name: 'Ocean', accent: '#0EA5E9' },
+              { primary: '#059669', secondary: '#10B981', name: 'Forest', accent: '#22C55E' },
+              { primary: '#DC2626', secondary: '#F59E0B', name: 'Sunset', accent: '#F97316' },
+              { primary: '#7C2D12', secondary: '#EA580C', name: 'Autumn', accent: '#F59E0B' },
+              { primary: '#1F2937', secondary: '#374151', name: 'Elegant', accent: '#6B7280' },
+              { primary: '#BE185D', secondary: '#EC4899', name: 'Vibrant', accent: '#F472B6' },
+              { primary: '#6366F1', secondary: '#8B5CF6', name: 'Purple', accent: '#A855F7' },
+              { primary: '#0891B2', secondary: '#06B6D4', name: 'Sky', accent: '#38BDF8' }
+            ].map((preset, index) => {
+              const isSelected = formData.primaryColor === preset.primary && formData.secondaryColor === preset.secondary;
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    updateFormData('primaryColor', preset.primary);
+                    updateFormData('secondaryColor', preset.secondary);
+                  }}
+                  className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                    isSelected
+                      ? 'border-teal-500 bg-teal-50 shadow-lg transform scale-105'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="relative mb-3">
+                    <div className="flex space-x-1">
+                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.primary }}></div>
+                      <div className="w-8 h-8 rounded-lg shadow-sm" style={{ backgroundColor: preset.secondary }}></div>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1">
+                        <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${
+                    isSelected ? 'text-teal-700' : 'text-gray-700'
+                  }`}>
+                    {preset.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
