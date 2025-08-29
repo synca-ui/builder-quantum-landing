@@ -1717,7 +1717,7 @@ export default function Configurator() {
           );
 
         default:
-          return renderPreviewContent();
+          return <TemplatePreviewContent />;
       }
     };
 
