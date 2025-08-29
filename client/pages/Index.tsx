@@ -275,20 +275,18 @@ export default function Index() {
 
             {/* CTA Buttons with enhanced animation */}
             <div className="hidden md:flex items-center space-x-3">
-              {hasSavedSites && (
-                <a href="/dashboard">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
-                  >
-                    <div className="relative flex items-center space-x-2">
-                      <LayoutDashboard className="w-4 h-4" />
-                      <span>Dashboard</span>
-                    </div>
-                  </Button>
-                </a>
-              )}
+              <a href="/dashboard">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
+                >
+                  <div className="relative flex items-center space-x-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </div>
+                </Button>
+              </a>
               <a href="/configurator">
                 <Button
                   size="sm"
