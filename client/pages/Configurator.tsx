@@ -1895,7 +1895,7 @@ export default function Configurator() {
             </div>
 
             {/* Navigation */}
-            <nav className="bg-black/90 backdrop-blur border-b border-cyan-400/30 px-4 py-3 relative shadow-[0_0_20px_#00ffff50]">
+            <nav className="bg-black/90 backdrop-blur border-b border-cyan-400/30 px-4 py-3 relative z-50 shadow-[0_0_20px_#00ffff50]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded border border-cyan-400/60 bg-cyan-500/20 flex items-center justify-center shadow-[0_0_10px_#00ffff]">
