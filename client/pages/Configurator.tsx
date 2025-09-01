@@ -1879,37 +1879,32 @@ export default function Configurator() {
 
       case "cozy":
         return (
-          <div
-            className={`h-full overflow-y-auto text-white ${fontClass}`}
-            style={{
-              background: "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
-            }}
-          >
+          <div className={`h-full overflow-y-auto bg-orange-50 ${fontClass}`}>
             {/* Status Bar with Notch Space */}
-            <div className="h-8 bg-black flex items-center justify-center text-xs font-bold text-cyan-300">
-              {/* Empty space for notch */}
+            <div className="h-8 bg-amber-100">
+              {/* notch space */}
             </div>
 
             {/* Navigation */}
-            <nav className="bg-black/90 backdrop-blur border-b border-cyan-400/30 px-4 py-3 relative z-50 shadow-[0_0_20px_#00ffff50]">
+            <nav className="mx-2 mt-0 bg-white/95 border border-amber-200 rounded-b-2xl px-4 py-3 relative z-50 shadow">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded border border-cyan-400/60 bg-cyan-500/20 flex items-center justify-center shadow-[0_0_10px_#00ffff]">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-bold text-cyan-300 drop-shadow-[0_0_10px_#00ffff]">
+                  <h1 className="text-lg font-semibold text-amber-900">
                     {getBusinessName()}
                   </h1>
                 </div>
                 <div className="flex items-center space-x-2">
                   {formData.onlineOrdering && (
                     <button
-                      className="p-2 hover:bg-cyan-500/20 rounded border border-cyan-400/50 transition-all duration-300 relative hover:shadow-[0_0_15px_#00ffff]"
+                      className="p-2 hover:bg-amber-50 rounded-xl transition-colors relative border border-amber-200"
                       onClick={() => setShowCart(!showCart)}
                     >
-                      <ShoppingBag className="w-5 h-5 text-cyan-400" />
+                      <ShoppingBag className="w-5 h-5 text-amber-700" />
                       {cartItemsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 text-black text-xs rounded-full flex items-center justify-center shadow-[0_0_10px_#00ff88]">
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 text-white text-[10px] rounded-full flex items-center justify-center">
                           {cartItemsCount}
                         </span>
                       )}
@@ -1917,24 +1912,24 @@ export default function Configurator() {
                   )}
                   <button
                     onClick={toggleMenu}
-                    className="p-2 hover:bg-cyan-500/20 rounded border border-cyan-400/50 transition-all duration-300 hover:shadow-[0_0_15px_#00ffff]"
+                    className="p-2 hover:bg-amber-50 rounded-xl transition-colors border border-amber-200"
                   >
-                    <Menu className="w-5 h-5 text-cyan-400" />
+                    <Menu className="w-5 h-5 text-amber-700" />
                   </button>
                 </div>
               </div>
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-black/95 backdrop-blur border-t border-cyan-400/50 z-[60] shadow-[0_0_20px_#00ffff50]">
-                  <div className="py-2">
+                <div className="absolute top-full left-0 right-0 bg-white border-t border-amber-200 z-50">
+                  <div className="py-1">
                     {formData.selectedPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-4 py-2 text-left text-cyan-300 hover:bg-cyan-500/20 transition-all duration-300 text-sm font-bold hover:shadow-[0_0_10px_#00ffff] ${
+                        className={`w-full px-3 py-1.5 text-left text-amber-800 hover:bg-amber-50 transition-colors text-xs ${
                           previewState.activePage === page
-                            ? "bg-cyan-500/30 text-green-300 shadow-[0_0_15px_#00ff88]"
+                            ? "bg-amber-50 font-semibold text-amber-900"
                             : ""
                         }`}
                       >
@@ -1947,7 +1942,7 @@ export default function Configurator() {
             </nav>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto">{renderPageContent()}</div>
+            <div className="flex-1 overflow-y-auto bg-orange-50">{renderPageContent()}</div>
           </div>
         );
 
