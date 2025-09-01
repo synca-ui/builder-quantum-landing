@@ -5472,6 +5472,8 @@ export default function Configurator() {
         return <AdvancedFeaturesStep />;
       case "domain-hosting":
         return <DomainHostingStep />;
+      case "seo-optimization":
+        return <SEOOptimizationStep />;
       case "preview-adjustments":
         return <PreviewAdjustmentsStep />;
       case "publish":
