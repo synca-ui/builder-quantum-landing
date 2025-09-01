@@ -4045,42 +4045,69 @@ export default function Configurator() {
                 Choose CSV File
               </Button>
               <input
-                id="csv-upload"
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const csvText = event.target?.result as string;
-                      if (csvText) {
-                        const lines = csvText.split('\n').filter(line => line.trim());
-                        const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+              id="csv-upload"
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  let text = String(event.target?.result || "");
+                  if (!text) return;
+                  // Strip BOM and normalize newlines
+                  text = text.replace(/^\uFEFF/, "").replace(/\r\n?|\n/g, "\n");
+                  const firstLine = text.split("\n")[0] || "";
+                  const delimiter = (firstLine.match(/;/g)?.length || 0) > (firstLine.match(/,/g)?.length || 0)
+                    ? ";"
+                    : (firstLine.includes("\t") ? "\t" : ",");
 
-                        const newItems = lines.slice(1).map(line => {
-                          const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-                          const item: any = {};
+                  const parseLine = (line: string) => {
+                    const out: string[] = [];
+                    let cur = ""; let inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                      const ch = line[i];
+                      if (ch === '"') {
+                        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+                        else { inQuotes = !inQuotes; }
+                      } else if (ch === delimiter && !inQuotes) {
+                        out.push(cur); cur = "";
+                      } else { cur += ch; }
+                    }
+                    out.push(cur);
+                    return out.map(v => v.trim());
+                  };
 
-                          headers.forEach((header, index) => {
-                            if (header === 'dish' || header === 'name') item.name = values[index]?.replace(/[^\w\s-]/g, '') || '';
-                            else if (header === 'description') item.description = values[index]?.replace(/[^\w\s-.,]/g, '') || '';
-                            else if (header === 'price') item.price = values[index]?.replace(/[^\d.]/g, '') || '0';
-                          });
+                  const rows = text.split("\n").filter(l => l.trim());
+                  if (rows.length === 0) return;
+                  const headerCells = parseLine(rows[0]).map(h => h.toLowerCase());
+                  const nameKeys = ["name","dish","item","title","produkt","gericht"];
+                  const descKeys = ["description","desc","details","beschreibung"];
+                  const priceKeys = ["price","preis","cost","amount"];
 
-                          return item;
-                        }).filter(item => item.name && item.price);
+                  const getIdx = (keys: string[]) => headerCells.findIndex(h => keys.includes(h));
+                  const nameIdx = getIdx(nameKeys);
+                  const descIdx = getIdx(descKeys);
+                  const priceIdx = getIdx(priceKeys);
 
-                        if (newItems.length > 0) {
-                          updateFormData("menuItems", [...formData.menuItems, ...newItems]);
-                        }
-                      }
-                    };
-                    reader.readAsText(file);
+                  const newItems = rows.slice(1).map((line) => {
+                    const cells = parseLine(line).map(v => v.replace(/\"/g, '"'));
+                    const clean = (s?: string) => (s || "").replace(/[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu, "").trim();
+                    const num = (s?: string) => (s || "").replace(/[^0-9.,]/g, "").replace(",", ".");
+                    const name = clean(cells[nameIdx] || "");
+                    const description = clean(cells[descIdx] || "");
+                    const price = num(cells[priceIdx] || "0");
+                    return name && price ? { name, description, price } : null;
+                  }).filter(Boolean) as any[];
+
+                  if (newItems.length) {
+                    updateFormData("menuItems", [...formData.menuItems, ...newItems]);
                   }
-                }}
-              />
+                };
+                reader.readAsText(file);
+              }}
+            />
               <p className="text-xs text-gray-500 mt-2">
                 Format: name,description,price
               </p>
