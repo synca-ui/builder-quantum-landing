@@ -996,7 +996,7 @@ export default function Configurator() {
         hours: "7:00 - 22:00",
         special: "Innovative Menu",
       },
-      clean: {
+      stylish: {
         items: [
           {
             name: "Organic Latte",
@@ -1500,7 +1500,7 @@ export default function Configurator() {
                       key={index}
                       className={`${templateStyles.homeCard} relative`}
                     >
-                      <div className="text-lg mb-1">{item.emoji || "🍽️"}</div>
+                      <div className="text-lg mb-1">{item.emoji || "🍽���"}</div>
                       <h3
                         className={
                           templateStyles.itemName + " text-xs truncate"
@@ -2164,7 +2164,7 @@ export default function Configurator() {
         tagline: "Modern Flavors, Bold Choices",
         description: "Where creativity meets cuisine",
       },
-      clean: {
+      stylish: {
         items: [
           {
             name: "Organic Latte",
