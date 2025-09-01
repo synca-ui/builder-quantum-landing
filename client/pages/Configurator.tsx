@@ -501,18 +501,18 @@ export default function Configurator() {
       features: ["Warm Colors", "Rounded Corners", "Community Feel"],
       mockup: {
         nav: {
-          bg: "bg-black/95",
-          text: "text-white",
-          border: "border-cyan-400/50",
+          bg: "bg-white/90",
+          text: "text-amber-900",
+          border: "border-amber-200",
         },
         hero: {
-          bg: "bg-gradient-to-r from-black to-purple-900",
-          text: "text-white",
+          bg: "bg-amber-50",
+          text: "text-amber-900",
         },
         cards: {
-          bg: "bg-gray-900/90 backdrop-blur",
-          border: "border-cyan-400/30",
-          text: "text-cyan-100",
+          bg: "bg-white",
+          border: "border-amber-200",
+          text: "text-slate-800",
         },
       },
     },
