@@ -47,6 +47,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
 
 export default function Configurator() {
@@ -1065,8 +1066,7 @@ export default function Configurator() {
             return {
               page: "p-4",
               title: "text-lg font-medium mb-4 text-center text-black",
-              itemCard:
-                "bg-gray-50 rounded p-3 shadow-sm border border-gray-100",
+              itemCard: "bg-gray-50 rounded p-3 border border-gray-100",
               itemName: "font-medium text-sm text-black",
               itemDesc: "text-xs text-gray-600",
               itemPrice: "font-medium text-sm text-black",
@@ -2309,16 +2309,9 @@ export default function Configurator() {
           )}
 
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative">
-              <div className="w-56 h-[420px] bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl">
-                <div className="w-full h-full bg-white rounded-[1.75rem] overflow-hidden relative">
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-5 bg-gray-900 rounded-b-lg z-20"></div>
-                  <div className="h-full relative transition-all duration-500 ease-in-out">
-                    {renderPreviewContent()}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <LivePhoneFrame widthClass="w-56" heightClass="h-[420px]">
+              {renderPreviewContent()}
+            </LivePhoneFrame>
           </div>
         </div>
         {/* Cart Dropdown Modal */}
@@ -2502,14 +2495,9 @@ export default function Configurator() {
               </div>
 
               <div className="flex justify-center">
-                <div className="w-56 h-[420px] bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl">
-                  <div className="w-full h-full bg-white rounded-[1.75rem] overflow-hidden relative">
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-5 bg-gray-900 rounded-b-lg z-20"></div>
-                    <div className="h-full relative transition-all duration-500 ease-in-out">
-                      <TemplatePreviewContent />
-                    </div>
-                  </div>
-                </div>
+                <LivePhoneFrame widthClass="w-56" heightClass="h-[420px]">
+                  <TemplatePreviewContent />
+                </LivePhoneFrame>
               </div>
             </div>
           </div>
