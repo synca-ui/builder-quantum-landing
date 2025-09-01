@@ -2913,9 +2913,19 @@ export default function Configurator() {
                   <Input
                     type="text"
                     value={formData.primaryColor}
-                    onChange={(e) =>
-                      updateFormData("primaryColor", e.target.value)
-                    }
+                    onChange={(e) => {
+                      updateFormData("primaryColor", e.target.value);
+
+                      // Also update template-specific theme if template is selected
+                      if (formData.template) {
+                        const newThemes = { ...formData.templateThemes };
+                        if (!newThemes[formData.template]) {
+                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                        }
+                        newThemes[formData.template].primary = e.target.value;
+                        updateFormData("templateThemes", newThemes);
+                      }
+                    }}
                     className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                     placeholder="#2563EB"
                   />
