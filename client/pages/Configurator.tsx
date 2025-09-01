@@ -395,7 +395,7 @@ export default function Configurator() {
     {
       id: "stylish",
       name: "Stylish",
-      description: "Fresh, airy design with excellent spacing and soft colors",
+      description: "Visual-first design with overlays, mixed sections, and motion",
       preview: "bg-gradient-to-br from-emerald-50 to-teal-100",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
