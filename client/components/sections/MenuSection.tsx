@@ -31,6 +31,9 @@ export function MenuSection({
   showRemoveButtons = false,
   className = "",
   templateStyle = "minimalist",
+  primaryColor,
+  secondaryColor,
+  textColor,
 }: MenuSectionProps) {
   const getTemplateStyles = () => {
     switch (templateStyle) {
