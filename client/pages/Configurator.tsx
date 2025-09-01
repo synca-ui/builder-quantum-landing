@@ -1875,7 +1875,7 @@ export default function Configurator() {
 
               {/* Side Panel Menu */}
               {previewState.menuOpen && (
-                <div className="fixed inset-0 z-50">
+                <div className="absolute inset-0 z-50">
                   <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
                   <div className="absolute right-0 top-0 h-full w-2/3 max-w-64 bg-white shadow-xl border-l border-emerald-100 p-3">
                     <div className="space-y-1">
