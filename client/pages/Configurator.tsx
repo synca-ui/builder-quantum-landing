@@ -94,7 +94,7 @@ export default function Configurator() {
 
     // Per-template themes
     templateThemes: {
-      minimalistic: {
+      minimalist: {
         primary: "#2563EB",
         secondary: "#7C3AED",
         text: "#1A1A1A",
@@ -121,14 +121,14 @@ export default function Configurator() {
         buttonRadius: "rounded-2xl",
         buttonHover: "grow",
       },
-      neon: {
+      cozy: {
         primary: "#00ff88",
         secondary: "#ff0080",
         text: "#FFFFFF",
         background: "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
         highlight: "#00d4ff",
         buttonRadius: "rounded-md",
-        buttonHover: "neon-glow",
+        buttonHover: "cozy-glow",
       },
     },
 
@@ -386,7 +386,7 @@ export default function Configurator() {
   // Professional App-Style Templates - Minimalistic, Modern, Clean, Fancy
   const templates = [
     {
-      id: "minimalistic",
+      id: "minimalist",
       name: "Minimalistic",
       description:
         "Clean, simple design focusing on content with perfect readability",
@@ -484,9 +484,9 @@ export default function Configurator() {
       },
     },
     {
-      id: "neon",
+      id: "cozy",
       name: "Neon",
-      description: "Futuristic gaming-inspired design with neon colors and tech aesthetics",
+      description: "Futuristic gaming-inspired design with cozy colors and tech aesthetics",
       preview: "bg-gradient-to-br from-black via-purple-900 to-cyan-900",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
@@ -494,7 +494,7 @@ export default function Configurator() {
         accent: "#06b6d4",
         text: "#FFFFFF",
         secondary: "#a855f7",
-        layout: "neon-grid",
+        layout: "cozy-grid",
         navigation: "cyberpunk",
         typography: "futuristic",
       },
@@ -882,10 +882,10 @@ export default function Configurator() {
       if (formData.businessName) return formData.businessName;
       // Template-specific business names
       const templateNames = {
-        minimalistic: "Simple",
+        minimalist: "Simple",
         modern: "FLUX",
         stylish: "Style",
-        neon: "Neon",
+        cozy: "Neon",
       };
       const selectedId =
         currentStep === 0
@@ -971,7 +971,7 @@ export default function Configurator() {
         ? previewTemplateId || formData.template
         : formData.template;
     const templateContent = {
-      minimalistic: {
+      minimalist: {
         items: [
           {
             name: "Coffee",
@@ -1043,7 +1043,7 @@ export default function Configurator() {
         hours: "6:30 - 19:30",
         special: "100% Organic",
       },
-      neon: {
+      cozy: {
         items: [
           {
             name: "Cyber Energy",
@@ -1068,7 +1068,7 @@ export default function Configurator() {
     };
 
     const currentContent =
-      templateContent[selectedId] || templateContent["minimalistic"];
+      templateContent[selectedId] || templateContent["minimalist"];
 
     // Ensure selectedIdForSwitch is available for styling
     const selectedIdForSwitch =
@@ -1125,7 +1125,7 @@ export default function Configurator() {
     const renderPageContent = () => {
       const getTemplateStyles = () => {
         switch (selectedIdForSwitch) {
-          case "minimalistic":
+          case "minimalist":
             return {
               page: "p-4",
               title: "text-lg font-medium mb-4 text-center text-black",
@@ -1176,7 +1176,7 @@ export default function Configurator() {
               homeCard:
                 "bg-white rounded-lg p-2 text-center border border-emerald-200",
             };
-          case "neon":
+          case "cozy":
             return {
               page: "p-4 bg-gradient-to-b from-black to-gray-900",
               title: "text-xl font-bold mb-6 text-center text-cyan-300 drop-shadow-[0_0_10px_#00ffff]",
@@ -1642,7 +1642,7 @@ export default function Configurator() {
     };
 
     switch (selectedIdForSwitch) {
-      case "minimalistic":
+      case "minimalist":
         return (
           <div
             className={`h-full overflow-y-auto ${fontClass}`}
@@ -1877,7 +1877,7 @@ export default function Configurator() {
           </div>
         );
 
-      case "neon":
+      case "cozy":
         return (
           <div
             className={`h-full overflow-y-auto text-white ${fontClass}`}
@@ -2079,10 +2079,10 @@ export default function Configurator() {
       if (formData.businessName) return formData.businessName;
       // Use realistic names based on selected template for preview
       const templateNames = {
-        minimalistic: "Simple",
+        minimalist: "Simple",
         modern: "FLUX",
         stylish: "Style",
-        neon: "Neon",
+        cozy: "Neon",
       };
       const selectedId =
         currentStep === 0
@@ -2151,7 +2151,7 @@ export default function Configurator() {
         ? previewTemplateId || formData.template
         : formData.template;
     const templateContent = {
-      minimalistic: {
+      minimalist: {
         items: [
           { name: "Coffee", description: "Fresh brewed", price: "3.50" },
           { name: "Sandwich", description: "Daily special", price: "7.00" },
@@ -2202,7 +2202,7 @@ export default function Configurator() {
         tagline: "Fresh, Healthy, Natural",
         description: "Fine dining at its finest",
       },
-      neon: {
+      cozy: {
         items: [
           {
             name: "Cyber Energy",
@@ -2226,7 +2226,7 @@ export default function Configurator() {
     };
 
     const currentContent =
-      templateContent[selectedId] || templateContent["minimalistic"];
+      templateContent[selectedId] || templateContent["minimalist"];
 
     const sampleContent = {
       menuItems:
@@ -2836,7 +2836,7 @@ export default function Configurator() {
                     if (formData.template) {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].primary = preset.primary;
                       newThemes[formData.template].secondary = preset.secondary;
@@ -2905,7 +2905,7 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                          newThemes[formData.template] = { ...newThemes.minimalist };
                         }
                         newThemes[formData.template].primary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -2926,7 +2926,7 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                          newThemes[formData.template] = { ...newThemes.minimalist };
                         }
                         newThemes[formData.template].primary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -2958,7 +2958,7 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                          newThemes[formData.template] = { ...newThemes.minimalist };
                         }
                         newThemes[formData.template].secondary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -2979,7 +2979,7 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                          newThemes[formData.template] = { ...newThemes.minimalist };
                         }
                         newThemes[formData.template].secondary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -3136,7 +3136,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].primary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3149,7 +3149,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].primary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3171,7 +3171,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].secondary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3184,7 +3184,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].secondary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3206,7 +3206,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].text = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3219,7 +3219,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].text = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3241,7 +3241,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].highlight = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3254,7 +3254,7 @@ export default function Configurator() {
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                        newThemes[formData.template] = { ...newThemes.minimalist };
                       }
                       newThemes[formData.template].highlight = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3288,7 +3288,7 @@ export default function Configurator() {
                       onClick={() => {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                          newThemes[formData.template] = { ...newThemes.minimalist };
                         }
                         newThemes[formData.template].buttonRadius = style.id;
                         updateFormData("templateThemes", newThemes);
@@ -3321,7 +3321,7 @@ export default function Configurator() {
                       onClick={() => {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                          newThemes[formData.template] = { ...newThemes.minimalist };
                         }
                         newThemes[formData.template].buttonHover = effect.id;
                         updateFormData("templateThemes", newThemes);
