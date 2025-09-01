@@ -10,6 +10,7 @@ import {
   publishConfiguration,
   getPublishedSite
 } from "./routes/configurations";
+import { fetchInstagramPhotos } from "./routes/instagram";
 
 export function createServer() {
   const app = express();
