@@ -2144,22 +2144,22 @@ export default function Configurator() {
       modern: {
         items: [
           {
-            name: "Artisan Brew",
-            description: "Single origin specialty coffee",
+            name: "Signature Latte",
+            description: "Premium espresso with oat milk",
             price: "5.50",
           },
           {
-            name: "Power Bowl",
-            description: "Quinoa, avocado, superfoods",
+            name: "Energy Bowl",
+            description: "Quinoa, avocado, fresh greens",
             price: "12.00",
           },
           {
-            name: "Craft Burger",
-            description: "House blend, local ingredients",
+            name: "Urban Burger",
+            description: "Plant-based patty, local ingredients",
             price: "15.00",
           },
         ],
-        tagline: "Modern Flavors, Bold Choices",
+        tagline: "Bold Flavors, Bright Future",
         description: "Where creativity meets cuisine",
       },
       stylish: {
@@ -2186,23 +2186,23 @@ export default function Configurator() {
       fancy: {
         items: [
           {
-            name: "Royal Espresso",
-            description: "Gold-filtered premium blend",
+            name: "Dark Storm",
+            description: "Premium whiskey blend, house special",
+            price: "12.00",
+          },
+          {
+            name: "Midnight Shot",
+            description: "Layered specialty, signature drink",
             price: "8.00",
           },
           {
-            name: "Truffle Pasta",
-            description: "Fresh pasta, white truffle",
-            price: "28.00",
-          },
-          {
-            name: "Champagne Cocktail",
-            description: "Dom Pérignon, gold flakes",
-            price: "35.00",
+            name: "Golden Hour",
+            description: "Craft cocktail with premium spirits",
+            price: "15.00",
           },
         ],
-        tagline: "Luxury Dining Experience",
-        description: "Next-gen café experience",
+        tagline: "Premium Night Experience",
+        description: "Next-gen club experience",
       },
     };
 
