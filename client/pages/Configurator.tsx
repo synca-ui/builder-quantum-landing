@@ -1677,8 +1677,7 @@ export default function Configurator() {
                     className={`${getFontSizeClass("text-lg")} font-medium`}
                     style={{
                       color:
-                        selectedIdForSwitch === "modern" ||
-                        selectedIdForSwitch === "fancy"
+                        selectedIdForSwitch === "modern"
                           ? "#FFFFFF"
                           : styles.userFontColor,
                     }}
