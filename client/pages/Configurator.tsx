@@ -1022,27 +1022,27 @@ export default function Configurator() {
         hours: "6:30 - 19:30",
         special: "100% Organic",
       },
-      fancy: {
+      neon: {
         items: [
           {
-            name: "Dark Storm",
-            description: "Premium whiskey blend, house special",
+            name: "Cyber Energy",
+            description: "High-tech energy boost, glowing blue",
+            price: "7.50",
+          },
+          {
+            name: "Neon Fusion",
+            description: "Electric cocktail with LED ice cubes",
             price: "12.00",
           },
           {
-            name: "Midnight Shot",
-            description: "Layered specialty, signature drink",
-            price: "8.00",
-          },
-          {
-            name: "Golden Hour",
-            description: "Craft cocktail with premium spirits",
-            price: "15.00",
+            name: "Digital Brew",
+            description: "Futuristic coffee experience",
+            price: "6.00",
           },
         ],
-        tagline: "Premium Night Experience",
-        hours: "20:00 - 3:00",
-        special: "VIP Club Access",
+        tagline: "Enter the Digital Realm",
+        hours: "24/7 Online",
+        special: "Gaming Zone Active",
       },
     };
 
@@ -2185,26 +2185,26 @@ export default function Configurator() {
         tagline: "Fresh, Healthy, Natural",
         description: "Fine dining at its finest",
       },
-      fancy: {
+      neon: {
         items: [
           {
-            name: "Dark Storm",
-            description: "Premium whiskey blend, house special",
+            name: "Cyber Energy",
+            description: "High-tech energy boost, glowing blue",
+            price: "7.50",
+          },
+          {
+            name: "Neon Fusion",
+            description: "Electric cocktail with LED ice cubes",
             price: "12.00",
           },
           {
-            name: "Midnight Shot",
-            description: "Layered specialty, signature drink",
-            price: "8.00",
-          },
-          {
-            name: "Golden Hour",
-            description: "Craft cocktail with premium spirits",
-            price: "15.00",
+            name: "Digital Brew",
+            description: "Futuristic coffee experience",
+            price: "6.00",
           },
         ],
-        tagline: "Premium Night Experience",
-        description: "Next-gen club experience",
+        tagline: "Enter the Digital Realm",
+        description: "Next-gen gaming cafe experience",
       },
     };
 
