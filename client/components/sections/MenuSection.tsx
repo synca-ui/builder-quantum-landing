@@ -101,22 +101,26 @@ export function MenuSection({
   return (
     <div className={`${styles.container} ${className}`}>
       {items.map((item, index) => (
-        <div key={item.id || index} className={styles.itemCard}>
+        <div key={item.id || index} className={styles.itemCard} style={
+          templateStyle === "cozy"
+            ? { backgroundColor: secondaryColor ? `${secondaryColor}20` : undefined, borderColor: primaryColor }
+            : undefined
+        }>
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-2 flex-1">
               {item.emoji && (
                 <span className={styles.emoji}>{item.emoji}</span>
               )}
               <div className="flex-1">
-                <h3 className={styles.itemName}>{item.name}</h3>
+                <h3 className={styles.itemName} style={{ color: textColor || undefined }}>{item.name}</h3>
                 {item.description && (
-                  <p className={styles.itemDesc}>{item.description}</p>
+                  <p className={styles.itemDesc} style={{ color: textColor ? `${textColor}CC` : undefined }}>{item.description}</p>
                 )}
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className={styles.itemPrice}>${item.price}</span>
-              
+              <span className={styles.itemPrice} style={{ color: primaryColor || undefined }}>${item.price}</span>
+
               {showOrderingButtons && onAddToCart && (
                 <button
                   className="w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
@@ -125,7 +129,7 @@ export function MenuSection({
                   <Plus className="w-3 h-3" />
                 </button>
               )}
-              
+
               {showRemoveButtons && onRemoveItem && (
                 <button
                   onClick={() => onRemoveItem(index)}
