@@ -4875,57 +4875,138 @@ export default function Configurator() {
 
           {/* Custom Domain Setup */}
           {formData.hasDomain && (
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Find Your Perfect Domain
-              </h3>
-              <div className="flex space-x-2 mb-4">
-                <Input
-                  type="text"
-                  placeholder="Enter domain name"
-                  value={domainSearch}
-                  onChange={(e) => setDomainSearch(e.target.value)}
-                  className="flex-1"
-                />
-                <Button variant="outline">Search</Button>
-              </div>
-
-              <div className="space-y-3">
-                {availableDomains.map((domain, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-3 h-3 rounded-full ${domain.available ? "bg-green-500" : "bg-red-500"}`}
-                      ></div>
-                      <span className="font-mono font-medium">
-                        {domain.domain}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={`text-sm ${domain.available ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {domain.price}
-                      </span>
-                      {domain.available && (
-                        <Button
-                          size="sm"
-                          className="bg-teal-500 hover:bg-teal-600"
-                          onClick={() =>
-                            updateFormData("domainName", domain.domain)
+            <div className="space-y-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">
+                  Connect Your Custom Domain
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Enter Your Domain
+                    </label>
+                    <div className="flex space-x-2">
+                      <Input
+                        type="text"
+                        placeholder="e.g. yourbusiness.com"
+                        value={formData.domainName || ""}
+                        onChange={(e) => updateFormData("domainName", e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (formData.domainName) {
+                            // Simulate domain validation
+                            alert(`Domain ${formData.domainName} is ready to connect!`);
                           }
-                        >
-                          Select
-                        </Button>
-                      )}
+                        }}
+                      >
+                        Validate
+                      </Button>
                     </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Enter a domain you already own or plan to purchase
+                    </p>
                   </div>
-                ))}
-              </div>
-            </Card>
+
+                  {formData.domainName && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 mb-2">DNS Configuration Required</h4>
+                      <p className="text-sm text-blue-800 mb-3">
+                        To connect your domain, add these DNS records:
+                      </p>
+                      <div className="bg-white rounded border font-mono text-xs p-3 space-y-1">
+                        <div><strong>A Record:</strong> @ → 76.76.19.61</div>
+                        <div><strong>CNAME:</strong> www → your-site.sync-a.com</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">
+                  Or Search New Domains
+                </h3>
+                <div className="flex space-x-2 mb-4">
+                  <Input
+                    type="text"
+                    placeholder="Enter domain name to search"
+                    value={domainSearch}
+                    onChange={(e) => setDomainSearch(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button variant="outline">Search</Button>
+                </div>
+
+                <div className="space-y-3">
+                  {availableDomains.map((domain, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-3 h-3 rounded-full ${domain.available ? "bg-green-500" : "bg-red-500"}`}
+                        ></div>
+                        <span className="font-mono font-medium">
+                          {domain.domain}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={`text-sm ${domain.available ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {domain.price}
+                        </span>
+                        {domain.available && (
+                          <Button
+                            size="sm"
+                            className="bg-teal-500 hover:bg-teal-600"
+                            onClick={() =>
+                              updateFormData("domainName", domain.domain)
+                            }
+                          >
+                            Select
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Domain API Integration Info */}
+              <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                  <Globe className="w-5 h-5 mr-2 text-purple-600" />
+                  Automated Domain Management
+                </h3>
+                <p className="text-sm text-gray-700 mb-4">
+                  We integrate with leading domain and hosting providers for seamless setup:
+                </p>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="bg-white rounded-lg p-3 border border-purple-100">
+                    <h4 className="font-semibold text-purple-900 text-sm mb-1">Vercel</h4>
+                    <p className="text-xs text-gray-600">Auto-deploy & custom domains</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-purple-100">
+                    <h4 className="font-semibold text-purple-900 text-sm mb-1">Netlify</h4>
+                    <p className="text-xs text-gray-600">Edge functions & DNS management</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-purple-100">
+                    <h4 className="font-semibold text-purple-900 text-sm mb-1">CloudFlare</h4>
+                    <p className="text-xs text-gray-600">DNS, SSL & CDN integration</p>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-purple-100 rounded-lg">
+                  <p className="text-xs text-purple-800">
+                    💡 <strong>Pro Tip:</strong> Custom domains will be automatically configured with SSL, CDN, and optimized for global performance.
+                  </p>
+                </div>
+              </Card>
+            </div>
           )}
         </div>
 
