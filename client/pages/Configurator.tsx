@@ -3762,8 +3762,32 @@ export default function Configurator() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    // Handle CSV file processing here
-                    console.log("CSV file uploaded:", file);
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const csvText = event.target?.result as string;
+                      if (csvText) {
+                        const lines = csvText.split('\n').filter(line => line.trim());
+                        const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+
+                        const newItems = lines.slice(1).map(line => {
+                          const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                          const item: any = {};
+
+                          headers.forEach((header, index) => {
+                            if (header === 'dish' || header === 'name') item.name = values[index]?.replace(/[^\w\s-]/g, '') || '';
+                            else if (header === 'description') item.description = values[index]?.replace(/[^\w\s-.,]/g, '') || '';
+                            else if (header === 'price') item.price = values[index]?.replace(/[^\d.]/g, '') || '0';
+                          });
+
+                          return item;
+                        }).filter(item => item.name && item.price);
+
+                        if (newItems.length > 0) {
+                          updateFormData("menuItems", [...formData.menuItems, ...newItems]);
+                        }
+                      }
+                    };
+                    reader.readAsText(file);
                   }
                 }}
               />
