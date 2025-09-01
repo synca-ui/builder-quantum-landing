@@ -920,7 +920,7 @@ export default function Configurator() {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "🥗",
+            emoji: "��",
           },
         ],
         tagline: "Simple. Fresh. Good.",
@@ -1066,7 +1066,7 @@ export default function Configurator() {
             return {
               page: "p-4",
               title: "text-lg font-medium mb-4 text-center text-black",
-              itemCard: "bg-gray-50 rounded p-3 border border-gray-100",
+              itemCard: "py-2 border-b border-gray-200 last:border-b-0",
               itemName: "font-medium text-sm text-black",
               itemDesc: "text-xs text-gray-600",
               itemPrice: "font-medium text-sm text-black",
@@ -1179,7 +1179,7 @@ export default function Configurator() {
                   <div key={index} className={templateStyles.itemCard}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-2">
-                        <span className="text-lg">{item.emoji || "🍽️"}</span>
+                        <span className={`${selectedIdForSwitch === "minimalistic" ? "hidden" : ""} text-lg`}>{item.emoji || "🍽️"}</span>
                         <div>
                           <h3 className={templateStyles.itemName}>
                             {item.name}
@@ -1633,7 +1633,7 @@ export default function Configurator() {
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-white shadow-sm border-t border-gray-100 z-50">
+                <div className="absolute top-full left-0 right-0 bg-white border-t border-gray-100 z-50">
                   <div className="py-1">
                     {formData.selectedPages.map((page) => (
                       <button
