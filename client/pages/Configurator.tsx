@@ -1786,7 +1786,7 @@ export default function Configurator() {
                 formData.backgroundType === "gradient"
                   ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
                   : formData.backgroundColor ||
-                    "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
+                    "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
             }}
           >
             {/* Status Bar - Space for notch */}
