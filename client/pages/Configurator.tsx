@@ -5511,14 +5511,35 @@ export default function Configurator() {
       ) : (
         // Other configurator steps with live preview
         <div className="pt-20">
-          <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2">
-              <div className="min-h-[80vh]">{renderMainContent()}</div>
+          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Mobile Preview Toggle */}
+            <div className="lg:hidden mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const preview = document.getElementById('mobile-preview');
+                  if (preview) {
+                    preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+                  }
+                }}
+                className="w-full"
+              >
+                <Smartphone className="w-4 h-4 mr-2" />
+                Toggle Preview
+              </Button>
+              <div id="mobile-preview" className="mt-4 hidden lg:hidden">
+                <LivePreview />
+              </div>
             </div>
 
-            {/* Live Preview */}
-            <div className="hidden lg:block">
+            {/* Main Content */}
+            <div className="lg:col-span-2 order-2 lg:order-1">
+              <div className="min-h-[60vh] lg:min-h-[80vh]">{renderMainContent()}</div>
+            </div>
+
+            {/* Live Preview - Desktop */}
+            <div className="hidden lg:block order-1 lg:order-2">
               <LivePreview />
             </div>
           </div>
