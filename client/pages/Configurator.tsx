@@ -1506,11 +1506,7 @@ export default function Configurator() {
                 </p>
               </div>
 
-              <div className={`mb-4 ${
-                selectedIdForSwitch === "modern"
-                  ? "grid grid-cols-1 gap-3"
-                  : "grid grid-cols-2 gap-2"
-              }`}>
+              <div className={`mb-4 grid grid-cols-2 gap-2`}>
                 {(formData.menuItems.length > 0
                   ? formData.menuItems
                   : currentContent.items
