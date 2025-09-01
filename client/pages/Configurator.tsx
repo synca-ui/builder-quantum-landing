@@ -1846,23 +1846,24 @@ export default function Configurator() {
                 </div>
               </div>
 
-              {/* Dropdown Menu */}
+              {/* Side Panel Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-white shadow-lg border-t border-emerald-100 z-50">
-                  <div className="py-1">
-                    {formData.selectedPages.map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => navigateToPage(page)}
-                        className={`w-full px-3 py-1.5 text-left text-slate-700 hover:bg-emerald-50 transition-colors text-xs ${
-                          previewState.activePage === page
-                            ? "bg-emerald-50 font-semibold text-emerald-700"
-                            : ""
-                        }`}
-                      >
-                        {page.charAt(0).toUpperCase() + page.slice(1)}
-                      </button>
-                    ))}
+                <div className="fixed inset-0 z-50">
+                  <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
+                  <div className="absolute right-0 top-0 h-full w-2/3 max-w-64 bg-white shadow-xl border-l border-emerald-100 p-3">
+                    <div className="space-y-1">
+                      {formData.selectedPages.map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => navigateToPage(page)}
+                          className={`w-full px-3 py-2 text-left text-slate-700 hover:bg-emerald-50 transition-colors text-sm font-semibold ${
+                            previewState.activePage === page ? "text-emerald-700" : ""
+                          }`}
+                        >
+                          {page.charAt(0).toUpperCase() + page.slice(1)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -5304,7 +5305,7 @@ export default function Configurator() {
                 <div className="bg-white rounded-lg p-4 border border-orange-200">
                   <h4 className="font-semibold text-orange-900 mb-2">Premium Features Include:</h4>
                   <ul className="space-y-1 text-sm text-orange-800">
-                    <li>�� Automatic content optimization for search engines</li>
+                    <li>✓ Automatic content optimization for search engines</li>
                     <li>✓ Schema markup generation for better search visibility</li>
                     <li>✓ Local SEO optimization for location-based searches</li>
                     <li>✓ Weekly SEO performance reports</li>
