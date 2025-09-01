@@ -206,13 +206,13 @@ export const defaultTemplateThemes: Record<string, TemplateTheme> = {
     buttonHover: "grow",
   },
   cozy: {
-    primary: "#00ff88",
-    secondary: "#ff0080",
-    text: "#FFFFFF",
-    background: "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
-    highlight: "#00d4ff",
-    buttonRadius: "rounded-md",
-    buttonHover: "neon-glow",
+    primary: "#EA580C",
+    secondary: "#F59E0B",
+    text: "#1F2937",
+    background: "#FFFBF0",
+    highlight: "#FDBA74",
+    buttonRadius: "rounded-2xl",
+    buttonHover: "grow",
   },
 };
 
