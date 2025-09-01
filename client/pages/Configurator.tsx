@@ -1239,38 +1239,51 @@ export default function Configurator() {
               <h2 className={templateStyles.title}>Menu</h2>
               <div className="space-y-3">
                 {menuItemsToShow.map((item, index) => (
-                  <div key={index} className={templateStyles.itemCard}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-2">
-                        <span className="hidden">
-                          {item.emoji || "🍽️"}
+                  selectedIdForSwitch === "minimalist" ? (
+                    <details key={index} className={`${templateStyles.itemCard} cursor-pointer open:shadow-md`}>
+                      <summary className="flex items-center justify-between list-none">
+                        <h3 className={templateStyles.itemName}>{item.name}</h3>
+                        <span className={templateStyles.itemPrice} style={{ color: styles.userPrimary }}>
+                          ${item.price}
                         </span>
-                        <div>
-                          <h3 className={templateStyles.itemName}>
-                            {item.name}
-                          </h3>
-                          <p className={templateStyles.itemDesc}>
-                            {item.description}
-                          </p>
-                        </div>
+                      </summary>
+                      <div className="mt-2 text-left">
+                        <p className={templateStyles.itemDesc}>{item.description}</p>
                       </div>
-                      <span
-                        className={templateStyles.itemPrice}
-                        style={{ color: styles.userPrimary }}
-                      >
-                        ${item.price}
-                      </span>
-                      {/* Show + icon if ordering is enabled */}
-                      {formData.onlineOrdering && (
-                        <button
-                          className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
-                          onClick={() => addToCart(item)}
+                    </details>
+                  ) : (
+                    <div key={index} className={templateStyles.itemCard}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-2">
+                          <span className="hidden">
+                            {item.emoji || "🍽️"}
+                          </span>
+                          <div>
+                            <h3 className={templateStyles.itemName}>
+                              {item.name}
+                            </h3>
+                            <p className={templateStyles.itemDesc}>
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={templateStyles.itemPrice}
+                          style={{ color: styles.userPrimary }}
                         >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      )}
+                          ${item.price}
+                        </span>
+                        {formData.onlineOrdering && (
+                          <button
+                            className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
+                            onClick={() => addToCart(item)}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )
                 ))}
                 {menuItemsToShow.length === 0 && (
                   <div className="text-center py-8">
