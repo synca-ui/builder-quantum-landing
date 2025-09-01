@@ -5328,12 +5328,22 @@ export default function Configurator() {
                   <p className="text-gray-600 text-sm mb-1">
                     Pages: {formData.selectedPages.length}
                   </p>
-                  <p className="text-gray-600 text-sm">
-                    Domain:{" "}
-                    {formData.hasDomain
-                      ? formData.domainName
-                      : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-gray-600 text-sm">
+                      Domain:{" "}
+                      {formData.hasDomain
+                        ? formData.domainName
+                        : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
+                    </p>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
+                      <p className="text-sm font-semibold text-green-800 mb-1">Your Live URL:</p>
+                      <p className="font-mono text-sm text-green-700 break-all">
+                        https://{formData.hasDomain
+                          ? formData.domainName
+                          : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
