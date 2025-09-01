@@ -387,7 +387,7 @@ export default function Configurator() {
   const templates = [
     {
       id: "minimalist",
-      name: "Minimalistic",
+      name: "Minimalist",
       description:
         "Clean, simple design focusing on content with perfect readability",
       preview: "bg-gradient-to-br from-white to-gray-100",
