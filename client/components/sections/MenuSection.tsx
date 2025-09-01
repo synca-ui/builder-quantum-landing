@@ -67,10 +67,11 @@ export function MenuSection({
       case "cozy":
         return {
           container: "space-y-3",
-          itemCard: "bg-slate-800/80 backdrop-blur rounded border border-amber-500/40 p-3",
-          itemName: "font-serif font-bold text-sm text-amber-100",
-          itemDesc: "text-xs text-amber-200/80",
-          itemPrice: "font-serif font-bold text-sm text-amber-400",
+          // use neutral utility classes; colors applied via inline styles from props
+          itemCard: "backdrop-blur rounded border p-3",
+          itemName: "font-serif font-bold text-sm",
+          itemDesc: "text-xs",
+          itemPrice: "font-serif font-bold text-sm",
           emoji: "hidden",
         };
       default:
