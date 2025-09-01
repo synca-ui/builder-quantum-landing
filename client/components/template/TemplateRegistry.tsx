@@ -52,7 +52,8 @@ export const defaultTemplates: Template[] = [
   {
     id: "minimalist",
     name: "Minimalist",
-    description: "Narrative, minimal design guiding users through full-screen sections.",
+    description:
+      "Narrative, minimal design guiding users through full-screen sections.",
     preview: "bg-gradient-to-br from-white to-gray-100",
     businessTypes: ["cafe", "restaurant", "bar"],
     style: {
@@ -115,7 +116,8 @@ export const defaultTemplates: Template[] = [
   {
     id: "stylish",
     name: "Stylish",
-    description: "Visual-first design with overlays, mixed sections, and motion",
+    description:
+      "Visual-first design with overlays, mixed sections, and motion",
     preview: "bg-gradient-to-br from-emerald-50 to-slate-800",
     businessTypes: ["cafe", "restaurant", "bar"],
     style: {
@@ -134,7 +136,10 @@ export const defaultTemplates: Template[] = [
         text: "text-white",
         border: "border-emerald-300/20",
       },
-      hero: { bg: "bg-gradient-to-r from-emerald-500/20 to-transparent", text: "text-white" },
+      hero: {
+        bg: "bg-gradient-to-r from-emerald-500/20 to-transparent",
+        text: "text-white",
+      },
       cards: {
         bg: "bg-white/5 backdrop-blur",
         border: "border-white/10",
@@ -145,7 +150,8 @@ export const defaultTemplates: Template[] = [
   {
     id: "cozy",
     name: "Cozy",
-    description: "Warm, friendly aesthetic with rounded elements and authentic photography.",
+    description:
+      "Warm, friendly aesthetic with rounded elements and authentic photography.",
     preview: "bg-gradient-to-br from-amber-100 via-orange-50 to-rose-50",
     businessTypes: ["cafe", "restaurant", "bar"],
     style: {
@@ -231,7 +237,7 @@ export function TemplateRegistry({
     (template) =>
       !template.businessTypes ||
       template.businessTypes.includes(businessType || "") ||
-      !businessType
+      !businessType,
   );
 
   return (

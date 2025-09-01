@@ -15,17 +15,20 @@
 ## ✨ Features
 
 ### 🎨 **Distinct Template Designs**
+
 - **4 Unique Templates**: Minimalist, Creative & Bold, Professional & Elegant, Modern & Sleek
 - Each template has completely different layouts, navigation styles, and animations
 - Templates feel like different apps, not just color variations
 
 ### 🖌️ **Interactive Design System**
+
 - **Live Preview**: Fully interactive iPhone-style preview with real-time updates
 - **Color Selector Dots**: Quick theme switching with 4 preset color schemes
 - **Smart Auto-Save**: Automatically saves progress to the backend
 - **Responsive Design**: Mobile-first approach with perfect mobile optimization
 
 ### 🔧 **Complete Business Setup**
+
 - **Business Information**: Name, type, location, slogan, and unique descriptions
 - **Menu/Product Management**: Add items, descriptions, prices, and categories
 - **Opening Hours**: Flexible scheduling with day-specific hours
@@ -34,6 +37,7 @@
 - **Gallery Support**: Photo uploads and management
 
 ### 🚀 **Backend Integration**
+
 - **Auto-Save**: Real-time configuration saving with 3-second debouncing
 - **Dashboard**: Manage multiple website configurations
 - **Publishing System**: One-click publishing with custom or subdomain URLs
@@ -41,6 +45,7 @@
 - **RESTful API**: Full CRUD operations for configurations
 
 ### 📱 **User Experience**
+
 - **Step-by-Step Wizard**: Guided setup process across 5 phases
 - **Progress Tracking**: Visual progress indicators and phase management
 - **Interactive Elements**: Clickable menus, hover effects, and smooth animations
@@ -49,6 +54,7 @@
 ## 🛠 Tech Stack
 
 ### Frontend
+
 - **React 18** with TypeScript for type-safe component development
 - **Vite** for fast development and optimized builds
 - **Tailwind CSS** for utility-first styling and responsive design
@@ -58,6 +64,7 @@
 - **TanStack Query** for server state management
 
 ### Backend
+
 - **Node.js** with Express.js for robust API development
 - **TypeScript** for type safety across the stack
 - **Zod** for runtime type validation and schema enforcement
@@ -65,6 +72,7 @@
 - **File-based Storage** (easily replaceable with database)
 
 ### Development Tools
+
 - **ESLint & Prettier** for code quality and formatting
 - **Vitest** for unit testing
 - **PostCSS** for CSS processing
@@ -73,18 +81,21 @@
 ## �� Quick Start
 
 ### Prerequisites
+
 - **Node.js** 18+ and npm/yarn/pnpm
 - **Git** for version control
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-username/sync-a-builder.git
    cd sync-a-builder
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -94,6 +105,7 @@
    ```
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    # or
@@ -168,6 +180,7 @@ The application currently uses **file-based storage** for configurations, stored
 To replace file storage with a database (PostgreSQL, MongoDB, etc.):
 
 1. **Install database driver**:
+
    ```bash
    npm install pg @types/pg  # For PostgreSQL
    # or
@@ -182,11 +195,13 @@ To replace file storage with a database (PostgreSQL, MongoDB, etc.):
 ## 🌐 API Documentation
 
 ### Base URL
+
 ```
 http://localhost:5173/api
 ```
 
 ### Authentication
+
 The API uses a simple user ID system via the `x-user-id` header. In production, replace this with proper authentication.
 
 ### Endpoints
@@ -196,25 +211,29 @@ The API uses a simple user ID system via the `x-user-id` header. In production, 
 ```http
 POST /api/configurations
 ```
+
 Create or update a configuration.
 
 **Headers:**
+
 - `x-user-id: string` - User identifier
 - `Content-Type: application/json`
 
 **Request Body:**
+
 ```json
 {
   "businessName": "Bella's Café",
   "businessType": "cafe",
   "template": "minimalist",
   "primaryColor": "#2563EB",
-  "secondaryColor": "#7C3AED",
+  "secondaryColor": "#7C3AED"
   // ... other configuration fields
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -233,12 +252,15 @@ Create or update a configuration.
 ```http
 GET /api/configurations
 ```
+
 Get all user configurations.
 
 **Headers:**
+
 - `x-user-id: string`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -247,7 +269,7 @@ Get all user configurations.
       "id": "abc123",
       "businessName": "Bella's Café",
       "status": "published",
-      "publishedUrl": "https://bellas-cafe-abc123.sync.app",
+      "publishedUrl": "https://bellas-cafe-abc123.sync.app"
       // ... other fields
     }
   ]
@@ -259,16 +281,19 @@ Get all user configurations.
 ```http
 GET /api/configurations/:id
 ```
+
 Get a specific configuration.
 
 ```http
 DELETE /api/configurations/:id
 ```
+
 Delete a configuration.
 
 ```http
 POST /api/configurations/:id/publish
 ```
+
 Publish a configuration and generate a live URL.
 
 #### **Published Sites**
@@ -276,6 +301,7 @@ Publish a configuration and generate a live URL.
 ```http
 GET /api/sites/:subdomain
 ```
+
 Get published site data by subdomain or domain.
 
 ## 🎨 Customization
@@ -283,28 +309,30 @@ Get published site data by subdomain or domain.
 ### Adding New Templates
 
 1. **Define the template** in `client/pages/Configurator.tsx`:
+
    ```typescript
    const templates = [
      // ... existing templates
      {
-       id: 'your-template',
-       name: 'Your Template Name',
-       description: 'Template description',
-       preview: 'bg-gradient-to-br from-blue-50 to-indigo-100',
+       id: "your-template",
+       name: "Your Template Name",
+       description: "Template description",
+       preview: "bg-gradient-to-br from-blue-50 to-indigo-100",
        style: {
-         background: '#FFFFFF',
-         accent: '#3B82F6',
-         text: '#1F2937',
-         secondary: '#F8FAFC',
-         layout: 'custom-layout',
-         navigation: 'custom-nav',
-         typography: 'custom-typography'
-       }
-     }
+         background: "#FFFFFF",
+         accent: "#3B82F6",
+         text: "#1F2937",
+         secondary: "#F8FAFC",
+         layout: "custom-layout",
+         navigation: "custom-nav",
+         typography: "custom-typography",
+       },
+     },
    ];
    ```
 
 2. **Create the render function** in the `LivePreview` component:
+
    ```typescript
    const renderYourTemplate = () => (
      <div className="h-full overflow-y-auto bg-white">
@@ -316,7 +344,7 @@ Get published site data by subdomain or domain.
 3. **Add to the switch statement**:
    ```typescript
    switch (formData.template) {
-     case 'your-template':
+     case "your-template":
        return renderYourTemplate();
      // ... other cases
    }
@@ -360,11 +388,13 @@ npm run build
 ### Vercel Deployment
 
 1. **Install Vercel CLI**:
+
    ```bash
    npm install -g vercel
    ```
 
 2. **Deploy**:
+
    ```bash
    vercel
    ```
@@ -388,11 +418,13 @@ npm run build
 ### Custom Server Deployment
 
 1. **Build the project**:
+
    ```bash
    npm run build
    ```
 
 2. **Start the production server**:
+
    ```bash
    npm start
    ```
@@ -447,6 +479,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🗺 Roadmap
 
 ### Upcoming Features
+
 - [ ] **Database Integration**: PostgreSQL/MongoDB support
 - [ ] **User Authentication**: Proper user accounts and security
 - [ ] **Advanced Templates**: More design options and customization
@@ -457,6 +490,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **White-label Solution**: Brand customization for agencies
 
 ### Current Version: v1.0.0
+
 - ✅ Core builder functionality
 - ✅ 4 distinct templates
 - ✅ Backend integration
@@ -469,6 +503,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Production Deployment Checklist
 
 #### 1. **Infrastructure Setup**
+
 - [ ] **Cloud Provider**: Choose AWS, Google Cloud, or Azure
 - [ ] **Domain Registration**: Purchase your production domain
 - [ ] **SSL Certificate**: Set up HTTPS with Let's Encrypt or CloudFlare
@@ -476,6 +511,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Load Balancer**: Configure for high availability (optional)
 
 #### 2. **Database Migration**
+
 - [ ] **Production Database**: Set up PostgreSQL or MongoDB cluster
 - [ ] **Connection Pooling**: Configure pg-pool or MongoDB connection pooling
 - [ ] **Backup Strategy**: Implement automated daily backups
@@ -483,6 +519,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Environment Variables**: Set production database URLs
 
 #### 3. **Authentication & Security**
+
 - [ ] **User Authentication**: Implement JWT or OAuth 2.0
 - [ ] **API Security**: Add rate limiting and request validation
 - [ ] **CORS Configuration**: Restrict origins for production
@@ -490,6 +527,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Input Sanitization**: Validate and sanitize all user inputs
 
 #### 4. **Monitoring & Analytics**
+
 - [ ] **Application Monitoring**: Set up Sentry or DataDog
 - [ ] **Performance Monitoring**: Configure New Relic or similar
 - [ ] **Log Management**: Implement centralized logging (ELK stack)
@@ -497,29 +535,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Business Analytics**: Add Google Analytics or Mixpanel
 
 #### 5. **Domain & DNS Management**
+
 - [ ] **DNS Provider**: Configure CloudFlare or Route 53
 - [ ] **Subdomain Automation**: Set up wildcard DNS for user sites
 - [ ] **Domain API Integration**: Implement automatic domain binding
   ```typescript
   // Example: Vercel API integration
   const deployToVercel = async (config: Configuration) => {
-    const response = await fetch('https://api.vercel.com/v9/projects', {
-      method: 'POST',
+    const response = await fetch("https://api.vercel.com/v9/projects", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${process.env.VERCEL_TOKEN}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         name: config.domainName,
-        framework: 'nextjs',
-        gitRepository: { type: 'github', repo: 'your-repo' }
-      })
+        framework: "nextjs",
+        gitRepository: { type: "github", repo: "your-repo" },
+      }),
     });
   };
   ```
 - [ ] **SSL Automation**: Auto-provision SSL for custom domains
 
 #### 6. **API Deployment Pipeline**
+
 - [ ] **CI/CD Setup**: Configure GitHub Actions or GitLab CI
 - [ ] **Staging Environment**: Set up staging for testing
 - [ ] **Blue-Green Deployment**: Implement zero-downtime deployments
@@ -527,6 +567,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Health Checks**: Implement /health and /ready endpoints
 
 #### 7. **Hosting & Publishing**
+
 - [ ] **Static Site Generation**: Implement server-side rendering for user sites
 - [ ] **CDN Distribution**: Serve user sites via global CDN
 - [ ] **Template Engine**: Set up dynamic template compilation
@@ -534,6 +575,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Caching Strategy**: Implement Redis for configuration caching
 
 #### 8. **Payment & Billing (if monetized)**
+
 - [ ] **Payment Gateway**: Integrate Stripe or PayPal
 - [ ] **Subscription Management**: Set up recurring billing
 - [ ] **Usage Tracking**: Monitor API calls and storage usage
@@ -541,6 +583,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Trial Periods**: Implement free trial functionality
 
 #### 9. **Legal & Compliance**
+
 - [ ] **Privacy Policy**: Create GDPR-compliant privacy policy
 - [ ] **Terms of Service**: Draft comprehensive terms
 - [ ] **GDPR Compliance**: Implement data export/deletion
@@ -548,6 +591,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Business Registration**: Register business entity if needed
 
 #### 10. **Marketing & Launch**
+
 - [ ] **Landing Page**: Create marketing website
 - [ ] **SEO Optimization**: Optimize for search engines
 - [ ] **Social Media**: Set up business social accounts
@@ -612,6 +656,7 @@ npm start
 ```
 
 ### Launch Timeline Estimate
+
 - **Phase 1** (Weeks 1-2): Infrastructure & Database Setup
 - **Phase 2** (Weeks 3-4): Authentication & Security Implementation
 - **Phase 3** (Weeks 5-6): Domain Management & API Integration

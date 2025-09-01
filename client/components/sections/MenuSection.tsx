@@ -49,7 +49,8 @@ export function MenuSection({
       case "modern":
         return {
           container: "space-y-3",
-          itemCard: "bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/40 shadow-xl",
+          itemCard:
+            "bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/40 shadow-xl",
           itemName: "font-bold text-sm text-white drop-shadow-md",
           itemDesc: "text-xs text-white drop-shadow-sm",
           itemPrice: "font-bold text-sm text-white drop-shadow-md",
@@ -58,7 +59,8 @@ export function MenuSection({
       case "stylish":
         return {
           container: "space-y-3",
-          itemCard: "bg-white/5 backdrop-blur rounded p-3 border border-white/10",
+          itemCard:
+            "bg-white/5 backdrop-blur rounded p-3 border border-white/10",
           itemName: "font-serif font-semibold text-sm text-emerald-100",
           itemDesc: "text-xs text-emerald-200/80",
           itemPrice: "font-serif font-semibold text-sm text-emerald-400",
@@ -101,25 +103,47 @@ export function MenuSection({
   return (
     <div className={`${styles.container} ${className}`}>
       {items.map((item, index) => (
-        <div key={item.id || index} className={styles.itemCard} style={
-          templateStyle === "cozy"
-            ? { backgroundColor: secondaryColor ? `${secondaryColor}20` : undefined, borderColor: primaryColor }
-            : undefined
-        }>
+        <div
+          key={item.id || index}
+          className={styles.itemCard}
+          style={
+            templateStyle === "cozy"
+              ? {
+                  backgroundColor: secondaryColor
+                    ? `${secondaryColor}20`
+                    : undefined,
+                  borderColor: primaryColor,
+                }
+              : undefined
+          }
+        >
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-2 flex-1">
-              {item.emoji && (
-                <span className={styles.emoji}>{item.emoji}</span>
-              )}
+              {item.emoji && <span className={styles.emoji}>{item.emoji}</span>}
               <div className="flex-1">
-                <h3 className={styles.itemName} style={{ color: textColor || undefined }}>{item.name}</h3>
+                <h3
+                  className={styles.itemName}
+                  style={{ color: textColor || undefined }}
+                >
+                  {item.name}
+                </h3>
                 {item.description && (
-                  <p className={styles.itemDesc} style={{ color: textColor ? `${textColor}CC` : undefined }}>{item.description}</p>
+                  <p
+                    className={styles.itemDesc}
+                    style={{ color: textColor ? `${textColor}CC` : undefined }}
+                  >
+                    {item.description}
+                  </p>
                 )}
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className={styles.itemPrice} style={{ color: primaryColor || undefined }}>${item.price}</span>
+              <span
+                className={styles.itemPrice}
+                style={{ color: primaryColor || undefined }}
+              >
+                ${item.price}
+              </span>
 
               {showOrderingButtons && onAddToCart && (
                 <button

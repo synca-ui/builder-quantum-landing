@@ -108,7 +108,8 @@ export default function Configurator() {
         primary: "#f5576c",
         secondary: "#4facfe",
         text: "#FFFFFF",
-        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
+        background:
+          "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
         highlight: "#f093fb",
         buttonRadius: "rounded-xl",
         buttonHover: "glow",
@@ -126,7 +127,8 @@ export default function Configurator() {
         primary: "#00ff88",
         secondary: "#ff0080",
         text: "#FFFFFF",
-        background: "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
+        background:
+          "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
         highlight: "#00d4ff",
         buttonRadius: "rounded-md",
         buttonHover: "cozy-glow",
@@ -424,7 +426,8 @@ export default function Configurator() {
       preview: "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
-        background: "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
+        background:
+          "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
         accent: "#2563EB",
         text: "#FFFFFF",
         secondary: "#1D4ED8",
@@ -487,7 +490,8 @@ export default function Configurator() {
     {
       id: "cozy",
       name: "Cozy",
-      description: "Warm, personal, and grounded aesthetic with authentic photography.",
+      description:
+        "Warm, personal, and grounded aesthetic with authentic photography.",
       preview: "bg-gradient-to-br from-amber-100 via-orange-50 to-rose-50",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
@@ -945,9 +949,12 @@ export default function Configurator() {
     // Helper to convert hex like #2563EB to rgba(a)
     const toRgba = (hex: string, alpha = 1) => {
       if (!hex) return `rgba(0,0,0,${alpha})`;
-      let h = hex.replace('#', '');
+      let h = hex.replace("#", "");
       if (h.length === 3) {
-        h = h.split('').map((c) => c + c).join('');
+        h = h
+          .split("")
+          .map((c) => c + c)
+          .join("");
       }
       const int = parseInt(h, 16);
       const r = (int >> 16) & 255;
@@ -1068,17 +1075,35 @@ export default function Configurator() {
         : formData.template;
 
     // Compose runtime styles from template defaults and user selections
-    const themeOverride = (formData.templateThemes && selectedIdForSwitch && formData.templateThemes[selectedIdForSwitch]) || {};
-    const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch);
-    const baseTemplateStyle = selectedTemplateDef ? selectedTemplateDef.style : templates[0].style;
-    const forcedTextColor = selectedIdForSwitch === "modern" ? "#FFFFFF" : formData.fontColor;
+    const themeOverride =
+      (formData.templateThemes &&
+        selectedIdForSwitch &&
+        formData.templateThemes[selectedIdForSwitch]) ||
+      {};
+    const selectedTemplateDef = templates.find(
+      (t) => t.id === selectedIdForSwitch,
+    );
+    const baseTemplateStyle = selectedTemplateDef
+      ? selectedTemplateDef.style
+      : templates[0].style;
+    const forcedTextColor =
+      selectedIdForSwitch === "modern" ? "#FFFFFF" : formData.fontColor;
     const styles = {
       ...baseTemplateStyle,
-      userPrimary: themeOverride.primary || formData.primaryColor || (baseTemplateStyle as any).accent,
-      userSecondary: themeOverride.secondary || formData.secondaryColor || (baseTemplateStyle as any).secondary,
+      userPrimary:
+        themeOverride.primary ||
+        formData.primaryColor ||
+        (baseTemplateStyle as any).accent,
+      userSecondary:
+        themeOverride.secondary ||
+        formData.secondaryColor ||
+        (baseTemplateStyle as any).secondary,
       userFontColor: themeOverride.text || forcedTextColor,
       userFontSize: formData.fontSize,
-      userBackground: themeOverride.background || formData.backgroundColor || (baseTemplateStyle as any).background,
+      userBackground:
+        themeOverride.background ||
+        formData.backgroundColor ||
+        (baseTemplateStyle as any).background,
     };
 
     const LogoDisplay = () => {
@@ -1122,15 +1147,18 @@ export default function Configurator() {
         if (!profileUrl) return;
 
         try {
-          const resp = await fetch(`/api/instagram?profileUrl=${encodeURIComponent(
-            profileUrl
-          )}`);
+          const resp = await fetch(
+            `/api/instagram?profileUrl=${encodeURIComponent(profileUrl)}`,
+          );
           if (!resp.ok) return;
           const data = await resp.json();
           if (cancelled) return;
           if (Array.isArray(data) && data.length > 0) {
             // Map to gallery format expected by configurator
-            const updated = data.map((src: string) => ({ url: src, alt: "Instagram photo" }));
+            const updated = data.map((src: string) => ({
+              url: src,
+              alt: "Instagram photo",
+            }));
             updateFormData("gallery", updated);
           }
         } catch (e) {
@@ -1277,26 +1305,32 @@ export default function Configurator() {
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>Menu</h2>
               <div className="space-y-3">
-                {menuItemsToShow.map((item, index) => (
+                {menuItemsToShow.map((item, index) =>
                   selectedIdForSwitch === "minimalist" ? (
-                    <details key={index} className={`${templateStyles.itemCard} cursor-pointer open:shadow-md`}>
+                    <details
+                      key={index}
+                      className={`${templateStyles.itemCard} cursor-pointer open:shadow-md`}
+                    >
                       <summary className="flex items-center justify-between list-none">
                         <h3 className={templateStyles.itemName}>{item.name}</h3>
-                        <span className={templateStyles.itemPrice} style={{ color: styles.userPrimary }}>
+                        <span
+                          className={templateStyles.itemPrice}
+                          style={{ color: styles.userPrimary }}
+                        >
                           ${item.price}
                         </span>
                       </summary>
                       <div className="mt-2 text-left">
-                        <p className={templateStyles.itemDesc}>{item.description}</p>
+                        <p className={templateStyles.itemDesc}>
+                          {item.description}
+                        </p>
                       </div>
                     </details>
                   ) : (
                     <div key={index} className={templateStyles.itemCard}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-2">
-                          <span className="hidden">
-                            {item.emoji || "🍽️"}
-                          </span>
+                          <span className="hidden">{item.emoji || "🍽️"}</span>
                           <div>
                             <h3 className={templateStyles.itemName}>
                               {item.name}
@@ -1322,8 +1356,8 @@ export default function Configurator() {
                         )}
                       </div>
                     </div>
-                  )
-                ))}
+                  ),
+                )}
                 {menuItemsToShow.length === 0 && (
                   <div className="text-center py-8">
                     <p className={templateStyles.itemDesc}>
@@ -1481,7 +1515,14 @@ export default function Configurator() {
                   Object.keys(formData.openingHours).length > 0 && (
                     <div className="flex items-center space-x-2">
                       <Clock className={templateStyles.contactIcon} />
-                      <span className={templateStyles.itemDesc} style={{ color: formData.openingHoursTextColor || styles.userFontColor }}>
+                      <span
+                        className={templateStyles.itemDesc}
+                        style={{
+                          color:
+                            formData.openingHoursTextColor ||
+                            styles.userFontColor,
+                        }}
+                      >
                         {currentContent.hours}
                       </span>
                     </div>
@@ -1626,45 +1667,89 @@ export default function Configurator() {
                 Object.keys(formData.openingHours).length > 0 && (
                   <div className="text-center mt-6 pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Clock className="w-3 h-3" style={{ color: formData.openingHoursTextColor || styles.userFontColor }} />
-                      <span className="text-xs font-medium" style={{ color: formData.openingHoursTextColor || styles.userFontColor }}>
+                      <Clock
+                        className="w-3 h-3"
+                        style={{
+                          color:
+                            formData.openingHoursTextColor ||
+                            styles.userFontColor,
+                        }}
+                      />
+                      <span
+                        className="text-xs font-medium"
+                        style={{
+                          color:
+                            formData.openingHoursTextColor ||
+                            styles.userFontColor,
+                        }}
+                      >
                         Opening Hours
                       </span>
                     </div>
 
                     <div
                       className="text-xs space-y-0.5"
-                      style={{ color: formData.openingHoursTextColor || styles.userFontColor, cursor: "pointer" }}
-                      onClick={() => setPreviewState((p) => ({ ...p, openHoursExpanded: !p.openHoursExpanded }))}
+                      style={{
+                        color:
+                          formData.openingHoursTextColor ||
+                          styles.userFontColor,
+                        cursor: "pointer",
+                      }}
+                      onClick={() =>
+                        setPreviewState((p) => ({
+                          ...p,
+                          openHoursExpanded: !p.openHoursExpanded,
+                        }))
+                      }
                       title="Click to expand hours"
                     >
-                      {previewState.openHoursExpanded ? (
-                        Object.entries(formData.openingHours).map(([day, hours]) => (
-                          <div key={day} className="flex justify-between items-center py-1 text-sm">
-                            <span style={{ fontWeight: 600 }}>{day}</span>
-                            <span>
-                              {hours.closed ? "Closed" : `${hours.open} - ${hours.close}`}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        Object.entries(formData.openingHours)
-                          .slice(0, 2)
-                          .map(([day, hours]) => (
-                            <div key={day} className="flex justify-between items-center">
-                              <span>{day}</span>
-                              <span>
-                                {hours.closed ? "Closed" : `${hours.open} - ${hours.close}`}
-                              </span>
-                            </div>
-                          ))
-                      )}
+                      {previewState.openHoursExpanded
+                        ? Object.entries(formData.openingHours).map(
+                            ([day, hours]) => (
+                              <div
+                                key={day}
+                                className="flex justify-between items-center py-1 text-sm"
+                              >
+                                <span style={{ fontWeight: 600 }}>{day}</span>
+                                <span>
+                                  {hours.closed
+                                    ? "Closed"
+                                    : `${hours.open} - ${hours.close}`}
+                                </span>
+                              </div>
+                            ),
+                          )
+                        : Object.entries(formData.openingHours)
+                            .slice(0, 2)
+                            .map(([day, hours]) => (
+                              <div
+                                key={day}
+                                className="flex justify-between items-center"
+                              >
+                                <span>{day}</span>
+                                <span>
+                                  {hours.closed
+                                    ? "Closed"
+                                    : `${hours.open} - ${hours.close}`}
+                                </span>
+                              </div>
+                            ))}
 
-                      {!previewState.openHoursExpanded && Object.keys(formData.openingHours).length > 2 && (
-                        <div className="text-xs mt-1" style={{ color: formData.openingHoursTextColor || styles.userFontColor, opacity: 0.7 }}>
-                          +{Object.keys(formData.openingHours).length - 2} more days
-                        </div>
-                      )}
+                      {!previewState.openHoursExpanded &&
+                        Object.keys(formData.openingHours).length > 2 && (
+                          <div
+                            className="text-xs mt-1"
+                            style={{
+                              color:
+                                formData.openingHoursTextColor ||
+                                styles.userFontColor,
+                              opacity: 0.7,
+                            }}
+                          >
+                            +{Object.keys(formData.openingHours).length - 2}{" "}
+                            more days
+                          </div>
+                        )}
                     </div>
                   </div>
                 )}
@@ -1770,7 +1855,9 @@ export default function Configurator() {
                         key={page}
                         onClick={() => navigateToPage(page)}
                         className={`w-56 mx-auto px-4 py-2 text-black hover:bg-gray-100 rounded-full transition-colors text-sm ${
-                          previewState.activePage === page ? "font-semibold" : ""
+                          previewState.activePage === page
+                            ? "font-semibold"
+                            : ""
                         }`}
                       >
                         {page.charAt(0).toUpperCase() + page.slice(1)}
@@ -1796,7 +1883,7 @@ export default function Configurator() {
           <div
             className={`h-full overflow-y-auto text-white ${fontClass}`}
             style={{
-              background: `linear-gradient(135deg, ${styles.userSecondary || formData.secondaryColor || '#38bdf8'} 0%, ${styles.userPrimary || formData.primaryColor || '#2563eb'} 50%, ${styles.userSecondary || formData.secondaryColor || '#1e40af'} 100%)`,
+              background: `linear-gradient(135deg, ${styles.userSecondary || formData.secondaryColor || "#38bdf8"} 0%, ${styles.userPrimary || formData.primaryColor || "#2563eb"} 50%, ${styles.userSecondary || formData.secondaryColor || "#1e40af"} 100%)`,
             }}
           >
             {/* Status Bar - Space for notch */}
@@ -1841,11 +1928,14 @@ export default function Configurator() {
               {/* Full-screen Menu */}
               {previewState.menuOpen && (
                 <div className="absolute inset-0 z-[60] flex items-start justify-center">
-                  <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
+                  <div
+                    className="absolute inset-0 bg-black/20"
+                    onClick={toggleMenu}
+                  />
                   <div
                     className="relative w-full max-w-none p-6 pt-6 backdrop-blur-xl ring-1 ring-white/10"
                     style={{
-                      background: `linear-gradient(135deg, ${toRgba(styles.userSecondary || '#38bdf8', 0.65)} 0%, ${toRgba(styles.userPrimary || '#2563eb', 0.65)} 50%, ${toRgba(styles.userSecondary || '#1e40af', 0.65)} 100%)`,
+                      background: `linear-gradient(135deg, ${toRgba(styles.userSecondary || "#38bdf8", 0.65)} 0%, ${toRgba(styles.userPrimary || "#2563eb", 0.65)} 50%, ${toRgba(styles.userSecondary || "#1e40af", 0.65)} 100%)`,
                       borderTop: "1px solid rgba(255,255,255,0.15)",
                       color: "#ffffff",
                     }}
@@ -1855,9 +1945,14 @@ export default function Configurator() {
                         <div className="w-6 h-6 rounded-md bg-white/15 flex items-center justify-center">
                           <LogoDisplay />
                         </div>
-                        <span className="text-sm font-semibold">{getBusinessName()}</span>
+                        <span className="text-sm font-semibold">
+                          {getBusinessName()}
+                        </span>
                       </div>
-                      <button onClick={toggleMenu} className="p-2 rounded-md hover:bg-white/10">
+                      <button
+                        onClick={toggleMenu}
+                        className="p-2 rounded-md hover:bg-white/10"
+                      >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
@@ -1871,9 +1966,11 @@ export default function Configurator() {
                             onClick={() => navigateToPage(page)}
                             className="w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border"
                             style={{
-                              backgroundColor: isActive ? toRgba(styles.userPrimary || '#2563eb', 0.18) : 'rgba(255,255,255,0.06)',
-                              borderColor: 'rgba(255,255,255,0.12)',
-                              color: '#ffffff',
+                              backgroundColor: isActive
+                                ? toRgba(styles.userPrimary || "#2563eb", 0.18)
+                                : "rgba(255,255,255,0.06)",
+                              borderColor: "rgba(255,255,255,0.12)",
+                              color: "#ffffff",
                             }}
                           >
                             {page.charAt(0).toUpperCase() + page.slice(1)}
@@ -1903,7 +2000,10 @@ export default function Configurator() {
             }}
           >
             {/* Status Bar - Space for notch */}
-            <div className="h-8" style={{ backgroundColor: styles.userSecondary || "#ffffff" }}>
+            <div
+              className="h-8"
+              style={{ backgroundColor: styles.userSecondary || "#ffffff" }}
+            >
               {/* Empty space for Apple notch */}
             </div>
 
@@ -1921,13 +2021,18 @@ export default function Configurator() {
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{
-                      backgroundColor: styles.userPrimary ? `${styles.userPrimary}20` : "#f0f0f0",
+                      backgroundColor: styles.userPrimary
+                        ? `${styles.userPrimary}20`
+                        : "#f0f0f0",
                       border: `1px solid ${styles.userPrimary || "#eee"}`,
                     }}
                   >
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-semibold" style={{ color: styles.userFontColor }}>
+                  <h1
+                    className="text-lg font-semibold"
+                    style={{ color: styles.userFontColor }}
+                  >
                     {getBusinessName()}
                   </h1>
                 </div>
@@ -1936,9 +2041,16 @@ export default function Configurator() {
                     <button
                       className="p-2 rounded-lg transition-colors relative"
                       onClick={() => setShowCart(!showCart)}
-                      style={{ border: `1px solid ${styles.userPrimary || "transparent"}`, color: styles.userFontColor, backgroundColor: 'transparent' }}
+                      style={{
+                        border: `1px solid ${styles.userPrimary || "transparent"}`,
+                        color: styles.userFontColor,
+                        backgroundColor: "transparent",
+                      }}
                     >
-                      <ShoppingBag className="w-5 h-5" style={{ color: styles.userFontColor }} />
+                      <ShoppingBag
+                        className="w-5 h-5"
+                        style={{ color: styles.userFontColor }}
+                      />
                       {cartItemsCount > 0 && (
                         <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
                           {cartItemsCount}
@@ -1949,9 +2061,15 @@ export default function Configurator() {
                   <button
                     onClick={toggleMenu}
                     className="p-2 rounded-lg transition-colors"
-                    style={{ backgroundColor: 'transparent', color: styles.userFontColor }}
+                    style={{
+                      backgroundColor: "transparent",
+                      color: styles.userFontColor,
+                    }}
                   >
-                    <Menu className="w-5 h-5" style={{ color: styles.userFontColor }} />
+                    <Menu
+                      className="w-5 h-5"
+                      style={{ color: styles.userFontColor }}
+                    />
                   </button>
                 </div>
               </div>
@@ -1960,7 +2078,10 @@ export default function Configurator() {
             {/* Full-screen menu overlay (covers entire phone screen) */}
             {previewState.menuOpen && (
               <div className="absolute inset-0 z-[60] flex items-start justify-center">
-                <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
+                <div
+                  className="absolute inset-0 bg-black/20"
+                  onClick={toggleMenu}
+                />
                 <div
                   className="relative w-full max-w-none p-6 transition-transform duration-300 ease-in-out"
                   style={{
@@ -1997,7 +2118,10 @@ export default function Configurator() {
             )}
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto" style={{ background: 'transparent' }}>
+            <div
+              className="flex-1 overflow-y-auto"
+              style={{ background: "transparent" }}
+            >
               {renderPageContent()}
             </div>
           </div>
@@ -2005,7 +2129,9 @@ export default function Configurator() {
 
       case "cozy":
         return (
-          <div className={`h-full overflow-y-auto bg-orange-50 ${fontClass} relative`}>
+          <div
+            className={`h-full overflow-y-auto bg-orange-50 ${fontClass} relative`}
+          >
             {/* Status Bar with Notch Space */}
             <div className="h-8 bg-amber-100" />
 
@@ -2020,22 +2146,34 @@ export default function Configurator() {
                     color: styles.userFontColor,
                   }}
                 >
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: (styles.userPrimary || '#F59E0B') + '20' }}>
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{
+                      backgroundColor: (styles.userPrimary || "#F59E0B") + "20",
+                    }}
+                  >
                     <LogoDisplay />
                   </div>
-                  <span className="text-sm font-semibold">{getBusinessName()}</span>
+                  <span className="text-sm font-semibold">
+                    {getBusinessName()}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-orange-50 pb-16">{renderPageContent()}</div>
+            <div className="flex-1 overflow-y-auto bg-orange-50 pb-16">
+              {renderPageContent()}
+            </div>
 
             {/* Bottom-right Menu FAB */}
             <button
               onClick={toggleMenu}
               className="absolute bottom-4 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center ring-1 ring-white/40"
-              style={{ backgroundColor: styles.userPrimary || '#EA580C', color: '#fff' }}
+              style={{
+                backgroundColor: styles.userPrimary || "#EA580C",
+                color: "#fff",
+              }}
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
@@ -2044,14 +2182,34 @@ export default function Configurator() {
             {/* Full-screen Cozy Menu Screen */}
             {previewState.menuOpen && (
               <div className="absolute inset-0 z-[60]">
-                <div className="absolute inset-0" style={{ background: `${styles.userSecondary || '#FEF3C7'}CC` }} />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `${styles.userSecondary || "#FEF3C7"}CC`,
+                  }}
+                />
                 <div className="relative h-full p-6 flex flex-col">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full border" style={{ background: '#FFFFFF', borderColor: (styles.userPrimary || '#EA580C') + '40', color: styles.userFontColor }}>
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: styles.userPrimary || '#EA580C' }} />
+                    <div
+                      className="inline-flex items-center space-x-2 px-4 py-2 rounded-full border"
+                      style={{
+                        background: "#FFFFFF",
+                        borderColor: (styles.userPrimary || "#EA580C") + "40",
+                        color: styles.userFontColor,
+                      }}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{
+                          backgroundColor: styles.userPrimary || "#EA580C",
+                        }}
+                      />
                       <span className="text-sm font-semibold">Menu</span>
                     </div>
-                    <button onClick={toggleMenu} className="p-2 rounded-full hover:bg-black/5">
+                    <button
+                      onClick={toggleMenu}
+                      className="p-2 rounded-full hover:bg-black/5"
+                    >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
@@ -2061,7 +2219,10 @@ export default function Configurator() {
                         key={page}
                         onClick={() => navigateToPage(page)}
                         className="w-full text-left px-4 py-3 rounded-xl border bg-white shadow-sm"
-                        style={{ borderColor: (styles.userPrimary || '#EA580C') + '30', color: styles.userFontColor }}
+                        style={{
+                          borderColor: (styles.userPrimary || "#EA580C") + "30",
+                          color: styles.userFontColor,
+                        }}
                       >
                         {page.charAt(0).toUpperCase() + page.slice(1)}
                       </button>
@@ -2212,7 +2373,6 @@ export default function Configurator() {
           : formData.template;
       return templateNames[selectedId] || "Your Business";
     };
-
 
     const getBusinessIcon = () => {
       switch (formData.businessType) {
@@ -2595,8 +2755,12 @@ export default function Configurator() {
                   key={template.id}
                   className={`cursor-pointer transition-all duration-300 border-2 ${
                     selectedTemplate === template.id
-                      ? (template.id === "modern" ? "border-blue-500 bg-blue-50 shadow-lg" : "border-teal-500 bg-teal-50 shadow-lg")
-                      : (template.id === "modern" ? "border-gray-200 hover:border-blue-300 hover:shadow-md" : "border-gray-200 hover:border-teal-300 hover:shadow-md")
+                      ? template.id === "modern"
+                        ? "border-blue-500 bg-blue-50 shadow-lg"
+                        : "border-teal-500 bg-teal-50 shadow-lg"
+                      : template.id === "modern"
+                        ? "border-gray-200 hover:border-blue-300 hover:shadow-md"
+                        : "border-gray-200 hover:border-teal-300 hover:shadow-md"
                   }`}
                   onClick={() => handleTemplateClick(template.id)}
                 >
@@ -2610,13 +2774,12 @@ export default function Configurator() {
                           <h4 className="text-md font-bold text-gray-900 truncate">
                             {template.name}
                           </h4>
-                          {selectedTemplate === template.id && (
-                            template.id === "modern" ? (
+                          {selectedTemplate === template.id &&
+                            (template.id === "modern" ? (
                               <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />
                             ) : (
                               <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />
-                            )
-                          )}
+                            ))}
                         </div>
                         <p className="text-gray-600 text-xs mt-1 line-clamp-2">
                           {template.description}
@@ -2632,7 +2795,9 @@ export default function Configurator() {
 
             {/* Use Template Button */}
             {selectedTemplate && (
-              <Card className={`p-4 ${selectedTemplate === "modern" ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" : "bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200"}`}>
+              <Card
+                className={`p-4 ${selectedTemplate === "modern" ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" : "bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200"}`}
+              >
                 <div className="text-center">
                   <p className="text-gray-600 text-sm mb-3">
                     Previewing:{" "}
@@ -2661,12 +2826,17 @@ export default function Configurator() {
                   Live Preview
                 </h3>
                 <div className="text-center">
-                  <span className="text-xs text-gray-500 font-mono">Live Preview</span>
+                  <span className="text-xs text-gray-500 font-mono">
+                    Live Preview
+                  </span>
                 </div>
               </div>
 
               <div className="flex justify-center">
-                <LivePhoneFrame widthClass="w-48 lg:w-56" heightClass="h-[360px] lg:h-[420px]">
+                <LivePhoneFrame
+                  widthClass="w-48 lg:w-56"
+                  heightClass="h-[360px] lg:h-[420px]"
+                >
                   <TemplatePreviewContent />
                 </LivePhoneFrame>
               </div>
@@ -2944,7 +3114,9 @@ export default function Configurator() {
                     if (formData.template) {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].primary = preset.primary;
                       newThemes[formData.template].secondary = preset.secondary;
@@ -3013,7 +3185,9 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalist };
+                          newThemes[formData.template] = {
+                            ...newThemes.minimalist,
+                          };
                         }
                         newThemes[formData.template].primary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -3034,7 +3208,9 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalist };
+                          newThemes[formData.template] = {
+                            ...newThemes.minimalist,
+                          };
                         }
                         newThemes[formData.template].primary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -3066,7 +3242,9 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalist };
+                          newThemes[formData.template] = {
+                            ...newThemes.minimalist,
+                          };
                         }
                         newThemes[formData.template].secondary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -3087,7 +3265,9 @@ export default function Configurator() {
                       if (formData.template) {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalist };
+                          newThemes[formData.template] = {
+                            ...newThemes.minimalist,
+                          };
                         }
                         newThemes[formData.template].secondary = e.target.value;
                         updateFormData("templateThemes", newThemes);
@@ -3229,7 +3409,8 @@ export default function Configurator() {
         {formData.template && (
           <div className="bg-blue-50 rounded-2xl p-8">
             <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
-              {templates.find(t => t.id === formData.template)?.name} Theme Settings
+              {templates.find((t) => t.id === formData.template)?.name} Theme
+              Settings
             </h3>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Primary Color */}
@@ -3240,11 +3421,16 @@ export default function Configurator() {
                 <div className="flex items-center space-x-3">
                   <input
                     type="color"
-                    value={formData.templateThemes?.[formData.template]?.primary || formData.primaryColor}
+                    value={
+                      formData.templateThemes?.[formData.template]?.primary ||
+                      formData.primaryColor
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].primary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3253,11 +3439,16 @@ export default function Configurator() {
                   />
                   <Input
                     type="text"
-                    value={formData.templateThemes?.[formData.template]?.primary || formData.primaryColor}
+                    value={
+                      formData.templateThemes?.[formData.template]?.primary ||
+                      formData.primaryColor
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].primary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3275,11 +3466,16 @@ export default function Configurator() {
                 <div className="flex items-center space-x-3">
                   <input
                     type="color"
-                    value={formData.templateThemes?.[formData.template]?.secondary || formData.secondaryColor}
+                    value={
+                      formData.templateThemes?.[formData.template]?.secondary ||
+                      formData.secondaryColor
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].secondary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3288,11 +3484,16 @@ export default function Configurator() {
                   />
                   <Input
                     type="text"
-                    value={formData.templateThemes?.[formData.template]?.secondary || formData.secondaryColor}
+                    value={
+                      formData.templateThemes?.[formData.template]?.secondary ||
+                      formData.secondaryColor
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].secondary = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3310,11 +3511,16 @@ export default function Configurator() {
                 <div className="flex items-center space-x-3">
                   <input
                     type="color"
-                    value={formData.templateThemes?.[formData.template]?.text || formData.fontColor}
+                    value={
+                      formData.templateThemes?.[formData.template]?.text ||
+                      formData.fontColor
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].text = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3323,11 +3529,16 @@ export default function Configurator() {
                   />
                   <Input
                     type="text"
-                    value={formData.templateThemes?.[formData.template]?.text || formData.fontColor}
+                    value={
+                      formData.templateThemes?.[formData.template]?.text ||
+                      formData.fontColor
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].text = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3345,11 +3556,16 @@ export default function Configurator() {
                 <div className="flex items-center space-x-3">
                   <input
                     type="color"
-                    value={formData.templateThemes?.[formData.template]?.highlight || "#14B8A6"}
+                    value={
+                      formData.templateThemes?.[formData.template]?.highlight ||
+                      "#14B8A6"
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].highlight = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3358,11 +3574,16 @@ export default function Configurator() {
                   />
                   <Input
                     type="text"
-                    value={formData.templateThemes?.[formData.template]?.highlight || "#14B8A6"}
+                    value={
+                      formData.templateThemes?.[formData.template]?.highlight ||
+                      "#14B8A6"
+                    }
                     onChange={(e) => {
                       const newThemes = { ...formData.templateThemes };
                       if (!newThemes[formData.template]) {
-                        newThemes[formData.template] = { ...newThemes.minimalist };
+                        newThemes[formData.template] = {
+                          ...newThemes.minimalist,
+                        };
                       }
                       newThemes[formData.template].highlight = e.target.value;
                       updateFormData("templateThemes", newThemes);
@@ -3388,7 +3609,8 @@ export default function Configurator() {
                     <Button
                       key={style.id}
                       variant={
-                        (formData.templateThemes?.[formData.template]?.buttonRadius || "rounded-lg") === style.id
+                        (formData.templateThemes?.[formData.template]
+                          ?.buttonRadius || "rounded-lg") === style.id
                           ? "default"
                           : "outline"
                       }
@@ -3396,7 +3618,9 @@ export default function Configurator() {
                       onClick={() => {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalist };
+                          newThemes[formData.template] = {
+                            ...newThemes.minimalist,
+                          };
                         }
                         newThemes[formData.template].buttonRadius = style.id;
                         updateFormData("templateThemes", newThemes);
@@ -3421,7 +3645,8 @@ export default function Configurator() {
                     <Button
                       key={effect.id}
                       variant={
-                        (formData.templateThemes?.[formData.template]?.buttonHover || "grow") === effect.id
+                        (formData.templateThemes?.[formData.template]
+                          ?.buttonHover || "grow") === effect.id
                           ? "default"
                           : "outline"
                       }
@@ -3429,12 +3654,19 @@ export default function Configurator() {
                       onClick={() => {
                         const newThemes = { ...formData.templateThemes };
                         if (!newThemes[formData.template]) {
-                          newThemes[formData.template] = { ...newThemes.minimalist };
+                          newThemes[formData.template] = {
+                            ...newThemes.minimalist,
+                          };
                         }
                         newThemes[formData.template].buttonHover = effect.id;
                         updateFormData("templateThemes", newThemes);
                       }}
-                      className={(formData.templateThemes?.[formData.template]?.buttonHover || "grow") === effect.id ? "bg-teal-500 hover:bg-teal-600" : ""}
+                      className={
+                        (formData.templateThemes?.[formData.template]
+                          ?.buttonHover || "grow") === effect.id
+                          ? "bg-teal-500 hover:bg-teal-600"
+                          : ""
+                      }
                     >
                       {effect.name}
                     </Button>
@@ -3825,11 +4057,16 @@ export default function Configurator() {
               <input
                 type="color"
                 value={formData.openingHoursTextColor || "#0F172A"}
-                onChange={(e) => updateFormData("openingHoursTextColor", e.target.value)}
+                onChange={(e) =>
+                  updateFormData("openingHoursTextColor", e.target.value)
+                }
                 className="w-12 h-10 rounded cursor-pointer border"
                 aria-label="Opening hours text color"
               />
-              <span className="text-sm text-gray-600">This controls the color of the Opening Hours text in the preview.</span>
+              <span className="text-sm text-gray-600">
+                This controls the color of the Opening Hours text in the
+                preview.
+              </span>
             </div>
           </Card>
           {/* Weekdays (Mo-Fr) */}
@@ -4163,111 +4400,172 @@ export default function Configurator() {
                 Choose CSV File
               </Button>
               <input
-              id="csv-upload"
-              type="file"
-              accept=".csv,text/csv"
-              className="hidden"
-              onChange={(e) => {
-                const inputEl = e.target as HTMLInputElement;
-                const file = inputEl.files?.[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                  try {
-                    let text = String(event.target?.result || "");
-                    if (!text) return;
-                    // Strip BOM and normalize newlines
-                    text = text.replace(/^\uFEFF/, "").replace(/\r\n?|\n/g, "\n");
+                id="csv-upload"
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => {
+                  const inputEl = e.target as HTMLInputElement;
+                  const file = inputEl.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    try {
+                      let text = String(event.target?.result || "");
+                      if (!text) return;
+                      // Strip BOM and normalize newlines
+                      text = text
+                        .replace(/^\uFEFF/, "")
+                        .replace(/\r\n?|\n/g, "\n");
 
-                    const firstLine = text.split("\n")[0] || "";
-                    const delimiter = (firstLine.match(/;/g)?.length || 0) > (firstLine.match(/,/g)?.length || 0)
-                      ? ";"
-                      : (firstLine.includes("\t") ? "\t" : ",");
+                      const firstLine = text.split("\n")[0] || "";
+                      const delimiter =
+                        (firstLine.match(/;/g)?.length || 0) >
+                        (firstLine.match(/,/g)?.length || 0)
+                          ? ";"
+                          : firstLine.includes("\t")
+                            ? "\t"
+                            : ",";
 
-                    const parseLine = (line: string) => {
-                      const out: string[] = [];
-                      let cur = "";
-                      let inQuotes = false;
-                      for (let i = 0; i < line.length; i++) {
-                        const ch = line[i];
-                        if (ch === '"') {
-                          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
-                          else { inQuotes = !inQuotes; }
-                        } else if (ch === delimiter && !inQuotes) {
-                          out.push(cur); cur = "";
-                        } else { cur += ch; }
+                      const parseLine = (line: string) => {
+                        const out: string[] = [];
+                        let cur = "";
+                        let inQuotes = false;
+                        for (let i = 0; i < line.length; i++) {
+                          const ch = line[i];
+                          if (ch === '"') {
+                            if (inQuotes && line[i + 1] === '"') {
+                              cur += '"';
+                              i++;
+                            } else {
+                              inQuotes = !inQuotes;
+                            }
+                          } else if (ch === delimiter && !inQuotes) {
+                            out.push(cur);
+                            cur = "";
+                          } else {
+                            cur += ch;
+                          }
+                        }
+                        out.push(cur);
+                        return out.map((v) => v.trim());
+                      };
+
+                      const rows = text.split("\n").filter((l) => l.trim());
+                      if (rows.length === 0) return;
+
+                      const headerCells = parseLine(rows[0]).map((h) =>
+                        h
+                          .toLowerCase()
+                          .replace(/^"(.*)"$/, "$1")
+                          .trim(),
+                      );
+
+                      const nameKeys = [
+                        "name",
+                        "dish",
+                        "item",
+                        "title",
+                        "produkt",
+                        "gericht",
+                      ];
+                      const descKeys = [
+                        "description",
+                        "desc",
+                        "details",
+                        "beschreibung",
+                      ];
+                      const priceKeys = ["price", "preis", "cost", "amount"];
+
+                      // Decide whether the first row is a header by checking for known header keywords
+                      const headerMatched = headerCells.some(
+                        (h) =>
+                          nameKeys.includes(h) ||
+                          priceKeys.includes(h) ||
+                          descKeys.includes(h),
+                      );
+
+                      let dataRows = headerMatched ? rows.slice(1) : rows;
+
+                      let nameIdx = -1;
+                      let descIdx = -1;
+                      let priceIdx = -1;
+
+                      if (headerMatched) {
+                        const getIdx = (keys: string[]) =>
+                          headerCells.findIndex((h) => keys.includes(h));
+                        nameIdx = getIdx(nameKeys);
+                        descIdx = getIdx(descKeys);
+                        priceIdx = getIdx(priceKeys);
+
+                        // fallback to positional columns if headers not found
+                        if (nameIdx === -1 && headerCells.length >= 1)
+                          nameIdx = 0;
+                        if (priceIdx === -1 && headerCells.length >= 2)
+                          priceIdx = headerCells.length - 1;
+                      } else {
+                        // no header, assume columns: name, description, ..., price (price last)
+                        const sampleCells = parseLine(rows[0]);
+                        const colCount = sampleCells.length;
+                        nameIdx = 0;
+                        descIdx = colCount >= 2 ? 1 : -1;
+                        priceIdx = colCount >= 2 ? colCount - 1 : 1;
                       }
-                      out.push(cur);
-                      return out.map(v => v.trim());
-                    };
 
-                    const rows = text.split("\n").filter(l => l.trim());
-                    if (rows.length === 0) return;
+                      const newItems = dataRows
+                        .map((line) => {
+                          const cells = parseLine(line).map((v) =>
+                            v.replace(/""/g, '"'),
+                          );
+                          const clean = (s?: string) =>
+                            (s || "")
+                              .replace(
+                                /[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu,
+                                "",
+                              )
+                              .trim();
+                          const num = (s?: string) =>
+                            (s || "")
+                              .replace(/[^0-9,\.\-]/g, "")
+                              .replace(/,/g, ".");
 
-                    const headerCells = parseLine(rows[0]).map(h => h.toLowerCase().replace(/^"(.*)"$/, "$1").trim());
+                          const name = clean(cells[nameIdx] || "");
+                          const description = clean(
+                            descIdx !== -1 ? cells[descIdx] || "" : "",
+                          );
+                          const priceRaw = num(cells[priceIdx] || "");
 
-                    const nameKeys = ["name","dish","item","title","produkt","gericht"];
-                    const descKeys = ["description","desc","details","beschreibung"];
-                    const priceKeys = ["price","preis","cost","amount"];
+                          const price = priceRaw
+                            ? isNaN(Number(priceRaw))
+                              ? priceRaw
+                              : Number(priceRaw).toFixed(2)
+                            : "";
 
-                    // Decide whether the first row is a header by checking for known header keywords
-                    const headerMatched = headerCells.some(h => nameKeys.includes(h) || priceKeys.includes(h) || descKeys.includes(h));
+                          return name && price
+                            ? { name, description, price }
+                            : null;
+                        })
+                        .filter(Boolean) as any[];
 
-                    let dataRows = headerMatched ? rows.slice(1) : rows;
+                      if (newItems.length) {
+                        // append items (multiple imports supported)
+                        setFormData((prev) => ({
+                          ...prev,
+                          menuItems: [...(prev.menuItems || []), ...newItems],
+                        }));
+                      }
 
-                    let nameIdx = -1;
-                    let descIdx = -1;
-                    let priceIdx = -1;
-
-                    if (headerMatched) {
-                      const getIdx = (keys: string[]) => headerCells.findIndex(h => keys.includes(h));
-                      nameIdx = getIdx(nameKeys);
-                      descIdx = getIdx(descKeys);
-                      priceIdx = getIdx(priceKeys);
-
-                      // fallback to positional columns if headers not found
-                      if (nameIdx === -1 && headerCells.length >= 1) nameIdx = 0;
-                      if (priceIdx === -1 && headerCells.length >= 2) priceIdx = headerCells.length - 1;
-                    } else {
-                      // no header, assume columns: name, description, ..., price (price last)
-                      const sampleCells = parseLine(rows[0]);
-                      const colCount = sampleCells.length;
-                      nameIdx = 0;
-                      descIdx = colCount >= 2 ? 1 : -1;
-                      priceIdx = colCount >= 2 ? colCount - 1 : 1;
+                      // clear input so same file can be uploaded again if needed
+                      try {
+                        inputEl.value = "";
+                      } catch (e) {}
+                    } catch (err) {
+                      console.error("CSV parse error", err);
                     }
-
-                    const newItems = dataRows.map((line) => {
-                      const cells = parseLine(line).map(v => v.replace(/""/g, '"'));
-                      const clean = (s?: string) => (s || "").replace(/[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu, "").trim();
-                      const num = (s?: string) => (s || "").replace(/[^0-9,\.\-]/g, "").replace(/,/g, ".");
-
-                      const name = clean(cells[nameIdx] || "");
-                      const description = clean(descIdx !== -1 ? cells[descIdx] || "" : "");
-                      const priceRaw = num(cells[priceIdx] || "");
-
-                      const price = priceRaw ? (isNaN(Number(priceRaw)) ? priceRaw : Number(priceRaw).toFixed(2)) : "";
-
-                      return name && price ? { name, description, price } : null;
-                    }).filter(Boolean) as any[];
-
-                    if (newItems.length) {
-                      // append items (multiple imports supported)
-                      setFormData((prev) => ({
-                        ...prev,
-                        menuItems: [ ...(prev.menuItems || []), ...newItems ],
-                      }));
-                    }
-
-                    // clear input so same file can be uploaded again if needed
-                    try { inputEl.value = ""; } catch (e) {}
-                  } catch (err) {
-                    console.error("CSV parse error", err);
-                  }
-                };
-                reader.readAsText(file, 'utf-8');
-              }}
-            />
+                  };
+                  reader.readAsText(file, "utf-8");
+                }}
+              />
               <p className="text-xs text-gray-500 mt-2">
                 Format: name,description,price
               </p>
@@ -4954,27 +5252,43 @@ export default function Configurator() {
         case "onlineOrdering":
           return (
             <Card className="p-6 mt-6">
-              <h4 className="text-lg font-bold mb-3">Online Ordering Settings</h4>
+              <h4 className="text-lg font-bold mb-3">
+                Online Ordering Settings
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Show cart in top bar</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Show cart in top bar
+                  </label>
                   <input
                     type="checkbox"
                     checked={!!formData.showCartInTopBar}
-                    onChange={(e) => updateFormData("showCartInTopBar", e.target.checked)}
+                    onChange={(e) =>
+                      updateFormData("showCartInTopBar", e.target.checked)
+                    }
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Order confirmation message</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Order confirmation message
+                  </label>
                   <input
                     type="text"
-                    value={formData.orderConfirmationMessage || "Thanks! We received your order."}
-                    onChange={(e) => updateFormData("orderConfirmationMessage", e.target.value)}
+                    value={
+                      formData.orderConfirmationMessage ||
+                      "Thanks! We received your order."
+                    }
+                    onChange={(e) =>
+                      updateFormData("orderConfirmationMessage", e.target.value)
+                    }
                     className="w-full"
                   />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-3">These settings control small ordering UX options for the live preview and published site.</p>
+              <p className="text-sm text-gray-500 mt-3">
+                These settings control small ordering UX options for the live
+                preview and published site.
+              </p>
             </Card>
           );
 
@@ -4984,10 +5298,20 @@ export default function Configurator() {
               <h4 className="text-lg font-bold mb-3">Online Store Settings</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Payment provider</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Payment provider
+                  </label>
                   <select
-                    value={(formData.storeConfig && formData.storeConfig.provider) || "stripe"}
-                    onChange={(e) => updateFormData("storeConfig", { ...(formData.storeConfig || {}), provider: e.target.value })}
+                    value={
+                      (formData.storeConfig && formData.storeConfig.provider) ||
+                      "stripe"
+                    }
+                    onChange={(e) =>
+                      updateFormData("storeConfig", {
+                        ...(formData.storeConfig || {}),
+                        provider: e.target.value,
+                      })
+                    }
                     className="w-full"
                   >
                     <option value="stripe">Stripe</option>
@@ -4996,16 +5320,28 @@ export default function Configurator() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Currency</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Currency
+                  </label>
                   <input
                     type="text"
-                    value={(formData.storeConfig && formData.storeConfig.currency) || "USD"}
-                    onChange={(e) => updateFormData("storeConfig", { ...(formData.storeConfig || {}), currency: e.target.value })}
+                    value={
+                      (formData.storeConfig && formData.storeConfig.currency) ||
+                      "USD"
+                    }
+                    onChange={(e) =>
+                      updateFormData("storeConfig", {
+                        ...(formData.storeConfig || {}),
+                        currency: e.target.value,
+                      })
+                    }
                     className="w-full"
                   />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-3">Connect a payment provider to accept online payments.</p>
+              <p className="text-sm text-gray-500 mt-3">
+                Connect a payment provider to accept online payments.
+              </p>
             </Card>
           );
 
@@ -5014,11 +5350,22 @@ export default function Configurator() {
             <Card className="p-6 mt-6">
               <h4 className="text-lg font-bold mb-3">Team Section Settings</h4>
               <div className="space-y-3">
-                <p className="text-sm text-gray-600">Add team members to showcase on your About page.</p>
+                <p className="text-sm text-gray-600">
+                  Add team members to showcase on your About page.
+                </p>
                 <div>
-                  <label className="block text-sm font-medium mb-1">New member name</label>
-                  <input type="text" value={""} onChange={() => {}} className="w-full" />
-                  <div className="text-xs text-gray-400 mt-1">Members can be added later in the About page settings.</div>
+                  <label className="block text-sm font-medium mb-1">
+                    New member name
+                  </label>
+                  <input
+                    type="text"
+                    value={""}
+                    onChange={() => {}}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-gray-400 mt-1">
+                    Members can be added later in the About page settings.
+                  </div>
                 </div>
               </div>
             </Card>
@@ -5032,8 +5379,13 @@ export default function Configurator() {
     return (
       <div className="py-8 max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Optional features</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">Enable advanced functionality to enhance your website and provide better customer experience.</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Optional features
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Enable advanced functionality to enhance your website and provide
+            better customer experience.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -5046,16 +5398,30 @@ export default function Configurator() {
                 onClick={() => handleFeatureClick(feature.id, isEnabled)}
               >
                 <CardContent className="p-6 text-center">
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${isEnabled ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-600"}`}>
+                  <div
+                    className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${isEnabled ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-600"}`}
+                  >
                     {feature.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {feature.title}
+                  </h3>
                   {feature.premium && (
-                    <div className="mb-2"><span className="px-2 py-1 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold rounded-full">Premium</span></div>
+                    <div className="mb-2">
+                      <span className="px-2 py-1 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold rounded-full">
+                        Premium
+                      </span>
+                    </div>
                   )}
-                  <p className="text-gray-600 text-sm mb-4">{feature.description}</p>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {feature.description}
+                  </p>
                   {isEnabled && (
-                    <div className="mt-2"><div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto"><Check className="w-4 h-4 text-white" /></div></div>
+                    <div className="mt-2">
+                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -5066,8 +5432,18 @@ export default function Configurator() {
         {renderFeatureConfig()}
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg"><ArrowLeft className="mr-2 w-5 h-5" />Back</Button>
-          <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">Continue<ChevronRight className="ml-2 w-5 h-5" /></Button>
+          <Button onClick={prevStep} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={nextStep}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
         </div>
       </div>
     );
@@ -5202,7 +5578,9 @@ export default function Configurator() {
                         type="text"
                         placeholder="e.g. yourbusiness.com"
                         value={formData.domainName || ""}
-                        onChange={(e) => updateFormData("domainName", e.target.value)}
+                        onChange={(e) =>
+                          updateFormData("domainName", e.target.value)
+                        }
                         className="flex-1"
                       />
                       <Button
@@ -5210,7 +5588,9 @@ export default function Configurator() {
                         onClick={() => {
                           if (formData.domainName) {
                             // Simulate domain validation
-                            alert(`Domain ${formData.domainName} is ready to connect!`);
+                            alert(
+                              `Domain ${formData.domainName} is ready to connect!`,
+                            );
                           }
                         }}
                       >
@@ -5224,13 +5604,19 @@ export default function Configurator() {
 
                   {formData.domainName && (
                     <div className="bg-blue-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-blue-900 mb-2">DNS Configuration Required</h4>
+                      <h4 className="font-semibold text-blue-900 mb-2">
+                        DNS Configuration Required
+                      </h4>
                       <p className="text-sm text-blue-800 mb-3">
                         To connect your domain, add these DNS records:
                       </p>
                       <div className="bg-white rounded border font-mono text-xs p-3 space-y-1">
-                        <div><strong>A Record:</strong> @ → 76.76.19.61</div>
-                        <div><strong>CNAME:</strong> www → your-site.sync-a.com</div>
+                        <div>
+                          <strong>A Record:</strong> @ → 76.76.19.61
+                        </div>
+                        <div>
+                          <strong>CNAME:</strong> www → your-site.sync-a.com
+                        </div>
                       </div>
                     </div>
                   )}
@@ -5296,25 +5682,40 @@ export default function Configurator() {
                   Automated Domain Management
                 </h3>
                 <p className="text-sm text-gray-700 mb-4">
-                  We integrate with leading domain and hosting providers for seamless setup:
+                  We integrate with leading domain and hosting providers for
+                  seamless setup:
                 </p>
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="bg-white rounded-lg p-3 border border-purple-100">
-                    <h4 className="font-semibold text-purple-900 text-sm mb-1">Vercel</h4>
-                    <p className="text-xs text-gray-600">Auto-deploy & custom domains</p>
+                    <h4 className="font-semibold text-purple-900 text-sm mb-1">
+                      Vercel
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      Auto-deploy & custom domains
+                    </p>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-purple-100">
-                    <h4 className="font-semibold text-purple-900 text-sm mb-1">Netlify</h4>
-                    <p className="text-xs text-gray-600">Edge functions & DNS management</p>
+                    <h4 className="font-semibold text-purple-900 text-sm mb-1">
+                      Netlify
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      Edge functions & DNS management
+                    </p>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-purple-100">
-                    <h4 className="font-semibold text-purple-900 text-sm mb-1">CloudFlare</h4>
-                    <p className="text-xs text-gray-600">DNS, SSL & CDN integration</p>
+                    <h4 className="font-semibold text-purple-900 text-sm mb-1">
+                      CloudFlare
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      DNS, SSL & CDN integration
+                    </p>
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-purple-100 rounded-lg">
                   <p className="text-xs text-purple-800">
-                    💡 <strong>Pro Tip:</strong> Custom domains will be automatically configured with SSL, CDN, and optimized for global performance.
+                    💡 <strong>Pro Tip:</strong> Custom domains will be
+                    automatically configured with SSL, CDN, and optimized for
+                    global performance.
                   </p>
                 </div>
               </Card>
@@ -5349,7 +5750,8 @@ export default function Configurator() {
             SEO Optimization
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Improve your search engine visibility and help customers find your business online.
+            Improve your search engine visibility and help customers find your
+            business online.
           </p>
         </div>
 
@@ -5367,13 +5769,14 @@ export default function Configurator() {
                 </label>
                 <Input
                   type="text"
-                  placeholder={`${formData.businessName} - ${formData.slogan || 'Best Local Business'}`}
+                  placeholder={`${formData.businessName} - ${formData.slogan || "Best Local Business"}`}
                   value={formData.metaTitle || ""}
                   onChange={(e) => updateFormData("metaTitle", e.target.value)}
                   className="w-full"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  The title that appears in search results (50-60 characters recommended)
+                  The title that appears in search results (50-60 characters
+                  recommended)
                 </p>
               </div>
 
@@ -5382,14 +5785,17 @@ export default function Configurator() {
                   Meta Description
                 </label>
                 <Textarea
-                  placeholder={`Discover ${formData.businessName} ${formData.location ? `in ${formData.location}` : ''}. ${formData.uniqueDescription || 'Quality service and great experience await you.'}`}
+                  placeholder={`Discover ${formData.businessName} ${formData.location ? `in ${formData.location}` : ""}. ${formData.uniqueDescription || "Quality service and great experience await you."}`}
                   value={formData.metaDescription || ""}
-                  onChange={(e) => updateFormData("metaDescription", e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("metaDescription", e.target.value)
+                  }
                   className="w-full"
                   rows={3}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Description that appears in search results (150-160 characters recommended)
+                  Description that appears in search results (150-160 characters
+                  recommended)
                 </p>
               </div>
 
@@ -5425,9 +5831,11 @@ export default function Configurator() {
                 {formData.socialMediaImage ? (
                   <div className="space-y-3">
                     <img
-                      src={typeof formData.socialMediaImage === "string"
-                        ? formData.socialMediaImage
-                        : URL.createObjectURL(formData.socialMediaImage)}
+                      src={
+                        typeof formData.socialMediaImage === "string"
+                          ? formData.socialMediaImage
+                          : URL.createObjectURL(formData.socialMediaImage)
+                      }
                       alt="Social media preview"
                       className="mx-auto h-32 object-cover rounded"
                     />
@@ -5445,7 +5853,11 @@ export default function Configurator() {
                     <div>
                       <Button
                         variant="outline"
-                        onClick={() => document.getElementById("social-image-upload")?.click()}
+                        onClick={() =>
+                          document
+                            .getElementById("social-image-upload")
+                            ?.click()
+                        }
                       >
                         Upload Image
                       </Button>
@@ -5463,7 +5875,8 @@ export default function Configurator() {
                       />
                     </div>
                     <p className="text-xs text-gray-500">
-                      Image that appears when your website is shared on social media
+                      Image that appears when your website is shared on social
+                      media
                     </p>
                   </div>
                 )}
@@ -5485,7 +5898,9 @@ export default function Configurator() {
                 type="text"
                 placeholder="G-XXXXXXXXXX"
                 value={formData.googleAnalyticsId || ""}
-                onChange={(e) => updateFormData("googleAnalyticsId", e.target.value)}
+                onChange={(e) =>
+                  updateFormData("googleAnalyticsId", e.target.value)
+                }
                 className="w-full"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -5506,41 +5921,56 @@ export default function Configurator() {
                   type="checkbox"
                   id="seo-api"
                   checked={formData.seoApiOptimization}
-                  onChange={(e) => updateFormData("seoApiOptimization", e.target.checked)}
+                  onChange={(e) =>
+                    updateFormData("seoApiOptimization", e.target.checked)
+                  }
                   className="mt-1"
                 />
                 <div className="flex-1">
-                  <label htmlFor="seo-api" className="text-sm font-bold text-gray-900 cursor-pointer">
+                  <label
+                    htmlFor="seo-api"
+                    className="text-sm font-bold text-gray-900 cursor-pointer"
+                  >
                     Enable AI-Powered SEO Optimization
                   </label>
                   <p className="text-sm text-gray-700 mt-1">
-                    Our AI will automatically optimize your content, generate additional meta tags,
-                    create structured data, and monitor your search rankings.
+                    Our AI will automatically optimize your content, generate
+                    additional meta tags, create structured data, and monitor
+                    your search rankings.
                   </p>
                   <div className="mt-3">
                     <span className="text-lg font-bold text-orange-600">
                       ${formData.seoApiCost}/month
                     </span>
-                    <span className="text-sm text-gray-600 ml-2">(billed annually)</span>
+                    <span className="text-sm text-gray-600 ml-2">
+                      (billed annually)
+                    </span>
                   </div>
                 </div>
               </div>
 
               {formData.seoApiOptimization && (
                 <div className="bg-white rounded-lg p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2">Premium Features Include:</h4>
+                  <h4 className="font-semibold text-orange-900 mb-2">
+                    Premium Features Include:
+                  </h4>
                   <ul className="space-y-1 text-sm text-orange-800">
                     <li>✓ Automatic content optimization for search engines</li>
-                    <li>✓ Schema markup generation for better search visibility</li>
-                    <li>✓ Local SEO optimization for location-based searches</li>
+                    <li>
+                      ✓ Schema markup generation for better search visibility
+                    </li>
+                    <li>
+                      ✓ Local SEO optimization for location-based searches
+                    </li>
                     <li>✓ Weekly SEO performance reports</li>
                     <li>✓ Competitor analysis and recommendations</li>
                     <li>✓ Priority support and SEO consultation</li>
                   </ul>
                   <div className="mt-3 p-2 bg-orange-100 rounded">
                     <p className="text-xs text-orange-800">
-                      <strong>Integration:</strong> We'll connect with leading SEO APIs including
-                      SEMrush, Ahrefs, and Google Search Console for comprehensive optimization.
+                      <strong>Integration:</strong> We'll connect with leading
+                      SEO APIs including SEMrush, Ahrefs, and Google Search
+                      Console for comprehensive optimization.
                     </p>
                   </div>
                 </div>
@@ -5556,7 +5986,8 @@ export default function Configurator() {
             <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
               <div className="space-y-1">
                 <h4 className="text-blue-600 text-lg hover:underline cursor-pointer">
-                  {formData.metaTitle || `${formData.businessName} - ${formData.slogan || 'Best Local Business'}`}
+                  {formData.metaTitle ||
+                    `${formData.businessName} - ${formData.slogan || "Best Local Business"}`}
                 </h4>
                 <p className="text-green-700 text-sm">
                   {formData.hasDomain
@@ -5565,7 +5996,7 @@ export default function Configurator() {
                 </p>
                 <p className="text-gray-700 text-sm">
                   {formData.metaDescription ||
-                    `Discover ${formData.businessName} ${formData.location ? `in ${formData.location}` : ''}. ${formData.uniqueDescription || 'Quality service and great experience await you.'}`}
+                    `Discover ${formData.businessName} ${formData.location ? `in ${formData.location}` : ""}. ${formData.uniqueDescription || "Quality service and great experience await you."}`}
                 </p>
               </div>
             </div>
@@ -5886,9 +6317,12 @@ export default function Configurator() {
                         : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
                     </p>
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
-                      <p className="text-sm font-semibold text-green-800 mb-1">Your Live URL:</p>
+                      <p className="text-sm font-semibold text-green-800 mb-1">
+                        Your Live URL:
+                      </p>
                       <p className="font-mono text-sm text-green-700 break-all">
-                        https://{formData.hasDomain
+                        https://
+                        {formData.hasDomain
                           ? formData.domainName
                           : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
                       </p>
@@ -6066,9 +6500,10 @@ export default function Configurator() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const preview = document.getElementById('mobile-preview');
+                  const preview = document.getElementById("mobile-preview");
                   if (preview) {
-                    preview.style.display = preview.style.display === 'none' ? 'block' : 'none';
+                    preview.style.display =
+                      preview.style.display === "none" ? "block" : "none";
                   }
                 }}
                 className="w-full"
@@ -6083,7 +6518,9 @@ export default function Configurator() {
 
             {/* Main Content */}
             <div className="lg:col-span-2 order-2 lg:order-1">
-              <div className="min-h-[60vh] lg:min-h-[80vh]">{renderMainContent()}</div>
+              <div className="min-h-[60vh] lg:min-h-[80vh]">
+                {renderMainContent()}
+              </div>
             </div>
 
             {/* Live Preview - Desktop */}
