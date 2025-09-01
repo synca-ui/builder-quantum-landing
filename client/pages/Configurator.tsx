@@ -48,6 +48,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
+import ReservationButton from "@/components/ui/ReservationButton";
+import MenuSection from "@/components/sections/MenuSection";
+import GalleryGrid from "@/components/sections/GalleryGrid";
+import TemplateRegistry from "@/components/template/TemplateRegistry";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
 
 export default function Configurator() {
