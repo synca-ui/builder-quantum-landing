@@ -91,6 +91,7 @@ export default function Configurator() {
     backgroundImage: null,
     selectedPages: ["home"],
     customPages: [],
+    openingHoursTextColor: "#0F172A",
 
     // Per-template themes
     templateThemes: {
@@ -420,13 +421,13 @@ export default function Configurator() {
       id: "modern",
       name: "Modern",
       description: "Contemporary design with bold colors and sleek animations",
-      preview: "bg-gradient-to-br from-pink-500 via-purple-500 to-cyan-500",
+      preview: "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
-        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
-        accent: "#f5576c",
+        background: "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
+        accent: "#2563EB",
         text: "#FFFFFF",
-        secondary: "#4facfe",
+        secondary: "#1D4ED8",
         layout: "modern-cards",
         navigation: "glassmorphism",
         typography: "modern-geometric",
@@ -439,7 +440,7 @@ export default function Configurator() {
           border: "border-white/20",
         },
         hero: {
-          bg: "bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500",
+          bg: "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600",
           text: "text-white",
         },
         cards: {
@@ -1466,7 +1467,7 @@ export default function Configurator() {
                   Object.keys(formData.openingHours).length > 0 && (
                     <div className="flex items-center space-x-2">
                       <Clock className={templateStyles.contactIcon} />
-                      <span className={templateStyles.itemDesc} style={{ color: styles.userFontColor }}>
+                      <span className={templateStyles.itemDesc} style={{ color: formData.openingHoursTextColor || styles.userFontColor }}>
                         {currentContent.hours}
                       </span>
                     </div>
@@ -1611,15 +1612,15 @@ export default function Configurator() {
                 Object.keys(formData.openingHours).length > 0 && (
                   <div className="text-center mt-6 pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Clock className="w-3 h-3" style={{ color: styles.userFontColor }} />
-                      <span className="text-xs font-medium" style={{ color: styles.userFontColor }}>
+                      <Clock className="w-3 h-3" style={{ color: formData.openingHoursTextColor || styles.userFontColor }} />
+                      <span className="text-xs font-medium" style={{ color: formData.openingHoursTextColor || styles.userFontColor }}>
                         Opening Hours
                       </span>
                     </div>
 
                     <div
                       className="text-xs space-y-0.5"
-                      style={{ color: styles.userFontColor, cursor: "pointer" }}
+                      style={{ color: formData.openingHoursTextColor || styles.userFontColor, cursor: "pointer" }}
                       onClick={() => setPreviewState((p) => ({ ...p, openHoursExpanded: !p.openHoursExpanded }))}
                       title="Click to expand hours"
                     >
@@ -1646,7 +1647,7 @@ export default function Configurator() {
                       )}
 
                       {!previewState.openHoursExpanded && Object.keys(formData.openingHours).length > 2 && (
-                        <div className="text-xs mt-1" style={{ color: styles.userFontColor, opacity: 0.7 }}>
+                        <div className="text-xs mt-1" style={{ color: formData.openingHoursTextColor || styles.userFontColor, opacity: 0.7 }}>
                           +{Object.keys(formData.openingHours).length - 2} more days
                         </div>
                       )}
@@ -1794,7 +1795,7 @@ export default function Configurator() {
             </div>
 
             {/* Navigation */}
-            <nav className="bg-white/15 backdrop-blur-md border-b border-white/30 px-4 py-3 relative z-50">
+            <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-3 relative z-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
@@ -1829,15 +1830,15 @@ export default function Configurator() {
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-white/40 z-[60] shadow-xl">
+                <div className="absolute top-full left-3 right-3 bg-blue-900/80 backdrop-blur-md border border-blue-300/30 z-[60] shadow-xl rounded-xl">
                   <div className="py-2">
                     {formData.selectedPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-4 py-2 text-left text-white hover:bg-pink-500/20 transition-colors text-sm font-medium ${
+                        className={`w-full px-4 py-2 text-left text-white hover:bg-blue-500/20 transition-colors text-sm font-medium ${
                           previewState.activePage === page
-                            ? "bg-pink-500/30 text-pink-100 font-bold"
+                            ? "bg-blue-500/30 text-blue-100 font-bold"
                             : ""
                         }`}
                       >
@@ -3767,6 +3768,20 @@ export default function Configurator() {
         </div>
 
         <div className="space-y-6">
+          {/* Opening Hours Text Color */}
+          <Card className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Text color</h3>
+            <div className="flex items-center space-x-4">
+              <input
+                type="color"
+                value={formData.openingHoursTextColor || "#0F172A"}
+                onChange={(e) => updateFormData("openingHoursTextColor", e.target.value)}
+                className="w-12 h-10 rounded cursor-pointer border"
+                aria-label="Opening hours text color"
+              />
+              <span className="text-sm text-gray-600">This controls the color of the Opening Hours text in the preview.</span>
+            </div>
+          </Card>
           {/* Weekdays (Mo-Fr) */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
