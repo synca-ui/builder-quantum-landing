@@ -2556,10 +2556,8 @@ export default function Configurator() {
                 <h3 className="text-base lg:text-lg font-bold text-gray-900">
                   Live Preview
                 </h3>
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 lg:w-3 lg:h-3 bg-red-400 rounded-full"></div>
-                  <div className="w-2 h-2 lg:w-3 lg:h-3 bg-yellow-400 rounded-full"></div>
-                  <div className="w-2 h-2 lg:w-3 lg:h-3 bg-green-400 rounded-full"></div>
+                <div className="text-center">
+                  <span className="text-xs text-gray-500 font-mono">Live Preview</span>
                 </div>
               </div>
 
