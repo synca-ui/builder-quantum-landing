@@ -1718,16 +1718,16 @@ export default function Configurator() {
                 formData.backgroundType === "gradient"
                   ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
                   : formData.backgroundColor ||
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
             }}
           >
             {/* Status Bar */}
-            <div className="h-6 bg-white/10 flex items-center justify-center text-xs font-semibold text-white">
+            <div className="h-6 bg-white/20 flex items-center justify-center text-xs font-semibold text-white">
               9:41 AM
             </div>
 
             {/* Navigation */}
-            <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-3 relative">
+            <nav className="bg-white/15 backdrop-blur-md border-b border-white/30 px-4 py-3 relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
