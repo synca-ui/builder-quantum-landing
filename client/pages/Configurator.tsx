@@ -942,6 +942,20 @@ export default function Configurator() {
       }
     };
 
+    // Helper to convert hex like #2563EB to rgba(a)
+    const toRgba = (hex: string, alpha = 1) => {
+      if (!hex) return `rgba(0,0,0,${alpha})`;
+      let h = hex.replace('#', '');
+      if (h.length === 3) {
+        h = h.split('').map((c) => c + c).join('');
+      }
+      const int = parseInt(h, 16);
+      const r = (int >> 16) & 255;
+      const g = (int >> 8) & 255;
+      const b = int & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
     // Template-specific content
     const selectedId =
       currentStep === 0
@@ -1782,13 +1796,7 @@ export default function Configurator() {
           <div
             className={`h-full overflow-y-auto text-white ${fontClass}`}
             style={{
-              background:
-                currentStep === 0
-                  ? "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)"
-                  : formData.backgroundType === "gradient"
-                    ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
-                    : formData.backgroundColor ||
-                      "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
+              background: `linear-gradient(135deg, ${styles.userSecondary || formData.secondaryColor || '#38bdf8'} 0%, ${styles.userPrimary || formData.primaryColor || '#2563eb'} 50%, ${styles.userSecondary || formData.secondaryColor || '#1e40af'} 100%)`,
             }}
           >
             {/* Status Bar - Space for notch */}
@@ -1837,25 +1845,28 @@ export default function Configurator() {
                   <div
                     className="relative w-full max-w-none p-6 pt-8"
                     style={{
-                      background: "linear-gradient(135deg, rgba(56,189,248,0.95) 0%, rgba(37,99,235,0.95) 50%, rgba(30,64,175,0.95) 100%)",
+                      background: `linear-gradient(135deg, ${toRgba(styles.userSecondary || '#38bdf8', 0.95)} 0%, ${toRgba(styles.userPrimary || '#2563eb', 0.95)} 50%, ${toRgba(styles.userSecondary || '#1e40af', 0.95)} 100%)`,
                       borderTop: "1px solid rgba(255,255,255,0.2)",
                       color: "#ffffff",
                     }}
                   >
                     <div className="space-y-2">
-                      {formData.selectedPages.map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => navigateToPage(page)}
-                          className={`w-full text-left px-4 py-3 transition-colors text-sm font-semibold rounded-lg ${
-                            previewState.activePage === page
-                              ? "bg-white/20 text-white"
-                              : "hover:bg-white/10"
-                          }`}
-                        >
-                          {page.charAt(0).toUpperCase() + page.slice(1)}
-                        </button>
-                      ))}
+                      {formData.selectedPages.map((page) => {
+                        const isActive = previewState.activePage === page;
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => navigateToPage(page)}
+                            className={`w-full text-left px-4 py-3 text-sm font-semibold rounded-lg`}
+                            style={{
+                              backgroundColor: isActive ? toRgba(styles.userPrimary || '#2563eb', 0.25) : 'transparent',
+                              color: '#ffffff',
+                            }}
+                          >
+                            {page.charAt(0).toUpperCase() + page.slice(1)}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
