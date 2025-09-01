@@ -4848,6 +4848,7 @@ export default function Configurator() {
 
   // Advanced Features Step (Step 10)
   const AdvancedFeaturesStep = () => {
+    const [activeFeature, setActiveFeature] = useState<string | null>(null);
     const features = [
       {
         id: "onlineOrdering",
@@ -4874,16 +4875,100 @@ export default function Configurator() {
       },
     ];
 
+    const handleFeatureClick = (featureId: string, enabled: boolean) => {
+      // Toggle enabled flag
+      updateFormData(featureId, !enabled);
+      // Open configuration panel when enabling, close when disabling
+      setActiveFeature(!enabled ? featureId : null);
+    };
+
+    const renderFeatureConfig = () => {
+      if (!activeFeature) return null;
+
+      switch (activeFeature) {
+        case "onlineOrdering":
+          return (
+            <Card className="p-6 mt-6">
+              <h4 className="text-lg font-bold mb-3">Online Ordering Settings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Show cart in top bar</label>
+                  <input
+                    type="checkbox"
+                    checked={!!formData.showCartInTopBar}
+                    onChange={(e) => updateFormData("showCartInTopBar", e.target.checked)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Order confirmation message</label>
+                  <input
+                    type="text"
+                    value={formData.orderConfirmationMessage || "Thanks! We received your order."}
+                    onChange={(e) => updateFormData("orderConfirmationMessage", e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-3">These settings control small ordering UX options for the live preview and published site.</p>
+            </Card>
+          );
+
+        case "onlineStore":
+          return (
+            <Card className="p-6 mt-6">
+              <h4 className="text-lg font-bold mb-3">Online Store Settings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Payment provider</label>
+                  <select
+                    value={(formData.storeConfig && formData.storeConfig.provider) || "stripe"}
+                    onChange={(e) => updateFormData("storeConfig", { ...(formData.storeConfig || {}), provider: e.target.value })}
+                    className="w-full"
+                  >
+                    <option value="stripe">Stripe</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="manual">Manual (offline)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Currency</label>
+                  <input
+                    type="text"
+                    value={(formData.storeConfig && formData.storeConfig.currency) || "USD"}
+                    onChange={(e) => updateFormData("storeConfig", { ...(formData.storeConfig || {}), currency: e.target.value })}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-3">Connect a payment provider to accept online payments.</p>
+            </Card>
+          );
+
+        case "teamArea":
+          return (
+            <Card className="p-6 mt-6">
+              <h4 className="text-lg font-bold mb-3">Team Section Settings</h4>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">Add team members to showcase on your About page.</p>
+                <div>
+                  <label className="block text-sm font-medium mb-1">New member name</label>
+                  <input type="text" value={""} onChange={() => {}} className="w-full" />
+                  <div className="text-xs text-gray-400 mt-1">Members can be added later in the About page settings.</div>
+                </div>
+              </div>
+            </Card>
+          );
+
+        default:
+          return null;
+      }
+    };
+
     return (
       <div className="py-8 max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Optional features
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Enable advanced functionality to enhance your website and provide
-            better customer experience.
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Optional features</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">Enable advanced functionality to enhance your website and provide better customer experience.</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -4892,42 +4977,20 @@ export default function Configurator() {
             return (
               <Card
                 key={feature.id}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  isEnabled
-                    ? "border-teal-500 bg-teal-50"
-                    : "border-gray-200 hover:border-teal-300"
-                }`}
-                onClick={() => updateFormData(feature.id, !isEnabled)}
+                className={`cursor-pointer transition-all duration-300 border-2 ${isEnabled ? "border-teal-500 bg-teal-50" : "border-gray-200 hover:border-teal-300"}`}
+                onClick={() => handleFeatureClick(feature.id, isEnabled)}
               >
                 <CardContent className="p-6 text-center">
-                  <div
-                    className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
-                      isEnabled
-                        ? "bg-teal-500 text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
+                  <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${isEnabled ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-600"}`}>
                     {feature.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
                   {feature.premium && (
-                    <div className="mb-2">
-                      <span className="px-2 py-1 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold rounded-full">
-                        Premium
-                      </span>
-                    </div>
+                    <div className="mb-2"><span className="px-2 py-1 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold rounded-full">Premium</span></div>
                   )}
-                  <p className="text-gray-600 text-sm mb-4">
-                    {feature.description}
-                  </p>
+                  <p className="text-gray-600 text-sm mb-4">{feature.description}</p>
                   {isEnabled && (
-                    <div className="mt-2">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
+                    <div className="mt-2"><div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto"><Check className="w-4 h-4 text-white" /></div></div>
                   )}
                 </CardContent>
               </Card>
@@ -4935,19 +4998,11 @@ export default function Configurator() {
           })}
         </div>
 
+        {renderFeatureConfig()}
+
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
-          </Button>
-          <Button
-            onClick={nextStep}
-            size="lg"
-            className="bg-gradient-to-r from-teal-500 to-purple-500"
-          >
-            Continue
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </Button>
+          <Button onClick={prevStep} variant="outline" size="lg"><ArrowLeft className="mr-2 w-5 h-5" />Back</Button>
+          <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">Continue<ChevronRight className="ml-2 w-5 h-5" /></Button>
         </div>
       </div>
     );
