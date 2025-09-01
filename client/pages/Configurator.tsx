@@ -1631,9 +1631,9 @@ export default function Configurator() {
             className={`h-full overflow-y-auto ${fontClass}`}
             style={{ backgroundColor: formData.backgroundColor || "#FFFFFF" }}
           >
-            {/* Status Bar */}
-            <div className="h-6 bg-white flex items-center justify-center text-xs font-medium text-black">
-              9:41 AM
+            {/* Status Bar - Space for notch */}
+            <div className="h-8 bg-white">
+              {/* Empty space for Apple notch */}
             </div>
 
             {/* Navigation */}
@@ -1723,9 +1723,9 @@ export default function Configurator() {
                     "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
             }}
           >
-            {/* Status Bar */}
-            <div className="h-6 bg-white/20 flex items-center justify-center text-xs font-semibold text-white">
-              9:41 AM
+            {/* Status Bar - Space for notch */}
+            <div className="h-8 bg-white/10">
+              {/* Empty space for Apple notch */}
             </div>
 
             {/* Navigation */}
@@ -1792,9 +1792,9 @@ export default function Configurator() {
       case "stylish":
         return (
           <div className={`h-full overflow-y-auto bg-emerald-50 ${fontClass}`}>
-            {/* Status Bar */}
-            <div className="h-6 bg-white flex items-center justify-center text-xs font-medium text-slate-800">
-              9:41 AM
+            {/* Status Bar - Space for notch */}
+            <div className="h-8 bg-white">
+              {/* Empty space for Apple notch */}
             </div>
 
             {/* Navigation */}
