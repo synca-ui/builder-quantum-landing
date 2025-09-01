@@ -1074,11 +1074,11 @@ export default function Configurator() {
     const forcedTextColor = selectedIdForSwitch === "modern" ? "#FFFFFF" : formData.fontColor;
     const styles = {
       ...baseTemplateStyle,
-      userPrimary: themeOverride.primary || formData.primaryColor,
-      userSecondary: themeOverride.secondary || formData.secondaryColor,
+      userPrimary: themeOverride.primary || formData.primaryColor || (baseTemplateStyle as any).accent,
+      userSecondary: themeOverride.secondary || formData.secondaryColor || (baseTemplateStyle as any).secondary,
       userFontColor: themeOverride.text || forcedTextColor,
       userFontSize: formData.fontSize,
-      userBackground: themeOverride.background || formData.backgroundColor,
+      userBackground: themeOverride.background || formData.backgroundColor || (baseTemplateStyle as any).background,
     };
 
     const LogoDisplay = () => {
@@ -2005,67 +2005,71 @@ export default function Configurator() {
 
       case "cozy":
         return (
-          <div className={`h-full overflow-y-auto bg-orange-50 ${fontClass}`}>
+          <div className={`h-full overflow-y-auto bg-orange-50 ${fontClass} relative`}>
             {/* Status Bar with Notch Space */}
-            <div className="h-8 bg-amber-100">
-              {/* notch space */}
-            </div>
+            <div className="h-8 bg-amber-100" />
 
-            {/* Navigation */}
-            <nav className="mx-2 mt-0 rounded-b-2xl px-4 py-3 relative z-50 shadow" style={{ backgroundColor: styles.userSecondary || "#ffffff", borderColor: styles.userPrimary || "#FDE68A", color: styles.userFontColor }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: styles.userSecondary || "#FEF3C7", borderColor: styles.userPrimary || "#FDE68A" }}>
+            {/* Pill Header */}
+            <div className="px-3 pt-2 pb-4">
+              <div className="flex justify-center">
+                <div
+                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-full shadow-md border"
+                  style={{
+                    background: `${styles.userSecondary || "#FEF3C7"}`,
+                    borderColor: styles.userPrimary || "#F59E0B",
+                    color: styles.userFontColor,
+                  }}
+                >
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: (styles.userPrimary || '#F59E0B') + '20' }}>
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-semibold" style={{ color: styles.userFontColor }}>
-                    {getBusinessName()}
-                  </h1>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {formData.onlineOrdering && (
-                    <button
-                      className="p-2 rounded-xl transition-colors relative border" style={{ borderColor: styles.userPrimary, color: styles.userFontColor }}
-                      onClick={() => setShowCart(!showCart)}
-                    >
-                      <ShoppingBag className="w-5 h-5" style={{ color: styles.userPrimary }} />
-                      {cartItemsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 text-white text-[10px] rounded-full flex items-center justify-center">
-                          {cartItemsCount}
-                        </span>
-                      )}
-                    </button>
-                  )}
-                  <button
-                    onClick={toggleMenu}
-                    className="p-2 rounded-xl transition-colors border" style={{ borderColor: styles.userPrimary, color: styles.userFontColor }}
-                  >
-                    <Menu className="w-5 h-5" style={{ color: styles.userPrimary }} />
-                  </button>
+                  <span className="text-sm font-semibold">{getBusinessName()}</span>
                 </div>
               </div>
+            </div>
 
-              {/* Dropdown Menu */}
-              {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 z-50" style={{ backgroundColor: styles.userSecondary || "#ffffff", borderTopColor: styles.userPrimary }}>
-                  <div className="py-1">
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto bg-orange-50 pb-16">{renderPageContent()}</div>
+
+            {/* Bottom-right Menu FAB */}
+            <button
+              onClick={toggleMenu}
+              className="absolute bottom-4 right-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center ring-1 ring-white/40"
+              style={{ backgroundColor: styles.userPrimary || '#EA580C', color: '#fff' }}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Full-screen Cozy Menu Screen */}
+            {previewState.menuOpen && (
+              <div className="absolute inset-0 z-[60]">
+                <div className="absolute inset-0" style={{ background: `${styles.userSecondary || '#FEF3C7'}CC` }} />
+                <div className="relative h-full p-6 flex flex-col">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full border" style={{ background: '#FFFFFF', borderColor: (styles.userPrimary || '#EA580C') + '40', color: styles.userFontColor }}>
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: styles.userPrimary || '#EA580C' }} />
+                      <span className="text-sm font-semibold">Menu</span>
+                    </div>
+                    <button onClick={toggleMenu} className="p-2 rounded-full hover:bg-black/5">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-3">
                     {formData.selectedPages.map((page) => (
                       <button
-                      key={page}
-                      onClick={() => navigateToPage(page)}
-                      className={"w-full px-3 py-1.5 text-left transition-colors text-xs"}
-                      style={{ color: styles.userFontColor, backgroundColor: previewState.activePage === page ? (styles.userSecondary || 'transparent') : 'transparent', fontWeight: previewState.activePage === page ? 600 : 400 }}
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className="w-full text-left px-4 py-3 rounded-xl border bg-white shadow-sm"
+                        style={{ borderColor: (styles.userPrimary || '#EA580C') + '30', color: styles.userFontColor }}
                       >
                         {page.charAt(0).toUpperCase() + page.slice(1)}
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
-            </nav>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-orange-50">{renderPageContent()}</div>
+              </div>
+            )}
           </div>
         );
 
