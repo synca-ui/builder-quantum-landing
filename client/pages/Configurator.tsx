@@ -978,27 +978,24 @@ export default function Configurator() {
       modern: {
         items: [
           {
-            name: "Artisan Brew",
-            description: "Single origin specialty coffee",
+            name: "Signature Latte",
+            description: "Premium espresso with oat milk",
             price: "5.50",
-            emoji: "☕",
           },
           {
-            name: "Power Bowl",
-            description: "Quinoa, avocado, superfoods",
+            name: "Energy Bowl",
+            description: "Quinoa, avocado, fresh greens",
             price: "12.00",
-            emoji: "🥗",
           },
           {
-            name: "Craft Burger",
-            description: "House blend, local ingredients",
+            name: "Urban Burger",
+            description: "Plant-based patty, local ingredients",
             price: "15.00",
-            emoji: "🍔",
           },
         ],
-        tagline: "Modern Flavors, Bold Choices",
+        tagline: "Bold Flavors, Bright Future",
         hours: "7:00 - 22:00",
-        special: "Innovative Menu",
+        special: "Vibrant Experience",
       },
       stylish: {
         items: [
@@ -1028,27 +1025,24 @@ export default function Configurator() {
       fancy: {
         items: [
           {
-            name: "Signature Espresso",
-            description: "Premium single-origin blend",
+            name: "Dark Storm",
+            description: "Premium whiskey blend, house special",
+            price: "12.00",
+          },
+          {
+            name: "Midnight Shot",
+            description: "Layered specialty, signature drink",
             price: "8.00",
-            emoji: "☕",
           },
           {
-            name: "Artisan Pasta",
-            description: "Handcrafted with seasonal ingredients",
-            price: "28.00",
-            emoji: "🍽️",
-          },
-          {
-            name: "Sommelier Selection",
-            description: "Curated wine pairing experience",
-            price: "35.00",
-            emoji: "🍷",
+            name: "Golden Hour",
+            description: "Craft cocktail with premium spirits",
+            price: "15.00",
           },
         ],
-        tagline: "Refined Culinary Excellence",
-        hours: "By Reservation",
-        special: "Chef's Table Experience",
+        tagline: "Premium Night Experience",
+        hours: "20:00 - 3:00",
+        special: "VIP Club Access",
       },
     };
 
