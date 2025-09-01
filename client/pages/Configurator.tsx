@@ -1764,15 +1764,15 @@ export default function Configurator() {
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-white/15 backdrop-blur-md border-t border-white/30 z-50">
-                  <div className="py-1">
+                <div className="absolute top-full left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-white/40 z-[60] shadow-xl">
+                  <div className="py-2">
                     {formData.selectedPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-3 py-1.5 text-left text-white hover:bg-white/10 transition-colors text-xs ${
+                        className={`w-full px-4 py-2 text-left text-white hover:bg-pink-500/20 transition-colors text-sm font-medium ${
                           previewState.activePage === page
-                            ? "bg-white/20 font-bold"
+                            ? "bg-pink-500/30 text-pink-100 font-bold"
                             : ""
                         }`}
                       >
