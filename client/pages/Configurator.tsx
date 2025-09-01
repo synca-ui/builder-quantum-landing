@@ -1155,22 +1155,22 @@ export default function Configurator() {
               homeCard:
                 "bg-white rounded-lg p-2 text-center border border-emerald-200",
             };
-          case "fancy":
+          case "neon":
             return {
-              page: "p-4 bg-gradient-to-b from-slate-900 to-slate-800",
-              title: "text-xl font-bold mb-6 text-center text-white",
+              page: "p-4 bg-gradient-to-b from-black to-gray-900",
+              title: "text-xl font-bold mb-6 text-center text-cyan-300 drop-shadow-[0_0_10px_#00ffff]",
               itemCard:
-                "bg-slate-800/90 backdrop-blur rounded-lg border border-orange-500/30 p-4 shadow-xl",
-              itemName: "font-bold text-sm text-white",
-              itemDesc: "text-xs text-orange-200/80",
-              itemPrice: "font-bold text-sm text-orange-400",
+                "bg-gray-900/95 backdrop-blur rounded border border-cyan-400/50 p-4 shadow-xl shadow-cyan-500/20",
+              itemName: "font-bold text-sm text-cyan-300 drop-shadow-[0_0_5px_#00ffff]",
+              itemDesc: "text-xs text-gray-300",
+              itemPrice: "font-bold text-sm text-green-400 drop-shadow-[0_0_5px_#00ff88]",
               galleryItem:
-                "aspect-square bg-slate-800/80 backdrop-blur rounded-lg flex items-center justify-center border border-orange-500/30 shadow-lg",
+                "aspect-square bg-gray-900/90 backdrop-blur rounded border border-cyan-400/30 flex items-center justify-center shadow-lg shadow-cyan-500/20",
               aboutLogo:
-                "w-16 h-16 mx-auto bg-orange-500/20 backdrop-blur rounded-lg border border-orange-500/50 flex items-center justify-center",
-              contactIcon: "w-4 h-4 text-orange-400",
+                "w-16 h-16 mx-auto bg-cyan-500/20 backdrop-blur rounded border border-cyan-400/50 flex items-center justify-center shadow-[0_0_20px_#00ffff]",
+              contactIcon: "w-4 h-4 text-cyan-400",
               homeCard:
-                "bg-slate-800/80 backdrop-blur rounded-lg p-3 text-center border border-orange-500/30 shadow-lg",
+                "bg-gray-900/90 backdrop-blur rounded border border-cyan-400/30 p-3 text-center shadow-lg shadow-cyan-500/20",
             };
           default:
             return {
