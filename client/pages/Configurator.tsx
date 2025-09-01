@@ -1221,9 +1221,7 @@ export default function Configurator() {
                   <div key={index} className={templateStyles.itemCard}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-2">
-                        <span
-                          className={`${selectedIdForSwitch === "minimalistic" ? "hidden" : ""} text-lg`}
-                        >
+                        <span className="hidden">
                           {item.emoji || "🍽️"}
                         </span>
                         <div>
@@ -1498,7 +1496,7 @@ export default function Configurator() {
                       key={index}
                       className={`${templateStyles.homeCard} relative`}
                     >
-                      <div className="text-lg mb-1">{item.emoji || "🍽️"}</div>
+                      <div className="hidden">{item.emoji || "🍽️"}</div>
                       <h3
                         className={
                           templateStyles.itemName + " text-xs truncate"
