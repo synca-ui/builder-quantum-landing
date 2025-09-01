@@ -393,7 +393,7 @@ export default function Configurator() {
       },
     },
     {
-      id: "clean",
+      id: "stylish",
       name: "Clean",
       description: "Fresh, airy design with excellent spacing and soft colors",
       preview: "bg-gradient-to-br from-emerald-50 to-teal-100",
