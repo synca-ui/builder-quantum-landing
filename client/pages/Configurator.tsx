@@ -1466,7 +1466,7 @@ export default function Configurator() {
                   Object.keys(formData.openingHours).length > 0 && (
                     <div className="flex items-center space-x-2">
                       <Clock className={templateStyles.contactIcon} />
-                      <span className={templateStyles.itemDesc}>
+                      <span className={templateStyles.itemDesc} style={{ color: styles.userFontColor }}>
                         {currentContent.hours}
                       </span>
                     </div>
