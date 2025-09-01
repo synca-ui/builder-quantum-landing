@@ -157,6 +157,16 @@ export default function Configurator() {
     domainName: "",
     selectedDomain: "",
 
+    // SEO Optimization
+    seoEnabled: false,
+    metaTitle: "",
+    metaDescription: "",
+    keywords: "",
+    socialMediaImage: null,
+    googleAnalyticsId: "",
+    seoApiOptimization: false,
+    seoApiCost: 29.99,
+
     // UI State
     showOptionalFields: false,
   });
