@@ -146,7 +146,7 @@ export const defaultTemplates: Template[] = [
     id: "cozy",
     name: "Cozy",
     description: "Warm, friendly aesthetic with rounded elements and authentic photography.",
-    preview: "bg-gradient-to-br from-black via-purple-900 to-cyan-900",
+    preview: "bg-gradient-to-br from-amber-100 via-orange-50 to-rose-50",
     businessTypes: ["cafe", "restaurant", "bar"],
     style: {
       background: "#FFFBF0",
@@ -160,18 +160,18 @@ export const defaultTemplates: Template[] = [
     features: ["Warm Colors", "Rounded Corners", "Community Feel"],
     mockup: {
       nav: {
-        bg: "bg-black/95",
-        text: "text-white",
-        border: "border-cyan-400/50",
+        bg: "bg-white/90",
+        text: "text-amber-900",
+        border: "border-amber-200",
       },
       hero: {
-        bg: "bg-gradient-to-r from-black to-purple-900",
-        text: "text-white",
+        bg: "bg-amber-50",
+        text: "text-amber-900",
       },
       cards: {
-        bg: "bg-gray-900/90 backdrop-blur",
-        border: "border-cyan-400/30",
-        text: "text-cyan-100",
+        bg: "bg-white",
+        border: "border-amber-200",
+        text: "text-slate-800",
       },
     },
   },
