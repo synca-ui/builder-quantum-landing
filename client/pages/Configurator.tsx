@@ -1696,18 +1696,16 @@ export default function Configurator() {
                 </div>
               </div>
 
-              {/* Dropdown Menu */}
+              {/* Full-screen Overlay Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-white border-t border-gray-100 z-50">
-                  <div className="py-1">
+                <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-[60] flex items-center justify-center">
+                  <div className="space-y-2 text-center">
                     {formData.selectedPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-3 py-1.5 text-left text-black hover:bg-gray-50 transition-colors text-xs ${
-                          previewState.activePage === page
-                            ? "bg-gray-50 font-medium"
-                            : ""
+                        className={`w-56 mx-auto px-4 py-2 text-black hover:bg-gray-100 rounded-full transition-colors text-sm ${
+                          previewState.activePage === page ? "font-semibold" : ""
                         }`}
                       >
                         {page.charAt(0).toUpperCase() + page.slice(1)}
@@ -5306,7 +5304,7 @@ export default function Configurator() {
                 <div className="bg-white rounded-lg p-4 border border-orange-200">
                   <h4 className="font-semibold text-orange-900 mb-2">Premium Features Include:</h4>
                   <ul className="space-y-1 text-sm text-orange-800">
-                    <li>✓ Automatic content optimization for search engines</li>
+                    <li>�� Automatic content optimization for search engines</li>
                     <li>✓ Schema markup generation for better search visibility</li>
                     <li>✓ Local SEO optimization for location-based searches</li>
                     <li>✓ Weekly SEO performance reports</li>
