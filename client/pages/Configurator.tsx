@@ -885,7 +885,7 @@ export default function Configurator() {
         minimalistic: "Simple",
         modern: "FLUX",
         stylish: "Style",
-        fancy: "Fancy",
+        neon: "Neon",
       };
       const selectedId =
         currentStep === 0
@@ -2082,7 +2082,7 @@ export default function Configurator() {
         minimalistic: "Simple",
         modern: "FLUX",
         stylish: "Style",
-        fancy: "Fancy",
+        neon: "Neon",
       };
       const selectedId =
         currentStep === 0
