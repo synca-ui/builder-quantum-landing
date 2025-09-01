@@ -5512,14 +5512,9 @@ export default function Configurator() {
 
               <div className="flex justify-center">
                 {previewMode === "mobile" ? (
-                  <div className="w-64 h-[480px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
-                    <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-gray-900 rounded-b-xl z-20"></div>
-                      <div className="h-full relative">
-                        <TemplatePreviewContent />
-                      </div>
-                    </div>
-                  </div>
+                  <LivePhoneFrame widthClass="w-64" heightClass="h-[480px]">
+                    <TemplatePreviewContent />
+                  </LivePhoneFrame>
                 ) : (
                   <div className="w-full max-w-4xl h-96 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
                     <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center justify-center px-4">
