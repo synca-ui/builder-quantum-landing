@@ -1076,6 +1076,20 @@ export default function Configurator() {
         ? previewTemplateId || formData.template
         : formData.template;
 
+    // Compose runtime styles from template defaults and user selections
+    const themeOverride = (formData.templateThemes && selectedIdForSwitch && formData.templateThemes[selectedIdForSwitch]) || {};
+    const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch);
+    const baseTemplateStyle = selectedTemplateDef ? selectedTemplateDef.style : templates[0].style;
+    const forcedTextColor = selectedIdForSwitch === "modern" ? "#FFFFFF" : formData.fontColor;
+    const styles = {
+      ...baseTemplateStyle,
+      userPrimary: themeOverride.primary || formData.primaryColor,
+      userSecondary: themeOverride.secondary || formData.secondaryColor,
+      userFontColor: themeOverride.text || forcedTextColor,
+      userFontSize: formData.fontSize,
+      userBackground: themeOverride.background || formData.backgroundColor,
+    };
+
     const LogoDisplay = () => {
       if (formData.logo) {
         return (
@@ -1087,6 +1101,7 @@ export default function Configurator() {
             }
             alt="Business logo"
             className="w-6 h-6 object-contain rounded"
+            style={{ color: styles.userPrimary }}
           />
         );
       }
