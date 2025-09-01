@@ -3051,6 +3051,226 @@ export default function Configurator() {
           </div>
         </div>
 
+        {/* Template-Specific Theme Controls */}
+        {formData.template && (
+          <div className="bg-blue-50 rounded-2xl p-8">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+              {templates.find(t => t.id === formData.template)?.name} Theme Settings
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Primary Color */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Primary Color
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={formData.templateThemes?.[formData.template]?.primary || formData.primaryColor}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].primary = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                  />
+                  <Input
+                    type="text"
+                    value={formData.templateThemes?.[formData.template]?.primary || formData.primaryColor}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].primary = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="font-mono text-sm flex-1"
+                  />
+                </div>
+              </div>
+
+              {/* Secondary Color */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Secondary Color
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={formData.templateThemes?.[formData.template]?.secondary || formData.secondaryColor}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].secondary = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                  />
+                  <Input
+                    type="text"
+                    value={formData.templateThemes?.[formData.template]?.secondary || formData.secondaryColor}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].secondary = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="font-mono text-sm flex-1"
+                  />
+                </div>
+              </div>
+
+              {/* Text Color */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Text Color
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={formData.templateThemes?.[formData.template]?.text || formData.fontColor}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].text = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                  />
+                  <Input
+                    type="text"
+                    value={formData.templateThemes?.[formData.template]?.text || formData.fontColor}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].text = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="font-mono text-sm flex-1"
+                  />
+                </div>
+              </div>
+
+              {/* Highlight Color */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Highlight Color
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={formData.templateThemes?.[formData.template]?.highlight || "#14B8A6"}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].highlight = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                  />
+                  <Input
+                    type="text"
+                    value={formData.templateThemes?.[formData.template]?.highlight || "#14B8A6"}
+                    onChange={(e) => {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].highlight = e.target.value;
+                      updateFormData("templateThemes", newThemes);
+                    }}
+                    className="font-mono text-sm flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Button Style Controls */}
+            <div className="grid md:grid-cols-2 gap-6 mt-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Button Style
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "rounded-lg", name: "Rounded" },
+                    { id: "rounded-xl", name: "More Round" },
+                    { id: "rounded-full", name: "Pill" },
+                  ].map((style) => (
+                    <Button
+                      key={style.id}
+                      variant={
+                        (formData.templateThemes?.[formData.template]?.buttonRadius || "rounded-lg") === style.id
+                          ? "default"
+                          : "outline"
+                      }
+                      size="sm"
+                      onClick={() => {
+                        const newThemes = { ...formData.templateThemes };
+                        if (!newThemes[formData.template]) {
+                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                        }
+                        newThemes[formData.template].buttonRadius = style.id;
+                        updateFormData("templateThemes", newThemes);
+                      }}
+                      className={`${style.id} ${(formData.templateThemes?.[formData.template]?.buttonRadius || "rounded-lg") === style.id ? "bg-teal-500 hover:bg-teal-600" : ""}`}
+                    >
+                      {style.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Hover Effect
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "grow", name: "Grow" },
+                    { id: "glow", name: "Glow" },
+                  ].map((effect) => (
+                    <Button
+                      key={effect.id}
+                      variant={
+                        (formData.templateThemes?.[formData.template]?.buttonHover || "grow") === effect.id
+                          ? "default"
+                          : "outline"
+                      }
+                      size="sm"
+                      onClick={() => {
+                        const newThemes = { ...formData.templateThemes };
+                        if (!newThemes[formData.template]) {
+                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                        }
+                        newThemes[formData.template].buttonHover = effect.id;
+                        updateFormData("templateThemes", newThemes);
+                      }}
+                      className={(formData.templateThemes?.[formData.template]?.buttonHover || "grow") === effect.id ? "bg-teal-500 hover:bg-teal-600" : ""}
+                    >
+                      {effect.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Background Style - Only Color and Gradient */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">
