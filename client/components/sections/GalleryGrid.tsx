@@ -26,7 +26,7 @@ export function GalleryGrid({
 }: GalleryGridProps) {
   const getTemplateStyles = () => {
     switch (templateStyle) {
-      case "minimalistic":
+      case "minimalist":
         return {
           container: `grid grid-cols-${cols} gap-2`,
           imageItem: "aspect-square bg-gray-100 rounded flex items-center justify-center overflow-hidden",
@@ -50,7 +50,7 @@ export function GalleryGrid({
           placeholderText: "text-xs text-emerald-100/60 mt-2",
           removeButton: "opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-red-500/80 backdrop-blur hover:bg-red-600/80",
         };
-      case "fancy":
+      case "cozy":
         return {
           container: `grid grid-cols-${cols} gap-3`,
           imageItem: "aspect-square bg-slate-800/50 backdrop-blur rounded flex items-center justify-center border border-amber-500/30 overflow-hidden group",
