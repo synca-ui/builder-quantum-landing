@@ -876,6 +876,7 @@ export default function Configurator() {
       menuOpen: false,
       activePage: "home",
       hoveredItem: null,
+      openHoursExpanded: false,
     });
 
     const getBusinessName = () => {
@@ -1095,6 +1096,38 @@ export default function Configurator() {
         menuOpen: false,
       }));
     };
+
+    // Fetch Instagram photos when instagram sync is enabled and a profile URL exists
+    useEffect(() => {
+      let cancelled = false;
+      const tryFetchInstagram = async () => {
+        if (!formData.instagramSync) return;
+        const profileUrl = formData.socialMedia?.instagram;
+        if (!profileUrl) return;
+
+        try {
+          const resp = await fetch(`/api/instagram?profileUrl=${encodeURIComponent(
+            profileUrl
+          )}`);
+          if (!resp.ok) return;
+          const data = await resp.json();
+          if (cancelled) return;
+          if (Array.isArray(data) && data.length > 0) {
+            // Map to gallery format expected by configurator
+            const updated = data.map((src: string) => ({ src }));
+            updateFormData("gallery", updated);
+          }
+        } catch (e) {
+          // ignore fetch errors softly
+          console.warn("Instagram fetch failed:", e);
+        }
+      };
+
+      tryFetchInstagram();
+      return () => {
+        cancelled = true;
+      };
+    }, [formData.instagramSync, formData.socialMedia?.instagram]);
 
     if (!selectedIdForSwitch) {
       return (
@@ -1572,36 +1605,48 @@ export default function Configurator() {
                 </div>
               )}
 
-              {/* Small Opening Hours at Bottom */}
+              {/* Small Opening Hours at Bottom (click to expand) */}
               {formData.openingHours &&
                 Object.keys(formData.openingHours).length > 0 && (
                   <div className="text-center mt-6 pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Clock className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs font-medium text-gray-600">
+                      <Clock className="w-3 h-3" style={{ color: styles.userFontColor }} />
+                      <span className="text-xs font-medium" style={{ color: styles.userFontColor }}>
                         Opening Hours
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 space-y-0.5">
-                      {Object.entries(formData.openingHours)
-                        .slice(0, 2)
-                        .map(([day, hours]) => (
-                          <div
-                            key={day}
-                            className="flex justify-between items-center"
-                          >
-                            <span>{day}</span>
+
+                    <div
+                      className="text-xs space-y-0.5"
+                      style={{ color: styles.userFontColor, cursor: "pointer" }}
+                      onClick={() => setPreviewState((p) => ({ ...p, openHoursExpanded: !p.openHoursExpanded }))}
+                      title="Click to expand hours"
+                    >
+                      {previewState.openHoursExpanded ? (
+                        Object.entries(formData.openingHours).map(([day, hours]) => (
+                          <div key={day} className="flex justify-between items-center py-1 text-sm">
+                            <span style={{ fontWeight: 600 }}>{day}</span>
                             <span>
-                              {hours.closed
-                                ? "Closed"
-                                : `${hours.open} - ${hours.close}`}
+                              {hours.closed ? "Closed" : `${hours.open} - ${hours.close}`}
                             </span>
                           </div>
-                        ))}
-                      {Object.keys(formData.openingHours).length > 2 && (
+                        ))
+                      ) : (
+                        Object.entries(formData.openingHours)
+                          .slice(0, 2)
+                          .map(([day, hours]) => (
+                            <div key={day} className="flex justify-between items-center">
+                              <span>{day}</span>
+                              <span>
+                                {hours.closed ? "Closed" : `${hours.open} - ${hours.close}`}
+                              </span>
+                            </div>
+                          ))
+                      )}
+
+                      {!previewState.openHoursExpanded && Object.keys(formData.openingHours).length > 2 && (
                         <div className="text-xs text-gray-400 mt-1">
-                          +{Object.keys(formData.openingHours).length - 2} more
-                          days
+                          +{Object.keys(formData.openingHours).length - 2} more days
                         </div>
                       )}
                     </div>
@@ -1617,6 +1662,8 @@ export default function Configurator() {
                       {formData.socialMedia.instagram && (
                         <a
                           href={formData.socialMedia.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-pink-500 hover:text-pink-600 transition-colors"
                         >
                           <Instagram className="w-4 h-4" />
