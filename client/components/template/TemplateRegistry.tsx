@@ -178,7 +178,7 @@ export const defaultTemplates: Template[] = [
 ];
 
 export const defaultTemplateThemes: Record<string, TemplateTheme> = {
-  minimalistic: {
+  minimalist: {
     primary: "#2563EB",
     secondary: "#7C3AED",
     text: "#1A1A1A",
@@ -205,7 +205,7 @@ export const defaultTemplateThemes: Record<string, TemplateTheme> = {
     buttonRadius: "rounded-2xl",
     buttonHover: "grow",
   },
-  neon: {
+  cozy: {
     primary: "#00ff88",
     secondary: "#ff0080",
     text: "#FFFFFF",
