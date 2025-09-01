@@ -2064,7 +2064,7 @@ export default function Configurator() {
       const templateNames = {
         minimalistic: "Simple",
         modern: "FLUX",
-        clean: "Pure",
+        stylish: "Style",
         fancy: "Fancy",
       };
       const selectedId =
