@@ -1860,7 +1860,7 @@ export default function Configurator() {
           </div>
         );
 
-      case "fancy":
+      case "neon":
         return (
           <div
             className={`h-full overflow-y-auto text-white ${fontClass}`}
