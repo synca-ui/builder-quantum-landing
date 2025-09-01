@@ -1830,23 +1830,33 @@ export default function Configurator() {
                 </div>
               </div>
 
-              {/* Dropdown Menu */}
+              {/* Full-screen Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-3 right-3 bg-blue-900/80 backdrop-blur-md border border-blue-300/30 z-[60] shadow-xl rounded-xl">
-                  <div className="py-2">
-                    {formData.selectedPages.map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => navigateToPage(page)}
-                        className={`w-full px-4 py-2 text-left text-white hover:bg-blue-500/20 transition-colors text-sm font-medium ${
-                          previewState.activePage === page
-                            ? "bg-blue-500/30 text-blue-100 font-bold"
-                            : ""
-                        }`}
-                      >
-                        {page.charAt(0).toUpperCase() + page.slice(1)}
-                      </button>
-                    ))}
+                <div className="absolute inset-0 z-[60] flex items-start justify-center">
+                  <div className="absolute inset-0 bg-black/30" onClick={toggleMenu} />
+                  <div
+                    className="relative w-full max-w-none p-6 pt-8"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(56,189,248,0.95) 0%, rgba(37,99,235,0.95) 50%, rgba(30,64,175,0.95) 100%)",
+                      borderTop: "1px solid rgba(255,255,255,0.2)",
+                      color: "#ffffff",
+                    }}
+                  >
+                    <div className="space-y-2">
+                      {formData.selectedPages.map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => navigateToPage(page)}
+                          className={`w-full text-left px-4 py-3 transition-colors text-sm font-semibold rounded-lg ${
+                            previewState.activePage === page
+                              ? "bg-white/20 text-white"
+                              : "hover:bg-white/10"
+                          }`}
+                        >
+                          {page.charAt(0).toUpperCase() + page.slice(1)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
