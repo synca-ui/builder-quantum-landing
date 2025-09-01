@@ -1030,7 +1030,7 @@ export default function Configurator() {
             name: "Fresh Wrap",
             description: "Seasonal vegetables, herbs",
             price: "8.50",
-            emoji: "🌯",
+            emoji: "����",
           },
           {
             name: "Green Smoothie",
@@ -1157,7 +1157,7 @@ export default function Configurator() {
                 "w-16 h-16 mx-auto bg-white/30 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/40",
               contactIcon: "w-4 h-4 text-pink-200 drop-shadow-sm",
               homeCard:
-                "bg-white/25 backdrop-blur-md rounded-2xl p-3 text-center border border-white/40 shadow-lg aspect-[4/3] flex flex-col justify-center",
+                "bg-white/25 backdrop-blur-md rounded-2xl p-2 text-center border border-white/40 shadow-lg",
             };
           case "stylish":
             return {
