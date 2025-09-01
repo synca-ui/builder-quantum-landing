@@ -1855,17 +1855,38 @@ export default function Configurator() {
 
       case "stylish":
         return (
-          <div className={`h-full overflow-y-auto ${fontClass}`} style={{ backgroundColor: selectedIdForSwitch === 'stylish' ? (styles.userBackground || '#fff') : undefined }}>
+          <div
+            className={`h-full overflow-y-auto ${fontClass} relative`}
+            style={{
+              background:
+                formData.backgroundType === "gradient"
+                  ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+                  : styles.userBackground || "#ffffff",
+            }}
+          >
             {/* Status Bar - Space for notch */}
-            <div className="h-8" style={{ backgroundColor: styles.userSecondary || '#ffffff' }}>
+            <div className="h-8" style={{ backgroundColor: styles.userSecondary || "#ffffff" }}>
               {/* Empty space for Apple notch */}
             </div>
 
             {/* Navigation */}
-            <nav className="px-4 py-4 relative z-50 shadow-sm border-b" style={{ backgroundColor: styles.userSecondary || '#ffffff', borderColor: (styles.userPrimary || '#000000') + '20', color: styles.userFontColor }}>
+            <nav
+              className="px-4 py-4 relative z-50 shadow-sm border-b"
+              style={{
+                backgroundColor: styles.userSecondary || "#ffffff",
+                borderColor: (styles.userPrimary || "#000000") + "20",
+                color: styles.userFontColor,
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: styles.userPrimary ? `${styles.userPrimary}20` : '#f0f0f0', border: `1px solid ${styles.userPrimary || '#eee'}` }}>
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{
+                      backgroundColor: styles.userPrimary ? `${styles.userPrimary}20` : "#f0f0f0",
+                      border: `1px solid ${styles.userPrimary || "#eee"}`,
+                    }}
+                  >
                     <LogoDisplay />
                   </div>
                   <h1 className="text-lg font-semibold" style={{ color: styles.userFontColor }}>
@@ -1877,7 +1898,7 @@ export default function Configurator() {
                     <button
                       className="p-2 rounded-lg transition-colors relative"
                       onClick={() => setShowCart(!showCart)}
-                      style={{ border: `1px solid ${styles.userPrimary || 'transparent'}`, color: styles.userFontColor, backgroundColor: 'transparent' }}
+                      style={{ border: `1px solid ${styles.userPrimary || "transparent"}`, color: styles.userFontColor, backgroundColor: 'transparent' }}
                     >
                       <ShoppingBag className="w-5 h-5" style={{ color: styles.userFontColor }} />
                       {cartItemsCount > 0 && (
@@ -1896,31 +1917,49 @@ export default function Configurator() {
                   </button>
                 </div>
               </div>
-
-              {/* Full-width dropdown menu inside phone (drops below nav and fills the phone area) */}
-              {previewState.menuOpen && (
-                <div className="absolute left-0 right-0 top-full z-50">
-                  <div className="absolute left-0 right-0 top-0 bottom-0 bg-black/10" onClick={toggleMenu} />
-                  <div className="relative p-3" style={{ backgroundColor: styles.userSecondary || '#ffffff', borderTop: `1px solid ${styles.userPrimary || '#eee'}`, zIndex: 60 }}>
-                    <div className="space-y-1">
-                      {formData.selectedPages.map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => navigateToPage(page)}
-                          className={"w-full px-3 py-3 text-left transition-colors text-sm font-semibold"}
-                          style={{ color: previewState.activePage === page ? (styles.userPrimary || styles.userFontColor) : styles.userFontColor, backgroundColor: previewState.activePage === page ? (styles.userPrimary ? `${styles.userPrimary}20` : 'transparent') : 'transparent' }}
-                        >
-                          {page.charAt(0).toUpperCase() + page.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
             </nav>
 
+            {/* Full-screen menu overlay (covers entire phone screen) */}
+            {previewState.menuOpen && (
+              <div className="absolute inset-0 z-60 flex items-start justify-center">
+                <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
+                <div
+                  className="relative w-full max-w-none p-6 transition-transform duration-300 ease-in-out"
+                  style={{
+                    background: styles.userSecondary || "#ffffff",
+                    borderTop: `1px solid ${styles.userPrimary || "#eee"}`,
+                    color: styles.userFontColor,
+                  }}
+                >
+                  <div className="space-y-4 pt-8">
+                    {formData.selectedPages.map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => navigateToPage(page)}
+                        className={`w-full text-left px-4 py-3 transition-colors text-sm font-semibold`}
+                        style={{
+                          color:
+                            previewState.activePage === page
+                              ? styles.userPrimary || styles.userFontColor
+                              : styles.userFontColor,
+                          backgroundColor:
+                            previewState.activePage === page
+                              ? styles.userPrimary
+                                ? `${styles.userPrimary}20`
+                                : "transparent"
+                              : "transparent",
+                        }}
+                      >
+                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Content */}
-            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: selectedIdForSwitch === 'stylish' ? (styles.userBackground || 'transparent') : undefined }}>
+            <div className="flex-1 overflow-y-auto" style={{ background: 'transparent' }}>
               {renderPageContent()}
             </div>
           </div>
