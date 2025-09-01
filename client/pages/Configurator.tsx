@@ -1115,7 +1115,7 @@ export default function Configurator() {
           if (cancelled) return;
           if (Array.isArray(data) && data.length > 0) {
             // Map to gallery format expected by configurator
-            const updated = data.map((src: string) => ({ src }));
+            const updated = data.map((src: string) => ({ url: src, alt: "Instagram photo" }));
             updateFormData("gallery", updated);
           }
         } catch (e) {
@@ -1646,7 +1646,7 @@ export default function Configurator() {
                       )}
 
                       {!previewState.openHoursExpanded && Object.keys(formData.openingHours).length > 2 && (
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="text-xs mt-1" style={{ color: styles.userFontColor, opacity: 0.7 }}>
                           +{Object.keys(formData.openingHours).length - 2} more days
                         </div>
                       )}
@@ -1922,7 +1922,7 @@ export default function Configurator() {
 
             {/* Full-screen menu overlay (covers entire phone screen) */}
             {previewState.menuOpen && (
-              <div className="absolute inset-0 z-60 flex items-start justify-center">
+              <div className="absolute inset-0 z-[60] flex items-start justify-center">
                 <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
                 <div
                   className="relative w-full max-w-none p-6 transition-transform duration-300 ease-in-out"
