@@ -1783,10 +1783,12 @@ export default function Configurator() {
             className={`h-full overflow-y-auto text-white ${fontClass}`}
             style={{
               background:
-                formData.backgroundType === "gradient"
-                  ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
-                  : formData.backgroundColor ||
-                    "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
+                currentStep === 0
+                  ? "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)"
+                  : formData.backgroundType === "gradient"
+                    ? `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+                    : formData.backgroundColor ||
+                      "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
             }}
           >
             {/* Status Bar - Space for notch */}
@@ -2501,8 +2503,14 @@ export default function Configurator() {
   // Template Selection with Live Preview
   const TemplateStep = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(
-      previewTemplateId || formData.template,
+      previewTemplateId || formData.template || "modern",
     );
+
+    useEffect(() => {
+      if (!previewTemplateId && !formData.template) {
+        setPreviewTemplateId("modern");
+      }
+    }, []);
 
     const handleTemplateClick = (templateId: string) => {
       setSelectedTemplate(templateId);
