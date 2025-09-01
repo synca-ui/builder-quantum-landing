@@ -1037,7 +1037,7 @@ export default function Configurator() {
             name: "Artisan Pasta",
             description: "Handcrafted with seasonal ingredients",
             price: "28.00",
-            emoji: "🍽��",
+            emoji: "🍽️",
           },
           {
             name: "Sommelier Selection",
@@ -2533,21 +2533,21 @@ export default function Configurator() {
           </div>
 
           {/* Live Preview */}
-          <div className="sticky top-8">
-            <div className="bg-gray-100 rounded-2xl p-6">
+          <div className="order-1 lg:order-2 lg:sticky lg:top-8">
+            <div className="bg-gray-100 rounded-2xl p-4 lg:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-base lg:text-lg font-bold text-gray-900">
                   Live Preview
                 </h3>
                 <div className="flex space-x-2">
-                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <div className="w-2 h-2 lg:w-3 lg:h-3 bg-red-400 rounded-full"></div>
+                  <div className="w-2 h-2 lg:w-3 lg:h-3 bg-yellow-400 rounded-full"></div>
+                  <div className="w-2 h-2 lg:w-3 lg:h-3 bg-green-400 rounded-full"></div>
                 </div>
               </div>
 
               <div className="flex justify-center">
-                <LivePhoneFrame widthClass="w-56" heightClass="h-[420px]">
+                <LivePhoneFrame widthClass="w-48 lg:w-56" heightClass="h-[360px] lg:h-[420px]">
                   <TemplatePreviewContent />
                 </LivePhoneFrame>
               </div>
