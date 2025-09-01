@@ -399,18 +399,18 @@ export default function Configurator() {
       id: "modern",
       name: "Modern",
       description: "Contemporary design with bold colors and sleek animations",
-      preview: "bg-gradient-to-br from-blue-500 to-purple-600",
+      preview: "bg-gradient-to-br from-pink-500 via-purple-500 to-cyan-500",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        accent: "#4F46E5",
+        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
+        accent: "#f5576c",
         text: "#FFFFFF",
-        secondary: "#6366F1",
+        secondary: "#4facfe",
         layout: "modern-cards",
         navigation: "glassmorphism",
         typography: "modern-geometric",
       },
-      features: ["Gradient Backgrounds", "Glass Effects", "Bold Typography"],
+      features: ["Vibrant Colors", "Glass Effects", "Rectangular Layout"],
       mockup: {
         nav: {
           bg: "bg-white/10 backdrop-blur-md",
@@ -418,7 +418,7 @@ export default function Configurator() {
           border: "border-white/20",
         },
         hero: {
-          bg: "bg-gradient-to-r from-blue-500 to-purple-600",
+          bg: "bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500",
           text: "text-white",
         },
         cards: {
@@ -465,24 +465,24 @@ export default function Configurator() {
     {
       id: "fancy",
       name: "Fancy",
-      description: "Luxurious design with gold accents and premium aesthetics",
-      preview: "bg-gradient-to-br from-amber-100 via-yellow-200 to-orange-300",
+      description: "Dark premium bar/club design with vibrant accent colors",
+      preview: "bg-gradient-to-br from-slate-800 via-slate-900 to-black",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
         background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-        accent: "#F59E0B",
+        accent: "#f97316",
         text: "#FFFFFF",
-        secondary: "#292524",
-        layout: "luxury-showcase",
-        navigation: "premium-floating",
-        typography: "luxury-serif",
+        secondary: "#fbbf24",
+        layout: "club-showcase",
+        navigation: "dark-premium",
+        typography: "modern-bold",
       },
-      features: ["Gold Accents", "Premium Feel", "Luxury Design"],
+      features: ["Dark Theme", "Premium Feel", "Club Design"],
       mockup: {
         nav: {
           bg: "bg-slate-900",
           text: "text-white",
-          border: "border-amber-500/30",
+          border: "border-orange-500/30",
         },
         hero: {
           bg: "bg-gradient-to-r from-slate-800 to-slate-900",
@@ -490,8 +490,8 @@ export default function Configurator() {
         },
         cards: {
           bg: "bg-slate-800/80 backdrop-blur",
-          border: "border-amber-500/40",
-          text: "text-amber-100",
+          border: "border-orange-500/40",
+          text: "text-orange-100",
         },
       },
     },
