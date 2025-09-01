@@ -5450,19 +5450,12 @@ export default function Configurator() {
                   </div>
                 ) : (
                   <div className="w-full max-w-4xl h-96 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
-                    <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center px-4">
-                      <div className="flex space-x-2">
-                        <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                        <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      </div>
-                      <div className="flex-1 text-center">
-                        <span className="text-xs text-gray-600 font-mono">
-                          {formData.hasDomain
-                            ? formData.domainName
-                            : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
-                        </span>
-                      </div>
+                    <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center justify-center px-4">
+                      <span className="text-xs text-gray-600 font-mono">
+                        {formData.hasDomain
+                          ? formData.domainName
+                          : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
+                      </span>
                     </div>
                     <div className="h-full overflow-hidden">
                       <TemplatePreviewContent />
