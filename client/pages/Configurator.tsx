@@ -894,31 +894,6 @@ export default function Configurator() {
       return templateNames[selectedId] || "Your Business";
     };
 
-    const getTemplateStyles = () => {
-      const selectedId =
-        currentStep === 0
-          ? previewTemplateId || formData.template
-          : formData.template;
-      const selected = templates.find((t) => t.id === selectedId);
-      const baseStyles = selected ? selected.style : templates[0].style;
-
-      // For dark background templates, force white text for visibility
-      const forcedTextColor =
-        selectedId === "modern"
-          ? "#FFFFFF"
-          : formData.fontColor;
-
-      return {
-        ...baseStyles,
-        userPrimary: formData.primaryColor,
-        userSecondary: formData.secondaryColor,
-        userFontColor: forcedTextColor,
-        userFontSize: formData.fontSize,
-      };
-    };
-
-    const styles = getTemplateStyles();
-
     // Helper function for font size classes
     const getFontSizeClass = (baseSize: string) => {
       const sizeMap = {
