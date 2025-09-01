@@ -4049,7 +4049,8 @@ export default function Configurator() {
               accept=".csv,text/csv"
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
+                const inputEl = e.target as HTMLInputElement;
+                const file = inputEl.files?.[0];
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -4090,22 +4091,40 @@ export default function Configurator() {
                     const descKeys = ["description","desc","details","beschreibung"];
                     const priceKeys = ["price","preis","cost","amount"];
 
-                    const getIdx = (keys: string[]) => headerCells.findIndex(h => keys.includes(h));
-                    let nameIdx = getIdx(nameKeys);
-                    let descIdx = getIdx(descKeys);
-                    let priceIdx = getIdx(priceKeys);
+                    // Decide whether the first row is a header by checking for known header keywords
+                    const headerMatched = headerCells.some(h => nameKeys.includes(h) || priceKeys.includes(h) || descKeys.includes(h));
 
-                    // fallback to positional columns if headers not found
-                    if (nameIdx === -1 && headerCells.length >= 1) nameIdx = 0;
-                    if (priceIdx === -1 && headerCells.length >= 2) priceIdx = headerCells.length - 1;
+                    let dataRows = headerMatched ? rows.slice(1) : rows;
 
-                    const newItems = rows.slice(1).map((line) => {
+                    let nameIdx = -1;
+                    let descIdx = -1;
+                    let priceIdx = -1;
+
+                    if (headerMatched) {
+                      const getIdx = (keys: string[]) => headerCells.findIndex(h => keys.includes(h));
+                      nameIdx = getIdx(nameKeys);
+                      descIdx = getIdx(descKeys);
+                      priceIdx = getIdx(priceKeys);
+
+                      // fallback to positional columns if headers not found
+                      if (nameIdx === -1 && headerCells.length >= 1) nameIdx = 0;
+                      if (priceIdx === -1 && headerCells.length >= 2) priceIdx = headerCells.length - 1;
+                    } else {
+                      // no header, assume columns: name, description, ..., price (price last)
+                      const sampleCells = parseLine(rows[0]);
+                      const colCount = sampleCells.length;
+                      nameIdx = 0;
+                      descIdx = colCount >= 2 ? 1 : -1;
+                      priceIdx = colCount >= 2 ? colCount - 1 : 1;
+                    }
+
+                    const newItems = dataRows.map((line) => {
                       const cells = parseLine(line).map(v => v.replace(/""/g, '"'));
                       const clean = (s?: string) => (s || "").replace(/[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu, "").trim();
                       const num = (s?: string) => (s || "").replace(/[^0-9,\.\-]/g, "").replace(/,/g, ".");
 
                       const name = clean(cells[nameIdx] || "");
-                      const description = clean(descIdx !== -1 ? cells[descIdx] || "" : cells[1] || "");
+                      const description = clean(descIdx !== -1 ? cells[descIdx] || "" : "");
                       const priceRaw = num(cells[priceIdx] || "");
 
                       const price = priceRaw ? (isNaN(Number(priceRaw)) ? priceRaw : Number(priceRaw).toFixed(2)) : "";
@@ -4114,12 +4133,15 @@ export default function Configurator() {
                     }).filter(Boolean) as any[];
 
                     if (newItems.length) {
-                      // Use functional update to avoid stale closures
+                      // append items (multiple imports supported)
                       setFormData((prev) => ({
                         ...prev,
                         menuItems: [ ...(prev.menuItems || []), ...newItems ],
                       }));
                     }
+
+                    // clear input so same file can be uploaded again if needed
+                    try { inputEl.value = ""; } catch (e) {}
                   } catch (err) {
                     console.error("CSV parse error", err);
                   }
