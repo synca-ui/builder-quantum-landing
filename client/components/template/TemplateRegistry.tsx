@@ -150,9 +150,9 @@ export const defaultTemplates: Template[] = [
     businessTypes: ["cafe", "restaurant", "bar"],
     style: {
       background: "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
-      accent: "#00ff88",
+      accent: "#06b6d4",
       text: "#FFFFFF",
-      secondary: "#ff0080",
+      secondary: "#a855f7",
       layout: "neon-grid",
       navigation: "cyberpunk",
       typography: "futuristic",
