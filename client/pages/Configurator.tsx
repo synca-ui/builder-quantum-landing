@@ -396,7 +396,7 @@ export default function Configurator() {
       id: "stylish",
       name: "Stylish",
       description: "Visual-first design with overlays, mixed sections, and motion",
-      preview: "bg-gradient-to-br from-emerald-50 to-teal-100",
+      preview: "bg-gradient-to-br from-emerald-50 to-slate-800",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
         background: "#FAFAFA",
