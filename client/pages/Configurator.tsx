@@ -1808,30 +1808,31 @@ export default function Configurator() {
 
       case "stylish":
         return (
-          <div className={`h-full overflow-y-auto bg-emerald-50 ${fontClass}`}>
+          <div className={`h-full overflow-y-auto ${fontClass}`} style={{ backgroundColor: selectedIdForSwitch === 'stylish' ? (styles.userBackground || '#fff') : undefined }}>
             {/* Status Bar - Space for notch */}
-            <div className="h-8 bg-white">
+            <div className="h-8" style={{ backgroundColor: styles.userSecondary || '#ffffff' }}>
               {/* Empty space for Apple notch */}
             </div>
 
             {/* Navigation */}
-            <nav className="bg-white shadow-sm border-b border-emerald-100 px-4 py-4 relative z-50">
+            <nav className="px-4 py-4 relative z-50 shadow-sm border-b" style={{ backgroundColor: styles.userSecondary || '#ffffff', borderColor: (styles.userPrimary || '#000000') + '20', color: styles.userFontColor }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: styles.userPrimary ? `${styles.userPrimary}20` : '#f0f0f0', border: `1px solid ${styles.userPrimary || '#eee'}` }}>
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-semibold text-slate-800">
+                  <h1 className="text-lg font-semibold" style={{ color: styles.userFontColor }}>
                     {getBusinessName()}
                   </h1>
                 </div>
                 <div className="flex items-center space-x-2">
                   {formData.onlineOrdering && (
                     <button
-                      className="p-2 hover:bg-emerald-50 rounded-lg transition-colors relative"
+                      className="p-2 rounded-lg transition-colors relative"
                       onClick={() => setShowCart(!showCart)}
+                      style={{ border: `1px solid ${styles.userPrimary || 'transparent'}`, color: styles.userFontColor, backgroundColor: 'transparent' }}
                     >
-                      <ShoppingBag className="w-5 h-5 text-slate-600" />
+                      <ShoppingBag className="w-5 h-5" style={{ color: styles.userFontColor }} />
                       {cartItemsCount > 0 && (
                         <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
                           {cartItemsCount}
@@ -1841,26 +1842,26 @@ export default function Configurator() {
                   )}
                   <button
                     onClick={toggleMenu}
-                    className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'transparent', color: styles.userFontColor }}
                   >
-                    <Menu className="w-5 h-5 text-slate-600" />
+                    <Menu className="w-5 h-5" style={{ color: styles.userFontColor }} />
                   </button>
                 </div>
               </div>
 
-              {/* Side Panel Menu */}
+              {/* Full-width dropdown menu inside phone (drops below nav and fills the phone area) */}
               {previewState.menuOpen && (
-                <div className="absolute inset-0 z-50">
-                  <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
-                  <div className="absolute right-0 top-0 h-full w-2/3 max-w-64 bg-white shadow-xl border-l border-emerald-100 p-3">
+                <div className="absolute left-0 right-0 top-full z-50">
+                  <div className="absolute left-0 right-0 top-0 bottom-0 bg-black/10" onClick={toggleMenu} />
+                  <div className="relative p-3" style={{ backgroundColor: styles.userSecondary || '#ffffff', borderTop: `1px solid ${styles.userPrimary || '#eee'}`, zIndex: 60 }}>
                     <div className="space-y-1">
                       {formData.selectedPages.map((page) => (
                         <button
                           key={page}
                           onClick={() => navigateToPage(page)}
-                          className={`w-full px-3 py-2 text-left text-slate-700 hover:bg-emerald-50 transition-colors text-sm font-semibold ${
-                            previewState.activePage === page ? "text-emerald-700" : ""
-                          }`}
+                          className={"w-full px-3 py-3 text-left transition-colors text-sm font-semibold"}
+                          style={{ color: previewState.activePage === page ? (styles.userPrimary || styles.userFontColor) : styles.userFontColor, backgroundColor: previewState.activePage === page ? (styles.userPrimary ? `${styles.userPrimary}20` : 'transparent') : 'transparent' }}
                         >
                           {page.charAt(0).toUpperCase() + page.slice(1)}
                         </button>
@@ -1872,7 +1873,7 @@ export default function Configurator() {
             </nav>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-emerald-50">
+            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: selectedIdForSwitch === 'stylish' ? (styles.userBackground || 'transparent') : undefined }}>
               {renderPageContent()}
             </div>
           </div>
