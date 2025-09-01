@@ -39,5 +39,8 @@ export function createServer() {
   // Public site serving
   app.get("/api/sites/:subdomain", getPublishedSite);
 
+  // Instagram scraping endpoint (best-effort for public/open profiles)
+  app.get("/api/instagram", fetchInstagramPhotos);
+
   return app;
 }
