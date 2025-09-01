@@ -485,7 +485,7 @@ export default function Configurator() {
     },
     {
       id: "cozy",
-      name: "Neon",
+      name: "Cozy",
       description: "Futuristic gaming-inspired design with cozy colors and tech aesthetics",
       preview: "bg-gradient-to-br from-black via-purple-900 to-cyan-900",
       businessTypes: ["cafe", "restaurant", "bar"],
@@ -498,7 +498,7 @@ export default function Configurator() {
         navigation: "cyberpunk",
         typography: "futuristic",
       },
-      features: ["Neon Accents", "Cyberpunk Style", "Gaming Vibes"],
+      features: ["Warm Colors", "Rounded Corners", "Community Feel"],
       mockup: {
         nav: {
           bg: "bg-black/95",
@@ -885,7 +885,7 @@ export default function Configurator() {
         minimalist: "Simple",
         modern: "FLUX",
         stylish: "Style",
-        cozy: "Neon",
+        cozy: "Cozy",
       };
       const selectedId =
         currentStep === 0
@@ -1046,18 +1046,18 @@ export default function Configurator() {
       cozy: {
         items: [
           {
-            name: "Cyber Energy",
-            description: "High-tech energy boost, glowing blue",
+            name: "Grandma's Pie",
+            description: "Warm slice with seasonal fruit",
             price: "7.50",
           },
           {
-            name: "Neon Fusion",
-            description: "Electric cocktail with LED ice cubes",
+            name: "House Lemonade",
+            description: "Freshly squeezed, lightly sweetened",
             price: "12.00",
           },
           {
-            name: "Digital Brew",
-            description: "Futuristic coffee experience",
+            name: "House Roast",
+            description: "Slow-brewed, comforting aroma",
             price: "6.00",
           },
         ],
@@ -2076,7 +2076,7 @@ export default function Configurator() {
         minimalist: "Simple",
         modern: "FLUX",
         stylish: "Style",
-        cozy: "Neon",
+        cozy: "Cozy",
       };
       const selectedId =
         currentStep === 0
@@ -2199,18 +2199,18 @@ export default function Configurator() {
       cozy: {
         items: [
           {
-            name: "Cyber Energy",
-            description: "High-tech energy boost, glowing blue",
+            name: "Grandma's Pie",
+            description: "Warm slice with seasonal fruit",
             price: "7.50",
           },
           {
-            name: "Neon Fusion",
-            description: "Electric cocktail with LED ice cubes",
+            name: "House Lemonade",
+            description: "Freshly squeezed, lightly sweetened",
             price: "12.00",
           },
           {
-            name: "Digital Brew",
-            description: "Futuristic coffee experience",
+            name: "House Roast",
+            description: "Slow-brewed, comforting aroma",
             price: "6.00",
           },
         ],
