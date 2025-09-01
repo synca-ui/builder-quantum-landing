@@ -205,14 +205,14 @@ export const defaultTemplateThemes: Record<string, TemplateTheme> = {
     buttonRadius: "rounded-2xl",
     buttonHover: "grow",
   },
-  fancy: {
-    primary: "#F59E0B",
-    secondary: "#D97706",
+  neon: {
+    primary: "#00ff88",
+    secondary: "#ff0080",
     text: "#FFFFFF",
-    background: "#0F172A",
-    highlight: "#A3E635",
-    buttonRadius: "rounded-full",
-    buttonHover: "glow",
+    background: "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
+    highlight: "#00d4ff",
+    buttonRadius: "rounded-md",
+    buttonHover: "neon-glow",
   },
 };
 
