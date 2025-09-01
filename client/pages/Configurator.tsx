@@ -904,7 +904,7 @@ export default function Configurator() {
 
       // For dark background templates, force white text for visibility
       const forcedTextColor =
-        selectedId === "modern" || selectedId === "fancy"
+        selectedId === "modern"
           ? "#FFFFFF"
           : formData.fontColor;
 
@@ -2101,7 +2101,7 @@ export default function Configurator() {
 
       // For dark background templates, force white text for visibility
       const forcedTextColor =
-        selectedId === "modern" || selectedId === "fancy"
+        selectedId === "modern"
           ? "#FFFFFF"
           : formData.fontColor;
 
