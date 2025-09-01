@@ -1037,7 +1037,7 @@ export default function Configurator() {
             name: "Artisan Pasta",
             description: "Handcrafted with seasonal ingredients",
             price: "28.00",
-            emoji: "🍽️",
+            emoji: "🍽��",
           },
           {
             name: "Sommelier Selection",
@@ -2460,9 +2460,9 @@ export default function Configurator() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Template Selection */}
-          <div className="space-y-4">
+          <div className="space-y-4 order-2 lg:order-1">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               Available Templates
             </h3>
