@@ -1819,7 +1819,7 @@ export default function Configurator() {
             </div>
 
             {/* Navigation */}
-            <nav className="bg-white shadow-sm border-b border-emerald-100 px-4 py-4 relative">
+            <nav className="bg-white shadow-sm border-b border-emerald-100 px-4 py-4 relative z-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
