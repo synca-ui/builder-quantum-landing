@@ -2904,6 +2904,16 @@ export default function Configurator() {
                     onChange={(e) => {
                       e.stopPropagation();
                       updateFormData("primaryColor", e.target.value);
+
+                      // Also update template-specific theme if template is selected
+                      if (formData.template) {
+                        const newThemes = { ...formData.templateThemes };
+                        if (!newThemes[formData.template]) {
+                          newThemes[formData.template] = { ...newThemes.minimalistic };
+                        }
+                        newThemes[formData.template].primary = e.target.value;
+                        updateFormData("templateThemes", newThemes);
+                      }
                     }}
                     className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
                     style={{ WebkitAppearance: "none", padding: "4px" }}
