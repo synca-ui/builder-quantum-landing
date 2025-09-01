@@ -1178,20 +1178,20 @@ export default function Configurator() {
             };
           case "cozy":
             return {
-              page: "p-4 bg-gradient-to-b from-black to-gray-900",
-              title: "text-xl font-bold mb-6 text-center text-cyan-300 drop-shadow-[0_0_10px_#00ffff]",
+              page: "p-4 bg-orange-50",
+              title: "text-lg font-semibold mb-4 text-center text-amber-900",
               itemCard:
-                "bg-gray-900/95 backdrop-blur rounded border border-cyan-400/50 p-4 shadow-xl shadow-cyan-500/20",
-              itemName: "font-bold text-sm text-cyan-300 drop-shadow-[0_0_5px_#00ffff]",
-              itemDesc: "text-xs text-gray-300",
-              itemPrice: "font-bold text-sm text-green-400 drop-shadow-[0_0_5px_#00ff88]",
+                "bg-white rounded-xl p-4 border border-amber-200 shadow-sm",
+              itemName: "font-semibold text-sm text-amber-900",
+              itemDesc: "text-xs text-amber-700",
+              itemPrice: "font-bold text-sm text-orange-600",
               galleryItem:
-                "aspect-square bg-gray-900/90 backdrop-blur rounded border border-cyan-400/30 flex items-center justify-center shadow-lg shadow-cyan-500/20",
+                "aspect-square bg-amber-50 rounded-xl flex items-center justify-center border border-amber-200",
               aboutLogo:
-                "w-16 h-16 mx-auto bg-cyan-500/20 backdrop-blur rounded border border-cyan-400/50 flex items-center justify-center shadow-[0_0_20px_#00ffff]",
-              contactIcon: "w-4 h-4 text-cyan-400",
+                "w-16 h-16 mx-auto bg-amber-100 rounded-xl flex items-center justify-center border border-amber-200",
+              contactIcon: "w-4 h-4 text-orange-600",
               homeCard:
-                "bg-gray-900/90 backdrop-blur rounded border border-cyan-400/30 p-3 text-center shadow-lg shadow-cyan-500/20",
+                "bg-white rounded-xl p-3 text-center border border-amber-200",
             };
           default:
             return {
