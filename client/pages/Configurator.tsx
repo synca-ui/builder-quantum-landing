@@ -1841,15 +1841,27 @@ export default function Configurator() {
               {/* Full-screen Menu */}
               {previewState.menuOpen && (
                 <div className="absolute inset-0 z-[60] flex items-start justify-center">
-                  <div className="absolute inset-0 bg-black/30" onClick={toggleMenu} />
+                  <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
                   <div
-                    className="relative w-full max-w-none p-6 pt-8"
+                    className="relative w-full max-w-none p-6 pt-6 backdrop-blur-xl ring-1 ring-white/10"
                     style={{
-                      background: `linear-gradient(135deg, ${toRgba(styles.userSecondary || '#38bdf8', 0.95)} 0%, ${toRgba(styles.userPrimary || '#2563eb', 0.95)} 50%, ${toRgba(styles.userSecondary || '#1e40af', 0.95)} 100%)`,
-                      borderTop: "1px solid rgba(255,255,255,0.2)",
+                      background: `linear-gradient(135deg, ${toRgba(styles.userSecondary || '#38bdf8', 0.65)} 0%, ${toRgba(styles.userPrimary || '#2563eb', 0.65)} 50%, ${toRgba(styles.userSecondary || '#1e40af', 0.65)} 100%)`,
+                      borderTop: "1px solid rgba(255,255,255,0.15)",
                       color: "#ffffff",
                     }}
                   >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded-md bg-white/15 flex items-center justify-center">
+                          <LogoDisplay />
+                        </div>
+                        <span className="text-sm font-semibold">{getBusinessName()}</span>
+                      </div>
+                      <button onClick={toggleMenu} className="p-2 rounded-md hover:bg-white/10">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
                     <div className="space-y-2">
                       {formData.selectedPages.map((page) => {
                         const isActive = previewState.activePage === page;
@@ -1857,9 +1869,10 @@ export default function Configurator() {
                           <button
                             key={page}
                             onClick={() => navigateToPage(page)}
-                            className={`w-full text-left px-4 py-3 text-sm font-semibold rounded-lg`}
+                            className="w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border"
                             style={{
-                              backgroundColor: isActive ? toRgba(styles.userPrimary || '#2563eb', 0.25) : 'transparent',
+                              backgroundColor: isActive ? toRgba(styles.userPrimary || '#2563eb', 0.18) : 'rgba(255,255,255,0.06)',
+                              borderColor: 'rgba(255,255,255,0.12)',
                               color: '#ffffff',
                             }}
                           >
