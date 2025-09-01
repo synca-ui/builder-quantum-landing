@@ -47,7 +47,7 @@ export function MenuSection({
           itemName: "font-bold text-sm text-white drop-shadow-md",
           itemDesc: "text-xs text-white drop-shadow-sm",
           itemPrice: "font-bold text-sm text-white drop-shadow-md",
-          emoji: "text-lg",
+          emoji: "hidden",
         };
       case "stylish":
         return {
@@ -56,7 +56,7 @@ export function MenuSection({
           itemName: "font-serif font-semibold text-sm text-emerald-100",
           itemDesc: "text-xs text-emerald-200/80",
           itemPrice: "font-serif font-semibold text-sm text-emerald-400",
-          emoji: "text-lg",
+          emoji: "hidden",
         };
       case "fancy":
         return {
@@ -65,7 +65,7 @@ export function MenuSection({
           itemName: "font-serif font-bold text-sm text-amber-100",
           itemDesc: "text-xs text-amber-200/80",
           itemPrice: "font-serif font-bold text-sm text-amber-400",
-          emoji: "text-lg",
+          emoji: "hidden",
         };
       default:
         return {
@@ -74,7 +74,7 @@ export function MenuSection({
           itemName: "font-semibold text-sm",
           itemDesc: "text-xs text-gray-600",
           itemPrice: "font-bold text-sm",
-          emoji: "text-lg",
+          emoji: "hidden",
         };
     }
   };
