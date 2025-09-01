@@ -2756,7 +2756,7 @@ export default function Configurator() {
           <p className="text-sm text-gray-500 mb-6">
             Choose a preset or customize your own colors below
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[
               {
                 primary: "#2563EB",
