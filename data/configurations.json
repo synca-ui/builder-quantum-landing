@@ -40,5 +40,209 @@
     "createdAt": "2025-08-29T11:34:14.218Z",
     "updatedAt": "2025-08-29T11:35:22.301Z",
     "status": "draft"
+  },
+  {
+    "userId": "user_mf15yv89gyhr9349ny5",
+    "businessName": "Bella",
+    "businessType": "cafe",
+    "location": "",
+    "slogan": "",
+    "uniqueDescription": "",
+    "template": "stylish",
+    "primaryColor": "#caf0fe",
+    "secondaryColor": "#d4e3fe",
+    "fontFamily": "display",
+    "selectedPages": [
+      "home",
+      "menu",
+      "gallery",
+      "contact",
+      "about"
+    ],
+    "customPages": [],
+    "openingHours": {
+      "Monday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Tuesday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Wednesday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Thursday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Friday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Saturday": {
+        "open": "10:00",
+        "close": "16:00",
+        "closed": true
+      },
+      "Sunday": {
+        "open": "10:00",
+        "close": "16:00",
+        "closed": false
+      }
+    },
+    "menuItems": [
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "coffee",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.79"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.89"
+      }
+    ],
+    "reservationsEnabled": true,
+    "maxGuests": 10,
+    "notificationMethod": "email",
+    "contactMethods": [],
+    "socialMedia": {
+      "instagram": "https://www.instagram.com/julilivess/?next=%2F"
+    },
+    "gallery": [],
+    "onlineOrdering": true,
+    "onlineStore": false,
+    "teamArea": false,
+    "hasDomain": false,
+    "domainName": "",
+    "selectedDomain": "",
+    "createdAt": "2025-09-01T13:37:16.279Z",
+    "updatedAt": "2025-09-01T13:37:16.279Z",
+    "status": "draft",
+    "id": "mf15yvawgjx9q55qa1f"
+  },
+  {
+    "userId": "user_mf15yv89gyhr9349ny5",
+    "businessName": "Bella",
+    "businessType": "cafe",
+    "location": "",
+    "slogan": "",
+    "uniqueDescription": "",
+    "template": "stylish",
+    "primaryColor": "#caf0fe",
+    "secondaryColor": "#d4e3fe",
+    "fontFamily": "display",
+    "selectedPages": [
+      "home",
+      "menu",
+      "gallery",
+      "contact",
+      "about"
+    ],
+    "customPages": [],
+    "openingHours": {
+      "Monday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Tuesday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Wednesday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Thursday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Friday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Saturday": {
+        "open": "10:00",
+        "close": "16:00",
+        "closed": true
+      },
+      "Sunday": {
+        "open": "10:00",
+        "close": "16:00",
+        "closed": false
+      }
+    },
+    "menuItems": [
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "coffee",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.79"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.89"
+      }
+    ],
+    "reservationsEnabled": true,
+    "maxGuests": 10,
+    "notificationMethod": "email",
+    "contactMethods": [],
+    "socialMedia": {
+      "instagram": "https://www.instagram.com/julilivess/?next=%2F"
+    },
+    "gallery": [],
+    "onlineOrdering": true,
+    "onlineStore": false,
+    "teamArea": false,
+    "hasDomain": false,
+    "domainName": "",
+    "selectedDomain": "",
+    "createdAt": "2025-09-01T13:37:16.396Z",
+    "updatedAt": "2025-09-01T13:37:16.396Z",
+    "status": "draft",
+    "id": "mf15yveak3d0ce9h2rh"
   }
 ]

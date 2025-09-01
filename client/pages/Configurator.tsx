@@ -1090,9 +1090,10 @@ export default function Configurator() {
     };
 
     const navigateToPage = (page: string) => {
+      const id = String(page).toLowerCase();
       setPreviewState((prev) => ({
         ...prev,
-        activePage: page,
+        activePage: id,
         menuOpen: false,
       }));
     };
