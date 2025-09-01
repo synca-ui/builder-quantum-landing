@@ -1485,7 +1485,7 @@ export default function Configurator() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-1 gap-3 mb-4">
                 {(formData.menuItems.length > 0
                   ? formData.menuItems
                   : currentContent.items
