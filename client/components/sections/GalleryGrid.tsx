@@ -20,7 +20,7 @@ export function GalleryGrid({
   images,
   onRemoveImage,
   showRemoveButtons = false,
-  templateStyle = "minimalistic",
+  templateStyle = "minimalist",
   className = "",
   cols = 2,
 }: GalleryGridProps) {

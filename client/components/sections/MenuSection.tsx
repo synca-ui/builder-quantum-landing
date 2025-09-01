@@ -27,11 +27,11 @@ export function MenuSection({
   showOrderingButtons = false,
   showRemoveButtons = false,
   className = "",
-  templateStyle = "minimalistic",
+  templateStyle = "minimalist",
 }: MenuSectionProps) {
   const getTemplateStyles = () => {
     switch (templateStyle) {
-      case "minimalistic":
+      case "minimalist":
         return {
           container: "space-y-0",
           itemCard: "py-2 border-b border-gray-200 last:border-b-0",
@@ -58,7 +58,7 @@ export function MenuSection({
           itemPrice: "font-serif font-semibold text-sm text-emerald-400",
           emoji: "hidden",
         };
-      case "fancy":
+      case "cozy":
         return {
           container: "space-y-3",
           itemCard: "bg-slate-800/80 backdrop-blur rounded border border-amber-500/40 p-3",
