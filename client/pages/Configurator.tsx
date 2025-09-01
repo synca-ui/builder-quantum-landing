@@ -2549,8 +2549,8 @@ export default function Configurator() {
                   key={template.id}
                   className={`cursor-pointer transition-all duration-300 border-2 ${
                     selectedTemplate === template.id
-                      ? "border-teal-500 bg-teal-50 shadow-lg"
-                      : "border-gray-200 hover:border-teal-300 hover:shadow-md"
+                      ? (template.id === "modern" ? "border-blue-500 bg-blue-50 shadow-lg" : "border-teal-500 bg-teal-50 shadow-lg")
+                      : (template.id === "modern" ? "border-gray-200 hover:border-blue-300 hover:shadow-md" : "border-gray-200 hover:border-teal-300 hover:shadow-md")
                   }`}
                   onClick={() => handleTemplateClick(template.id)}
                 >
@@ -2565,7 +2565,11 @@ export default function Configurator() {
                             {template.name}
                           </h4>
                           {selectedTemplate === template.id && (
-                            <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                            template.id === "modern" ? (
+                              <Check className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                            ) : (
+                              <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                            )
                           )}
                         </div>
                         <p className="text-gray-600 text-xs mt-1 line-clamp-2">
@@ -2573,7 +2577,7 @@ export default function Configurator() {
                         </p>
                       </div>
                       <Eye
-                        className={`w-5 h-5 flex-shrink-0 ${selectedTemplate === template.id ? "text-teal-600" : "text-gray-400"}`}
+                        className={`w-5 h-5 flex-shrink-0 ${selectedTemplate === template.id ? (template.id === "modern" ? "text-blue-600" : "text-teal-600") : "text-gray-400"}`}
                       />
                     </div>
                   </CardContent>
@@ -2582,7 +2586,7 @@ export default function Configurator() {
 
             {/* Use Template Button */}
             {selectedTemplate && (
-              <Card className="p-4 bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200">
+              <Card className={`p-4 ${selectedTemplate === "modern" ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" : "bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200"}`}>
                 <div className="text-center">
                   <p className="text-gray-600 text-sm mb-3">
                     Previewing:{" "}
