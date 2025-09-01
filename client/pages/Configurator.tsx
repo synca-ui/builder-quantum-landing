@@ -1867,18 +1867,18 @@ export default function Configurator() {
             }}
           >
             {/* Status Bar */}
-            <div className="h-6 bg-black/50 flex items-center justify-center text-xs font-semibold text-amber-400">
-              9:41 AM
+            <div className="h-6 bg-slate-900 flex items-center justify-center text-xs font-semibold text-white">
+              20:14
             </div>
 
             {/* Navigation */}
-            <nav className="bg-slate-900/80 backdrop-blur border-b border-amber-500/30 px-4 py-3 relative">
+            <nav className="bg-slate-900/95 backdrop-blur border-b border-orange-500/20 px-4 py-4 relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded border border-amber-500/50 bg-amber-500/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg border border-orange-500/40 bg-orange-500/10 flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-serif font-bold text-white">
+                  <h1 className="text-lg font-bold text-white">
                     {getBusinessName()}
                   </h1>
                 </div>
