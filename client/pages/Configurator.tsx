@@ -1126,17 +1126,17 @@ export default function Configurator() {
               title:
                 "text-lg font-bold mb-4 text-center text-white drop-shadow-lg",
               itemCard:
-                "bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/40 shadow-xl",
+                "bg-white/25 backdrop-blur-md rounded-2xl p-4 border border-white/40 shadow-xl",
               itemName: "font-bold text-sm text-white drop-shadow-md",
-              itemDesc: "text-xs text-white drop-shadow-sm",
-              itemPrice: "font-bold text-sm text-white drop-shadow-md",
+              itemDesc: "text-xs text-white/90 drop-shadow-sm",
+              itemPrice: "font-bold text-sm text-pink-200 drop-shadow-md",
               galleryItem:
-                "aspect-square bg-white/15 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/40",
+                "aspect-[4/3] bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/40",
               aboutLogo:
-                "w-16 h-16 mx-auto bg-white/25 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30",
-              contactIcon: "w-4 h-4 text-white drop-shadow-sm",
+                "w-16 h-16 mx-auto bg-white/30 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/40",
+              contactIcon: "w-4 h-4 text-pink-200 drop-shadow-sm",
               homeCard:
-                "bg-white/20 backdrop-blur-md rounded-xl p-2 text-center border border-white/40 shadow-lg",
+                "bg-white/25 backdrop-blur-md rounded-2xl p-3 text-center border border-white/40 shadow-lg aspect-[4/3] flex flex-col justify-center",
             };
           case "stylish":
             return {
@@ -1157,20 +1157,20 @@ export default function Configurator() {
             };
           case "fancy":
             return {
-              page: "p-4",
-              title: "text-lg font-serif font-bold mb-4 text-center text-white",
+              page: "p-4 bg-gradient-to-b from-slate-900 to-slate-800",
+              title: "text-xl font-bold mb-6 text-center text-white",
               itemCard:
-                "bg-slate-800/80 backdrop-blur rounded border border-amber-500/40 p-3",
-              itemName: "font-serif font-bold text-sm text-amber-100",
-              itemDesc: "text-xs text-amber-200/80",
-              itemPrice: "font-serif font-bold text-sm text-amber-400",
+                "bg-slate-800/90 backdrop-blur rounded-lg border border-orange-500/30 p-4 shadow-xl",
+              itemName: "font-bold text-sm text-white",
+              itemDesc: "text-xs text-orange-200/80",
+              itemPrice: "font-bold text-sm text-orange-400",
               galleryItem:
-                "aspect-square bg-slate-800/50 backdrop-blur rounded flex items-center justify-center border border-amber-500/30",
+                "aspect-square bg-slate-800/80 backdrop-blur rounded-lg flex items-center justify-center border border-orange-500/30 shadow-lg",
               aboutLogo:
-                "w-16 h-16 mx-auto bg-amber-500/20 backdrop-blur rounded border border-amber-500/50 flex items-center justify-center",
-              contactIcon: "w-4 h-4 text-amber-400",
+                "w-16 h-16 mx-auto bg-orange-500/20 backdrop-blur rounded-lg border border-orange-500/50 flex items-center justify-center",
+              contactIcon: "w-4 h-4 text-orange-400",
               homeCard:
-                "bg-slate-800/50 backdrop-blur rounded p-2 text-center border border-amber-500/30",
+                "bg-slate-800/80 backdrop-blur rounded-lg p-3 text-center border border-orange-500/30 shadow-lg",
             };
           default:
             return {
