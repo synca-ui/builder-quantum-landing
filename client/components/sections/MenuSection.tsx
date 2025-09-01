@@ -18,6 +18,9 @@ interface MenuSectionProps {
   showRemoveButtons?: boolean;
   className?: string;
   templateStyle?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  textColor?: string;
 }
 
 export function MenuSection({
