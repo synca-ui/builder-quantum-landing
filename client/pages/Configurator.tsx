@@ -319,7 +319,17 @@ export default function Configurator() {
       component: "domain-hosting",
     },
 
-    // Step 11: Final Preview
+    // Step 11: SEO Optimization
+    {
+      id: "seo-optimization",
+      title: "SEO Optimization",
+      description: "Improve your search engine visibility",
+      phase: 6,
+      phaseTitle: "Publishing",
+      component: "seo-optimization",
+    },
+
+    // Step 12: Final Preview
     {
       id: "preview-adjustments",
       title: "Preview & final tweaks",
@@ -329,7 +339,7 @@ export default function Configurator() {
       component: "preview-adjustments",
     },
 
-    // Step 12: Publish
+    // Step 13: Publish
     {
       id: "publish",
       title: "Publish your website",
