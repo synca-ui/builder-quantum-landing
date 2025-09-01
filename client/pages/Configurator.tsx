@@ -87,6 +87,14 @@ export default function Configurator() {
     selectedPages: ["home"],
     customPages: [],
 
+    // Per-template themes
+    templateThemes: {
+      minimalistic: { primary: "#2563EB", secondary: "#7C3AED", text: "#1A1A1A", background: "#FFFFFF", highlight: "#14B8A6", buttonRadius: "rounded-lg", buttonHover: "grow" },
+      modern: { primary: "#4F46E5", secondary: "#7C3AED", text: "#FFFFFF", background: "#111827", highlight: "#22D3EE", buttonRadius: "rounded-xl", buttonHover: "glow" },
+      stylish: { primary: "#059669", secondary: "#10B981", text: "#0F172A", background: "#FAFAFA", highlight: "#F59E0B", buttonRadius: "rounded-2xl", buttonHover: "grow" },
+      fancy: { primary: "#F59E0B", secondary: "#D97706", text: "#FFFFFF", background: "#0F172A", highlight: "#A3E635", buttonRadius: "rounded-full", buttonHover: "glow" },
+    },
+
     // Content & Features
     openingHours: {},
     menuItems: [],
