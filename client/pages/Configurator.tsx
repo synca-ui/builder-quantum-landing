@@ -2864,7 +2864,7 @@ export default function Configurator() {
           <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
             Custom Colors
           </h3>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Primary Color */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-4">
