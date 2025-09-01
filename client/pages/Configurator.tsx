@@ -1865,34 +1865,34 @@ export default function Configurator() {
           <div
             className={`h-full overflow-y-auto text-white ${fontClass}`}
             style={{
-              background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+              background: "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
             }}
           >
-            {/* Status Bar */}
-            <div className="h-6 bg-slate-900 flex items-center justify-center text-xs font-semibold text-white">
-              20:14
+            {/* Status Bar with Notch Space */}
+            <div className="h-8 bg-black flex items-center justify-center text-xs font-bold text-cyan-300">
+              {/* Empty space for notch */}
             </div>
 
             {/* Navigation */}
-            <nav className="bg-slate-900/95 backdrop-blur border-b border-orange-500/20 px-4 py-4 relative">
+            <nav className="bg-black/90 backdrop-blur border-b border-cyan-400/30 px-4 py-3 relative shadow-[0_0_20px_#00ffff50]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg border border-orange-500/40 bg-orange-500/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded border border-cyan-400/60 bg-cyan-500/20 flex items-center justify-center shadow-[0_0_10px_#00ffff]">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-bold text-white">
+                  <h1 className="text-lg font-bold text-cyan-300 drop-shadow-[0_0_10px_#00ffff]">
                     {getBusinessName()}
                   </h1>
                 </div>
                 <div className="flex items-center space-x-2">
                   {formData.onlineOrdering && (
                     <button
-                      className="p-2 hover:bg-amber-500/10 rounded border border-amber-500/30 transition-colors relative"
+                      className="p-2 hover:bg-cyan-500/20 rounded border border-cyan-400/50 transition-all duration-300 relative hover:shadow-[0_0_15px_#00ffff]"
                       onClick={() => setShowCart(!showCart)}
                     >
-                      <ShoppingBag className="w-5 h-5 text-amber-400" />
+                      <ShoppingBag className="w-5 h-5 text-cyan-400" />
                       {cartItemsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 text-black text-xs rounded-full flex items-center justify-center shadow-[0_0_10px_#00ff88]">
                           {cartItemsCount}
                         </span>
                       )}
@@ -1900,24 +1900,24 @@ export default function Configurator() {
                   )}
                   <button
                     onClick={toggleMenu}
-                    className="p-2 hover:bg-amber-500/10 rounded border border-amber-500/30 transition-colors"
+                    className="p-2 hover:bg-cyan-500/20 rounded border border-cyan-400/50 transition-all duration-300 hover:shadow-[0_0_15px_#00ffff]"
                   >
-                    <Menu className="w-5 h-5 text-amber-400" />
+                    <Menu className="w-5 h-5 text-cyan-400" />
                   </button>
                 </div>
               </div>
 
               {/* Dropdown Menu */}
               {previewState.menuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-slate-800/90 backdrop-blur border-t border-amber-500/40 z-50">
-                  <div className="py-1">
+                <div className="absolute top-full left-0 right-0 bg-black/95 backdrop-blur border-t border-cyan-400/50 z-[60] shadow-[0_0_20px_#00ffff50]">
+                  <div className="py-2">
                     {formData.selectedPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className={`w-full px-3 py-1.5 text-left text-amber-100 hover:bg-amber-500/10 transition-colors text-xs font-serif ${
+                        className={`w-full px-4 py-2 text-left text-cyan-300 hover:bg-cyan-500/20 transition-all duration-300 text-sm font-bold hover:shadow-[0_0_10px_#00ffff] ${
                           previewState.activePage === page
-                            ? "bg-amber-500/20 text-amber-300 font-bold"
+                            ? "bg-cyan-500/30 text-green-300 shadow-[0_0_15px_#00ff88]"
                             : ""
                         }`}
                       >
