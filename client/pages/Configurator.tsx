@@ -2835,6 +2835,17 @@ export default function Configurator() {
                     updateFormData("backgroundType", "gradient");
                     // Set background color based on theme
                     updateFormData("backgroundColor", preset.primary);
+
+                    // Update template-specific themes if a template is selected
+                    if (formData.template) {
+                      const newThemes = { ...formData.templateThemes };
+                      if (!newThemes[formData.template]) {
+                        newThemes[formData.template] = { ...newThemes.minimalistic };
+                      }
+                      newThemes[formData.template].primary = preset.primary;
+                      newThemes[formData.template].secondary = preset.secondary;
+                      updateFormData("templateThemes", newThemes);
+                    }
                   }}
                   className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-105 ${
                     isSelected
