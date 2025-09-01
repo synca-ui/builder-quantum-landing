@@ -4046,65 +4046,85 @@ export default function Configurator() {
               <input
               id="csv-upload"
               type="file"
-              accept=".csv"
+              accept=".csv,text/csv"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                  let text = String(event.target?.result || "");
-                  if (!text) return;
-                  // Strip BOM and normalize newlines
-                  text = text.replace(/^\uFEFF/, "").replace(/\r\n?|\n/g, "\n");
-                  const firstLine = text.split("\n")[0] || "";
-                  const delimiter = (firstLine.match(/;/g)?.length || 0) > (firstLine.match(/,/g)?.length || 0)
-                    ? ";"
-                    : (firstLine.includes("\t") ? "\t" : ",");
+                  try {
+                    let text = String(event.target?.result || "");
+                    if (!text) return;
+                    // Strip BOM and normalize newlines
+                    text = text.replace(/^\uFEFF/, "").replace(/\r\n?|\n/g, "\n");
 
-                  const parseLine = (line: string) => {
-                    const out: string[] = [];
-                    let cur = ""; let inQuotes = false;
-                    for (let i = 0; i < line.length; i++) {
-                      const ch = line[i];
-                      if (ch === '"') {
-                        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
-                        else { inQuotes = !inQuotes; }
-                      } else if (ch === delimiter && !inQuotes) {
-                        out.push(cur); cur = "";
-                      } else { cur += ch; }
+                    const firstLine = text.split("\n")[0] || "";
+                    const delimiter = (firstLine.match(/;/g)?.length || 0) > (firstLine.match(/,/g)?.length || 0)
+                      ? ";"
+                      : (firstLine.includes("\t") ? "\t" : ",");
+
+                    const parseLine = (line: string) => {
+                      const out: string[] = [];
+                      let cur = "";
+                      let inQuotes = false;
+                      for (let i = 0; i < line.length; i++) {
+                        const ch = line[i];
+                        if (ch === '"') {
+                          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+                          else { inQuotes = !inQuotes; }
+                        } else if (ch === delimiter && !inQuotes) {
+                          out.push(cur); cur = "";
+                        } else { cur += ch; }
+                      }
+                      out.push(cur);
+                      return out.map(v => v.trim());
+                    };
+
+                    const rows = text.split("\n").filter(l => l.trim());
+                    if (rows.length === 0) return;
+
+                    const headerCells = parseLine(rows[0]).map(h => h.toLowerCase().replace(/^"(.*)"$/, "$1").trim());
+
+                    const nameKeys = ["name","dish","item","title","produkt","gericht"];
+                    const descKeys = ["description","desc","details","beschreibung"];
+                    const priceKeys = ["price","preis","cost","amount"];
+
+                    const getIdx = (keys: string[]) => headerCells.findIndex(h => keys.includes(h));
+                    let nameIdx = getIdx(nameKeys);
+                    let descIdx = getIdx(descKeys);
+                    let priceIdx = getIdx(priceKeys);
+
+                    // fallback to positional columns if headers not found
+                    if (nameIdx === -1 && headerCells.length >= 1) nameIdx = 0;
+                    if (priceIdx === -1 && headerCells.length >= 2) priceIdx = headerCells.length - 1;
+
+                    const newItems = rows.slice(1).map((line) => {
+                      const cells = parseLine(line).map(v => v.replace(/""/g, '"'));
+                      const clean = (s?: string) => (s || "").replace(/[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu, "").trim();
+                      const num = (s?: string) => (s || "").replace(/[^0-9,\.\-]/g, "").replace(/,/g, ".");
+
+                      const name = clean(cells[nameIdx] || "");
+                      const description = clean(descIdx !== -1 ? cells[descIdx] || "" : cells[1] || "");
+                      const priceRaw = num(cells[priceIdx] || "");
+
+                      const price = priceRaw ? (isNaN(Number(priceRaw)) ? priceRaw : Number(priceRaw).toFixed(2)) : "";
+
+                      return name && price ? { name, description, price } : null;
+                    }).filter(Boolean) as any[];
+
+                    if (newItems.length) {
+                      // Use functional update to avoid stale closures
+                      setFormData((prev) => ({
+                        ...prev,
+                        menuItems: [ ...(prev.menuItems || []), ...newItems ],
+                      }));
                     }
-                    out.push(cur);
-                    return out.map(v => v.trim());
-                  };
-
-                  const rows = text.split("\n").filter(l => l.trim());
-                  if (rows.length === 0) return;
-                  const headerCells = parseLine(rows[0]).map(h => h.toLowerCase());
-                  const nameKeys = ["name","dish","item","title","produkt","gericht"];
-                  const descKeys = ["description","desc","details","beschreibung"];
-                  const priceKeys = ["price","preis","cost","amount"];
-
-                  const getIdx = (keys: string[]) => headerCells.findIndex(h => keys.includes(h));
-                  const nameIdx = getIdx(nameKeys);
-                  const descIdx = getIdx(descKeys);
-                  const priceIdx = getIdx(priceKeys);
-
-                  const newItems = rows.slice(1).map((line) => {
-                    const cells = parseLine(line).map(v => v.replace(/\"/g, '"'));
-                    const clean = (s?: string) => (s || "").replace(/[\p{Emoji_Presentation}\p{Emoji}\uFE0F]/gu, "").trim();
-                    const num = (s?: string) => (s || "").replace(/[^0-9.,]/g, "").replace(",", ".");
-                    const name = clean(cells[nameIdx] || "");
-                    const description = clean(cells[descIdx] || "");
-                    const price = num(cells[priceIdx] || "0");
-                    return name && price ? { name, description, price } : null;
-                  }).filter(Boolean) as any[];
-
-                  if (newItems.length) {
-                    updateFormData("menuItems", [...formData.menuItems, ...newItems]);
+                  } catch (err) {
+                    console.error("CSV parse error", err);
                   }
                 };
-                reader.readAsText(file);
+                reader.readAsText(file, 'utf-8');
               }}
             />
               <p className="text-xs text-gray-500 mt-2">
