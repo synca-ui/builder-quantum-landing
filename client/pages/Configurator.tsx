@@ -1140,7 +1140,7 @@ export default function Configurator() {
               homeCard:
                 "bg-white/20 backdrop-blur-md rounded-xl p-2 text-center border border-white/40 shadow-lg",
             };
-          case "clean":
+          case "stylish":
             return {
               page: "p-4",
               title: "text-lg font-semibold mb-4 text-center text-slate-800",
@@ -1500,7 +1500,7 @@ export default function Configurator() {
                       key={index}
                       className={`${templateStyles.homeCard} relative`}
                     >
-                      <div className="text-lg mb-1">{item.emoji || "🍽���"}</div>
+                      <div className="text-lg mb-1">{item.emoji || "🍽️"}</div>
                       <h3
                         className={
                           templateStyles.itemName + " text-xs truncate"
@@ -1789,7 +1789,7 @@ export default function Configurator() {
           </div>
         );
 
-      case "clean":
+      case "stylish":
         return (
           <div className={`h-full overflow-y-auto bg-emerald-50 ${fontClass}`}>
             {/* Status Bar */}
