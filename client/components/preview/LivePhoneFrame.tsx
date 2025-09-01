@@ -31,9 +31,7 @@ export function LivePhoneFrame({
           </div>
 
           {/* Content */}
-          <div className="iphone-content">
-            {children}
-          </div>
+          <div className="iphone-content">{children}</div>
         </div>
       </div>
       {/* Shadow */}

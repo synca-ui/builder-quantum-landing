@@ -89,10 +89,42 @@ export default function Configurator() {
 
     // Per-template themes
     templateThemes: {
-      minimalistic: { primary: "#2563EB", secondary: "#7C3AED", text: "#1A1A1A", background: "#FFFFFF", highlight: "#14B8A6", buttonRadius: "rounded-lg", buttonHover: "grow" },
-      modern: { primary: "#4F46E5", secondary: "#7C3AED", text: "#FFFFFF", background: "#111827", highlight: "#22D3EE", buttonRadius: "rounded-xl", buttonHover: "glow" },
-      stylish: { primary: "#059669", secondary: "#10B981", text: "#0F172A", background: "#FAFAFA", highlight: "#F59E0B", buttonRadius: "rounded-2xl", buttonHover: "grow" },
-      fancy: { primary: "#F59E0B", secondary: "#D97706", text: "#FFFFFF", background: "#0F172A", highlight: "#A3E635", buttonRadius: "rounded-full", buttonHover: "glow" },
+      minimalistic: {
+        primary: "#2563EB",
+        secondary: "#7C3AED",
+        text: "#1A1A1A",
+        background: "#FFFFFF",
+        highlight: "#14B8A6",
+        buttonRadius: "rounded-lg",
+        buttonHover: "grow",
+      },
+      modern: {
+        primary: "#4F46E5",
+        secondary: "#7C3AED",
+        text: "#FFFFFF",
+        background: "#111827",
+        highlight: "#22D3EE",
+        buttonRadius: "rounded-xl",
+        buttonHover: "glow",
+      },
+      stylish: {
+        primary: "#059669",
+        secondary: "#10B981",
+        text: "#0F172A",
+        background: "#FAFAFA",
+        highlight: "#F59E0B",
+        buttonRadius: "rounded-2xl",
+        buttonHover: "grow",
+      },
+      fancy: {
+        primary: "#F59E0B",
+        secondary: "#D97706",
+        text: "#FFFFFF",
+        background: "#0F172A",
+        highlight: "#A3E635",
+        buttonRadius: "rounded-full",
+        buttonHover: "glow",
+      },
     },
 
     // Content & Features
@@ -395,7 +427,8 @@ export default function Configurator() {
     {
       id: "stylish",
       name: "Stylish",
-      description: "Visual-first design with overlays, mixed sections, and motion",
+      description:
+        "Visual-first design with overlays, mixed sections, and motion",
       preview: "bg-gradient-to-br from-emerald-50 to-slate-800",
       businessTypes: ["cafe", "restaurant", "bar"],
       style: {
@@ -414,7 +447,10 @@ export default function Configurator() {
           text: "text-white",
           border: "border-emerald-300/20",
         },
-        hero: { bg: "bg-gradient-to-r from-emerald-500/20 to-transparent", text: "text-white" },
+        hero: {
+          bg: "bg-gradient-to-r from-emerald-500/20 to-transparent",
+          text: "text-white",
+        },
         cards: {
           bg: "bg-white/5 backdrop-blur",
           border: "border-white/10",
@@ -1187,7 +1223,11 @@ export default function Configurator() {
                   <div key={index} className={templateStyles.itemCard}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-2">
-                        <span className={`${selectedIdForSwitch === "minimalistic" ? "hidden" : ""} text-lg`}>{item.emoji || "🍽️"}</span>
+                        <span
+                          className={`${selectedIdForSwitch === "minimalistic" ? "hidden" : ""} text-lg`}
+                        >
+                          {item.emoji || "🍽️"}
+                        </span>
                         <div>
                           <h3 className={templateStyles.itemName}>
                             {item.name}
