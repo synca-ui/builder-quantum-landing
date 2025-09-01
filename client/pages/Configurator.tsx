@@ -1175,12 +1175,12 @@ export default function Configurator() {
                 "bg-white/25 backdrop-blur-md rounded-2xl p-4 border border-white/40 shadow-xl",
               itemName: "font-bold text-sm text-white drop-shadow-md",
               itemDesc: "text-xs text-white/90 drop-shadow-sm",
-              itemPrice: "font-bold text-sm text-pink-200 drop-shadow-md",
+              itemPrice: "font-bold text-sm text-blue-200 drop-shadow-md",
               galleryItem:
                 "aspect-[4/3] bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/40",
               aboutLogo:
                 "w-16 h-16 mx-auto bg-white/30 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/40",
-              contactIcon: "w-4 h-4 text-pink-200 drop-shadow-sm",
+              contactIcon: "w-4 h-4 text-blue-200 drop-shadow-sm",
               homeCard:
                 "bg-white/25 backdrop-blur-md rounded-2xl p-2 text-center border border-white/40 shadow-lg",
             };
