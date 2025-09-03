@@ -1839,7 +1839,8 @@ export default function Configurator() {
                   .map((item, index) => (
                     <div
                       key={index}
-                      className={`${templateStyles.homeCard} relative`}
+                      className={`${templateStyles.homeCard} relative cursor-pointer`}
+                      onClick={() => openProductModal(item)}
                     >
                       <div className="hidden">{item.emoji || "🍽️"}</div>
                       <h3
@@ -1859,7 +1860,7 @@ export default function Configurator() {
                       {formData.onlineOrdering && (
                         <button
                           className="absolute top-1 right-1 w-4 h-4 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
-                          onClick={() => addToCart(item)}
+                          onClick={(e) => { e.stopPropagation(); addToCart(item); }}
                         >
                           <Plus className="w-2 h-2" />
                         </button>
