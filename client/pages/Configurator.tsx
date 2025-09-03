@@ -1818,18 +1818,6 @@ export default function Configurator() {
                   ); })()}
                 </div>
               )}
-              <div className="text-center mb-4">
-                <div className={templateStyles.aboutLogo + " mb-2"}>
-                  <LogoDisplay />
-                </div>
-                <h1 className={templateStyles.itemName + " text-base"}>
-                  {getBusinessName()}
-                </h1>
-                <p className={templateStyles.itemDesc}>
-                  {formData.slogan || currentContent.tagline}
-                </p>
-              </div>
-
               <div className={`mb-4 grid grid-cols-2 gap-2`}>
                 {(formData.menuItems.length > 0
                   ? formData.menuItems
