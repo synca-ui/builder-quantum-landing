@@ -7008,6 +7008,8 @@ export default function Configurator() {
         return <MediaGalleryStep />;
       case "advanced-features":
         return <AdvancedFeaturesStep />;
+      case "feature-config":
+        return <FeatureConfigStep />;
       case "domain-hosting":
         return <DomainHostingStep />;
       case "seo-optimization":
