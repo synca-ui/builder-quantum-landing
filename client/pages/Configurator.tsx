@@ -1057,6 +1057,7 @@ export default function Configurator() {
         contact: "Contact",
         aboutUs: "About Us",
         followUs: "Follow Us",
+        settings: "Settings",
         pageNotAvailable: "Page Not Available",
         contactInfoPlaceholder: "Contact information will appear here",
         cart: "Cart",
