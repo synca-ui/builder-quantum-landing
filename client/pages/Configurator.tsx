@@ -1020,6 +1020,46 @@ export default function Configurator() {
       currentStep === 0
         ? previewTemplateId || formData.template
         : formData.template;
+
+    // i18n dictionary and helper for preview UI
+    const dict = {
+      en: {
+        home: "Home",
+        menu: "Menu",
+        gallery: "Gallery",
+        about: "About",
+        reservations: "Reservations",
+        contact: "Contact",
+        aboutUs: "About Us",
+        followUs: "Follow Us",
+        pageNotAvailable: "Page Not Available",
+        contactInfoPlaceholder: "Contact information will appear here",
+        cart: "Cart",
+        clearCart: "Clear Cart",
+        checkout: "Checkout",
+        total: "Total:",
+      },
+      de: {
+        home: "Startseite",
+        menu: "Speisekarte",
+        gallery: "Galerie",
+        about: "Über uns",
+        reservations: "Reservierungen",
+        contact: "Kontakt",
+        aboutUs: "Über uns",
+        followUs: "Folge uns",
+        pageNotAvailable: "Seite nicht verfügbar",
+        contactInfoPlaceholder: "Kontaktinformationen erscheinen hier",
+        cart: "Warenkorb",
+        clearCart: "Leeren",
+        checkout: "Zur Kasse",
+        total: "Summe:",
+      },
+    } as const;
+    const t = (key: keyof typeof dict["en"]) =>
+      (dict as any)[formData.language]?.[key] || dict.en[key];
+    const pageLabel = (id: string) => t(id as any);
+
     const templateContent = {
       minimalist: {
         items: [
