@@ -1178,24 +1178,31 @@ export default function Configurator() {
     const baseTemplateStyle = selectedTemplateDef
       ? selectedTemplateDef.style
       : templates[0].style;
+    const isDark = formData.themeMode === "dark";
     const forcedTextColor =
-      selectedIdForSwitch === "modern" ? "#FFFFFF" : formData.fontColor;
+      selectedIdForSwitch === "modern"
+        ? "#FFFFFF"
+        : isDark
+          ? "#F8FAFC"
+          : formData.fontColor;
     const styles = {
       ...baseTemplateStyle,
       userPrimary:
         themeOverride.primary ||
         formData.primaryColor ||
         (baseTemplateStyle as any).accent,
-      userSecondary:
-        themeOverride.secondary ||
-        formData.secondaryColor ||
-        (baseTemplateStyle as any).secondary,
+      userSecondary: isDark
+        ? "#0F172A"
+        : themeOverride.secondary ||
+          formData.secondaryColor ||
+          (baseTemplateStyle as any).secondary,
       userFontColor: themeOverride.text || forcedTextColor,
       userFontSize: formData.fontSize,
-      userBackground:
-        themeOverride.background ||
-        formData.backgroundColor ||
-        (baseTemplateStyle as any).background,
+      userBackground: isDark
+        ? "#0B1020"
+        : themeOverride.background ||
+          formData.backgroundColor ||
+          (baseTemplateStyle as any).background,
     };
 
     const LogoDisplay = () => {
