@@ -1148,6 +1148,12 @@ export default function Configurator() {
     const currentContent =
       templateContent[selectedId] || templateContent["minimalist"];
 
+    // Offers helper for badges
+    const offerNames = (formData.offersEnabled ? (formData.offers || []) : [])
+      .flatMap((o: any) => String(o.products || "").split(","))
+      .map((s: string) => s.trim().toLowerCase())
+      .filter(Boolean);
+
     // Ensure selectedIdForSwitch is available for styling
     const selectedIdForSwitch =
       currentStep === 0
