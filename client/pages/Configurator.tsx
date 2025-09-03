@@ -2321,13 +2321,6 @@ export default function Configurator() {
 
             {/* Pill Header */}
             <div className="px-3 pt-2 pb-4 relative">
-              <button
-                onClick={() => setPreviewState((p) => ({ ...p, activePage: "settings", menuOpen: false }))}
-                className="absolute right-3 top-2 p-2 rounded-full bg-white/70 hover:bg-white shadow"
-                aria-label="Settings"
-              >
-                <Settings className="w-5 h-5 text-amber-900" />
-              </button>
               <div className="flex justify-center">
                 <div
                   className="inline-flex items-center space-x-2 px-4 py-2 rounded-full shadow-md border"
