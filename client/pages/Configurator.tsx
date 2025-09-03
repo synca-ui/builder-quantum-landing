@@ -2207,7 +2207,7 @@ export default function Configurator() {
                               : "transparent",
                         }}
                       >
-                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                        {pageLabel(page)}
                       </button>
                     ))}
                   </div>
@@ -2321,7 +2321,7 @@ export default function Configurator() {
                           borderColor: (styles.userPrimary || "#EA580C") + "30",
                         }}
                       >
-                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                        {pageLabel(page)}
                       </button>
                     ))}
                   </div>
