@@ -2242,14 +2242,6 @@ export default function Configurator() {
                     </button>
                   )}
                   <button
-                    onClick={() => setPreviewState((p) => ({ ...p, activePage: "settings", menuOpen: false }))}
-                    className="p-2 rounded-lg transition-colors"
-                    style={{ backgroundColor: "transparent", color: styles.userFontColor }}
-                    aria-label="Settings"
-                  >
-                    <Settings className="w-5 h-5" style={{ color: styles.userFontColor }} />
-                  </button>
-                  <button
                     onClick={toggleMenu}
                     className="p-2 rounded-lg transition-colors"
                     style={{
