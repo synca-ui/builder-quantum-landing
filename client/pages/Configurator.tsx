@@ -1953,7 +1953,7 @@ export default function Configurator() {
                             : ""
                         }`}
                       >
-                        {page.charAt(0).toUpperCase() + page.slice(1)}
+                        {pageLabel(page)}
                       </button>
                     ))}
                   </div>
