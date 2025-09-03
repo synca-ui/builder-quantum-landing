@@ -2096,7 +2096,7 @@ export default function Configurator() {
       case "modern":
         return (
           <div
-            className={`h-full overflow-y-auto text-white ${fontClass}`}
+            className={`h-full overflow-y-auto text-white ${fontClass} relative`}
             style={{
               background: `linear-gradient(135deg, ${styles.userSecondary || formData.secondaryColor || "#38bdf8"} 0%, ${styles.userPrimary || formData.primaryColor || "#2563eb"} 50%, ${styles.userSecondary || formData.secondaryColor || "#1e40af"} 100%)`,
             }}
