@@ -2081,6 +2081,7 @@ export default function Configurator() {
               )}
             </nav>
 
+            <OrderProgress />
             {/* Content */}
             <div
               className="flex-1 overflow-y-auto"
@@ -2088,6 +2089,7 @@ export default function Configurator() {
             >
               {renderPageContent()}
             </div>
+            <CartSidebar />
           </div>
         );
 
