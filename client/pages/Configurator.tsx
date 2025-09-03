@@ -6037,6 +6037,210 @@ export default function Configurator() {
     );
   };
 
+  // Feature Config Step (dynamic)
+  const FeatureConfigStep = () => {
+    useEffect(() => {
+      if (!pendingFeatureConfig) {
+        nextStep();
+      }
+    }, [pendingFeatureConfig]);
+
+    const finish = () => {
+      setPendingFeatureConfig(null);
+      nextStep();
+    };
+
+    const goBack = () => {
+      setPendingFeatureConfig(null);
+      const idx = configuratorSteps.findIndex((s) => s.id === "advanced-features");
+      if (idx !== -1) setCurrentStep(idx);
+    };
+
+    const render = () => {
+      switch (pendingFeatureConfig) {
+        case "onlineOrdering":
+          return (
+            <Card className="p-6">
+              <h4 className="text-lg font-bold mb-3">Online Ordering Settings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">POS Provider</label>
+                  <select value={formData.posProvider} onChange={(e)=>updateFormData("posProvider", e.target.value)} className="w-full">
+                    <option value="none">None</option>
+                    <option value="sumup">SumUp</option>
+                    <option value="shopify">Shopify POS</option>
+                    <option value="local">Local POS</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Payment Options</label>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {(["applePay","googlePay","card","cash"] as const).map((k) => (
+                      <label key={k} className="inline-flex items-center space-x-2">
+                        <input type="checkbox" checked={!!formData.paymentMethods?.[k]} onChange={(e)=>updateFormData("paymentMethods", { ...formData.paymentMethods, [k]: e.target.checked })} />
+                        <span className="capitalize">{k.replace(/([A-Z])/g, " $1")}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Order Options</label>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    {(["delivery","pickup","table"] as const).map((k) => (
+                      <label key={k} className="inline-flex items-center space-x-2">
+                        <input type="checkbox" checked={!!formData.orderOptions?.[k]} onChange={(e)=>updateFormData("orderOptions", { ...formData.orderOptions, [k]: e.target.checked })} />
+                        <span className="capitalize">{k}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="inline-flex items-center space-x-2">
+                    <input type="checkbox" checked={!!formData.deliveryAddressRequired} onChange={(e)=>updateFormData("deliveryAddressRequired", e.target.checked)} />
+                    <span>Require delivery address for delivery orders</span>
+                  </label>
+                </div>
+              </div>
+            </Card>
+          );
+        case "onlineStore":
+          return (
+            <Card className="p-6">
+              <h4 className="text-lg font-bold mb-3">Online Store Settings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Categories</label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Input type="text" placeholder="Add category" onKeyDown={(e)=>{const v=(e.target as HTMLInputElement).value.trim(); if(e.key==='Enter'&&v){updateFormData("categories", [...(formData.categories||[]), v]); (e.target as HTMLInputElement).value='';}}} />
+                    <span className="text-xs text-gray-500">Press Enter</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.categories||[]).map((c:string,i:number)=>(<span key={i} className="px-2 py-1 bg-gray-100 rounded text-xs">{c}</span>))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium mb-1">Options</label>
+                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.showStockLevels} onChange={(e)=>updateFormData("showStockLevels", e.target.checked)} /><span>Show stock levels</span></label>
+                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.discountsEnabled} onChange={(e)=>updateFormData("discountsEnabled", e.target.checked)} /><span>Enable discounts</span></label>
+                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.bundlesEnabled} onChange={(e)=>updateFormData("bundlesEnabled", e.target.checked)} /><span>Enable bundles</span></label>
+                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.seasonalOffersEnabled} onChange={(e)=>updateFormData("seasonalOffersEnabled", e.target.checked)} /><span>Enable seasonal offers</span></label>
+                </div>
+              </div>
+            </Card>
+          );
+        case "teamArea":
+          return (
+            <Card className="p-6">
+              <h4 className="text-lg font-bold mb-3">Team Section Settings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Name</label>
+                  <Input type="text" placeholder="e.g. Alex" onKeyDown={(e)=>{ if(e.key==='Enter'){ const name=(e.target as HTMLInputElement).value.trim(); if(name){ updateFormData("teamMembers", [...(formData.teamMembers||[]), { name, role: "", status: "on_duty" }]); (e.target as HTMLInputElement).value=''; } } }} />
+                  <p className="text-xs text-gray-400 mt-1">Press Enter to add</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Quick Roles</label>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {["chef","barista","waiter"].map((r)=>(
+                      <button key={r} className="px-2 py-1 border rounded" onClick={()=>updateFormData("teamMembers", [...(formData.teamMembers||[]), { name: r.charAt(0).toUpperCase()+r.slice(1), role: r, status: "off_duty" }])}>+ {r}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        case "loyaltyEnabled":
+          return (
+            <Card className="p-6">
+              <h4 className="text-lg font-bold mb-3">Loyalty / Stamp Card</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Stamps for reward</label>
+                  <Input type="number" value={formData.loyaltyConfig?.stampsForReward || 10} onChange={(e)=>updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig||{}), stampsForReward:Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Reward type</label>
+                  <select value={formData.loyaltyConfig?.rewardType || 'discount'} onChange={(e)=>updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig||{}), rewardType:e.target.value })} className="w-full">
+                    <option value="discount">Discount</option>
+                    <option value="free_item">Free Item</option>
+                    <option value="voucher">Voucher</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Expiration date</label>
+                  <Input type="date" value={formData.loyaltyConfig?.expiryDate || ''} onChange={(e)=>updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig||{}), expiryDate:e.target.value })} />
+                </div>
+              </div>
+            </Card>
+          );
+        case "couponsEnabled":
+          return (
+            <Card className="p-6">
+              <h4 className="text-lg font-bold mb-3">Coupons / Vouchers</h4>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <select id="coupon-type-step" className="border rounded p-2">
+                    <option value="amount">Fixed Amount</option>
+                    <option value="percent">Percentage</option>
+                    <option value="bogo">2-for-1</option>
+                  </select>
+                  <Input id="coupon-value-step" type="text" placeholder="Value" />
+                  <Input id="coupon-conditions-step" type="text" placeholder="Conditions" />
+                  <Button onClick={()=>{ const type=(document.getElementById('coupon-type-step') as HTMLSelectElement).value; const value=(document.getElementById('coupon-value-step') as HTMLInputElement).value; const conditions=(document.getElementById('coupon-conditions-step') as HTMLInputElement).value; if(value){ updateFormData("coupons", [...(formData.coupons||[]), { type, value, conditions }]); (document.getElementById('coupon-value-step') as HTMLInputElement).value=''; (document.getElementById('coupon-conditions-step') as HTMLInputElement).value=''; } }}>Add Coupon</Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {(formData.coupons || []).map((c:any,i:number)=>(
+                    <div key={i} className="p-3 border rounded">
+                      <div className="text-sm font-semibold">{c.type} - {c.value}</div>
+                      <div className="text-xs text-gray-600">{c.conditions}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          );
+        case "offersEnabled":
+          return (
+            <Card className="p-6">
+              <h4 className="text-lg font-bold mb-3">Current Offers / Specials</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Input id="offer-window-step" type="text" placeholder="Time window (e.g., 17:00-19:00)" />
+                <Input id="offer-products-step" type="text" placeholder="Products (comma-separated)" />
+                <Input id="offer-discount-step" type="text" placeholder="Discount / Bundle" />
+              </div>
+              <div className="mt-3">
+                <Button onClick={()=>{ const time=(document.getElementById('offer-window-step') as HTMLInputElement).value; const products=(document.getElementById('offer-products-step') as HTMLInputElement).value; const discount=(document.getElementById('offer-discount-step') as HTMLInputElement).value; if(time && products){ updateFormData("offers", [...(formData.offers||[]), { time, products, discount }]); (document.getElementById('offer-window-step') as HTMLInputElement).value=''; (document.getElementById('offer-products-step') as HTMLInputElement).value=''; (document.getElementById('offer-discount-step') as HTMLInputElement).value=''; } }}>Add Offer</Button>
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {(formData.offers || []).map((o:any,i:number)=>(
+                  <div key={i} className="p-3 border rounded">
+                    <div className="text-sm font-semibold">{o.time}</div>
+                    <div className="text-xs text-gray-600">{o.products}</div>
+                    <div className="text-xs">{o.discount}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Feature configuration</h2>
+        </div>
+        {render()}
+        <div className="flex justify-between mt-8">
+          <Button onClick={goBack} variant="outline" size="lg"><ArrowLeft className="mr-2 w-5 h-5" />Back</Button>
+          <Button onClick={finish} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">Save & Continue<ChevronRight className="ml-2 w-5 h-5" /></Button>
+        </div>
+      </div>
+    );
+  };
+
   // Domain & Hosting Step (Step 11)
   const DomainHostingStep = () => {
     const [domainSearch, setDomainSearch] = useState("");
