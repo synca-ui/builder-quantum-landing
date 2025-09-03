@@ -2220,14 +2220,13 @@ export default function Configurator() {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    {formData.selectedPages.map((page) => (
+                    {menuPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
-                        className="w-full text-left px-4 py-3 rounded-xl border bg-white shadow-sm"
+                        className="w-full text-left px-4 py-3 rounded-xl border bg-white shadow-sm text-gray-900"
                         style={{
                           borderColor: (styles.userPrimary || "#EA580C") + "30",
-                          color: styles.userFontColor,
                         }}
                       >
                         {page.charAt(0).toUpperCase() + page.slice(1)}
@@ -4286,7 +4285,7 @@ export default function Configurator() {
 
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
-                ��� <strong>Tipp:</strong> Feiertage werden automatisch wie
+                💡 <strong>Tipp:</strong> Feiertage werden automatisch wie
                 Sonntag behandelt. Sie können diese später in den Einstellungen
                 anpassen.
               </p>
