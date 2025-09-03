@@ -1079,7 +1079,7 @@ export default function Configurator() {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "����",
+            emoji: "��",
           },
         ],
         tagline: "Simple. Fresh. Good.",
@@ -1490,7 +1490,7 @@ export default function Configurator() {
           }
           return (
             <div className={templateStyles.page}>
-              <h2 className={templateStyles.title}>Gallery</h2>
+              <h2 className={templateStyles.title}>{t("gallery")}</h2>
               <div className="grid grid-cols-2 gap-2">
                 {formData.gallery.length > 0
                   ? formData.gallery.map((image, index) => (
