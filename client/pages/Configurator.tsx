@@ -1079,7 +1079,7 @@ export default function Configurator() {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "��",
+            emoji: "����",
           },
         ],
         tagline: "Simple. Fresh. Good.",
@@ -1408,7 +1408,7 @@ export default function Configurator() {
 
           return (
             <div className={templateStyles.page}>
-              <h2 className={templateStyles.title}>Menu</h2>
+              <h2 className={templateStyles.title}>{t("menu")}</h2>
               <div className="space-y-3">
                 {menuItemsToShow.map((item, index) =>
                   selectedIdForSwitch === "minimalist" ? (
