@@ -2382,10 +2382,12 @@ export default function Configurator() {
               </div>
             </div>
 
+            <OrderProgress />
             {/* Content */}
             <div className="flex-1 overflow-y-auto bg-orange-50 pb-16">
               {renderPageContent()}
             </div>
+            <CartSidebar />
 
             {/* Bottom-right Menu FAB */}
             <button
@@ -4501,7 +4503,7 @@ export default function Configurator() {
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
                 💡 <strong>Tipp:</strong> Feiertage werden automatisch wie
-                Sonntag behandelt. Sie können diese später in den Einstellungen
+                Sonntag behandelt. Sie k��nnen diese später in den Einstellungen
                 anpassen.
               </p>
             </div>
