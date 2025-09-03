@@ -1392,9 +1392,7 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>
-                    This page is not enabled
-                  </p>
+                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
                 </div>
               </div>
             );
@@ -1435,7 +1433,7 @@ export default function Configurator() {
                     <div key={index} className={templateStyles.itemCard}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-2">
-                          <span className="hidden">{item.emoji || "��️"}</span>
+                          <span className="hidden">{item.emoji || "🍽️"}</span>
                           <div>
                             <h3 className={templateStyles.itemName}>
                               {item.name}
@@ -1481,9 +1479,7 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>
-                    This page is not enabled
-                  </p>
+                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
                 </div>
               </div>
             );
@@ -1530,9 +1526,7 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>
-                    This page is not enabled
-                  </p>
+                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
                 </div>
               </div>
             );
@@ -1570,9 +1564,7 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>
-                    This page is not enabled
-                  </p>
+                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
                 </div>
               </div>
             );
