@@ -2181,9 +2181,10 @@ export default function Configurator() {
             >
               {renderPageContent()}
             </div>
-            {selectedProduct && (
-              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
-                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+            {productModalOpen && selectedProduct && (
+              <div className="absolute inset-0 z-[70] flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
@@ -2206,9 +2207,7 @@ export default function Configurator() {
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
-                    </DialogHeader>
+                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
                     {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
                     <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
                     {formData.onlineOrdering && (
@@ -2226,8 +2225,8 @@ export default function Configurator() {
                       </div>
                     )}
                   </div>
-                </DialogContent>
-              </Dialog>
+                </div>
+              </div>
             )}
             <CartSidebar />
           </div>
@@ -2342,9 +2341,10 @@ export default function Configurator() {
             <OrderProgress />
             {/* Content */}
             <div className="flex-1 overflow-y-auto">{renderPageContent()}</div>
-            {selectedProduct && (
-              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
-                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+            {productModalOpen && selectedProduct && (
+              <div className="absolute inset-0 z-[70] flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
@@ -2367,9 +2367,7 @@ export default function Configurator() {
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
-                    </DialogHeader>
+                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
                     {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
                     <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
                     {formData.onlineOrdering && (
@@ -2387,8 +2385,8 @@ export default function Configurator() {
                       </div>
                     )}
                   </div>
-                </DialogContent>
-              </Dialog>
+                </div>
+              </div>
             )}
             <CartSidebar />
           </div>
@@ -2534,9 +2532,10 @@ export default function Configurator() {
             >
               {renderPageContent()}
             </div>
-            {selectedProduct && (
-              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
-                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+            {productModalOpen && selectedProduct && (
+              <div className="absolute inset-0 z-[70] flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
@@ -2559,9 +2558,7 @@ export default function Configurator() {
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
-                    </DialogHeader>
+                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
                     {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
                     <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
                     {formData.onlineOrdering && (
@@ -2579,8 +2576,8 @@ export default function Configurator() {
                       </div>
                     )}
                   </div>
-                </DialogContent>
-              </Dialog>
+                </div>
+              </div>
             )}
             <CartSidebar />
           </div>
@@ -2625,9 +2622,10 @@ export default function Configurator() {
             <div className="flex-1 overflow-y-auto bg-orange-50 pb-16">
               {renderPageContent()}
             </div>
-            {selectedProduct && (
-              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
-                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+            {productModalOpen && selectedProduct && (
+              <div className="absolute inset-0 z-[70] flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
@@ -2650,9 +2648,7 @@ export default function Configurator() {
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
-                    </DialogHeader>
+                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
                     {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
                     <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
                     {formData.onlineOrdering && (
@@ -2670,8 +2666,8 @@ export default function Configurator() {
                       </div>
                     )}
                   </div>
-                </DialogContent>
-              </Dialog>
+                </div>
+              </div>
             )}
             <CartSidebar />
 
