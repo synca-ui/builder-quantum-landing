@@ -70,6 +70,7 @@ export default function Configurator() {
     "idle" | "publishing" | "published" | "error"
   >("idle");
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     // Template Selection
