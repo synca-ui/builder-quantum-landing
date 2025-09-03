@@ -1413,6 +1413,48 @@ export default function Configurator() {
       const templateStyles = getTemplateStyles();
 
       switch (previewState.activePage) {
+        case "settings":
+          return (
+            <div className={templateStyles.page}>
+              <h2 className={templateStyles.title}>{t("settings")}</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className={templateStyles.itemName}>Language</h3>
+                  <div className="mt-2 inline-flex rounded-lg border overflow-hidden">
+                    <button
+                      className={`px-3 py-1 text-sm ${formData.language === "en" ? "bg-gray-100" : ""}`}
+                      onClick={() => updateFormData("language", "en")}
+                    >
+                      EN
+                    </button>
+                    <button
+                      className={`px-3 py-1 text-sm ${formData.language === "de" ? "bg-gray-100" : ""}`}
+                      onClick={() => updateFormData("language", "de")}
+                    >
+                      DE
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <h3 className={templateStyles.itemName}>Theme</h3>
+                  <div className="mt-2 inline-flex rounded-lg border overflow-hidden">
+                    <button
+                      className={`px-3 py-1 text-sm ${formData.themeMode === "light" ? "bg-gray-100" : ""}`}
+                      onClick={() => updateFormData("themeMode", "light")}
+                    >
+                      Light
+                    </button>
+                    <button
+                      className={`px-3 py-1 text-sm ${formData.themeMode === "dark" ? "bg-gray-100" : ""}`}
+                      onClick={() => updateFormData("themeMode", "dark")}
+                    >
+                      Dark
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
         case "menu":
           if (!formData.selectedPages.includes("menu")) {
             return (
