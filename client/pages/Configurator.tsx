@@ -96,6 +96,10 @@ export default function Configurator() {
     customPages: [],
     openingHoursTextColor: "#0F172A",
 
+    // Global preferences
+    language: "en", // "en" | "de"
+    themeMode: "light", // "light" | "dark"
+
     // Per-template themes
     templateThemes: {
       minimalist: {
