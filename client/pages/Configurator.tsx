@@ -1856,7 +1856,7 @@ export default function Configurator() {
               {previewState.menuOpen && (
                 <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-[60] flex items-center justify-center">
                   <div className="space-y-2 text-center">
-                    {formData.selectedPages.map((page) => (
+                    {menuPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
