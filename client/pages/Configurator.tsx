@@ -51,6 +51,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { motion } from "framer-motion";
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import ReservationButton from "@/components/ui/ReservationButton";
 import MenuSection from "@/components/sections/MenuSection";
@@ -222,18 +225,19 @@ export default function Configurator() {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [showCart, setShowCart] = useState(false);
 
-  // Add to cart function
-  const addToCart = useCallback((item: any) => {
+  // Add to cart function (supports quantity)
+  const addToCart = useCallback((item: any, qty: number = 1) => {
+    const quantity = Math.max(1, Math.floor(qty || 1));
     setCartItems((prev) => {
       const existingItem = prev.find((cartItem) => cartItem.name === item.name);
       if (existingItem) {
         return prev.map((cartItem) =>
           cartItem.name === item.name
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            ? { ...cartItem, quantity: cartItem.quantity + quantity }
             : cartItem,
         );
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, quantity }];
     });
   }, []);
 
@@ -1297,6 +1301,20 @@ export default function Configurator() {
     }, [formData.selectedPages]);
 
     // Template-aware page rendering
+    // Product modal state
+    const [productModalOpen, setProductModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+    const [selectedQty, setSelectedQty] = useState<number>(1);
+    const [showArrowHint, setShowArrowHint] = useState(true);
+
+    const openProductModal = (item: any) => {
+      setSelectedProduct(item);
+      setSelectedQty(1);
+      setShowArrowHint(true);
+      setProductModalOpen(true);
+      setTimeout(() => setShowArrowHint(false), 1800);
+    };
+
     const renderPageContent = () => {
       const getTemplateStyles = () => {
         switch (selectedIdForSwitch) {
@@ -1483,7 +1501,10 @@ export default function Configurator() {
                       key={index}
                       className={`${templateStyles.itemCard} cursor-pointer open:shadow-md`}
                     >
-                      <summary className="flex items-center justify-between list-none">
+                      <summary
+                        className="flex items-center justify-between list-none"
+                        onClick={(e) => { e.preventDefault(); openProductModal(item); }}
+                      >
                         <h3 className={templateStyles.itemName}>{item.name}</h3>
                         <span
                           className={templateStyles.itemPrice}
@@ -1502,7 +1523,7 @@ export default function Configurator() {
                       </div>
                     </details>
                   ) : (
-                    <div key={index} className={templateStyles.itemCard}>
+                    <div key={index} className={templateStyles.itemCard} onClick={() => openProductModal(item)}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-2">
                           <span className="hidden">{item.emoji || "🍽️"}</span>
@@ -1530,7 +1551,7 @@ export default function Configurator() {
                         {formData.onlineOrdering && (
                           <button
                             className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
-                            onClick={() => addToCart(item)}
+                            onClick={(e) => { e.stopPropagation(); addToCart(item); }}
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -2034,38 +2055,44 @@ export default function Configurator() {
 
     const CartSidebar = () => {
       if (!formData.onlineOrdering || !previewState.showCartSidebar) return null;
+      const subtotal = cartItems.reduce((t, it) => t + parseFloat(it.price) * it.quantity, 0);
+      const fees = 0;
+      const total = subtotal + fees;
       return (
-        <div className="absolute top-0 right-0 h-full w-36 bg-white/90 backdrop-blur border-l border-gray-200 z-[40] flex flex-col">
-          <div className="p-2 text-xs font-semibold border-b">Cart ({cartItemsCount})</div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div className="absolute top-0 right-0 h-full w-64 bg-white/95 backdrop-blur border-l border-gray-200 z-[40] flex flex-col">
+          <div className="p-4 border-b">
+            <h3 className="text-sm font-semibold">Cart</h3>
+            <p className="text-xs text-gray-500">{cartItemsCount} item{cartItemsCount!==1?'s':''}</p>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {cartItems.length === 0 ? (
-              <div className="text-[10px] text-gray-500">Empty</div>
+              <div className="text-xs text-gray-500">Your cart is empty</div>
             ) : (
               cartItems.map((it, i) => (
-                <div key={i} className="text-[11px]">
-                  <div className="font-medium">{it.name} × {it.quantity}</div>
-                  <div className="text-gray-500">${(parseFloat(it.price) * it.quantity).toFixed(2)}</div>
+                <div key={i} className="border rounded-md p-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium truncate mr-2">{it.name}</div>
+                    <div className="text-gray-600">${(parseFloat(it.price) * it.quantity).toFixed(2)}</div>
+                  </div>
+                  <div className="text-[11px] text-gray-500">Qty: {it.quantity} × ${parseFloat(it.price).toFixed(2)}</div>
                 </div>
               ))
             )}
           </div>
-          {formData.orderOptions?.delivery && (
-            <div className="p-2 border-t space-y-1">
-              <label className="text-[11px] font-medium">Delivery address</label>
-              <input
-                type="text"
-                placeholder="Street & No."
-                className="w-full border rounded px-2 py-1 text-[11px]"
-                onFocus={() => setPreviewState((p) => ({ ...p, orderStage: "cart" }))}
-              />
+          <div className="p-4 border-t space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-medium">${subtotal.toFixed(2)}</span>
             </div>
-          )}
-          <div className="p-2 border-t space-y-1">
-            <div className="text-[11px]">Total: <span className="font-bold">${cartTotal.toFixed(2)}</span></div>
-            <div className="grid grid-cols-2 gap-1">
-              <button className="text-[11px] px-2 py-1 border rounded" onClick={() => setPreviewState((p) => ({ ...p, orderStage: "cart" }))}>Cart</button>
-              <button className="text-[11px] px-2 py-1 bg-teal-500 text-white rounded" onClick={() => setPreviewState((p) => ({ ...p, orderStage: "payment" }))}>Pay</button>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Fees</span>
+              <span className="font-medium">${fees.toFixed(2)}</span>
             </div>
+            <div className="flex items-center justify-between text-base pt-1 border-t">
+              <span className="font-semibold">Total</span>
+              <span className="font-semibold">${total.toFixed(2)}</span>
+            </div>
+            <Button className="w-full bg-teal-600 hover:bg-teal-700 mt-2" onClick={() => setPreviewState((p)=>({...p, orderStage: "payment"}))}>Checkout</Button>
           </div>
         </div>
       );
@@ -2270,6 +2297,54 @@ export default function Configurator() {
             <OrderProgress />
             {/* Content */}
             <div className="flex-1 overflow-y-auto">{renderPageContent()}</div>
+            {selectedProduct && (
+              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
+                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+                  <div className="relative">
+                    <Carousel opts={{ loop: true }}>
+                      <CarouselContent>
+                        {(selectedProduct.images && selectedProduct.images.length > 0
+                          ? selectedProduct.images
+                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                        ).map((img: any, idx: number) => (
+                          <CarouselItem key={idx}>
+                            <div className="aspect-[4/3] w-full bg-gray-100">
+                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                    {showArrowHint && (
+                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                        <ChevronRight className="w-7 h-7" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
+                    </DialogHeader>
+                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
+                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    {formData.onlineOrdering && (
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="inline-flex items-center border rounded-full overflow-hidden">
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
+                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                          </div>
+                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                            Add to cart
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
             <CartSidebar />
           </div>
         );
@@ -2412,6 +2487,54 @@ export default function Configurator() {
             >
               {renderPageContent()}
             </div>
+            {selectedProduct && (
+              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
+                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+                  <div className="relative">
+                    <Carousel opts={{ loop: true }}>
+                      <CarouselContent>
+                        {(selectedProduct.images && selectedProduct.images.length > 0
+                          ? selectedProduct.images
+                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                        ).map((img: any, idx: number) => (
+                          <CarouselItem key={idx}>
+                            <div className="aspect-[4/3] w-full bg-gray-100">
+                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                    {showArrowHint && (
+                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                        <ChevronRight className="w-7 h-7" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
+                    </DialogHeader>
+                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
+                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    {formData.onlineOrdering && (
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="inline-flex items-center border rounded-full overflow-hidden">
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
+                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                          </div>
+                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                            Add to cart
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
             <CartSidebar />
           </div>
         );
@@ -2455,6 +2578,54 @@ export default function Configurator() {
             <div className="flex-1 overflow-y-auto bg-orange-50 pb-16">
               {renderPageContent()}
             </div>
+            {selectedProduct && (
+              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
+                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+                  <div className="relative">
+                    <Carousel opts={{ loop: true }}>
+                      <CarouselContent>
+                        {(selectedProduct.images && selectedProduct.images.length > 0
+                          ? selectedProduct.images
+                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                        ).map((img: any, idx: number) => (
+                          <CarouselItem key={idx}>
+                            <div className="aspect-[4/3] w-full bg-gray-100">
+                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                    {showArrowHint && (
+                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                        <ChevronRight className="w-7 h-7" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
+                    </DialogHeader>
+                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
+                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    {formData.onlineOrdering && (
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="inline-flex items-center border rounded-full overflow-hidden">
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
+                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                          </div>
+                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                            Add to cart
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
             <CartSidebar />
 
             {/* Bottom-right Menu FAB */}
@@ -4601,6 +4772,7 @@ export default function Configurator() {
       name: "",
       description: "",
       price: "",
+      images: [] as { url: string; alt: string; file?: File }[],
     });
 
     const addMenuItem = () => {
@@ -4610,13 +4782,29 @@ export default function Configurator() {
           { ...newItem, id: Date.now().toString() },
         ];
         updateFormData("menuItems", updatedItems);
-        setNewItem({ name: "", description: "", price: "" });
+        setNewItem({ name: "", description: "", price: "", images: [] });
       }
     };
 
     const removeMenuItem = (index: number) => {
       const updatedItems = formData.menuItems.filter((_, i) => i !== index);
       updateFormData("menuItems", updatedItems);
+    };
+
+    const handleUploadImagesForItem = (index: number, files: FileList | null) => {
+      if (!files) return;
+      const images = Array.from(files).map((file) => ({ url: URL.createObjectURL(file), alt: file.name, file }));
+      const updated = [...formData.menuItems];
+      const existing = updated[index] || {};
+      const prevImages = Array.isArray(existing.images) ? existing.images : [];
+      updated[index] = { ...existing, images: [...prevImages, ...images] };
+      updateFormData("menuItems", updated);
+    };
+
+    const handleUploadImagesForNew = (files: FileList | null) => {
+      if (!files) return;
+      const images = Array.from(files).map((file) => ({ url: URL.createObjectURL(file), alt: file.name, file }));
+      setNewItem((prev) => ({ ...prev, images: [...prev.images, ...images] }));
     };
 
     return (
@@ -4931,6 +5119,23 @@ export default function Configurator() {
               </div>
             </div>
           </div>
+          <div className="mt-4">
+            <label className="block text-sm font-bold text-gray-700 mb-2">Images</label>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => document.getElementById("new-item-images")?.click()}>Upload Images</Button>
+              <input id="new-item-images" type="file" accept="image/*" multiple className="hidden" onChange={(e)=> handleUploadImagesForNew(e.target.files)} />
+              <div className="text-xs text-gray-500">{newItem.images.length} selected</div>
+            </div>
+            {newItem.images.length>0 && (
+              <div className="mt-2 grid grid-cols-4 gap-2">
+                {newItem.images.map((im, idx)=>(
+                  <div key={idx} className="aspect-square bg-gray-100 rounded overflow-hidden">
+                    <img src={im.url} alt={im.alt} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Card>
 
         {/* Menu Items List */}
@@ -4947,6 +5152,15 @@ export default function Configurator() {
                         {item.description}
                       </p>
                     )}
+                    {Array.isArray(item.images) && item.images.length>0 && (
+                      <div className="mt-3 grid grid-cols-4 gap-2">
+                        {item.images.slice(0,4).map((im:any, i2:number)=>(
+                          <div key={i2} className="aspect-square bg-gray-100 rounded overflow-hidden">
+                            <img src={im.url} alt={im.alt} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className="text-lg font-bold text-teal-600">
@@ -4961,6 +5175,13 @@ export default function Configurator() {
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById(`item-images-${index}`)?.click()}>
+                    Upload Images
+                  </Button>
+                  <input id={`item-images-${index}`} type="file" accept="image/*" multiple className="hidden" onChange={(e)=> handleUploadImagesForItem(index, e.target.files)} />
+                  <div className="text-xs text-gray-500">{Array.isArray(item.images)? item.images.length: 0} images</div>
                 </div>
               </Card>
             ))}
