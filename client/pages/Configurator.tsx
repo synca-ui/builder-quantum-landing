@@ -1443,8 +1443,32 @@ export default function Configurator() {
           return (
             <div className={templateStyles.page}>
               <h2 className={templateStyles.title}>{t("menu")}</h2>
+              {formData.onlineStore && (
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex gap-2 overflow-x-auto">
+                    <button className={`px-2 py-1 text-xs border rounded ${previewState.activeCategory === 'all' ? 'bg-gray-100' : ''}`} onClick={()=>setPreviewState(p=>({...p, activeCategory:'all'}))}>All</button>
+                    {(formData.categories || []).map((c:string)=> (
+                      <button key={c} className={`px-2 py-1 text-xs border rounded ${previewState.activeCategory === c ? 'bg-gray-100' : ''}`} onClick={()=>setPreviewState(p=>({...p, activeCategory:c}))}>{c}</button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <label>Sort</label>
+                    <select className="border rounded px-2 py-1" value={previewState.sortMode} onChange={(e)=>setPreviewState(p=>({...p, sortMode: e.target.value as any}))}>
+                      <option value="popularity">Popularity</option>
+                      <option value="price">Price</option>
+                    </select>
+                    <label className="inline-flex items-center gap-1">
+                      <input type="checkbox" checked={previewState.mapView} onChange={(e)=>setPreviewState(p=>({...p, mapView: e.target.checked}))} />
+                      <span>Map view</span>
+                    </label>
+                  </div>
+                </div>
+              )}
               <div className="space-y-3">
-                {menuItemsToShow.map((item, index) =>
+                {menuItemsToShow
+                  .filter((it:any)=> previewState.activeCategory==='all' || (it.category || 'Other')===previewState.activeCategory)
+                  .sort((a:any,b:any)=> previewState.sortMode==='price' ? parseFloat(a.price)-parseFloat(b.price) : 0)
+                  .map((item, index) =>
                   selectedIdForSwitch === "minimalist" ? (
                     <details
                       key={index}
@@ -1462,6 +1486,9 @@ export default function Configurator() {
                       <div className="mt-2 text-left">
                         <p className={templateStyles.itemDesc}>
                           {item.description}
+                          {formData.showStockLevels && typeof item.stock !== 'undefined' && (
+                            <span className="ml-2 text-[10px]">Stock: {item.stock}</span>
+                          )}
                         </p>
                       </div>
                     </details>
@@ -1473,9 +1500,15 @@ export default function Configurator() {
                           <div>
                             <h3 className={templateStyles.itemName}>
                               {item.name}
+                              {formData.offersEnabled && offerNames.some(n=>item.name.toLowerCase().includes(n)) && (
+                                <span className="ml-2 text-[10px] text-white bg-red-500 rounded px-1">Offer</span>
+                              )}
                             </h3>
                             <p className={templateStyles.itemDesc}>
                               {item.description}
+                              {formData.showStockLevels && typeof item.stock !== 'undefined' && (
+                                <span className="ml-2 text-[10px]">Stock: {item.stock}</span>
+                              )}
                             </p>
                           </div>
                         </div>
