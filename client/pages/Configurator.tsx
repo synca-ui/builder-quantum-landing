@@ -1307,13 +1307,7 @@ export default function Configurator() {
     const [selectedQty, setSelectedQty] = useState<number>(1);
     const [showArrowHint, setShowArrowHint] = useState(true);
 
-    const canOpenProductModal = () => {
-      if (typeof window === "undefined") return false;
-      return !window.location.pathname.includes("/configurator");
-    };
-
     const openProductModal = (item: any) => {
-      if (!canOpenProductModal()) return;
       setSelectedProduct(item);
       setSelectedQty(1);
       setShowArrowHint(true);
@@ -1509,7 +1503,7 @@ export default function Configurator() {
                     >
                       <summary
                         className="flex items-center justify-between list-none"
-                        onClick={(e) => { if (canOpenProductModal()) { e.preventDefault(); openProductModal(item); } }}
+                        onClick={(e) => { e.preventDefault(); openProductModal(item); }}
                       >
                         <h3 className={templateStyles.itemName}>{item.name}</h3>
                         <span
@@ -1529,7 +1523,7 @@ export default function Configurator() {
                       </div>
                     </details>
                   ) : (
-                    <div key={index} className={templateStyles.itemCard} onClick={() => { if (canOpenProductModal()) openProductModal(item); }}>
+                    <div key={index} className={templateStyles.itemCard} onClick={() => openProductModal(item)}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-2">
                           <span className="hidden">{item.emoji || "🍽️"}</span>
@@ -1846,7 +1840,7 @@ export default function Configurator() {
                     <div
                       key={index}
                       className={`${templateStyles.homeCard} relative cursor-pointer`}
-                      onClick={() => { if (canOpenProductModal()) openProductModal(item); }}
+                      onClick={() => openProductModal(item)}
                     >
                       <div className="hidden">{item.emoji || "🍽️"}</div>
                       <h3
