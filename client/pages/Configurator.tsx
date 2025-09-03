@@ -1435,7 +1435,7 @@ export default function Configurator() {
                     <div key={index} className={templateStyles.itemCard}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-2">
-                          <span className="hidden">{item.emoji || "🍽️"}</span>
+                          <span className="hidden">{item.emoji || "🍽��"}</span>
                           <div>
                             <h3 className={templateStyles.itemName}>
                               {item.name}
@@ -1539,7 +1539,7 @@ export default function Configurator() {
           }
           return (
             <div className={templateStyles.page}>
-              <h2 className={templateStyles.title}>About Us</h2>
+              <h2 className={templateStyles.title}>{t("aboutUs")}</h2>
               <div className="text-center space-y-3">
                 <div
                   className={templateStyles.aboutLogo}
