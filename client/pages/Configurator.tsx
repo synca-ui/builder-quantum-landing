@@ -5550,10 +5550,15 @@ export default function Configurator() {
     ];
 
     const handleFeatureClick = (featureId: string, enabled: boolean) => {
-      // Toggle enabled flag
-      updateFormData(featureId, !enabled);
-      // Open configuration panel when enabling, close when disabling
-      setActiveFeature(!enabled ? featureId : null);
+      const willEnable = !enabled;
+      updateFormData(featureId, willEnable);
+      if (willEnable) {
+        setPendingFeatureConfig(featureId);
+        const idx = configuratorSteps.findIndex((s) => s.id === "feature-config");
+        if (idx !== -1) setCurrentStep(idx);
+      } else {
+        setActiveFeature(null);
+      }
     };
 
     const renderFeatureConfig = () => {
