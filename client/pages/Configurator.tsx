@@ -1601,9 +1601,14 @@ export default function Configurator() {
                 {formData.location && (
                   <div className="flex items-center space-x-2">
                     <MapPin className={templateStyles.contactIcon} />
-                    <span className={templateStyles.itemDesc}>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${templateStyles.itemDesc} underline`}
+                    >
                       {formData.location}
-                    </span>
+                    </a>
                   </div>
                 )}
 
