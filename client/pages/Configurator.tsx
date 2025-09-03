@@ -1852,10 +1852,10 @@ export default function Configurator() {
                 </div>
               </div>
 
-              {/* Full-screen Overlay Menu */}
+              {/* Dropdown Menu under header (Minimalist) */}
               {previewState.menuOpen && (
-                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-[60] flex items-center justify-center">
-                  <div className="space-y-2 text-center">
+                <div className="absolute left-0 right-0 top-full bg-white/95 backdrop-blur-sm z-[60] border-t border-gray-200">
+                  <div className="space-y-2 text-center py-3">
                     {menuPages.map((page) => (
                       <button
                         key={page}
