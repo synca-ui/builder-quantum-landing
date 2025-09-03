@@ -1939,6 +1939,70 @@ export default function Configurator() {
       }
     };
 
+    // Ordering progress & cart sidebar (preview only)
+    const OrderProgress = () => {
+      if (!formData.onlineOrdering) return null;
+      const steps = ["select", "cart", "payment", "done"] as const;
+      const labels: Record<(typeof steps)[number], string> = {
+        select: "Selection",
+        cart: "Cart",
+        payment: "Payment",
+        done: "Confirmation",
+      };
+      const idx = steps.indexOf(previewState.orderStage as any);
+      return (
+        <div className="px-4 pt-2">
+          <div className="flex items-center text-[11px] text-gray-600 gap-2">
+            {steps.map((s, i) => (
+              <div key={s} className="flex items-center flex-1 gap-1">
+                <div className={`h-1 w-full rounded ${i <= idx ? "bg-teal-500" : "bg-gray-200"}`}></div>
+                <span className="whitespace-nowrap">{labels[s]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const CartSidebar = () => {
+      if (!formData.onlineOrdering || !previewState.showCartSidebar) return null;
+      return (
+        <div className="absolute top-0 right-0 h-full w-36 bg-white/90 backdrop-blur border-l border-gray-200 z-[40] flex flex-col">
+          <div className="p-2 text-xs font-semibold border-b">Cart ({cartItemsCount})</div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            {cartItems.length === 0 ? (
+              <div className="text-[10px] text-gray-500">Empty</div>
+            ) : (
+              cartItems.map((it, i) => (
+                <div key={i} className="text-[11px]">
+                  <div className="font-medium">{it.name} × {it.quantity}</div>
+                  <div className="text-gray-500">${(parseFloat(it.price) * it.quantity).toFixed(2)}</div>
+                </div>
+              ))
+            )}
+          </div>
+          {formData.orderOptions?.delivery && (
+            <div className="p-2 border-t space-y-1">
+              <label className="text-[11px] font-medium">Delivery address</label>
+              <input
+                type="text"
+                placeholder="Street & No."
+                className="w-full border rounded px-2 py-1 text-[11px]"
+                onFocus={() => setPreviewState((p) => ({ ...p, orderStage: "cart" }))}
+              />
+            </div>
+          )}
+          <div className="p-2 border-t space-y-1">
+            <div className="text-[11px]">Total: <span className="font-bold">${cartTotal.toFixed(2)}</span></div>
+            <div className="grid grid-cols-2 gap-1">
+              <button className="text-[11px] px-2 py-1 border rounded" onClick={() => setPreviewState((p) => ({ ...p, orderStage: "cart" }))}>Cart</button>
+              <button className="text-[11px] px-2 py-1 bg-teal-500 text-white rounded" onClick={() => setPreviewState((p) => ({ ...p, orderStage: "payment" }))}>Pay</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     switch (selectedIdForSwitch) {
       case "minimalist":
         return (
