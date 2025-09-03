@@ -1964,7 +1964,7 @@ export default function Configurator() {
                     </div>
 
                     <div className="space-y-2">
-                      {formData.selectedPages.map((page) => {
+                      {menuPages.map((page) => {
                         const isActive = previewState.activePage === page;
                         return (
                           <button
