@@ -2184,6 +2184,54 @@ export default function Configurator() {
             >
               {renderPageContent()}
             </div>
+            {selectedProduct && (
+              <Dialog open={productModalOpen} onOpenChange={setProductModalOpen}>
+                <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+                  <div className="relative">
+                    <Carousel opts={{ loop: true }}>
+                      <CarouselContent>
+                        {(selectedProduct.images && selectedProduct.images.length > 0
+                          ? selectedProduct.images
+                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                        ).map((img: any, idx: number) => (
+                          <CarouselItem key={idx}>
+                            <div className="aspect-[4/3] w-full bg-gray-100">
+                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                    {showArrowHint && (
+                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                        <ChevronRight className="w-7 h-7" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg">{selectedProduct.name}</DialogTitle>
+                    </DialogHeader>
+                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
+                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    {formData.onlineOrdering && (
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="inline-flex items-center border rounded-full overflow-hidden">
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
+                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
+                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                          </div>
+                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                            Add to cart
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
             <CartSidebar />
           </div>
         );
