@@ -161,6 +161,31 @@ export default function Configurator() {
     onlineOrdering: false,
     onlineStore: false,
     teamArea: false,
+
+    // Online ordering configuration
+    posProvider: "none",
+    paymentMethods: { applePay: false, googlePay: false, card: true, cash: true },
+    orderOptions: { delivery: true, pickup: true, table: false },
+    deliveryAddressRequired: true,
+
+    // Online store configuration
+    categories: ["Drinks", "Food"],
+    showStockLevels: false,
+    discountsEnabled: false,
+    bundlesEnabled: false,
+    seasonalOffersEnabled: false,
+
+    // Team
+    teamMembers: [],
+
+    // Loyalty / Coupons / Offers
+    loyaltyEnabled: false,
+    loyaltyConfig: { stampsForReward: 10, rewardType: "discount", expiryDate: "" },
+    couponsEnabled: false,
+    coupons: [],
+    offersEnabled: false,
+    offers: [],
+
     cartItems: [],
 
     // Domain & Publishing
