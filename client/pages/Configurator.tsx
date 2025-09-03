@@ -2007,7 +2007,7 @@ export default function Configurator() {
       case "minimalist":
         return (
           <div
-            className={`h-full overflow-y-auto ${fontClass}`}
+            className={`h-full overflow-y-auto ${fontClass} relative`}
             style={{ backgroundColor: formData.backgroundColor || "#FFFFFF" }}
           >
             {/* Status Bar - Space for notch */}
