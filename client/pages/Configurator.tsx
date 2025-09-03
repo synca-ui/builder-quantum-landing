@@ -2097,7 +2097,7 @@ export default function Configurator() {
                   }}
                 >
                   <div className="space-y-4 pt-8">
-                    {formData.selectedPages.map((page) => (
+                    {menuPages.map((page) => (
                       <button
                         key={page}
                         onClick={() => navigateToPage(page)}
@@ -4286,7 +4286,7 @@ export default function Configurator() {
 
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
-                💡 <strong>Tipp:</strong> Feiertage werden automatisch wie
+                ��� <strong>Tipp:</strong> Feiertage werden automatisch wie
                 Sonntag behandelt. Sie können diese später in den Einstellungen
                 anpassen.
               </p>
