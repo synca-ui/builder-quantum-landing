@@ -356,6 +356,14 @@ export default function Configurator() {
       phaseTitle: "Media & Advanced",
       component: "advanced-features",
     },
+    {
+      id: "feature-config",
+      title: "Configure selected feature",
+      description: "Adjust settings for the feature you just enabled",
+      phase: 5,
+      phaseTitle: "Media & Advanced",
+      component: "feature-config",
+    },
 
     // Step 10: Domain & Hosting
     {
