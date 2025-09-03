@@ -2066,7 +2066,7 @@ export default function Configurator() {
                               color: "#ffffff",
                             }}
                           >
-                            {page.charAt(0).toUpperCase() + page.slice(1)}
+                            {pageLabel(page)}
                           </button>
                         );
                       })}
