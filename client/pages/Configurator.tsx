@@ -103,6 +103,9 @@ export default function Configurator() {
     language: "en", // "en" | "de"
     themeMode: "light", // "light" | "dark"
 
+    // Homepage options
+    showHomeHero: true,
+
     // Per-template themes
     templateThemes: {
       minimalist: {
@@ -1818,7 +1821,21 @@ export default function Configurator() {
                   ); })()}
                 </div>
               )}
-              <div className={`mb-4 grid grid-cols-2 gap-2`}>
+              {formData.showHomeHero && (
+              <div className="text-center mb-4">
+                <div className={templateStyles.aboutLogo + " mb-2"}>
+                  <LogoDisplay />
+                </div>
+                <h1 className={templateStyles.itemName + " text-base"}>
+                  {getBusinessName()}
+                </h1>
+                <p className={templateStyles.itemDesc}>
+                  {formData.slogan || currentContent.tagline}
+                </p>
+              </div>
+            )}
+
+            <div className={`mb-4 grid grid-cols-2 gap-2`}>
                 {(formData.menuItems.length > 0
                   ? formData.menuItems
                   : currentContent.items
@@ -3839,6 +3856,17 @@ export default function Configurator() {
                 Enter a hex color code or use the color picker
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Homepage Options */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-4">Homepage Options</label>
+          <div className="space-y-2">
+            <label className="inline-flex items-center space-x-2 text-sm">
+              <input type="checkbox" checked={!!formData.showHomeHero} onChange={(e)=> updateFormData("showHomeHero", e.target.checked)} />
+              <span>Show header block under headline (logo + name)</span>
+            </label>
           </div>
         </div>
 
