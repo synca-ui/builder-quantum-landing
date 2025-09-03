@@ -1104,7 +1104,7 @@ export default function Configurator() {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "����",
+            emoji: "��",
           },
         ],
         tagline: "Simple. Fresh. Good.",
@@ -1314,7 +1314,7 @@ export default function Configurator() {
 
     // Always include Home in overlay menus
     const menuPages = useMemo(() => {
-      const set = new Set<string>(["home", ...formData.selectedPages]);
+      const set = new Set<string>(["home", ...formData.selectedPages, "settings"]);
       return Array.from(set);
     }, [formData.selectedPages]);
 
