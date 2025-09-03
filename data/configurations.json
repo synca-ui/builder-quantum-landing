@@ -244,5 +244,103 @@
     "updatedAt": "2025-09-01T13:37:16.396Z",
     "status": "draft",
     "id": "mf15yveak3d0ce9h2rh"
+  },
+  {
+    "userId": "user_mewod4t90763iqgq366k",
+    "businessName": "bara",
+    "businessType": "restaurant",
+    "location": "",
+    "slogan": "",
+    "uniqueDescription": "",
+    "template": "minimalist",
+    "primaryColor": "#940537",
+    "secondaryColor": "#10B981",
+    "fontFamily": "sans-serif",
+    "selectedPages": [
+      "home",
+      "menu",
+      "gallery"
+    ],
+    "customPages": [],
+    "openingHours": {
+      "Monday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Tuesday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Wednesday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Thursday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Friday": {
+        "open": "09:00",
+        "close": "17:00",
+        "closed": false
+      },
+      "Saturday": {
+        "open": "10:00",
+        "close": "16:00",
+        "closed": false
+      },
+      "Sunday": {
+        "open": "10:00",
+        "close": "16:00",
+        "closed": true
+      }
+    },
+    "menuItems": [
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "coffee",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.79"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.89"
+      }
+    ],
+    "reservationsEnabled": true,
+    "maxGuests": 10,
+    "notificationMethod": "email",
+    "contactMethods": [],
+    "socialMedia": {},
+    "gallery": [],
+    "onlineOrdering": true,
+    "onlineStore": false,
+    "teamArea": false,
+    "hasDomain": false,
+    "domainName": "",
+    "selectedDomain": "",
+    "createdAt": "2025-09-03T11:48:31.751Z",
+    "updatedAt": "2025-09-03T11:48:31.751Z",
+    "status": "draft",
+    "id": "mf3wyqa289y6wkf01kl"
   }
 ]
