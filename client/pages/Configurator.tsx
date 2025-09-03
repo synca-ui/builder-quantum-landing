@@ -1617,10 +1617,10 @@ export default function Configurator() {
                     {getBusinessName()}
                   </h3>
                   <p className={templateStyles.itemDesc}>
-                    {currentContent.tagline}
+                    {formData.slogan || currentContent.tagline}
                   </p>
                   <p className={templateStyles.itemDesc + " mt-2"}>
-                    {currentContent.special}
+                    {formData.uniqueDescription || currentContent.special}
                   </p>
                   {formData.location && (
                     <div className="flex items-center justify-center mt-2 space-x-2">
@@ -1796,10 +1796,10 @@ export default function Configurator() {
                   {getBusinessName()}
                 </h1>
                 <p className={templateStyles.itemDesc}>
-                  {currentContent.tagline}
+                  {formData.slogan || currentContent.tagline}
                 </p>
                 <p className={templateStyles.itemDesc + " mt-1"}>
-                  {currentContent.special}
+                  {formData.uniqueDescription || currentContent.special}
                 </p>
               </div>
 
