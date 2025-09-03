@@ -1188,6 +1188,12 @@ export default function Configurator() {
       fontOptions.find((f) => f.id === formData.fontFamily)?.class ||
       "font-sans";
 
+    // Always include Home in overlay menus
+    const menuPages = useMemo(() => {
+      const set = new Set<string>(["home", ...formData.selectedPages]);
+      return Array.from(set);
+    }, [formData.selectedPages]);
+
     // Template-aware page rendering
     const renderPageContent = () => {
       const getTemplateStyles = () => {
