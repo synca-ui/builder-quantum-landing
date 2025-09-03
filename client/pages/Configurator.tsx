@@ -151,6 +151,7 @@ export default function Configurator() {
     menuPdf: null,
     reservationsEnabled: false,
     reservationButtonColor: "#2563EB",
+    reservationButtonTextColor: "#FFFFFF",
     reservationButtonShape: "rounded",
     timeSlots: [],
     maxGuests: 10,
@@ -1881,7 +1882,7 @@ export default function Configurator() {
                     }`}
                     style={{
                       backgroundColor: formData.reservationButtonColor,
-                      color: "#FFFFFF",
+                      color: formData.reservationButtonTextColor || "#FFFFFF",
                     }}
                     onClick={() => {
                       /* Handle reservation */
@@ -5369,6 +5370,30 @@ export default function Configurator() {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Text Color
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="color"
+                      value={formData.reservationButtonTextColor || "#FFFFFF"}
+                      onChange={(e) =>
+                        updateFormData("reservationButtonTextColor", e.target.value)
+                      }
+                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.reservationButtonTextColor || "#FFFFFF"}
+                      onChange={(e) =>
+                        updateFormData("reservationButtonTextColor", e.target.value)
+                      }
+                      className="font-mono flex-1"
+                      placeholder="#FFFFFF"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Button Shape
                   </label>
                   <div className="grid grid-cols-3 gap-2">
@@ -5402,14 +5427,14 @@ export default function Configurator() {
                   Preview
                 </label>
                 <button
-                  className={`px-6 py-3 text-white font-medium transition-colors ${
+                  className={`px-6 py-3 font-medium transition-colors ${
                     formData.reservationButtonShape === "rounded"
                       ? "rounded-lg"
                       : formData.reservationButtonShape === "pill"
                         ? "rounded-full"
                         : "rounded-none"
                   }`}
-                  style={{ backgroundColor: formData.reservationButtonColor }}
+                  style={{ backgroundColor: formData.reservationButtonColor, color: formData.reservationButtonTextColor || "#FFFFFF" }}
                 >
                   <Calendar className="w-4 h-4 mr-2 inline" />
                   Reserve Table
