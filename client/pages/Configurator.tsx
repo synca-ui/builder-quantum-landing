@@ -846,44 +846,6 @@ export default function Configurator() {
 
           <div className="hidden md:block">
             <div className="flex items-center space-x-6">
-              {/* Language & Theme */}
-              <div className="hidden md:flex items-center space-x-2">
-                <div className="flex items-center rounded-full border border-gray-200 dark:border-slate-700 overflow-hidden">
-                  <button
-                    className={`px-3 py-1 text-xs font-semibold ${formData.language === "en" ? "bg-gray-100 dark:bg-slate-800" : ""}`}
-                    onClick={() => updateFormData("language", "en")}
-                    aria-label="Switch to English"
-                  >
-                    EN
-                  </button>
-                  <button
-                    className={`px-3 py-1 text-xs font-semibold ${formData.language === "de" ? "bg-gray-100 dark:bg-slate-800" : ""}`}
-                    onClick={() => updateFormData("language", "de")}
-                    aria-label="Auf Deutsch umschalten"
-                  >
-                    DE
-                  </button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    updateFormData(
-                      "themeMode",
-                      formData.themeMode === "dark" ? "light" : "dark",
-                    )
-                  }
-                  className="border-purple-200 dark:border-slate-700 text-purple-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-slate-800"
-                  aria-label="Toggle theme"
-                >
-                  {formData.themeMode === "dark" ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-
               {/* Back to Templates button - only show after template selection */}
               {currentStep > 0 && (
                 <Button
