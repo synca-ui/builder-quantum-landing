@@ -1637,6 +1637,17 @@ export default function Configurator() {
                   )}
                 </div>
               </div>
+              {formData.teamArea && (formData.teamMembers || []).length > 0 && (
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {formData.teamMembers.map((m:any, i:number) => (
+                    <div key={i} className="p-2 bg-white rounded border hover:shadow">
+                      <div className="font-semibold text-sm">{m.name}</div>
+                      <div className="text-xs text-gray-600">{m.role}</div>
+                      <div className="text-xs">{m.status}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
 
