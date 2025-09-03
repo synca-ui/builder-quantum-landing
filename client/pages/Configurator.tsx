@@ -915,6 +915,11 @@ export default function Configurator() {
       activePage: "home",
       hoveredItem: null,
       openHoursExpanded: false,
+      orderStage: "select" as "select" | "cart" | "payment" | "done",
+      showCartSidebar: true,
+      mapView: false,
+      sortMode: "popularity" as "popularity" | "price",
+      activeCategory: "all",
     });
 
     const getBusinessName = () => {
