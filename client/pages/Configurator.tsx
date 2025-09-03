@@ -1828,11 +1828,6 @@ export default function Configurator() {
                 <p className={templateStyles.itemDesc}>
                   {formData.slogan || currentContent.tagline}
                 </p>
-                {formData.uniqueDescription && (
-                  <p className={templateStyles.itemDesc + " mt-1"}>
-                    {formData.uniqueDescription}
-                  </p>
-                )}
               </div>
 
               <div className={`mb-4 grid grid-cols-2 gap-2`}>
