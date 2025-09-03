@@ -1104,7 +1104,7 @@ export default function Configurator() {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "��",
+            emoji: "����",
           },
         ],
         tagline: "Simple. Fresh. Good.",
@@ -5441,9 +5441,69 @@ export default function Configurator() {
                   />
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">POS Provider</label>
+                  <select
+                    value={formData.posProvider}
+                    onChange={(e) => updateFormData("posProvider", e.target.value)}
+                    className="w-full"
+                  >
+                    <option value="none">None</option>
+                    <option value="sumup">SumUp</option>
+                    <option value="shopify">Shopify POS</option>
+                    <option value="local">Local POS</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Payment Options</label>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {(["applePay","googlePay","card","cash"] as const).map((k) => (
+                      <label key={k} className="inline-flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.paymentMethods?.[k]}
+                          onChange={(e) =>
+                            updateFormData("paymentMethods", { ...formData.paymentMethods, [k]: e.target.checked })
+                          }
+                        />
+                        <span className="capitalize">{k.replace(/([A-Z])/g, " $1")}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Order Options</label>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    {(["delivery","pickup","table"] as const).map((k) => (
+                      <label key={k} className="inline-flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={!!formData.orderOptions?.[k]}
+                          onChange={(e) =>
+                            updateFormData("orderOptions", { ...formData.orderOptions, [k]: e.target.checked })
+                          }
+                        />
+                        <span className="capitalize">{k}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="inline-flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.deliveryAddressRequired}
+                      onChange={(e) => updateFormData("deliveryAddressRequired", e.target.checked)}
+                    />
+                    <span>Require delivery address for delivery orders</span>
+                  </label>
+                </div>
+              </div>
+
               <p className="text-sm text-gray-500 mt-3">
-                These settings control small ordering UX options for the live
-                preview and published site.
+                Configure POS, payments, and order flows. Cart will be accessible across pages.
               </p>
             </Card>
           );
@@ -5495,8 +5555,71 @@ export default function Configurator() {
                   />
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Categories</label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Input
+                      type="text"
+                      placeholder="Add category"
+                      onKeyDown={(e) => {
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (e.key === "Enter" && val) {
+                          updateFormData("categories", [...(formData.categories || []), val]);
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                      }}
+                    />
+                    <span className="text-xs text-gray-500">Press Enter</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.categories || []).map((c: string, i: number) => (
+                      <span key={i} className="px-2 py-1 bg-gray-100 rounded text-xs">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium mb-1">Options</label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.showStockLevels}
+                      onChange={(e) => updateFormData("showStockLevels", e.target.checked)}
+                    />
+                    <span>Show stock levels</span>
+                  </label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.discountsEnabled}
+                      onChange={(e) => updateFormData("discountsEnabled", e.target.checked)}
+                    />
+                    <span>Enable discounts</span>
+                  </label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.bundlesEnabled}
+                      onChange={(e) => updateFormData("bundlesEnabled", e.target.checked)}
+                    />
+                    <span>Enable bundles</span>
+                  </label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.seasonalOffersEnabled}
+                      onChange={(e) => updateFormData("seasonalOffersEnabled", e.target.checked)}
+                    />
+                    <span>Enable seasonal offers</span>
+                  </label>
+                </div>
+              </div>
+
               <p className="text-sm text-gray-500 mt-3">
-                Connect a payment provider to accept online payments.
+                Manage categories, stock visibility and promotions. Product details (images/allergens) are configured per item in Menu/Products step.
               </p>
             </Card>
           );
@@ -5509,20 +5632,169 @@ export default function Configurator() {
                 <p className="text-sm text-gray-600">
                   Add team members to showcase on your About page.
                 </p>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    New member name
-                  </label>
-                  <input
-                    type="text"
-                    value={""}
-                    onChange={() => {}}
-                    className="w-full"
-                  />
-                  <div className="text-xs text-gray-400 mt-1">
-                    Members can be added later in the About page settings.
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Name</label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. Alex"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const name = (e.target as HTMLInputElement).value.trim();
+                          if (name) {
+                            updateFormData("teamMembers", [...(formData.teamMembers || []), { name, role: "", status: "on_duty" }]);
+                            (e.target as HTMLInputElement).value = "";
+                          }
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Press Enter to add</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Quick Roles</label>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {["chef","barista","waiter"].map((r) => (
+                        <button
+                          key={r}
+                          className="px-2 py-1 border rounded"
+                          onClick={() => updateFormData("teamMembers", [...(formData.teamMembers || []), { name: r.charAt(0).toUpperCase()+r.slice(1), role: r, status: "off_duty" }])}
+                        >
+                          + {r}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {(formData.teamMembers || []).map((m: any, i: number) => (
+                    <div key={i} className="p-2 border rounded">
+                      <div className="font-semibold text-sm">{m.name}</div>
+                      <div className="text-xs text-gray-600">{m.role}</div>
+                      <div className="text-xs">Status: {m.status}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          );
+
+        case "loyaltyEnabled":
+          return (
+            <Card className="p-6 mt-6">
+              <h4 className="text-lg font-bold mb-3">Loyalty / Stamp Card</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Stamps for reward</label>
+                  <Input
+                    type="number"
+                    value={formData.loyaltyConfig?.stampsForReward || 10}
+                    onChange={(e) =>
+                      updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig || {}), stampsForReward: Number(e.target.value) })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Reward type</label>
+                  <select
+                    value={formData.loyaltyConfig?.rewardType || "discount"}
+                    onChange={(e) =>
+                      updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig || {}), rewardType: e.target.value })
+                    }
+                    className="w-full"
+                  >
+                    <option value="discount">Discount</option>
+                    <option value="free_item">Free Item</option>
+                    <option value="voucher">Voucher</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Expiration date</label>
+                  <Input
+                    type="date"
+                    value={formData.loyaltyConfig?.expiryDate || ""}
+                    onChange={(e) =>
+                      updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig || {}), expiryDate: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            </Card>
+          );
+
+        case "couponsEnabled":
+          return (
+            <Card className="p-6 mt-6">
+              <h4 className="text-lg font-bold mb-3">Coupons / Vouchers</h4>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <select id="coupon-type" className="border rounded p-2">
+                    <option value="amount">Fixed Amount</option>
+                    <option value="percent">Percentage</option>
+                    <option value="bogo">2-for-1</option>
+                  </select>
+                  <Input id="coupon-value" type="text" placeholder="Value" />
+                  <Input id="coupon-conditions" type="text" placeholder="Conditions" />
+                  <Button
+                    onClick={() => {
+                      const type = (document.getElementById("coupon-type") as HTMLSelectElement).value;
+                      const value = (document.getElementById("coupon-value") as HTMLInputElement).value;
+                      const conditions = (document.getElementById("coupon-conditions") as HTMLInputElement).value;
+                      if (value) {
+                        updateFormData("coupons", [...(formData.coupons || []), { type, value, conditions }]);
+                        (document.getElementById("coupon-value") as HTMLInputElement).value = "";
+                        (document.getElementById("coupon-conditions") as HTMLInputElement).value = "";
+                      }
+                    }}
+                  >
+                    Add Coupon
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {(formData.coupons || []).map((c: any, i: number) => (
+                    <div key={i} className="p-3 border rounded">
+                      <div className="text-sm font-semibold">{c.type} - {c.value}</div>
+                      <div className="text-xs text-gray-600">{c.conditions}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          );
+
+        case "offersEnabled":
+          return (
+            <Card className="p-6 mt-6">
+              <h4 className="text-lg font-bold mb-3">Current Offers / Specials</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Input id="offer-window" type="text" placeholder="Time window (e.g., 17:00-19:00)" />
+                <Input id="offer-products" type="text" placeholder="Products (comma-separated)" />
+                <Input id="offer-discount" type="text" placeholder="Discount / Bundle" />
+              </div>
+              <div className="mt-3">
+                <Button
+                  onClick={() => {
+                    const time = (document.getElementById("offer-window") as HTMLInputElement).value;
+                    const products = (document.getElementById("offer-products") as HTMLInputElement).value;
+                    const discount = (document.getElementById("offer-discount") as HTMLInputElement).value;
+                    if (time && products) {
+                      updateFormData("offers", [...(formData.offers || []), { time, products, discount }]);
+                      (document.getElementById("offer-window") as HTMLInputElement).value = "";
+                      (document.getElementById("offer-products") as HTMLInputElement).value = "";
+                      (document.getElementById("offer-discount") as HTMLInputElement).value = "";
+                    }
+                  }}
+                >
+                  Add Offer
+                </Button>
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {(formData.offers || []).map((o: any, i: number) => (
+                  <div key={i} className="p-3 border rounded">
+                    <div className="text-sm font-semibold">{o.time}</div>
+                    <div className="text-xs text-gray-600">{o.products}</div>
+                    <div className="text-xs">{o.discount}</div>
+                  </div>
+                ))}
               </div>
             </Card>
           );
