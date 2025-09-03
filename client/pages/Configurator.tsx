@@ -2099,13 +2099,6 @@ export default function Configurator() {
                     </button>
                   )}
                   <button
-                    onClick={() => setPreviewState((p) => ({ ...p, activePage: "settings", menuOpen: false }))}
-                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                    aria-label="Settings"
-                  >
-                    <Settings className="w-5 h-5 text-white" />
-                  </button>
-                  <button
                     onClick={toggleMenu}
                     className="p-2 hover:bg-white/10 rounded-xl transition-colors"
                     aria-label="Menu"
