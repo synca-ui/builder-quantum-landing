@@ -2114,13 +2114,15 @@ export default function Configurator() {
                     <LogoDisplay />
                   </div>
                   <h1
-                    className={`${getFontSizeClass("text-lg")} font-medium`}
+                    onClick={() => navigateToPage("home")}
+                    className={`${getFontSizeClass("text-lg")} font-medium cursor-pointer`}
                     style={{
                       color:
                         selectedIdForSwitch === "modern"
                           ? "#FFFFFF"
                           : styles.userFontColor,
                     }}
+                    title="Go to Home"
                   >
                     {getBusinessName()}
                   </h1>
@@ -2252,7 +2254,7 @@ export default function Configurator() {
                   <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-bold text-white">
+                  <h1 className="text-lg font-bold text-white cursor-pointer" onClick={() => navigateToPage("home")} title="Go to Home">
                     {getBusinessName()}
                   </h1>
                 </div>
@@ -2435,8 +2437,10 @@ export default function Configurator() {
                     <LogoDisplay />
                   </div>
                   <h1
-                    className="text-lg font-semibold"
+                    onClick={() => navigateToPage("home")}
+                    className="text-lg font-semibold cursor-pointer"
                     style={{ color: styles.userFontColor }}
+                    title="Go to Home"
                   >
                     {getBusinessName()}
                   </h1>
@@ -2610,7 +2614,7 @@ export default function Configurator() {
                   >
                     <LogoDisplay />
                   </div>
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-semibold cursor-pointer" onClick={() => navigateToPage("home")} title="Go to Home">
                     {getBusinessName()}
                   </span>
                 </div>
