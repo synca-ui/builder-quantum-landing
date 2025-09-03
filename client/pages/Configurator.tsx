@@ -51,7 +51,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import { motion } from "framer-motion";
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import ReservationButton from "@/components/ui/ReservationButton";
@@ -72,7 +76,9 @@ export default function Configurator() {
     "idle" | "publishing" | "published" | "error"
   >("idle");
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
-  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<string | null>(null);
+  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<
+    string | null
+  >(null);
 
   const [formData, setFormData] = useState({
     // Template Selection
@@ -171,7 +177,12 @@ export default function Configurator() {
 
     // Online ordering configuration
     posProvider: "none",
-    paymentMethods: { applePay: false, googlePay: false, card: true, cash: true },
+    paymentMethods: {
+      applePay: false,
+      googlePay: false,
+      card: true,
+      cash: true,
+    },
     orderOptions: { delivery: true, pickup: true, table: false },
     deliveryAddressRequired: true,
 
@@ -187,7 +198,11 @@ export default function Configurator() {
 
     // Loyalty / Coupons / Offers
     loyaltyEnabled: false,
-    loyaltyConfig: { stampsForReward: 10, rewardType: "discount", expiryDate: "" },
+    loyaltyConfig: {
+      stampsForReward: 10,
+      rewardType: "discount",
+      expiryDate: "",
+    },
     couponsEnabled: false,
     coupons: [],
     offersEnabled: false,
@@ -217,7 +232,6 @@ export default function Configurator() {
   useEffect(() => {
     setIsVisible(true);
   }, []);
-
 
   // Template preview selection (for step 0 live preview before committing)
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
@@ -1060,7 +1074,7 @@ export default function Configurator() {
         total: "Summe:",
       },
     } as const;
-    const t = (key: keyof typeof dict["en"]) =>
+    const t = (key: keyof (typeof dict)["en"]) =>
       (dict as any)[formData.language]?.[key] || dict.en[key];
     const pageLabel = (id: string) => t(id as any);
 
@@ -1165,7 +1179,7 @@ export default function Configurator() {
       templateContent[selectedId] || templateContent["minimalist"];
 
     // Offers helper for badges
-    const offerNames = (formData.offersEnabled ? (formData.offers || []) : [])
+    const offerNames = (formData.offersEnabled ? formData.offers || [] : [])
       .flatMap((o: any) => String(o.products || "").split(","))
       .map((s: string) => s.trim().toLowerCase())
       .filter(Boolean);
@@ -1299,7 +1313,11 @@ export default function Configurator() {
 
     // Always include Home in overlay menus
     const menuPages = useMemo(() => {
-      const set = new Set<string>(["home", ...formData.selectedPages, "settings"]);
+      const set = new Set<string>([
+        "home",
+        ...formData.selectedPages,
+        "settings",
+      ]);
       return Array.from(set);
     }, [formData.selectedPages]);
 
@@ -1458,7 +1476,9 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
+                  <p className={templateStyles.itemDesc}>
+                    {t("pageNotAvailable")}
+                  </p>
                 </div>
               </div>
             );
@@ -1476,19 +1496,55 @@ export default function Configurator() {
               {formData.onlineStore && (
                 <div className="mb-2 flex items-center justify-between">
                   <div className="flex gap-2 overflow-x-auto">
-                    <button className={`px-2 py-1 text-xs border rounded ${previewState.activeCategory === 'all' ? 'bg-gray-100' : ''}`} onClick={()=>setPreviewState(p=>({...p, activeCategory:'all'}))}>All</button>
-                    {(formData.categories || []).map((c:string)=> (
-                      <button key={c} className={`px-2 py-1 text-xs border rounded ${previewState.activeCategory === c ? 'bg-gray-100' : ''}`} onClick={()=>setPreviewState(p=>({...p, activeCategory:c}))}>{c}</button>
+                    <button
+                      className={`px-2 py-1 text-xs border rounded ${previewState.activeCategory === "all" ? "bg-gray-100" : ""}`}
+                      onClick={() =>
+                        setPreviewState((p) => ({
+                          ...p,
+                          activeCategory: "all",
+                        }))
+                      }
+                    >
+                      All
+                    </button>
+                    {(formData.categories || []).map((c: string) => (
+                      <button
+                        key={c}
+                        className={`px-2 py-1 text-xs border rounded ${previewState.activeCategory === c ? "bg-gray-100" : ""}`}
+                        onClick={() =>
+                          setPreviewState((p) => ({ ...p, activeCategory: c }))
+                        }
+                      >
+                        {c}
+                      </button>
                     ))}
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <label>Sort</label>
-                    <select className="border rounded px-2 py-1" value={previewState.sortMode} onChange={(e)=>setPreviewState(p=>({...p, sortMode: e.target.value as any}))}>
+                    <select
+                      className="border rounded px-2 py-1"
+                      value={previewState.sortMode}
+                      onChange={(e) =>
+                        setPreviewState((p) => ({
+                          ...p,
+                          sortMode: e.target.value as any,
+                        }))
+                      }
+                    >
                       <option value="popularity">Popularity</option>
                       <option value="price">Price</option>
                     </select>
                     <label className="inline-flex items-center gap-1">
-                      <input type="checkbox" checked={previewState.mapView} onChange={(e)=>setPreviewState(p=>({...p, mapView: e.target.checked}))} />
+                      <input
+                        type="checkbox"
+                        checked={previewState.mapView}
+                        onChange={(e) =>
+                          setPreviewState((p) => ({
+                            ...p,
+                            mapView: e.target.checked,
+                          }))
+                        }
+                      />
                       <span>Map view</span>
                     </label>
                   </div>
@@ -1496,73 +1552,104 @@ export default function Configurator() {
               )}
               <div className="space-y-3">
                 {menuItemsToShow
-                  .filter((it:any)=> previewState.activeCategory==='all' || (it.category || 'Other')===previewState.activeCategory)
-                  .sort((a:any,b:any)=> previewState.sortMode==='price' ? parseFloat(a.price)-parseFloat(b.price) : 0)
+                  .filter(
+                    (it: any) =>
+                      previewState.activeCategory === "all" ||
+                      (it.category || "Other") === previewState.activeCategory,
+                  )
+                  .sort((a: any, b: any) =>
+                    previewState.sortMode === "price"
+                      ? parseFloat(a.price) - parseFloat(b.price)
+                      : 0,
+                  )
                   .map((item, index) =>
-                  selectedIdForSwitch === "minimalist" ? (
-                    <details
-                      key={index}
-                      className={`${templateStyles.itemCard} cursor-pointer open:shadow-md`}
-                    >
-                      <summary
-                        className="flex items-center justify-between list-none"
-                        onClick={(e) => { e.preventDefault(); openProductModal(item); }}
+                    selectedIdForSwitch === "minimalist" ? (
+                      <details
+                        key={index}
+                        className={`${templateStyles.itemCard} cursor-pointer open:shadow-md`}
                       >
-                        <h3 className={templateStyles.itemName}>{item.name}</h3>
-                        <span
-                          className={templateStyles.itemPrice}
-                          style={{ color: styles.userPrimary }}
+                        <summary
+                          className="flex items-center justify-between list-none"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openProductModal(item);
+                          }}
                         >
-                          ${item.price}
-                        </span>
-                      </summary>
-                      <div className="mt-2 text-left">
-                        <p className={templateStyles.itemDesc}>
-                          {item.description}
-                          {formData.showStockLevels && typeof item.stock !== 'undefined' && (
-                            <span className="ml-2 text-[10px]">Stock: {item.stock}</span>
-                          )}
-                        </p>
-                      </div>
-                    </details>
-                  ) : (
-                    <div key={index} className={templateStyles.itemCard} onClick={() => openProductModal(item)}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-2">
-                          <span className="hidden">{item.emoji || "🍽️"}</span>
-                          <div>
-                            <h3 className={templateStyles.itemName}>
-                              {item.name}
-                              {formData.offersEnabled && offerNames.some(n=>item.name.toLowerCase().includes(n)) && (
-                                <span className="ml-2 text-[10px] text-white bg-red-500 rounded px-1">Offer</span>
-                              )}
-                            </h3>
-                            <p className={templateStyles.itemDesc}>
-                              {item.description}
-                              {formData.showStockLevels && typeof item.stock !== 'undefined' && (
-                                <span className="ml-2 text-[10px]">Stock: {item.stock}</span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={templateStyles.itemPrice}
-                          style={{ color: styles.userPrimary }}
-                        >
-                          ${item.price}
-                        </span>
-                        {formData.onlineOrdering && (
-                          <button
-                            className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
-                            onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                          <h3 className={templateStyles.itemName}>
+                            {item.name}
+                          </h3>
+                          <span
+                            className={templateStyles.itemPrice}
+                            style={{ color: styles.userPrimary }}
                           >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        )}
+                            ${item.price}
+                          </span>
+                        </summary>
+                        <div className="mt-2 text-left">
+                          <p className={templateStyles.itemDesc}>
+                            {item.description}
+                            {formData.showStockLevels &&
+                              typeof item.stock !== "undefined" && (
+                                <span className="ml-2 text-[10px]">
+                                  Stock: {item.stock}
+                                </span>
+                              )}
+                          </p>
+                        </div>
+                      </details>
+                    ) : (
+                      <div
+                        key={index}
+                        className={templateStyles.itemCard}
+                        onClick={() => openProductModal(item)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-2">
+                            <span className="hidden">{item.emoji || "🍽️"}</span>
+                            <div>
+                              <h3 className={templateStyles.itemName}>
+                                {item.name}
+                                {formData.offersEnabled &&
+                                  offerNames.some((n) =>
+                                    item.name.toLowerCase().includes(n),
+                                  ) && (
+                                    <span className="ml-2 text-[10px] text-white bg-red-500 rounded px-1">
+                                      Offer
+                                    </span>
+                                  )}
+                              </h3>
+                              <p className={templateStyles.itemDesc}>
+                                {item.description}
+                                {formData.showStockLevels &&
+                                  typeof item.stock !== "undefined" && (
+                                    <span className="ml-2 text-[10px]">
+                                      Stock: {item.stock}
+                                    </span>
+                                  )}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={templateStyles.itemPrice}
+                            style={{ color: styles.userPrimary }}
+                          >
+                            ${item.price}
+                          </span>
+                          {formData.onlineOrdering && (
+                            <button
+                              className="ml-2 w-6 h-6 bg-teal-500 hover:bg-teal-600 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(item);
+                              }}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ),
-                )}
+                    ),
+                  )}
                 {menuItemsToShow.length === 0 && (
                   <div className="text-center py-8">
                     <p className={templateStyles.itemDesc}>
@@ -1581,7 +1668,9 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
+                  <p className={templateStyles.itemDesc}>
+                    {t("pageNotAvailable")}
+                  </p>
                 </div>
               </div>
             );
@@ -1628,7 +1717,9 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
+                  <p className={templateStyles.itemDesc}>
+                    {t("pageNotAvailable")}
+                  </p>
                 </div>
               </div>
             );
@@ -1672,8 +1763,11 @@ export default function Configurator() {
               </div>
               {formData.teamArea && (formData.teamMembers || []).length > 0 && (
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {formData.teamMembers.map((m:any, i:number) => (
-                    <div key={i} className="p-2 bg-white rounded border hover:shadow">
+                  {formData.teamMembers.map((m: any, i: number) => (
+                    <div
+                      key={i}
+                      className="p-2 bg-white rounded border hover:shadow"
+                    >
                       <div className="font-semibold text-sm">{m.name}</div>
                       <div className="text-xs text-gray-600">{m.role}</div>
                       <div className="text-xs">{m.status}</div>
@@ -1690,7 +1784,9 @@ export default function Configurator() {
               <div className={templateStyles.page}>
                 <div className="text-center py-8">
                   <h2 className={templateStyles.title}>Page Not Available</h2>
-                  <p className={templateStyles.itemDesc}>{t("pageNotAvailable")}</p>
+                  <p className={templateStyles.itemDesc}>
+                    {t("pageNotAvailable")}
+                  </p>
                 </div>
               </div>
             );
@@ -1761,7 +1857,9 @@ export default function Configurator() {
                   (Object.keys(formData.socialMedia).length > 0 ||
                     formData.instagramSync) && (
                     <div className="mt-4">
-                      <h3 className={templateStyles.itemName + " mb-2"}>{t("followUs")}</h3>
+                      <h3 className={templateStyles.itemName + " mb-2"}>
+                        {t("followUs")}
+                      </h3>
                       <div className="flex space-x-3">
                         {formData.socialMedia.instagram && (
                           <a
@@ -1798,7 +1896,9 @@ export default function Configurator() {
                   !formData.location &&
                   !formData.socialMedia && (
                     <div className="text-center py-4">
-                      <p className={templateStyles.itemDesc}>{t("contactInfoPlaceholder")}</p>
+                      <p className={templateStyles.itemDesc}>
+                        {t("contactInfoPlaceholder")}
+                      </p>
                     </div>
                   )}
               </div>
@@ -1811,31 +1911,43 @@ export default function Configurator() {
               {formData.loyaltyEnabled && (
                 <div className="mb-3">
                   <div className="text-xs mb-1">Loyalty</div>
-                  {(() => { const target = formData.loyaltyConfig?.stampsForReward || 10; const have = cartItems.reduce((t,i)=>t+i.quantity,0)%target; const pct = (have/target)*100; return (
-                    <div>
-                      <div className="h-2 bg-gray-200 rounded">
-                        <div className="h-2 bg-teal-500 rounded" style={{ width: `${pct}%` }}></div>
+                  {(() => {
+                    const target =
+                      formData.loyaltyConfig?.stampsForReward || 10;
+                    const have =
+                      cartItems.reduce((t, i) => t + i.quantity, 0) % target;
+                    const pct = (have / target) * 100;
+                    return (
+                      <div>
+                        <div className="h-2 bg-gray-200 rounded">
+                          <div
+                            className="h-2 bg-teal-500 rounded"
+                            style={{ width: `${pct}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-[11px] mt-1">
+                          {have}/{target} stamps
+                        </div>
                       </div>
-                      <div className="text-[11px] mt-1">{have}/{target} stamps</div>
-                    </div>
-                  ); })()}
+                    );
+                  })()}
                 </div>
               )}
               {formData.showHomeHero && (
-              <div className="text-center mb-4">
-                <div className={templateStyles.aboutLogo + " mb-2"}>
-                  <LogoDisplay />
+                <div className="text-center mb-4">
+                  <div className={templateStyles.aboutLogo + " mb-2"}>
+                    <LogoDisplay />
+                  </div>
+                  <h1 className={templateStyles.itemName + " text-base"}>
+                    {getBusinessName()}
+                  </h1>
+                  <p className={templateStyles.itemDesc}>
+                    {formData.slogan || currentContent.tagline}
+                  </p>
                 </div>
-                <h1 className={templateStyles.itemName + " text-base"}>
-                  {getBusinessName()}
-                </h1>
-                <p className={templateStyles.itemDesc}>
-                  {formData.slogan || currentContent.tagline}
-                </p>
-              </div>
-            )}
+              )}
 
-            <div className={`mb-4 grid grid-cols-2 gap-2`}>
+              <div className={`mb-4 grid grid-cols-2 gap-2`}>
                 {(formData.menuItems.length > 0
                   ? formData.menuItems
                   : currentContent.items
@@ -1865,7 +1977,10 @@ export default function Configurator() {
                       {formData.onlineOrdering && (
                         <button
                           className="absolute top-1 right-1 w-4 h-4 bg-teal-500 text-white rounded-full flex items-center justify-center text-xs transition-transform hover:scale-110"
-                          onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(item);
+                          }}
                         >
                           <Plus className="w-2 h-2" />
                         </button>
@@ -2045,7 +2160,9 @@ export default function Configurator() {
           <div className="flex items-center text-[11px] text-gray-600 gap-2">
             {steps.map((s, i) => (
               <div key={s} className="flex items-center flex-1 gap-1">
-                <div className={`h-1 w-full rounded ${i <= idx ? "bg-teal-500" : "bg-gray-200"}`}></div>
+                <div
+                  className={`h-1 w-full rounded ${i <= idx ? "bg-teal-500" : "bg-gray-200"}`}
+                ></div>
                 <span className="whitespace-nowrap">{labels[s]}</span>
               </div>
             ))}
@@ -2055,15 +2172,21 @@ export default function Configurator() {
     };
 
     const CartSidebar = () => {
-      if (!formData.onlineOrdering || !previewState.showCartSidebar) return null;
-      const subtotal = cartItems.reduce((t, it) => t + parseFloat(it.price) * it.quantity, 0);
+      if (!formData.onlineOrdering || !previewState.showCartSidebar)
+        return null;
+      const subtotal = cartItems.reduce(
+        (t, it) => t + parseFloat(it.price) * it.quantity,
+        0,
+      );
       const fees = 0;
       const total = subtotal + fees;
       return (
         <div className="absolute top-0 right-0 h-full w-64 bg-white/95 backdrop-blur border-l border-gray-200 z-[40] flex flex-col">
           <div className="p-4 border-b">
             <h3 className="text-sm font-semibold">Cart</h3>
-            <p className="text-xs text-gray-500">{cartItemsCount} item{cartItemsCount!==1?'s':''}</p>
+            <p className="text-xs text-gray-500">
+              {cartItemsCount} item{cartItemsCount !== 1 ? "s" : ""}
+            </p>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {cartItems.length === 0 ? (
@@ -2073,9 +2196,13 @@ export default function Configurator() {
                 <div key={i} className="border rounded-md p-2">
                   <div className="flex items-center justify-between text-sm">
                     <div className="font-medium truncate mr-2">{it.name}</div>
-                    <div className="text-gray-600">${(parseFloat(it.price) * it.quantity).toFixed(2)}</div>
+                    <div className="text-gray-600">
+                      ${(parseFloat(it.price) * it.quantity).toFixed(2)}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-gray-500">Qty: {it.quantity} × ${parseFloat(it.price).toFixed(2)}</div>
+                  <div className="text-[11px] text-gray-500">
+                    Qty: {it.quantity} × ${parseFloat(it.price).toFixed(2)}
+                  </div>
                 </div>
               ))
             )}
@@ -2093,7 +2220,14 @@ export default function Configurator() {
               <span className="font-semibold">Total</span>
               <span className="font-semibold">${total.toFixed(2)}</span>
             </div>
-            <Button className="w-full bg-teal-600 hover:bg-teal-700 mt-2" onClick={() => setPreviewState((p)=>({...p, orderStage: "payment"}))}>Checkout</Button>
+            <Button
+              className="w-full bg-teal-600 hover:bg-teal-700 mt-2"
+              onClick={() =>
+                setPreviewState((p) => ({ ...p, orderStage: "payment" }))
+              }
+            >
+              Checkout
+            </Button>
           </div>
         </div>
       );
@@ -2189,42 +2323,100 @@ export default function Configurator() {
             </div>
             {productModalOpen && selectedProduct && (
               <div className="absolute inset-0 z-[70] flex items-center justify-center">
-                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div
+                  className="absolute inset-0 bg-black/40"
+                  onClick={() => setProductModalOpen(false)}
+                />
                 <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
-                        {(selectedProduct.images && selectedProduct.images.length > 0
+                        {(selectedProduct.images &&
+                        selectedProduct.images.length > 0
                           ? selectedProduct.images
-                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                          : [
+                              {
+                                url:
+                                  selectedProduct.imageUrl ||
+                                  "/placeholder.svg",
+                                alt: selectedProduct.name,
+                              },
+                            ]
                         ).map((img: any, idx: number) => (
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
-                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                              <img
+                                src={img.url}
+                                alt={img.alt || selectedProduct.name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                           </CarouselItem>
                         ))}
                       </CarouselContent>
                     </Carousel>
                     {showArrowHint && (
-                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                      <motion.div
+                        initial={{ opacity: 0, x: 0 }}
+                        animate={{ opacity: [0, 1, 1, 0], x: [0, 6, 0, 0] }}
+                        transition={{ duration: 1.8, ease: "easeInOut" }}
+                        className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow"
+                      >
                         <ChevronRight className="w-7 h-7" />
                       </motion.div>
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
-                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
-                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    <h3 className="text-lg font-semibold">
+                      {selectedProduct.name}
+                    </h3>
+                    {selectedProduct.description && (
+                      <p className="text-sm text-gray-600">
+                        {selectedProduct.description}
+                      </p>
+                    )}
+                    <div className="text-base font-semibold text-teal-600">
+                      ${parseFloat(selectedProduct.price).toFixed(2)}
+                    </div>
                     {formData.onlineOrdering && (
                       <div className="pt-2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="inline-flex items-center border rounded-full overflow-hidden">
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
-                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() =>
+                                setSelectedQty((q) => Math.max(1, q - 1))
+                              }
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              value={selectedQty}
+                              onChange={(e) =>
+                                setSelectedQty(
+                                  Math.max(1, parseInt(e.target.value || "1")),
+                                )
+                              }
+                              className="w-12 text-center outline-none"
+                            />
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() => setSelectedQty((q) => q + 1)}
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
                           </div>
-                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                          <Button
+                            className="flex-1 bg-teal-600 hover:bg-teal-700"
+                            onClick={() => {
+                              addToCart(selectedProduct, selectedQty);
+                              setProductModalOpen(false);
+                            }}
+                          >
                             Add to cart
                           </Button>
                         </div>
@@ -2258,7 +2450,11 @@ export default function Configurator() {
                   <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
                     <LogoDisplay />
                   </div>
-                  <h1 className="text-lg font-bold text-white cursor-pointer" onClick={() => navigateToPage("home")} title="Go to Home">
+                  <h1
+                    className="text-lg font-bold text-white cursor-pointer"
+                    onClick={() => navigateToPage("home")}
+                    title="Go to Home"
+                  >
                     {getBusinessName()}
                   </h1>
                 </div>
@@ -2349,42 +2545,100 @@ export default function Configurator() {
             <div className="flex-1 overflow-y-auto">{renderPageContent()}</div>
             {productModalOpen && selectedProduct && (
               <div className="absolute inset-0 z-[70] flex items-center justify-center">
-                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div
+                  className="absolute inset-0 bg-black/40"
+                  onClick={() => setProductModalOpen(false)}
+                />
                 <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
-                        {(selectedProduct.images && selectedProduct.images.length > 0
+                        {(selectedProduct.images &&
+                        selectedProduct.images.length > 0
                           ? selectedProduct.images
-                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                          : [
+                              {
+                                url:
+                                  selectedProduct.imageUrl ||
+                                  "/placeholder.svg",
+                                alt: selectedProduct.name,
+                              },
+                            ]
                         ).map((img: any, idx: number) => (
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
-                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                              <img
+                                src={img.url}
+                                alt={img.alt || selectedProduct.name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                           </CarouselItem>
                         ))}
                       </CarouselContent>
                     </Carousel>
                     {showArrowHint && (
-                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                      <motion.div
+                        initial={{ opacity: 0, x: 0 }}
+                        animate={{ opacity: [0, 1, 1, 0], x: [0, 6, 0, 0] }}
+                        transition={{ duration: 1.8, ease: "easeInOut" }}
+                        className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow"
+                      >
                         <ChevronRight className="w-7 h-7" />
                       </motion.div>
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
-                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
-                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    <h3 className="text-lg font-semibold">
+                      {selectedProduct.name}
+                    </h3>
+                    {selectedProduct.description && (
+                      <p className="text-sm text-gray-600">
+                        {selectedProduct.description}
+                      </p>
+                    )}
+                    <div className="text-base font-semibold text-teal-600">
+                      ${parseFloat(selectedProduct.price).toFixed(2)}
+                    </div>
                     {formData.onlineOrdering && (
                       <div className="pt-2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="inline-flex items-center border rounded-full overflow-hidden">
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
-                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() =>
+                                setSelectedQty((q) => Math.max(1, q - 1))
+                              }
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              value={selectedQty}
+                              onChange={(e) =>
+                                setSelectedQty(
+                                  Math.max(1, parseInt(e.target.value || "1")),
+                                )
+                              }
+                              className="w-12 text-center outline-none"
+                            />
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() => setSelectedQty((q) => q + 1)}
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
                           </div>
-                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                          <Button
+                            className="flex-1 bg-teal-600 hover:bg-teal-700"
+                            onClick={() => {
+                              addToCart(selectedProduct, selectedQty);
+                              setProductModalOpen(false);
+                            }}
+                          >
                             Add to cart
                           </Button>
                         </div>
@@ -2540,42 +2794,100 @@ export default function Configurator() {
             </div>
             {productModalOpen && selectedProduct && (
               <div className="absolute inset-0 z-[70] flex items-center justify-center">
-                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div
+                  className="absolute inset-0 bg-black/40"
+                  onClick={() => setProductModalOpen(false)}
+                />
                 <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
-                        {(selectedProduct.images && selectedProduct.images.length > 0
+                        {(selectedProduct.images &&
+                        selectedProduct.images.length > 0
                           ? selectedProduct.images
-                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                          : [
+                              {
+                                url:
+                                  selectedProduct.imageUrl ||
+                                  "/placeholder.svg",
+                                alt: selectedProduct.name,
+                              },
+                            ]
                         ).map((img: any, idx: number) => (
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
-                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                              <img
+                                src={img.url}
+                                alt={img.alt || selectedProduct.name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                           </CarouselItem>
                         ))}
                       </CarouselContent>
                     </Carousel>
                     {showArrowHint && (
-                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                      <motion.div
+                        initial={{ opacity: 0, x: 0 }}
+                        animate={{ opacity: [0, 1, 1, 0], x: [0, 6, 0, 0] }}
+                        transition={{ duration: 1.8, ease: "easeInOut" }}
+                        className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow"
+                      >
                         <ChevronRight className="w-7 h-7" />
                       </motion.div>
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
-                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
-                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    <h3 className="text-lg font-semibold">
+                      {selectedProduct.name}
+                    </h3>
+                    {selectedProduct.description && (
+                      <p className="text-sm text-gray-600">
+                        {selectedProduct.description}
+                      </p>
+                    )}
+                    <div className="text-base font-semibold text-teal-600">
+                      ${parseFloat(selectedProduct.price).toFixed(2)}
+                    </div>
                     {formData.onlineOrdering && (
                       <div className="pt-2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="inline-flex items-center border rounded-full overflow-hidden">
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
-                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() =>
+                                setSelectedQty((q) => Math.max(1, q - 1))
+                              }
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              value={selectedQty}
+                              onChange={(e) =>
+                                setSelectedQty(
+                                  Math.max(1, parseInt(e.target.value || "1")),
+                                )
+                              }
+                              className="w-12 text-center outline-none"
+                            />
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() => setSelectedQty((q) => q + 1)}
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
                           </div>
-                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                          <Button
+                            className="flex-1 bg-teal-600 hover:bg-teal-700"
+                            onClick={() => {
+                              addToCart(selectedProduct, selectedQty);
+                              setProductModalOpen(false);
+                            }}
+                          >
                             Add to cart
                           </Button>
                         </div>
@@ -2616,7 +2928,11 @@ export default function Configurator() {
                   >
                     <LogoDisplay />
                   </div>
-                  <span className="text-sm font-semibold cursor-pointer" onClick={() => navigateToPage("home")} title="Go to Home">
+                  <span
+                    className="text-sm font-semibold cursor-pointer"
+                    onClick={() => navigateToPage("home")}
+                    title="Go to Home"
+                  >
                     {getBusinessName()}
                   </span>
                 </div>
@@ -2630,42 +2946,100 @@ export default function Configurator() {
             </div>
             {productModalOpen && selectedProduct && (
               <div className="absolute inset-0 z-[70] flex items-center justify-center">
-                <div className="absolute inset-0 bg-black/40" onClick={() => setProductModalOpen(false)} />
+                <div
+                  className="absolute inset-0 bg-black/40"
+                  onClick={() => setProductModalOpen(false)}
+                />
                 <div className="relative bg-white rounded-xl w-[88%] max-w-xs overflow-hidden shadow-xl">
                   <div className="relative">
                     <Carousel opts={{ loop: true }}>
                       <CarouselContent>
-                        {(selectedProduct.images && selectedProduct.images.length > 0
+                        {(selectedProduct.images &&
+                        selectedProduct.images.length > 0
                           ? selectedProduct.images
-                          : [{ url: selectedProduct.imageUrl || "/placeholder.svg", alt: selectedProduct.name }]
+                          : [
+                              {
+                                url:
+                                  selectedProduct.imageUrl ||
+                                  "/placeholder.svg",
+                                alt: selectedProduct.name,
+                              },
+                            ]
                         ).map((img: any, idx: number) => (
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
-                              <img src={img.url} alt={img.alt || selectedProduct.name} className="w-full h-full object-cover" />
+                              <img
+                                src={img.url}
+                                alt={img.alt || selectedProduct.name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                           </CarouselItem>
                         ))}
                       </CarouselContent>
                     </Carousel>
                     {showArrowHint && (
-                      <motion.div initial={{ opacity: 0, x: 0 }} animate={{ opacity: [0,1,1,0], x: [0,6,0,0] }} transition={{ duration: 1.8, ease: "easeInOut" }} className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow">
+                      <motion.div
+                        initial={{ opacity: 0, x: 0 }}
+                        animate={{ opacity: [0, 1, 1, 0], x: [0, 6, 0, 0] }}
+                        transition={{ duration: 1.8, ease: "easeInOut" }}
+                        className="absolute top-1/2 -translate-y-1/2 right-3 text-white drop-shadow"
+                      >
                         <ChevronRight className="w-7 h-7" />
                       </motion.div>
                     )}
                   </div>
                   <div className="p-4 space-y-2">
-                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
-                    {selectedProduct.description && (<p className="text-sm text-gray-600">{selectedProduct.description}</p>)}
-                    <div className="text-base font-semibold text-teal-600">${parseFloat(selectedProduct.price).toFixed(2)}</div>
+                    <h3 className="text-lg font-semibold">
+                      {selectedProduct.name}
+                    </h3>
+                    {selectedProduct.description && (
+                      <p className="text-sm text-gray-600">
+                        {selectedProduct.description}
+                      </p>
+                    )}
+                    <div className="text-base font-semibold text-teal-600">
+                      ${parseFloat(selectedProduct.price).toFixed(2)}
+                    </div>
                     {formData.onlineOrdering && (
                       <div className="pt-2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="inline-flex items-center border rounded-full overflow-hidden">
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
-                            <input type="number" min={1} value={selectedQty} onChange={(e)=> setSelectedQty(Math.max(1, parseInt(e.target.value || '1')))} className="w-12 text-center outline-none" />
-                            <button className="px-3 py-1 text-lg" onClick={() => setSelectedQty((q) => q + 1)} aria-label="Increase quantity">+</button>
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() =>
+                                setSelectedQty((q) => Math.max(1, q - 1))
+                              }
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              value={selectedQty}
+                              onChange={(e) =>
+                                setSelectedQty(
+                                  Math.max(1, parseInt(e.target.value || "1")),
+                                )
+                              }
+                              className="w-12 text-center outline-none"
+                            />
+                            <button
+                              className="px-3 py-1 text-lg"
+                              onClick={() => setSelectedQty((q) => q + 1)}
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
                           </div>
-                          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => { addToCart(selectedProduct, selectedQty); setProductModalOpen(false); }}>
+                          <Button
+                            className="flex-1 bg-teal-600 hover:bg-teal-700"
+                            onClick={() => {
+                              addToCart(selectedProduct, selectedQty);
+                              setProductModalOpen(false);
+                            }}
+                          >
                             Add to cart
                           </Button>
                         </div>
@@ -3861,10 +4235,18 @@ export default function Configurator() {
 
         {/* Homepage Options */}
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">Homepage Options</label>
+          <label className="block text-sm font-bold text-gray-700 mb-4">
+            Homepage Options
+          </label>
           <div className="space-y-2">
             <label className="inline-flex items-center space-x-2 text-sm">
-              <input type="checkbox" checked={!!formData.showHomeHero} onChange={(e)=> updateFormData("showHomeHero", e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={!!formData.showHomeHero}
+                onChange={(e) =>
+                  updateFormData("showHomeHero", e.target.checked)
+                }
+              />
               <span>Show header block under headline (logo + name)</span>
             </label>
           </div>
@@ -4851,9 +5233,16 @@ export default function Configurator() {
       updateFormData("menuItems", updatedItems);
     };
 
-    const handleUploadImagesForItem = (index: number, files: FileList | null) => {
+    const handleUploadImagesForItem = (
+      index: number,
+      files: FileList | null,
+    ) => {
       if (!files) return;
-      const images = Array.from(files).map((file) => ({ url: URL.createObjectURL(file), alt: file.name, file }));
+      const images = Array.from(files).map((file) => ({
+        url: URL.createObjectURL(file),
+        alt: file.name,
+        file,
+      }));
       const updated = [...formData.menuItems];
       const existing = updated[index] || {};
       const prevImages = Array.isArray(existing.images) ? existing.images : [];
@@ -4863,7 +5252,11 @@ export default function Configurator() {
 
     const handleUploadImagesForNew = (files: FileList | null) => {
       if (!files) return;
-      const images = Array.from(files).map((file) => ({ url: URL.createObjectURL(file), alt: file.name, file }));
+      const images = Array.from(files).map((file) => ({
+        url: URL.createObjectURL(file),
+        alt: file.name,
+        file,
+      }));
       setNewItem((prev) => ({ ...prev, images: [...prev.images, ...images] }));
     };
 
@@ -5180,17 +5573,42 @@ export default function Configurator() {
             </div>
           </div>
           <div className="mt-4">
-            <label className="block text-sm font-bold text-gray-700 mb-2">Images</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Images
+            </label>
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => document.getElementById("new-item-images")?.click()}>Upload Images</Button>
-              <input id="new-item-images" type="file" accept="image/*" multiple className="hidden" onChange={(e)=> handleUploadImagesForNew(e.target.files)} />
-              <div className="text-xs text-gray-500">{newItem.images.length} selected</div>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  document.getElementById("new-item-images")?.click()
+                }
+              >
+                Upload Images
+              </Button>
+              <input
+                id="new-item-images"
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleUploadImagesForNew(e.target.files)}
+              />
+              <div className="text-xs text-gray-500">
+                {newItem.images.length} selected
+              </div>
             </div>
-            {newItem.images.length>0 && (
+            {newItem.images.length > 0 && (
               <div className="mt-2 grid grid-cols-4 gap-2">
-                {newItem.images.map((im, idx)=>(
-                  <div key={idx} className="aspect-square bg-gray-100 rounded overflow-hidden">
-                    <img src={im.url} alt={im.alt} className="w-full h-full object-cover" />
+                {newItem.images.map((im, idx) => (
+                  <div
+                    key={idx}
+                    className="aspect-square bg-gray-100 rounded overflow-hidden"
+                  >
+                    <img
+                      src={im.url}
+                      alt={im.alt}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ))}
               </div>
@@ -5212,11 +5630,18 @@ export default function Configurator() {
                         {item.description}
                       </p>
                     )}
-                    {Array.isArray(item.images) && item.images.length>0 && (
+                    {Array.isArray(item.images) && item.images.length > 0 && (
                       <div className="mt-3 grid grid-cols-4 gap-2">
-                        {item.images.slice(0,4).map((im:any, i2:number)=>(
-                          <div key={i2} className="aspect-square bg-gray-100 rounded overflow-hidden">
-                            <img src={im.url} alt={im.alt} className="w-full h-full object-cover" />
+                        {item.images.slice(0, 4).map((im: any, i2: number) => (
+                          <div
+                            key={i2}
+                            className="aspect-square bg-gray-100 rounded overflow-hidden"
+                          >
+                            <img
+                              src={im.url}
+                              alt={im.alt}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         ))}
                       </div>
@@ -5237,11 +5662,28 @@ export default function Configurator() {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => document.getElementById(`item-images-${index}`)?.click()}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      document.getElementById(`item-images-${index}`)?.click()
+                    }
+                  >
                     Upload Images
                   </Button>
-                  <input id={`item-images-${index}`} type="file" accept="image/*" multiple className="hidden" onChange={(e)=> handleUploadImagesForItem(index, e.target.files)} />
-                  <div className="text-xs text-gray-500">{Array.isArray(item.images)? item.images.length: 0} images</div>
+                  <input
+                    id={`item-images-${index}`}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) =>
+                      handleUploadImagesForItem(index, e.target.files)
+                    }
+                  />
+                  <div className="text-xs text-gray-500">
+                    {Array.isArray(item.images) ? item.images.length : 0} images
+                  </div>
                 </div>
               </Card>
             ))}
@@ -5393,7 +5835,10 @@ export default function Configurator() {
                       type="color"
                       value={formData.reservationButtonTextColor || "#FFFFFF"}
                       onChange={(e) =>
-                        updateFormData("reservationButtonTextColor", e.target.value)
+                        updateFormData(
+                          "reservationButtonTextColor",
+                          e.target.value,
+                        )
                       }
                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
                     />
@@ -5401,7 +5846,10 @@ export default function Configurator() {
                       type="text"
                       value={formData.reservationButtonTextColor || "#FFFFFF"}
                       onChange={(e) =>
-                        updateFormData("reservationButtonTextColor", e.target.value)
+                        updateFormData(
+                          "reservationButtonTextColor",
+                          e.target.value,
+                        )
                       }
                       className="font-mono flex-1"
                       placeholder="#FFFFFF"
@@ -5450,7 +5898,10 @@ export default function Configurator() {
                         ? "rounded-full"
                         : "rounded-none"
                   }`}
-                  style={{ backgroundColor: formData.reservationButtonColor, color: formData.reservationButtonTextColor || "#FFFFFF" }}
+                  style={{
+                    backgroundColor: formData.reservationButtonColor,
+                    color: formData.reservationButtonTextColor || "#FFFFFF",
+                  }}
                 >
                   <Calendar className="w-4 h-4 mr-2 inline" />
                   Reserve Table
@@ -5859,7 +6310,9 @@ export default function Configurator() {
       updateFormData(featureId, willEnable);
       if (willEnable) {
         setPendingFeatureConfig(featureId);
-        const idx = configuratorSteps.findIndex((s) => s.id === "feature-config");
+        const idx = configuratorSteps.findIndex(
+          (s) => s.id === "feature-config",
+        );
         if (idx !== -1) setCurrentStep(idx);
       } else {
         setActiveFeature(null);
@@ -5909,10 +6362,14 @@ export default function Configurator() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">POS Provider</label>
+                  <label className="block text-sm font-medium mb-1">
+                    POS Provider
+                  </label>
                   <select
                     value={formData.posProvider}
-                    onChange={(e) => updateFormData("posProvider", e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("posProvider", e.target.value)
+                    }
                     className="w-full"
                   >
                     <option value="none">None</option>
@@ -5922,32 +6379,52 @@ export default function Configurator() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Payment Options</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Payment Options
+                  </label>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {(["applePay","googlePay","card","cash"] as const).map((k) => (
-                      <label key={k} className="inline-flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={!!formData.paymentMethods?.[k]}
-                          onChange={(e) =>
-                            updateFormData("paymentMethods", { ...formData.paymentMethods, [k]: e.target.checked })
-                          }
-                        />
-                        <span className="capitalize">{k.replace(/([A-Z])/g, " $1")}</span>
-                      </label>
-                    ))}
+                    {(["applePay", "googlePay", "card", "cash"] as const).map(
+                      (k) => (
+                        <label
+                          key={k}
+                          className="inline-flex items-center space-x-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={!!formData.paymentMethods?.[k]}
+                            onChange={(e) =>
+                              updateFormData("paymentMethods", {
+                                ...formData.paymentMethods,
+                                [k]: e.target.checked,
+                              })
+                            }
+                          />
+                          <span className="capitalize">
+                            {k.replace(/([A-Z])/g, " $1")}
+                          </span>
+                        </label>
+                      ),
+                    )}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Order Options</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Order Options
+                  </label>
                   <div className="grid grid-cols-3 gap-2 text-sm">
-                    {(["delivery","pickup","table"] as const).map((k) => (
-                      <label key={k} className="inline-flex items-center space-x-2">
+                    {(["delivery", "pickup", "table"] as const).map((k) => (
+                      <label
+                        key={k}
+                        className="inline-flex items-center space-x-2"
+                      >
                         <input
                           type="checkbox"
                           checked={!!formData.orderOptions?.[k]}
                           onChange={(e) =>
-                            updateFormData("orderOptions", { ...formData.orderOptions, [k]: e.target.checked })
+                            updateFormData("orderOptions", {
+                              ...formData.orderOptions,
+                              [k]: e.target.checked,
+                            })
                           }
                         />
                         <span className="capitalize">{k}</span>
@@ -5960,7 +6437,12 @@ export default function Configurator() {
                     <input
                       type="checkbox"
                       checked={!!formData.deliveryAddressRequired}
-                      onChange={(e) => updateFormData("deliveryAddressRequired", e.target.checked)}
+                      onChange={(e) =>
+                        updateFormData(
+                          "deliveryAddressRequired",
+                          e.target.checked,
+                        )
+                      }
                     />
                     <span>Require delivery address for delivery orders</span>
                   </label>
@@ -5968,7 +6450,8 @@ export default function Configurator() {
               </div>
 
               <p className="text-sm text-gray-500 mt-3">
-                Configure POS, payments, and order flows. Cart will be accessible across pages.
+                Configure POS, payments, and order flows. Cart will be
+                accessible across pages.
               </p>
             </Card>
           );
@@ -6023,7 +6506,9 @@ export default function Configurator() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Categories</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Categories
+                  </label>
                   <div className="flex items-center space-x-2 mb-2">
                     <Input
                       type="text"
@@ -6031,7 +6516,10 @@ export default function Configurator() {
                       onKeyDown={(e) => {
                         const val = (e.target as HTMLInputElement).value.trim();
                         if (e.key === "Enter" && val) {
-                          updateFormData("categories", [...(formData.categories || []), val]);
+                          updateFormData("categories", [
+                            ...(formData.categories || []),
+                            val,
+                          ]);
                           (e.target as HTMLInputElement).value = "";
                         }
                       }}
@@ -6040,19 +6528,26 @@ export default function Configurator() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {(formData.categories || []).map((c: string, i: number) => (
-                      <span key={i} className="px-2 py-1 bg-gray-100 rounded text-xs">
+                      <span
+                        key={i}
+                        className="px-2 py-1 bg-gray-100 rounded text-xs"
+                      >
                         {c}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium mb-1">Options</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Options
+                  </label>
                   <label className="inline-flex items-center space-x-2 text-sm">
                     <input
                       type="checkbox"
                       checked={!!formData.showStockLevels}
-                      onChange={(e) => updateFormData("showStockLevels", e.target.checked)}
+                      onChange={(e) =>
+                        updateFormData("showStockLevels", e.target.checked)
+                      }
                     />
                     <span>Show stock levels</span>
                   </label>
@@ -6060,7 +6555,9 @@ export default function Configurator() {
                     <input
                       type="checkbox"
                       checked={!!formData.discountsEnabled}
-                      onChange={(e) => updateFormData("discountsEnabled", e.target.checked)}
+                      onChange={(e) =>
+                        updateFormData("discountsEnabled", e.target.checked)
+                      }
                     />
                     <span>Enable discounts</span>
                   </label>
@@ -6068,7 +6565,9 @@ export default function Configurator() {
                     <input
                       type="checkbox"
                       checked={!!formData.bundlesEnabled}
-                      onChange={(e) => updateFormData("bundlesEnabled", e.target.checked)}
+                      onChange={(e) =>
+                        updateFormData("bundlesEnabled", e.target.checked)
+                      }
                     />
                     <span>Enable bundles</span>
                   </label>
@@ -6076,7 +6575,12 @@ export default function Configurator() {
                     <input
                       type="checkbox"
                       checked={!!formData.seasonalOffersEnabled}
-                      onChange={(e) => updateFormData("seasonalOffersEnabled", e.target.checked)}
+                      onChange={(e) =>
+                        updateFormData(
+                          "seasonalOffersEnabled",
+                          e.target.checked,
+                        )
+                      }
                     />
                     <span>Enable seasonal offers</span>
                   </label>
@@ -6084,7 +6588,9 @@ export default function Configurator() {
               </div>
 
               <p className="text-sm text-gray-500 mt-3">
-                Manage categories, stock visibility and promotions. Product details (images/allergens) are configured per item in Menu/Products step.
+                Manage categories, stock visibility and promotions. Product
+                details (images/allergens) are configured per item in
+                Menu/Products step.
               </p>
             </Card>
           );
@@ -6099,30 +6605,50 @@ export default function Configurator() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Name</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Name
+                    </label>
                     <Input
                       type="text"
                       placeholder="e.g. Alex"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          const name = (e.target as HTMLInputElement).value.trim();
+                          const name = (
+                            e.target as HTMLInputElement
+                          ).value.trim();
                           if (name) {
-                            updateFormData("teamMembers", [...(formData.teamMembers || []), { name, role: "", status: "on_duty" }]);
+                            updateFormData("teamMembers", [
+                              ...(formData.teamMembers || []),
+                              { name, role: "", status: "on_duty" },
+                            ]);
                             (e.target as HTMLInputElement).value = "";
                           }
                         }
                       }}
                     />
-                    <p className="text-xs text-gray-400 mt-1">Press Enter to add</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Press Enter to add
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Quick Roles</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Quick Roles
+                    </label>
                     <div className="flex flex-wrap gap-2 text-xs">
-                      {["chef","barista","waiter"].map((r) => (
+                      {["chef", "barista", "waiter"].map((r) => (
                         <button
                           key={r}
                           className="px-2 py-1 border rounded"
-                          onClick={() => updateFormData("teamMembers", [...(formData.teamMembers || []), { name: r.charAt(0).toUpperCase()+r.slice(1), role: r, status: "off_duty" }])}
+                          onClick={() =>
+                            updateFormData("teamMembers", [
+                              ...(formData.teamMembers || []),
+                              {
+                                name: r.charAt(0).toUpperCase() + r.slice(1),
+                                role: r,
+                                status: "off_duty",
+                              },
+                            ])
+                          }
                         >
                           + {r}
                         </button>
@@ -6149,21 +6675,31 @@ export default function Configurator() {
               <h4 className="text-lg font-bold mb-3">Loyalty / Stamp Card</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Stamps for reward</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Stamps for reward
+                  </label>
                   <Input
                     type="number"
                     value={formData.loyaltyConfig?.stampsForReward || 10}
                     onChange={(e) =>
-                      updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig || {}), stampsForReward: Number(e.target.value) })
+                      updateFormData("loyaltyConfig", {
+                        ...(formData.loyaltyConfig || {}),
+                        stampsForReward: Number(e.target.value),
+                      })
                     }
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Reward type</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Reward type
+                  </label>
                   <select
                     value={formData.loyaltyConfig?.rewardType || "discount"}
                     onChange={(e) =>
-                      updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig || {}), rewardType: e.target.value })
+                      updateFormData("loyaltyConfig", {
+                        ...(formData.loyaltyConfig || {}),
+                        rewardType: e.target.value,
+                      })
                     }
                     className="w-full"
                   >
@@ -6173,12 +6709,17 @@ export default function Configurator() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Expiration date</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Expiration date
+                  </label>
                   <Input
                     type="date"
                     value={formData.loyaltyConfig?.expiryDate || ""}
                     onChange={(e) =>
-                      updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig || {}), expiryDate: e.target.value })
+                      updateFormData("loyaltyConfig", {
+                        ...(formData.loyaltyConfig || {}),
+                        expiryDate: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -6198,16 +6739,43 @@ export default function Configurator() {
                     <option value="bogo">2-for-1</option>
                   </select>
                   <Input id="coupon-value" type="text" placeholder="Value" />
-                  <Input id="coupon-conditions" type="text" placeholder="Conditions" />
+                  <Input
+                    id="coupon-conditions"
+                    type="text"
+                    placeholder="Conditions"
+                  />
                   <Button
                     onClick={() => {
-                      const type = (document.getElementById("coupon-type") as HTMLSelectElement).value;
-                      const value = (document.getElementById("coupon-value") as HTMLInputElement).value;
-                      const conditions = (document.getElementById("coupon-conditions") as HTMLInputElement).value;
+                      const type = (
+                        document.getElementById(
+                          "coupon-type",
+                        ) as HTMLSelectElement
+                      ).value;
+                      const value = (
+                        document.getElementById(
+                          "coupon-value",
+                        ) as HTMLInputElement
+                      ).value;
+                      const conditions = (
+                        document.getElementById(
+                          "coupon-conditions",
+                        ) as HTMLInputElement
+                      ).value;
                       if (value) {
-                        updateFormData("coupons", [...(formData.coupons || []), { type, value, conditions }]);
-                        (document.getElementById("coupon-value") as HTMLInputElement).value = "";
-                        (document.getElementById("coupon-conditions") as HTMLInputElement).value = "";
+                        updateFormData("coupons", [
+                          ...(formData.coupons || []),
+                          { type, value, conditions },
+                        ]);
+                        (
+                          document.getElementById(
+                            "coupon-value",
+                          ) as HTMLInputElement
+                        ).value = "";
+                        (
+                          document.getElementById(
+                            "coupon-conditions",
+                          ) as HTMLInputElement
+                        ).value = "";
                       }
                     }}
                   >
@@ -6217,8 +6785,12 @@ export default function Configurator() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {(formData.coupons || []).map((c: any, i: number) => (
                     <div key={i} className="p-3 border rounded">
-                      <div className="text-sm font-semibold">{c.type} - {c.value}</div>
-                      <div className="text-xs text-gray-600">{c.conditions}</div>
+                      <div className="text-sm font-semibold">
+                        {c.type} - {c.value}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {c.conditions}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -6229,23 +6801,64 @@ export default function Configurator() {
         case "offersEnabled":
           return (
             <Card className="p-6 mt-6">
-              <h4 className="text-lg font-bold mb-3">Current Offers / Specials</h4>
+              <h4 className="text-lg font-bold mb-3">
+                Current Offers / Specials
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Input id="offer-window" type="text" placeholder="Time window (e.g., 17:00-19:00)" />
-                <Input id="offer-products" type="text" placeholder="Products (comma-separated)" />
-                <Input id="offer-discount" type="text" placeholder="Discount / Bundle" />
+                <Input
+                  id="offer-window"
+                  type="text"
+                  placeholder="Time window (e.g., 17:00-19:00)"
+                />
+                <Input
+                  id="offer-products"
+                  type="text"
+                  placeholder="Products (comma-separated)"
+                />
+                <Input
+                  id="offer-discount"
+                  type="text"
+                  placeholder="Discount / Bundle"
+                />
               </div>
               <div className="mt-3">
                 <Button
                   onClick={() => {
-                    const time = (document.getElementById("offer-window") as HTMLInputElement).value;
-                    const products = (document.getElementById("offer-products") as HTMLInputElement).value;
-                    const discount = (document.getElementById("offer-discount") as HTMLInputElement).value;
+                    const time = (
+                      document.getElementById(
+                        "offer-window",
+                      ) as HTMLInputElement
+                    ).value;
+                    const products = (
+                      document.getElementById(
+                        "offer-products",
+                      ) as HTMLInputElement
+                    ).value;
+                    const discount = (
+                      document.getElementById(
+                        "offer-discount",
+                      ) as HTMLInputElement
+                    ).value;
                     if (time && products) {
-                      updateFormData("offers", [...(formData.offers || []), { time, products, discount }]);
-                      (document.getElementById("offer-window") as HTMLInputElement).value = "";
-                      (document.getElementById("offer-products") as HTMLInputElement).value = "";
-                      (document.getElementById("offer-discount") as HTMLInputElement).value = "";
+                      updateFormData("offers", [
+                        ...(formData.offers || []),
+                        { time, products, discount },
+                      ]);
+                      (
+                        document.getElementById(
+                          "offer-window",
+                        ) as HTMLInputElement
+                      ).value = "";
+                      (
+                        document.getElementById(
+                          "offer-products",
+                        ) as HTMLInputElement
+                      ).value = "";
+                      (
+                        document.getElementById(
+                          "offer-discount",
+                        ) as HTMLInputElement
+                      ).value = "";
                     }
                   }}
                 >
@@ -6357,7 +6970,9 @@ export default function Configurator() {
 
     const goBack = () => {
       setPendingFeatureConfig(null);
-      const idx = configuratorSteps.findIndex((s) => s.id === "advanced-features");
+      const idx = configuratorSteps.findIndex(
+        (s) => s.id === "advanced-features",
+      );
       if (idx !== -1) setCurrentStep(idx);
     };
 
@@ -6366,11 +6981,21 @@ export default function Configurator() {
         case "onlineOrdering":
           return (
             <Card className="p-6">
-              <h4 className="text-lg font-bold mb-3">Online Ordering Settings</h4>
+              <h4 className="text-lg font-bold mb-3">
+                Online Ordering Settings
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">POS Provider</label>
-                  <select value={formData.posProvider} onChange={(e)=>updateFormData("posProvider", e.target.value)} className="w-full">
+                  <label className="block text-sm font-medium mb-1">
+                    POS Provider
+                  </label>
+                  <select
+                    value={formData.posProvider}
+                    onChange={(e) =>
+                      updateFormData("posProvider", e.target.value)
+                    }
+                    className="w-full"
+                  >
                     <option value="none">None</option>
                     <option value="sumup">SumUp</option>
                     <option value="shopify">Shopify POS</option>
@@ -6378,22 +7003,54 @@ export default function Configurator() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Payment Options</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Payment Options
+                  </label>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {(["applePay","googlePay","card","cash"] as const).map((k) => (
-                      <label key={k} className="inline-flex items-center space-x-2">
-                        <input type="checkbox" checked={!!formData.paymentMethods?.[k]} onChange={(e)=>updateFormData("paymentMethods", { ...formData.paymentMethods, [k]: e.target.checked })} />
-                        <span className="capitalize">{k.replace(/([A-Z])/g, " $1")}</span>
-                      </label>
-                    ))}
+                    {(["applePay", "googlePay", "card", "cash"] as const).map(
+                      (k) => (
+                        <label
+                          key={k}
+                          className="inline-flex items-center space-x-2"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={!!formData.paymentMethods?.[k]}
+                            onChange={(e) =>
+                              updateFormData("paymentMethods", {
+                                ...formData.paymentMethods,
+                                [k]: e.target.checked,
+                              })
+                            }
+                          />
+                          <span className="capitalize">
+                            {k.replace(/([A-Z])/g, " $1")}
+                          </span>
+                        </label>
+                      ),
+                    )}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Order Options</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Order Options
+                  </label>
                   <div className="grid grid-cols-3 gap-2 text-sm">
-                    {(["delivery","pickup","table"] as const).map((k) => (
-                      <label key={k} className="inline-flex items-center space-x-2">
-                        <input type="checkbox" checked={!!formData.orderOptions?.[k]} onChange={(e)=>updateFormData("orderOptions", { ...formData.orderOptions, [k]: e.target.checked })} />
+                    {(["delivery", "pickup", "table"] as const).map((k) => (
+                      <label
+                        key={k}
+                        className="inline-flex items-center space-x-2"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!formData.orderOptions?.[k]}
+                          onChange={(e) =>
+                            updateFormData("orderOptions", {
+                              ...formData.orderOptions,
+                              [k]: e.target.checked,
+                            })
+                          }
+                        />
                         <span className="capitalize">{k}</span>
                       </label>
                     ))}
@@ -6401,7 +7058,16 @@ export default function Configurator() {
                 </div>
                 <div>
                   <label className="inline-flex items-center space-x-2">
-                    <input type="checkbox" checked={!!formData.deliveryAddressRequired} onChange={(e)=>updateFormData("deliveryAddressRequired", e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={!!formData.deliveryAddressRequired}
+                      onChange={(e) =>
+                        updateFormData(
+                          "deliveryAddressRequired",
+                          e.target.checked,
+                        )
+                      }
+                    />
                     <span>Require delivery address for delivery orders</span>
                   </label>
                 </div>
@@ -6414,21 +7080,84 @@ export default function Configurator() {
               <h4 className="text-lg font-bold mb-3">Online Store Settings</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Categories</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Categories
+                  </label>
                   <div className="flex items-center space-x-2 mb-2">
-                    <Input type="text" placeholder="Add category" onKeyDown={(e)=>{const v=(e.target as HTMLInputElement).value.trim(); if(e.key==='Enter'&&v){updateFormData("categories", [...(formData.categories||[]), v]); (e.target as HTMLInputElement).value='';}}} />
+                    <Input
+                      type="text"
+                      placeholder="Add category"
+                      onKeyDown={(e) => {
+                        const v = (e.target as HTMLInputElement).value.trim();
+                        if (e.key === "Enter" && v) {
+                          updateFormData("categories", [
+                            ...(formData.categories || []),
+                            v,
+                          ]);
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                      }}
+                    />
                     <span className="text-xs text-gray-500">Press Enter</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {(formData.categories||[]).map((c:string,i:number)=>(<span key={i} className="px-2 py-1 bg-gray-100 rounded text-xs">{c}</span>))}
+                    {(formData.categories || []).map((c: string, i: number) => (
+                      <span
+                        key={i}
+                        className="px-2 py-1 bg-gray-100 rounded text-xs"
+                      >
+                        {c}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium mb-1">Options</label>
-                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.showStockLevels} onChange={(e)=>updateFormData("showStockLevels", e.target.checked)} /><span>Show stock levels</span></label>
-                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.discountsEnabled} onChange={(e)=>updateFormData("discountsEnabled", e.target.checked)} /><span>Enable discounts</span></label>
-                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.bundlesEnabled} onChange={(e)=>updateFormData("bundlesEnabled", e.target.checked)} /><span>Enable bundles</span></label>
-                  <label className="inline-flex items-center space-x-2 text-sm"><input type="checkbox" checked={!!formData.seasonalOffersEnabled} onChange={(e)=>updateFormData("seasonalOffersEnabled", e.target.checked)} /><span>Enable seasonal offers</span></label>
+                  <label className="block text-sm font-medium mb-1">
+                    Options
+                  </label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.showStockLevels}
+                      onChange={(e) =>
+                        updateFormData("showStockLevels", e.target.checked)
+                      }
+                    />
+                    <span>Show stock levels</span>
+                  </label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.discountsEnabled}
+                      onChange={(e) =>
+                        updateFormData("discountsEnabled", e.target.checked)
+                      }
+                    />
+                    <span>Enable discounts</span>
+                  </label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.bundlesEnabled}
+                      onChange={(e) =>
+                        updateFormData("bundlesEnabled", e.target.checked)
+                      }
+                    />
+                    <span>Enable bundles</span>
+                  </label>
+                  <label className="inline-flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.seasonalOffersEnabled}
+                      onChange={(e) =>
+                        updateFormData(
+                          "seasonalOffersEnabled",
+                          e.target.checked,
+                        )
+                      }
+                    />
+                    <span>Enable seasonal offers</span>
+                  </label>
                 </div>
               </div>
             </Card>
@@ -6440,14 +7169,50 @@ export default function Configurator() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">Name</label>
-                  <Input type="text" placeholder="e.g. Alex" onKeyDown={(e)=>{ if(e.key==='Enter'){ const name=(e.target as HTMLInputElement).value.trim(); if(name){ updateFormData("teamMembers", [...(formData.teamMembers||[]), { name, role: "", status: "on_duty" }]); (e.target as HTMLInputElement).value=''; } } }} />
-                  <p className="text-xs text-gray-400 mt-1">Press Enter to add</p>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Alex"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const name = (
+                          e.target as HTMLInputElement
+                        ).value.trim();
+                        if (name) {
+                          updateFormData("teamMembers", [
+                            ...(formData.teamMembers || []),
+                            { name, role: "", status: "on_duty" },
+                          ]);
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Press Enter to add
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Quick Roles</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Quick Roles
+                  </label>
                   <div className="flex flex-wrap gap-2 text-xs">
-                    {["chef","barista","waiter"].map((r)=>(
-                      <button key={r} className="px-2 py-1 border rounded" onClick={()=>updateFormData("teamMembers", [...(formData.teamMembers||[]), { name: r.charAt(0).toUpperCase()+r.slice(1), role: r, status: "off_duty" }])}>+ {r}</button>
+                    {["chef", "barista", "waiter"].map((r) => (
+                      <button
+                        key={r}
+                        className="px-2 py-1 border rounded"
+                        onClick={() =>
+                          updateFormData("teamMembers", [
+                            ...(formData.teamMembers || []),
+                            {
+                              name: r.charAt(0).toUpperCase() + r.slice(1),
+                              role: r,
+                              status: "off_duty",
+                            },
+                          ])
+                        }
+                      >
+                        + {r}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -6460,20 +7225,53 @@ export default function Configurator() {
               <h4 className="text-lg font-bold mb-3">Loyalty / Stamp Card</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Stamps for reward</label>
-                  <Input type="number" value={formData.loyaltyConfig?.stampsForReward || 10} onChange={(e)=>updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig||{}), stampsForReward:Number(e.target.value) })} />
+                  <label className="block text-sm font-medium mb-1">
+                    Stamps for reward
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.loyaltyConfig?.stampsForReward || 10}
+                    onChange={(e) =>
+                      updateFormData("loyaltyConfig", {
+                        ...(formData.loyaltyConfig || {}),
+                        stampsForReward: Number(e.target.value),
+                      })
+                    }
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Reward type</label>
-                  <select value={formData.loyaltyConfig?.rewardType || 'discount'} onChange={(e)=>updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig||{}), rewardType:e.target.value })} className="w-full">
+                  <label className="block text-sm font-medium mb-1">
+                    Reward type
+                  </label>
+                  <select
+                    value={formData.loyaltyConfig?.rewardType || "discount"}
+                    onChange={(e) =>
+                      updateFormData("loyaltyConfig", {
+                        ...(formData.loyaltyConfig || {}),
+                        rewardType: e.target.value,
+                      })
+                    }
+                    className="w-full"
+                  >
                     <option value="discount">Discount</option>
                     <option value="free_item">Free Item</option>
                     <option value="voucher">Voucher</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Expiration date</label>
-                  <Input type="date" value={formData.loyaltyConfig?.expiryDate || ''} onChange={(e)=>updateFormData("loyaltyConfig", { ...(formData.loyaltyConfig||{}), expiryDate:e.target.value })} />
+                  <label className="block text-sm font-medium mb-1">
+                    Expiration date
+                  </label>
+                  <Input
+                    type="date"
+                    value={formData.loyaltyConfig?.expiryDate || ""}
+                    onChange={(e) =>
+                      updateFormData("loyaltyConfig", {
+                        ...(formData.loyaltyConfig || {}),
+                        expiryDate: e.target.value,
+                      })
+                    }
+                  />
                 </div>
               </div>
             </Card>
@@ -6489,15 +7287,63 @@ export default function Configurator() {
                     <option value="percent">Percentage</option>
                     <option value="bogo">2-for-1</option>
                   </select>
-                  <Input id="coupon-value-step" type="text" placeholder="Value" />
-                  <Input id="coupon-conditions-step" type="text" placeholder="Conditions" />
-                  <Button onClick={()=>{ const type=(document.getElementById('coupon-type-step') as HTMLSelectElement).value; const value=(document.getElementById('coupon-value-step') as HTMLInputElement).value; const conditions=(document.getElementById('coupon-conditions-step') as HTMLInputElement).value; if(value){ updateFormData("coupons", [...(formData.coupons||[]), { type, value, conditions }]); (document.getElementById('coupon-value-step') as HTMLInputElement).value=''; (document.getElementById('coupon-conditions-step') as HTMLInputElement).value=''; } }}>Add Coupon</Button>
+                  <Input
+                    id="coupon-value-step"
+                    type="text"
+                    placeholder="Value"
+                  />
+                  <Input
+                    id="coupon-conditions-step"
+                    type="text"
+                    placeholder="Conditions"
+                  />
+                  <Button
+                    onClick={() => {
+                      const type = (
+                        document.getElementById(
+                          "coupon-type-step",
+                        ) as HTMLSelectElement
+                      ).value;
+                      const value = (
+                        document.getElementById(
+                          "coupon-value-step",
+                        ) as HTMLInputElement
+                      ).value;
+                      const conditions = (
+                        document.getElementById(
+                          "coupon-conditions-step",
+                        ) as HTMLInputElement
+                      ).value;
+                      if (value) {
+                        updateFormData("coupons", [
+                          ...(formData.coupons || []),
+                          { type, value, conditions },
+                        ]);
+                        (
+                          document.getElementById(
+                            "coupon-value-step",
+                          ) as HTMLInputElement
+                        ).value = "";
+                        (
+                          document.getElementById(
+                            "coupon-conditions-step",
+                          ) as HTMLInputElement
+                        ).value = "";
+                      }
+                    }}
+                  >
+                    Add Coupon
+                  </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {(formData.coupons || []).map((c:any,i:number)=>(
+                  {(formData.coupons || []).map((c: any, i: number) => (
                     <div key={i} className="p-3 border rounded">
-                      <div className="text-sm font-semibold">{c.type} - {c.value}</div>
-                      <div className="text-xs text-gray-600">{c.conditions}</div>
+                      <div className="text-sm font-semibold">
+                        {c.type} - {c.value}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {c.conditions}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -6507,17 +7353,72 @@ export default function Configurator() {
         case "offersEnabled":
           return (
             <Card className="p-6">
-              <h4 className="text-lg font-bold mb-3">Current Offers / Specials</h4>
+              <h4 className="text-lg font-bold mb-3">
+                Current Offers / Specials
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Input id="offer-window-step" type="text" placeholder="Time window (e.g., 17:00-19:00)" />
-                <Input id="offer-products-step" type="text" placeholder="Products (comma-separated)" />
-                <Input id="offer-discount-step" type="text" placeholder="Discount / Bundle" />
+                <Input
+                  id="offer-window-step"
+                  type="text"
+                  placeholder="Time window (e.g., 17:00-19:00)"
+                />
+                <Input
+                  id="offer-products-step"
+                  type="text"
+                  placeholder="Products (comma-separated)"
+                />
+                <Input
+                  id="offer-discount-step"
+                  type="text"
+                  placeholder="Discount / Bundle"
+                />
               </div>
               <div className="mt-3">
-                <Button onClick={()=>{ const time=(document.getElementById('offer-window-step') as HTMLInputElement).value; const products=(document.getElementById('offer-products-step') as HTMLInputElement).value; const discount=(document.getElementById('offer-discount-step') as HTMLInputElement).value; if(time && products){ updateFormData("offers", [...(formData.offers||[]), { time, products, discount }]); (document.getElementById('offer-window-step') as HTMLInputElement).value=''; (document.getElementById('offer-products-step') as HTMLInputElement).value=''; (document.getElementById('offer-discount-step') as HTMLInputElement).value=''; } }}>Add Offer</Button>
+                <Button
+                  onClick={() => {
+                    const time = (
+                      document.getElementById(
+                        "offer-window-step",
+                      ) as HTMLInputElement
+                    ).value;
+                    const products = (
+                      document.getElementById(
+                        "offer-products-step",
+                      ) as HTMLInputElement
+                    ).value;
+                    const discount = (
+                      document.getElementById(
+                        "offer-discount-step",
+                      ) as HTMLInputElement
+                    ).value;
+                    if (time && products) {
+                      updateFormData("offers", [
+                        ...(formData.offers || []),
+                        { time, products, discount },
+                      ]);
+                      (
+                        document.getElementById(
+                          "offer-window-step",
+                        ) as HTMLInputElement
+                      ).value = "";
+                      (
+                        document.getElementById(
+                          "offer-products-step",
+                        ) as HTMLInputElement
+                      ).value = "";
+                      (
+                        document.getElementById(
+                          "offer-discount-step",
+                        ) as HTMLInputElement
+                      ).value = "";
+                    }
+                  }}
+                >
+                  Add Offer
+                </Button>
               </div>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                {(formData.offers || []).map((o:any,i:number)=>(
+                {(formData.offers || []).map((o: any, i: number) => (
                   <div key={i} className="p-3 border rounded">
                     <div className="text-sm font-semibold">{o.time}</div>
                     <div className="text-xs text-gray-600">{o.products}</div>
@@ -6535,12 +7436,24 @@ export default function Configurator() {
     return (
       <div className="py-8 max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Feature configuration</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Feature configuration
+          </h2>
         </div>
         {render()}
         <div className="flex justify-between mt-8">
-          <Button onClick={goBack} variant="outline" size="lg"><ArrowLeft className="mr-2 w-5 h-5" />Back</Button>
-          <Button onClick={finish} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">Save & Continue<ChevronRight className="ml-2 w-5 h-5" /></Button>
+          <Button onClick={goBack} variant="outline" size="lg">
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={finish}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Save & Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
         </div>
       </div>
     );
