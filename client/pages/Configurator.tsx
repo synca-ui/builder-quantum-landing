@@ -4816,6 +4816,16 @@ export default function Configurator() {
       </div>
 
       {/* Page-Specific Configuration Info */}
+      <Card className="p-6 mt-8">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">
+          Homepage Options
+        </h3>
+        <label className="inline-flex items-center space-x-2 text-sm">
+          <input type="checkbox" checked={!!formData.showHomeHero} onChange={(e)=> updateFormData("showHomeHero", e.target.checked)} />
+          <span>Show header block under headline (logo + name) on Home</span>
+        </label>
+      </Card>
+
       {formData.selectedPages.length > 1 && (
         <Card className="p-6 mt-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
