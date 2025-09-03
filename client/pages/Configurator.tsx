@@ -1667,9 +1667,7 @@ export default function Configurator() {
                   !formData.location &&
                   !formData.socialMedia && (
                     <div className="text-center py-4">
-                      <p className={templateStyles.itemDesc}>
-                        Contact information will appear here
-                      </p>
+                      <p className={templateStyles.itemDesc}>{t("contactInfoPlaceholder")}</p>
                     </div>
                   )}
               </div>
