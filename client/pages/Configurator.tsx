@@ -1630,9 +1630,7 @@ export default function Configurator() {
                   (Object.keys(formData.socialMedia).length > 0 ||
                     formData.instagramSync) && (
                     <div className="mt-4">
-                      <h3 className={templateStyles.itemName + " mb-2"}>
-                        Follow Us
-                      </h3>
+                      <h3 className={templateStyles.itemName + " mb-2"}>{t("followUs")}</h3>
                       <div className="flex space-x-3">
                         {formData.socialMedia.instagram && (
                           <a
