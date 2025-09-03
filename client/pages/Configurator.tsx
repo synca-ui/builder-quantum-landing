@@ -211,12 +211,6 @@ export default function Configurator() {
     setIsVisible(true);
   }, []);
 
-  // Apply dark/light theme to document root
-  useEffect(() => {
-    const root = document.documentElement;
-    if (formData.themeMode === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
-  }, [formData.themeMode]);
 
   // Template preview selection (for step 0 live preview before committing)
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
