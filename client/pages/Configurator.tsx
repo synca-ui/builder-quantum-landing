@@ -1200,7 +1200,7 @@ export default function Configurator() {
         switch (selectedIdForSwitch) {
           case "minimalist":
             return {
-              page: "p-4",
+              page: "p-4 pt-6",
               title: "text-lg font-medium mb-4 text-center text-black",
               itemCard: "py-2 border-b border-gray-200 last:border-b-0",
               itemName: "font-medium text-sm text-black",
@@ -1216,7 +1216,7 @@ export default function Configurator() {
             };
           case "modern":
             return {
-              page: "p-4",
+              page: "p-4 pt-6",
               title:
                 "text-lg font-bold mb-4 text-center text-white drop-shadow-lg",
               itemCard:
@@ -1234,7 +1234,7 @@ export default function Configurator() {
             };
           case "stylish":
             return {
-              page: "p-4",
+              page: "p-4 pt-6",
               title: "text-lg font-semibold mb-4 text-center text-slate-800",
               itemCard:
                 "bg-white rounded-lg p-3 shadow-sm border border-emerald-200",
@@ -1251,7 +1251,7 @@ export default function Configurator() {
             };
           case "cozy":
             return {
-              page: "p-4 bg-orange-50",
+              page: "p-4 pt-6 bg-orange-50",
               title: "text-lg font-semibold mb-4 text-center text-amber-900",
               itemCard:
                 "bg-white rounded-xl p-4 border border-amber-200 shadow-sm",
@@ -1268,7 +1268,7 @@ export default function Configurator() {
             };
           default:
             return {
-              page: "p-4",
+              page: "p-4 pt-6",
               title: "text-lg font-bold mb-4 text-center",
               itemCard: "bg-white/90 backdrop-blur rounded-lg p-3 shadow-sm",
               itemName: "font-semibold text-sm",
