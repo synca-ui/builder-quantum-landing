@@ -5371,6 +5371,27 @@ export default function Configurator() {
         icon: <Users className="w-8 h-8" />,
         premium: false,
       },
+      {
+        id: "loyaltyEnabled",
+        title: "Stamp Card / Loyalty",
+        description: "Reward returning customers with digital stamps",
+        icon: <Star className="w-8 h-8" />,
+        premium: false,
+      },
+      {
+        id: "couponsEnabled",
+        title: "Coupons / Vouchers",
+        description: "Create and manage digital coupon campaigns",
+        icon: <Crown className="w-8 h-8" />,
+        premium: false,
+      },
+      {
+        id: "offersEnabled",
+        title: "Current Offers / Specials",
+        description: "Highlight time-limited deals and bundles",
+        icon: <Zap className="w-8 h-8" />,
+        premium: false,
+      },
     ];
 
     const handleFeatureClick = (featureId: string, enabled: boolean) => {
