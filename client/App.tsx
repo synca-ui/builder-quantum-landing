@@ -19,7 +19,10 @@ const queryClient = new QueryClient({
       // Add error handling for React Query
       retry: (failureCount, error) => {
         // Don't retry network errors more than once
-        if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        if (
+          error instanceof Error &&
+          error.message.includes("Failed to fetch")
+        ) {
           return failureCount < 1;
         }
         return failureCount < 3;

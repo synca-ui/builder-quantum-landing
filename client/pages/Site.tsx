@@ -60,11 +60,15 @@ export default function Site() {
     };
   }, [resolvedSlug]);
 
-  const theme = useMemo(() => ({
-    '--primary': config?.primaryColor || '#111827',
-    '--secondary': config?.secondaryColor || '#6B7280',
-    fontFamily: config?.fontFamily || 'Inter, system-ui, sans-serif',
-  } as React.CSSProperties), [config]);
+  const theme = useMemo(
+    () =>
+      ({
+        "--primary": config?.primaryColor || "#111827",
+        "--secondary": config?.secondaryColor || "#6B7280",
+        fontFamily: config?.fontFamily || "Inter, system-ui, sans-serif",
+      }) as React.CSSProperties,
+    [config],
+  );
 
   if (loading) {
     return (
@@ -78,22 +82,31 @@ export default function Site() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center p-6">
         <h1 className="text-2xl font-bold mb-2">Site unavailable</h1>
-        <p className="text-gray-600 mb-4">{error || 'We could not find this published site.'}</p>
-        <Button onClick={() => (window.location.href = '/')}>Go home</Button>
+        <p className="text-gray-600 mb-4">
+          {error || "We could not find this published site."}
+        </p>
+        <Button onClick={() => (window.location.href = "/")}>Go home</Button>
       </div>
     );
   }
 
   return (
-    <div style={theme} className="min-h-screen bg-white text-gray-900" >
+    <div style={theme} className="min-h-screen bg-white text-gray-900">
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="font-black text-xl" style={{ color: 'var(--primary)' }}>
+          <div
+            className="font-black text-xl"
+            style={{ color: "var(--primary)" }}
+          >
             {config.businessName}
           </div>
           <nav className="text-sm text-gray-600">
-            <a href="#menu" className="mr-4 hover:text-black">Menu</a>
-            <a href="#gallery" className="hover:text-black">Gallery</a>
+            <a href="#menu" className="mr-4 hover:text-black">
+              Menu
+            </a>
+            <a href="#gallery" className="hover:text-black">
+              Gallery
+            </a>
           </nav>
         </div>
       </header>
@@ -101,7 +114,10 @@ export default function Site() {
       <main>
         <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-6xl mx-auto px-4">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4" style={{ color: 'var(--primary)' }}>
+            <h1
+              className="text-4xl md:text-5xl font-extrabold mb-4"
+              style={{ color: "var(--primary)" }}
+            >
               {config.businessName}
             </h1>
             {config.slogan && (

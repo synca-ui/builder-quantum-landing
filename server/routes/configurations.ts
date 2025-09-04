@@ -396,9 +396,10 @@ export async function publishConfiguration(req: Request, res: Response) {
         if (h) baseHost = h;
       } catch {}
     }
-    const publishedUrl = config.hasDomain && config.domainName
-      ? `https://${config.domainName}`
-      : `https://${tenantSlug}.${baseHost}`;
+    const publishedUrl =
+      config.hasDomain && config.domainName
+        ? `https://${config.domainName}`
+        : `https://${tenantSlug}.${baseHost}`;
 
     // Update configuration status
     config.status = "published";
@@ -436,10 +437,17 @@ export async function getPublishedSite(req: Request, res: Response) {
 
     // Prefer DB source if configured
     const databaseUrl =
-      process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || process.env.POSTGRES_URL || "";
+      process.env.DATABASE_URL ||
+      process.env.SUPABASE_DB_URL ||
+      process.env.POSTGRES_URL ||
+      "";
 
     if (databaseUrl) {
-      const pool = new Pool({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, max: 2 });
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        max: 2,
+      });
       const client = await pool.connect();
       try {
         // Look up tenant mapping
@@ -468,7 +476,13 @@ export async function getPublishedSite(req: Request, res: Response) {
 
     // Fallback to file-based store (for local dev)
     const configurations = await loadConfigurations();
-    const config = configurations.find((c) => c.status === "published" && (c.publishedUrl?.includes(subdomain) || c.selectedDomain === subdomain || c.domainName === subdomain));
+    const config = configurations.find(
+      (c) =>
+        c.status === "published" &&
+        (c.publishedUrl?.includes(subdomain) ||
+          c.selectedDomain === subdomain ||
+          c.domainName === subdomain),
+    );
     if (config) {
       return res.json({ success: true, site: config });
     }
