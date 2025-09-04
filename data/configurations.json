@@ -56,23 +56,7 @@
         "closed": true
       }
     },
-    "menuItems": [
-      {
-        "name": "Coffee",
-        "description": "Freshly brewed coffee",
-        "price": "3.50"
-      },
-      {
-        "name": "Sandwich",
-        "description": "Fresh sandwich with premium ingredients",
-        "price": "8.99"
-      },
-      {
-        "name": "Salad",
-        "description": "Fresh garden salad",
-        "price": "7.50"
-      }
-    ],
+    "menuItems": [],
     "reservationsEnabled": false,
     "maxGuests": 10,
     "notificationMethod": "email",
@@ -85,8 +69,8 @@
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-04T17:29:32.968Z",
-    "updatedAt": "2025-09-04T17:29:32.968Z",
+    "createdAt": "2025-09-04T17:38:15.905Z",
+    "updatedAt": "2025-09-04T17:38:15.905Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
