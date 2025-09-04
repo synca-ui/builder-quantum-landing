@@ -2895,7 +2895,7 @@ export default function Configurator() {
                               }
                               aria-label="Decrease quantity"
                             >
-                              ��
+                              −
                             </button>
                             <input
                               type="number"
@@ -7767,7 +7767,7 @@ export default function Configurator() {
                   }
                   className="flex-1"
                 />
-                <span className="text-gray-500 font-mono">.sync-a.com</span>
+                <span className="text-gray-500 font-mono">.{getBaseHost()}</span>
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 Your website will be available at: {getDisplayedDomain()}
