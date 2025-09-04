@@ -224,22 +224,21 @@ export async function publishConfiguration(req: Request, res: Response) {
     const { id } = req.params;
     const userId = (req.headers["x-user-id"] as string) || "anonymous";
 
-    // Try file storage first; if not found or not writable (Netlify), use payload
+    // Prefer config from request payload to avoid FS on serverless; fallback to file
+    const payload = (req.body?.config || {}) as Partial<Configuration>;
     let configurations: Configuration[] = [];
-    try {
-      configurations = await loadConfigurations();
-    } catch {}
-    let configIndex = configurations.findIndex(
-      (c) => c.id === id && c.userId === userId,
-    );
+    let configIndex = -1;
+    if (!payload || Object.keys(payload).length === 0) {
+      try {
+        configurations = await loadConfigurations();
+        configIndex = configurations.findIndex((c) => c.id === id && c.userId === userId);
+      } catch {}
+    }
 
     let config: Configuration;
-    if (configIndex === -1) {
-      const payload = (req.body?.config || {}) as Partial<Configuration>;
-      if (!payload || !payload.businessName || !payload.template) {
-        return res
-          .status(404)
-          .json({ error: "Configuration not found (and no payload provided)" });
+    if (payload && Object.keys(payload).length > 0) {
+      if (!payload.businessName || !payload.template) {
+        return res.status(400).json({ error: "Missing required fields in payload" });
       }
       config = {
         ...(payload as Configuration),
@@ -249,8 +248,10 @@ export async function publishConfiguration(req: Request, res: Response) {
         updatedAt: new Date().toISOString(),
         status: (payload.status as any) || "draft",
       } as Configuration;
-    } else {
+    } else if (configIndex !== -1) {
       config = configurations[configIndex];
+    } else {
+      return res.status(404).json({ error: "Configuration not found" });
     }
 
     // Prepare tenant details
