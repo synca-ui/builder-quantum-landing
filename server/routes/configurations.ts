@@ -220,13 +220,17 @@ export async function publishConfiguration(req: Request, res: Response) {
     try {
       configurations = await loadConfigurations();
     } catch {}
-    let configIndex = configurations.findIndex((c) => c.id === id && c.userId === userId);
+    let configIndex = configurations.findIndex(
+      (c) => c.id === id && c.userId === userId,
+    );
 
     let config: Configuration;
     if (configIndex === -1) {
       const payload = (req.body?.config || {}) as Partial<Configuration>;
       if (!payload || !payload.businessName || !payload.template) {
-        return res.status(404).json({ error: "Configuration not found (and no payload provided)" });
+        return res
+          .status(404)
+          .json({ error: "Configuration not found (and no payload provided)" });
       }
       config = {
         ...(payload as Configuration),
@@ -260,7 +264,11 @@ export async function publishConfiguration(req: Request, res: Response) {
     if (!databaseUrl) {
       console.warn("DATABASE_URL not configured, skipping DB setup");
     } else {
-      const pool = new Pool({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, max: 2 });
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        max: 2,
+      });
       const client = await pool.connect();
       try {
         await client.query("BEGIN");

@@ -1,6 +1,6 @@
 // Client-side API functions for configuration management
 
-import { handleFetchError } from '@/utils/debug';
+import { handleFetchError } from "@/utils/debug";
 
 export interface Configuration {
   id?: string;
@@ -32,7 +32,7 @@ export interface Configuration {
   selectedDomain?: string;
   createdAt?: string;
   updatedAt?: string;
-  status?: 'draft' | 'published' | 'archived';
+  status?: "draft" | "published" | "archived";
   publishedUrl?: string;
 }
 
@@ -45,10 +45,11 @@ export interface ApiResponse<T> {
 
 // Get user ID from localStorage or generate anonymous one
 function getUserId(): string {
-  let userId = localStorage.getItem('sync_user_id');
+  let userId = localStorage.getItem("sync_user_id");
   if (!userId) {
-    userId = 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
-    localStorage.setItem('sync_user_id', userId);
+    userId =
+      "user_" + Date.now().toString(36) + Math.random().toString(36).substr(2);
+    localStorage.setItem("sync_user_id", userId);
   }
   return userId;
 }
@@ -56,7 +57,7 @@ function getUserId(): string {
 // Base API request function with improved error handling
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<ApiResponse<T>> {
   try {
     // Add timeout to prevent hanging requests
@@ -65,8 +66,8 @@ async function apiRequest<T>(
 
     const response = await fetch(`/api${endpoint}`, {
       headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': getUserId(),
+        "Content-Type": "application/json",
+        "x-user-id": getUserId(),
         ...options.headers,
       },
       signal: controller.signal,
@@ -80,8 +81,8 @@ async function apiRequest<T>(
     try {
       data = await response.json();
     } catch (jsonError) {
-      console.warn('Failed to parse JSON response:', jsonError);
-      data = { error: 'Invalid server response' };
+      console.warn("Failed to parse JSON response:", jsonError);
+      data = { error: "Invalid server response" };
     }
 
     if (!response.ok) {
@@ -97,22 +98,22 @@ async function apiRequest<T>(
       message: data.message,
     };
   } catch (error) {
-    console.warn('API request failed:', { endpoint, error });
+    console.warn("API request failed:", { endpoint, error });
 
     // Use debug utilities for better error handling
     if (error instanceof Error) {
       handleFetchError(error, `API request to ${endpoint}`);
 
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         return {
           success: false,
-          error: 'Request timeout - server may be unavailable',
+          error: "Request timeout - server may be unavailable",
         };
       }
-      if (error.message.includes('Failed to fetch')) {
+      if (error.message.includes("Failed to fetch")) {
         return {
           success: false,
-          error: 'Unable to connect to server - API may be unavailable',
+          error: "Unable to connect to server - API may be unavailable",
         };
       }
       return {
@@ -123,7 +124,7 @@ async function apiRequest<T>(
 
     return {
       success: false,
-      error: 'Unknown network error',
+      error: "Unknown network error",
     };
   }
 }
@@ -131,17 +132,19 @@ async function apiRequest<T>(
 // Configuration API functions with error handling
 export const configurationApi = {
   // Save configuration (create or update)
-  async save(config: Partial<Configuration>): Promise<ApiResponse<Configuration>> {
+  async save(
+    config: Partial<Configuration>,
+  ): Promise<ApiResponse<Configuration>> {
     try {
-      return await apiRequest<Configuration>('/configurations', {
-        method: 'POST',
+      return await apiRequest<Configuration>("/configurations", {
+        method: "POST",
         body: JSON.stringify(config),
       });
     } catch (error) {
-      console.warn('Failed to save configuration:', error);
+      console.warn("Failed to save configuration:", error);
       return {
         success: false,
-        error: 'Failed to save configuration - server may be unavailable',
+        error: "Failed to save configuration - server may be unavailable",
       };
     }
   },
@@ -149,12 +152,12 @@ export const configurationApi = {
   // Get all user configurations
   async getAll(): Promise<ApiResponse<Configuration[]>> {
     try {
-      return await apiRequest<Configuration[]>('/configurations');
+      return await apiRequest<Configuration[]>("/configurations");
     } catch (error) {
-      console.warn('Failed to get configurations:', error);
+      console.warn("Failed to get configurations:", error);
       return {
         success: false,
-        error: 'Failed to load configurations - server may be unavailable',
+        error: "Failed to load configurations - server may be unavailable",
         data: [], // Return empty array as fallback
       };
     }
@@ -165,10 +168,10 @@ export const configurationApi = {
     try {
       return await apiRequest<Configuration>(`/configurations/${id}`);
     } catch (error) {
-      console.warn('Failed to get configuration:', error);
+      console.warn("Failed to get configuration:", error);
       return {
         success: false,
-        error: 'Failed to load configuration - server may be unavailable',
+        error: "Failed to load configuration - server may be unavailable",
       };
     }
   },
@@ -177,42 +180,47 @@ export const configurationApi = {
   async delete(id: string): Promise<ApiResponse<void>> {
     try {
       return await apiRequest<void>(`/configurations/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
     } catch (error) {
-      console.warn('Failed to delete configuration:', error);
+      console.warn("Failed to delete configuration:", error);
       return {
         success: false,
-        error: 'Failed to delete configuration - server may be unavailable',
+        error: "Failed to delete configuration - server may be unavailable",
       };
     }
   },
 
   // Publish configuration (accepts optional config payload to avoid FS writes on server)
-  async publish(id: string, config?: Partial<Configuration>): Promise<ApiResponse<Configuration>> {
+  async publish(
+    id: string,
+    config?: Partial<Configuration>,
+  ): Promise<ApiResponse<Configuration>> {
     try {
       return await apiRequest<Configuration>(`/configurations/${id}/publish`, {
-        method: 'POST',
+        method: "POST",
         body: config ? JSON.stringify({ config }) : undefined,
       });
     } catch (error) {
-      console.warn('Failed to publish configuration:', error);
+      console.warn("Failed to publish configuration:", error);
       return {
         success: false,
-        error: 'Failed to publish configuration - server may be unavailable',
+        error: "Failed to publish configuration - server may be unavailable",
       };
     }
   },
 
   // Get published site by subdomain
-  async getPublishedSite(subdomain: string): Promise<ApiResponse<Configuration>> {
+  async getPublishedSite(
+    subdomain: string,
+  ): Promise<ApiResponse<Configuration>> {
     try {
       return await apiRequest<Configuration>(`/sites/${subdomain}`);
     } catch (error) {
-      console.warn('Failed to get published site:', error);
+      console.warn("Failed to get published site:", error);
       return {
         success: false,
-        error: 'Failed to load published site - server may be unavailable',
+        error: "Failed to load published site - server may be unavailable",
       };
     }
   },
@@ -221,17 +229,17 @@ export const configurationApi = {
 // Auto-save functionality
 export class AutoSaver {
   private saveTimeout: NodeJS.Timeout | null = null;
-  private lastSavedData: string = '';
+  private lastSavedData: string = "";
 
   constructor(
     private saveFunction: (data: Partial<Configuration>) => Promise<void>,
-    private debounceMs: number = 2000
+    private debounceMs: number = 2000,
   ) {}
 
   // Queue a save operation
   save(data: Partial<Configuration>): void {
     const dataString = JSON.stringify(data);
-    
+
     // Don't save if data hasn't changed
     if (dataString === this.lastSavedData) {
       return;
@@ -247,9 +255,9 @@ export class AutoSaver {
       try {
         await this.saveFunction(data);
         this.lastSavedData = dataString;
-        console.log('Configuration auto-saved');
+        console.log("Configuration auto-saved");
       } catch (error) {
-        console.error('Auto-save failed:', error);
+        console.error("Auto-save failed:", error);
       }
     }, this.debounceMs);
   }
@@ -260,13 +268,13 @@ export class AutoSaver {
       clearTimeout(this.saveTimeout);
       this.saveTimeout = null;
     }
-    
+
     try {
       await this.saveFunction(data);
       this.lastSavedData = JSON.stringify(data);
-      console.log('Configuration saved immediately');
+      console.log("Configuration saved immediately");
     } catch (error) {
-      console.error('Immediate save failed:', error);
+      console.error("Immediate save failed:", error);
       throw error;
     }
   }
@@ -296,13 +304,16 @@ export const sessionApi = {
       const result = await configurationApi.getAll();
       return result.success && result.data && result.data.length > 0;
     } catch (error) {
-      console.warn('Failed to check saved configurations, falling back to localStorage:', error);
+      console.warn(
+        "Failed to check saved configurations, falling back to localStorage:",
+        error,
+      );
       // Fallback to localStorage check
       try {
-        const savedData = localStorage.getItem('configuratorData');
+        const savedData = localStorage.getItem("configuratorData");
         return savedData !== null;
       } catch (storageError) {
-        console.warn('localStorage also unavailable:', storageError);
+        console.warn("localStorage also unavailable:", storageError);
         return false;
       }
     }
@@ -314,18 +325,22 @@ export const sessionApi = {
       const result = await configurationApi.getAll();
       if (result.success && result.data && result.data.length > 0) {
         // Sort by updatedAt and return the most recent
-        const sorted = result.data.sort((a, b) =>
-          new Date(b.updatedAt || b.createdAt || 0).getTime() -
-          new Date(a.updatedAt || a.createdAt || 0).getTime()
+        const sorted = result.data.sort(
+          (a, b) =>
+            new Date(b.updatedAt || b.createdAt || 0).getTime() -
+            new Date(a.updatedAt || a.createdAt || 0).getTime(),
         );
         return sorted[0];
       }
     } catch (error) {
-      console.warn('Failed to get latest configuration from API, trying localStorage:', error);
+      console.warn(
+        "Failed to get latest configuration from API, trying localStorage:",
+        error,
+      );
       // Fallback to localStorage
       try {
-        const savedData = localStorage.getItem('configuratorData');
-        const savedId = localStorage.getItem('currentConfigId');
+        const savedData = localStorage.getItem("configuratorData");
+        const savedId = localStorage.getItem("currentConfigId");
         if (savedData) {
           const parsedData = JSON.parse(savedData);
           return {
@@ -334,7 +349,7 @@ export const sessionApi = {
           } as Configuration;
         }
       } catch (storageError) {
-        console.warn('localStorage fallback also failed:', storageError);
+        console.warn("localStorage fallback also failed:", storageError);
       }
     }
     return null;
@@ -343,17 +358,17 @@ export const sessionApi = {
   // Check API health
   async checkApiHealth(): Promise<boolean> {
     try {
-      const response = await fetch('/api/ping', {
-        method: 'GET',
+      const response = await fetch("/api/ping", {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         // Short timeout for health check
         signal: AbortSignal.timeout(5000),
       });
       return response.ok;
     } catch (error) {
-      console.warn('API health check failed:', error);
+      console.warn("API health check failed:", error);
       return false;
     }
   },
@@ -361,14 +376,14 @@ export const sessionApi = {
 
 // Error handling utilities
 export function handleApiError(error: string): string {
-  if (error.includes('Network error')) {
-    return 'Unable to connect to the server. Please check your internet connection.';
+  if (error.includes("Network error")) {
+    return "Unable to connect to the server. Please check your internet connection.";
   }
-  if (error.includes('404')) {
-    return 'The requested resource was not found.';
+  if (error.includes("404")) {
+    return "The requested resource was not found.";
   }
-  if (error.includes('500')) {
-    return 'A server error occurred. Please try again later.';
+  if (error.includes("500")) {
+    return "A server error occurred. Please try again later.";
   }
   return error;
 }
