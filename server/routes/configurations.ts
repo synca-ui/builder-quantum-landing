@@ -379,11 +379,15 @@ export async function publishConfiguration(req: Request, res: Response) {
           await client.query("COMMIT");
           console.log(`Tenant provisioned: ${tenantSlug} -> ${tenantSchema}`);
         } catch (e) {
-          try { await client.query("ROLLBACK"); } catch {}
+          try {
+            await client.query("ROLLBACK");
+          } catch {}
           console.error("DB provisioning failed:", e);
         } finally {
           client.release();
-          try { await pool.end(); } catch {}
+          try {
+            await pool.end();
+          } catch {}
         }
       })().catch((e) => console.error("Provisioning error:", e));
     }
