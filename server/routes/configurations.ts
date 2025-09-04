@@ -129,7 +129,11 @@ export async function saveConfiguration(req: Request, res: Response) {
       configurations.push(config);
     }
 
-    await saveConfigurations(configurations);
+    try {
+      await saveConfigurations(configurations);
+    } catch (e) {
+      console.warn("Skipping configurations.json save (read-only FS)");
+    }
 
     res.json({
       success: true,
