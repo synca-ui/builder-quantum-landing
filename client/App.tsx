@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Site from "./pages/Site";
 import HostAwareRoot from "./pages/HostAwareRoot";
+import TestSite from "./pages/TestSite";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/configurator" element={<Configurator />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/site/:subdomain" element={<Site />} />
+            <Route path="/test-site" element={<TestSite />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
