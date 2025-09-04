@@ -706,11 +706,21 @@ export default function Configurator() {
         const result = await configurationApi.save(configData);
 
         if (result.success && result.data) {
-          setCurrentConfigId(result.data.id || null);
+          const configId = result.data.id || null;
+          setCurrentConfigId(configId);
           setSaveStatus("saved");
+
+          // Save to persistence system
+          if (configId) {
+            persistence.setConfigId(configId);
+          }
+          persistence.saveStep(currentStep, 'save', 'save', { configId, success: true }, data);
+
+          // Keep legacy localStorage for backward compatibility
           localStorage.setItem("configuratorData", JSON.stringify(data));
         } else {
           setSaveStatus("error");
+          persistence.saveStep(currentStep, 'save', 'save', { success: false, error: result.error }, data);
         }
       } catch (error) {
         setSaveStatus("error");
