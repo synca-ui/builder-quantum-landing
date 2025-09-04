@@ -41,7 +41,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<HostAwareRoot />} />
             <Route path="/configurator" element={<Configurator />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/site/:subdomain" element={<Site />} />
