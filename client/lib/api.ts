@@ -188,11 +188,12 @@ export const configurationApi = {
     }
   },
 
-  // Publish configuration
-  async publish(id: string): Promise<ApiResponse<Configuration>> {
+  // Publish configuration (accepts optional config payload to avoid FS writes on server)
+  async publish(id: string, config?: Partial<Configuration>): Promise<ApiResponse<Configuration>> {
     try {
       return await apiRequest<Configuration>(`/configurations/${id}/publish`, {
         method: 'POST',
+        body: config ? JSON.stringify({ config }) : undefined,
       });
     } catch (error) {
       console.warn('Failed to publish configuration:', error);
