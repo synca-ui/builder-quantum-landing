@@ -72,6 +72,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import QRCode from "@/components/qr/QRCode";
+import { toast } from "@/hooks/use-toast";
 
 function ShareQRButton({ url }: { url: string }) {
   return (
