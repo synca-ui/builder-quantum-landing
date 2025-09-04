@@ -43,7 +43,10 @@ const ConfigurationSchema = z.object({
 type Configuration = z.infer<typeof ConfigurationSchema>;
 
 // Ephemeral in-memory cache for immediate site availability after publish
-const publishedCache = new Map<string, { config: Configuration; expiresAt: number }>();
+const publishedCache = new Map<
+  string,
+  { config: Configuration; expiresAt: number }
+>();
 
 // Simple file-based storage (replace with database in production)
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -421,7 +424,10 @@ export async function publishConfiguration(req: Request, res: Response) {
     config.updatedAt = new Date().toISOString();
 
     // Cache for 10 minutes so preview works immediately
-    publishedCache.set(tenantSlug, { config, expiresAt: Date.now() + 10 * 60 * 1000 });
+    publishedCache.set(tenantSlug, {
+      config,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
 
     try {
       if (configIndex !== -1) {
