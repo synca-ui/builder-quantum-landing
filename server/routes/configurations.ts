@@ -390,10 +390,10 @@ export async function publishConfiguration(req: Request, res: Response) {
     // Generate published URL: prefer Netlify-provided SITE_URL/URL if present
     const siteUrlFromEnv = process.env.SITE_URL || process.env.URL;
     const publishedUrl = siteUrlFromEnv
-      ? siteUrlFromEnv
+      ? `${siteUrlFromEnv.replace(/\/$/, "")}/site/${tenantSlug}`
       : config.hasDomain && config.domainName
         ? `https://${config.domainName}`
-        : `https://${tenantSlug}.synca.digital`;
+        : `https://${tenantSlug}.synca.digital/site/${tenantSlug}`;
 
     // Update configuration status
     config.status = "published";
@@ -427,26 +427,48 @@ export async function publishConfiguration(req: Request, res: Response) {
 
 export async function getPublishedSite(req: Request, res: Response) {
   try {
-    const { subdomain } = req.params;
-    const configurations = await loadConfigurations();
+    const { subdomain } = req.params; // actually tenantSlug
 
-    // Find published configuration by subdomain or domain
-    const config = configurations.find(
-      (c) =>
-        c.status === "published" &&
-        (c.publishedUrl?.includes(subdomain) ||
-          c.selectedDomain === subdomain ||
-          c.domainName === subdomain),
-    );
+    // Prefer DB source if configured
+    const databaseUrl =
+      process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || process.env.POSTGRES_URL || "";
 
-    if (!config) {
-      return res.status(404).json({ error: "Site not found" });
+    if (databaseUrl) {
+      const pool = new Pool({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, max: 2 });
+      const client = await pool.connect();
+      try {
+        // Look up tenant mapping
+        const mapRes = await client.query(
+          `SELECT schema_name, restaurant_id FROM public.tenants WHERE tenant_slug = $1 LIMIT 1`,
+          [subdomain],
+        );
+        const mapping = mapRes.rows[0];
+        if (mapping?.schema_name && mapping?.restaurant_id) {
+          await client.query(`SET search_path TO ${mapping.schema_name};`);
+          const cfgRes = await client.query(
+            `SELECT config_json FROM restaurants WHERE id = $1 LIMIT 1`,
+            [mapping.restaurant_id],
+          );
+          const row = cfgRes.rows[0];
+          if (row?.config_json) {
+            return res.json({ success: true, site: row.config_json });
+          }
+        }
+      } catch (e) {
+        console.error("DB read for published site failed:", e);
+      } finally {
+        client.release();
+      }
     }
 
-    res.json({
-      success: true,
-      site: config,
-    });
+    // Fallback to file-based store (for local dev)
+    const configurations = await loadConfigurations();
+    const config = configurations.find((c) => c.status === "published" && (c.publishedUrl?.includes(subdomain) || c.selectedDomain === subdomain || c.domainName === subdomain));
+    if (config) {
+      return res.json({ success: true, site: config });
+    }
+
+    return res.status(404).json({ error: "Site not found" });
   } catch (error) {
     console.error("Error getting published site:", error);
     res.status(500).json({ error: "Internal server error" });
