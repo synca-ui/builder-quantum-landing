@@ -24,12 +24,27 @@ export default function Site() {
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<SiteConfig | null>(null);
 
+  // Resolve tenant slug from route or hostname
+  const resolvedSlug = useMemo(() => {
+    if (subdomain) return subdomain;
+    try {
+      const host = window.location.hostname;
+      // expect something like tenant.synca.digital
+      const parts = host.split(".");
+      // If host has at least 3 parts and ends with synca.digital (or current base domain), use first part
+      if (parts.length >= 3) {
+        return parts[0];
+      }
+    } catch {}
+    return "";
+  }, [subdomain]);
+
   useEffect(() => {
     let mounted = true;
     async function load() {
-      if (!subdomain) return;
+      if (!resolvedSlug) return;
       setLoading(true);
-      const res = await configurationApi.getPublishedSite(subdomain);
+      const res = await configurationApi.getPublishedSite(resolvedSlug);
       if (!mounted) return;
       if (res.success && res.data) {
         setConfig(res.data as any);
@@ -43,7 +58,7 @@ export default function Site() {
     return () => {
       mounted = false;
     };
-  }, [subdomain]);
+  }, [resolvedSlug]);
 
   const theme = useMemo(() => ({
     '--primary': config?.primaryColor || '#111827',
