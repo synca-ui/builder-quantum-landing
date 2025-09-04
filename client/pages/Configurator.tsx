@@ -644,39 +644,50 @@ export default function Configurator() {
 
   // Form data update helper
   const updateFormData = useCallback((field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  }, []);
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+      persistence.updateFormData(field, value, newData);
+      return newData;
+    });
+  }, [persistence]);
 
   // Navigation functions
   const startConfigurator = useCallback(() => {
     // Use requestAnimationFrame for smoother transition
     requestAnimationFrame(() => {
       setCurrentStep(0); // Go to template selection
+      persistence.saveStep(0, 'template', 'step_change', { action: 'started' }, formData);
     });
-  }, []);
+  }, [formData, persistence]);
 
   const nextStep = useCallback(() => {
     if (currentStep < configuratorSteps.length - 1) {
       updateFormDataFromInputs();
-      setCurrentStep((prev) => prev + 1);
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      persistence.saveStep(newStep, configuratorSteps[newStep]?.id || 'unknown', 'step_change', { action: 'next', from: currentStep }, formData);
     }
-  }, [currentStep, configuratorSteps.length, updateFormDataFromInputs]);
+  }, [currentStep, configuratorSteps, updateFormDataFromInputs, formData, persistence]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
       updateFormDataFromInputs();
-      setCurrentStep((prev) => prev - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      persistence.saveStep(newStep, configuratorSteps[newStep]?.id || 'unknown', 'step_change', { action: 'prev', from: currentStep }, formData);
     } else if (currentStep === 0) {
       // Go back to welcome page
       setCurrentStep(-1);
+      persistence.saveStep(-1, 'welcome', 'step_change', { action: 'back_to_welcome' }, formData);
     }
-  }, [currentStep, updateFormDataFromInputs]);
+  }, [currentStep, updateFormDataFromInputs, formData, persistence, configuratorSteps]);
 
   // Back to Template Selection function
   const backToTemplates = useCallback(() => {
     updateFormDataFromInputs();
     setCurrentStep(0);
-  }, [updateFormDataFromInputs]);
+    persistence.saveStep(0, 'template', 'step_change', { action: 'back_to_templates', from: currentStep }, formData);
+  }, [updateFormDataFromInputs, formData, persistence, currentStep]);
 
   // Save and publish functions
   const saveToBackend = useCallback(
