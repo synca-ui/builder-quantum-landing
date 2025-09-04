@@ -12,6 +12,7 @@ import Configurator from "./pages/Configurator";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Site from "./pages/Site";
+import HostAwareRoot from "./pages/HostAwareRoot";
 
 const queryClient = new QueryClient({
   defaultOptions: {
