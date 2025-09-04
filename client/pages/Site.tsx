@@ -239,37 +239,45 @@ export default function Site() {
           </section>
         )}
 
-        {pages.includes("menu") &&
-          Array.isArray(menuItems) &&
-          menuItems.length > 0 && (
-            <section id="menu" className="py-14 border-t">
-              <div className="max-w-6xl mx-auto px-4">
-                <h2
-                  className="text-2xl font-bold mb-6"
-                  style={{ color: "var(--primary)" }}
-                >
-                  Menu
-                </h2>
+        {pages.includes("menu") && (
+          <section id="menu" className="py-14 border-t">
+            <div className="max-w-6xl mx-auto px-4">
+              <h2
+                className="text-2xl font-bold mb-6"
+                style={{ color: "var(--primary)" }}
+              >
+                Menu
+              </h2>
+              {Array.isArray(menuItems) && menuItems.length > 0 ? (
                 <MenuSection items={menuItems} />
-              </div>
-            </section>
-          )}
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">Menu coming soon!</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
-        {pages.includes("gallery") &&
-          Array.isArray(gallery) &&
-          gallery.length > 0 && (
-            <section id="gallery" className="py-14 border-t">
-              <div className="max-w-6xl mx-auto px-4">
-                <h2
-                  className="text-2xl font-bold mb-6"
-                  style={{ color: "var(--primary)" }}
-                >
-                  Gallery
-                </h2>
+        {pages.includes("gallery") && (
+          <section id="gallery" className="py-14 border-t">
+            <div className="max-w-6xl mx-auto px-4">
+              <h2
+                className="text-2xl font-bold mb-6"
+                style={{ color: "var(--primary)" }}
+              >
+                Gallery
+              </h2>
+              {Array.isArray(gallery) && gallery.length > 0 ? (
                 <GalleryGrid images={gallery} />
-              </div>
-            </section>
-          )}
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">Photo gallery coming soon!</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {pages.includes("contact") && (
           <section id="contact" className="py-14 border-t">

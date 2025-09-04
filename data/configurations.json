@@ -56,7 +56,23 @@
         "closed": true
       }
     },
-    "menuItems": [],
+    "menuItems": [
+      {
+        "name": "Coffee",
+        "description": "Freshly brewed coffee",
+        "price": "3.50"
+      },
+      {
+        "name": "Sandwich",
+        "description": "Fresh sandwich with premium ingredients",
+        "price": "8.99"
+      },
+      {
+        "name": "Salad",
+        "description": "Fresh garden salad",
+        "price": "7.50"
+      }
+    ],
     "reservationsEnabled": false,
     "maxGuests": 10,
     "notificationMethod": "email",
