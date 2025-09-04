@@ -260,10 +260,12 @@ export async function publishConfiguration(req: Request, res: Response) {
     if (!databaseUrl) {
       console.warn("DATABASE_URL not configured, skipping DB setup");
     } else {
-      const pool = new Pool({ connectionString: databaseUrl, max: 2 });
+      const pool = new Pool({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false }, max: 2 });
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
+        // Ensure needed extensions
+        await client.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
         // Create tenant schema and core tables
         await client.query(`CREATE SCHEMA IF NOT EXISTS ${tenantSchema};`);
         await client.query(`SET search_path TO ${tenantSchema};`);
