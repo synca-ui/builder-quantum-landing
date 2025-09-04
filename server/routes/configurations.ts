@@ -382,8 +382,17 @@ export async function publishConfiguration(req: Request, res: Response) {
     config.publishedUrl = publishedUrl;
     config.updatedAt = new Date().toISOString();
 
-    configurations[configIndex] = config;
-    await saveConfigurations(configurations);
+    try {
+      if (configIndex !== -1) {
+        configurations[configIndex] = config;
+      } else {
+        // Best-effort append in environments that allow writes
+        configurations.push(config as any);
+      }
+      await saveConfigurations(configurations);
+    } catch (e) {
+      console.warn("Skipping configurations.json save (read-only FS)");
+    }
 
     return res.json({
       success: true,
