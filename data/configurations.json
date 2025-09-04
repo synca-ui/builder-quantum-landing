@@ -1,8 +1,8 @@
 [
   {
-    "id": "mf5o8fej14lrdxt3wpr",
-    "userId": "user_mewod4t90763iqgq366k",
-    "businessName": "erer",
+    "id": "new",
+    "userId": "user_mf5rd5v4e5u79ggoo5",
+    "businessName": "Bella",
     "businessType": "cafe",
     "location": "",
     "slogan": "",
@@ -15,8 +15,8 @@
       "home",
       "menu",
       "gallery",
-      "contact",
-      "about"
+      "about",
+      "contact"
     ],
     "customPages": [],
     "openingHours": {
@@ -69,8 +69,8 @@
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-04T18:32:56.845Z",
-    "updatedAt": "2025-09-04T18:32:56.846Z",
+    "createdAt": "2025-09-04T18:47:20.175Z",
+    "updatedAt": "2025-09-04T18:47:20.181Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
@@ -131,12 +131,12 @@
     "seoApiCost": 29.99,
     "showOptionalFields": false,
     "templateThemes": {
-      "modern": {
+      "minimalist": {
         "primary": "#059669",
         "secondary": "#10B981"
       }
     },
-    "publishedUrl": "https://erer-xt3wpr.synca.digital",
-    "previewUrl": "https://synca.digital/site/erer-xt3wpr"
+    "publishedUrl": "https://bella-new.synca.digital",
+    "previewUrl": "https://synca.digital/site/bella-new"
   }
 ]
