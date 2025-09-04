@@ -767,15 +767,15 @@ export default function Configurator() {
   );
 
   const publishConfiguration = useCallback(async () => {
+    // Best-effort save; in serverless it may be skipped but that's fine
     if (!currentConfigId) {
       await saveToBackend(formData as Partial<Configuration>);
-      return;
     }
 
     setPublishStatus("publishing");
     try {
       const result = await configurationApi.publish(
-        currentConfigId,
+        currentConfigId || "new",
         formData as any,
       );
 
