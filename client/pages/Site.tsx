@@ -90,33 +90,55 @@ export default function Site() {
     );
   }
 
-  const pages = (config as any).selectedPages || ["home", "menu", "gallery", "contact"];
-  const uniqueDescription = (config as any).uniqueDescription as string | undefined;
+  const pages = (config as any).selectedPages || [
+    "home",
+    "menu",
+    "gallery",
+    "contact",
+  ];
+  const uniqueDescription = (config as any).uniqueDescription as
+    | string
+    | undefined;
   const location = (config as any).location as string | undefined;
-  const openingHours = (config as any).openingHours as Record<string, any> | undefined;
+  const openingHours = (config as any).openingHours as
+    | Record<string, any>
+    | undefined;
   const reservationsEnabled = !!(config as any).reservationsEnabled;
   const contactMethods = (config as any).contactMethods as string[] | undefined;
-  const social = (config as any).socialMedia as Record<string, string> | undefined;
+  const social = (config as any).socialMedia as
+    | Record<string, string>
+    | undefined;
 
   return (
     <div style={theme} className="min-h-screen bg-white text-gray-900">
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="font-black text-xl" style={{ color: "var(--primary)" }}>
+          <div
+            className="font-black text-xl"
+            style={{ color: "var(--primary)" }}
+          >
             {config.businessName || "Your Business"}
           </div>
           <nav className="text-sm text-gray-600 flex gap-4">
             {pages.includes("menu") && (
-              <a href="#menu" className="hover:text-black">Menu</a>
+              <a href="#menu" className="hover:text-black">
+                Menu
+              </a>
             )}
             {pages.includes("gallery") && (
-              <a href="#gallery" className="hover:text-black">Gallery</a>
+              <a href="#gallery" className="hover:text-black">
+                Gallery
+              </a>
             )}
             {pages.includes("about") && (
-              <a href="#about" className="hover:text-black">About</a>
+              <a href="#about" className="hover:text-black">
+                About
+              </a>
             )}
             {pages.includes("contact") && (
-              <a href="#contact" className="hover:text-black">Contact</a>
+              <a href="#contact" className="hover:text-black">
+                Contact
+              </a>
             )}
           </nav>
         </div>
@@ -126,15 +148,22 @@ export default function Site() {
         {pages.includes("home") && (
           <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
             <div className="max-w-6xl mx-auto px-4">
-              <h1 className="text-4xl md:text-5xl font-extrabold mb-4" style={{ color: "var(--primary)" }}>
+              <h1
+                className="text-4xl md:text-5xl font-extrabold mb-4"
+                style={{ color: "var(--primary)" }}
+              >
                 {config.businessName || "Your Business"}
               </h1>
               {config.slogan && (
-                <p className="text-lg text-gray-600 max-w-2xl">{config.slogan}</p>
+                <p className="text-lg text-gray-600 max-w-2xl">
+                  {config.slogan}
+                </p>
               )}
               {reservationsEnabled && (
                 <div className="mt-6">
-                  <Button onClick={() => alert("Reservation flow coming soon")}>Reserve a table</Button>
+                  <Button onClick={() => alert("Reservation flow coming soon")}>
+                    Reserve a table
+                  </Button>
                 </div>
               )}
             </div>
@@ -145,28 +174,34 @@ export default function Site() {
           <section id="about" className="py-14 border-t">
             <div className="max-w-6xl mx-auto px-4">
               <h2 className="text-2xl font-bold mb-4">About</h2>
-              <p className="text-gray-700 leading-relaxed max-w-3xl">{uniqueDescription}</p>
+              <p className="text-gray-700 leading-relaxed max-w-3xl">
+                {uniqueDescription}
+              </p>
             </div>
           </section>
         )}
 
-        {pages.includes("menu") && Array.isArray(config.menuItems) && config.menuItems.length > 0 && (
-          <section id="menu" className="py-14 border-t">
-            <div className="max-w-6xl mx-auto px-4">
-              <h2 className="text-2xl font-bold mb-6">Menu</h2>
-              <MenuSection items={config.menuItems as any} />
-            </div>
-          </section>
-        )}
+        {pages.includes("menu") &&
+          Array.isArray(config.menuItems) &&
+          config.menuItems.length > 0 && (
+            <section id="menu" className="py-14 border-t">
+              <div className="max-w-6xl mx-auto px-4">
+                <h2 className="text-2xl font-bold mb-6">Menu</h2>
+                <MenuSection items={config.menuItems as any} />
+              </div>
+            </section>
+          )}
 
-        {pages.includes("gallery") && Array.isArray(config.gallery) && config.gallery.length > 0 && (
-          <section id="gallery" className="py-14 border-t">
-            <div className="max-w-6xl mx-auto px-4">
-              <h2 className="text-2xl font-bold mb-6">Gallery</h2>
-              <GalleryGrid images={config.gallery as any} />
-            </div>
-          </section>
-        )}
+        {pages.includes("gallery") &&
+          Array.isArray(config.gallery) &&
+          config.gallery.length > 0 && (
+            <section id="gallery" className="py-14 border-t">
+              <div className="max-w-6xl mx-auto px-4">
+                <h2 className="text-2xl font-bold mb-6">Gallery</h2>
+                <GalleryGrid images={config.gallery as any} />
+              </div>
+            </section>
+          )}
 
         {pages.includes("contact") && (
           <section id="contact" className="py-14 border-t">
@@ -184,7 +219,13 @@ export default function Site() {
                 {social && Object.keys(social).length > 0 && (
                   <div className="mt-3 flex gap-3 text-sm text-gray-600">
                     {Object.entries(social).map(([k, v]) => (
-                      <a key={k} href={v} target="_blank" rel="noreferrer" className="underline">
+                      <a
+                        key={k}
+                        href={v}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline"
+                      >
                         {k}
                       </a>
                     ))}
@@ -198,7 +239,13 @@ export default function Site() {
                     {Object.entries(openingHours).map(([day, val]: any) => (
                       <li key={day} className="flex justify-between max-w-sm">
                         <span className="font-medium capitalize">{day}</span>
-                        <span className="text-gray-600">{typeof val === 'string' ? val : (val?.open && val?.close ? `${val.open} – ${val.close}` : 'closed')}</span>
+                        <span className="text-gray-600">
+                          {typeof val === "string"
+                            ? val
+                            : val?.open && val?.close
+                              ? `${val.open} – ${val.close}`
+                              : "closed"}
+                        </span>
                       </li>
                     ))}
                   </ul>
