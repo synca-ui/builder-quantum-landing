@@ -727,7 +727,7 @@ export default function Configurator() {
         console.error("Save error:", error);
       }
     },
-    [currentConfigId],
+    [currentConfigId, currentStep, persistence],
   );
 
   const publishConfiguration = useCallback(async () => {
@@ -749,6 +749,17 @@ export default function Configurator() {
           (result.data as any).previewUrl || result.data.publishedUrl || null;
         setPublishStatus("published");
         setPublishedUrl(live);
+
+        // Save to persistence system
+        if (live) {
+          persistence.setPublishedUrl(live);
+        }
+        persistence.saveStep(currentStep, 'publish', 'publish', {
+          success: true,
+          publishedUrl: live,
+          configId: currentConfigId
+        }, formData);
+
         if (live) {
           toast({
             title: "Published",
@@ -760,6 +771,11 @@ export default function Configurator() {
         }
       } else {
         setPublishStatus("error");
+        persistence.saveStep(currentStep, 'publish', 'publish', {
+          success: false,
+          error: result.error,
+          configId: currentConfigId
+        }, formData);
         toast({
           title: "Publish failed",
           description: result.error || "Unknown error",
@@ -769,13 +785,18 @@ export default function Configurator() {
     } catch (error: any) {
       setPublishStatus("error");
       console.error("Publish error:", error);
+      persistence.saveStep(currentStep, 'publish', 'publish', {
+        success: false,
+        error: error?.message || String(error),
+        configId: currentConfigId
+      }, formData);
       toast({
         title: "Publish error",
         description: error?.message || String(error),
         variant: "destructive" as any,
       });
     }
-  }, [currentConfigId, formData, saveToBackend]);
+  }, [currentConfigId, formData, saveToBackend, currentStep, persistence]);
 
   // Progress calculation
   const progressPercentage = useMemo(() => {
