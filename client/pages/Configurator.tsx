@@ -890,14 +890,17 @@ export default function Configurator() {
               {currentStep >= 0 && (
                 <div className="flex items-center space-x-2">
                   {publishStatus === "published" && publishedUrl ? (
-                    <Button
-                      size="sm"
-                      onClick={() => window.open(publishedUrl, "_blank")}
-                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
-                    >
-                      <Globe className="w-4 h-4 mr-2" />
-                      View Live Site
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => window.open(publishedUrl, "_blank")}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
+                      >
+                        <Globe className="w-4 h-4 mr-2" />
+                        View Live Site
+                      </Button>
+                      <ShareQRButton url={publishedUrl} />
+                    </>
                   ) : (
                     <Button
                       size="sm"
