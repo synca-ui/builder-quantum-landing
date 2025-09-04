@@ -37,6 +37,7 @@ const ConfigurationSchema = z.object({
   updatedAt: z.string(),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
   publishedUrl: z.string().optional(),
+  previewUrl: z.string().optional(),
 });
 
 type Configuration = z.infer<typeof ConfigurationSchema>;
