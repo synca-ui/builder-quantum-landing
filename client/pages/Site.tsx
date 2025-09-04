@@ -29,14 +29,32 @@ export default function Site() {
   useEffect(() => {
     let mounted = true;
     async function load() {
-      if (!resolvedSlug) return;
+      console.log('=== Site Load Debug ===');
+      console.log('Hostname:', window.location.hostname);
+      console.log('Full URL:', window.location.href);
+      console.log('useParams subdomain:', subdomain);
+      console.log('Resolved slug:', resolvedSlug);
+      console.log('======================');
+
+      if (!resolvedSlug) {
+        console.warn('No resolved slug, skipping site load');
+        setError('No site identifier found in URL');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      console.log(`Calling API: /api/sites/${resolvedSlug}`);
       const res = await configurationApi.getPublishedSite(resolvedSlug);
+      console.log('API Response:', res);
+
       if (!mounted) return;
       if (res.success && res.data) {
+        console.log('Site loaded successfully:', res.data);
         setConfig(res.data);
         setError(null);
       } else {
+        console.error('Site load failed:', res.error);
         setError(res.error || "Failed to load site");
       }
       setLoading(false);
@@ -45,7 +63,7 @@ export default function Site() {
     return () => {
       mounted = false;
     };
-  }, [resolvedSlug]);
+  }, [resolvedSlug, subdomain]);
 
   const theme = useMemo(
     () =>

@@ -460,15 +460,22 @@ export async function publishConfiguration(req: Request, res: Response) {
 export async function getPublishedSite(req: Request, res: Response) {
   try {
     const { subdomain } = req.params; // actually tenantSlug
+    console.log('=== getPublishedSite Debug ===');
+    console.log('Requested subdomain:', subdomain);
+    console.log('Cache keys:', Array.from(publishedCache.keys()));
 
     // Check ephemeral cache first
     const cached = publishedCache.get(subdomain);
     if (cached) {
+      console.log('Found in cache:', cached.config.businessName);
       if (cached.expiresAt > Date.now()) {
         return res.json({ success: true, site: cached.config });
       } else {
+        console.log('Cache expired, removing');
         publishedCache.delete(subdomain);
       }
+    } else {
+      console.log('Not found in cache');
     }
 
     // Prefer DB source if configured
@@ -511,7 +518,16 @@ export async function getPublishedSite(req: Request, res: Response) {
     }
 
     // Fallback to file-based store (for local dev)
+    console.log('Falling back to file-based store');
     const configurations = await loadConfigurations();
+    console.log('Loaded configurations:', configurations.length);
+
+    const publishedConfigs = configurations.filter(c => c.status === "published");
+    console.log('Published configurations:', publishedConfigs.length);
+    publishedConfigs.forEach(c => {
+      console.log(`- ${c.businessName}: publishedUrl=${c.publishedUrl}, selectedDomain=${c.selectedDomain}, domainName=${c.domainName}`);
+    });
+
     const config = configurations.find(
       (c) =>
         c.status === "published" &&
@@ -519,10 +535,13 @@ export async function getPublishedSite(req: Request, res: Response) {
           c.selectedDomain === subdomain ||
           c.domainName === subdomain),
     );
+
     if (config) {
+      console.log('Found matching config:', config.businessName);
       return res.json({ success: true, site: config });
     }
 
+    console.log('No matching config found for subdomain:', subdomain);
     return res.status(404).json({ error: "Site not found" });
   } catch (error) {
     console.error("Error getting published site:", error);
