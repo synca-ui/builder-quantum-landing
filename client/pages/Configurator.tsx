@@ -781,7 +781,7 @@ export default function Configurator() {
 
       if (result.success && result.data) {
         setPublishStatus("published");
-        setPublishedUrl(result.data.publishedUrl || null);
+        setPublishedUrl((result.data as any).previewUrl || result.data.publishedUrl || null);
       } else {
         setPublishStatus("error");
       }

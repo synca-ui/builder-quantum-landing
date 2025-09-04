@@ -34,6 +34,7 @@ export interface Configuration {
   updatedAt?: string;
   status?: "draft" | "published" | "archived";
   publishedUrl?: string;
+  previewUrl?: string;
 }
 
 export interface ApiResponse<T> {
