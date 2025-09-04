@@ -215,16 +215,30 @@ export async function publishConfiguration(req: Request, res: Response) {
     const { id } = req.params;
     const userId = (req.headers["x-user-id"] as string) || "anonymous";
 
-    const configurations = await loadConfigurations();
-    const configIndex = configurations.findIndex(
-      (c) => c.id === id && c.userId === userId,
-    );
+    // Try file storage first; if not found or not writable (Netlify), use payload
+    let configurations: Configuration[] = [];
+    try {
+      configurations = await loadConfigurations();
+    } catch {}
+    let configIndex = configurations.findIndex((c) => c.id === id && c.userId === userId);
 
+    let config: Configuration;
     if (configIndex === -1) {
-      return res.status(404).json({ error: "Configuration not found" });
+      const payload = (req.body?.config || {}) as Partial<Configuration>;
+      if (!payload || !payload.businessName || !payload.template) {
+        return res.status(404).json({ error: "Configuration not found (and no payload provided)" });
+      }
+      config = {
+        ...(payload as Configuration),
+        id: id || Date.now().toString(36),
+        userId,
+        createdAt: payload.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: (payload.status as any) || "draft",
+      } as Configuration;
+    } else {
+      config = configurations[configIndex];
     }
-
-    const config = configurations[configIndex];
 
     // Prepare tenant details
     const baseSlug = generateSlug(config.businessName) || "site";
