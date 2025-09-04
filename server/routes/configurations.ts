@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
+import { Pool } from "pg";
 
 // Configuration data schema
 const ConfigurationSchema = z.object({
