@@ -231,14 +231,18 @@ export async function publishConfiguration(req: Request, res: Response) {
     if (!payload || Object.keys(payload).length === 0) {
       try {
         configurations = await loadConfigurations();
-        configIndex = configurations.findIndex((c) => c.id === id && c.userId === userId);
+        configIndex = configurations.findIndex(
+          (c) => c.id === id && c.userId === userId,
+        );
       } catch {}
     }
 
     let config: Configuration;
     if (payload && Object.keys(payload).length > 0) {
       if (!payload.businessName || !payload.template) {
-        return res.status(400).json({ error: "Missing required fields in payload" });
+        return res
+          .status(400)
+          .json({ error: "Missing required fields in payload" });
       }
       config = {
         ...(payload as Configuration),
