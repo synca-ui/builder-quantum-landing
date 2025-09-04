@@ -42,6 +42,9 @@ const ConfigurationSchema = z.object({
 
 type Configuration = z.infer<typeof ConfigurationSchema>;
 
+// Ephemeral in-memory cache for immediate site availability after publish
+const publishedCache = new Map<string, { config: Configuration; expiresAt: number }>();
+
 // Simple file-based storage (replace with database in production)
 const DATA_DIR = path.join(process.cwd(), "data");
 const CONFIGS_FILE = path.join(DATA_DIR, "configurations.json");
@@ -417,6 +420,9 @@ export async function publishConfiguration(req: Request, res: Response) {
     (config as any).previewUrl = previewUrl;
     config.updatedAt = new Date().toISOString();
 
+    // Cache for 10 minutes so preview works immediately
+    publishedCache.set(tenantSlug, { config, expiresAt: Date.now() + 10 * 60 * 1000 });
+
     try {
       if (configIndex !== -1) {
         configurations[configIndex] = config;
@@ -446,6 +452,16 @@ export async function publishConfiguration(req: Request, res: Response) {
 export async function getPublishedSite(req: Request, res: Response) {
   try {
     const { subdomain } = req.params; // actually tenantSlug
+
+    // Check ephemeral cache first
+    const cached = publishedCache.get(subdomain);
+    if (cached) {
+      if (cached.expiresAt > Date.now()) {
+        return res.json({ success: true, site: cached.config });
+      } else {
+        publishedCache.delete(subdomain);
+      }
+    }
 
     // Prefer DB source if configured
     const databaseUrl =
