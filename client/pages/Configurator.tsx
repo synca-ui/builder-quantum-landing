@@ -117,6 +117,27 @@ export default function Configurator() {
   // Initialize persistence system FIRST
   const persistence = usePersistence();
 
+  // Compute base host dynamically (e.g., synca.digital)
+  const getBaseHost = useCallback(() => {
+    try {
+      const h = window.location.hostname.replace(/^www\./, "");
+      const parts = h.split(".");
+      if (parts.length >= 2) return parts.slice(-2).join(".");
+      return h;
+    } catch {
+      return "synca.digital";
+    }
+  }, []);
+
+  const getDisplayedDomain = useCallback(() => {
+    if (publishedUrl) {
+      try { return new URL(publishedUrl).hostname; } catch {}
+    }
+    if (formData.hasDomain && formData.domainName) return formData.domainName;
+    const slug = (formData.selectedDomain || formData.businessName || "site").toLowerCase().replace(/\s+/g, "");
+    return `${slug}.${getBaseHost()}`;
+  }, [formData.hasDomain, formData.domainName, formData.selectedDomain, formData.businessName, publishedUrl, getBaseHost]);
+
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(() => {
@@ -2874,7 +2895,7 @@ export default function Configurator() {
                               }
                               aria-label="Decrease quantity"
                             >
-                              −
+                              ��
                             </button>
                             <input
                               type="number"
@@ -7749,10 +7770,7 @@ export default function Configurator() {
                 <span className="text-gray-500 font-mono">.sync-a.com</span>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Your website will be available at:{" "}
-                {formData.selectedDomain ||
-                  formData.businessName.toLowerCase().replace(/\s+/g, "")}
-                .sync-a.com
+                Your website will be available at: {getDisplayedDomain()}
               </p>
             </Card>
           )}
@@ -7811,7 +7829,7 @@ export default function Configurator() {
                           <strong>A Record:</strong> @ → 76.76.19.61
                         </div>
                         <div>
-                          <strong>CNAME:</strong> www → your-site.sync-a.com
+                          <strong>CNAME:</strong> www → your-site.{getBaseHost()}
                         </div>
                       </div>
                     </div>
@@ -8186,9 +8204,7 @@ export default function Configurator() {
                     `${formData.businessName} - ${formData.slogan || "Best Local Business"}`}
                 </h4>
                 <p className="text-green-700 text-sm">
-                  {formData.hasDomain
-                    ? formData.domainName
-                    : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
+                  {getDisplayedDomain()}
                 </p>
                 <p className="text-gray-700 text-sm">
                   {formData.metaDescription ||
@@ -8365,9 +8381,7 @@ export default function Configurator() {
                   <div className="w-full max-w-4xl h-96 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
                     <div className="h-8 bg-gray-100 border-b border-gray-200 flex items-center justify-center px-4">
                       <span className="text-xs text-gray-600 font-mono">
-                        {formData.hasDomain
-                          ? formData.domainName
-                          : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
+                        {getDisplayedDomain()}
                       </span>
                     </div>
                     <div className="h-full overflow-hidden">
@@ -8507,20 +8521,14 @@ export default function Configurator() {
                   </p>
                   <div className="space-y-1">
                     <p className="text-gray-600 text-sm">
-                      Domain:{" "}
-                      {formData.hasDomain
-                        ? formData.domainName
-                        : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
+                      Domain: {getDisplayedDomain()}
                     </p>
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
                       <p className="text-sm font-semibold text-green-800 mb-1">
                         Your Live URL:
                       </p>
                       <p className="font-mono text-sm text-green-700 break-all">
-                        https://
-                        {formData.hasDomain
-                          ? formData.domainName
-                          : `${formData.selectedDomain || formData.businessName.toLowerCase().replace(/\s+/g, "")}.sync-a.com`}
+                        {publishedUrl || `https://${getDisplayedDomain()}`}
                       </p>
                     </div>
                   </div>
