@@ -114,6 +114,9 @@ function ShareQRButton({ url }: { url: string }) {
 }
 
 export default function Configurator() {
+  // Initialize persistence system FIRST
+  const persistence = usePersistence();
+
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(() => {
@@ -136,9 +139,6 @@ export default function Configurator() {
   const [pendingFeatureConfig, setPendingFeatureConfig] = useState<
     string | null
   >(null);
-
-  // Initialize persistence system
-  const persistence = usePersistence();
 
   // Initialize form data from persistence system
   const [formData, setFormData] = useState(() => {
