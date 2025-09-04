@@ -241,19 +241,16 @@ export async function publishConfiguration(req: Request, res: Response) {
 
     let config: Configuration;
     if (payload && Object.keys(payload).length > 0) {
-      if (!payload.businessName || !payload.template) {
-        return res
-          .status(400)
-          .json({ error: "Missing required fields in payload" });
-      }
-      config = {
-        ...(payload as Configuration),
-        id: id || Date.now().toString(36),
+      const draft = {
+        ...(payload as Partial<Configuration>),
+        id: id || generateId(),
         userId,
-        createdAt: payload.createdAt || new Date().toISOString(),
+        createdAt: (payload as any).createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        status: (payload.status as any) || "draft",
-      } as Configuration;
+        status: ((payload as any)?.status as any) || "draft",
+      } as Partial<Configuration>;
+      // Coerce defaults via schema
+      config = ConfigurationSchema.parse(draft);
     } else if (configIndex !== -1) {
       config = configurations[configIndex];
     } else {
