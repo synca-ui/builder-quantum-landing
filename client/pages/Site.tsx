@@ -249,11 +249,17 @@ export default function Site() {
                 Menu
               </h2>
               {Array.isArray(menuItems) && menuItems.length > 0 ? (
-                <MenuSection items={menuItems} />
+                <>
+                  {console.log('Rendering menu items:', menuItems)}
+                  <MenuSection items={menuItems} />
+                </>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-600">Menu coming soon!</p>
-                </div>
+                <>
+                  {console.log('No menu items found:', menuItems)}
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Menu coming soon!</p>
+                  </div>
+                </>
               )}
             </div>
           </section>
