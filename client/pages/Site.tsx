@@ -90,7 +90,47 @@ export default function Site() {
         <p className="text-gray-600 mb-4">
           {error || "We could not find this published site."}
         </p>
-        <Button onClick={() => (window.location.href = "/")}>Go home</Button>
+
+        <div className="bg-gray-100 p-4 rounded-lg mb-6 text-sm text-left max-w-md">
+          <h3 className="font-semibold mb-2">Debug Info:</h3>
+          <p><strong>Hostname:</strong> {window.location.hostname}</p>
+          <p><strong>Path:</strong> {window.location.pathname}</p>
+          <p><strong>Resolved Slug:</strong> {resolvedSlug || 'None'}</p>
+          <p><strong>URL Param:</strong> {subdomain || 'None'}</p>
+        </div>
+
+        <div className="space-y-3">
+          <Button
+            onClick={() => (window.location.href = "/")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+          >
+            Go home
+          </Button>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => (window.location.href = "/configurator")}
+            >
+              Create New Site
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => (window.location.href = "/test-site")}
+            >
+              Debug Tools
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            onClick={() => window.location.reload()}
+            className="text-sm"
+          >
+            Reload Page
+          </Button>
+        </div>
       </div>
     );
   }
