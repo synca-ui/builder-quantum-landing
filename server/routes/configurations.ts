@@ -35,15 +35,15 @@ const ConfigurationSchema = z.object({
   selectedDomain: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  status: z.enum(['draft', 'published', 'archived']).default('draft'),
-  publishedUrl: z.string().optional()
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  publishedUrl: z.string().optional(),
 });
 
 type Configuration = z.infer<typeof ConfigurationSchema>;
 
 // Simple file-based storage (replace with database in production)
-const DATA_DIR = path.join(process.cwd(), 'data');
-const CONFIGS_FILE = path.join(DATA_DIR, 'configurations.json');
+const DATA_DIR = path.join(process.cwd(), "data");
+const CONFIGS_FILE = path.join(DATA_DIR, "configurations.json");
 
 // Ensure data directory exists
 async function ensureDataDir() {
@@ -58,7 +58,7 @@ async function ensureDataDir() {
 async function loadConfigurations(): Promise<Configuration[]> {
   await ensureDataDir();
   try {
-    const data = await fs.readFile(CONFIGS_FILE, 'utf-8');
+    const data = await fs.readFile(CONFIGS_FILE, "utf-8");
     return JSON.parse(data);
   } catch {
     return [];
@@ -80,18 +80,18 @@ function generateId(): string {
 function generateSlug(businessName: string): string {
   return businessName
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
     .substr(0, 30);
 }
 
 export async function saveConfiguration(req: Request, res: Response) {
   try {
-    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    const userId = (req.headers["x-user-id"] as string) || "anonymous";
     const configData = {
       ...req.body,
       userId,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     // Set createdAt if it doesn't exist (new configuration)
@@ -103,8 +103,8 @@ export async function saveConfiguration(req: Request, res: Response) {
     const parsed = ConfigurationSchema.safeParse(configData);
     if (!parsed.success) {
       return res.status(400).json({
-        error: 'Invalid configuration data',
-        details: parsed.error.issues
+        error: "Invalid configuration data",
+        details: parsed.error.issues,
       });
     }
 
@@ -113,9 +113,11 @@ export async function saveConfiguration(req: Request, res: Response) {
 
     if (config.id) {
       // Update existing configuration
-      const index = configurations.findIndex(c => c.id === config.id && c.userId === userId);
+      const index = configurations.findIndex(
+        (c) => c.id === config.id && c.userId === userId,
+      );
       if (index === -1) {
-        return res.status(404).json({ error: 'Configuration not found' });
+        return res.status(404).json({ error: "Configuration not found" });
       }
       // Preserve original createdAt for updates
       config.createdAt = configurations[index].createdAt;
@@ -129,110 +131,125 @@ export async function saveConfiguration(req: Request, res: Response) {
 
     await saveConfigurations(configurations);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       configuration: config,
-      message: 'Configuration saved successfully'
+      message: "Configuration saved successfully",
     });
   } catch (error) {
-    console.error('Error saving configuration:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error saving configuration:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
 
 export async function getConfigurations(req: Request, res: Response) {
   try {
-    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    const userId = (req.headers["x-user-id"] as string) || "anonymous";
     const configurations = await loadConfigurations();
-    
-    const userConfigs = configurations.filter(c => c.userId === userId);
-    
-    res.json({ 
-      success: true, 
-      configurations: userConfigs 
+
+    const userConfigs = configurations.filter((c) => c.userId === userId);
+
+    res.json({
+      success: true,
+      configurations: userConfigs,
     });
   } catch (error) {
-    console.error('Error getting configurations:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error getting configurations:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
 
 export async function getConfiguration(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = req.headers['x-user-id'] as string || 'anonymous';
-    
+    const userId = (req.headers["x-user-id"] as string) || "anonymous";
+
     const configurations = await loadConfigurations();
-    const config = configurations.find(c => c.id === id && c.userId === userId);
-    
+    const config = configurations.find(
+      (c) => c.id === id && c.userId === userId,
+    );
+
     if (!config) {
-      return res.status(404).json({ error: 'Configuration not found' });
+      return res.status(404).json({ error: "Configuration not found" });
     }
 
-    res.json({ 
-      success: true, 
-      configuration: config 
+    res.json({
+      success: true,
+      configuration: config,
     });
   } catch (error) {
-    console.error('Error getting configuration:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error getting configuration:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
 
 export async function deleteConfiguration(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = req.headers['x-user-id'] as string || 'anonymous';
-    
+    const userId = (req.headers["x-user-id"] as string) || "anonymous";
+
     const configurations = await loadConfigurations();
-    const index = configurations.findIndex(c => c.id === id && c.userId === userId);
-    
+    const index = configurations.findIndex(
+      (c) => c.id === id && c.userId === userId,
+    );
+
     if (index === -1) {
-      return res.status(404).json({ error: 'Configuration not found' });
+      return res.status(404).json({ error: "Configuration not found" });
     }
 
     configurations.splice(index, 1);
     await saveConfigurations(configurations);
 
-    res.json({ 
-      success: true, 
-      message: 'Configuration deleted successfully' 
+    res.json({
+      success: true,
+      message: "Configuration deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting configuration:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error deleting configuration:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
 
 export async function publishConfiguration(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = (req.headers['x-user-id'] as string) || 'anonymous';
+    const userId = (req.headers["x-user-id"] as string) || "anonymous";
 
     const configurations = await loadConfigurations();
-    const configIndex = configurations.findIndex((c) => c.id === id && c.userId === userId);
+    const configIndex = configurations.findIndex(
+      (c) => c.id === id && c.userId === userId,
+    );
 
     if (configIndex === -1) {
-      return res.status(404).json({ error: 'Configuration not found' });
+      return res.status(404).json({ error: "Configuration not found" });
     }
 
     const config = configurations[configIndex];
 
     // Prepare tenant details
-    const baseSlug = generateSlug(config.businessName) || 'site';
-    const shortId = (config.id || '').slice(-6) || Date.now().toString(36).slice(-6);
+    const baseSlug = generateSlug(config.businessName) || "site";
+    const shortId =
+      (config.id || "").slice(-6) || Date.now().toString(36).slice(-6);
     const tenantSlug = `${baseSlug}-${shortId}`; // unique per config
-    const tenantSchema = `tenant_${tenantSlug.replace(/[^a-z0-9_\-]/g, '').replace(/\-/g, '_')}`.slice(0, 50);
+    const tenantSchema =
+      `tenant_${tenantSlug.replace(/[^a-z0-9_\-]/g, "").replace(/\-/g, "_")}`.slice(
+        0,
+        50,
+      );
 
     // Database URL from env (do NOT hardcode secrets)
-    const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || process.env.POSTGRES_URL || '';
+    const databaseUrl =
+      process.env.DATABASE_URL ||
+      process.env.SUPABASE_DB_URL ||
+      process.env.POSTGRES_URL ||
+      "";
     if (!databaseUrl) {
-      console.warn('DATABASE_URL not configured, skipping DB setup');
+      console.warn("DATABASE_URL not configured, skipping DB setup");
     } else {
       const pool = new Pool({ connectionString: databaseUrl, max: 2 });
       const client = await pool.connect();
       try {
-        await client.query('BEGIN');
+        await client.query("BEGIN");
         // Create tenant schema and core tables
         await client.query(`CREATE SCHEMA IF NOT EXISTS ${tenantSchema};`);
         await client.query(`SET search_path TO ${tenantSchema};`);
@@ -306,12 +323,12 @@ export async function publishConfiguration(req: Request, res: Response) {
         // Insert base restaurant row with config JSON
         const insertRes = await client.query(
           `INSERT INTO restaurants(name, type, config_json) VALUES($1,$2,$3) RETURNING id`,
-          [config.businessName, config.businessType, JSON.stringify(config)]
+          [config.businessName, config.businessType, JSON.stringify(config)],
         );
         const restaurantId = insertRes.rows[0]?.id;
 
         // Public tenant registry mapping
-        await client.query('RESET search_path;');
+        await client.query("RESET search_path;");
         await client.query(`
           CREATE TABLE IF NOT EXISTS public.tenants (
             id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -325,26 +342,27 @@ export async function publishConfiguration(req: Request, res: Response) {
           `INSERT INTO public.tenants(tenant_slug, schema_name, restaurant_id)
            VALUES($1,$2,$3)
            ON CONFLICT (tenant_slug) DO UPDATE SET schema_name = EXCLUDED.schema_name, restaurant_id = EXCLUDED.restaurant_id`,
-          [tenantSlug, tenantSchema, restaurantId]
+          [tenantSlug, tenantSchema, restaurantId],
         );
 
-        await client.query('COMMIT');
+        await client.query("COMMIT");
         console.log(`Tenant provisioned: ${tenantSlug} -> ${tenantSchema}`);
       } catch (e) {
-        await client.query('ROLLBACK');
-        console.error('DB provisioning failed:', e);
+        await client.query("ROLLBACK");
+        console.error("DB provisioning failed:", e);
       } finally {
         client.release();
       }
     }
 
     // Generate published URL (keep current domain handling)
-    const publishedUrl = config.hasDomain && config.domainName
-      ? `https://${config.domainName}`
-      : `https://${tenantSlug}.synca.digital`;
+    const publishedUrl =
+      config.hasDomain && config.domainName
+        ? `https://${config.domainName}`
+        : `https://${tenantSlug}.synca.digital`;
 
     // Update configuration status
-    config.status = 'published';
+    config.status = "published";
     config.publishedUrl = publishedUrl;
     config.updatedAt = new Date().toISOString();
 
@@ -356,11 +374,11 @@ export async function publishConfiguration(req: Request, res: Response) {
       configuration: config,
       publishedUrl,
       tenant: { slug: tenantSlug, schema: tenantSchema },
-      message: 'Website published successfully!'
+      message: "Website published successfully!",
     });
   } catch (error) {
-    console.error('Error publishing configuration:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("Error publishing configuration:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
 
@@ -368,26 +386,26 @@ export async function getPublishedSite(req: Request, res: Response) {
   try {
     const { subdomain } = req.params;
     const configurations = await loadConfigurations();
-    
+
     // Find published configuration by subdomain or domain
-    const config = configurations.find(c => 
-      c.status === 'published' && (
-        c.publishedUrl?.includes(subdomain) ||
-        c.selectedDomain === subdomain ||
-        c.domainName === subdomain
-      )
+    const config = configurations.find(
+      (c) =>
+        c.status === "published" &&
+        (c.publishedUrl?.includes(subdomain) ||
+          c.selectedDomain === subdomain ||
+          c.domainName === subdomain),
     );
-    
+
     if (!config) {
-      return res.status(404).json({ error: 'Site not found' });
+      return res.status(404).json({ error: "Site not found" });
     }
 
-    res.json({ 
-      success: true, 
-      site: config 
+    res.json({
+      success: true,
+      site: config,
     });
   } catch (error) {
-    console.error('Error getting published site:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error getting published site:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
