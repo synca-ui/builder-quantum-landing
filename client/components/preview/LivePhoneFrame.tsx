@@ -1,4 +1,5 @@
 import React, { PropsWithChildren } from "react";
+import { PhonePortalProvider } from "./phone-portal";
 
 type LivePhoneFrameProps = {
   className?: string;
@@ -31,7 +32,9 @@ export function LivePhoneFrame({
           </div>
 
           {/* Content */}
-          <div className="iphone-content">{children}</div>
+          <div className="iphone-content">
+            <PhonePortalProvider>{children}</PhonePortalProvider>
+          </div>
         </div>
       </div>
       {/* Shadow */}
