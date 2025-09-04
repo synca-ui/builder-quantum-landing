@@ -774,7 +774,7 @@ export default function Configurator() {
 
     setPublishStatus("publishing");
     try {
-      const result = await configurationApi.publish(currentConfigId);
+      const result = await configurationApi.publish(currentConfigId, formData as any);
 
       if (result.success && result.data) {
         setPublishStatus("published");
