@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/carousel";
 import { motion } from "framer-motion";
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
+import PhonePortal from "@/components/preview/phone-portal";
 import ReservationButton from "@/components/ui/ReservationButton";
 import MenuSection from "@/components/sections/MenuSection";
 import GalleryGrid from "@/components/sections/GalleryGrid";
