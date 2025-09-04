@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Configurator from "./pages/Configurator";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import Site from "./pages/Site";
 
 const queryClient = new QueryClient({
   defaultOptions: {
