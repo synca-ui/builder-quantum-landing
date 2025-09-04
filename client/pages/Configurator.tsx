@@ -64,6 +64,8 @@ import MenuSection from "@/components/sections/MenuSection";
 import GalleryGrid from "@/components/sections/GalleryGrid";
 import TemplateRegistry from "@/components/template/TemplateRegistry";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import QRCode from "@/components/qr/QRCode";
 
 export default function Configurator() {
   const [isVisible, setIsVisible] = useState(false);
