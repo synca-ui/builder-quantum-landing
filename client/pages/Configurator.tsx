@@ -149,6 +149,32 @@ export default function Configurator() {
 
   useEffect(() => {
     setIsVisible(true);
+
+    // Log restoration status
+    const hasSaved = persistence.hasSavedSteps();
+    const summary = persistence.getSummary();
+
+    console.log('=== Configurator Initialization ===');
+    console.log('Has saved steps:', hasSaved);
+    console.log('Summary:', summary);
+    console.log('Current step:', currentStep);
+    console.log('Form data:', formData);
+    console.log('Config ID:', currentConfigId);
+    console.log('Published URL:', publishedUrl);
+    console.log('=====================================');
+
+    // Show toast with restoration status
+    if (hasSaved) {
+      toast({
+        title: "State Restored",
+        description: `Loaded your previous progress: ${summary}`,
+      });
+    } else {
+      toast({
+        title: "New Session",
+        description: "Starting fresh - all steps will be saved automatically",
+      });
+    }
   }, []);
 
   // Template preview selection (for step 0 live preview before committing)
@@ -4950,7 +4976,7 @@ export default function Configurator() {
                   htmlFor="weekday-schedule"
                   className="text-sm text-gray-600"
                 >
-                  Gleiche Zeiten für alle Wochentage
+                  Gleiche Zeiten f��r alle Wochentage
                 </label>
               </div>
             </div>
