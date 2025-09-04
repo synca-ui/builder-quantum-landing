@@ -273,119 +273,119 @@ export async function publishConfiguration(req: Request, res: Response) {
     if (!databaseUrl) {
       console.warn("DATABASE_URL not configured, skipping DB setup");
     } else {
-      const pool = new Pool({
-        connectionString: databaseUrl,
-        ssl: { rejectUnauthorized: false },
-        max: 2,
-      });
-      const client = await pool.connect();
-      try {
-        await client.query("BEGIN");
-        // Ensure needed extensions
-        await client.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
-        // Create tenant schema and core tables
-        await client.query(`CREATE SCHEMA IF NOT EXISTS ${tenantSchema};`);
-        await client.query(`SET search_path TO ${tenantSchema};`);
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS restaurants (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            name text NOT NULL,
-            type text,
-            logo_url text,
-            address text,
-            contact_info jsonb DEFAULT '{}'::jsonb,
-            config_json jsonb NOT NULL,
-            created_at timestamptz DEFAULT now()
+      // Fire-and-forget provisioning to keep response fast
+      (async () => {
+        const pool = new Pool({
+          connectionString: databaseUrl,
+          ssl: { rejectUnauthorized: false },
+          max: 2,
+        });
+        const client = await pool.connect();
+        try {
+          await client.query("BEGIN");
+          await client.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
+          await client.query(`CREATE SCHEMA IF NOT EXISTS ${tenantSchema};`);
+          await client.query(`SET search_path TO ${tenantSchema};`);
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS restaurants (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              name text NOT NULL,
+              type text,
+              logo_url text,
+              address text,
+              contact_info jsonb DEFAULT '{}'::jsonb,
+              config_json jsonb NOT NULL,
+              created_at timestamptz DEFAULT now()
+            );
+          `);
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS menu_categories (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              name text NOT NULL,
+              sort_order int DEFAULT 0
+            );
+          `);
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS menu_items (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              category_id uuid REFERENCES menu_categories(id) ON DELETE SET NULL,
+              name text NOT NULL,
+              description text,
+              price numeric(10,2) NOT NULL,
+              stock int,
+              images jsonb DEFAULT '[]'::jsonb,
+              metadata jsonb DEFAULT '{}'::jsonb
+            );
+          `);
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS events (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              title text NOT NULL,
+              description text,
+              starts_at timestamptz,
+              ends_at timestamptz,
+              metadata jsonb DEFAULT '{}'::jsonb
+            );
+          `);
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS orders (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              user_id uuid,
+              status text DEFAULT 'pending',
+              total numeric(10,2) DEFAULT 0,
+              created_at timestamptz DEFAULT now()
+            );
+          `);
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS order_items (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              order_id uuid REFERENCES orders(id) ON DELETE CASCADE,
+              item_id uuid,
+              quantity int NOT NULL DEFAULT 1,
+              unit_price numeric(10,2) NOT NULL
+            );
+          `);
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS loyalty_points (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              user_id uuid,
+              points int NOT NULL DEFAULT 0,
+              metadata jsonb DEFAULT '{}'::jsonb
+            );
+          `);
+          const insertRes = await client.query(
+            `INSERT INTO restaurants(name, type, config_json) VALUES($1,$2,$3) RETURNING id`,
+            [config.businessName, config.businessType, JSON.stringify(config)],
           );
-        `);
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS menu_categories (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            name text NOT NULL,
-            sort_order int DEFAULT 0
-          );
-        `);
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS menu_items (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            category_id uuid REFERENCES menu_categories(id) ON DELETE SET NULL,
-            name text NOT NULL,
-            description text,
-            price numeric(10,2) NOT NULL,
-            stock int,
-            images jsonb DEFAULT '[]'::jsonb,
-            metadata jsonb DEFAULT '{}'::jsonb
-          );
-        `);
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS events (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            title text NOT NULL,
-            description text,
-            starts_at timestamptz,
-            ends_at timestamptz,
-            metadata jsonb DEFAULT '{}'::jsonb
-          );
-        `);
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS orders (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            user_id uuid,
-            status text DEFAULT 'pending',
-            total numeric(10,2) DEFAULT 0,
-            created_at timestamptz DEFAULT now()
-          );
-        `);
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS order_items (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            order_id uuid REFERENCES orders(id) ON DELETE CASCADE,
-            item_id uuid,
-            quantity int NOT NULL DEFAULT 1,
-            unit_price numeric(10,2) NOT NULL
-          );
-        `);
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS loyalty_points (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            user_id uuid,
-            points int NOT NULL DEFAULT 0,
-            metadata jsonb DEFAULT '{}'::jsonb
-          );
-        `);
-        // Insert base restaurant row with config JSON
-        const insertRes = await client.query(
-          `INSERT INTO restaurants(name, type, config_json) VALUES($1,$2,$3) RETURNING id`,
-          [config.businessName, config.businessType, JSON.stringify(config)],
-        );
-        const restaurantId = insertRes.rows[0]?.id;
+          const restaurantId = insertRes.rows[0]?.id;
 
-        // Public tenant registry mapping
-        await client.query("RESET search_path;");
-        await client.query(`
-          CREATE TABLE IF NOT EXISTS public.tenants (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            tenant_slug text UNIQUE NOT NULL,
-            schema_name text UNIQUE NOT NULL,
-            restaurant_id uuid,
-            created_at timestamptz DEFAULT now()
+          await client.query("RESET search_path;");
+          await client.query(`
+            CREATE TABLE IF NOT EXISTS public.tenants (
+              id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+              tenant_slug text UNIQUE NOT NULL,
+              schema_name text UNIQUE NOT NULL,
+              restaurant_id uuid,
+              created_at timestamptz DEFAULT now()
+            );
+          `);
+          await client.query(
+            `INSERT INTO public.tenants(tenant_slug, schema_name, restaurant_id)
+             VALUES($1,$2,$3)
+             ON CONFLICT (tenant_slug) DO UPDATE SET schema_name = EXCLUDED.schema_name, restaurant_id = EXCLUDED.restaurant_id`,
+            [tenantSlug, tenantSchema, restaurantId],
           );
-        `);
-        await client.query(
-          `INSERT INTO public.tenants(tenant_slug, schema_name, restaurant_id)
-           VALUES($1,$2,$3)
-           ON CONFLICT (tenant_slug) DO UPDATE SET schema_name = EXCLUDED.schema_name, restaurant_id = EXCLUDED.restaurant_id`,
-          [tenantSlug, tenantSchema, restaurantId],
-        );
 
-        await client.query("COMMIT");
-        console.log(`Tenant provisioned: ${tenantSlug} -> ${tenantSchema}`);
-      } catch (e) {
-        await client.query("ROLLBACK");
-        console.error("DB provisioning failed:", e);
-      } finally {
-        client.release();
-      }
+          await client.query("COMMIT");
+          console.log(`Tenant provisioned: ${tenantSlug} -> ${tenantSchema}`);
+        } catch (e) {
+          try { await client.query("ROLLBACK"); } catch {}
+          console.error("DB provisioning failed:", e);
+        } finally {
+          client.release();
+          try { await pool.end(); } catch {}
+        }
+      })().catch((e) => console.error("Provisioning error:", e));
     }
 
     // Generate published URL to unique subdomain like tenant.synca.digital
