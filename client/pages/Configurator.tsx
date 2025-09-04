@@ -833,7 +833,10 @@ export default function Configurator() {
         setPublishStatus("published");
         setPublishedUrl(live);
         if (live) {
-          toast({ title: "Published", description: "Opening your live app..." });
+          toast({
+            title: "Published",
+            description: "Opening your live app...",
+          });
           window.open(live, "_blank");
         } else {
           toast({ title: "Published", description: "Live URL not returned" });
