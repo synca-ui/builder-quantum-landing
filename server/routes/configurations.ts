@@ -387,13 +387,18 @@ export async function publishConfiguration(req: Request, res: Response) {
       }
     }
 
-    // Generate published URL: prefer Netlify-provided SITE_URL/URL if present
+    // Generate published URL to unique subdomain like tenant.synca.digital
     const siteUrlFromEnv = process.env.SITE_URL || process.env.URL;
-    const publishedUrl = siteUrlFromEnv
-      ? `${siteUrlFromEnv.replace(/\/$/, "")}/site/${tenantSlug}`
-      : config.hasDomain && config.domainName
-        ? `https://${config.domainName}`
-        : `https://${tenantSlug}.synca.digital/site/${tenantSlug}`;
+    let baseHost = "synca.digital";
+    if (siteUrlFromEnv) {
+      try {
+        const h = new URL(siteUrlFromEnv).hostname.replace(/^www\./, "");
+        if (h) baseHost = h;
+      } catch {}
+    }
+    const publishedUrl = config.hasDomain && config.domainName
+      ? `https://${config.domainName}`
+      : `https://${tenantSlug}.${baseHost}`;
 
     // Update configuration status
     config.status = "published";
