@@ -4822,7 +4822,11 @@ export default function Configurator() {
           Homepage Options
         </h3>
         <label className="inline-flex items-center space-x-2 text-sm">
-          <input type="checkbox" checked={!!formData.showHomeHero} onChange={(e)=> updateFormData("showHomeHero", e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={!!formData.showHomeHero}
+            onChange={(e) => updateFormData("showHomeHero", e.target.checked)}
+          />
           <span>Show header block under headline (logo + name) on Home</span>
         </label>
       </Card>

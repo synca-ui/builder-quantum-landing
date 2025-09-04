@@ -1,4 +1,11 @@
-import React, { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 
 const PhonePortalContext = createContext<HTMLElement | null>(null);
@@ -23,7 +30,8 @@ export function PhonePortalProvider({ children }: PropsWithChildren<{}>) {
 export function PhonePortal({ children }: PropsWithChildren<{}>) {
   const node = useContext(PhonePortalContext);
   if (node) return createPortal(children, node);
-  if (typeof document !== "undefined") return createPortal(children, document.body);
+  if (typeof document !== "undefined")
+    return createPortal(children, document.body);
   return null;
 }
 
