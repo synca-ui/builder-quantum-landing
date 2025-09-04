@@ -116,166 +116,35 @@ function ShareQRButton({ url }: { url: string }) {
 export default function Configurator() {
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(-1); // Start with welcome page
+  const [currentStep, setCurrentStep] = useState(() => {
+    const restoredStep = persistence.getCurrentStep();
+    console.log('Restored current step:', restoredStep);
+    return restoredStep;
+  });
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
-  const [currentConfigId, setCurrentConfigId] = useState<string | null>(null);
+  const [currentConfigId, setCurrentConfigId] = useState<string | null>(() => {
+    return persistence.getConfigId() || null;
+  });
   const [publishStatus, setPublishStatus] = useState<
     "idle" | "publishing" | "published" | "error"
   >("idle");
-  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(() => {
+    return persistence.getPublishedUrl() || null;
+  });
   const [pendingFeatureConfig, setPendingFeatureConfig] = useState<
     string | null
   >(null);
 
-  const [formData, setFormData] = useState({
-    // Template Selection
-    template: "",
+  // Initialize persistence system
+  const persistence = usePersistence();
 
-    // Business Information
-    businessName: "",
-    businessType: "",
-    location: "",
-    logo: null,
-    slogan: "",
-    uniqueDescription: "",
-
-    // Design & Style
-    primaryColor: "#2563EB",
-    secondaryColor: "#7C3AED",
-    fontFamily: "sans-serif",
-    fontColor: "#000000",
-    fontSize: "medium",
-    backgroundType: "color",
-    backgroundColor: "#FFFFFF",
-    backgroundImage: null,
-    selectedPages: ["home"],
-    customPages: [],
-    openingHoursTextColor: "#0F172A",
-
-    // Global preferences
-    language: "en", // "en" | "de"
-    themeMode: "light", // "light" | "dark"
-
-    // Homepage options
-    showHomeHero: true,
-
-    // Per-template themes
-    templateThemes: {
-      minimalist: {
-        primary: "#2563EB",
-        secondary: "#7C3AED",
-        text: "#1A1A1A",
-        background: "#FFFFFF",
-        highlight: "#14B8A6",
-        buttonRadius: "rounded-lg",
-        buttonHover: "grow",
-      },
-      modern: {
-        primary: "#f5576c",
-        secondary: "#4facfe",
-        text: "#FFFFFF",
-        background:
-          "linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)",
-        highlight: "#f093fb",
-        buttonRadius: "rounded-xl",
-        buttonHover: "glow",
-      },
-      stylish: {
-        primary: "#059669",
-        secondary: "#10B981",
-        text: "#0F172A",
-        background: "#FAFAFA",
-        highlight: "#F59E0B",
-        buttonRadius: "rounded-2xl",
-        buttonHover: "grow",
-      },
-      cozy: {
-        primary: "#00ff88",
-        secondary: "#ff0080",
-        text: "#FFFFFF",
-        background:
-          "linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%)",
-        highlight: "#00d4ff",
-        buttonRadius: "rounded-md",
-        buttonHover: "cozy-glow",
-      },
-    },
-
-    // Content & Features
-    openingHours: {},
-    menuItems: [],
-    menuPdf: null,
-    reservationsEnabled: false,
-    reservationButtonColor: "#2563EB",
-    reservationButtonTextColor: "#FFFFFF",
-    reservationButtonShape: "rounded",
-    timeSlots: [],
-    maxGuests: 10,
-    notificationMethod: "email",
-    contactMethods: [],
-    socialMedia: {},
-    instagramSync: false,
-
-    // Media & Advanced
-    gallery: [],
-    onlineOrdering: false,
-    onlineStore: false,
-    teamArea: false,
-
-    // Online ordering configuration
-    posProvider: "none",
-    paymentMethods: {
-      applePay: false,
-      googlePay: false,
-      card: true,
-      cash: true,
-    },
-    orderOptions: { delivery: true, pickup: true, table: false },
-    deliveryAddressRequired: true,
-
-    // Online store configuration
-    categories: ["Drinks", "Food"],
-    showStockLevels: false,
-    discountsEnabled: false,
-    bundlesEnabled: false,
-    seasonalOffersEnabled: false,
-
-    // Team
-    teamMembers: [],
-
-    // Loyalty / Coupons / Offers
-    loyaltyEnabled: false,
-    loyaltyConfig: {
-      stampsForReward: 10,
-      rewardType: "discount",
-      expiryDate: "",
-    },
-    couponsEnabled: false,
-    coupons: [],
-    offersEnabled: false,
-    offers: [],
-
-    cartItems: [],
-
-    // Domain & Publishing
-    hasDomain: false,
-    domainName: "",
-    selectedDomain: "",
-
-    // SEO Optimization
-    seoEnabled: false,
-    metaTitle: "",
-    metaDescription: "",
-    keywords: "",
-    socialMediaImage: null,
-    googleAnalyticsId: "",
-    seoApiOptimization: false,
-    seoApiCost: 29.99,
-
-    // UI State
-    showOptionalFields: false,
+  // Initialize form data from persistence system
+  const [formData, setFormData] = useState(() => {
+    const restoredData = persistence.getFormData();
+    console.log('Restored form data:', restoredData);
+    return restoredData;
   });
 
   useEffect(() => {
