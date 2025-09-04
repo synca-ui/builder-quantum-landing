@@ -828,22 +828,34 @@ export default function Configurator() {
       );
 
       if (result.success && result.data) {
-        const live = (result.data as any).previewUrl || result.data.publishedUrl || null;
+        const live =
+          (result.data as any).previewUrl || result.data.publishedUrl || null;
         setPublishStatus("published");
         setPublishedUrl(live);
         if (live) {
-          toast({ title: "Published", description: "Your app is live. Click View Live Site." });
+          toast({
+            title: "Published",
+            description: "Your app is live. Click View Live Site.",
+          });
         } else {
           toast({ title: "Published", description: "Live URL not returned" });
         }
       } else {
         setPublishStatus("error");
-        toast({ title: "Publish failed", description: result.error || "Unknown error", variant: "destructive" as any });
+        toast({
+          title: "Publish failed",
+          description: result.error || "Unknown error",
+          variant: "destructive" as any,
+        });
       }
     } catch (error: any) {
       setPublishStatus("error");
       console.error("Publish error:", error);
-      toast({ title: "Publish error", description: error?.message || String(error), variant: "destructive" as any });
+      toast({
+        title: "Publish error",
+        description: error?.message || String(error),
+        variant: "destructive" as any,
+      });
     }
   }, [currentConfigId, formData, saveToBackend]);
 
