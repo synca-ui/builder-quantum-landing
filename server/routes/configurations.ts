@@ -50,7 +50,11 @@ async function ensureDataDir() {
   try {
     await fs.access(DATA_DIR);
   } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+    } catch {
+      // Read-only filesystem - ignore
+    }
   }
 }
 
