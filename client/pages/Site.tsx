@@ -1,28 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { configurationApi } from "@/lib/api";
+import { configurationApi, Configuration } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import GalleryGrid from "@/components/sections/GalleryGrid";
 import MenuSection from "@/components/sections/MenuSection";
-
-interface SiteConfig {
-  businessName: string;
-  slogan?: string;
-  template: string;
-  primaryColor: string;
-  secondaryColor: string;
-  fontFamily: string;
-  menuItems?: any[];
-  gallery?: any[];
-  contactMethods?: string[];
-  socialMedia?: Record<string, string>;
-}
 
 export default function Site() {
   const { subdomain } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [config, setConfig] = useState<Configuration | null>(null);
 
   // Resolve tenant slug from route or hostname
   const resolvedSlug = useMemo(() => {
@@ -47,7 +34,7 @@ export default function Site() {
       const res = await configurationApi.getPublishedSite(resolvedSlug);
       if (!mounted) return;
       if (res.success && res.data) {
-        setConfig(res.data as any);
+        setConfig(res.data);
         setError(null);
       } else {
         setError(res.error || "Failed to load site");
@@ -90,24 +77,18 @@ export default function Site() {
     );
   }
 
-  const pages = (config as any).selectedPages || [
-    "home",
-    "menu",
-    "gallery",
-    "contact",
-  ];
-  const uniqueDescription = (config as any).uniqueDescription as
-    | string
-    | undefined;
-  const location = (config as any).location as string | undefined;
-  const openingHours = (config as any).openingHours as
-    | Record<string, any>
-    | undefined;
-  const reservationsEnabled = !!(config as any).reservationsEnabled;
-  const contactMethods = (config as any).contactMethods as string[] | undefined;
-  const social = (config as any).socialMedia as
-    | Record<string, string>
-    | undefined;
+  // Access all configuration fields properly
+  const pages = config.selectedPages || ["home", "menu", "gallery", "contact"];
+  const businessName = config.businessName || "Your Business";
+  const slogan = config.slogan;
+  const uniqueDescription = config.uniqueDescription;
+  const location = config.location;
+  const openingHours = config.openingHours || {};
+  const reservationsEnabled = config.reservationsEnabled || false;
+  const contactMethods = config.contactMethods || [];
+  const socialMedia = config.socialMedia || {};
+  const menuItems = config.menuItems || [];
+  const gallery = config.gallery || [];
 
   return (
     <div style={theme} className="min-h-screen bg-white text-gray-900">
@@ -117,7 +98,7 @@ export default function Site() {
             className="font-black text-xl"
             style={{ color: "var(--primary)" }}
           >
-            {config.businessName || "Your Business"}
+            {businessName}
           </div>
           <nav className="text-sm text-gray-600 flex gap-4">
             {pages.includes("menu") && (
@@ -152,16 +133,24 @@ export default function Site() {
                 className="text-4xl md:text-5xl font-extrabold mb-4"
                 style={{ color: "var(--primary)" }}
               >
-                {config.businessName || "Your Business"}
+                {businessName}
               </h1>
-              {config.slogan && (
-                <p className="text-lg text-gray-600 max-w-2xl">
-                  {config.slogan}
+              {slogan && (
+                <p className="text-lg text-gray-600 max-w-2xl mb-4">
+                  {slogan}
+                </p>
+              )}
+              {uniqueDescription && (
+                <p className="text-base text-gray-700 max-w-3xl leading-relaxed">
+                  {uniqueDescription}
                 </p>
               )}
               {reservationsEnabled && (
                 <div className="mt-6">
-                  <Button onClick={() => alert("Reservation flow coming soon")}>
+                  <Button 
+                    onClick={() => alert("Reservation flow coming soon")}
+                    style={{ backgroundColor: "var(--primary)", color: "white" }}
+                  >
                     Reserve a table
                   </Button>
                 </div>
@@ -173,78 +162,102 @@ export default function Site() {
         {pages.includes("about") && uniqueDescription && (
           <section id="about" className="py-14 border-t">
             <div className="max-w-6xl mx-auto px-4">
-              <h2 className="text-2xl font-bold mb-4">About</h2>
+              <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+                About Us
+              </h2>
               <p className="text-gray-700 leading-relaxed max-w-3xl">
                 {uniqueDescription}
               </p>
+              {config.businessType && (
+                <p className="text-gray-600 mt-3">
+                  <strong>Business Type:</strong> {config.businessType}
+                </p>
+              )}
             </div>
           </section>
         )}
 
-        {pages.includes("menu") &&
-          Array.isArray(config.menuItems) &&
-          config.menuItems.length > 0 && (
-            <section id="menu" className="py-14 border-t">
-              <div className="max-w-6xl mx-auto px-4">
-                <h2 className="text-2xl font-bold mb-6">Menu</h2>
-                <MenuSection items={config.menuItems as any} />
-              </div>
-            </section>
-          )}
+        {pages.includes("menu") && Array.isArray(menuItems) && menuItems.length > 0 && (
+          <section id="menu" className="py-14 border-t">
+            <div className="max-w-6xl mx-auto px-4">
+              <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--primary)" }}>
+                Menu
+              </h2>
+              <MenuSection items={menuItems} />
+            </div>
+          </section>
+        )}
 
-        {pages.includes("gallery") &&
-          Array.isArray(config.gallery) &&
-          config.gallery.length > 0 && (
-            <section id="gallery" className="py-14 border-t">
-              <div className="max-w-6xl mx-auto px-4">
-                <h2 className="text-2xl font-bold mb-6">Gallery</h2>
-                <GalleryGrid images={config.gallery as any} />
-              </div>
-            </section>
-          )}
+        {pages.includes("gallery") && Array.isArray(gallery) && gallery.length > 0 && (
+          <section id="gallery" className="py-14 border-t">
+            <div className="max-w-6xl mx-auto px-4">
+              <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--primary)" }}>
+                Gallery
+              </h2>
+              <GalleryGrid images={gallery} />
+            </div>
+          </section>
+        )}
 
         {pages.includes("contact") && (
           <section id="contact" className="py-14 border-t">
             <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-8">
               <div>
-                <h2 className="text-2xl font-bold mb-4">Contact</h2>
-                {location && <p className="text-gray-700 mb-2">{location}</p>}
-                {Array.isArray(contactMethods) && contactMethods.length > 0 && (
-                  <ul className="text-gray-700 space-y-1">
-                    {contactMethods.map((m, i) => (
-                      <li key={i}>{m}</li>
-                    ))}
-                  </ul>
+                <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+                  Contact
+                </h2>
+                {location && (
+                  <div className="mb-4">
+                    <h3 className="font-semibold text-gray-900 mb-1">Location</h3>
+                    <p className="text-gray-700">{location}</p>
+                  </div>
                 )}
-                {social && Object.keys(social).length > 0 && (
-                  <div className="mt-3 flex gap-3 text-sm text-gray-600">
-                    {Object.entries(social).map(([k, v]) => (
-                      <a
-                        key={k}
-                        href={v}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="underline"
-                      >
-                        {k}
-                      </a>
-                    ))}
+                {Array.isArray(contactMethods) && contactMethods.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="font-semibold text-gray-900 mb-1">Contact Methods</h3>
+                    <ul className="text-gray-700 space-y-1">
+                      {contactMethods.map((method, i) => (
+                        <li key={i}>{method}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {socialMedia && Object.keys(socialMedia).length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">Follow Us</h3>
+                    <div className="flex gap-3 text-sm">
+                      {Object.entries(socialMedia).map(([platform, url]) => (
+                        <a
+                          key={platform}
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline capitalize"
+                        >
+                          {platform}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
               {openingHours && Object.keys(openingHours).length > 0 && (
                 <div>
-                  <h2 className="text-2xl font-bold mb-4">Opening Hours</h2>
-                  <ul className="text-gray-700 space-y-1">
-                    {Object.entries(openingHours).map(([day, val]: any) => (
+                  <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+                    Opening Hours
+                  </h2>
+                  <ul className="text-gray-700 space-y-2">
+                    {Object.entries(openingHours).map(([day, schedule]: [string, any]) => (
                       <li key={day} className="flex justify-between max-w-sm">
                         <span className="font-medium capitalize">{day}</span>
                         <span className="text-gray-600">
-                          {typeof val === "string"
-                            ? val
-                            : val?.open && val?.close
-                              ? `${val.open} – ${val.close}`
-                              : "closed"}
+                          {typeof schedule === "string"
+                            ? schedule
+                            : schedule?.open && schedule?.close
+                              ? `${schedule.open} – ${schedule.close}`
+                              : schedule?.closed
+                                ? "Closed"
+                                : "Closed"}
                         </span>
                       </li>
                     ))}
@@ -254,10 +267,50 @@ export default function Site() {
             </div>
           </section>
         )}
+
+        {/* Additional features from configuration */}
+        {config.onlineOrdering && (
+          <section className="py-14 border-t">
+            <div className="max-w-6xl mx-auto px-4 text-center">
+              <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+                Online Ordering
+              </h2>
+              <p className="text-gray-700 mb-6">
+                Order your favorite items online for pickup or delivery.
+              </p>
+              <Button style={{ backgroundColor: "var(--primary)", color: "white" }}>
+                Order Now
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {config.onlineStore && (
+          <section className="py-14 border-t bg-gray-50">
+            <div className="max-w-6xl mx-auto px-4 text-center">
+              <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+                Online Store
+              </h2>
+              <p className="text-gray-700 mb-6">
+                Browse and purchase our products online.
+              </p>
+              <Button style={{ backgroundColor: "var(--primary)", color: "white" }}>
+                Visit Store
+              </Button>
+            </div>
+          </section>
+        )}
       </main>
 
-      <footer className="py-10 border-t mt-10 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} {config.businessName || "Your Business"}
+      <footer className="py-10 border-t mt-10 text-center text-sm text-gray-500 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <p>© {new Date().getFullYear()} {businessName}</p>
+          {config.businessType && (
+            <p className="mt-1 text-xs text-gray-400">
+              {config.businessType}
+            </p>
+          )}
+        </div>
       </footer>
     </div>
   );
