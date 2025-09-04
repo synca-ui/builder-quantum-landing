@@ -64,7 +64,13 @@ import MenuSection from "@/components/sections/MenuSection";
 import GalleryGrid from "@/components/sections/GalleryGrid";
 import TemplateRegistry from "@/components/template/TemplateRegistry";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import QRCode from "@/components/qr/QRCode";
 
 function ShareQRButton({ url }: { url: string }) {
@@ -81,10 +87,23 @@ function ShareQRButton({ url }: { url: string }) {
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-2">
           <QRCode value={url} size={220} />
-          <div className="text-xs text-gray-600 break-all text-center max-w-[90%]">{url}</div>
+          <div className="text-xs text-gray-600 break-all text-center max-w-[90%]">
+            {url}
+          </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => navigator.clipboard.writeText(url)}>Copy Link</Button>
-            <Button size="sm" variant="secondary" onClick={() => window.open(url, "_blank")}>Open</Button>
+            <Button
+              size="sm"
+              onClick={() => navigator.clipboard.writeText(url)}
+            >
+              Copy Link
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => window.open(url, "_blank")}
+            >
+              Open
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -808,7 +827,9 @@ export default function Configurator() {
 
       if (result.success && result.data) {
         setPublishStatus("published");
-        setPublishedUrl((result.data as any).previewUrl || result.data.publishedUrl || null);
+        setPublishedUrl(
+          (result.data as any).previewUrl || result.data.publishedUrl || null,
+        );
       } else {
         setPublishStatus("error");
       }
