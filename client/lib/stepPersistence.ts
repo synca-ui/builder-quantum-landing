@@ -187,6 +187,13 @@ export class StepPersistence {
       }
     } catch (error) {
       console.warn('Failed to load persistence state:', error);
+      // Try to clear corrupted data
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      } catch (clearError) {
+        console.warn('Failed to clear corrupted persistence data:', clearError);
+      }
     }
     return null;
   }
@@ -197,9 +204,23 @@ export class StepPersistence {
   private saveState(): void {
     try {
       this.state.lastUpdated = Date.now();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-      // Also save to sessionStorage as backup
-      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(this.state));
+      const serialized = JSON.stringify(this.state);
+
+      // Try localStorage first
+      try {
+        localStorage.setItem(STORAGE_KEY, serialized);
+      } catch (localError) {
+        console.warn('localStorage failed, trying sessionStorage:', localError);
+        // Fallback to sessionStorage if localStorage fails
+        sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
+      }
+
+      // Also save to sessionStorage as backup if localStorage worked
+      try {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
+      } catch (sessionError) {
+        console.warn('sessionStorage backup failed:', sessionError);
+      }
     } catch (error) {
       console.error('Failed to save persistence state:', error);
     }
@@ -209,35 +230,43 @@ export class StepPersistence {
    * Record a new step
    */
   saveStep(stepNumber: number, stepId: string, action: StepData['action'], data: any, formData: any): void {
-    const stepData: StepData = {
-      stepNumber,
-      stepId,
-      timestamp: Date.now(),
-      action,
-      data,
-      formData: { ...formData }, // Deep copy
-    };
+    try {
+      const stepData: StepData = {
+        stepNumber,
+        stepId,
+        timestamp: Date.now(),
+        action,
+        data: data || {},
+        formData: formData ? { ...formData } : {}, // Safe deep copy
+      };
 
-    this.state.steps.push(stepData);
-    this.state.currentStep = stepNumber;
-    this.state.formData = { ...formData };
-    
-    // Keep only last 50 steps to prevent storage bloat
-    if (this.state.steps.length > 50) {
-      this.state.steps = this.state.steps.slice(-50);
+      this.state.steps.push(stepData);
+      this.state.currentStep = stepNumber;
+      this.state.formData = formData ? { ...formData } : {};
+
+      // Keep only last 50 steps to prevent storage bloat
+      if (this.state.steps.length > 50) {
+        this.state.steps = this.state.steps.slice(-50);
+      }
+
+      this.saveState();
+    } catch (error) {
+      console.error('Failed to save step:', error);
     }
-
-    this.saveState();
   }
 
   /**
    * Update form data
    */
   updateFormData(field: string, value: any, formData: any): void {
-    this.state.formData = { ...formData };
-    
-    // Record field update
-    this.saveStep(-1, 'field_update', 'field_update', { field, value }, formData);
+    try {
+      this.state.formData = formData ? { ...formData } : {};
+
+      // Record field update
+      this.saveStep(-1, 'field_update', 'field_update', { field, value }, formData);
+    } catch (error) {
+      console.error('Failed to update form data:', error);
+    }
   }
 
   /**
