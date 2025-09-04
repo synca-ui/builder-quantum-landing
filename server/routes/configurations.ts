@@ -225,7 +225,7 @@ export async function publishConfiguration(req: Request, res: Response) {
     const userId = (req.headers["x-user-id"] as string) || "anonymous";
 
     // Prefer config from request payload to avoid FS on serverless; fallback to file
-    const payload = (req.body?.config || {}) as Partial<Configuration>;
+    const payload = ((req.body && (req.body as any).config) ? (req.body as any).config : req.body) as Partial<Configuration>;
     let configurations: Configuration[] = [];
     let configIndex = -1;
     if (!payload || Object.keys(payload).length === 0) {
