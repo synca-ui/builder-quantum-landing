@@ -73,6 +73,7 @@ import {
 } from "@/components/ui/dialog";
 import QRCode from "@/components/qr/QRCode";
 import { toast } from "@/hooks/use-toast";
+import { stepPersistence, usePersistence } from "@/lib/stepPersistence";
 
 function ShareQRButton({ url }: { url: string }) {
   return (
