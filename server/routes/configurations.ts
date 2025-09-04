@@ -401,10 +401,12 @@ export async function publishConfiguration(req: Request, res: Response) {
       config.hasDomain && config.domainName
         ? `https://${config.domainName}`
         : `https://${tenantSlug}.${baseHost}`;
+    const previewUrl = `${(siteUrlFromEnv || `https://${baseHost}`).replace(/\/$/, "")}/site/${tenantSlug}`;
 
     // Update configuration status
     config.status = "published";
     config.publishedUrl = publishedUrl;
+    (config as any).previewUrl = previewUrl;
     config.updatedAt = new Date().toISOString();
 
     try {
@@ -423,6 +425,7 @@ export async function publishConfiguration(req: Request, res: Response) {
       success: true,
       configuration: config,
       publishedUrl,
+      previewUrl,
       tenant: { slug: tenantSlug, schema: tenantSchema },
       message: "Website published successfully!",
     });
