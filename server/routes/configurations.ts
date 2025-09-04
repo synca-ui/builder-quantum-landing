@@ -464,16 +464,9 @@ export async function getPublishedSite(req: Request, res: Response) {
     console.log('Requested subdomain:', subdomain);
     console.log('Cache keys:', Array.from(publishedCache.keys()));
 
-    // Check ephemeral cache first
-    const cached = publishedCache.get(subdomain);
-    if (cached) {
-      console.log('Found in cache:', cached.config.businessName);
-      // Temporarily disable cache to force reload from updated file
-      console.log('Clearing cache to reload updated configuration');
-      publishedCache.delete(subdomain);
-    } else {
-      console.log('Not found in cache');
-    }
+    // Clear ALL cache to ensure fresh data
+    console.log('Clearing all cache entries');
+    publishedCache.clear();
 
     // Prefer DB source if configured
     const databaseUrl =
