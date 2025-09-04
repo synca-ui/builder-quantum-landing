@@ -1,13 +1,13 @@
 [
   {
-    "id": "new",
+    "id": "mf5o8fej14lrdxt3wpr",
     "userId": "user_mewod4t90763iqgq366k",
     "businessName": "erer",
     "businessType": "cafe",
     "location": "",
     "slogan": "",
     "uniqueDescription": "",
-    "template": "modern",
+    "template": "minimalist",
     "primaryColor": "#059669",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
@@ -69,8 +69,8 @@
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-04T17:19:40.143Z",
-    "updatedAt": "2025-09-04T17:19:40.144Z",
+    "createdAt": "2025-09-04T17:20:40.018Z",
+    "updatedAt": "2025-09-04T17:20:40.019Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
@@ -136,7 +136,7 @@
         "secondary": "#10B981"
       }
     },
-    "publishedUrl": "https://erer-new.synca.digital",
-    "previewUrl": "https://synca.digital/site/erer-new"
+    "publishedUrl": "https://erer-xt3wpr.synca.digital",
+    "previewUrl": "https://synca.digital/site/erer-xt3wpr"
   }
 ]
