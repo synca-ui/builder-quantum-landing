@@ -468,12 +468,9 @@ export async function getPublishedSite(req: Request, res: Response) {
     const cached = publishedCache.get(subdomain);
     if (cached) {
       console.log('Found in cache:', cached.config.businessName);
-      if (cached.expiresAt > Date.now()) {
-        return res.json({ success: true, site: cached.config });
-      } else {
-        console.log('Cache expired, removing');
-        publishedCache.delete(subdomain);
-      }
+      // Temporarily disable cache to force reload from updated file
+      console.log('Clearing cache to reload updated configuration');
+      publishedCache.delete(subdomain);
     } else {
       console.log('Not found in cache');
     }
