@@ -136,9 +136,7 @@ export default function Site() {
                 {businessName}
               </h1>
               {slogan && (
-                <p className="text-lg text-gray-600 max-w-2xl mb-4">
-                  {slogan}
-                </p>
+                <p className="text-lg text-gray-600 max-w-2xl mb-4">{slogan}</p>
               )}
               {uniqueDescription && (
                 <p className="text-base text-gray-700 max-w-3xl leading-relaxed">
@@ -147,9 +145,12 @@ export default function Site() {
               )}
               {reservationsEnabled && (
                 <div className="mt-6">
-                  <Button 
+                  <Button
                     onClick={() => alert("Reservation flow coming soon")}
-                    style={{ backgroundColor: "var(--primary)", color: "white" }}
+                    style={{
+                      backgroundColor: "var(--primary)",
+                      color: "white",
+                    }}
                   >
                     Reserve a table
                   </Button>
@@ -162,7 +163,10 @@ export default function Site() {
         {pages.includes("about") && uniqueDescription && (
           <section id="about" className="py-14 border-t">
             <div className="max-w-6xl mx-auto px-4">
-              <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+              <h2
+                className="text-2xl font-bold mb-4"
+                style={{ color: "var(--primary)" }}
+              >
                 About Us
               </h2>
               <p className="text-gray-700 leading-relaxed max-w-3xl">
@@ -177,44 +181,61 @@ export default function Site() {
           </section>
         )}
 
-        {pages.includes("menu") && Array.isArray(menuItems) && menuItems.length > 0 && (
-          <section id="menu" className="py-14 border-t">
-            <div className="max-w-6xl mx-auto px-4">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--primary)" }}>
-                Menu
-              </h2>
-              <MenuSection items={menuItems} />
-            </div>
-          </section>
-        )}
+        {pages.includes("menu") &&
+          Array.isArray(menuItems) &&
+          menuItems.length > 0 && (
+            <section id="menu" className="py-14 border-t">
+              <div className="max-w-6xl mx-auto px-4">
+                <h2
+                  className="text-2xl font-bold mb-6"
+                  style={{ color: "var(--primary)" }}
+                >
+                  Menu
+                </h2>
+                <MenuSection items={menuItems} />
+              </div>
+            </section>
+          )}
 
-        {pages.includes("gallery") && Array.isArray(gallery) && gallery.length > 0 && (
-          <section id="gallery" className="py-14 border-t">
-            <div className="max-w-6xl mx-auto px-4">
-              <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--primary)" }}>
-                Gallery
-              </h2>
-              <GalleryGrid images={gallery} />
-            </div>
-          </section>
-        )}
+        {pages.includes("gallery") &&
+          Array.isArray(gallery) &&
+          gallery.length > 0 && (
+            <section id="gallery" className="py-14 border-t">
+              <div className="max-w-6xl mx-auto px-4">
+                <h2
+                  className="text-2xl font-bold mb-6"
+                  style={{ color: "var(--primary)" }}
+                >
+                  Gallery
+                </h2>
+                <GalleryGrid images={gallery} />
+              </div>
+            </section>
+          )}
 
         {pages.includes("contact") && (
           <section id="contact" className="py-14 border-t">
             <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-8">
               <div>
-                <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+                <h2
+                  className="text-2xl font-bold mb-4"
+                  style={{ color: "var(--primary)" }}
+                >
                   Contact
                 </h2>
                 {location && (
                   <div className="mb-4">
-                    <h3 className="font-semibold text-gray-900 mb-1">Location</h3>
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      Location
+                    </h3>
                     <p className="text-gray-700">{location}</p>
                   </div>
                 )}
                 {Array.isArray(contactMethods) && contactMethods.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="font-semibold text-gray-900 mb-1">Contact Methods</h3>
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      Contact Methods
+                    </h3>
                     <ul className="text-gray-700 space-y-1">
                       {contactMethods.map((method, i) => (
                         <li key={i}>{method}</li>
@@ -224,7 +245,9 @@ export default function Site() {
                 )}
                 {socialMedia && Object.keys(socialMedia).length > 0 && (
                   <div className="mt-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">Follow Us</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Follow Us
+                    </h3>
                     <div className="flex gap-3 text-sm">
                       {Object.entries(socialMedia).map(([platform, url]) => (
                         <a
@@ -243,24 +266,29 @@ export default function Site() {
               </div>
               {openingHours && Object.keys(openingHours).length > 0 && (
                 <div>
-                  <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+                  <h2
+                    className="text-2xl font-bold mb-4"
+                    style={{ color: "var(--primary)" }}
+                  >
                     Opening Hours
                   </h2>
                   <ul className="text-gray-700 space-y-2">
-                    {Object.entries(openingHours).map(([day, schedule]: [string, any]) => (
-                      <li key={day} className="flex justify-between max-w-sm">
-                        <span className="font-medium capitalize">{day}</span>
-                        <span className="text-gray-600">
-                          {typeof schedule === "string"
-                            ? schedule
-                            : schedule?.open && schedule?.close
-                              ? `${schedule.open} – ${schedule.close}`
-                              : schedule?.closed
-                                ? "Closed"
-                                : "Closed"}
-                        </span>
-                      </li>
-                    ))}
+                    {Object.entries(openingHours).map(
+                      ([day, schedule]: [string, any]) => (
+                        <li key={day} className="flex justify-between max-w-sm">
+                          <span className="font-medium capitalize">{day}</span>
+                          <span className="text-gray-600">
+                            {typeof schedule === "string"
+                              ? schedule
+                              : schedule?.open && schedule?.close
+                                ? `${schedule.open} – ${schedule.close}`
+                                : schedule?.closed
+                                  ? "Closed"
+                                  : "Closed"}
+                          </span>
+                        </li>
+                      ),
+                    )}
                   </ul>
                 </div>
               )}
@@ -272,13 +300,18 @@ export default function Site() {
         {config.onlineOrdering && (
           <section className="py-14 border-t">
             <div className="max-w-6xl mx-auto px-4 text-center">
-              <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+              <h2
+                className="text-2xl font-bold mb-4"
+                style={{ color: "var(--primary)" }}
+              >
                 Online Ordering
               </h2>
               <p className="text-gray-700 mb-6">
                 Order your favorite items online for pickup or delivery.
               </p>
-              <Button style={{ backgroundColor: "var(--primary)", color: "white" }}>
+              <Button
+                style={{ backgroundColor: "var(--primary)", color: "white" }}
+              >
                 Order Now
               </Button>
             </div>
@@ -288,13 +321,18 @@ export default function Site() {
         {config.onlineStore && (
           <section className="py-14 border-t bg-gray-50">
             <div className="max-w-6xl mx-auto px-4 text-center">
-              <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
+              <h2
+                className="text-2xl font-bold mb-4"
+                style={{ color: "var(--primary)" }}
+              >
                 Online Store
               </h2>
               <p className="text-gray-700 mb-6">
                 Browse and purchase our products online.
               </p>
-              <Button style={{ backgroundColor: "var(--primary)", color: "white" }}>
+              <Button
+                style={{ backgroundColor: "var(--primary)", color: "white" }}
+              >
                 Visit Store
               </Button>
             </div>
@@ -304,11 +342,11 @@ export default function Site() {
 
       <footer className="py-10 border-t mt-10 text-center text-sm text-gray-500 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4">
-          <p>© {new Date().getFullYear()} {businessName}</p>
+          <p>
+            © {new Date().getFullYear()} {businessName}
+          </p>
           {config.businessType && (
-            <p className="mt-1 text-xs text-gray-400">
-              {config.businessType}
-            </p>
+            <p className="mt-1 text-xs text-gray-400">{config.businessType}</p>
           )}
         </div>
       </footer>
