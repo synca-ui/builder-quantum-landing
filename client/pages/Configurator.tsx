@@ -117,26 +117,6 @@ export default function Configurator() {
   // Initialize persistence system FIRST
   const persistence = usePersistence();
 
-  // Compute base host dynamically (e.g., synca.digital)
-  const getBaseHost = useCallback(() => {
-    try {
-      const h = window.location.hostname.replace(/^www\./, "");
-      const parts = h.split(".");
-      if (parts.length >= 2) return parts.slice(-2).join(".");
-      return h;
-    } catch {
-      return "synca.digital";
-    }
-  }, []);
-
-  const getDisplayedDomain = useCallback(() => {
-    if (publishedUrl) {
-      try { return new URL(publishedUrl).hostname; } catch {}
-    }
-    if (formData.hasDomain && formData.domainName) return formData.domainName;
-    const slug = (formData.selectedDomain || formData.businessName || "site").toLowerCase().replace(/\s+/g, "");
-    return `${slug}.${getBaseHost()}`;
-  }, [formData.hasDomain, formData.domainName, formData.selectedDomain, formData.businessName, publishedUrl, getBaseHost]);
 
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -167,6 +147,30 @@ export default function Configurator() {
     console.log('Restored form data:', restoredData);
     return restoredData;
   });
+
+  // Compute base host dynamically (e.g., synca.digital)
+  const getBaseHost = useCallback(() => {
+    try {
+      const h = window.location.hostname.replace(/^www\./, "");
+      const parts = h.split(".");
+      if (parts.length >= 2) return parts.slice(-2).join(".");
+      return h;
+    } catch {
+      return "synca.digital";
+    }
+  }, []);
+
+  // Depends on publishedUrl and formData; must be declared AFTER their initialization to avoid TDZ
+  const getDisplayedDomain = useCallback(() => {
+    if (publishedUrl) {
+      try { return new URL(publishedUrl).hostname; } catch {}
+    }
+    if (formData.hasDomain && formData.domainName) return formData.domainName;
+    const slug = (formData.selectedDomain || formData.businessName || "site")
+      .toLowerCase()
+      .replace(/\s+/g, "");
+    return `${slug}.${getBaseHost()}`;
+  }, [formData.hasDomain, formData.domainName, formData.selectedDomain, formData.businessName, publishedUrl, getBaseHost]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -1132,7 +1136,7 @@ export default function Configurator() {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "��",
+            emoji: "����",
           },
         ],
         tagline: "Simple. Fresh. Good.",
