@@ -39,6 +39,9 @@ export function createServer() {
   // Public site serving
   app.get("/api/sites/:subdomain", getPublishedSite);
 
+  // Config JSON proxy for Edge/clients
+  app.get("/api/config/:slug", require('../server/routes/config').getConfigBySlug);
+
   // Instagram scraping endpoint (best-effort for public/open profiles)
   app.get("/api/instagram", fetchInstagramPhotos);
 
