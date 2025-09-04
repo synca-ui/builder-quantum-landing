@@ -387,9 +387,11 @@ export async function publishConfiguration(req: Request, res: Response) {
       }
     }
 
-    // Generate published URL (keep current domain handling)
-    const publishedUrl =
-      config.hasDomain && config.domainName
+    // Generate published URL: prefer Netlify-provided SITE_URL/URL if present
+    const siteUrlFromEnv = process.env.SITE_URL || process.env.URL;
+    const publishedUrl = siteUrlFromEnv
+      ? siteUrlFromEnv
+      : config.hasDomain && config.domainName
         ? `https://${config.domainName}`
         : `https://${tenantSlug}.synca.digital`;
 
