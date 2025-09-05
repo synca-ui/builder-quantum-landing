@@ -842,6 +842,21 @@ export default function Configurator() {
     }
   }, [currentConfigId, formData, saveToBackend, currentStep, persistence]);
 
+  // Sync current draft to server preview cache (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
+        fetch(`/api/preview/${sid}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ config: formData }),
+        }).catch(() => {});
+      } catch {}
+    }, 400);
+    return () => clearTimeout(t);
+  }, [formData, persistence]);
+
   // Progress calculation
   const progressPercentage = useMemo(() => {
     if (currentStep < 0) return 0;
