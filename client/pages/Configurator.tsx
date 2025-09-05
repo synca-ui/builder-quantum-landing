@@ -847,11 +847,11 @@ export default function Configurator() {
     const t = setTimeout(() => {
       try {
         const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
-        fetch(`/api/preview/${sid}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ config: formData }),
-        }).catch(() => {});
+        const payload = JSON.stringify({ config: formData });
+        const blob = new Blob([payload], { type: 'application/json' });
+        if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
+          void fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
+        }
       } catch {}
     }, 400);
     return () => clearTimeout(t);
@@ -986,7 +986,13 @@ export default function Configurator() {
                         variant="outline"
                         onClick={async () => {
                           const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
-                          try { await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ config: formData }) }); } catch {}
+                          try {
+                            const payload = JSON.stringify({ config: formData });
+                            const blob = new Blob([payload], { type: 'application/json' });
+                            if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
+                              await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
+                            }
+                          } catch {}
                           window.open(`/site/preview-${sid}`, '_blank');
                         }}
                         className="border-gray-300"
