@@ -25,7 +25,18 @@ const ConfigurationSchema = z
     reservationsEnabled: z.coerce.boolean().default(false),
     maxGuests: z.coerce.number().default(10),
     notificationMethod: z.string().default("email"),
-    contactMethods: z.array(z.string()).default([]),
+    contactMethods: z
+      .array(z.any())
+      .default([])
+      .transform((arr) =>
+        (arr as any[])
+          .map((m) =>
+            typeof m === "string"
+              ? m
+              : [m?.type, m?.value].filter(Boolean).join(": ")
+          )
+          .filter((s) => typeof s === "string" && s.trim()),
+      ) as unknown as z.ZodType<string[]>,
     socialMedia: z.record(z.string()).default({}),
     gallery: z.array(z.any()).default([]),
     onlineOrdering: z.coerce.boolean().default(false),
