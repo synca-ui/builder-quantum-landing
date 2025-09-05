@@ -501,6 +501,12 @@ export async function getPublishedSite(req: Request, res: Response) {
     console.log('Clearing cache for subdomain:', subdomain);
     publishedCache.delete(subdomain);
 
+    // Serve from in-memory cache if available (immediate after publish)
+    const cached = publishedCache.get(subdomain);
+    if (cached && cached.expiresAt > Date.now()) {
+      return res.json({ success: true, site: cached.config });
+    }
+
     // Prefer Supabase store
     if (supabase) {
       try {
