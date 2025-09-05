@@ -222,7 +222,8 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
     const getBusinessName = () => formData.businessName || "Your Business";
     const selectedIdForSwitch = formData.template || 'modern';
-    const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch) || templates[1];
+    const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch) || templates[0];
+    const mockup = selectedTemplateDef.mockup || templates[0].mockup;
     const baseTemplateStyle = selectedTemplateDef.style;
 
     const themeOverride = (formData as any).templateThemes?.[selectedIdForSwitch] || {};
@@ -380,17 +381,17 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     return (
         <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
             <div className="h-8" />
-            <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${selectedTemplateDef.mockup?.nav.bg}`}>
-                <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${selectedTemplateDef.mockup?.nav.text}`}>
-                    <span className={`w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden ${selectedTemplateDef.mockup?.cards.bg}`}><LogoDisplay /></span>
+            <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${mockup.nav.bg}`}>
+                <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${mockup.nav.text}`}>
+                    <span className={`w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden ${mockup.cards.bg}`}><LogoDisplay /></span>
                     {getBusinessName()}
                 </Link>
-                <button aria-label="Menu" className={`sm:hidden w-9 h-9 rounded-xl flex items-center justify-center ${selectedTemplateDef.mockup?.cards.bg}`}>
-                  <Menu className={`w-5 h-5 ${selectedTemplateDef.mockup?.nav.text}`} onClick={() => setMenuOpen(true)} />
+                <button aria-label="Menu" className={`sm:hidden w-9 h-9 rounded-xl flex items-center justify-center ${mockup.cards.bg}`}>
+                  <Menu className={`w-5 h-5 ${mockup.nav.text}`} onClick={() => setMenuOpen(true)} />
                 </button>
                 <nav className="hidden sm:flex gap-4 text-sm">
                     {menuPages.filter(p => p !== 'home').map(p => (
-                        <Link key={p} to={pageLink(p)} className={`${activePage === p ? selectedTemplateDef.mockup?.nav.text : 'text-white/70'} hover:text-white font-semibold`}>
+                        <Link key={p} to={pageLink(p)} className={`${activePage === p ? mockup.nav.text : 'text-white/70'} hover:text-white font-semibold`}>
                             {p.charAt(0).toUpperCase() + p.slice(1)}
                         </Link>
                     ))}
