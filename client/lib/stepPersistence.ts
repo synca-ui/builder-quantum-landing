@@ -178,6 +178,7 @@ export class StepPersistence {
    * Load state from localStorage
    */
   private loadState(): PersistenceState | null {
+    if (!this.enabled) return null;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
