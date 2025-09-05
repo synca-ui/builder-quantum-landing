@@ -61,7 +61,6 @@ import { motion } from "framer-motion";
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import PhonePortal from "@/components/preview/phone-portal";
 import ReservationButton from "@/components/ui/ReservationButton";
-import AppRenderer from "@/components/dynamic/AppRenderer";
 import MenuSection from "@/components/sections/MenuSection";
 import GalleryGrid from "@/components/sections/GalleryGrid";
 import TemplateRegistry from "@/components/template/TemplateRegistry";
@@ -3305,31 +3304,6 @@ export default function Configurator() {
     );
   };
 
-  // Build runtime config from current form data
-  const getRuntimeConfig = () => {
-    const cm = Array.isArray(formData.contactMethods)
-      ? formData.contactMethods.map((m: any) =>
-          typeof m === "string" ? m : [m?.type, m?.value].filter(Boolean).join(": ")
-        ).filter((s: any) => typeof s === "string" && s.trim())
-      : [];
-    const gallery = Array.isArray(formData.gallery)
-      ? formData.gallery.map((g: any, i: number) => ({ id: g.id || String(i), url: g.url || g, alt: g.alt || "" }))
-      : [];
-    return {
-      businessName: formData.businessName,
-      slogan: formData.slogan,
-      uniqueDescription: formData.uniqueDescription,
-      primaryColor: formData.primaryColor,
-      fontFamily: formData.fontFamily,
-      selectedPages: formData.selectedPages?.length ? formData.selectedPages : ["home","menu","gallery","contact"],
-      menuItems: formData.menuItems || [],
-      gallery,
-      contactMethods: cm,
-      socialMedia: formData.socialMedia || {},
-      openingHours: formData.openingHours || {},
-    } as any;
-  };
-
   // Enhanced Interactive Live Preview Component
   const LivePreview = () => {
     const [previewState, setPreviewState] = useState({
@@ -3542,8 +3516,8 @@ export default function Configurator() {
         currentStep === 0
           ? previewTemplateId || formData.template
           : formData.template;
-      // Use the same renderer as production (AppRenderer) for 1:1 parity
-      return <AppRenderer config={getRuntimeConfig()} />;
+      // Use the main TemplatePreviewContent component for consistent rendering
+      return <TemplatePreviewContent />;
     };
 
     return (
@@ -8436,7 +8410,7 @@ export default function Configurator() {
               <div className="flex justify-center">
                 {previewMode === "mobile" ? (
                   <LivePhoneFrame widthClass="w-64" heightClass="h-[480px]">
-                    <AppRenderer config={getRuntimeConfig()} />
+                    <TemplatePreviewContent />
                   </LivePhoneFrame>
                 ) : (
                   <div className="w-full max-w-4xl h-96 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
@@ -8446,7 +8420,7 @@ export default function Configurator() {
                       </span>
                     </div>
                     <div className="h-full overflow-hidden">
-                      <AppRenderer config={getRuntimeConfig()} />
+                      <TemplatePreviewContent />
                     </div>
                   </div>
                 )}
