@@ -62,10 +62,10 @@ const FALLBACK_CONFIG: Configuration = {
     Sunday: { open: "09:00", close: "20:00", closed: true },
   },
   menuItems: [
-    { id: "cappuccino", name: "Cappuccino", description: "Rich espresso with steamed milk foam", price: 3.50 },
-    { id: "coffee", name: "Drip Coffee", description: "Our signature house blend", price: 2.75 },
-    { id: "latte", name: "Latte", description: "Espresso with steamed milk", price: 4.00 },
-    { id: "croissant", name: "Croissant", description: "Buttery and flaky, baked fresh", price: 2.50 },
+    { id: "cappuccino", name: "Cappuccino", description: "Rich espresso with steamed milk foam", price: 3.50, imageUrl: "/placeholder.svg" },
+    { id: "coffee", name: "Drip Coffee", description: "Our signature house blend", price: 2.75, imageUrl: "/placeholder.svg" },
+    { id: "latte", name: "Latte", description: "Espresso with steamed milk", price: 4.00, imageUrl: "/placeholder.svg" },
+    { id: "croissant", name: "Croissant", description: "Buttery and flaky, baked fresh", price: 2.50, imageUrl: "/placeholder.svg" },
   ],
   gallery: [
       { url: "/placeholder.svg", alt: "A cozy coffee shop interior" },
@@ -73,6 +73,10 @@ const FALLBACK_CONFIG: Configuration = {
       { url: "/placeholder.svg", alt: "A delicious looking pastry" },
       { url: "/placeholder.svg", alt: "Friendly staff smiling" },
   ],
+  socialMedia: {
+      instagram: "https://instagram.com/example",
+      facebook: "https://facebook.com/example",
+  },
   contactMethods: ["Email: contact@juju.cafe", "Phone: (555) 123-4567"],
   reservationsEnabled: true,
 };
@@ -128,7 +132,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
         switch (activePage) {
             case "home":
                 return (
-                    <section className="px-6 pt-6">
+                    <section className="px-6 pt-6 pb-24">
                         <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40 overflow-hidden">
                             <LogoDisplay />
                         </div>
@@ -198,11 +202,20 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                     <section className="max-w-md mx-auto px-6 py-8">
                         <h2 className="text-lg font-bold mb-3 text-white">Contact</h2>
                         <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95">
-                            {formData.location && <p className="text-sm mb-2">{formData.location}</p>}
+                            {formData.location && <p className="text-sm mb-2 flex items-center gap-2"><MapPin className="w-4 h-4" /> {formData.location}</p>}
                             {Array.isArray(formData.contactMethods) && formData.contactMethods.length > 0 && (
                                 <ul className="mt-2 text-sm space-y-1">
-                                    {formData.contactMethods.map((m: any, i: number) => <li key={i}>{typeof m === "string" ? m : `${m.type}: ${m.value}`}</li>)}
+                                    {formData.contactMethods.map((m: any, i: number) => <li key={i} className="flex items-center gap-2"><Mail className="w-4 h-4" /> {typeof m === "string" ? m : `${m.type}: ${m.value}`}</li>)}
                                 </ul>
+                            )}
+                            {formData.socialMedia && (Object.keys(formData.socialMedia).length > 0) && (
+                                <div className="mt-4 pt-4 border-t border-white/20">
+                                    <h3 className="text-sm font-semibold mb-2">Follow Us</h3>
+                                    <div className="flex gap-4">
+                                        {formData.socialMedia.instagram && <a href={formData.socialMedia.instagram} target="_blank" rel="noopener noreferrer"><Instagram className="w-5 h-5" /></a>}
+                                        {formData.socialMedia.facebook && <a href={formData.socialMedia.facebook} target="_blank" rel="noopener noreferrer"><Facebook className="w-5 h-5" /></a>}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </section>
@@ -247,14 +260,18 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                 </div>
             )}
 
-            {renderPageContent()}
+            <div className="pb-20">
+                {renderPageContent()}
+            </div>
 
             {productOpen && (
-                <div className="absolute inset-0 z-30 flex items-center justify-center">
+                <div className="absolute inset-0 z-30 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/50" onClick={() => setProductOpen(null)} />
-                    <div className="relative bg-white text-gray-900 rounded-2xl w-[90%] max-w-sm p-5 shadow-2xl">
+                    <div className="relative bg-white text-gray-900 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
                         <button aria-label="Close" className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100" onClick={() => setProductOpen(null)}>×</button>
+                        <img src={productOpen.imageUrl || "/placeholder.svg"} alt={productOpen.name} className="w-full h-40 object-cover rounded-lg mb-4" />
                         <div className="text-lg font-bold mb-1">{productOpen.name}</div>
+                        <p className="text-sm text-gray-600 mb-3">{productOpen.description}</p>
                         {typeof productOpen.price !== 'undefined' && <div className="text-teal-600 font-semibold mb-3">${Number(productOpen.price).toFixed(2)}</div>}
                         <button className="w-full rounded-lg bg-teal-600 hover:bg-teal-700 text-white py-2 font-medium" onClick={() => setProductOpen(null)}>Add to cart</button>
                     </div>
