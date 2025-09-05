@@ -331,6 +331,19 @@ export default function Site() {
                       ))}
                     </ul>
                   )}
+                  {config.openingHours && Object.keys(config.openingHours).length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-sm font-semibold mb-1">Opening Hours</div>
+                      <ul className="text-xs space-y-1">
+                        {Object.entries(config.openingHours).map(([day, hours]: any) => (
+                          <li key={day} className="flex justify-between">
+                            <span className="font-medium">{day}</span>
+                            <span>{typeof hours === 'string' ? hours : (hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </section>
             )}
