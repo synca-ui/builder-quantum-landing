@@ -714,13 +714,28 @@ export default function Configurator() {
     persistence.saveStep(0, 'template', 'step_change', { action: 'back_to_templates', from: currentStep }, formData);
   }, [updateFormDataFromInputs, formData, persistence, currentStep]);
 
+  // Normalize payload to server schema (e.g., contactMethods must be string[])
+  const normalizeConfigPayload = useCallback((data: any): Partial<Configuration> => {
+    const clone: any = { ...data };
+    if (Array.isArray(clone.contactMethods)) {
+      clone.contactMethods = clone.contactMethods
+        .map((m: any) =>
+          typeof m === "string"
+            ? m
+            : [m?.type, m?.value].filter(Boolean).join(": ").trim(),
+        )
+        .filter((s: any) => typeof s === "string" && s.trim());
+    }
+    return clone as Partial<Configuration>;
+  }, []);
+
   // Save and publish functions
   const saveToBackend = useCallback(
     async (data: Partial<Configuration>) => {
       setSaveStatus("saving");
       try {
         const configData = {
-          ...data,
+          ...normalizeConfigPayload(data),
           userId: sessionApi.getUserId(),
         };
 
@@ -766,7 +781,7 @@ export default function Configurator() {
     try {
       const result = await configurationApi.publish(
         currentConfigId || "new",
-        formData as any,
+        normalizeConfigPayload(formData) as any,
       );
 
       if (result.success && result.data) {
@@ -1136,7 +1151,7 @@ export default function Configurator() {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "����",
+            emoji: "��",
           },
         ],
         tagline: "Simple. Fresh. Good.",
