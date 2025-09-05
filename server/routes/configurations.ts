@@ -3,6 +3,7 @@ import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
 import { Pool } from "pg";
+import { supabase } from "../supabase";
 
 // Configuration data schema
 const ConfigurationSchema = z
@@ -281,6 +282,7 @@ export async function publishConfiguration(req: Request, res: Response) {
     const shortId =
       (config.id || "").slice(-6) || Date.now().toString(36).slice(-6);
     const tenantSlug = `${baseSlug}-${shortId}`; // unique per config
+    (config as any).slug = tenantSlug;
     const tenantSchema =
       `tenant_${tenantSlug.replace(/[^a-z0-9_\-]/g, "").replace(/\-/g, "_")}`.slice(
         0,
@@ -436,6 +438,26 @@ export async function publishConfiguration(req: Request, res: Response) {
     (config as any).previewUrl = previewUrl;
     config.updatedAt = new Date().toISOString();
 
+    // Persist to Supabase
+    try {
+      if (supabase) {
+        await supabase
+          .from("configurations")
+          .upsert(
+            {
+              user_id: userId,
+              slug: tenantSlug,
+              status: "published",
+              config: config as any,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "slug" },
+          );
+      }
+    } catch (e) {
+      console.error("Supabase upsert failed:", e);
+    }
+
     // Cache for 10 minutes so preview works immediately
     publishedCache.set(tenantSlug, {
       config,
@@ -479,7 +501,23 @@ export async function getPublishedSite(req: Request, res: Response) {
     console.log('Clearing cache for subdomain:', subdomain);
     publishedCache.delete(subdomain);
 
-    // Prefer DB source if configured
+    // Prefer Supabase store
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("configurations")
+          .select("config")
+          .eq("slug", subdomain)
+          .single();
+        if (!error && data?.config) {
+          return res.json({ success: true, site: data.config });
+        }
+      } catch (e) {
+        console.error("Supabase read failed:", e);
+      }
+    }
+
+    // Fallback to DB source if configured
     const databaseUrl =
       process.env.DATABASE_URL ||
       process.env.SUPABASE_DB_URL ||
@@ -532,7 +570,9 @@ export async function getPublishedSite(req: Request, res: Response) {
     const config = configurations.find(
       (c) =>
         c.status === "published" &&
-        (c.publishedUrl?.includes(subdomain) ||
+        (((c as any).slug && (c as any).slug === subdomain) ||
+          c.previewUrl?.includes(`/site/${subdomain}`) ||
+          c.publishedUrl?.includes(subdomain) ||
           c.selectedDomain === subdomain ||
           c.domainName === subdomain),
     );
