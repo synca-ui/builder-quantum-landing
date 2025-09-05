@@ -208,6 +208,7 @@ export class StepPersistence {
    * Save state to localStorage
    */
   private saveState(): void {
+    if (!this.enabled) return;
     try {
       this.state.lastUpdated = Date.now();
       const serialized = JSON.stringify(this.state);
