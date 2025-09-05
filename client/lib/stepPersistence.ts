@@ -31,6 +31,7 @@ const SESSION_STORAGE_KEY = 'configurator_session';
 export class StepPersistence {
   private sessionId: string;
   private state: PersistenceState;
+  private enabled: boolean;
 
   constructor() {
     this.sessionId = this.generateSessionId();
