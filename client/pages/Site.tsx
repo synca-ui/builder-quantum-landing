@@ -378,8 +378,12 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
         }
     };
 
+    const background = selectedIdForSwitch === 'modern'
+        ? 'linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)'
+        : styles.userBackground;
+
     return (
-        <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
+        <div className={`min-h-screen relative ${fontClass}`} style={{ background, color: styles.userFontColor }}>
             <div className="h-8" />
             <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${mockup.nav.bg}`}>
                 <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${mockup.nav.text}`}>
