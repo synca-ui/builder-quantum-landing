@@ -62,6 +62,9 @@ const publishedCache = new Map<
   { config: Configuration; expiresAt: number }
 >();
 
+// In-memory preview cache keyed by preview-<session>
+const previewCache = new Map<string, { config: any; expiresAt: number }>();
+
 // Simple file-based storage (replace with database in production)
 const DATA_DIR = path.join(process.cwd(), "data");
 const CONFIGS_FILE = path.join(DATA_DIR, "configurations.json");
