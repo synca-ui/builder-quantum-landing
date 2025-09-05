@@ -965,24 +965,34 @@ export default function Configurator() {
                       <ShareQRButton url={publishedUrl} />
                     </>
                   ) : (
-                    <Button
-                      size="sm"
-                      onClick={publishConfiguration}
-                      disabled={publishStatus === "publishing"}
-                      className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg"
-                    >
-                      {publishStatus === "publishing" ? (
-                        <>
-                          <Cloud className="w-4 h-4 mr-2 animate-pulse" />
-                          Publishing...
-                        </>
-                      ) : (
-                        <>
-                          <Rocket className="w-4 h-4 mr-2" />
-                          Publish Website
-                        </>
-                      )}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(`/site/preview-${persistence.getSessionId ? persistence.getSessionId() : 'local'}`, '_blank')}
+                        className="border-gray-300"
+                      >
+                        1:1 Preview
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={publishConfiguration}
+                        disabled={publishStatus === "publishing"}
+                        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg ml-2"
+                      >
+                        {publishStatus === "publishing" ? (
+                          <>
+                            <Cloud className="w-4 h-4 mr-2 animate-pulse" />
+                            Publishing...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Publish Website
+                          </>
+                        )}
+                      </Button>
+                    </>
                   )}
                 </div>
               )}
