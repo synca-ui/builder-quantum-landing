@@ -7,7 +7,7 @@
     "location": "",
     "slogan": "",
     "uniqueDescription": "",
-    "template": "minimalist",
+    "template": "modern",
     "primaryColor": "#059669",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
@@ -56,83 +56,21 @@
         "closed": true
       }
     },
-    "menuItems": [
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.99",
-        "images": [
-          {
-            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/3a2251b1-ed4d-40b2-8b28-a5d02ec90e67",
-            "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
-            "file": {}
-          },
-          {
-            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/274dafba-501e-4797-ab99-6a30a169e75a",
-            "alt": "Bild1.png.jpeg",
-            "file": {}
-          },
-          {
-            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/34d11dc3-888f-4e84-8dce-9f341b1d79c7",
-            "alt": "Bild.png.jpeg",
-            "file": {}
-          }
-        ]
-      },
-      {
-        "name": "coffee",
-        "description": "hot",
-        "price": "2.99"
-      },
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.79"
-      },
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.99"
-      },
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.89"
-      }
-    ],
-    "reservationsEnabled": true,
+    "menuItems": [],
+    "reservationsEnabled": false,
     "maxGuests": 10,
     "notificationMethod": "email",
     "contactMethods": [],
-    "socialMedia": {
-      "instagram": "sdsd",
-      "facebook": "sdsd"
-    },
-    "gallery": [
-      {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/96dc2f24-a0a2-443d-9e96-c07e89f0e4d0",
-        "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
-        "file": {}
-      },
-      {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/7e0ef7a7-b458-4ff2-9255-1d53d8439f6b",
-        "alt": "Bild1.png.jpeg",
-        "file": {}
-      },
-      {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/a595ac2d-50b1-4d9a-9e52-b32332ed4cea",
-        "alt": "Bild.png.jpeg",
-        "file": {}
-      }
-    ],
+    "socialMedia": {},
+    "gallery": [],
     "onlineOrdering": false,
     "onlineStore": false,
     "teamArea": false,
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-05T09:21:51.426Z",
-    "updatedAt": "2025-09-05T09:21:51.427Z",
+    "createdAt": "2025-09-05T09:27:01.451Z",
+    "updatedAt": "2025-09-05T09:27:01.452Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
@@ -145,9 +83,9 @@
     "themeMode": "light",
     "showHomeHero": true,
     "menuPdf": null,
-    "reservationButtonColor": "#171717",
+    "reservationButtonColor": "#2563EB",
     "reservationButtonTextColor": "#FFFFFF",
-    "reservationButtonShape": "pill",
+    "reservationButtonShape": "rounded",
     "timeSlots": [],
     "instagramSync": false,
     "posProvider": "none",
@@ -193,7 +131,7 @@
     "seoApiCost": 29.99,
     "showOptionalFields": false,
     "templateThemes": {
-      "minimalist": {
+      "modern": {
         "primary": "#059669",
         "secondary": "#10B981"
       }
