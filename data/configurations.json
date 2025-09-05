@@ -1,6 +1,6 @@
 [
   {
-    "id": "new",
+    "id": "mf6lfmgho341tlu63u",
     "userId": "user_mf6jq6trx6wwyvkof2",
     "businessName": "bebe",
     "businessType": "cafe",
@@ -116,8 +116,8 @@
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-05T08:49:03.200Z",
-    "updatedAt": "2025-09-05T08:49:03.201Z",
+    "createdAt": "2025-09-05T08:52:23.525Z",
+    "updatedAt": "2025-09-05T08:52:23.527Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
@@ -183,7 +183,8 @@
         "secondary": "#10B981"
       }
     },
-    "publishedUrl": "https://bebe-new.synca.digital",
-    "previewUrl": "https://synca.digital/site/bebe-new"
+    "slug": "bebe-tlu63u",
+    "publishedUrl": "https://bebe-tlu63u.synca.digital",
+    "previewUrl": "https://synca.digital/site/bebe-tlu63u"
   }
 ]
