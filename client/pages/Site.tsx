@@ -380,7 +380,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
     return (
         <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
-            <div className="w-full bg-white" style={{height: 'max(env(safe-area-inset-top, 12px), 12px)'}} />
+            <div className="w-full bg-white" style={{height: 'max(env(safe-area-inset-top, 16px), 16px)'}} />
             <header className="px-4 h-14 flex items-center justify-between relative z-30 bg-white border-b border-black/10">
                 <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-black">
                     <span className="w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden bg-gray-100"><LogoDisplay /></span>
@@ -400,8 +400,8 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
             {menuOpen && (
                 <div className="fixed inset-0 z-20">
-                    <div className="fixed inset-0 top-14 bg-black/30" onClick={() => setMenuOpen(false)} />
-                    <div className="fixed left-0 right-0 top-14 bg-white border-b border-black/10 shadow-lg">
+                    <div className="fixed inset-0 bg-black/30" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 56px)' }} onClick={() => setMenuOpen(false)} />
+                    <div className="fixed left-0 right-0 bg-white border-b border-black/10 shadow-lg" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 56px)' }}>
                         <div className="px-4 py-3 flex justify-end">
                             <button aria-label="Close menu" className="w-9 h-9 rounded-xl bg-gray-100 text-black" onClick={() => setMenuOpen(false)}>×</button>
                         </div>
