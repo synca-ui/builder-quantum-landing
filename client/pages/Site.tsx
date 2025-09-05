@@ -381,17 +381,17 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     return (
         <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
             <div className="h-8" />
-            <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${mockup.nav.bg}`}>
-                <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${mockup.nav.text}`}>
-                    <span className={`w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden ${mockup.cards.bg}`}><LogoDisplay /></span>
+            <header className="px-4 h-14 flex items-center justify-between relative z-30 bg-white border-b border-black/10">
+                <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-black">
+                    <span className="w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden bg-gray-100"><LogoDisplay /></span>
                     {getBusinessName()}
                 </Link>
-                <button aria-label="Menu" className={`sm:hidden w-9 h-9 rounded-xl flex items-center justify-center ${mockup.cards.bg}`}>
-                  <Menu className={`w-5 h-5 ${mockup.nav.text}`} onClick={() => setMenuOpen(true)} />
+                <button aria-label="Menu" onClick={() => setMenuOpen(true)} className="sm:hidden w-9 h-9 rounded-xl flex items-center justify-center bg-gray-100 text-black">
+                  <Menu className="w-5 h-5" />
                 </button>
                 <nav className="hidden sm:flex gap-4 text-sm">
                     {menuPages.filter(p => p !== 'home').map(p => (
-                        <Link key={p} to={pageLink(p)} className={`${activePage === p ? mockup.nav.text : 'text-white/70'} hover:text-white font-semibold`}>
+                        <Link key={p} to={pageLink(p)} className={`${activePage === p ? 'text-black' : 'text-gray-600'} hover:text-black font-semibold`}>
                             {p.charAt(0).toUpperCase() + p.slice(1)}
                         </Link>
                     ))}
@@ -399,15 +399,15 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
             </header>
 
             {menuOpen && (
-                <div className="absolute inset-0 z-20">
-                    <div className="absolute inset-0 bg-black/30" onClick={() => setMenuOpen(false)} />
-                    <div className="relative p-6 pt-12 bg-gray-800/90 backdrop-blur-xl">
-                        <div className="flex justify-end">
-                            <button aria-label="Close menu" className="w-9 h-9 rounded-xl bg-white/15 text-white" onClick={() => setMenuOpen(false)}>×</button>
+                <div className="fixed inset-0 z-20">
+                    <div className="fixed inset-0 top-14 bg-black/30" onClick={() => setMenuOpen(false)} />
+                    <div className="fixed left-0 right-0 top-14 bg-white border-b border-black/10 shadow-lg">
+                        <div className="px-4 py-3 flex justify-end">
+                            <button aria-label="Close menu" className="w-9 h-9 rounded-xl bg-gray-100 text-black" onClick={() => setMenuOpen(false)}>×</button>
                         </div>
-                        <div className="mt-4 space-y-3">
+                        <div className="px-4 pb-4 space-y-2">
                             {menuPages.map(p => (
-                                <Link key={p} to={pageLink(p)} onClick={() => setMenuOpen(false)} className="block w-full text-left px-4 py-3 text-white/95 font-semibold rounded-xl border border-white/25 bg-white/10">
+                                <Link key={p} to={pageLink(p)} onClick={() => setMenuOpen(false)} className={`block w-full text-left px-4 py-3 rounded-xl font-semibold ${activePage === p ? 'bg-gray-100 text-black' : 'text-gray-800 hover:bg-gray-50'}`}>
                                     {p.charAt(0).toUpperCase() + p.slice(1)}
                                 </Link>
                             ))}
