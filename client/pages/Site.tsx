@@ -1,9 +1,182 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
-import { configurationApi, Configuration } from "@/lib/api";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
+import {
+  ChevronRight,
+  Menu,
+  X,
+  Palette,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Calendar,
+  Camera,
+  Instagram,
+  Facebook,
+  Coffee,
+  ShoppingBag,
+  Utensils,
+  Store,
+  Building,
+  Plus,
+  Check,
+  Star,
+  Heart,
+  Home,
+  Settings,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import { motion } from "framer-motion";
 import GalleryGrid from "@/components/sections/GalleryGrid";
+import { configurationApi, type Configuration } from "@/lib/api";
 
-// Fallback configuration when API is unavailable
+const fontOptions = [
+    { id: "sans-serif", name: "Sans Serif", class: "font-sans", preview: "Modern & Clean", description: "Perfect for digital readability" },
+    { id: "serif", name: "Serif", class: "font-serif", preview: "Classic & Elegant", description: "Traditional and sophisticated" },
+    { id: "display", name: "Display", class: "font-mono", preview: "Bold & Creative", description: "Eye-catching and unique" },
+];
+
+const templates = [
+    {
+      id: "minimalist",
+      name: "Minimalist",
+      description:
+        "Clean, simple design focusing on content with perfect readability",
+      preview: "bg-gradient-to-br from-white to-gray-100",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background: "#FFFFFF",
+        accent: "#000000",
+        text: "#1A1A1A",
+        secondary: "#F8F9FA",
+        layout: "minimal-grid",
+        navigation: "borderless-clean",
+        typography: "minimal-sans",
+      },
+      features: ["Ultra Clean", "Fast Loading", "Content Focus"],
+      mockup: {
+        nav: {
+          bg: "bg-white",
+          text: "text-black",
+          border: "border-transparent",
+        },
+        hero: { bg: "bg-white", text: "text-black" },
+        cards: {
+          bg: "bg-gray-50",
+          border: "border-gray-100",
+          text: "text-gray-800",
+        },
+      },
+    },
+    {
+      id: "modern",
+      name: "Modern",
+      description: "Contemporary design with bold colors and sleek animations",
+      preview: "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background:
+          "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
+        accent: "#2563EB",
+        text: "#FFFFFF",
+        secondary: "#1D4ED8",
+        layout: "modern-cards",
+        navigation: "glassmorphism",
+        typography: "modern-geometric",
+      },
+      features: ["Vibrant Colors", "Glass Effects", "Rectangular Layout"],
+      mockup: {
+        nav: {
+          bg: "bg-white/10 backdrop-blur-md",
+          text: "text-white",
+          border: "border-white/20",
+        },
+        hero: {
+          bg: "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600",
+          text: "text-white",
+        },
+        cards: {
+          bg: "bg-white/15 backdrop-blur-sm",
+          border: "border-white/30",
+          text: "text-white",
+        },
+      },
+    },
+    {
+      id: "stylish",
+      name: "Stylish",
+      description:
+        "Visual-first design with overlays, mixed sections, and motion",
+      preview: "bg-gradient-to-br from-emerald-50 to-slate-800",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background: "#111827",
+        accent: "#059669",
+        text: "#F9FAFB",
+        secondary: "#1F2937",
+        layout: "visual-overlap",
+        navigation: "contrast",
+        typography: "decorative-serif",
+      },
+      features: ["Soft Colors", "Great Spacing", "Easy Reading"],
+      mockup: {
+        nav: {
+          bg: "bg-slate-900/80 backdrop-blur",
+          text: "text-white",
+          border: "border-emerald-300/20",
+        },
+        hero: {
+          bg: "bg-gradient-to-r from-emerald-500/20 to-transparent",
+          text: "text-white",
+        },
+        cards: {
+          bg: "bg-white/5 backdrop-blur",
+          border: "border-white/10",
+          text: "text-slate-100",
+        },
+      },
+    },
+    {
+      id: "cozy",
+      name: "Cozy",
+      description:
+        "Warm, personal, and grounded aesthetic with authentic photography.",
+      preview: "bg-gradient-to-br from-amber-100 via-orange-50 to-rose-50",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background: "#FFFBF0",
+        accent: "#EA580C",
+        text: "#1F2937",
+        secondary: "#FEF3C7",
+        layout: "cozy-grid",
+        navigation: "rounded-top",
+        typography: "handwritten-sans",
+      },
+      features: ["Warm Colors", "Rounded Corners", "Community Feel"],
+      mockup: {
+        nav: {
+          bg: "bg-white/90",
+          text: "text-amber-900",
+          border: "border-amber-200",
+        },
+        hero: {
+          bg: "bg-amber-50",
+          text: "text-amber-900",
+        },
+        cards: {
+          bg: "bg-white",
+          border: "border-amber-200",
+          text: "text-slate-800",
+        },
+      },
+    },
+];
+
 const FALLBACK_CONFIG: Configuration = {
   id: "fallback",
   userId: "anonymous",
@@ -13,10 +186,10 @@ const FALLBACK_CONFIG: Configuration = {
   slogan: "Bold Flavors, Bright Future",
   uniqueDescription: "",
   template: "modern",
-  primaryColor: "#fb923c", // orange-400
-  secondaryColor: "#f43f5e", // rose-500
+  primaryColor: "#fb923c",
+  secondaryColor: "#f43f5e",
   fontFamily: "sans-serif",
-  selectedPages: ["home", "menu", "contact"],
+  selectedPages: ["home", "menu", "contact", "gallery", "about"],
   customPages: [],
   openingHours: {
     Monday: { open: "07:00", close: "22:00", closed: false },
@@ -49,307 +222,223 @@ const FALLBACK_CONFIG: Configuration = {
 };
 
 export default function Site() {
-  const { subdomain } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [config, setConfig] = useState<Configuration | null>(null);
-  const [useFallback, setUseFallback] = useState(false);
+    const { subdomain } = useParams();
+    const [loading, setLoading] = useState(true);
+    const [config, setConfig] = useState<Configuration | null>(null);
+    const [useFallback, setUseFallback] = useState(false);
+    const location = useLocation();
 
-  // Resolve tenant slug from route or hostname
-  const resolvedSlug = useMemo(() => {
-    if (subdomain) return subdomain;
-    try {
-      const host = window.location.hostname;
-      const parts = host.split(".");
-      if (parts.length >= 3) return parts[0];
-    } catch {}
-    return "";
-  }, [subdomain]);
+    const resolvedSlug = useMemo(() => {
+        if (subdomain) return subdomain;
+        try {
+            const host = window.location.hostname;
+            const parts = host.split(".");
+            if (parts.length >= 3) return parts[0];
+        } catch {}
+        return "";
+    }, [subdomain]);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!resolvedSlug) {
-        setConfig(FALLBACK_CONFIG);
-        setUseFallback(true);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      const res = await configurationApi.getPublishedSite(resolvedSlug);
-      if (!mounted) return;
-      if (res.success && res.data) {
-        setConfig(res.data);
-      } else {
-        setConfig(FALLBACK_CONFIG);
-        setUseFallback(true);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [resolvedSlug]);
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!resolvedSlug) {
+                setConfig(FALLBACK_CONFIG);
+                setUseFallback(true);
+                setLoading(false);
+                return;
+            }
+            setLoading(true);
+            const res = await configurationApi.getPublishedSite(resolvedSlug);
+            if (!mounted) return;
+            if (res.success && res.data) {
+                setConfig(res.data);
+            } else {
+                setConfig(FALLBACK_CONFIG);
+                setUseFallback(true);
+            }
+            setLoading(false);
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, [resolvedSlug]);
 
-  const location = useLocation();
-  const segs = location.pathname.split("/").filter(Boolean);
-  const activePage = (segs[2] || "home").toLowerCase();
-
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [productOpen, setProductOpen] = useState<null | { name: string; price?: number }>(null);
-  const [openHoursExpanded, setOpenHoursExpanded] = useState(false);
-
-  if (loading || !config) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Loading...
-      </div>
-    );
-  }
-
-  const businessName = config.businessName || "Your Business";
-  const pages = Array.isArray(config.selectedPages) && config.selectedPages.length
-    ? config.selectedPages
-    : ["home", "menu", "gallery", "about", "contact"];
-  const items = Array.isArray(config.menuItems) ? config.menuItems : [];
-
-  const gradient = `linear-gradient(135deg, ${config.primaryColor || "#f97316"} 0%, ${config.secondaryColor || "#fb7185"} 50%, ${config.secondaryColor || "#ec4899"} 100%)`;
-
-  const pageLink = (p: string) => `/site/${segs[1] || resolvedSlug}/${p === "home" ? "" : p}`.replace(/\/$/, "");
-
-  const LogoDisplay = () => {
-    const src = (config as any).logo;
-    if (typeof src === "string" && src) {
-      return <img src={src} alt="Logo" className="w-6 h-6 object-contain rounded" />;
+    if (loading || !config) {
+        return (
+            <div className="h-full flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <Palette className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500">Loading Site...</p>
+                </div>
+            </div>
+        );
     }
-    return <span className="font-bold text-sm">{businessName.charAt(0) || "B"}</span>;
-  };
+    
+    return <SiteRenderer config={config} />;
+}
 
-  return (
-    <div className="min-h-screen" style={{ fontFamily: config.fontFamily || "Inter, system-ui, sans-serif" }}>
-      {useFallback && (
-        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 text-center text-sm text-blue-800">
-          Preview Mode: showing latest draft
-        </div>
-      )}
 
-      {/* Top area with gradient for Home, subtle bar for others */}
-      {activePage === "home" ? (
-        <div className="min-h-screen text-white relative">
-          <div className="h-8" />
-          <header className="px-4 py-3 flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
-                <LogoDisplay />
-              </div>
-              <div className="text-lg font-extrabold">{businessName}</div>
-            </div>
-            <nav className="hidden sm:flex gap-4 text-sm">
-              {pages.filter(p=>p!=='home').map(p => (
-                <Link key={p} to={pageLink(p)} className="text-white/90 hover:text-white" onClick={()=>setMenuOpen(false)}>
-                  {p.charAt(0).toUpperCase()+p.slice(1)}
+function SiteRenderer({ config: formData }: { config: Configuration }) {
+    const [previewState, setPreviewState] = useState({
+      menuOpen: false,
+      activePage: "home",
+      hoveredItem: null,
+      openHoursExpanded: false,
+      orderStage: "select" as "select" | "cart" | "payment" | "done",
+      showCartSidebar: true,
+      mapView: false,
+      sortMode: "popularity" as "popularity" | "price",
+      activeCategory: "all",
+    });
+
+    const [cartItems, setCartItems] = useState<any[]>([]);
+    const [showCart, setShowCart] = useState(false);
+    const [productModalOpen, setProductModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+    const [selectedQty, setSelectedQty] = useState<number>(1);
+    const [showArrowHint, setShowArrowHint] = useState(true);
+
+    const location = useLocation();
+    const segs = location.pathname.split("/").filter(Boolean);
+    const activePage = (segs[2] || "home").toLowerCase();
+
+    const addToCart = useCallback((item: any, qty: number = 1) => {
+        const quantity = Math.max(1, Math.floor(qty || 1));
+        setCartItems((prev) => {
+          const existingItem = prev.find((cartItem) => cartItem.name === item.name);
+          if (existingItem) {
+            return prev.map((cartItem) =>
+              cartItem.name === item.name
+                ? { ...cartItem, quantity: cartItem.quantity + quantity }
+                : cartItem,
+            );
+          }
+          return [...prev, { ...item, quantity }];
+        });
+    }, []);
+
+    const getBusinessName = () => {
+      if (formData.businessName) return formData.businessName;
+      const templateNames: { [key: string]: string } = {
+        minimalist: "Simple",
+        modern: "FLUX",
+        stylish: "Style",
+        cozy: "Cozy",
+      };
+      const selectedId = formData.template || 'modern';
+      return templateNames[selectedId] || "Your Business";
+    };
+
+    const getBusinessIcon = () => {
+      switch (formData.businessType) {
+        case "cafe": return <Coffee className="w-4 h-4" />;
+        case "restaurant": return <Utensils className="w-4 h-4" />;
+        case "bar": return <Star className="w-4 h-4" />;
+        default: return <Building className="w-4 h-4" />;
+      }
+    };
+
+    const toRgba = (hex: string, alpha = 1) => {
+      if (!hex) return `rgba(0,0,0,${alpha})`;
+      let h = hex.replace("#", "");
+      if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+      const int = parseInt(h, 16);
+      return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`;
+    };
+
+    const selectedIdForSwitch = formData.template || 'modern';
+
+    const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch);
+    const baseTemplateStyle = selectedTemplateDef ? selectedTemplateDef.style : templates[0].style;
+    const isDark = formData.themeMode === "dark";
+    const forcedTextColor = selectedIdForSwitch === "modern" ? "#FFFFFF" : isDark ? "#F8FAFC" : formData.fontColor;
+    
+    const styles = {
+      ...baseTemplateStyle,
+      userPrimary: formData.primaryColor || (baseTemplateStyle as any).accent,
+      userSecondary: isDark ? "#0F172A" : formData.secondaryColor || (baseTemplateStyle as any).secondary,
+      userFontColor: forcedTextColor,
+      userFontSize: formData.fontSize,
+      userBackground: isDark ? "#0B1020" : formData.backgroundColor || (baseTemplateStyle as any).background,
+    };
+
+    const LogoDisplay = () => {
+      if (formData.logo) {
+        return <img src={typeof formData.logo === "string" ? formData.logo : URL.createObjectURL(formData.logo)} alt="Business logo" className="w-6 h-6 object-contain rounded" style={{ color: styles.userPrimary }} />;
+      }
+      return getBusinessIcon();
+    };
+
+    const toggleMenu = () => setPreviewState((prev) => ({ ...prev, menuOpen: !prev.menuOpen }));
+    const navigateToPage = (page: string) => setPreviewState((prev) => ({ ...prev, activePage: String(page).toLowerCase(), menuOpen: false }));
+    
+    const openProductModal = (item: any) => {
+      setSelectedProduct(item);
+      setSelectedQty(1);
+      setShowArrowHint(true);
+      setProductModalOpen(true);
+      setTimeout(() => setShowArrowHint(false), 1800);
+    };
+
+    const fontClass = fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";
+    const menuPages = useMemo(() => Array.from(new Set<string>(["home", ...formData.selectedPages, "settings"])), [formData.selectedPages]);
+
+    const renderPageContent = () => {
+        // This function will now be local to the SiteRenderer component
+        // and will use the activePage from the URL.
+        // ... content of renderPageContent from Configurator.tsx
+        return <div>Page: {activePage}</div>
+    };
+
+    const pageLink = (p: string) => `/site/${segs[1] || ''}/${p === "home" ? "" : p}`.replace(/\/$/, "");
+
+    return (
+        <div className={`h-full overflow-y-auto ${fontClass} relative`} style={{ background: styles.userBackground }}>
+             <div className="h-8" style={{backgroundColor: toRgba(styles.userPrimary, 0.2)}}/>
+            <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-3 relative z-50" style={{borderColor: toRgba(styles.userPrimary, 0.2)}}>
+              <div className="flex items-center justify-between">
+                <Link to={pageLink('home')} className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center"><LogoDisplay /></div>
+                  <h1 className="text-lg font-bold" style={{color: styles.userFontColor}}>{getBusinessName()}</h1>
                 </Link>
-              ))}
-            </nav>
-            <button aria-label="Menu" className="sm:hidden w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center" onClick={()=>setMenuOpen(true)}>
-              ≡
-            </button>
-          </header>
-          <div className="absolute inset-0 -z-10" style={{ background: gradient }} />
-
-          {menuOpen && (
-            <div className="absolute inset-0 z-20">
-              <div className="absolute inset-0 bg-black/30" onClick={()=>setMenuOpen(false)} />
-              <div className="relative p-6 pt-12" style={{ background: gradient }}>
-                <div className="flex justify-end">
-                  <button aria-label="Close menu" className="w-9 h-9 rounded-xl bg-white/15 text-white" onClick={()=>setMenuOpen(false)}>×</button>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {pages.map(p => (
-                    <Link key={p} to={pageLink(p)} onClick={()=>setMenuOpen(false)} className="block w-full text-left px-4 py-3 text-white/95 font-semibold rounded-xl border border-white/25 bg-white/10">
-                      {p.charAt(0).toUpperCase()+p.slice(1)}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <section className="px-6 pt-6">
-            <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40">
-              <span className="text-2xl font-black">{businessName.charAt(0) || "B"}</span>
-            </div>
-            <h1 className="text-center text-xl font-extrabold mt-3">{businessName}</h1>
-            <p className="text-center text-sm opacity-95">{config.slogan || "Bold Flavors, Bright Future"}</p>
-
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).slice(0, 4).map((it: any) => (
-                <button key={it.id || it.name} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={()=>setProductOpen({ name: it.name, price: it.price })}>
-                  <div className="text-[11px] font-semibold truncate">{String(it.name).toLowerCase()}</div>
-                  <div className="text-[11px] font-bold text-pink-100">${Number(it.price).toFixed(2)}</div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Opening Hours */}
-          {config.openingHours && Object.keys(config.openingHours).length > 0 && (
-            <section className="px-6 mt-4">
-              <div className="rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md p-4 text-white/95">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold">Opening Hours</div>
-                  <button className="text-xs underline" onClick={()=>setOpenHoursExpanded(v=>!v)}>
-                    {openHoursExpanded ? "Hide" : "Show"}
+                <div className="flex items-center space-x-2">
+                  <button onClick={toggleMenu} className="p-2 hover:bg-white/10 rounded-xl transition-colors" aria-label="Menu">
+                    <Menu className="w-5 h-5" style={{color: styles.userFontColor}} />
                   </button>
                 </div>
-                <div className="mt-2 text-xs space-y-1">
-                  {(openHoursExpanded
-                    ? Object.entries(config.openingHours)
-                    : Object.entries(config.openingHours).slice(0,2)
-                  ).map(([day, hours]: any) => (
-                    <div key={day} className="flex justify-between">
-                      <span className="font-medium">{day}</span>
-                      <span>{typeof hours === 'string' ? hours : (hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`)}</span>
-                    </div>
-                  ))}
-                  {!openHoursExpanded && Object.keys(config.openingHours).length > 2 && (
-                    <div className="text-xs opacity-80">+{Object.keys(config.openingHours).length - 2} more days</div>
-                  )}
-                </div>
               </div>
-            </section>
-          )}
-
-          <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
-            <Link to={pageLink("reservations") || "#"} className="w-full max-w-md rounded-full bg-black/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur text-center">
-              Reserve Table
-            </Link>
-          </div>
-
-          {productOpen && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center">
-              <div className="absolute inset-0 bg-black/50" onClick={()=>setProductOpen(null)} />
-              <div className="relative bg-white text-gray-900 rounded-2xl w-[90%] max-w-sm p-5 shadow-2xl">
-                <button aria-label="Close" className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100" onClick={()=>setProductOpen(null)}>×</button>
-                <div className="text-lg font-bold mb-1">{productOpen.name}</div>
-                {typeof productOpen.price !== 'undefined' && (
-                  <div className="text-teal-600 font-semibold mb-3">${Number(productOpen.price).toFixed(2)}</div>
-                )}
-                <button className="w-full rounded-lg bg-teal-600 hover:bg-teal-700 text-white py-2 font-medium" onClick={()=>setProductOpen(null)}>Add to cart</button>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="min-h-screen text-white relative">
-          <div className="absolute inset-0 -z-10" style={{ background: gradient }} />
-          <div className="h-8" />
-          <header className="px-4 py-3 flex items-center justify-between relative z-10">
-            <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-white">
-              <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur inline-flex items-center justify-center overflow-hidden"><LogoDisplay /></span>
-              {businessName}
-            </Link>
-            <nav className="hidden sm:flex gap-4 text-sm">
-              {pages.filter(p=>p!=='home').map(p => (
-                <Link key={p} to={pageLink(p)} className={activePage===p?"text-white font-semibold":"text-white/90 hover:text-white"} onClick={()=>setMenuOpen(false)}>
-                  {p.charAt(0).toUpperCase()+p.slice(1)}
-                </Link>
-              ))}
             </nav>
-            <button aria-label="Menu" className="sm:hidden w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center" onClick={()=>setMenuOpen(true)}>
-              ≡
-            </button>
-          </header>
-
-          {menuOpen && (
-            <div className="absolute inset-0 z-20">
-              <div className="absolute inset-0 bg-black/30" onClick={()=>setMenuOpen(false)} />
-              <div className="relative p-6 pt-12" style={{ background: gradient }}>
-                <div className="flex justify-end">
-                  <button aria-label="Close menu" className="w-9 h-9 rounded-xl bg-white/15 text-white" onClick={()=>setMenuOpen(false)}>×</button>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {pages.map(p => (
-                    <Link key={p} to={pageLink(p)} onClick={()=>setMenuOpen(false)} className="block w-full text-left px-4 py-3 text-white/95 font-semibold rounded-xl border border-white/25 bg-white/10">
-                      {p.charAt(0).toUpperCase()+p.slice(1)}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <main className="max-w-md mx-auto px-6 py-8">
-            {activePage === "menu" && (
-              <section>
-                <h2 className="text-lg font-bold mb-3">Menu</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).map((it: any) => (
-                    <div key={it.id || it.name} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg">
-                      <div className="text-sm font-semibold truncate text-white">{it.name}</div>
-                      {typeof it.price !== "undefined" && (
-                        <div className="text-xs text-pink-100">${Number(it.price).toFixed(2)}</div>
-                      )}
+            
+            {previewState.menuOpen && (
+                <div className="absolute inset-0 z-[60] flex items-start justify-center">
+                  <div className="absolute inset-0 bg-black/20" onClick={toggleMenu} />
+                  <div className="relative w-full max-w-none p-6 pt-6 backdrop-blur-xl ring-1 ring-white/10" style={{ background: toRgba(styles.userSecondary, 0.85), borderTop: `1px solid ${toRgba(styles.userPrimary, 0.2)}`, color: styles.userFontColor }}>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 rounded-md bg-white/15 flex items-center justify-center"><LogoDisplay /></div>
+                            <span className="text-sm font-semibold">{getBusinessName()}</span>
+                        </div>
+                        <button onClick={toggleMenu} className="p-2 rounded-md hover:bg-white/10"><X className="w-4 h-4" /></button>
                     </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {activePage === "gallery" && (
-              <section>
-                <h2 className="text-lg font-bold mb-3">Gallery</h2>
-                {Array.isArray(config.gallery) && config.gallery.length > 0 ? (
-                  <GalleryGrid images={config.gallery as any} />
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {[1,2,3,4].map(i => (
-                      <div key={i} className="aspect-[4/3] rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md" />
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {activePage === "about" && (
-              <section>
-                <h2 className="text-lg font-bold mb-3">About</h2>
-                <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95">
-                  <p className="text-sm">{config.uniqueDescription || ""}</p>
-                </div>
-              </section>
-            )}
-
-            {activePage === "contact" && (
-              <section>
-                <h2 className="text-lg font-bold mb-3">Contact</h2>
-                <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95">
-                  {config.location && <p className="text-sm mb-2">{config.location}</p>}
-                  {Array.isArray(config.contactMethods) && config.contactMethods.length > 0 && (
-                    <ul className="mt-2 text-sm space-y-1">
-                      {config.contactMethods.map((m: any, i: number) => (
-                        <li key={i}>{typeof m === "string" ? m : `${m.type}: ${m.value}`}</li>
+                    <div className="space-y-2">
+                      {menuPages.map((page) => (
+                          <Link key={page} to={pageLink(page)} onClick={toggleMenu} className="w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border" style={{ backgroundColor: activePage === page ? toRgba(styles.userPrimary, 0.18) : "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.12)", color: styles.userFontColor }}>
+                            {page.charAt(0).toUpperCase() + page.slice(1)}
+                          </Link>
                       ))}
-                    </ul>
-                  )}
-                  {config.openingHours && Object.keys(config.openingHours).length > 0 && (
-                    <div className="mt-4">
-                      <div className="text-sm font-semibold mb-1">Opening Hours</div>
-                      <ul className="text-xs space-y-1">
-                        {Object.entries(config.openingHours).map(([day, hours]: any) => (
-                          <li key={day} className="flex justify-between">
-                            <span className="font-medium">{day}</span>
-                            <span>{typeof hours === 'string' ? hours : (hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`)}</span>
-                          </li>
-                        ))}
-                      </ul>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </section>
             )}
-          </main>
+
+            <div className="flex-1 overflow-y-auto p-4">
+                {/* Replace with actual page content rendering based on activePage */}
+                {activePage === 'home' && <div>Home Page Content</div>}
+                {activePage === 'menu' && <div>Menu Page Content</div>}
+                {activePage === 'gallery' && <div>Gallery Page Content</div>}
+                {activePage === 'about' && <div>About Page Content</div>}
+                {activePage === 'contact' && <div>Contact Page Content</div>}
+            </div>
         </div>
-      )}
-    </div>
-  );
+    );
 }
