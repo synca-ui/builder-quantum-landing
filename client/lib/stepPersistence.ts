@@ -408,6 +408,18 @@ export class StepPersistence {
     
     return `${businessName} - ${stepCount} steps saved, last action: ${lastAction}`;
   }
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    try { localStorage.setItem('configurator_persist_enabled', String(enabled)); } catch {}
+    if (!enabled) {
+      try { localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
+    } else {
+      this.saveState();
+    }
+  }
+
+  getEnabled(): boolean { return this.enabled; }
 }
 
 // Global instance
