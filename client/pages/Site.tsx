@@ -234,7 +234,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
       userPrimary: themeOverride.primary || formData.primaryColor || (baseTemplateStyle as any).accent,
       userSecondary: isDark ? '#0F172A' : themeOverride.secondary || formData.secondaryColor || (baseTemplateStyle as any).secondary,
       userFontColor: themeOverride.text || forcedText,
-      userBackground: isDark ? '#0B1020' : themeOverride.background || (formData as any).backgroundColor || (baseTemplateStyle as any).background,
+      userBackground: isDark ? '#0B1020' : themeOverride.background || (baseTemplateStyle as any).background,
     } as const;
 
     const fontClass = fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";

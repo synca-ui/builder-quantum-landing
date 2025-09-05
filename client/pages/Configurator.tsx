@@ -5569,9 +5569,14 @@ export default function Configurator() {
 
     const addMenuItem = () => {
       if (newItem.name && newItem.price) {
+        const itemToAdd = {
+            ...newItem,
+            id: Date.now().toString(),
+            imageUrl: newItem.images?.[0]?.url || ""
+        };
         const updatedItems = [
           ...formData.menuItems,
-          { ...newItem, id: Date.now().toString() },
+          itemToAdd,
         ];
         updateFormData("menuItems", updatedItems);
         setNewItem({ name: "", description: "", price: "", images: [] });
