@@ -138,8 +138,8 @@ export default function Site() {
           <div className="h-8" />
           <header className="px-4 py-3 flex items-center justify-between relative z-10">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <span className="font-bold text-sm">{businessName.charAt(0) || "B"}</span>
+              <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
+                <LogoDisplay />
               </div>
               <div className="text-lg font-extrabold">{businessName}</div>
             </div>
