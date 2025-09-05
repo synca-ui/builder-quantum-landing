@@ -203,20 +203,42 @@ export default function Site() {
           )}
         </div>
       ) : (
-        <div className="min-h-screen bg-white">
-          <div className="h-24" style={{ background: gradient }} />
-          <header className="px-4 py-3 flex items-center justify-between border-b">
-            <Link to={pageLink("home")} className="font-extrabold" style={{ color: "#111" }}>
+        <div className="min-h-screen text-white relative">
+          <div className="absolute inset-0 -z-10" style={{ background: gradient }} />
+          <div className="h-8" />
+          <header className="px-4 py-3 flex items-center justify-between relative z-10">
+            <Link to={pageLink("home")} className="text-lg font-extrabold text-white">
               {businessName}
             </Link>
-            <nav className="text-sm text-gray-600 flex gap-4">
+            <nav className="hidden sm:flex gap-4 text-sm">
               {pages.filter(p=>p!=='home').map(p => (
-                <Link key={p} to={pageLink(p)} className={activePage===p?"font-semibold text-gray-900":"hover:text-gray-900"}>
+                <Link key={p} to={pageLink(p)} className={activePage===p?"text-white font-semibold":"text-white/90 hover:text-white"} onClick={()=>setMenuOpen(false)}>
                   {p.charAt(0).toUpperCase()+p.slice(1)}
                 </Link>
               ))}
             </nav>
+            <button aria-label="Menu" className="sm:hidden w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center" onClick={()=>setMenuOpen(true)}>
+              ≡
+            </button>
           </header>
+
+          {menuOpen && (
+            <div className="absolute inset-0 z-20">
+              <div className="absolute inset-0 bg-black/30" onClick={()=>setMenuOpen(false)} />
+              <div className="relative p-6 pt-12" style={{ background: gradient }}>
+                <div className="flex justify-end">
+                  <button aria-label="Close menu" className="w-9 h-9 rounded-xl bg-white/15 text-white" onClick={()=>setMenuOpen(false)}>×</button>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {pages.map(p => (
+                    <Link key={p} to={pageLink(p)} onClick={()=>setMenuOpen(false)} className="block w-full text-left px-4 py-3 text-white/95 font-semibold rounded-xl border border-white/25 bg-white/10">
+                      {p.charAt(0).toUpperCase()+p.slice(1)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           <main className="max-w-md mx-auto px-6 py-8">
             {activePage === "menu" && (
@@ -224,10 +246,10 @@ export default function Site() {
                 <h2 className="text-lg font-bold mb-3">Menu</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).map((it: any) => (
-                    <div key={it.id || it.name} className="rounded-xl border p-3">
-                      <div className="text-sm font-semibold truncate">{it.name}</div>
+                    <div key={it.id || it.name} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg">
+                      <div className="text-sm font-semibold truncate text-white">{it.name}</div>
                       {typeof it.price !== "undefined" && (
-                        <div className="text-xs text-gray-600">${Number(it.price).toFixed(2)}</div>
+                        <div className="text-xs text-pink-100">${Number(it.price).toFixed(2)}</div>
                       )}
                     </div>
                   ))}
@@ -241,7 +263,11 @@ export default function Site() {
                 {Array.isArray(config.gallery) && config.gallery.length > 0 ? (
                   <GalleryGrid images={config.gallery as any} />
                 ) : (
-                  <div className="text-sm text-gray-600">No images yet.</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[1,2,3,4].map(i => (
+                      <div key={i} className="aspect-[4/3] rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md" />
+                    ))}
+                  </div>
                 )}
               </section>
             )}
@@ -249,21 +275,25 @@ export default function Site() {
             {activePage === "about" && (
               <section>
                 <h2 className="text-lg font-bold mb-3">About</h2>
-                <p className="text-sm text-gray-700">{config.uniqueDescription || ""}</p>
+                <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95">
+                  <p className="text-sm">{config.uniqueDescription || ""}</p>
+                </div>
               </section>
             )}
 
             {activePage === "contact" && (
               <section>
                 <h2 className="text-lg font-bold mb-3">Contact</h2>
-                {config.location && <p className="text-sm text-gray-700">{config.location}</p>}
-                {Array.isArray(config.contactMethods) && config.contactMethods.length > 0 && (
-                  <ul className="mt-2 text-sm text-gray-700 space-y-1">
-                    {config.contactMethods.map((m: any, i: number) => (
-                      <li key={i}>{typeof m === "string" ? m : `${m.type}: ${m.value}`}</li>
-                    ))}
-                  </ul>
-                )}
+                <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95">
+                  {config.location && <p className="text-sm mb-2">{config.location}</p>}
+                  {Array.isArray(config.contactMethods) && config.contactMethods.length > 0 && (
+                    <ul className="mt-2 text-sm space-y-1">
+                      {config.contactMethods.map((m: any, i: number) => (
+                        <li key={i}>{typeof m === "string" ? m : `${m.type}: ${m.value}`}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </section>
             )}
           </main>
