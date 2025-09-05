@@ -293,7 +293,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         <div className="mt-4 grid grid-cols-2 gap-3">
                             {items.slice(0, 4).map((it: any, index: number) => (
                                 <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
-                                    <img src={normalizeUrl(it.imageUrl)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                                    <img src={it.imageUrl || "/placeholder.svg"} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
                                     <div className="text-[11px] font-semibold truncate">{it.name}</div>
                                     <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
                                 </button>
@@ -327,7 +327,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         <div className="grid grid-cols-2 gap-3">
                             {items.map((it: any, index: number) => (
                                 <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg cursor-pointer" onClick={() => setProductOpen(it)}>
-                                    <img src={normalizeUrl(it.imageUrl)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                                    <img src={it.imageUrl || "/placeholder.svg"} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
                                     <div className="text-sm font-semibold truncate" style={{ color: styles.userFontColor }}>{it.name}</div>
                                     {typeof it.price !== "undefined" && <div className="text-xs" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>}
                                 </div>
@@ -378,12 +378,8 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
         }
     };
 
-    const background = selectedIdForSwitch === 'modern'
-        ? 'linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)'
-        : styles.userBackground;
-
     return (
-        <div className={`min-h-screen relative ${fontClass}`} style={{ background, color: styles.userFontColor }}>
+        <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
             <div className="h-8" />
             <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${mockup.nav.bg}`}>
                 <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${mockup.nav.text}`}>
@@ -429,7 +425,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                     <div className="absolute inset-0 bg-black/50" onClick={() => setProductOpen(null)} />
                     <div className="relative bg-white text-gray-900 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
                         <button aria-label="Close" className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100" onClick={() => setProductOpen(null)}>×</button>
-                        <img src={normalizeUrl(productOpen.imageUrl) || "/placeholder.svg"} alt={productOpen.name} className="w-full h-40 object-cover rounded-lg mb-4" />
+                        <img src={productOpen.imageUrl || "/placeholder.svg"} alt={productOpen.name} className="w-full h-40 object-cover rounded-lg mb-4" />
                         <div className="text-lg font-bold mb-1">{productOpen.name}</div>
                         <p className="text-sm text-gray-600 mb-3">{productOpen.description}</p>
                         {typeof productOpen.price !== 'undefined' && <div className="font-semibold mb-3" style={{ color: styles.userPrimary }}>${Number(productOpen.price).toFixed(2)}</div>}
