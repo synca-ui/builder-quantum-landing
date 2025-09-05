@@ -96,6 +96,7 @@ export default function Site() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [productOpen, setProductOpen] = useState<null | { name: string; price?: number }>(null);
+  const [openHoursExpanded, setOpenHoursExpanded] = useState(false);
 
   if (loading || !config) {
     return (
@@ -114,6 +115,14 @@ export default function Site() {
   const gradient = `linear-gradient(135deg, ${config.primaryColor || "#f97316"} 0%, ${config.secondaryColor || "#fb7185"} 50%, ${config.secondaryColor || "#ec4899"} 100%)`;
 
   const pageLink = (p: string) => `/site/${segs[1] || resolvedSlug}/${p === "home" ? "" : p}`.replace(/\/$/, "");
+
+  const LogoDisplay = () => {
+    const src = (config as any).logo;
+    if (typeof src === "string" && src) {
+      return <img src={src} alt="Logo" className="w-6 h-6 object-contain rounded" />;
+    }
+    return <span className="font-bold text-sm">{businessName.charAt(0) || "B"}</span>;
+  };
 
   return (
     <div className="min-h-screen" style={{ fontFamily: config.fontFamily || "Inter, system-ui, sans-serif" }}>
