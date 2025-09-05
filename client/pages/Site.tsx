@@ -96,13 +96,15 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch) || templates[1];
     const baseTemplateStyle = selectedTemplateDef.style;
 
+    const isDark = (formData as any).themeMode === 'dark';
+    const forcedText = selectedIdForSwitch === 'modern' ? '#FFFFFF' : undefined;
     const styles = {
       ...baseTemplateStyle,
-      userPrimary: formData.primaryColor || baseTemplateStyle.accent,
-      userSecondary: formData.secondaryColor || baseTemplateStyle.secondary,
-      userFontColor: formData.fontColor || baseTemplateStyle.text,
-      userBackground: formData.backgroundColor || baseTemplateStyle.background,
-    };
+      userPrimary: formData.primaryColor || (baseTemplateStyle as any).accent,
+      userSecondary: isDark ? '#0F172A' : formData.secondaryColor || (baseTemplateStyle as any).secondary,
+      userFontColor: forcedText || (formData as any).fontColor || (baseTemplateStyle as any).text,
+      userBackground: isDark ? '#0B1020' : (formData as any).backgroundColor || (baseTemplateStyle as any).background,
+    } as const;
 
     const fontClass = fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";
     const menuPages = useMemo(() => Array.from(new Set<string>(["home", ...(formData.selectedPages || [])])), [formData.selectedPages]);
@@ -117,9 +119,17 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
       }
     };
 
+    const normalizeUrl = (u?: string) => {
+      if (!u) return "/placeholder.svg";
+      if (u.startsWith('data:')) return u;
+      if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('/')) return u;
+      if (u.startsWith('blob:')) return "/placeholder.svg";
+      return u;
+    };
+
     const LogoDisplay = () => {
-        const { logo } = formData;
-        if (logo && typeof logo === 'string') {
+        const { logo } = formData as any;
+        if (logo && typeof logo === 'string' && !logo.startsWith('blob:')) {
             return <img src={logo} alt="Business logo" className="w-full h-full object-contain" />;
         }
         return getBusinessIcon();
@@ -127,7 +137,18 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
     const renderPageContent = () => {
         const items = formData.menuItems || [];
-        const gallery = formData.gallery || [];
+        const gallery = (formData.gallery || []).map((g: any) => ({ ...g, url: normalizeUrl(g?.url) }));
+
+        const toRgba = (hex: string, alpha = 1) => {
+          if (!hex) return `rgba(0,0,0,${alpha})`;
+          let h = hex.replace('#', '');
+          if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+          const int = parseInt(h, 16);
+          const r = (int >> 16) & 255;
+          const g = (int >> 8) & 255;
+          const b = int & 255;
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
 
         switch (activePage) {
             case "home":
@@ -142,7 +163,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                             {items.slice(0, 4).map((it: any) => (
                                 <button key={it.id || it.name} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
                                     <div className="text-[11px] font-semibold truncate">{it.name}</div>
-                                    <div className="text-[11px] font-bold text-pink-100">${Number(it.price).toFixed(2)}</div>
+                                    <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
                                 </button>
                             ))}
                         </div>
@@ -170,12 +191,12 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
             case "menu":
                 return (
                     <section className="max-w-md mx-auto px-6 py-8">
-                        <h2 className="text-lg font-bold mb-3 text-white">Menu</h2>
+                        <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Menu</h2>
                         <div className="grid grid-cols-2 gap-3">
                             {items.map((it: any) => (
                                 <div key={it.id || it.name} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg">
-                                    <div className="text-sm font-semibold truncate text-white">{it.name}</div>
-                                    {typeof it.price !== "undefined" && <div className="text-xs text-pink-100">${Number(it.price).toFixed(2)}</div>}
+                                    <div className="text-sm font-semibold truncate" style={{ color: styles.userFontColor }}>{it.name}</div>
+                                    {typeof it.price !== "undefined" && <div className="text-xs" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>}
                                 </div>
                             ))}
                         </div>
@@ -184,14 +205,14 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
             case "gallery":
                 return (
                     <section className="max-w-md mx-auto px-6 py-8">
-                        <h2 className="text-lg font-bold mb-3 text-white">Gallery</h2>
-                        <GalleryGrid images={gallery as any} />
+                        <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Gallery</h2>
+                        <GalleryGrid images={gallery as any} templateStyle={selectedIdForSwitch} />
                     </section>
                 );
             case "about":
                 return (
                     <section className="max-w-md mx-auto px-6 py-8">
-                        <h2 className="text-lg font-bold mb-3 text-white">About Us</h2>
+                        <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>About Us</h2>
                         <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95">
                             <p className="text-sm">{formData.uniqueDescription || ""}</p>
                         </div>
@@ -200,7 +221,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
             case "contact":
                 return (
                     <section className="max-w-md mx-auto px-6 py-8">
-                        <h2 className="text-lg font-bold mb-3 text-white">Contact</h2>
+                        <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Contact</h2>
                         <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95">
                             {formData.location && <p className="text-sm mb-2 flex items-center gap-2"><MapPin className="w-4 h-4" /> {formData.location}</p>}
                             {Array.isArray(formData.contactMethods) && formData.contactMethods.length > 0 && (
@@ -225,7 +246,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     };
 
     return (
-        <div className={`min-h-screen text-white relative ${fontClass}`} style={{ background: styles.userBackground }}>
+        <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
             <div className="h-8" />
             <header className="px-4 py-3 flex items-center justify-between relative z-10">
                 <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-white">
@@ -269,18 +290,18 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                     <div className="absolute inset-0 bg-black/50" onClick={() => setProductOpen(null)} />
                     <div className="relative bg-white text-gray-900 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
                         <button aria-label="Close" className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100" onClick={() => setProductOpen(null)}>×</button>
-                        <img src={productOpen.imageUrl || "/placeholder.svg"} alt={productOpen.name} className="w-full h-40 object-cover rounded-lg mb-4" />
+                        <img src={normalizeUrl(productOpen.imageUrl) || "/placeholder.svg"} alt={productOpen.name} className="w-full h-40 object-cover rounded-lg mb-4" />
                         <div className="text-lg font-bold mb-1">{productOpen.name}</div>
                         <p className="text-sm text-gray-600 mb-3">{productOpen.description}</p>
-                        {typeof productOpen.price !== 'undefined' && <div className="text-teal-600 font-semibold mb-3">${Number(productOpen.price).toFixed(2)}</div>}
-                        <button className="w-full rounded-lg bg-teal-600 hover:bg-teal-700 text-white py-2 font-medium" onClick={() => setProductOpen(null)}>Add to cart</button>
+                        {typeof productOpen.price !== 'undefined' && <div className="font-semibold mb-3" style={{ color: styles.userPrimary }}>${Number(productOpen.price).toFixed(2)}</div>}
+                        <button className="w-full rounded-lg text-white py-2 font-medium" style={{ backgroundColor: styles.userPrimary }} onClick={() => setProductOpen(null)}>Add to cart</button>
                     </div>
                 </div>
             )}
 
             {activePage === 'home' && formData.reservationsEnabled && (
                 <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
-                    <button className="w-full max-w-md rounded-full bg-black/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur">
+                    <button className="w-full max-w-md rounded-full text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur" style={{ backgroundColor: styles.userPrimary }}>
                         Reserve Table
                     </button>
                 </div>
