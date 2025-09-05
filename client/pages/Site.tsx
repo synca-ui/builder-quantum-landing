@@ -160,8 +160,8 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         <h1 className="text-center text-xl font-extrabold mt-3">{getBusinessName()}</h1>
                         <p className="text-center text-sm opacity-95">{formData.slogan || ""}</p>
                         <div className="mt-4 grid grid-cols-2 gap-3">
-                            {items.slice(0, 4).map((it: any) => (
-                                <button key={it.id || it.name} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
+                            {items.slice(0, 4).map((it: any, index: number) => (
+                                <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
                                     <div className="text-[11px] font-semibold truncate">{it.name}</div>
                                     <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
                                 </button>
@@ -193,8 +193,8 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                     <section className="max-w-md mx-auto px-6 py-8">
                         <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Menu</h2>
                         <div className="grid grid-cols-2 gap-3">
-                            {items.map((it: any) => (
-                                <div key={it.id || it.name} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg">
+                            {items.map((it: any, index: number) => (
+                                <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg">
                                     <div className="text-sm font-semibold truncate" style={{ color: styles.userFontColor }}>{it.name}</div>
                                     {typeof it.price !== "undefined" && <div className="text-xs" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>}
                                 </div>
