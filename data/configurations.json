@@ -1,8 +1,8 @@
 [
   {
-    "id": "mf6lfmgho341tlu63u",
+    "id": "new",
     "userId": "user_mf6jq6trx6wwyvkof2",
-    "businessName": "bebe",
+    "businessName": "JuJu",
     "businessType": "cafe",
     "location": "",
     "slogan": "",
@@ -60,7 +60,24 @@
       {
         "name": "cappucino",
         "description": "hot",
-        "price": "2.99"
+        "price": "2.99",
+        "images": [
+          {
+            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/c6876a99-e95c-4135-9c0e-6695c415d44a",
+            "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
+            "file": {}
+          },
+          {
+            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/f87e7d50-98a7-467b-9f56-9ab8e338f25c",
+            "alt": "Bild1.png.jpeg",
+            "file": {}
+          },
+          {
+            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/160fb60f-b232-4052-83f1-73e0af5e3a1e",
+            "alt": "Bild.png.jpeg",
+            "file": {}
+          }
+        ]
       },
       {
         "name": "coffee",
@@ -86,26 +103,24 @@
     "reservationsEnabled": true,
     "maxGuests": 10,
     "notificationMethod": "email",
-    "contactMethods": [
-      "phone: 0121212121212"
-    ],
+    "contactMethods": [],
     "socialMedia": {
-      "instagram": "desdsd",
-      "facebook": "sdsd"
+      "instagram": "bella",
+      "facebook": "bella"
     },
     "gallery": [
       {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/35f9de18-c77a-4421-96b3-1b5c07c2c60d",
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/bc210e89-6873-4f75-a7f9-ba4d81f31b4e",
         "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
         "file": {}
       },
       {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/4d222a8d-5bde-4316-8575-5e69e0adf050",
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/f8857962-7c8d-4f47-984f-301a488b32fa",
         "alt": "Bild1.png.jpeg",
         "file": {}
       },
       {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/27d8b8cf-9751-4083-8d4d-97487c8e3b84",
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/146754af-786d-4627-b487-f36b0aff4817",
         "alt": "Bild.png.jpeg",
         "file": {}
       }
@@ -116,8 +131,8 @@
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-05T09:08:36.185Z",
-    "updatedAt": "2025-09-05T09:08:36.187Z",
+    "createdAt": "2025-09-05T09:19:10.402Z",
+    "updatedAt": "2025-09-05T09:19:10.403Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
@@ -130,7 +145,7 @@
     "themeMode": "light",
     "showHomeHero": true,
     "menuPdf": null,
-    "reservationButtonColor": "#141414",
+    "reservationButtonColor": "#161717",
     "reservationButtonTextColor": "#FFFFFF",
     "reservationButtonShape": "pill",
     "timeSlots": [],
@@ -183,8 +198,8 @@
         "secondary": "#10B981"
       }
     },
-    "slug": "bebe-tlu63u",
-    "publishedUrl": "https://bebe-tlu63u.synca.digital",
-    "previewUrl": "https://synca.digital/site/bebe-tlu63u"
+    "slug": "juju-new",
+    "publishedUrl": "https://juju-new.synca.digital",
+    "previewUrl": "https://synca.digital/site/juju-new"
   }
 ]
