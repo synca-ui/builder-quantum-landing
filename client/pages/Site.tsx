@@ -238,7 +238,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     } as const;
 
     const fontClass = fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";
-    const menuPages = useMemo(() => Array.from(new Set<string>(["home", ...(formData.selectedPages || [])])), [formData.selectedPages]);
+    const menuPages = useMemo(() => Array.from(new Set<string>(["home", ...(formData.selectedPages || []), "settings"])), [formData.selectedPages]);
     const pageLink = (p: string) => `/site/${segs[1] || ''}/${p === "home" ? "" : p}`.replace(/\/$/, "");
 
     const getBusinessIcon = () => {
@@ -289,11 +289,11 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                             <LogoDisplay />
                         </div>
                         <h1 className="text-center text-xl font-extrabold mt-3">{getBusinessName()}</h1>
-                        <p className="text-center text-sm opacity-95">{formData.slogan || ""}</p>
+                        {formData.slogan && <p className="text-center text-sm opacity-95">{formData.slogan}</p>}
                         <div className="mt-4 grid grid-cols-2 gap-3">
                             {items.slice(0, 4).map((it: any, index: number) => (
                                 <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
-                                    <img src={it.imageUrl || "/placeholder.svg"} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                                    <img src={normalizeUrl(it.imageUrl)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
                                     <div className="text-[11px] font-semibold truncate">{it.name}</div>
                                     <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
                                 </button>
@@ -327,7 +327,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         <div className="grid grid-cols-2 gap-3">
                             {items.map((it: any, index: number) => (
                                 <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg cursor-pointer" onClick={() => setProductOpen(it)}>
-                                    <img src={it.imageUrl || "/placeholder.svg"} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                                    <img src={normalizeUrl(it.imageUrl)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
                                     <div className="text-sm font-semibold truncate" style={{ color: styles.userFontColor }}>{it.name}</div>
                                     {typeof it.price !== "undefined" && <div className="text-xs" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>}
                                 </div>
@@ -371,6 +371,16 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </section>
+                );
+            case "settings":
+                return (
+                    <section className="max-w-md mx-auto px-6 py-8">
+                        <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Settings</h2>
+                        <div className="rounded-2xl border border-white/35 bg-white/10 backdrop-blur-md p-4 text-white/95 flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            <p className="text-sm">Site settings will be available here.</p>
                         </div>
                     </section>
                 );
