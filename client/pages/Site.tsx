@@ -90,6 +90,10 @@ export default function Site() {
     };
   }, [resolvedSlug]);
 
+  const location = useLocation();
+  const segs = location.pathname.split("/").filter(Boolean);
+  const activePage = (segs[2] || "home").toLowerCase();
+
   if (loading || !config) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600">
@@ -101,11 +105,12 @@ export default function Site() {
   const businessName = config.businessName || "Your Business";
   const pages = Array.isArray(config.selectedPages) && config.selectedPages.length
     ? config.selectedPages
-    : ["home", "menu", "contact"];
+    : ["home", "menu", "gallery", "about", "contact"];
   const items = Array.isArray(config.menuItems) ? config.menuItems : [];
 
-  // Warm orange/rose gradient similar to the reference
   const gradient = `linear-gradient(135deg, ${config.primaryColor || "#f97316"} 0%, ${config.secondaryColor || "#fb7185"} 50%, ${config.secondaryColor || "#ec4899"} 100%)`;
+
+  const pageLink = (p: string) => `/site/${segs[1] || resolvedSlug}/${p === "home" ? "" : p}`.replace(/\/$/, "");
 
   return (
     <div className="min-h-screen" style={{ fontFamily: config.fontFamily || "Inter, system-ui, sans-serif" }}>
@@ -115,84 +120,117 @@ export default function Site() {
         </div>
       )}
 
-      {/* App-style full-bleed section */}
-      <div className="min-h-screen text-white relative">
-        {/* Top notch spacer */}
-        <div className="h-8" />
-
-        {/* Header */}
-        <header className="px-4 py-3 flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-              <span className="font-bold text-sm">{businessName.charAt(0) || "B"}</span>
+      {/* Top area with gradient for Home, subtle bar for others */}
+      {activePage === "home" ? (
+        <div className="min-h-screen text-white relative">
+          <div className="h-8" />
+          <header className="px-4 py-3 flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <span className="font-bold text-sm">{businessName.charAt(0) || "B"}</span>
+              </div>
+              <div className="text-lg font-extrabold">{businessName}</div>
             </div>
-            <div className="text-lg font-extrabold">{businessName}</div>
+            <nav className="hidden sm:flex gap-4 text-sm">
+              {pages.filter(p=>p!=='home').map(p => (
+                <Link key={p} to={pageLink(p)} className="text-white/90 hover:text-white">
+                  {p.charAt(0).toUpperCase()+p.slice(1)}
+                </Link>
+              ))}
+            </nav>
+          </header>
+          <div className="absolute inset-0 -z-10" style={{ background: gradient }} />
+
+          <section className="px-6 pt-6">
+            <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40">
+              <span className="text-2xl font-black">{businessName.charAt(0) || "B"}</span>
+            </div>
+            <h1 className="text-center text-xl font-extrabold mt-3">{businessName}</h1>
+            <p className="text-center text-sm opacity-95">{config.slogan || "Bold Flavors, Bright Future"}</p>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).slice(0, 4).map((it: any) => (
+                <div key={it.id || it.name} className="rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg">
+                  <div className="text-[11px] font-semibold truncate">{String(it.name).toLowerCase()}</div>
+                  <div className="text-[11px] font-bold text-pink-100">${Number(it.price).toFixed(2)}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
+            <Link to={pageLink("reservations") || "#"} className="w-full max-w-md rounded-full bg-black/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur text-center">
+              Reserve Table
+            </Link>
           </div>
-          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">≡</div>
-        </header>
-
-        {/* Gradient background */}
-        <div className="absolute inset-0 -z-10" style={{ background: gradient }} />
-
-        {/* Hero */}
-        <section className="px-6 pt-6">
-          <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40">
-            <span className="text-2xl font-black">{businessName.charAt(0) || "B"}</span>
-          </div>
-          <h1 className="text-center text-xl font-extrabold mt-3">{businessName}</h1>
-          <p className="text-center text-sm opacity-95">{config.slogan || "Bold Flavors, Bright Future"}</p>
-
-          {/* Featured cards */}
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).slice(0, 4).map((it: any) => (
-              <div key={it.id || it.name} className="rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg">
-                <div className="text-[11px] font-semibold truncate">{String(it.name).toLowerCase()}</div>
-                <div className="text-[11px] font-bold text-pink-100">${Number(it.price).toFixed(2)}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Extra sections below gradient to honor selected pages */}
-        <main className="bg-white text-gray-900 rounded-t-[28px] mt-6 pb-20">
-          {pages.includes("menu") && (
-            <section id="menu" className="max-w-md mx-auto px-6 py-8">
-              <h2 className="text-lg font-bold mb-3">Menu</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).map((it: any) => (
-                  <div key={it.id || it.name} className="rounded-xl border p-3">
-                    <div className="text-sm font-semibold truncate">{it.name}</div>
-                    {typeof it.price !== "undefined" && (
-                      <div className="text-xs text-gray-600">${Number(it.price).toFixed(2)}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {pages.includes("contact") && (
-            <section id="contact" className="max-w-md mx-auto px-6 pb-10">
-              <h2 className="text-lg font-bold mb-3">Contact</h2>
-              {config.location && <p className="text-sm text-gray-700">{config.location}</p>}
-              {Array.isArray(config.contactMethods) && config.contactMethods.length > 0 && (
-                <ul className="mt-2 text-sm text-gray-700 space-y-1">
-                  {config.contactMethods.map((m: any, i: number) => (
-                    <li key={i}>{typeof m === "string" ? m : `${m.type}: ${m.value}`}</li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-        </main>
-
-        {/* Bottom CTA */}
-        <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
-          <button className="w-full max-w-md rounded-full bg-black/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur">
-            Reserve Table
-          </button>
         </div>
-      </div>
+      ) : (
+        <div className="min-h-screen bg-white">
+          <div className="h-24" style={{ background: gradient }} />
+          <header className="px-4 py-3 flex items-center justify-between border-b">
+            <Link to={pageLink("home")} className="font-extrabold" style={{ color: "#111" }}>
+              {businessName}
+            </Link>
+            <nav className="text-sm text-gray-600 flex gap-4">
+              {pages.filter(p=>p!=='home').map(p => (
+                <Link key={p} to={pageLink(p)} className={activePage===p?"font-semibold text-gray-900":"hover:text-gray-900"}>
+                  {p.charAt(0).toUpperCase()+p.slice(1)}
+                </Link>
+              ))}
+            </nav>
+          </header>
+
+          <main className="max-w-md mx-auto px-6 py-8">
+            {activePage === "menu" && (
+              <section>
+                <h2 className="text-lg font-bold mb-3">Menu</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).map((it: any) => (
+                    <div key={it.id || it.name} className="rounded-xl border p-3">
+                      <div className="text-sm font-semibold truncate">{it.name}</div>
+                      {typeof it.price !== "undefined" && (
+                        <div className="text-xs text-gray-600">${Number(it.price).toFixed(2)}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {activePage === "gallery" && (
+              <section>
+                <h2 className="text-lg font-bold mb-3">Gallery</h2>
+                {Array.isArray(config.gallery) && config.gallery.length > 0 ? (
+                  <GalleryGrid images={config.gallery as any} />
+                ) : (
+                  <div className="text-sm text-gray-600">No images yet.</div>
+                )}
+              </section>
+            )}
+
+            {activePage === "about" && (
+              <section>
+                <h2 className="text-lg font-bold mb-3">About</h2>
+                <p className="text-sm text-gray-700">{config.uniqueDescription || ""}</p>
+              </section>
+            )}
+
+            {activePage === "contact" && (
+              <section>
+                <h2 className="text-lg font-bold mb-3">Contact</h2>
+                {config.location && <p className="text-sm text-gray-700">{config.location}</p>}
+                {Array.isArray(config.contactMethods) && config.contactMethods.length > 0 && (
+                  <ul className="mt-2 text-sm text-gray-700 space-y-1">
+                    {config.contactMethods.map((m: any, i: number) => (
+                      <li key={i}>{typeof m === "string" ? m : `${m.type}: ${m.value}`}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
+          </main>
+        </div>
+      )}
     </div>
   );
 }
