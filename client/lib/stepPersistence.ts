@@ -446,5 +446,6 @@ export function usePersistence() {
     getSummary: stepPersistence.getSummary.bind(stepPersistence),
     setEnabled: stepPersistence.setEnabled.bind(stepPersistence),
     getEnabled: stepPersistence.getEnabled.bind(stepPersistence),
+    getSessionId: stepPersistence.getSessionId.bind(stepPersistence),
   };
 }
