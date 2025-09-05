@@ -984,7 +984,11 @@ export default function Configurator() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => window.open(`/site/preview-${persistence.getSessionId ? persistence.getSessionId() : 'local'}`, '_blank')}
+                        onClick={async () => {
+                          const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
+                          try { await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ config: formData }) }); } catch {}
+                          window.open(`/site/preview-${sid}`, '_blank');
+                        }}
                         className="border-gray-300"
                       >
                         1:1 Preview
