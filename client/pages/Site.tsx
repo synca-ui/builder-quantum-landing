@@ -108,6 +108,9 @@ export default function Site() {
     : ["home", "menu", "gallery", "about", "contact"];
   const items = Array.isArray(config.menuItems) ? config.menuItems : [];
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [productOpen, setProductOpen] = useState<null | { name: string; price?: number }>(null);
+
   const gradient = `linear-gradient(135deg, ${config.primaryColor || "#f97316"} 0%, ${config.secondaryColor || "#fb7185"} 50%, ${config.secondaryColor || "#ec4899"} 100%)`;
 
   const pageLink = (p: string) => `/site/${segs[1] || resolvedSlug}/${p === "home" ? "" : p}`.replace(/\/$/, "");
