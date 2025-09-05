@@ -196,7 +196,8 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Menu</h2>
                         <div className="grid grid-cols-2 gap-3">
                             {items.map((it: any, index: number) => (
-                                <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg">
+                                <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg cursor-pointer" onClick={() => setProductOpen(it)}>
+                                    <img src={normalizeUrl(it.imageUrl)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
                                     <div className="text-sm font-semibold truncate" style={{ color: styles.userFontColor }}>{it.name}</div>
                                     {typeof it.price !== "undefined" && <div className="text-xs" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>}
                                 </div>
@@ -250,15 +251,17 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     return (
         <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
             <div className="h-8" />
-            <header className="px-4 py-3 flex items-center justify-between relative z-10">
-                <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-white">
-                    <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur inline-flex items-center justify-center overflow-hidden"><LogoDisplay /></span>
+            <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${selectedTemplateDef.mockup.nav.bg}`}>
+                <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${selectedTemplateDef.mockup.nav.text}`}>
+                    <span className={`w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden ${selectedTemplateDef.mockup.cards.bg}`}><LogoDisplay /></span>
                     {getBusinessName()}
                 </Link>
-                <button aria-label="Menu" className="sm:hidden w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center" onClick={() => setMenuOpen(true)}>≡</button>
+                <button aria-label="Menu" className={`sm:hidden w-9 h-9 rounded-xl flex items-center justify-center ${selectedTemplateDef.mockup.cards.bg}`}>
+                  <Menu className={`w-5 h-5 ${selectedTemplateDef.mockup.nav.text}`} onClick={() => setMenuOpen(true)} />
+                </button>
                 <nav className="hidden sm:flex gap-4 text-sm">
                     {menuPages.filter(p => p !== 'home').map(p => (
-                        <Link key={p} to={pageLink(p)} className={activePage === p ? "text-white font-semibold" : "text-white/90 hover:text-white"}>
+                        <Link key={p} to={pageLink(p)} className={`${activePage === p ? selectedTemplateDef.mockup.nav.text : 'text-white/70'} hover:text-white font-semibold`}>
                             {p.charAt(0).toUpperCase() + p.slice(1)}
                         </Link>
                     ))}
