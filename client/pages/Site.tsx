@@ -94,6 +94,9 @@ export default function Site() {
   const segs = location.pathname.split("/").filter(Boolean);
   const activePage = (segs[2] || "home").toLowerCase();
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [productOpen, setProductOpen] = useState<null | { name: string; price?: number }>(null);
+
   if (loading || !config) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600">
@@ -107,9 +110,6 @@ export default function Site() {
     ? config.selectedPages
     : ["home", "menu", "gallery", "about", "contact"];
   const items = Array.isArray(config.menuItems) ? config.menuItems : [];
-
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [productOpen, setProductOpen] = useState<null | { name: string; price?: number }>(null);
 
   const gradient = `linear-gradient(135deg, ${config.primaryColor || "#f97316"} 0%, ${config.secondaryColor || "#fb7185"} 50%, ${config.secondaryColor || "#ec4899"} 100%)`;
 
