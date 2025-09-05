@@ -191,6 +191,34 @@ export default function Site() {
             </div>
           </section>
 
+          {/* Opening Hours */}
+          {config.openingHours && Object.keys(config.openingHours).length > 0 && (
+            <section className="px-6 mt-4">
+              <div className="rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md p-4 text-white/95">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold">Opening Hours</div>
+                  <button className="text-xs underline" onClick={()=>setOpenHoursExpanded(v=>!v)}>
+                    {openHoursExpanded ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <div className="mt-2 text-xs space-y-1">
+                  {(openHoursExpanded
+                    ? Object.entries(config.openingHours)
+                    : Object.entries(config.openingHours).slice(0,2)
+                  ).map(([day, hours]: any) => (
+                    <div key={day} className="flex justify-between">
+                      <span className="font-medium">{day}</span>
+                      <span>{typeof hours === 'string' ? hours : (hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`)}</span>
+                    </div>
+                  ))}
+                  {!openHoursExpanded && Object.keys(config.openingHours).length > 2 && (
+                    <div className="text-xs opacity-80">+{Object.keys(config.openingHours).length - 2} more days</div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
           <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
             <Link to={pageLink("reservations") || "#"} className="w-full max-w-md rounded-full bg-black/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur text-center">
               Reserve Table
