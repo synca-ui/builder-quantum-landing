@@ -738,8 +738,9 @@ export default function Configurator() {
     async (data: Partial<Configuration>) => {
       setSaveStatus("saving");
       try {
+        const mediaSafe = await sanitizeMedia(data);
         const configData = {
-          ...normalizeConfigPayload(data),
+          ...normalizeConfigPayload(mediaSafe),
           userId: sessionApi.getUserId(),
         };
 
@@ -774,6 +775,72 @@ export default function Configurator() {
     [currentConfigId, currentStep, persistence],
   );
 
+  // Convert File/Blob/blob: URLs to data URLs so they persist across sessions and servers
+  const fileOrUrlToDataUrl = useCallback(async (input: any): Promise<string | null> => {
+    try {
+      if (!input) return null;
+      if (typeof input === 'string') {
+        if (input.startsWith('data:')) return input;
+        if (input.startsWith('blob:')) {
+          const resp = await fetch(input);
+          const blob = await resp.blob();
+          const reader = new FileReader();
+          return await new Promise((resolve, reject) => {
+            reader.onerror = () => reject(reader.error);
+            reader.onloadend = () => resolve(String(reader.result || ''));
+            reader.readAsDataURL(blob);
+          });
+        }
+        return input;
+      }
+      if (input instanceof Blob) {
+        const reader = new FileReader();
+        return await new Promise((resolve, reject) => {
+          reader.onerror = () => reject(reader.error);
+          reader.onloadend = () => resolve(String(reader.result || ''));
+          reader.readAsDataURL(input);
+        });
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const sanitizeMedia = useCallback(async (data: any) => {
+    const clone: any = { ...data };
+    if (clone.logo) {
+      const converted = await fileOrUrlToDataUrl(clone.logo);
+      if (converted) clone.logo = converted;
+    }
+    if (Array.isArray(clone.gallery)) {
+      const out = [] as any[];
+      for (const img of clone.gallery) {
+        const entry: any = { ...img };
+        if (entry && typeof entry.url === 'string' && entry.url.startsWith('blob:')) {
+          const converted = await fileOrUrlToDataUrl(entry.url);
+          if (converted) entry.url = converted;
+        }
+        if (entry && entry.file) delete entry.file;
+        out.push(entry);
+      }
+      clone.gallery = out;
+    }
+    if (Array.isArray(clone.menuItems)) {
+      clone.menuItems = await Promise.all(
+        clone.menuItems.map(async (it: any) => {
+          const item = { ...it };
+          if (item.imageUrl) {
+            const converted = await fileOrUrlToDataUrl(item.imageUrl);
+            if (converted) item.imageUrl = converted;
+          }
+          return item;
+        })
+      );
+    }
+    return clone;
+  }, [fileOrUrlToDataUrl]);
+
   const publishConfiguration = useCallback(async () => {
     // Best-effort save; in serverless it may be skipped but that's fine
     if (!currentConfigId) {
@@ -783,9 +850,11 @@ export default function Configurator() {
     setPublishStatus("publishing");
     toast({ title: "Publishing...", description: "Generating your live app" });
     try {
+      const mediaSafe = await sanitizeMedia(formData);
+      setFormData(mediaSafe);
       const result = await configurationApi.publish(
         currentConfigId || "new",
-        normalizeConfigPayload(formData) as any,
+        normalizeConfigPayload(mediaSafe) as any,
       );
 
       if (result.success && result.data) {
@@ -845,17 +914,20 @@ export default function Configurator() {
   // Sync current draft to server preview cache (debounced)
   useEffect(() => {
     const t = setTimeout(() => {
-      try {
-        const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
-        const payload = JSON.stringify({ config: formData });
-        const blob = new Blob([payload], { type: 'application/json' });
-        if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
-          void fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
-        }
-      } catch {}
-    }, 400);
+      (async () => {
+        try {
+          const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
+          const mediaSafe = await sanitizeMedia(formData);
+          const payload = JSON.stringify({ config: mediaSafe });
+          const blob = new Blob([payload], { type: 'application/json' });
+          if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
+            await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
+          }
+        } catch {}
+      })();
+    }, 500);
     return () => clearTimeout(t);
-  }, [formData, persistence]);
+  }, [formData, persistence, sanitizeMedia]);
 
   // Progress calculation
   const progressPercentage = useMemo(() => {
@@ -987,7 +1059,8 @@ export default function Configurator() {
                         onClick={async () => {
                           const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
                           try {
-                            const payload = JSON.stringify({ config: formData });
+                            const mediaSafe = await sanitizeMedia(formData);
+                            const payload = JSON.stringify({ config: mediaSafe });
                             const blob = new Blob([payload], { type: 'application/json' });
                             if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
                               await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
