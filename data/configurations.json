@@ -1,8 +1,8 @@
 [
   {
     "id": "new",
-    "userId": "user_mf5rd5v4e5u79ggoo5",
-    "businessName": "Bella",
+    "userId": "user_mf6jq6trx6wwyvkof2",
+    "businessName": "bebe",
     "businessType": "cafe",
     "location": "",
     "slogan": "",
@@ -56,21 +56,68 @@
         "closed": true
       }
     },
-    "menuItems": [],
-    "reservationsEnabled": false,
+    "menuItems": [
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "coffee",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.79"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.99"
+      },
+      {
+        "name": "cappucino",
+        "description": "hot",
+        "price": "2.89"
+      }
+    ],
+    "reservationsEnabled": true,
     "maxGuests": 10,
     "notificationMethod": "email",
-    "contactMethods": [],
-    "socialMedia": {},
-    "gallery": [],
+    "contactMethods": [
+      "phone: 0121212121212"
+    ],
+    "socialMedia": {
+      "instagram": "desdsd",
+      "facebook": "sdsd"
+    },
+    "gallery": [
+      {
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/35f9de18-c77a-4421-96b3-1b5c07c2c60d",
+        "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
+        "file": {}
+      },
+      {
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/4d222a8d-5bde-4316-8575-5e69e0adf050",
+        "alt": "Bild1.png.jpeg",
+        "file": {}
+      },
+      {
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/27d8b8cf-9751-4083-8d4d-97487c8e3b84",
+        "alt": "Bild.png.jpeg",
+        "file": {}
+      }
+    ],
     "onlineOrdering": false,
     "onlineStore": false,
     "teamArea": false,
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-04T18:47:20.175Z",
-    "updatedAt": "2025-09-04T18:47:20.181Z",
+    "createdAt": "2025-09-05T08:49:03.200Z",
+    "updatedAt": "2025-09-05T08:49:03.201Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
@@ -83,9 +130,9 @@
     "themeMode": "light",
     "showHomeHero": true,
     "menuPdf": null,
-    "reservationButtonColor": "#2563EB",
+    "reservationButtonColor": "#141414",
     "reservationButtonTextColor": "#FFFFFF",
-    "reservationButtonShape": "rounded",
+    "reservationButtonShape": "pill",
     "timeSlots": [],
     "instagramSync": false,
     "posProvider": "none",
@@ -136,7 +183,7 @@
         "secondary": "#10B981"
       }
     },
-    "publishedUrl": "https://bella-new.synca.digital",
-    "previewUrl": "https://synca.digital/site/bella-new"
+    "publishedUrl": "https://bebe-new.synca.digital",
+    "previewUrl": "https://synca.digital/site/bebe-new"
   }
 ]
