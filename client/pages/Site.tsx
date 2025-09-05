@@ -363,8 +363,19 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     };
 
     const LogoDisplay = () => {
-      if (formData.logo) {
-        return <img src={typeof formData.logo === "string" ? formData.logo : URL.createObjectURL(formData.logo)} alt="Business logo" className="w-6 h-6 object-contain rounded" style={{ color: styles.userPrimary }} />;
+      const { logo } = formData;
+      if (logo) {
+        if (typeof logo === 'string') {
+          return <img src={logo} alt="Business logo" className="w-6 h-6 object-contain rounded" style={{ color: styles.userPrimary }} />;
+        }
+        if (typeof logo === 'object' && logo instanceof Blob) {
+          try {
+            const src = URL.createObjectURL(logo);
+            return <img src={src} alt="Business logo" className="w-6 h-6 object-contain rounded" style={{ color: styles.userPrimary }} />;
+          } catch (e) {
+            console.error('Error creating object URL for logo', e);
+          }
+        }
       }
       return getBusinessIcon();
     };
