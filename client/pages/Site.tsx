@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { configurationApi, Configuration } from "@/lib/api";
+import GalleryGrid from "@/components/sections/GalleryGrid";
 
 // Fallback configuration when API is unavailable
 const FALLBACK_CONFIG: Configuration = {
