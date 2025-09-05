@@ -33,11 +33,140 @@ const fontOptions = [
 ];
 
 const templates = [
-    { id: "minimalist", style: { background: "#FFFFFF", accent: "#000000", text: "#1A1A1A", secondary: "#F8F9FA" } },
-    { id: "modern", style: { background: "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)", accent: "#2563EB", text: "#FFFFFF", secondary: "#1D4ED8" } },
-    { id: "stylish", style: { background: "#111827", accent: "#059669", text: "#F9FAFB", secondary: "#1F2937" } },
-    { id: "cozy", style: { background: "#FFFBF0", accent: "#EA580C", text: "#1F2937", secondary: "#FEF3C7" } },
-];
+    {
+      id: "minimalist",
+      name: "Minimalist",
+      description:
+        "Clean, simple design focusing on content with perfect readability",
+      preview: "bg-gradient-to-br from-white to-gray-100",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background: "#FFFFFF",
+        accent: "#000000",
+        text: "#1A1A1A",
+        secondary: "#F8F9FA",
+        layout: "minimal-grid",
+        navigation: "borderless-clean",
+        typography: "minimal-sans",
+      },
+      features: ["Ultra Clean", "Fast Loading", "Content Focus"],
+      mockup: {
+        nav: {
+          bg: "bg-white",
+          text: "text-black",
+          border: "border-transparent",
+        },
+        hero: { bg: "bg-white", text: "text-black" },
+        cards: {
+          bg: "bg-gray-50",
+          border: "border-gray-100",
+          text: "text-gray-800",
+        },
+      },
+    },
+    {
+      id: "modern",
+      name: "Modern",
+      description: "Contemporary design with bold colors and sleek animations",
+      preview: "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background:
+          "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
+        accent: "#2563EB",
+        text: "#FFFFFF",
+        secondary: "#1D4ED8",
+        layout: "modern-cards",
+        navigation: "glassmorphism",
+        typography: "modern-geometric",
+      },
+      features: ["Vibrant Colors", "Glass Effects", "Rectangular Layout"],
+      mockup: {
+        nav: {
+          bg: "bg-white/10 backdrop-blur-md",
+          text: "text-white",
+          border: "border-white/20",
+        },
+        hero: {
+          bg: "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600",
+          text: "text-white",
+        },
+        cards: {
+          bg: "bg-white/15 backdrop-blur-sm",
+          border: "border-white/30",
+          text: "text-white",
+        },
+      },
+    },
+    {
+      id: "stylish",
+      name: "Stylish",
+      description:
+        "Visual-first design with overlays, mixed sections, and motion",
+      preview: "bg-gradient-to-br from-emerald-50 to-slate-800",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background: "#111827",
+        accent: "#059669",
+        text: "#F9FAFB",
+        secondary: "#1F2937",
+        layout: "visual-overlap",
+        navigation: "contrast",
+        typography: "decorative-serif",
+      },
+      features: ["Soft Colors", "Great Spacing", "Easy Reading"],
+      mockup: {
+        nav: {
+          bg: "bg-slate-900/80 backdrop-blur",
+          text: "text-white",
+          border: "border-emerald-300/20",
+        },
+        hero: {
+          bg: "bg-gradient-to-r from-emerald-500/20 to-transparent",
+          text: "text-white",
+        },
+        cards: {
+          bg: "bg-white/5 backdrop-blur",
+          border: "border-white/10",
+          text: "text-slate-100",
+        },
+      },
+    },
+    {
+      id: "cozy",
+      name: "Cozy",
+      description:
+        "Warm, personal, and grounded aesthetic with authentic photography.",
+      preview: "bg-gradient-to-br from-amber-100 via-orange-50 to-rose-50",
+      businessTypes: ["cafe", "restaurant", "bar"],
+      style: {
+        background: "#FFFBF0",
+        accent: "#EA580C",
+        text: "#1F2937",
+        secondary: "#FEF3C7",
+        layout: "cozy-grid",
+        navigation: "rounded-top",
+        typography: "handwritten-sans",
+      },
+      features: ["Warm Colors", "Rounded Corners", "Community Feel"],
+      mockup: {
+        nav: {
+          bg: "bg-white/90",
+          text: "text-amber-900",
+          border: "border-amber-200",
+        },
+        hero: {
+          bg: "bg-amber-50",
+          text: "text-amber-900",
+        },
+        cards: {
+          bg: "bg-white",
+          border: "border-amber-200",
+          text: "text-slate-800",
+        },
+      },
+    },
+  ];
 
 const FALLBACK_CONFIG: Configuration = {
   id: "fallback",
@@ -251,17 +380,17 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     return (
         <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
             <div className="h-8" />
-            <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${selectedTemplateDef.mockup.nav.bg}`}>
-                <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${selectedTemplateDef.mockup.nav.text}`}>
-                    <span className={`w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden ${selectedTemplateDef.mockup.cards.bg}`}><LogoDisplay /></span>
+            <header className={`px-4 py-3 flex items-center justify-between relative z-10 ${selectedTemplateDef.mockup?.nav.bg}`}>
+                <Link to={pageLink("home")} className={`flex items-center gap-2 text-lg font-extrabold ${selectedTemplateDef.mockup?.nav.text}`}>
+                    <span className={`w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden ${selectedTemplateDef.mockup?.cards.bg}`}><LogoDisplay /></span>
                     {getBusinessName()}
                 </Link>
-                <button aria-label="Menu" className={`sm:hidden w-9 h-9 rounded-xl flex items-center justify-center ${selectedTemplateDef.mockup.cards.bg}`}>
-                  <Menu className={`w-5 h-5 ${selectedTemplateDef.mockup.nav.text}`} onClick={() => setMenuOpen(true)} />
+                <button aria-label="Menu" className={`sm:hidden w-9 h-9 rounded-xl flex items-center justify-center ${selectedTemplateDef.mockup?.cards.bg}`}>
+                  <Menu className={`w-5 h-5 ${selectedTemplateDef.mockup?.nav.text}`} onClick={() => setMenuOpen(true)} />
                 </button>
                 <nav className="hidden sm:flex gap-4 text-sm">
                     {menuPages.filter(p => p !== 'home').map(p => (
-                        <Link key={p} to={pageLink(p)} className={`${activePage === p ? selectedTemplateDef.mockup.nav.text : 'text-white/70'} hover:text-white font-semibold`}>
+                        <Link key={p} to={pageLink(p)} className={`${activePage === p ? selectedTemplateDef.mockup?.nav.text : 'text-white/70'} hover:text-white font-semibold`}>
                             {p.charAt(0).toUpperCase() + p.slice(1)}
                         </Link>
                     ))}
