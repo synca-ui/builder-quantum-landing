@@ -216,7 +216,8 @@ export default function Site() {
           <div className="absolute inset-0 -z-10" style={{ background: gradient }} />
           <div className="h-8" />
           <header className="px-4 py-3 flex items-center justify-between relative z-10">
-            <Link to={pageLink("home")} className="text-lg font-extrabold text-white">
+            <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-white">
+              <span className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur inline-flex items-center justify-center overflow-hidden"><LogoDisplay /></span>
               {businessName}
             </Link>
             <nav className="hidden sm:flex gap-4 text-sm">
