@@ -183,10 +183,24 @@ export default function Site() {
           </section>
 
           <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
-            <Link to={pageLink("reservations") || "#"} className="w-full max-w-md rounded-full bg-black/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur text-center">
+            <Link to={pageLink("reservations") || "#"} className="w-full max-w-md rounded-full bg黑/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur text-center">
               Reserve Table
             </Link>
           </div>
+
+          {productOpen && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50" onClick={()=>setProductOpen(null)} />
+              <div className="relative bg-white text-gray-900 rounded-2xl w-[90%] max-w-sm p-5 shadow-2xl">
+                <button aria-label="Close" className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100" onClick={()=>setProductOpen(null)}>×</button>
+                <div className="text-lg font-bold mb-1">{productOpen.name}</div>
+                {typeof productOpen.price !== 'undefined' && (
+                  <div className="text-teal-600 font-semibold mb-3">${Number(productOpen.price).toFixed(2)}</div>
+                )}
+                <button className="w-full rounded-lg bg-teal-600 hover:bg-teal-700 text-white py-2 font-medium" onClick={()=>setProductOpen(null)}>Add to cart</button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="min-h-screen bg-white">
