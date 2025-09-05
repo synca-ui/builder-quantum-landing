@@ -11,6 +11,7 @@ import {
   getPublishedSite,
 } from "./routes/configurations";
 import { fetchInstagramPhotos } from "./routes/instagram";
+import { setPreviewConfig } from "./routes/configurations";
 
 export function createServer() {
   const app = express();
@@ -38,6 +39,9 @@ export function createServer() {
 
   // Public site serving
   app.get("/api/sites/:subdomain", getPublishedSite);
+
+  // Preview config injection
+  app.post("/api/preview/:session", setPreviewConfig);
 
   // Config JSON proxy for Edge/clients
   app.get("/api/config/:slug", require('../server/routes/config').getConfigBySlug);
