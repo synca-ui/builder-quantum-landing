@@ -136,13 +136,34 @@ export default function Site() {
             </div>
             <nav className="hidden sm:flex gap-4 text-sm">
               {pages.filter(p=>p!=='home').map(p => (
-                <Link key={p} to={pageLink(p)} className="text-white/90 hover:text-white">
+                <Link key={p} to={pageLink(p)} className="text-white/90 hover:text-white" onClick={()=>setMenuOpen(false)}>
                   {p.charAt(0).toUpperCase()+p.slice(1)}
                 </Link>
               ))}
             </nav>
+            <button aria-label="Menu" className="sm:hidden w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center" onClick={()=>setMenuOpen(true)}>
+              ≡
+            </button>
           </header>
           <div className="absolute inset-0 -z-10" style={{ background: gradient }} />
+
+          {menuOpen && (
+            <div className="absolute inset-0 z-20">
+              <div className="absolute inset-0 bg-black/30" onClick={()=>setMenuOpen(false)} />
+              <div className="relative p-6 pt-12" style={{ background: gradient }}>
+                <div className="flex justify-end">
+                  <button aria-label="Close menu" className="w-9 h-9 rounded-xl bg-white/15 text-white" onClick={()=>setMenuOpen(false)}>×</button>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {pages.map(p => (
+                    <Link key={p} to={pageLink(p)} onClick={()=>setMenuOpen(false)} className="block w-full text-left px-4 py-3 text-white/95 font-semibold rounded-xl border border-white/25 bg-white/10">
+                      {p.charAt(0).toUpperCase()+p.slice(1)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           <section className="px-6 pt-6">
             <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40">
