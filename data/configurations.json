@@ -2,7 +2,7 @@
   {
     "id": "new",
     "userId": "user_mf6jq6trx6wwyvkof2",
-    "businessName": "JuJu",
+    "businessName": "sdsd",
     "businessType": "cafe",
     "location": "",
     "slogan": "",
@@ -63,17 +63,17 @@
         "price": "2.99",
         "images": [
           {
-            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/c6876a99-e95c-4135-9c0e-6695c415d44a",
+            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/3a2251b1-ed4d-40b2-8b28-a5d02ec90e67",
             "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
             "file": {}
           },
           {
-            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/f87e7d50-98a7-467b-9f56-9ab8e338f25c",
+            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/274dafba-501e-4797-ab99-6a30a169e75a",
             "alt": "Bild1.png.jpeg",
             "file": {}
           },
           {
-            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/160fb60f-b232-4052-83f1-73e0af5e3a1e",
+            "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/34d11dc3-888f-4e84-8dce-9f341b1d79c7",
             "alt": "Bild.png.jpeg",
             "file": {}
           }
@@ -105,22 +105,22 @@
     "notificationMethod": "email",
     "contactMethods": [],
     "socialMedia": {
-      "instagram": "bella",
-      "facebook": "bella"
+      "instagram": "sdsd",
+      "facebook": "sdsd"
     },
     "gallery": [
       {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/bc210e89-6873-4f75-a7f9-ba4d81f31b4e",
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/96dc2f24-a0a2-443d-9e96-c07e89f0e4d0",
         "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
         "file": {}
       },
       {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/f8857962-7c8d-4f47-984f-301a488b32fa",
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/7e0ef7a7-b458-4ff2-9255-1d53d8439f6b",
         "alt": "Bild1.png.jpeg",
         "file": {}
       },
       {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/146754af-786d-4627-b487-f36b0aff4817",
+        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/a595ac2d-50b1-4d9a-9e52-b32332ed4cea",
         "alt": "Bild.png.jpeg",
         "file": {}
       }
@@ -131,8 +131,8 @@
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-05T09:19:10.402Z",
-    "updatedAt": "2025-09-05T09:19:10.403Z",
+    "createdAt": "2025-09-05T09:21:51.426Z",
+    "updatedAt": "2025-09-05T09:21:51.427Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
@@ -145,7 +145,7 @@
     "themeMode": "light",
     "showHomeHero": true,
     "menuPdf": null,
-    "reservationButtonColor": "#161717",
+    "reservationButtonColor": "#171717",
     "reservationButtonTextColor": "#FFFFFF",
     "reservationButtonShape": "pill",
     "timeSlots": [],
@@ -198,8 +198,8 @@
         "secondary": "#10B981"
       }
     },
-    "slug": "juju-new",
-    "publishedUrl": "https://juju-new.synca.digital",
-    "previewUrl": "https://synca.digital/site/juju-new"
+    "slug": "sdsd-new",
+    "publishedUrl": "https://sdsd-new.synca.digital",
+    "previewUrl": "https://synca.digital/site/sdsd-new"
   }
 ]
