@@ -48,6 +48,7 @@ import {
   Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -119,6 +120,9 @@ export default function Configurator() {
 
 
   const [isVisible, setIsVisible] = useState(false);
+  const [persistEnabled, setPersistEnabled] = useState(() => {
+    try { return persistence.getEnabled ? persistence.getEnabled() : true; } catch { return true; }
+  });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(() => {
     const restoredStep = persistence.getCurrentStep();
@@ -921,6 +925,18 @@ export default function Configurator() {
 
           <div className="hidden md:block">
             <div className="flex items-center space-x-6">
+              {/* Persist toggle */}
+              <div className="hidden md:flex items-center gap-2 text-xs text-gray-600">
+                <span>Save progress</span>
+                <Switch
+                  checked={persistEnabled}
+                  onCheckedChange={(v: boolean) => {
+                    setPersistEnabled(v);
+                    try { persistence.setEnabled?.(v); } catch {}
+                    toast({ title: v ? 'Saving enabled' : 'Saving disabled', description: v ? 'Your steps will be stored and restored' : 'Progress will not be stored' });
+                  }}
+                />
+              </div>
               {/* Back to Templates button - only show after template selection */}
               {currentStep > 0 && (
                 <Button
