@@ -96,14 +96,15 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch) || templates[1];
     const baseTemplateStyle = selectedTemplateDef.style;
 
+    const themeOverride = (formData as any).templateThemes?.[selectedIdForSwitch] || {};
     const isDark = (formData as any).themeMode === 'dark';
-    const forcedText = selectedIdForSwitch === 'modern' ? '#FFFFFF' : undefined;
+    const forcedText = selectedIdForSwitch === 'modern' ? '#FFFFFF' : isDark ? '#F8FAFC' : (formData as any).fontColor;
     const styles = {
       ...baseTemplateStyle,
-      userPrimary: formData.primaryColor || (baseTemplateStyle as any).accent,
-      userSecondary: isDark ? '#0F172A' : formData.secondaryColor || (baseTemplateStyle as any).secondary,
-      userFontColor: forcedText || (formData as any).fontColor || (baseTemplateStyle as any).text,
-      userBackground: isDark ? '#0B1020' : (formData as any).backgroundColor || (baseTemplateStyle as any).background,
+      userPrimary: themeOverride.primary || formData.primaryColor || (baseTemplateStyle as any).accent,
+      userSecondary: isDark ? '#0F172A' : themeOverride.secondary || formData.secondaryColor || (baseTemplateStyle as any).secondary,
+      userFontColor: themeOverride.text || forcedText,
+      userBackground: isDark ? '#0B1020' : themeOverride.background || (formData as any).backgroundColor || (baseTemplateStyle as any).background,
     } as const;
 
     const fontClass = fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";
@@ -162,6 +163,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         <div className="mt-4 grid grid-cols-2 gap-3">
                             {items.slice(0, 4).map((it: any, index: number) => (
                                 <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
+                                    <img src={normalizeUrl(it.imageUrl)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
                                     <div className="text-[11px] font-semibold truncate">{it.name}</div>
                                     <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
                                 </button>
