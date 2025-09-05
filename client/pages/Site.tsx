@@ -174,10 +174,10 @@ export default function Site() {
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               {(items.length > 0 ? items : FALLBACK_CONFIG.menuItems).slice(0, 4).map((it: any) => (
-                <div key={it.id || it.name} className="rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg">
+                <button key={it.id || it.name} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={()=>setProductOpen({ name: it.name, price: it.price })}>
                   <div className="text-[11px] font-semibold truncate">{String(it.name).toLowerCase()}</div>
                   <div className="text-[11px] font-bold text-pink-100">${Number(it.price).toFixed(2)}</div>
-                </div>
+                </button>
               ))}
             </div>
           </section>
