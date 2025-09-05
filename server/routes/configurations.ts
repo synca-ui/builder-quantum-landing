@@ -510,13 +510,24 @@ export async function getPublishedSite(req: Request, res: Response) {
     // Prefer Supabase store
     if (supabase) {
       try {
-        const { data, error } = await supabase
+        // 1) Exact slug match
+        let { data, error } = await supabase
           .from("configurations")
           .select("config")
           .eq("slug", subdomain)
           .single();
         if (!error && data?.config) {
           return res.json({ success: true, site: data.config });
+        }
+        // 2) Fallback: latest by slug prefix (e.g. bebe-new-xxxx)
+        const { data: list, error: listErr } = await supabase
+          .from("configurations")
+          .select("config, updated_at, slug")
+          .ilike("slug", `${subdomain}-%`)
+          .order("updated_at", { ascending: false })
+          .limit(1);
+        if (!listErr && list && list.length && (list[0] as any).config) {
+          return res.json({ success: true, site: (list[0] as any).config });
         }
       } catch (e) {
         console.error("Supabase read failed:", e);
