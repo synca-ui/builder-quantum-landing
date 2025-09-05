@@ -380,7 +380,6 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
     return (
         <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
-            <div className="h-8 bg-white" />
             <header className="px-4 h-14 flex items-center justify-between relative z-30 bg-white border-b border-black/10">
                 <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-black">
                     <span className="w-8 h-8 rounded-xl inline-flex items-center justify-center overflow-hidden bg-gray-100"><LogoDisplay /></span>
