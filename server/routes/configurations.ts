@@ -493,6 +493,21 @@ export async function publishConfiguration(req: Request, res: Response) {
   }
 }
 
+export async function setPreviewConfig(req: Request, res: Response) {
+  try {
+    const { session } = req.params as any;
+    if (!session) return res.status(400).json({ error: 'Missing session' });
+    const config = req.body && (req.body as any).config ? (req.body as any).config : req.body;
+    if (!config || typeof config !== 'object') return res.status(400).json({ error: 'Invalid config' });
+    const key = `preview-${session}`;
+    previewCache.set(key, { config, expiresAt: Date.now() + 5 * 60 * 1000 });
+    return res.json({ success: true, key });
+  } catch (e) {
+    console.error('setPreviewConfig error', e);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function getPublishedSite(req: Request, res: Response) {
   try {
     const { subdomain } = req.params; // actually tenantSlug
