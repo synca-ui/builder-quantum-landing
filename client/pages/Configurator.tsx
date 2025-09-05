@@ -1310,7 +1310,7 @@ export default function Configurator() {
             name: "Organic Latte",
             description: "Fair trade beans, oat milk",
             price: "4.75",
-            emoji: "☕",
+            emoji: "��",
           },
           {
             name: "Fresh Wrap",
@@ -5823,7 +5823,7 @@ export default function Configurator() {
                             : "";
 
                           return name && price
-                            ? { name, description, price }
+                            ? { name, description, price, id: `csv-${Date.now()}-${index}` }
                             : null;
                         })
                         .filter(Boolean) as any[];
