@@ -35,6 +35,10 @@ export class StepPersistence {
 
   constructor() {
     this.sessionId = this.generateSessionId();
+    try {
+      const raw = localStorage.getItem('configurator_persist_enabled');
+      this.enabled = raw === null ? true : raw === 'true';
+    } catch { this.enabled = true; }
     this.state = this.loadState() || this.createInitialState();
   }
 
