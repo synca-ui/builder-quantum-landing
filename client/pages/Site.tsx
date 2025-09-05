@@ -183,7 +183,7 @@ export default function Site() {
           </section>
 
           <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
-            <Link to={pageLink("reservations") || "#"} className="w-full max-w-md rounded-full bg黑/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur text-center">
+            <Link to={pageLink("reservations") || "#"} className="w-full max-w-md rounded-full bg-black/70 text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur text-center">
               Reserve Table
             </Link>
           </div>
