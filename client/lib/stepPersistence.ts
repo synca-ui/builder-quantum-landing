@@ -442,5 +442,7 @@ export function usePersistence() {
     restoreToStep: stepPersistence.restoreToStep.bind(stepPersistence),
     clearAll: stepPersistence.clearAll.bind(stepPersistence),
     getSummary: stepPersistence.getSummary.bind(stepPersistence),
+    setEnabled: stepPersistence.setEnabled.bind(stepPersistence),
+    getEnabled: stepPersistence.getEnabled.bind(stepPersistence),
   };
 }
