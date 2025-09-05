@@ -519,6 +519,12 @@ export async function getPublishedSite(req: Request, res: Response) {
     console.log('Clearing cache for subdomain:', subdomain);
     publishedCache.delete(subdomain);
 
+    // Preview cache first
+    const previewHit = previewCache.get(subdomain);
+    if (previewHit && previewHit.expiresAt > Date.now()) {
+      return res.json({ success: true, site: previewHit.config });
+    }
+
     // Serve from in-memory cache if available (immediate after publish)
     const cached = publishedCache.get(subdomain);
     if (cached && cached.expiresAt > Date.now()) {
