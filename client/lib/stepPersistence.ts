@@ -420,6 +420,8 @@ export class StepPersistence {
   }
 
   getEnabled(): boolean { return this.enabled; }
+
+  getSessionId(): string { return this.sessionId; }
 }
 
 // Global instance
