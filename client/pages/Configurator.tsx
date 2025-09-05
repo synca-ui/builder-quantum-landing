@@ -5794,7 +5794,7 @@ export default function Configurator() {
                       }
 
                       const newItems = dataRows
-                        .map((line) => {
+                        .map((line, index) => {
                           const cells = parseLine(line).map((v) =>
                             v.replace(/""/g, '"'),
                           );
