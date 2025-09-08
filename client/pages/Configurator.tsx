@@ -921,7 +921,7 @@ export default function Configurator() {
           const payload = JSON.stringify({ config: mediaSafe });
           const blob = new Blob([payload], { type: 'application/json' });
           if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
-            await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
+            await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': sessionApi.getUserId() }, body: payload }).catch(() => {});
           }
         } catch {}
       })();
@@ -1063,7 +1063,7 @@ export default function Configurator() {
                             const payload = JSON.stringify({ config: mediaSafe });
                             const blob = new Blob([payload], { type: 'application/json' });
                             if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
-                              await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => {});
+                              await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': sessionApi.getUserId() }, body: payload }).catch(() => {});
                             }
                           } catch {}
                           window.open(`/site/preview-${sid}`, '_blank');
