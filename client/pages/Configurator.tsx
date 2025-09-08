@@ -1441,37 +1441,37 @@ export default function Configurator() {
 
     // Fetch Instagram photos when instagram sync is enabled and a profile URL exists
     useEffect(() => {
-      let cancelled = false;
-      const tryFetchInstagram = async () => {
-        if (!formData.instagramSync) return;
-        const profileUrl = formData.socialMedia?.instagram;
-        if (!profileUrl) return;
+      // let cancelled = false;
+      // const tryFetchInstagram = async () => {
+      //   if (!formData.instagramSync) return;
+      //   const profileUrl = formData.socialMedia?.instagram;
+      //   if (!profileUrl) return;
 
-        try {
-          const resp = await fetch(
-            `/api/instagram?profileUrl=${encodeURIComponent(profileUrl)}`,
-          );
-          if (!resp.ok) return;
-          const data = await resp.json();
-          if (cancelled) return;
-          if (Array.isArray(data) && data.length > 0) {
-            // Map to gallery format expected by configurator
-            const updated = data.map((src: string) => ({
-              url: src,
-              alt: "Instagram photo",
-            }));
-            updateFormData("gallery", updated);
-          }
-        } catch (e) {
-          // ignore fetch errors softly
-          console.warn("Instagram fetch failed:", e);
-        }
-      };
+      //   try {
+      //     const resp = await fetch(
+      //       `/api/instagram?profileUrl=${encodeURIComponent(profileUrl)}`,
+      //     );
+      //     if (!resp.ok) return;
+      //     const data = await resp.json();
+      //     if (cancelled) return;
+      //     if (Array.isArray(data) && data.length > 0) {
+      //       // Map to gallery format expected by configurator
+      //       const updated = data.map((src: string) => ({
+      //         url: src,
+      //         alt: "Instagram photo",
+      //       }));
+      //       updateFormData("gallery", updated);
+      //     }
+      //   } catch (e) {
+      //     // ignore fetch errors softly
+      //     console.warn("Instagram fetch failed:", e);
+      //   }
+      // };
 
-      tryFetchInstagram();
-      return () => {
-        cancelled = true;
-      };
+      // tryFetchInstagram();
+      // return () => {
+      //   cancelled = true;
+      // };
     }, [formData.instagramSync, formData.socialMedia?.instagram]);
 
     if (!selectedIdForSwitch) {
