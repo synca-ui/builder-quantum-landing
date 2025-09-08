@@ -513,11 +513,8 @@ export async function getPublishedSite(req: Request, res: Response) {
     const { subdomain } = req.params; // actually tenantSlug
     console.log('=== getPublishedSite Debug ===');
     console.log('Requested subdomain:', subdomain);
-    console.log('Cache keys:', Array.from(publishedCache.keys()));
+    console.log('Preview Cache keys:', Array.from(previewCache.keys()));
 
-    // Clear cache for this specific subdomain to ensure fresh data
-    console.log('Clearing cache for subdomain:', subdomain);
-    publishedCache.delete(subdomain);
 
     // Preview cache first
     const previewHit = previewCache.get(subdomain);
