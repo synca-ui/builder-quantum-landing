@@ -1129,6 +1129,15 @@ export default function Configurator() {
 
   // Modern App-Style Template Preview
   const TemplatePreviewContent = () => {
+    const normalizeImageSrc = (img: any): string => {
+      if (!img) return "/placeholder.svg";
+      if (typeof img === 'string') return img;
+      const url = img?.url;
+      if (typeof url === 'string') return url;
+      const file = (img as any)?.file || img;
+      if (typeof File !== "undefined" && file instanceof File) return URL.createObjectURL(file);
+      return "/placeholder.svg";
+    };
     const [previewState, setPreviewState] = useState({
       menuOpen: false,
       activePage: "home",
