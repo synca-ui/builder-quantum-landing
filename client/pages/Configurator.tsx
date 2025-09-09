@@ -5344,7 +5344,7 @@ export default function Configurator() {
                   htmlFor="weekday-schedule"
                   className="text-sm text-gray-600"
                 >
-                  Gleiche Zeiten f��r alle Wochentage
+                  Gleiche Zeiten f���r alle Wochentage
                 </label>
               </div>
             </div>
@@ -5564,6 +5564,15 @@ export default function Configurator() {
   };
 
   const MenuProductsStep = () => {
+    const normalizeImageSrc = (img: any): string => {
+      if (!img) return "/placeholder.svg";
+      if (typeof img === "string") return img;
+      const url = img?.url;
+      if (typeof url === "string") return url;
+      const file = (img as any)?.file || img;
+      if (typeof File !== "undefined" && file instanceof File) return URL.createObjectURL(file);
+      return "/placeholder.svg";
+    };
     const [newItem, setNewItem] = useState({
       name: "",
       description: "",
