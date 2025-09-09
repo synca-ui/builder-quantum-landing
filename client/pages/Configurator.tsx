@@ -841,9 +841,10 @@ export default function Configurator() {
       clone.menuItems = await Promise.all(
         clone.menuItems.map(async (it: any) => {
           const item = { ...it };
-          if (item.imageUrl) {
-            const converted = await fileOrUrlToDataUrl(item.imageUrl);
-            if (converted) item.imageUrl = converted;
+          if (item.image) {
+            const imageToConvert = item.image.file || item.image.url || item.image;
+            const converted = await fileOrUrlToDataUrl(imageToConvert);
+            if (converted) item.image = converted;
           }
           return item;
         })
