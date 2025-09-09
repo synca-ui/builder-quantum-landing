@@ -24,6 +24,7 @@ import {
 import { motion } from "framer-motion";
 import GalleryGrid from "@/components/sections/GalleryGrid";
 import { configurationApi, type Configuration } from "@/lib/api";
+import ReservationButton from "@/components/ui/ReservationButton";
 
 // Re-using the same data structures from the configurator for consistency
 const fontOptions = [
@@ -446,9 +447,11 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
             {activePage === 'home' && formData.reservationsEnabled && (
                 <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
-                    <button className="w-full max-w-md rounded-full text-white py-3 text-sm font-semibold shadow-2xl backdrop-blur" style={{ backgroundColor: styles.userPrimary }}>
-                        Reserve Table
-                    </button>
+                    <ReservationButton
+                        color={styles.userPrimary}
+                        shape={(formData as any).reservationButtonShape || 'rounded'}
+                        className="w-full max-w-md shadow-2xl"
+                    />
                 </div>
             )}
         </div>
