@@ -448,7 +448,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
             {activePage === 'home' && formData.reservationsEnabled && (
                 <div className="fixed bottom-4 left-0 right-0 flex justify-center px-4 z-20">
                     <ReservationButton
-                        color={styles.userPrimary}
+                        color={(formData as any).reservationButtonColor || styles.userPrimary}
                         textColor={(formData as any).reservationButtonTextColor || '#FFFFFF'}
                         shape={(formData as any).reservationButtonShape || 'rounded'}
                         className="w-full max-w-md shadow-2xl"
