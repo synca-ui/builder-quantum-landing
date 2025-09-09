@@ -436,7 +436,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                     <div className="absolute inset-0 bg-black/50" onClick={() => setProductOpen(null)} />
                     <div className="relative bg-white text-gray-900 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
                         <button aria-label="Close" className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100" onClick={() => setProductOpen(null)}>×</button>
-                        <img src={productOpen.imageUrl || "/placeholder.svg"} alt={productOpen.name} className="w-full h-40 object-cover rounded-lg mb-4" />
+                        <img src={normalizeUrl(productOpen.imageUrl)} alt={productOpen.name} className="w-full h-40 object-cover rounded-lg mb-4" />
                         <div className="text-lg font-bold mb-1">{productOpen.name}</div>
                         <p className="text-sm text-gray-600 mb-3">{productOpen.description}</p>
                         {typeof productOpen.price !== 'undefined' && <div className="font-semibold mb-3" style={{ color: styles.userPrimary }}>${Number(productOpen.price).toFixed(2)}</div>}
