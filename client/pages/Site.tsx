@@ -291,7 +291,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         </div>
                         <h1 className="text-center text-xl font-extrabold mt-3">{getBusinessName()}</h1>
                         {formData.slogan && <p className="text-center text-sm opacity-95">{formData.slogan}</p>}
-                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {items.slice(0, 4).map((it: any, index: number) => (
                                 <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
                                     <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
@@ -325,7 +325,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                 return (
                     <section className="max-w-md mx-auto px-6 py-8">
                         <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Menu</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {items.map((it: any, index: number) => (
                                 <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg cursor-pointer" onClick={() => setProductOpen(it)}>
                                     <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
