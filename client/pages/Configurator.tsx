@@ -1209,6 +1209,18 @@ export default function Configurator() {
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
+    const normalizeImageSrc = (img: any): string => {
+      if (!img) return "/placeholder.svg";
+      // If direct string URL or data URI
+      if (typeof img === 'string') return img;
+      // Common shapes: { url, alt } or { file }
+      const url = img?.url;
+      if (typeof url === 'string') return url;
+      const file = img?.file || img;
+      if (file instanceof File) return URL.createObjectURL(file);
+      return "/placeholder.svg";
+    };
+
     // Template-specific content
     const selectedId =
       currentStep === 0
