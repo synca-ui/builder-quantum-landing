@@ -4712,6 +4712,33 @@ export default function Configurator() {
                 </div>
               </div>
 
+              {/* Homepage Dish Image Visibility */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">
+                  Homepage Images
+                </label>
+                <div className="flex items-center justify-between rounded-lg border bg-white p-4">
+                    <div className="space-y-0.5">
+                        <label htmlFor="homepageDishImageVisibility" className="text-sm font-medium">
+                            Show dish images on homepage
+                        </label>
+                        <p className="text-xs text-gray-500">
+                            Control whether dish images are shown directly on the homepage.
+                        </p>
+                    </div>
+                    <Switch
+                        id="homepageDishImageVisibility"
+                        checked={formData.homepageDishImageVisibility !== 'hidden'}
+                        onCheckedChange={(checked) =>
+                            updateFormData(
+                                "homepageDishImageVisibility",
+                                checked ? "visible" : "hidden"
+                            )
+                        }
+                    />
+                </div>
+              </div>
+
               {/* Secondary Color */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3">
