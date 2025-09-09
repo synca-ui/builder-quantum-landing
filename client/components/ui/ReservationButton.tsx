@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 
 interface ReservationButtonProps {
   color?: string;
+  textColor?: string;
   shape?: "rounded" | "pill" | "square";
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -12,6 +13,7 @@ interface ReservationButtonProps {
 
 export function ReservationButton({
   color = "#2563EB",
+  textColor = "#FFFFFF",
   shape = "rounded",
   size = "md",
   className = "",
@@ -32,8 +34,8 @@ export function ReservationButton({
 
   return (
     <button
-      className={`font-medium text-white transition-all duration-200 hover:scale-105 active:scale-95 ${shapeClasses[shape]} ${sizeClasses[size]} ${className}`}
-      style={{ backgroundColor: color }}
+      className={`font-medium transition-all duration-200 hover:scale-105 active:scale-95 ${shapeClasses[shape]} ${sizeClasses[size]} ${className}`}
+      style={{ backgroundColor: color, color: textColor }}
       onClick={onClick}
     >
       <Calendar className="w-4 h-4 mr-2 inline" />
