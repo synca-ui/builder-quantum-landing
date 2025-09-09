@@ -5574,15 +5574,6 @@ export default function Configurator() {
   };
 
   const MenuProductsStep = () => {
-    const normalizeImageSrc = (img: any): string => {
-      if (!img) return "/placeholder.svg";
-      if (typeof img === "string") return img;
-      const url = img?.url;
-      if (typeof url === "string") return url;
-      const file = (img as any)?.file || img;
-      if (typeof File !== "undefined" && file instanceof File) return URL.createObjectURL(file);
-      return "/placeholder.svg";
-    };
     const [newItem, setNewItem] = useState({
       name: "",
       description: "",
@@ -5595,7 +5586,7 @@ export default function Configurator() {
         const itemToAdd = {
             ...newItem,
             id: Date.now().toString(),
-            imageUrl: newItem.images?.[0]?.url || ""
+            image: newItem.images?.[0],
         };
         const updatedItems = [
           ...formData.menuItems,
