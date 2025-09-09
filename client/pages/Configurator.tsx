@@ -2526,9 +2526,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url:
-                                  selectedProduct.imageUrl ||
-                                  "/placeholder.svg",
+                                url: normalizeImageSrc(selectedProduct.imageUrl),
                                 alt: selectedProduct.name,
                               },
                             ]
@@ -2748,9 +2746,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url:
-                                  selectedProduct.imageUrl ||
-                                  "/placeholder.svg",
+                                url: normalizeImageSrc(selectedProduct.imageUrl),
                                 alt: selectedProduct.name,
                               },
                             ]
@@ -2997,9 +2993,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url:
-                                  selectedProduct.imageUrl ||
-                                  "/placeholder.svg",
+                                url: normalizeImageSrc(selectedProduct.imageUrl),
                                 alt: selectedProduct.name,
                               },
                             ]
@@ -3149,9 +3143,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url:
-                                  selectedProduct.imageUrl ||
-                                  "/placeholder.svg",
+                                url: normalizeImageSrc(selectedProduct.imageUrl),
                                 alt: selectedProduct.name,
                               },
                             ]
