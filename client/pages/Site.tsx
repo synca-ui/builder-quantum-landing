@@ -251,12 +251,20 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
       }
     };
 
-    const normalizeUrl = (u?: string) => {
+    const normalizeUrl = (u: any) => {
       if (!u) return "/placeholder.svg";
-      if (u.startsWith('data:')) return u;
-      if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('/')) return u;
-      if (u.startsWith('blob:')) return "/placeholder.svg";
-      return u;
+      if (typeof u === 'string') {
+        if (u.startsWith('data:')) return u;
+        if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('/')) return u;
+        if (u.startsWith('blob:')) return "/placeholder.svg";
+        return u;
+      }
+      const url = u?.url;
+      if (typeof url === 'string') {
+          if (url.startsWith('blob:')) return "/placeholder.svg";
+          return url;
+      }
+      return "/placeholder.svg";
     };
 
     const LogoDisplay = () => {
