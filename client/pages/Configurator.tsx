@@ -2159,7 +2159,7 @@ export default function Configurator() {
                       onClick={() => openProductModal(item)}
                     >
                       <div className="hidden">{item.emoji || "🍽️"}</div>
-                      <img src={normalizeImageSrc(item.imageUrl)} alt={item.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                      <img src={normalizeImageSrc(item.image)} alt={item.name} className="w-full h-20 object-cover rounded-lg mb-2" />
                       <h3
                         className={
                           templateStyles.itemName + " text-xs truncate"
@@ -2536,7 +2536,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url: normalizeImageSrc(selectedProduct.imageUrl),
+                                url: normalizeImageSrc(selectedProduct.image),
                                 alt: selectedProduct.name,
                               },
                             ]
@@ -2756,7 +2756,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url: normalizeImageSrc(selectedProduct.imageUrl),
+                                url: normalizeImageSrc(selectedProduct.image),
                                 alt: selectedProduct.name,
                               },
                             ]
@@ -3003,7 +3003,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url: normalizeImageSrc(selectedProduct.imageUrl),
+                                url: normalizeImageSrc(selectedProduct.image),
                                 alt: selectedProduct.name,
                               },
                             ]
@@ -3153,7 +3153,7 @@ export default function Configurator() {
                           ? selectedProduct.images
                           : [
                               {
-                                url: normalizeImageSrc(selectedProduct.imageUrl),
+                                url: normalizeImageSrc(selectedProduct.image),
                                 alt: selectedProduct.name,
                               },
                             ]
