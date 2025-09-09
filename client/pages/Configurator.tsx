@@ -5615,7 +5615,8 @@ export default function Configurator() {
       const updated = [...formData.menuItems];
       const existing = updated[index] || {};
       const prevImages = Array.isArray(existing.images) ? existing.images : [];
-      updated[index] = { ...existing, images: [...prevImages, ...images] };
+      const newImages = [...prevImages, ...images];
+      updated[index] = { ...existing, images: newImages, image: newImages[0] };
       updateFormData("menuItems", updated);
     };
 
