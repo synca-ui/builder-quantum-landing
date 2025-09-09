@@ -302,7 +302,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                         <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {items.slice(0, 4).map((it: any, index: number) => (
                                 <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
-                                    <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                                    {(formData as any).homepageDishImageVisibility !== 'hidden' && <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />}
                                     <div className="text-[11px] font-semibold truncate">{it.name}</div>
                                     <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
                                 </button>

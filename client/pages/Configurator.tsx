@@ -2160,7 +2160,7 @@ export default function Configurator() {
                       onClick={() => openProductModal(item)}
                     >
                       <div className="hidden">{item.emoji || "🍽️"}</div>
-                      <img src={normalizeImageSrc(item.image)} alt={item.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                      {formData.homepageDishImageVisibility !== 'hidden' && <img src={normalizeImageSrc(item.image)} alt={item.name} className="w-full h-20 object-cover rounded-lg mb-2" />}
                       <h3
                         className={
                           templateStyles.itemName + " text-xs truncate"
