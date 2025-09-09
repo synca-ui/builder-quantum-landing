@@ -11,6 +11,7 @@ export interface Configuration {
   slogan?: string;
   uniqueDescription?: string;
   template: string;
+  homepageDishImageVisibility?: string;
   primaryColor: string;
   secondaryColor: string;
   fontFamily: string;
