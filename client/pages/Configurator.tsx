@@ -1878,7 +1878,7 @@ export default function Configurator() {
                         }
                       >
                         <img
-                          src={image.url}
+                          src={normalizeImageSrc(image)}
                           alt={image.alt}
                           className="w-full h-full object-cover"
                         />
@@ -2536,7 +2536,7 @@ export default function Configurator() {
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
                               <img
-                                src={img.url}
+                                src={normalizeImageSrc(img)}
                                 alt={img.alt || selectedProduct.name}
                                 className="w-full h-full object-cover"
                               />
@@ -2758,7 +2758,7 @@ export default function Configurator() {
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
                               <img
-                                src={img.url}
+                                src={normalizeImageSrc(img)}
                                 alt={img.alt || selectedProduct.name}
                                 className="w-full h-full object-cover"
                               />
@@ -3007,7 +3007,7 @@ export default function Configurator() {
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
                               <img
-                                src={img.url}
+                                src={normalizeImageSrc(img)}
                                 alt={img.alt || selectedProduct.name}
                                 className="w-full h-full object-cover"
                               />
@@ -3159,7 +3159,7 @@ export default function Configurator() {
                           <CarouselItem key={idx}>
                             <div className="aspect-[4/3] w-full bg-gray-100">
                               <img
-                                src={img.url}
+                                src={normalizeImageSrc(img)}
                                 alt={img.alt || selectedProduct.name}
                                 className="w-full h-full object-cover"
                               />
@@ -5972,7 +5972,7 @@ export default function Configurator() {
                     className="aspect-square bg-gray-100 rounded overflow-hidden"
                   >
                     <img
-                      src={im.url}
+                      src={normalizeImageSrc(im)}
                       alt={im.alt}
                       className="w-full h-full object-cover"
                     />
@@ -6005,7 +6005,7 @@ export default function Configurator() {
                             className="aspect-square bg-gray-100 rounded overflow-hidden"
                           >
                             <img
-                              src={im.url}
+                              src={normalizeImageSrc(im)}
                               alt={im.alt}
                               className="w-full h-full object-cover"
                             />
@@ -6583,7 +6583,7 @@ export default function Configurator() {
                 <div key={index} className="relative group">
                   <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                     <img
-                      src={image.url}
+                      src={normalizeImageSrc(image)}
                       alt={image.alt}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
