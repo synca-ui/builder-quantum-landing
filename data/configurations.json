@@ -2,123 +2,41 @@
   {
     "id": "new",
     "userId": "user_mf6jq6trx6wwyvkof2",
-    "businessName": "Bella",
-    "businessType": "cafe",
+    "businessName": "",
+    "businessType": "",
     "location": "",
     "slogan": "",
     "uniqueDescription": "",
-    "template": "modern",
-    "primaryColor": "#059669",
-    "secondaryColor": "#10B981",
+    "template": "",
+    "primaryColor": "#2563EB",
+    "secondaryColor": "#7C3AED",
     "fontFamily": "sans-serif",
     "selectedPages": [
-      "home",
-      "menu",
-      "gallery",
-      "about",
-      "contact"
+      "home"
     ],
     "customPages": [],
-    "openingHours": {
-      "Monday": {
-        "open": "09:00",
-        "close": "17:00",
-        "closed": false
-      },
-      "Tuesday": {
-        "open": "09:00",
-        "close": "17:00",
-        "closed": false
-      },
-      "Wednesday": {
-        "open": "09:00",
-        "close": "17:00",
-        "closed": false
-      },
-      "Thursday": {
-        "open": "09:00",
-        "close": "17:00",
-        "closed": false
-      },
-      "Friday": {
-        "open": "09:00",
-        "close": "17:00",
-        "closed": false
-      },
-      "Saturday": {
-        "open": "10:00",
-        "close": "16:00",
-        "closed": true
-      },
-      "Sunday": {
-        "open": "10:00",
-        "close": "16:00",
-        "closed": true
-      }
-    },
-    "menuItems": [
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.99"
-      },
-      {
-        "name": "coffee",
-        "description": "hot",
-        "price": "2.99"
-      },
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.79"
-      },
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.99"
-      },
-      {
-        "name": "cappucino",
-        "description": "hot",
-        "price": "2.89"
-      }
-    ],
+    "openingHours": {},
+    "menuItems": [],
     "reservationsEnabled": false,
     "maxGuests": 10,
     "notificationMethod": "email",
     "contactMethods": [],
     "socialMedia": {},
-    "gallery": [
-      {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/10d01ead-0002-4a6b-8018-6e81409aaf43",
-        "alt": "kaffeetasse-vektor-logo-design-vorlage-premium-cafe-logo_720103-917.jpg.avif",
-        "file": {}
-      },
-      {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/16ef3603-06fd-4ebd-b39c-792a9cb67f67",
-        "alt": "Bild1.png.jpeg",
-        "file": {}
-      },
-      {
-        "url": "blob:https://793709f3d40d4c6b88a12e7ab07ec621-9bfc4dd3bd3a4e3cb3e5e6af8.fly.dev/54603a88-3343-46f8-a33c-882c298fb2df",
-        "alt": "Bild.png.jpeg",
-        "file": {}
-      }
-    ],
+    "gallery": [],
     "onlineOrdering": false,
     "onlineStore": false,
     "teamArea": false,
     "hasDomain": false,
     "domainName": "",
     "selectedDomain": "",
-    "createdAt": "2025-09-05T09:35:55.139Z",
-    "updatedAt": "2025-09-05T09:35:55.140Z",
+    "createdAt": "2025-09-09T13:25:21.595Z",
+    "updatedAt": "2025-09-09T13:25:21.596Z",
     "status": "published",
     "logo": null,
     "fontColor": "#000000",
     "fontSize": "medium",
-    "backgroundType": "gradient",
-    "backgroundColor": "#059669",
+    "backgroundType": "color",
+    "backgroundColor": "#FFFFFF",
     "backgroundImage": null,
     "openingHoursTextColor": "#0F172A",
     "language": "en",
@@ -172,14 +90,8 @@
     "seoApiOptimization": false,
     "seoApiCost": 29.99,
     "showOptionalFields": false,
-    "templateThemes": {
-      "modern": {
-        "primary": "#059669",
-        "secondary": "#10B981"
-      }
-    },
-    "slug": "bella-new",
-    "publishedUrl": "https://bella-new.synca.digital",
-    "previewUrl": "https://synca.digital/site/bella-new"
+    "slug": "site-new",
+    "publishedUrl": "https://site-new.synca.digital",
+    "previewUrl": "https://synca.digital/site/site-new"
   }
 ]
