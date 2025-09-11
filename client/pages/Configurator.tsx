@@ -2519,6 +2519,7 @@ export default function Configurator() {
             className={`h-full overflow-y-auto ${fontClass} relative`}
             style={{ backgroundColor: formData.backgroundColor || "#FFFFFF" }}
           >
+            <CheckoutFlow />
             {/* Status Bar - Space for notch */}
             <div className="h-8 bg-white">
               {/* Empty space for Apple notch */}
@@ -2715,6 +2716,7 @@ export default function Configurator() {
               background: `linear-gradient(135deg, ${styles.userSecondary || formData.secondaryColor || "#38bdf8"} 0%, ${styles.userPrimary || formData.primaryColor || "#2563eb"} 50%, ${styles.userSecondary || formData.secondaryColor || "#1e40af"} 100%)`,
             }}
           >
+            <CheckoutFlow />
             {/* Status Bar - Space for notch */}
             <div className="h-8 bg-white/10">
               {/* Empty space for Apple notch */}
@@ -2938,6 +2940,7 @@ export default function Configurator() {
                   : styles.userBackground || "#ffffff",
             }}
           >
+            <CheckoutFlow />
             {/* Status Bar - Space for notch */}
             <div
               className="h-8"
@@ -3179,6 +3182,7 @@ export default function Configurator() {
           <div
             className={`h-full overflow-y-auto bg-orange-50 ${fontClass} relative`}
           >
+            <CheckoutFlow />
             {/* Status Bar with Notch Space */}
             <div className="h-8 bg-amber-100" />
 
