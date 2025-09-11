@@ -2562,6 +2562,7 @@ const TemplatePreviewContent = () => {
             style={{ backgroundColor: formData.backgroundColor || "#FFFFFF" }}
           >
             <CheckoutFlow />
+            <StampCardBar />
             {/* Status Bar - Space for notch */}
             <div className="h-8 bg-white">
               {/* Empty space for Apple notch */}
@@ -2759,6 +2760,7 @@ const TemplatePreviewContent = () => {
             }}
           >
             <CheckoutFlow />
+            <StampCardBar />
             {/* Status Bar - Space for notch */}
             <div className="h-8 bg-white/10">
               {/* Empty space for Apple notch */}
@@ -2983,6 +2985,7 @@ const TemplatePreviewContent = () => {
             }}
           >
             <CheckoutFlow />
+            <StampCardBar />
             {/* Status Bar - Space for notch */}
             <div
               className="h-8"
@@ -3225,6 +3228,7 @@ const TemplatePreviewContent = () => {
             className={`h-full overflow-y-auto bg-orange-50 ${fontClass} relative`}
           >
             <CheckoutFlow />
+            <StampCardBar />
             {/* Status Bar with Notch Space */}
             <div className="h-8 bg-amber-100" />
 
