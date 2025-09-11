@@ -1601,11 +1601,12 @@ const TemplatePreviewContent = () => {
     const menuPages = useMemo(() => {
       const set = new Set<string>([
         "home",
-        ...formData.selectedPages,
+        ...(formData.selectedPages || []),
+        ...(formData.offerPageEnabled ? ["offers"] : []),
         "settings",
       ]);
       return Array.from(set);
-    }, [formData.selectedPages]);
+    }, [formData.selectedPages, formData.offerPageEnabled]);
 
     // Template-aware page rendering
     // Product modal state
