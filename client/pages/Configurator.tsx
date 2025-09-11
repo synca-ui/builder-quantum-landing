@@ -2309,6 +2309,8 @@ const TemplatePreviewContent = () => {
                 </div>
               )}
 
+              <LoyaltyCardInline />
+
               {/* Small Opening Hours at Bottom (click to expand) */}
               {formData.openingHours &&
                 Object.keys(formData.openingHours).length > 0 && (
@@ -2484,6 +2486,40 @@ const TemplatePreviewContent = () => {
       );
     }
 
+    const LoyaltyCardInline = () => {
+      if (!formData.loyaltyEnabled) return null;
+      const target = formData.loyaltyConfig?.stampsForReward || 10;
+      const deviceId = getDeviceId();
+      const [have, setHave] = useState(() => {
+        const saved = localStorage.getItem(`stamps_${deviceId}`);
+        return saved ? parseInt(saved, 10) : 0;
+      });
+      useEffect(() => {
+        const handler = () => {
+          const saved = localStorage.getItem(`stamps_${deviceId}`);
+          setHave(saved ? parseInt(saved, 10) : 0);
+        };
+        const interval = setInterval(handler, 500);
+        window.addEventListener('storage', handler);
+        return () => {
+          clearInterval(interval);
+          window.removeEventListener('storage', handler);
+        };
+      }, [deviceId]);
+      const pct = Math.min(100, (have / target) * 100);
+      return (
+        <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold">Loyalty Card</div>
+            <div className="text-xs font-semibold">{have} / {target}</div>
+          </div>
+          <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+            <div className="h-2 rounded-full" style={{ width: `${pct}%`, backgroundColor: styles.userPrimary }} />
+          </div>
+        </div>
+      );
+    };
+
     const CheckoutFlow = () => {
       if (!formData.onlineOrdering) return null;
 
@@ -2646,7 +2682,7 @@ const TemplatePreviewContent = () => {
             style={{ backgroundColor: formData.backgroundColor || "#FFFFFF" }}
           >
             <CheckoutFlow />
-            <StampCardBar />
+
             {/* Status Bar - Space for notch */}
             <div className="h-8 bg-white">
               {/* Empty space for Apple notch */}
@@ -2844,7 +2880,7 @@ const TemplatePreviewContent = () => {
             }}
           >
             <CheckoutFlow />
-            <StampCardBar />
+
             {/* Status Bar - Space for notch */}
             <div className="h-8 bg-white/10">
               {/* Empty space for Apple notch */}
@@ -3069,7 +3105,7 @@ const TemplatePreviewContent = () => {
             }}
           >
             <CheckoutFlow />
-            <StampCardBar />
+
             {/* Status Bar - Space for notch */}
             <div
               className="h-8"
@@ -3312,7 +3348,7 @@ const TemplatePreviewContent = () => {
             className={`h-full overflow-y-auto bg-orange-50 ${fontClass} relative`}
           >
             <CheckoutFlow />
-            <StampCardBar />
+
             {/* Status Bar with Notch Space */}
             <div className="h-8 bg-amber-100" />
 
