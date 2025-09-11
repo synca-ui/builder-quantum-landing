@@ -1173,7 +1173,7 @@ export default function Configurator() {
     );
 }
 
-const OffersBanner = ({ offers, styles }) => {
+const OffersBanner = ({ offers, styles, offerBanner }) => {
     if (!offers || offers.length === 0) return null;
 
     const normalizeImageSrc = (img: any): string => {
@@ -1189,14 +1189,24 @@ const OffersBanner = ({ offers, styles }) => {
     // For now, just display the first offer
     const offer = offers[0];
 
+    const bannerStyles = {
+        backgroundColor: offerBanner?.backgroundColor || '#000000',
+        color: offerBanner?.textColor || '#FFFFFF',
+    };
+
+    const buttonStyles = {
+        backgroundColor: offerBanner?.buttonColor || '#FFFFFF',
+        color: offerBanner?.backgroundColor || '#000000',
+    }
+
     return (
-        <div className="relative bg-gray-900 text-white mb-4">
+        <div className="relative text-white mb-4" style={bannerStyles}>
             {offer.image && <img src={normalizeImageSrc(offer.image)} alt={offer.name} className="w-full h-48 object-cover opacity-50" />}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                <h3 className="font-bold text-2xl" style={{ color: styles.userPrimary }}>{offer.name}</h3>
+                <h3 className="font-bold text-2xl">{offer.name}</h3>
                 <p className="text-lg">{offer.description}</p>
                 <p className="font-bold text-xl mt-2">${offer.price}</p>
-                <Button className="mt-4 bg-white text-black hover:bg-gray-200">View Offer</Button>
+                <Button className="mt-4" style={buttonStyles}>View Offer</Button>
             </div>
         </div>
     );
