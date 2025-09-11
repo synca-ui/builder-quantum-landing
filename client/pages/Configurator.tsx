@@ -5844,7 +5844,7 @@ const TemplatePreviewContent = () => {
     );
   };
 
-  const OffersStep = () => {
+  const OffersStep = ({ onBack, onContinue, isModal }: { onBack?: () => void; onContinue?: () => void; isModal?: boolean }) => {
     const [newOffer, setNewOffer] = useState({
       name: "",
       description: "",
