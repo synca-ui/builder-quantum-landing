@@ -7060,6 +7060,7 @@ const MenuProductsStep = () => {
   // Advanced Features Step (Step 10)
   const AdvancedFeaturesStep = () => {
     const [activeFeature, setActiveFeature] = useState<string | null>(null);
+    const [offersModalOpen, setOffersModalOpen] = useState(false);
     const features = [
       {
         id: "onlineOrdering",
