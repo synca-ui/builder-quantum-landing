@@ -1178,29 +1178,40 @@ const OffersBanner = ({ offers, styles, offerBanner }) => {
       return "/placeholder.svg";
     };
 
-    // For now, just display the first offer
     const offer = offers[0];
 
+    const size = offerBanner?.size === 'small' ? 'small' : 'big';
+    const heightClass = size === 'small' ? 'h-32' : 'h-56';
+    const radiusClass = offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-xl';
+
     const bannerStyles = {
-        backgroundColor: offerBanner?.backgroundColor || '#000000',
-        color: offerBanner?.textColor || '#FFFFFF',
-    };
+      backgroundColor: offerBanner?.backgroundColor || '#000000',
+      color: offerBanner?.textColor || '#FFFFFF',
+    } as React.CSSProperties;
 
     const buttonStyles = {
-        backgroundColor: offerBanner?.buttonColor || '#FFFFFF',
-        color: offerBanner?.backgroundColor || '#000000',
-    }
+      backgroundColor: offerBanner?.buttonColor || '#FFFFFF',
+      color: offerBanner?.backgroundColor || '#000000',
+    } as React.CSSProperties;
+
+    const buttonRadius = offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-lg';
 
     return (
-        <div className="relative text-white mb-4" style={bannerStyles}>
-            {offer.image && <img src={normalizeImageSrc(offer.image)} alt={offer.name} className="w-full h-48 object-cover opacity-50" />}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                <h3 className="font-bold text-2xl">{offer.name}</h3>
-                <p className="text-lg">{offer.description}</p>
-                <p className="font-bold text-xl mt-2">${offer.price}</p>
-                <Button className="mt-4" style={buttonStyles}>View Offer</Button>
-            </div>
+      <div className={`relative text-white mb-4 overflow-hidden ${radiusClass}`} style={bannerStyles}>
+        {offer.image && (
+          <img
+            src={normalizeImageSrc(offer.image)}
+            alt={offer.name}
+            className={`w-full ${heightClass} object-cover opacity-50`}
+          />
+        )}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+          <h3 className="font-bold text-2xl">{offer.name}</h3>
+          {offer.description && <p className="text-lg">{offer.description}</p>}
+          {offer.price && <p className="font-bold text-xl mt-2">${offer.price}</p>}
+          <Button className={`mt-4 ${buttonRadius}`} style={buttonStyles}>View Offer</Button>
         </div>
+      </div>
     );
 }
 
