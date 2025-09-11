@@ -2143,31 +2143,7 @@ const TemplatePreviewContent = () => {
         default: // home
           return (
             <div className={templateStyles.page}>
-              {formData.loyaltyEnabled && (
-                <div className="mb-3">
-                  <div className="text-xs mb-1">Loyalty</div>
-                  {(() => {
-                    const target =
-                      formData.loyaltyConfig?.stampsForReward || 10;
-                    const have =
-                      cartItems.reduce((t, i) => t + i.quantity, 0) % target;
-                    const pct = (have / target) * 100;
-                    return (
-                      <div>
-                        <div className="h-2 bg-gray-200 rounded">
-                          <div
-                            className="h-2 bg-teal-500 rounded"
-                            style={{ width: `${pct}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-[11px] mt-1">
-                          {have}/{target} stamps
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
+              {/* Loyalty bar is now at the bottom */}
               {formData.showHomeHero && (
                 <div className="text-center mb-4">
                   <div className={templateStyles.aboutLogo + " mb-2"}>
