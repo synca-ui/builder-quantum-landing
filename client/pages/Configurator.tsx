@@ -2373,64 +2373,95 @@ export default function Configurator() {
     };
 
     const CartSidebar = () => {
-      if (!formData.onlineOrdering || !previewState.showCartSidebar)
+      if (!formData.onlineOrdering || !showCart)
         return null;
+
       const subtotal = cartItems.reduce(
         (t, it) => t + parseFloat(it.price) * it.quantity,
         0,
       );
       const fees = 0;
       const total = subtotal + fees;
+
       return (
-        <div className="absolute top-0 right-0 h-full w-64 bg-white/95 backdrop-blur border-l border-gray-200 z-[40] flex flex-col">
-          <div className="p-4 border-b">
-            <h3 className="text-sm font-semibold">Cart</h3>
-            <p className="text-xs text-gray-500">
-              {cartItemsCount} item{cartItemsCount !== 1 ? "s" : ""}
-            </p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {cartItems.length === 0 ? (
-              <div className="text-xs text-gray-500">Your cart is empty</div>
-            ) : (
-              cartItems.map((it, i) => (
-                <div key={i} className="border rounded-md p-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium truncate mr-2">{it.name}</div>
-                    <div className="text-gray-600">
-                      ${(parseFloat(it.price) * it.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-gray-500">
-                    Qty: {it.quantity} × ${parseFloat(it.price).toFixed(2)}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="p-4 border-t space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium">${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Fees</span>
-              <span className="font-medium">${fees.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between text-base pt-1 border-t">
-              <span className="font-semibold">Total</span>
-              <span className="font-semibold">${total.toFixed(2)}</span>
-            </div>
-            <Button
-              className="w-full bg-teal-600 hover:bg-teal-700 mt-2"
-              onClick={() =>
-                setPreviewState((p) => ({ ...p, orderStage: "payment" }))
-              }
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowCart(false)}
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-2xl shadow-xl w-full max-w-sm flex flex-col max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
             >
-              Checkout
-            </Button>
-          </div>
-        </div>
+                <div className="p-4 border-b flex justify-between items-center">
+                    <div>
+                        <h3 className="text-lg font-semibold">Cart</h3>
+                        <p className="text-sm text-gray-500">
+                            {cartItemsCount} item{cartItemsCount !== 1 ? "s" : ""}
+                        </p>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => setShowCart(false)}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {cartItems.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8">
+                        <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-4 text-lg font-medium">Your cart is empty</p>
+                        <p className="text-sm text-gray-500">Add items to get started</p>
+                    </div>
+                    ) : (
+                    cartItems.map((it, i) => (
+                        <div key={i} className="flex items-center gap-4">
+                            <img src={normalizeImageSrc(it.image)} alt={it.name} className="w-16 h-16 rounded-lg object-cover" />
+                            <div className="flex-1">
+                                <div className="font-medium">{it.name}</div>
+                                <div className="text-sm text-gray-500">
+                                    Qty: {it.quantity}
+                                </div>
+                            </div>
+                            <div className="font-semibold">
+                                ${(parseFloat(it.price) * it.quantity).toFixed(2)}
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => removeFromCart(it.name)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))
+                    )}
+                </div>
+                {cartItems.length > 0 && (
+                    <div className="p-4 border-t space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-medium">${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Fees</span>
+                        <span className="font-medium">${fees.toFixed(2)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-base pt-1 border-t">
+                        <span className="font-semibold">Total</span>
+                        <span className="font-semibold">${total.toFixed(2)}</span>
+                        </div>
+                        <Button
+                        className="w-full bg-teal-600 hover:bg-teal-700 mt-2"
+                        onClick={() =>
+                            setPreviewState((p) => ({ ...p, orderStage: "payment" }))
+                        }
+                        >
+                        Checkout
+                        </Button>
+                    </div>
+                )}
+            </motion.div>
+        </motion.div>
       );
     };
 
