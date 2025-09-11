@@ -9081,6 +9081,8 @@ const MenuProductsStep = () => {
         return <OpeningHoursStep />;
       case "menu-products":
         return <MenuProductsStep />;
+      case "offers":
+        return <OffersStep />;
       case "reservations":
         return <ReservationsStep />;
       case "contact-social":
