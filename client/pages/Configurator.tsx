@@ -322,14 +322,6 @@ export default function Configurator() {
       phaseTitle: "Business Details",
       component: "menu-products",
     },
-    {
-      id: "offers",
-      title: "Create Offers",
-      description: "Create special offers and promotions",
-      phase: 4,
-      phaseTitle: "Business Details",
-      component: "offers",
-    },
 
     // Step 6: Reservations
     {
