@@ -1387,7 +1387,7 @@ const TemplatePreviewContent = () => {
             name: "Salad",
             description: "Mixed greens",
             price: "6.50",
-            emoji: "��",
+            emoji: "���",
           },
         ],
         tagline: "Simple. Fresh. Good.",
@@ -5874,6 +5874,21 @@ const TemplatePreviewContent = () => {
               <div className="flex gap-2">
                 <Button variant={(formData.offerBanner?.shape || 'rounded') === 'rounded' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), shape: 'rounded'})}>Rounded</Button>
                 <Button variant={(formData.offerBanner?.shape || 'rounded') === 'pill' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), shape: 'pill'})}>Pill</Button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Card Aspect</label>
+              <div className="flex gap-2">
+                <Button variant={(formData.offerBanner?.cardAspect || 'rectangle') === 'rectangle' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), cardAspect: 'rectangle'})}>Rectangle</Button>
+                <Button variant={(formData.offerBanner?.cardAspect || 'rectangle') === 'square' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), cardAspect: 'square'})}>Square</Button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Text Size</label>
+              <div className="flex gap-2">
+                <Button variant={(formData.offerBanner?.textSize || 'md') === 'sm' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), textSize: 'sm'})}>Small</Button>
+                <Button variant={(formData.offerBanner?.textSize || 'md') === 'md' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), textSize: 'md'})}>Medium</Button>
+                <Button variant={(formData.offerBanner?.textSize || 'md') === 'lg' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), textSize: 'lg'})}>Large</Button>
               </div>
             </div>
           </div>
