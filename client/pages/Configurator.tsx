@@ -1207,7 +1207,7 @@ const OffersBanner = ({ offers, styles, offerBanner }) => {
           <img
             src={normalizeImageSrc(offer.image)}
             alt={offer.name}
-            className={`${cardAspect === 'square' ? 'aspect-square' : (size === 'small' ? 'h-32' : 'h-56')} w-full object-cover opacity-50`}
+            className={`${cardAspect === 'square' ? 'aspect-square' : (size === 'small' ? 'h-24' : 'h-40')} w-full object-cover opacity-50`}
           />
         )}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
