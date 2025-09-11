@@ -2567,7 +2567,7 @@ const TemplatePreviewContent = () => {
                   ))}
                 </div>
               </div>
-              <Button variant="link" onClick={() => setPreviewState(p => ({...p, orderStage: 'select'}))}>Back to cart</Button>
+              <Button variant="link" onClick={() => { setPreviewState(p => ({...p, orderStage: 'select'})); setShowCart(true); }}>Back to cart</Button>
             </div>
           );
         case 'done':
@@ -2673,9 +2673,7 @@ const TemplatePreviewContent = () => {
                         </div>
                         <Button
                         className="w-full bg-teal-600 hover:bg-teal-700 mt-1"
-                        onClick={() =>
-                            setPreviewState((p) => ({ ...p, orderStage: "payment" }))
-                        }
+                        onClick={() => { setPreviewState((p) => ({ ...p, orderStage: "payment" })); setShowCart(false); }}
                         >
                         Checkout
                         </Button>
@@ -4236,7 +4234,7 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back to Welcome
           </Button>
@@ -4396,7 +4394,7 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -5267,7 +5265,7 @@ const TemplatePreviewContent = () => {
       </div>
 
       <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
+        <Button type="button" onClick={prevStep} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
           Back
         </Button>
@@ -5422,7 +5420,7 @@ const TemplatePreviewContent = () => {
       )}
 
       <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
+        <Button type="button" onClick={prevStep} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
           Back
         </Button>
@@ -5740,7 +5738,7 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Zurück
           </Button>
@@ -6406,7 +6404,7 @@ const MenuProductsStep = () => {
         )}
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -6664,7 +6662,7 @@ const MenuProductsStep = () => {
       </div>
 
       <div className="flex justify-between mt-8">
-        <Button onClick={prevStep} variant="outline" size="lg">
+        <Button type="button" onClick={prevStep} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
           Back
         </Button>
@@ -6833,7 +6831,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -6953,7 +6951,7 @@ const MenuProductsStep = () => {
         )}
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -7653,7 +7651,7 @@ const MenuProductsStep = () => {
         {renderFeatureConfig()}
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8372,7 +8370,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8650,7 +8648,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8829,7 +8827,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -9031,7 +9029,7 @@ const MenuProductsStep = () => {
 
         {!isPublished && (
           <div className="flex justify-between mt-8">
-            <Button onClick={prevStep} variant="outline" size="lg">
+            <Button type="button" onClick={prevStep} variant="outline" size="lg">
               <ArrowLeft className="mr-2 w-5 h-5" />
               Back
             </Button>
@@ -9109,7 +9107,7 @@ const MenuProductsStep = () => {
               Step component '{currentStepConfig.component}' is coming soon...
             </p>
             <div className="flex justify-between max-w-lg mx-auto">
-              <Button onClick={prevStep} variant="outline" size="lg">
+              <Button type="button" onClick={prevStep} variant="outline" size="lg">
                 <ArrowLeft className="mr-2 w-5 h-5" />
                 Back
               </Button>
