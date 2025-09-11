@@ -7604,16 +7604,7 @@ const MenuProductsStep = () => {
               <Card
                 key={feature.id}
                 className={`cursor-pointer transition-all duration-300 border-2 ${isEnabled ? "border-teal-500 bg-teal-50" : "border-gray-200 hover:border-teal-300"}`}
-                onClick={() => {
-                  if (feature.id === "offersEnabled") {
-                    if (!isEnabled) updateFormData("offersEnabled", true);
-                    const url = new URL(window.location.origin + "/configurator");
-                    url.searchParams.set("feature", "offers");
-                    window.open(url.toString(), "_blank");
-                  } else {
-                    handleFeatureClick(feature.id, isEnabled);
-                  }
-                }}
+                onClick={() => handleFeatureClick(feature.id, isEnabled)}
               >
                 <CardContent className="p-6 text-center">
                   <div
