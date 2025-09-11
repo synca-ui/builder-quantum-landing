@@ -2673,7 +2673,10 @@ const TemplatePreviewContent = () => {
                         </div>
                         <Button
                         className="w-full bg-teal-600 hover:bg-teal-700 mt-1"
-                        onClick={() => { setPreviewState((p) => ({ ...p, orderStage: "payment" })); setShowCart(false); }}
+                        onClick={() => {
+                          setShowCart(false);
+                          setTimeout(() => setPreviewState((p) => ({ ...p, orderStage: "payment" })), 150);
+                        }}
                         >
                         Checkout
                         </Button>
