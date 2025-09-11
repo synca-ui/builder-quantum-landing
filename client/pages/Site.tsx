@@ -212,6 +212,25 @@ const FALLBACK_CONFIG: Configuration = {
 };
 
 // This is the main component that renders the site, now unified with the preview logic.
+const OffersBanner = ({ offers, styles, normalizeUrl }) => {
+    if (!offers || offers.length === 0) return null;
+
+    // For now, just display the first offer
+    const offer = offers[0];
+
+    return (
+        <div className="relative bg-gray-900 text-white mb-4">
+            {offer.image && <img src={normalizeUrl(offer.image)} alt={offer.name} className="w-full h-48 object-cover opacity-50" />}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                <h3 className="font-bold text-2xl" style={{ color: styles.userPrimary }}>{offer.name}</h3>
+                <p className="text-lg">{offer.description}</p>
+                <p className="font-bold text-xl mt-2">${offer.price}</p>
+                <button className="mt-4 bg-white text-black hover:bg-gray-200 px-4 py-2 rounded-lg">View Offer</button>
+            </div>
+        </div>
+    );
+}
+
 function SiteRenderer({ config: formData }: { config: Configuration }) {
     const location = useLocation();
     const segs = location.pathname.split("/").filter(Boolean);
