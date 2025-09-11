@@ -37,6 +37,7 @@ export interface Configuration {
   publishedUrl?: string;
   previewUrl?: string;
   paymentOptions?: string[];
+  offers?: any[];
 }
 
 export interface ApiResponse<T> {
