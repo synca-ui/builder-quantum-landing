@@ -36,6 +36,7 @@ export interface Configuration {
   status?: "draft" | "published" | "archived";
   publishedUrl?: string;
   previewUrl?: string;
+  paymentOptions?: string[];
 }
 
 export interface ApiResponse<T> {
