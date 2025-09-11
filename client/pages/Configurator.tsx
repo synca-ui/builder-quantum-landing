@@ -2287,6 +2287,10 @@ const TemplatePreviewContent = () => {
                   ))}
               </div>
 
+              {formData.offerBanner?.position === 'bottom' && (
+                <OffersBanner offers={formData.offers} styles={styles} offerBanner={formData.offerBanner} />
+              )}
+
               {/* Reservation Button */}
               {formData.reservationsEnabled && (
                 <div className="text-center mt-4">
