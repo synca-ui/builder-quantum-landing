@@ -5868,6 +5868,24 @@ const TemplatePreviewContent = () => {
           </div>
         </div>
 
+        <div className="bg-white p-8 rounded-2xl shadow-lg border mt-8">
+          <h3 className="text-xl font-bold mb-6">Customize Offer Banner</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
+                  <Input type="color" value={formData.offerBanner?.backgroundColor || '#000000'} onChange={(e) => updateFormData('offerBanner', {...(formData.offerBanner || {}), backgroundColor: e.target.value})} />
+              </div>
+              <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
+                  <Input type="color" value={formData.offerBanner?.textColor || '#FFFFFF'} onChange={(e) => updateFormData('offerBanner', {...(formData.offerBanner || {}), textColor: e.target.value})} />
+              </div>
+              <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Button Color</label>
+                  <Input type="color" value={formData.offerBanner?.buttonColor || '#FFFFFF'} onChange={(e) => updateFormData('offerBanner', {...(formData.offerBanner || {}), buttonColor: e.target.value})} />
+              </div>
+          </div>
+        </div>
+
         <div>
           <h3 className="text-xl font-bold mb-6">Your Offers</h3>
           <div className="space-y-4">
