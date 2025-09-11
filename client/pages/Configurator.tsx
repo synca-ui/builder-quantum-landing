@@ -1170,16 +1170,29 @@ const OffersBanner = ({ offers, styles, offerBanner }) => {
       return "/placeholder.svg";
     };
 
-    const offer = offers[0];
+    const list = Array.isArray(offers) ? offers : [];
+    const [idx, setIdx] = useState(0);
+    useEffect(() => {
+      if (list.length <= 1) return;
+      const t = setInterval(() => setIdx((i) => (i + 1) % list.length), 3000);
+      return () => clearInterval(t);
+    }, [list.length]);
+
+    const offer = list[Math.max(0, Math.min(idx, list.length - 1))];
 
     const size = offerBanner?.size === 'small' ? 'small' : 'big';
-    const heightClass = size === 'small' ? 'h-32' : 'h-56';
+    const cardAspect = offerBanner?.cardAspect === 'square' ? 'square' : 'rectangle';
     const radiusClass = offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-xl';
 
     const bannerStyles = {
       backgroundColor: offerBanner?.backgroundColor || '#000000',
       color: offerBanner?.textColor || '#FFFFFF',
     };
+
+    const textSize = offerBanner?.textSize || 'md';
+    const nameCls = textSize === 'sm' ? 'text-lg' : textSize === 'lg' ? 'text-3xl' : 'text-2xl';
+    const descCls = textSize === 'sm' ? 'text-xs' : textSize === 'lg' ? 'text-lg' : 'text-sm';
+    const priceCls = textSize === 'sm' ? 'text-base' : textSize === 'lg' ? 'text-2xl' : 'text-xl';
 
     const buttonStyles = {
       backgroundColor: offerBanner?.buttonColor || '#FFFFFF',
@@ -1194,14 +1207,13 @@ const OffersBanner = ({ offers, styles, offerBanner }) => {
           <img
             src={normalizeImageSrc(offer.image)}
             alt={offer.name}
-            className={`w-full ${heightClass} object-cover opacity-50`}
+            className={`${cardAspect === 'square' ? 'aspect-square' : (size === 'small' ? 'h-32' : 'h-56')} w-full object-cover opacity-50`}
           />
         )}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-          <h3 className="font-bold text-2xl">{offer.name}</h3>
-          {offer.description && <p className="text-lg">{offer.description}</p>}
-          {offer.price && <p className="font-bold text-xl mt-2">${offer.price}</p>}
-          <Button className={`mt-4 ${buttonRadius}`} style={buttonStyles}>View Offer</Button>
+          <h3 className={`font-bold ${nameCls}`}>{offer.name}</h3>
+          {offer.description && <p className={`${descCls}`}>{offer.description}</p>}
+          {typeof offer.price !== 'undefined' && <p className={`font-bold mt-2 ${priceCls}`}>${offer.price}</p>}
         </div>
       </div>
     );
