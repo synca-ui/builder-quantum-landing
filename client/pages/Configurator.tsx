@@ -2407,6 +2407,29 @@ const TemplatePreviewContent = () => {
       );
     };
 
+    const StampCardBar = () => {
+      if (!formData.loyaltyEnabled) return null;
+
+      const target = formData.loyaltyConfig?.stampsForReward || 10;
+      const have = cartItems.reduce((t, i) => t + i.quantity, 0) % target;
+      const pct = (have / target) * 100;
+
+      return (
+          <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-lg z-50">
+              <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold">Loyalty Card</h3>
+                  <span className="text-sm font-semibold">{have} / {target}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                      className="bg-teal-500 h-2.5 rounded-full"
+                      style={{ width: `${pct}%` }}
+                  ></div>
+              </div>
+          </div>
+      );
+    }
+
     const CheckoutFlow = () => {
       if (!formData.onlineOrdering) return null;
 
