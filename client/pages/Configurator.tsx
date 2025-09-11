@@ -2452,6 +2452,12 @@ const TemplatePreviewContent = () => {
               <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
               <p className="text-gray-600 mb-8">Your order has been placed.</p>
               <Button onClick={() => {
+                const deviceId = getDeviceId();
+                const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
+                const currentStamps = savedStamps ? parseInt(savedStamps, 10) : 0;
+                const newStamps = (currentStamps + cartItems.reduce((t, i) => t + i.quantity, 0)) % (formData.loyaltyConfig?.stampsForReward || 10);
+                localStorage.setItem(`stamps_${deviceId}`, newStamps.toString());
+
                 setPreviewState(p => ({...p, orderStage: 'select'}));
                 setCartItems([]);
               }}>Back to Menu</Button>
