@@ -323,7 +323,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
             case "home":
                 return (
                     <section className="pb-24">
-                        <OffersBanner offers={(formData as any).offers} styles={styles} normalizeUrl={normalizeUrl} />
+                        <OffersBanner offers={(formData as any).offers} styles={styles} normalizeUrl={normalizeUrl} offerBanner={(formData as any).offerBanner} />
                         <div className="px-6 pt-6">
                             <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40 overflow-hidden">
                                 <LogoDisplay />
