@@ -2231,9 +2231,6 @@ const TemplatePreviewContent = () => {
         default: // home
           return (
             <div className={templateStyles.page}>
-              {formData.offerBanner?.position !== 'bottom' && (
-                <OffersBanner offers={formData.offers} styles={styles} offerBanner={formData.offerBanner} />
-              )}
               {/* Loyalty bar is now at the bottom */}
               {formData.showHomeHero && (
                 <div className="text-center mb-4">
@@ -2247,6 +2244,10 @@ const TemplatePreviewContent = () => {
                     {formData.slogan || currentContent.tagline}
                   </p>
                 </div>
+              )}
+
+              {(formData.offers || []).length > 0 && (
+                <OffersBanner offers={formData.offers} styles={styles} offerBanner={formData.offerBanner} />
               )}
 
               <div className={`mb-4 grid grid-cols-2 gap-2`}>
@@ -2291,10 +2292,6 @@ const TemplatePreviewContent = () => {
                     </div>
                   ))}
               </div>
-
-              {formData.offerBanner?.position === 'bottom' && (
-                <OffersBanner offers={formData.offers} styles={styles} offerBanner={formData.offerBanner} />
-              )}
 
               {/* Reservation Button */}
               {formData.reservationsEnabled && (
