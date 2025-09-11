@@ -1137,7 +1137,34 @@ export default function Configurator() {
   );
 
   // Modern App-Style Template Preview
-  const TemplatePreviewContent = () => {
+  const PaymentOptionsStep = () => {
+    const paymentOptions = ["Credit Card", "PayPal", "Cash"];
+    return (
+        <motion.div key="payment-options" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+            <div className="space-y-4">
+                {paymentOptions.map((option) => (
+                    <div key={option} className="flex items-center justify-between rounded-lg border bg-white p-4">
+                        <label htmlFor={`payment-${option}`} className="text-sm font-medium">
+                            {option}
+                        </label>
+                        <Switch
+                            id={`payment-${option}`}
+                            checked={formData.paymentOptions?.includes(option)}
+                            onCheckedChange={(checked) => {
+                                const newOptions = checked
+                                    ? [...(formData.paymentOptions || []), option]
+                                    : formData.paymentOptions?.filter((o) => o !== option);
+                                updateFormData("paymentOptions", newOptions);
+                            }}
+                        />
+                    </div>
+                ))}
+            </div>
+        </motion.div>
+    );
+}
+
+const TemplatePreviewContent = () => {
     const normalizeImageSrc = (img: any): string => {
       if (!img) return "/placeholder.svg";
       if (typeof img === 'string') return img;
