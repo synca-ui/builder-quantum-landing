@@ -2430,8 +2430,16 @@ const TemplatePreviewContent = () => {
 
                 <p className="text-lg font-semibold mt-8 mb-4">Payment Method</p>
                 <div className="space-y-4">
-                  <Button className="w-full" onClick={() => setPreviewState(p => ({...p, orderStage: 'done'}))}>Pay with Card</Button>
-                  <Button className="w-full" variant="outline" onClick={() => setPreviewState(p => ({...p, orderStage: 'done'}))}>Pay with PayPal</Button>
+                  {(formData.paymentOptions && formData.paymentOptions.length > 0 ? formData.paymentOptions : ['Credit Card']).map((option) => (
+                    <Button
+                      key={option}
+                      className="w-full"
+                      variant={option === 'Credit Card' ? 'default' : 'outline'}
+                      onClick={() => setPreviewState(p => ({...p, orderStage: 'done'}))}
+                    >
+                      Pay with {option}
+                    </Button>
+                  ))}
                 </div>
               </div>
               <Button variant="link" onClick={() => setPreviewState(p => ({...p, orderStage: 'select'}))}>Back to cart</Button>
