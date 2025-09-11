@@ -7748,6 +7748,15 @@ const MenuProductsStep = () => {
 
         {renderFeatureConfig()}
 
+        <Dialog open={offersModalOpen} onOpenChange={setOffersModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create Offers</DialogTitle>
+            </DialogHeader>
+            <OffersStep isModal onBack={() => setOffersModalOpen(false)} onContinue={() => setOffersModalOpen(false)} />
+          </DialogContent>
+        </Dialog>
+
         <div className="flex justify-between mt-8">
           <Button onClick={prevStep} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
