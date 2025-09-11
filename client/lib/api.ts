@@ -38,6 +38,7 @@ export interface Configuration {
   previewUrl?: string;
   paymentOptions?: string[];
   offers?: any[];
+  offerBanner?: any;
 }
 
 export interface ApiResponse<T> {
