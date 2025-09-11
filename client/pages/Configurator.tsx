@@ -5987,7 +5987,21 @@ const TemplatePreviewContent = () => {
             ))}
           </div>
         </div>
+      <div className="flex justify-between mt-8">
+        <Button onClick={() => (onBack ? onBack() : prevStep())} variant="outline" size="lg">
+          <ArrowLeft className="mr-2 w-5 h-5" />
+          Back
+        </Button>
+        <Button
+          onClick={() => (onContinue ? onContinue() : nextStep())}
+          size="lg"
+          className="bg-gradient-to-r from-teal-500 to-purple-500"
+        >
+          Continue
+          <ChevronRight className="ml-2 w-5 h-5" />
+        </Button>
       </div>
+    </div>
     );
 }
 
