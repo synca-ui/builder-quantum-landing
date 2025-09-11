@@ -54,6 +54,7 @@ const ConfigurationSchema = z
     previewUrl: z.string().optional(),
     paymentOptions: z.array(z.string()).default([]),
     offers: z.array(z.any()).default([]),
+    offerBanner: z.any().optional(),
   })
   .passthrough();
 
