@@ -2372,6 +2372,53 @@ export default function Configurator() {
       );
     };
 
+    const CheckoutFlow = () => {
+      if (!formData.onlineOrdering) return null;
+
+      switch (previewState.orderStage) {
+        case 'payment':
+          return (
+            <div className="absolute inset-0 bg-white z-50 p-4 flex flex-col">
+              <h2 className="text-2xl font-bold mb-4">Payment</h2>
+              <div className="flex-1 overflow-y-auto">
+                <p className="text-lg font-semibold mb-4">Order Summary</p>
+                {cartItems.map((it, i) => (
+                  <div key={i} className="flex justify-between items-center mb-2">
+                    <span>{it.name} (x{it.quantity})</span>
+                    <span>${(parseFloat(it.price) * it.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
+                  <span>Total</span>
+                  <span>${cartTotal.toFixed(2)}</span>
+                </div>
+
+                <p className="text-lg font-semibold mt-8 mb-4">Payment Method</p>
+                <div className="space-y-4">
+                  <Button className="w-full" onClick={() => setPreviewState(p => ({...p, orderStage: 'done'}))}>Pay with Card</Button>
+                  <Button className="w-full" variant="outline" onClick={() => setPreviewState(p => ({...p, orderStage: 'done'}))}>Pay with PayPal</Button>
+                </div>
+              </div>
+              <Button variant="link" onClick={() => setPreviewState(p => ({...p, orderStage: 'select'}))}>Back to cart</Button>
+            </div>
+          );
+        case 'done':
+          return (
+            <div className="absolute inset-0 bg-white z-50 p-4 flex flex-col items-center justify-center text-center">
+              <Check className="w-16 h-16 text-green-500 mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
+              <p className="text-gray-600 mb-8">Your order has been placed.</p>
+              <Button onClick={() => {
+                setPreviewState(p => ({...p, orderStage: 'select'}));
+                setCartItems([]);
+              }}>Back to Menu</Button>
+            </div>
+          );
+        default:
+          return null;
+      }
+    }
+
     const CartSidebar = () => {
       if (!formData.onlineOrdering || !showCart)
         return null;
