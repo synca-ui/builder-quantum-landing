@@ -2388,7 +2388,26 @@ const TemplatePreviewContent = () => {
       if (!formData.loyaltyEnabled) return null;
 
       const target = formData.loyaltyConfig?.stampsForReward || 10;
-      const have = cartItems.reduce((t, i) => t + i.quantity, 0) % target;
+      const deviceId = getDeviceId();
+      const [have, setHave] = useState(() => {
+          const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
+          return savedStamps ? parseInt(savedStamps, 10) : 0;
+      });
+
+      useEffect(() => {
+          const handleStorageChange = () => {
+              const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
+              setHave(savedStamps ? parseInt(savedStamps, 10) : 0);
+          };
+          window.addEventListener('storage', handleStorageChange);
+          // also listen for local changes
+          const interval = setInterval(handleStorageChange, 500);
+          return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(interval);
+          }
+      }, [deviceId]);
+
       const pct = (have / target) * 100;
 
       return (
