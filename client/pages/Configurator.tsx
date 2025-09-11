@@ -9243,8 +9243,6 @@ const MenuProductsStep = () => {
         return <MediaGalleryStep />;
       case "advanced-features":
         return <AdvancedFeaturesStep />;
-      case "payment-options":
-        return <PaymentOptionsStep />;
       case "feature-config":
         return <FeatureConfigStep />;
       case "domain-hosting":
