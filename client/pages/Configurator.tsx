@@ -5763,7 +5763,105 @@ const TemplatePreviewContent = () => {
     );
   };
 
-  const MenuProductsStep = () => {
+  const OffersStep = () => {
+    const [newOffer, setNewOffer] = useState({
+      name: "",
+      description: "",
+      price: "",
+      image: null,
+    });
+
+    const addOffer = () => {
+      if (newOffer.name && newOffer.price) {
+        const updatedOffers = [
+          ...(formData.offers || []),
+          { ...newOffer, id: Date.now().toString() },
+        ];
+        updateFormData("offers", updatedOffers);
+        setNewOffer({ name: "", description: "", price: "", image: null });
+      }
+    };
+
+    const removeOffer = (index: number) => {
+      const updatedOffers = (formData.offers || []).filter((_, i) => i !== index);
+      updateFormData("offers", updatedOffers);
+    };
+
+    const handleImageForNew = (files: FileList | null) => {
+        if (!files || !files[0]) return;
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setNewOffer(prev => ({...prev, image: e.target.result}));
+        };
+        reader.readAsDataURL(file);
+    }
+
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Create Your Offers
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Add special offers and promotions to attract customers.
+          </p>
+        </div>
+
+        <div className="bg-white p-8 rounded-2xl shadow-lg border mb-8">
+          <h3 className="text-xl font-bold mb-6">Add New Offer</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              placeholder="Offer Name (e.g., Lunch Special)"
+              value={newOffer.name}
+              onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
+            />
+            <Input
+              placeholder="Price (e.g., 9.99)"
+              value={newOffer.price}
+              onChange={(e) => setNewOffer({ ...newOffer, price: e.target.value })}
+            />
+            <Textarea
+              placeholder="Description"
+              value={newOffer.description}
+              onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
+              className="md:col-span-2"
+            />
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Offer Image</label>
+                <input type="file" accept="image/*" onChange={(e) => handleImageForNew(e.target.files)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                {newOffer.image && <img src={newOffer.image as string} alt="preview" className="mt-4 w-32 h-32 object-cover rounded-lg" />}
+            </div>
+          </div>
+          <div className="mt-6 text-right">
+            <Button onClick={addOffer}>Add Offer</Button>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold mb-6">Your Offers</h3>
+          <div className="space-y-4">
+            {(formData.offers || []).map((offer, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg shadow flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    {offer.image && <img src={offer.image as string} alt={offer.name} className="w-16 h-16 object-cover rounded-lg" />}
+                    <div>
+                        <p className="font-semibold">{offer.name}</p>
+                        <p className="text-sm text-gray-600">${offer.price}</p>
+                    </div>
+                </div>
+                <Button variant="ghost" onClick={() => removeOffer(index)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+}
+
+const MenuProductsStep = () => {
     const [newItem, setNewItem] = useState({
       name: "",
       description: "",
