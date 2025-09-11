@@ -4237,7 +4237,7 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back to Welcome
           </Button>
@@ -4397,7 +4397,7 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -5741,7 +5741,7 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Zurück
           </Button>
@@ -6422,7 +6422,7 @@ const MenuProductsStep = () => {
         )}
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -6849,7 +6849,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -6969,7 +6969,7 @@ const MenuProductsStep = () => {
         )}
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -7669,7 +7669,7 @@ const MenuProductsStep = () => {
         {renderFeatureConfig()}
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8388,7 +8388,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8666,7 +8666,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8845,7 +8845,7 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={prevStep} variant="outline" size="lg">
+          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -9047,7 +9047,7 @@ const MenuProductsStep = () => {
 
         {!isPublished && (
           <div className="flex justify-between mt-8">
-            <Button type="button" onClick={prevStep} variant="outline" size="lg">
+            <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
               <ArrowLeft className="mr-2 w-5 h-5" />
               Back
             </Button>
@@ -9125,7 +9125,7 @@ const MenuProductsStep = () => {
               Step component '{currentStepConfig.component}' is coming soon...
             </p>
             <div className="flex justify-between max-w-lg mx-auto">
-              <Button type="button" onClick={prevStep} variant="outline" size="lg">
+              <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
                 <ArrowLeft className="mr-2 w-5 h-5" />
                 Back
               </Button>
