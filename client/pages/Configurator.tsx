@@ -362,6 +362,14 @@ export default function Configurator() {
       component: "advanced-features",
     },
     {
+      id: "payment-options",
+      title: "Setup Payment Options",
+      description: "Configure the payment methods you accept",
+      phase: 5,
+      phaseTitle: "Media & Advanced",
+      component: "payment-options",
+    },
+    {
       id: "feature-config",
       title: "Configure selected feature",
       description: "Adjust settings for the feature you just enabled",
