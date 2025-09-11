@@ -1173,6 +1173,35 @@ export default function Configurator() {
     );
 }
 
+const OffersBanner = ({ offers, styles }) => {
+    if (!offers || offers.length === 0) return null;
+
+    const normalizeImageSrc = (img: any): string => {
+      if (!img) return "/placeholder.svg";
+      if (typeof img === 'string') return img;
+      const url = img?.url;
+      if (typeof url === 'string') return url;
+      const file = (img as any)?.file || img;
+      if (typeof File !== "undefined" && file instanceof File) return URL.createObjectURL(file);
+      return "/placeholder.svg";
+    };
+
+    // For now, just display the first offer
+    const offer = offers[0];
+
+    return (
+        <div className="relative bg-gray-900 text-white mb-4">
+            {offer.image && <img src={normalizeImageSrc(offer.image)} alt={offer.name} className="w-full h-48 object-cover opacity-50" />}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                <h3 className="font-bold text-2xl" style={{ color: styles.userPrimary }}>{offer.name}</h3>
+                <p className="text-lg">{offer.description}</p>
+                <p className="font-bold text-xl mt-2">${offer.price}</p>
+                <Button className="mt-4 bg-white text-black hover:bg-gray-200">View Offer</Button>
+            </div>
+        </div>
+    );
+}
+
 const TemplatePreviewContent = () => {
     const normalizeImageSrc = (img: any): string => {
       if (!img) return "/placeholder.svg";
