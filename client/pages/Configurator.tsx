@@ -1537,6 +1537,7 @@ const TemplatePreviewContent = () => {
         activePage: id,
         menuOpen: false,
       }));
+      setShowCart(false);
     };
 
     // Fetch Instagram photos when instagram sync is enabled and a profile URL exists
@@ -6948,7 +6949,6 @@ const MenuProductsStep = () => {
   // Advanced Features Step (Step 10)
   const AdvancedFeaturesStep = () => {
     const [activeFeature, setActiveFeature] = useState<string | null>(null);
-    const [offersModalOpen, setOffersModalOpen] = useState(false);
     const features = [
       {
         id: "onlineOrdering",
@@ -7595,8 +7595,9 @@ const MenuProductsStep = () => {
                 onClick={() => {
                   if (feature.id === "offersEnabled") {
                     if (!isEnabled) updateFormData("offersEnabled", true);
-                    setActiveFeature(null);
-                    setOffersModalOpen(true);
+                    const url = new URL(window.location.origin + "/configurator");
+                    url.searchParams.set("feature", "offers");
+                    window.open(url.toString(), "_blank");
                   } else {
                     handleFeatureClick(feature.id, isEnabled);
                   }
@@ -7635,15 +7636,6 @@ const MenuProductsStep = () => {
         </div>
 
         {renderFeatureConfig()}
-
-        <Dialog open={offersModalOpen} onOpenChange={setOffersModalOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create Offers</DialogTitle>
-            </DialogHeader>
-            <OffersStep isModal onBack={() => setOffersModalOpen(false)} onContinue={() => setOffersModalOpen(false)} />
-          </DialogContent>
-        </Dialog>
 
         <div className="flex justify-between mt-8">
           <Button onClick={prevStep} variant="outline" size="lg">
@@ -8060,81 +8052,7 @@ const MenuProductsStep = () => {
           );
         case "offersEnabled":
           return (
-            <Card className="p-6">
-              <h4 className="text-lg font-bold mb-3">
-                Current Offers / Specials
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Input
-                  id="offer-window-step"
-                  type="text"
-                  placeholder="Time window (e.g., 17:00-19:00)"
-                />
-                <Input
-                  id="offer-products-step"
-                  type="text"
-                  placeholder="Products (comma-separated)"
-                />
-                <Input
-                  id="offer-discount-step"
-                  type="text"
-                  placeholder="Discount / Bundle"
-                />
-              </div>
-              <div className="mt-3">
-                <Button
-                  onClick={() => {
-                    const time = (
-                      document.getElementById(
-                        "offer-window-step",
-                      ) as HTMLInputElement
-                    ).value;
-                    const products = (
-                      document.getElementById(
-                        "offer-products-step",
-                      ) as HTMLInputElement
-                    ).value;
-                    const discount = (
-                      document.getElementById(
-                        "offer-discount-step",
-                      ) as HTMLInputElement
-                    ).value;
-                    if (time && products) {
-                      updateFormData("offers", [
-                        ...(formData.offers || []),
-                        { time, products, discount },
-                      ]);
-                      (
-                        document.getElementById(
-                          "offer-window-step",
-                        ) as HTMLInputElement
-                      ).value = "";
-                      (
-                        document.getElementById(
-                          "offer-products-step",
-                        ) as HTMLInputElement
-                      ).value = "";
-                      (
-                        document.getElementById(
-                          "offer-discount-step",
-                        ) as HTMLInputElement
-                      ).value = "";
-                    }
-                  }}
-                >
-                  Add Offer
-                </Button>
-              </div>
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                {(formData.offers || []).map((o: any, i: number) => (
-                  <div key={i} className="p-3 border rounded">
-                    <div className="text-sm font-semibold">{o.time}</div>
-                    <div className="text-xs text-gray-600">{o.products}</div>
-                    <div className="text-xs">{o.discount}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            <OffersStep onBack={goBack} onContinue={finish} />
           );
         default:
           return null;
@@ -9108,6 +9026,20 @@ const MenuProductsStep = () => {
       </div>
     );
   };
+
+  // Deep-link handling for direct feature configuration (e.g., /configurator?feature=offers)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const feature = params.get('feature');
+      if (feature === 'offers') {
+        if (!formData.offersEnabled) updateFormData('offersEnabled', true);
+        setPendingFeatureConfig('offersEnabled');
+        const idx = configuratorSteps.findIndex((s) => s.id === 'feature-config');
+        if (idx !== -1) setCurrentStep(idx);
+      }
+    } catch {}
+  }, []);
 
   // Render main content based on current step
   const renderMainContent = () => {
