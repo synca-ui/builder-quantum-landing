@@ -312,40 +312,44 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
         switch (activePage) {
             case "home":
                 return (
-                    <section className="px-6 pt-6 pb-24">
-                        <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40 overflow-hidden">
-                            <LogoDisplay />
-                        </div>
-                        <h1 className="text-center text-xl font-extrabold mt-3">{getBusinessName()}</h1>
-                        {formData.slogan && <p className="text-center text-sm opacity-95">{formData.slogan}</p>}
-                        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {items.slice(0, 4).map((it: any, index: number) => (
-                                <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
-                                    {(formData as any).homepageDishImageVisibility !== 'hidden' && <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />}
-                                    <div className="text-[11px] font-semibold truncate">{it.name}</div>
-                                    <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
-                                </button>
-                            ))}
-                        </div>
-                        {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
-                            <div className="mt-4 rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md p-4 text-white/95">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm font-semibold">Opening Hours</div>
-                                    <button className="text-xs underline" onClick={() => setOpenHoursExpanded(v => !v)}>{openHoursExpanded ? "Hide" : "Show"}</button>
-                                </div>
-                                <div className="mt-2 text-xs space-y-1">
-                                    {(openHoursExpanded ? Object.entries(formData.openingHours) : Object.entries(formData.openingHours).slice(0, 2)).map(([day, hours]: any) => (
-                                        <div key={day} className="flex justify-between">
-                                            <span className="font-medium">{day}</span>
-                                            <span>{hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}</span>
-                                        </div>
-                                    ))}
-                                    {!openHoursExpanded && Object.keys(formData.openingHours).length > 2 && (
-                                        <div className="text-xs opacity-80">+{Object.keys(formData.openingHours).length - 2} more days</div>
-                                    )}
-                                </div>
+                    <section className="pb-24">
+                        <OffersBanner offers={(formData as any).offers} styles={styles} normalizeUrl={normalizeUrl} />
+                        <div className="px-6 pt-6">
+                            <div className="mx-auto w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/40 overflow-hidden">
+                                <LogoDisplay />
                             </div>
-                        )}
+                            <h1 className="text-center text-xl font-extrabold mt-3">{getBusinessName()}</h1>
+                            {formData.slogan && <p className="text-center text-sm opacity-95">{formData.slogan}</p>}
+                            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {items.slice(0, 4).map((it: any, index: number) => (
+                                    <button key={it.id || it.name || index} className="text-left rounded-2xl border border-white/40 bg-white/25 backdrop-blur-md p-3 shadow-lg" onClick={() => setProductOpen(it)}>
+                                        {(formData as any).homepageDishImageVisibility !== 'hidden' && <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />}
+                                        <div className="text-[11px] font-semibold truncate">{it.name}</div>
+                                        <div className="text-[11px] font-bold" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>
+                                    </button>
+                                ))}
+                            </div>
+                            {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
+                                <div className="mt-4 rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md p-4 text-white/95">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm font-semibold">Opening Hours</div>
+                                        <button className="text-xs underline" onClick={() => setOpenHoursExpanded(v => !v)}>{openHoursExpanded ? "Hide" : "Show"}</button>
+                                    </div>
+                                    <div className="mt-2 text-xs space-y-1">
+                                        {(openHoursExpanded ? Object.entries(formData.openingHours) : Object.entries(formData.openingHours).slice(0, 2)).map(([day, hours]: any) => (
+                                            <div key={day} className="flex justify-between">
+                                                <span className="font-medium">{day}</span>
+                                                <span>{hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {!openHoursExpanded && Object.keys(formData.openingHours).length > 2 && (
+                                            <div className="text-xs opacity-80">+{Object.keys(formData.openingHours).length - 2} more days</div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </section>
                 );
             case "menu":
