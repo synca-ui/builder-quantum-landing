@@ -5935,6 +5935,37 @@ const TemplatePreviewContent = () => {
                   <Input type="color" value={formData.offerBanner?.buttonColor || '#FFFFFF'} onChange={(e) => updateFormData('offerBanner', {...(formData.offerBanner || {}), buttonColor: e.target.value})} />
               </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Placement on Home</label>
+              <div className="flex gap-2">
+                <Button variant={(formData.offerBanner?.position || 'top') === 'top' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), position: 'top'})}>Head</Button>
+                <Button variant={(formData.offerBanner?.position || 'top') === 'bottom' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), position: 'bottom'})}>Bottom</Button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Show Offers Page/Tab</label>
+              <div className="flex items-center gap-2">
+                <Switch id="offers-tab" checked={!!formData.offerPageEnabled} onCheckedChange={(v) => updateFormData('offerPageEnabled', v)} />
+                <label htmlFor="offers-tab" className="text-sm text-gray-600">Adds an Offers tab to your menu</label>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
+              <div className="flex gap-2">
+                <Button variant={(formData.offerBanner?.size || 'big') === 'small' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), size: 'small'})}>Small</Button>
+                <Button variant={(formData.offerBanner?.size || 'big') === 'big' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), size: 'big'})}>Big</Button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Shape</label>
+              <div className="flex gap-2">
+                <Button variant={(formData.offerBanner?.shape || 'rounded') === 'rounded' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), shape: 'rounded'})}>Rounded</Button>
+                <Button variant={(formData.offerBanner?.shape || 'rounded') === 'pill' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), shape: 'pill'})}>Pill</Button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
