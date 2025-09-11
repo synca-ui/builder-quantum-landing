@@ -1187,12 +1187,12 @@ const OffersBanner = ({ offers, styles, offerBanner }) => {
     const bannerStyles = {
       backgroundColor: offerBanner?.backgroundColor || '#000000',
       color: offerBanner?.textColor || '#FFFFFF',
-    } as React.CSSProperties;
+    };
 
     const buttonStyles = {
       backgroundColor: offerBanner?.buttonColor || '#FFFFFF',
       color: offerBanner?.backgroundColor || '#000000',
-    } as React.CSSProperties;
+    };
 
     const buttonRadius = offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-lg';
 
