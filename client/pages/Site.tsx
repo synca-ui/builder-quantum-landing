@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { getDeviceId } from "@/lib/utils";
 import { useParams, Link, useLocation } from "react-router-dom";
 import {
   Menu,
@@ -304,6 +305,40 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
         return getBusinessIcon();
     };
 
+    const LoyaltyCard = () => {
+      if (!(formData as any).loyaltyEnabled) return null;
+      const target = (formData as any).loyaltyConfig?.stampsForReward || 10;
+      const deviceId = getDeviceId();
+      const [have, setHave] = useState(() => {
+        const saved = localStorage.getItem(`stamps_${deviceId}`);
+        return saved ? parseInt(saved, 10) : 0;
+      });
+      useEffect(() => {
+        const handler = () => {
+          const saved = localStorage.getItem(`stamps_${deviceId}`);
+          setHave(saved ? parseInt(saved, 10) : 0);
+        };
+        const interval = setInterval(handler, 500);
+        window.addEventListener("storage", handler);
+        return () => {
+          clearInterval(interval);
+          window.removeEventListener("storage", handler);
+        };
+      }, [deviceId]);
+      const pct = Math.min(100, (have / target) * 100);
+      return (
+        <div className="mt-4 rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md p-4 text-white/95">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold">Loyalty Card</div>
+            <div className="text-xs font-semibold">{have} / {target}</div>
+          </div>
+          <div className="mt-3 w-full bg-white/30 rounded-full h-2">
+            <div className="h-2 rounded-full" style={{ width: `${pct}%`, backgroundColor: styles.userPrimary }} />
+          </div>
+        </div>
+      );
+    };
+
     const renderPageContent = () => {
         const items = formData.menuItems || [];
         const gallery = (formData.gallery || []).map((g: any) => ({ ...g, url: normalizeUrl(g?.url) }));
@@ -339,6 +374,17 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                                     </button>
                                 ))}
                             </div>
+                            {formData.reservationsEnabled && (
+                                <div className="mt-4">
+                                    <ReservationButton
+                                        color={(formData as any).reservationButtonColor || styles.userPrimary}
+                                        textColor={(formData as any).reservationButtonTextColor || '#FFFFFF'}
+                                        shape={(formData as any).reservationButtonShape || 'rounded'}
+                                        className="w-full"
+                                    />
+                                </div>
+                            )}
+                            <LoyaltyCard />
                             {formData.openingHours && Object.keys(formData.openingHours).length > 0 && (
                                 <div className="mt-4 rounded-2xl border border-white/30 bg-white/15 backdrop-blur-md p-4 text-white/95">
                                     <div className="flex items-center justify-between">

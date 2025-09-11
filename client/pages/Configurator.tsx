@@ -2440,31 +2440,7 @@ const TemplatePreviewContent = () => {
     };
 
     // Ordering progress & cart sidebar (preview only)
-    const OrderProgress = () => {
-      if (!formData.onlineOrdering) return null;
-      const steps = ["select", "cart", "payment", "done"] as const;
-      const labels: Record<(typeof steps)[number], string> = {
-        select: "Selection",
-        cart: "Cart",
-        payment: "Payment",
-        done: "Confirmation",
-      };
-      const idx = steps.indexOf(previewState.orderStage as any);
-      return (
-        <div className="px-4 pt-2">
-          <div className="flex items-center text-[11px] text-gray-600 gap-2">
-            {steps.map((s, i) => (
-              <div key={s} className="flex items-center flex-1 gap-1">
-                <div
-                  className={`h-1 w-full rounded ${i <= idx ? "bg-teal-500" : "bg-gray-200"}`}
-                ></div>
-                <span className="whitespace-nowrap">{labels[s]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    };
+    const OrderProgress = () => null;
 
     const StampCardBar = () => {
       if (!formData.loyaltyEnabled) return null;
