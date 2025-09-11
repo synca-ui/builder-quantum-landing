@@ -2492,14 +2492,14 @@ const TemplatePreviewContent = () => {
       const pct = (have / target) * 100;
 
       return (
-          <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-lg z-50">
-              <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold">Loyalty Card</h3>
-                  <span className="text-sm font-semibold">{have} / {target}</span>
+          <div className="absolute bottom-2 left-2 right-2 bg-white p-3 border rounded-lg shadow-md z-20">
+              <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-xs font-semibold">Loyalty Card</h3>
+                  <span className="text-xs font-semibold">{have} / {target}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                      className="bg-teal-500 h-2.5 rounded-full"
+                      className="bg-teal-500 h-2 rounded-full"
                       style={{ width: `${pct}%` }}
                   ></div>
               </div>
@@ -2591,13 +2591,13 @@ const TemplatePreviewContent = () => {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl shadow-xl w-full max-w-sm flex flex-col max-h-[90vh]"
+                className="bg-white rounded-xl shadow-xl w-full max-w-xs flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-4 border-b flex justify-between items-center">
+                <div className="p-3 border-b flex justify-between items-center">
                     <div>
-                        <h3 className="text-lg font-semibold">Cart</h3>
-                        <p className="text-sm text-gray-500">
+                        <h3 className="text-sm font-semibold">Cart</h3>
+                        <p className="text-xs text-gray-500">
                             {cartItemsCount} item{cartItemsCount !== 1 ? "s" : ""}
                         </p>
                     </div>
@@ -2605,7 +2605,7 @@ const TemplatePreviewContent = () => {
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {cartItems.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                         <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
@@ -2615,14 +2615,14 @@ const TemplatePreviewContent = () => {
                     ) : (
                     cartItems.map((it, i) => (
                         <div key={i} className="flex items-center gap-4">
-                            <img src={normalizeImageSrc(it.image)} alt={it.name} className="w-16 h-16 rounded-lg object-cover" />
+                            <img src={normalizeImageSrc(it.image)} alt={it.name} className="w-12 h-12 rounded-lg object-cover" />
                             <div className="flex-1">
                                 <div className="font-medium">{it.name}</div>
                                 <div className="text-sm text-gray-500">
                                     Qty: {it.quantity}
                                 </div>
                             </div>
-                            <div className="font-semibold">
+                            <div className="font-semibold text-sm">
                                 ${(parseFloat(it.price) * it.quantity).toFixed(2)}
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => removeFromCart(it.name)}>
@@ -2633,7 +2633,7 @@ const TemplatePreviewContent = () => {
                     )}
                 </div>
                 {cartItems.length > 0 && (
-                    <div className="p-4 border-t space-y-2">
+                    <div className="p-3 border-t space-y-2">
                         <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Subtotal</span>
                         <span className="font-medium">${subtotal.toFixed(2)}</span>
@@ -2642,12 +2642,12 @@ const TemplatePreviewContent = () => {
                         <span className="text-gray-600">Fees</span>
                         <span className="font-medium">${fees.toFixed(2)}</span>
                         </div>
-                        <div className="flex items-center justify-between text-base pt-1 border-t">
+                        <div className="flex items-center justify-between text-sm pt-1 border-t">
                         <span className="font-semibold">Total</span>
                         <span className="font-semibold">${total.toFixed(2)}</span>
                         </div>
                         <Button
-                        className="w-full bg-teal-600 hover:bg-teal-700 mt-2"
+                        className="w-full bg-teal-600 hover:bg-teal-700 mt-1"
                         onClick={() =>
                             setPreviewState((p) => ({ ...p, orderStage: "payment" }))
                         }
@@ -3556,109 +3556,7 @@ const TemplatePreviewContent = () => {
     if (!formData.onlineOrdering || !showCart) return null;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
-        <div
-          className="absolute inset-0 bg-black/20"
-          onClick={() => setShowCart(false)}
-        />
-        <div className="relative w-80 bg-white rounded-lg shadow-xl border border-gray-200">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg flex items-center">
-                <ShoppingBag className="w-5 h-5 mr-2" />
-                Cart ({cartItemsCount})
-              </h3>
-              <button
-                onClick={() => setShowCart(false)}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {cartItems.length === 0 ? (
-              <div className="text-center py-8">
-                <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">Your cart is empty</p>
-                <p className="text-sm text-gray-400 mt-1">
-                  Add items from the menu to get started
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {cartItems.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">
-                          {item.name}
-                        </h4>
-                        {item.description && (
-                          <p className="text-sm text-gray-600">
-                            {item.description}
-                          </p>
-                        )}
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-sm text-gray-500">
-                            Qty: {item.quantity}
-                          </span>
-                          <span className="text-sm font-medium text-teal-600">
-                            ${item.price} each
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-lg">
-                          ${(parseFloat(item.price) * item.quantity).toFixed(2)}
-                        </span>
-                        <button
-                          onClick={() => removeFromCart(item.name)}
-                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-bold">Total:</span>
-                    <span className="text-xl font-bold text-teal-600">
-                      ${cartTotal.toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => {
-                        setCartItems([]);
-                        setShowCart(false);
-                      }}
-                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Clear Cart
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowCart(false);
-                        /* Handle checkout */
-                      }}
-                      className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-medium"
-                    >
-                      Checkout
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      <div className="fixed inset-0 z-50 hidden"></div>
     );
   };
 
@@ -3949,8 +3847,6 @@ const TemplatePreviewContent = () => {
             </LivePhoneFrame>
           </div>
         </div>
-        {/* Cart Dropdown Modal */}
-        <CartDropdown />
       </div>
     );
   };
