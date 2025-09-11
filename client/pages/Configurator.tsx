@@ -1757,6 +1757,37 @@ const TemplatePreviewContent = () => {
               </div>
             </div>
           );
+        case "offers":
+          return (
+            <div className={templateStyles.page}>
+              <h2 className={templateStyles.title}>Offers</h2>
+              <div className="space-y-3">
+                {(formData.offers || []).length === 0 && (
+                  <div className="text-center py-8">
+                    <p className={templateStyles.itemDesc}>No offers yet. Add offers in More features → Offers.</p>
+                  </div>
+                )}
+                {(formData.offers || []).map((o: any, i: number) => (
+                  <div key={i} className={`${templateStyles.itemCard} flex items-center gap-3`}>
+                    {o.image && (
+                      <img src={normalizeImageSrc(o.image)} alt={o.name} className={`w-16 h-16 object-cover ${formData.offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-lg'}`} />
+                    )}
+                    <div className="flex-1">
+                      <div className={templateStyles.itemName}>{o.name}</div>
+                      {o.description && (
+                        <div className={templateStyles.itemDesc}>{o.description}</div>
+                      )}
+                    </div>
+                    {o.price && (
+                      <div className={templateStyles.itemPrice} style={{ color: styles.userPrimary }}>
+                        ${o.price}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
         case "menu":
           if (!formData.selectedPages.includes("menu")) {
             return (
