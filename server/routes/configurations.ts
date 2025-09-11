@@ -53,6 +53,7 @@ const ConfigurationSchema = z
     publishedUrl: z.string().optional(),
     previewUrl: z.string().optional(),
     paymentOptions: z.array(z.string()).default([]),
+    offers: z.array(z.any()).default([]),
   })
   .passthrough();
 
