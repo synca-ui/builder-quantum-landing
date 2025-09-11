@@ -52,6 +52,7 @@ const ConfigurationSchema = z
     status: z.enum(["draft", "published", "archived"]).default("draft"),
     publishedUrl: z.string().optional(),
     previewUrl: z.string().optional(),
+    paymentOptions: z.array(z.string()).default([]),
   })
   .passthrough();
 
