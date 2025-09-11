@@ -2191,7 +2191,7 @@ const TemplatePreviewContent = () => {
         default: // home
           return (
             <div className={templateStyles.page}>
-              <OffersBanner offers={formData.offers} styles={styles} />
+              <OffersBanner offers={formData.offers} styles={styles} offerBanner={formData.offerBanner} />
               {/* Loyalty bar is now at the bottom */}
               {formData.showHomeHero && (
                 <div className="text-center mb-4">
