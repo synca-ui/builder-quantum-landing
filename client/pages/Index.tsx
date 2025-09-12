@@ -347,7 +347,7 @@ export default function Index() {
                 <span className="font-display text-gradient">Build a Stunning</span>
                 <br />
                 <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
-                  Website in Minutes
+                  Web App in Minutes
                 </span>
               </h1>
               
