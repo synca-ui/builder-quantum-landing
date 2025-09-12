@@ -16,19 +16,19 @@
 # Favicon redirects to ensure consistent icon across browsers
 [[redirects]]
   from = "/favicon.ico"
-  to = "https://cdn.builder.io/api/v1/image/assets%2F3b0ddc7c5bae491b9212f741b624b4fa%2F8286de108a6240ccaf9218641adeb608?format=png&width=64&height=64"
+  to = "https://cdn.builder.io/api/v1/image/assets%2F3b0ddc7c5bae491b9212f741b624b4fa%2F08302a5e9e0e43669d45203353ef171f?format=png&width=64&height=64"
   status = 301
   force = true
 
 [[redirects]]
   from = "/favicon.png"
-  to = "https://cdn.builder.io/api/v1/image/assets%2F3b0ddc7c5bae491b9212f741b624b4fa%2F8286de108a6240ccaf9218641adeb608?format=png&width=64&height=64"
+  to = "https://cdn.builder.io/api/v1/image/assets%2F3b0ddc7c5bae491b9212f741b624b4fa%2F08302a5e9e0e43669d45203353ef171f?format=png&width=64&height=64"
   status = 301
   force = true
 
 [[redirects]]
   from = "/apple-touch-icon.png"
-  to = "https://cdn.builder.io/api/v1/image/assets%2F3b0ddc7c5bae491b9212f741b624b4fa%2F8286de108a6240ccaf9218641adeb608?format=png&width=180&height=180"
+  to = "https://cdn.builder.io/api/v1/image/assets%2F3b0ddc7c5bae491b9212f741b624b4fa%2F08302a5e9e0e43669d45203353ef171f?format=png&width=180&height=180"
   status = 301
   force = true
 
