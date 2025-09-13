@@ -1,13 +1,13 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = REPLACE_ENV.https://bkkdnflmymogmcqnfeer.supabase.co || process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const SUPABASE_ANON = REPLACE_ENV.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-export const supabaseClient: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
-    storageKey: 'sb:session',
+    autoRefreshToken: true,
   },
 });
 
-export default supabaseClient;
+export default supabase;
