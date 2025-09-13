@@ -59,7 +59,7 @@ const App = () => (
               <Route path="/" element={<HostAwareRoot />} />
               <Route path="/configurator" element={<Configurator />} />
               <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-              <Route path="/admin" element={<RequireAuth><TestSite /></RequireAuth>} />
+              <Route path="/admin" element={<RequireAuth><AdminPortal /></RequireAuth>} />
               <Route path="/site/:subdomain/*" element={<Site />} />
               <Route path="/test-site" element={<TestSite />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
