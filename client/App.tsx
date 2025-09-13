@@ -34,23 +34,39 @@ const queryClient = new QueryClient({
   },
 });
 
+import { AuthProvider, useAuth } from './context/AuthProvider';
+
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const { user, loading } = useAuth();
+  if (loading) return children; // simple: let child render while loading
+  if (!user) {
+    // redirect to home
+    window.location.href = '/';
+    return null;
+  }
+  return children;
+}
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-          <Routes>
-            <Route path="/" element={<HostAwareRoot />} />
-            <Route path="/configurator" element={<Configurator />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/site/:subdomain/*" element={<Site />} />
-            <Route path="/test-site" element={<TestSite />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+            <Routes>
+              <Route path="/" element={<HostAwareRoot />} />
+              <Route path="/configurator" element={<Configurator />} />
+              <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+              <Route path="/admin" element={<RequireAuth><TestSite /></RequireAuth>} />
+              <Route path="/site/:subdomain/*" element={<Site />} />
+              <Route path="/test-site" element={<TestSite />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </ErrorBoundary>
