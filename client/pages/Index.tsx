@@ -3,12 +3,15 @@ import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthProvider";
+import { LoginDialog, SignupDialog } from "@/components/auth/AuthDialogs";
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAdmin, signOut } = useAuth();
 
   useEffect(() => {
     setIsVisible(true);
@@ -153,8 +156,7 @@ export default function Index() {
     const navItems = [
       { id: 'features', label: 'Features', icon: <Layers className="w-4 h-4" />, href: '#features' },
       { id: 'demo', label: 'Demo', icon: <Play className="w-4 h-4" />, href: '#demo' },
-      { id: 'pricing', label: 'Pricing', icon: <Crown className="w-4 h-4" />, href: '#pricing' },
-      { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/dashboard' }
+      { id: 'pricing', label: 'Pricing', icon: <Crown className="w-4 h-4" />, href: '#pricing' }
     ];
 
     return (
@@ -215,27 +217,42 @@ export default function Index() {
 
             {/* CTA Buttons with enhanced animation */}
             <div className="hidden md:flex items-center space-x-3">
-              <a href="/dashboard">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
-                >
-                  <div className="relative flex items-center space-x-2">
-                    <LayoutDashboard className="w-4 h-4" />
-                    <span>Dashboard</span>
-                  </div>
-                </Button>
-              </a>
+              {!user && (
+                <>
+                  <LoginDialog />
+                  <SignupDialog />
+                </>
+              )}
+              {user && (
+                <>
+                  <a href="/dashboard">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
+                    >
+                      <div className="relative flex items-center space-x-2">
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </div>
+                    </Button>
+                  </a>
+                  {isAdmin && (
+                    <a href="/admin">
+                      <Button variant="outline" size="sm" className="border-2 border-purple-500/30 text-purple-600 hover:text-white hover:bg-purple-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105">
+                        Admin Portal
+                      </Button>
+                    </a>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={signOut}>Logout</Button>
+                </>
+              )}
               <a href="/configurator">
                 <Button
                   size="sm"
                   className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
                 >
-                  {/* Animated background */}
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-
-                  {/* Button content */}
                   <div className="relative flex items-center space-x-2">
                     <div className="transition-all duration-300 group-hover:rotate-45">
                       <Settings className="w-4 h-4" />
