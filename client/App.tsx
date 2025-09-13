@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Site from "./pages/Site";
 import HostAwareRoot from "./pages/HostAwareRoot";
 import TestSite from "./pages/TestSite";
+import AdminPortal from "./pages/AdminPortal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
