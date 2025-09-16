@@ -297,6 +297,7 @@ export async function publishConfiguration(req: Request, res: Response) {
 
     // Database URL from env (do NOT hardcode secrets)
     const databaseUrl =
+      process.env.NETLIFY_DATABASE_URL ||
       process.env.DATABASE_URL ||
       process.env.SUPABASE_DB_URL ||
       process.env.POSTGRES_URL ||
@@ -515,6 +516,7 @@ export async function getPublishedSite(req: Request, res: Response) {
 
     // Fallback to DB source if configured
     const databaseUrl =
+      process.env.NETLIFY_DATABASE_URL ||
       process.env.DATABASE_URL ||
       process.env.SUPABASE_DB_URL ||
       process.env.POSTGRES_URL ||
