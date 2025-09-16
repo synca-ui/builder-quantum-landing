@@ -5,6 +5,10 @@ import { signToken } from "../middleware/auth";
 
 export const authRouter = Router();
 
+authRouter.get("/signup", (_req, res) => {
+  return res.status(405).json({ error: "Use POST /api/auth/signup with JSON { email, password }" });
+});
+
 authRouter.post("/signup", async (req, res) => {
   try {
     let email: string | undefined;
