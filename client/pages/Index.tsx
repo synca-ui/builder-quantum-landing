@@ -3,6 +3,7 @@ import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthProvider";
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
@@ -14,6 +15,8 @@ export default function Index() {
     setIsVisible(true);
     // Mouse tracking removed for better performance
   }, []);
+
+  const { user } = useAuth();
 
   const features = [
     {
@@ -179,7 +182,7 @@ export default function Index() {
             {/* Desktop Navigation with enhanced hover effects */}
             <div className="hidden md:block">
               <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
-                {navItems.map((item, index) => (
+                {navItems.filter(n => user ? true : n.id !== 'dashboard').map((item, index) => (
                   <a
                     key={item.id}
                     href={item.href}
@@ -187,12 +190,9 @@ export default function Index() {
                     onMouseEnter={() => setHoveredItem(item.id)}
                     onMouseLeave={() => setHoveredItem(null)}
                   >
-                    {/* Background highlight */}
                     <div className={`absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20 rounded-full transition-all duration-500 ${
                       hoveredItem === item.id ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                     }`}></div>
-
-                    {/* Content */}
                     <div className={`relative flex items-center space-x-2 transition-all duration-500 ${
                       hoveredItem === item.id ? 'text-teal-600 transform translate-y-[-1px]' : 'text-gray-700'
                     }`}>
@@ -203,8 +203,6 @@ export default function Index() {
                       </div>
                       <span>{item.label}</span>
                     </div>
-
-                    {/* Animated underline */}
                     <div className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-teal-500 to-purple-500 transition-all duration-500 ${
                       hoveredItem === item.id ? 'w-8 -translate-x-1/2' : 'w-0 -translate-x-1/2'
                     }`}></div>
@@ -215,27 +213,38 @@ export default function Index() {
 
             {/* CTA Buttons with enhanced animation */}
             <div className="hidden md:flex items-center space-x-3">
-              <a href="/dashboard">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
-                >
-                  <div className="relative flex items-center space-x-2">
-                    <LayoutDashboard className="w-4 h-4" />
-                    <span>Dashboard</span>
-                  </div>
-                </Button>
-              </a>
+              {user ? (
+                <>
+                  <a href="/profile">
+                    <Button variant="outline" size="sm" className="border-2 border-gray-300/60">Profile</Button>
+                  </a>
+                  <a href="/dashboard">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
+                    >
+                      <div className="relative flex items-center space-x-2">
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </div>
+                    </Button>
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a href="/login"><Button variant="outline" size="sm">Log in</Button></a>
+                  <a href="/signup">
+                    <Button size="sm" className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">Sign up</Button>
+                  </a>
+                </>
+              )}
               <a href="/configurator">
                 <Button
                   size="sm"
                   className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
                 >
-                  {/* Animated background */}
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-
-                  {/* Button content */}
                   <div className="relative flex items-center space-x-2">
                     <div className="transition-all duration-300 group-hover:rotate-45">
                       <Settings className="w-4 h-4" />
@@ -285,7 +294,22 @@ export default function Index() {
                 </a>
               ))}
 
-              <div className="pt-2 border-t border-gray-200/50">
+              <div className="pt-2 border-t border-gray-200/50 space-y-2">
+                {!user && (
+                  <>
+                    <a href="/login" onClick={() => setIsMenuOpen(false)}>
+                      <Button size="sm" variant="outline" className="w-full">Log in</Button>
+                    </a>
+                    <a href="/signup" onClick={() => setIsMenuOpen(false)}>
+                      <Button size="sm" className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white">Sign up</Button>
+                    </a>
+                  </>
+                )}
+                {user && (
+                  <a href="/profile" onClick={() => setIsMenuOpen(false)}>
+                    <Button size="sm" variant="outline" className="w-full">Profile</Button>
+                  </a>
+                )}
                 <a href="/configurator" onClick={() => setIsMenuOpen(false)}>
                   <Button
                     size="sm"
@@ -358,7 +382,7 @@ export default function Index() {
               
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <a href="/configurator">
-                  <Button 
+                  <Button
                     size="lg"
                     className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-colors duration-300 shadow-2xl overflow-hidden"
                   >
@@ -370,9 +394,14 @@ export default function Index() {
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </Button>
                 </a>
-                
-                <Button 
-                  variant="outline" 
+                {!user && (
+                  <>
+                    <a href="/login"><Button variant="outline" size="lg">Log in</Button></a>
+                    <a href="/signup"><Button size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">Sign up</Button></a>
+                  </>
+                )}
+                <Button
+                  variant="outline"
                   size="lg"
                   className="group glass border-2 border-gray-300/50 hover:border-purple-400/50 px-10 py-6 text-xl font-bold rounded-full transition-all duration-500 ease-out hover:scale-105 backdrop-blur-sm"
                 >
@@ -381,6 +410,40 @@ export default function Index() {
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Example Dashboard Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-black">Example Dashboard</h2>
+            <p className="text-gray-600 mt-2">A quick preview of what you get after logging in.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="rounded-2xl border p-6 bg-gradient-to-br from-teal-50 to-white">
+              <div className="text-sm font-semibold text-teal-700">Traffic</div>
+              <div className="mt-2 text-3xl font-bold">1,284</div>
+              <div className="text-xs text-gray-500 mt-1">visits last 7 days</div>
+            </div>
+            <div className="rounded-2xl border p-6 bg-gradient-to-br from-purple-50 to-white">
+              <div className="text-sm font-semibold text-purple-700">Orders</div>
+              <div className="mt-2 text-3xl font-bold">76</div>
+              <div className="text-xs text-gray-500 mt-1">this week</div>
+            </div>
+            <div className="rounded-2xl border p-6 bg-gradient-to-br from-orange-50 to-white">
+              <div className="text-sm font-semibold text-orange-700">Ratings</div>
+              <div className="mt-2 text-3xl font-bold">4.8</div>
+              <div className="text-xs text-gray-500 mt-1">average</div>
+            </div>
+          </div>
+          <div className="text-center mt-8">
+            <a href={user ? "/dashboard" : "/login"}>
+              <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
+                {user ? "Go to Dashboard" : "Log in to access Dashboard"}
+              </Button>
+            </a>
           </div>
         </div>
       </section>
