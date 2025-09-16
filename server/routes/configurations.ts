@@ -3,7 +3,6 @@ import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
 import { Pool } from "pg";
-import { supabase } from "../supabase";
 
 // Configuration data schema
 const ConfigurationSchema = z
@@ -445,25 +444,6 @@ export async function publishConfiguration(req: Request, res: Response) {
     (config as any).previewUrl = previewUrl;
     config.updatedAt = new Date().toISOString();
 
-    // Persist to Supabase
-    try {
-      if (supabase) {
-        await supabase
-          .from("configurations")
-          .upsert(
-            {
-              user_id: userId,
-              slug: tenantSlug,
-              status: "published",
-              config: config as any,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "slug" },
-          );
-      }
-    } catch (e) {
-      console.error("Supabase upsert failed:", e);
-    }
 
     // Cache for 10 minutes so preview works immediately
     publishedCache.set(tenantSlug, {
@@ -532,32 +512,6 @@ export async function getPublishedSite(req: Request, res: Response) {
       return res.json({ success: true, site: cached.config });
     }
 
-    // Prefer Supabase store
-    if (supabase) {
-      try {
-        // 1) Exact slug match
-        let { data, error } = await supabase
-          .from("configurations")
-          .select("config")
-          .eq("slug", subdomain)
-          .single();
-        if (!error && data?.config) {
-          return res.json({ success: true, site: data.config });
-        }
-        // 2) Fallback: latest by slug prefix (e.g. bebe-new-xxxx)
-        const { data: list, error: listErr } = await supabase
-          .from("configurations")
-          .select("config, updated_at, slug")
-          .ilike("slug", `${subdomain}-%`)
-          .order("updated_at", { ascending: false })
-          .limit(1);
-        if (!listErr && list && list.length && (list[0] as any).config) {
-          return res.json({ success: true, site: (list[0] as any).config });
-        }
-      } catch (e) {
-        console.error("Supabase read failed:", e);
-      }
-    }
 
     // Fallback to DB source if configured
     const databaseUrl =
