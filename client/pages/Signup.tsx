@@ -31,12 +31,31 @@ export default function Signup() {
       <div className="w-full max-w-sm bg-white p-6 rounded-xl shadow">
         <h1 className="text-xl font-bold mb-4">Sign up</h1>
         <form onSubmit={onSubmit} className="space-y-3">
-          <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           {error && <div className="text-red-600 text-sm">{error}</div>}
-          <Button type="submit" disabled={loading} className="w-full">{loading ? "Creating…" : "Create account"}</Button>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Creating…" : "Create account"}
+          </Button>
         </form>
-        <div className="text-sm text-gray-600 mt-4">Have an account? <Link to="/login" className="text-teal-600 font-medium">Log in</Link></div>
+        <div className="text-sm text-gray-600 mt-4">
+          Have an account?{" "}
+          <Link to="/login" className="text-teal-600 font-medium">
+            Log in
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -86,7 +86,8 @@ export function normalizeImageSrc(img: any): string {
   const url = img?.url;
   if (typeof url === "string") return url;
   const file = (img as any)?.file || img;
-  if (typeof File !== "undefined" && file instanceof File) return URL.createObjectURL(file);
+  if (typeof File !== "undefined" && file instanceof File)
+    return URL.createObjectURL(file);
   return "/placeholder.svg";
 }
 
@@ -132,15 +133,18 @@ export default function Configurator() {
   // Initialize persistence system FIRST
   const persistence = usePersistence();
 
-
   const [isVisible, setIsVisible] = useState(false);
   const [persistEnabled, setPersistEnabled] = useState(() => {
-    try { return persistence.getEnabled ? persistence.getEnabled() : true; } catch { return true; }
+    try {
+      return persistence.getEnabled ? persistence.getEnabled() : true;
+    } catch {
+      return true;
+    }
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(() => {
     const restoredStep = persistence.getCurrentStep();
-    console.log('Restored current step:', restoredStep);
+    console.log("Restored current step:", restoredStep);
     return restoredStep;
   });
   const [saveStatus, setSaveStatus] = useState<
@@ -162,7 +166,7 @@ export default function Configurator() {
   // Initialize form data from persistence system
   const [formData, setFormData] = useState(() => {
     const restoredData = persistence.getFormData();
-    console.log('Restored form data:', restoredData);
+    console.log("Restored form data:", restoredData);
     return restoredData;
   });
 
@@ -181,14 +185,23 @@ export default function Configurator() {
   // Depends on publishedUrl and formData; must be declared AFTER their initialization to avoid TDZ
   const getDisplayedDomain = useCallback(() => {
     if (publishedUrl) {
-      try { return new URL(publishedUrl).hostname; } catch {}
+      try {
+        return new URL(publishedUrl).hostname;
+      } catch {}
     }
     if (formData.hasDomain && formData.domainName) return formData.domainName;
     const slug = (formData.selectedDomain || formData.businessName || "site")
       .toLowerCase()
       .replace(/\s+/g, "");
     return `${slug}.${getBaseHost()}`;
-  }, [formData.hasDomain, formData.domainName, formData.selectedDomain, formData.businessName, publishedUrl, getBaseHost]);
+  }, [
+    formData.hasDomain,
+    formData.domainName,
+    formData.selectedDomain,
+    formData.businessName,
+    publishedUrl,
+    getBaseHost,
+  ]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -197,14 +210,14 @@ export default function Configurator() {
     const hasSaved = persistence.hasSavedSteps();
     const summary = persistence.getSummary();
 
-    console.log('=== Configurator Initialization ===');
-    console.log('Has saved steps:', hasSaved);
-    console.log('Summary:', summary);
-    console.log('Current step:', currentStep);
-    console.log('Form data:', formData);
-    console.log('Config ID:', currentConfigId);
-    console.log('Published URL:', publishedUrl);
-    console.log('=====================================');
+    console.log("=== Configurator Initialization ===");
+    console.log("Has saved steps:", hasSaved);
+    console.log("Summary:", summary);
+    console.log("Current step:", currentStep);
+    console.log("Form data:", formData);
+    console.log("Config ID:", currentConfigId);
+    console.log("Published URL:", publishedUrl);
+    console.log("=====================================");
 
     // Show toast with restoration status
     if (hasSaved) {
@@ -686,20 +699,29 @@ export default function Configurator() {
   }, []);
 
   // Form data update helper
-  const updateFormData = useCallback((field: string, value: any) => {
-    setFormData((prev) => {
-      const newData = { ...prev, [field]: value };
-      persistence.updateFormData(field, value, newData);
-      return newData;
-    });
-  }, [persistence]);
+  const updateFormData = useCallback(
+    (field: string, value: any) => {
+      setFormData((prev) => {
+        const newData = { ...prev, [field]: value };
+        persistence.updateFormData(field, value, newData);
+        return newData;
+      });
+    },
+    [persistence],
+  );
 
   // Navigation functions
   const startConfigurator = useCallback(() => {
     // Use requestAnimationFrame for smoother transition
     requestAnimationFrame(() => {
       setCurrentStep(0); // Go to template selection
-      persistence.saveStep(0, 'template', 'step_change', { action: 'started' }, formData);
+      persistence.saveStep(
+        0,
+        "template",
+        "step_change",
+        { action: "started" },
+        formData,
+      );
     });
   }, [formData, persistence]);
 
@@ -708,44 +730,83 @@ export default function Configurator() {
       updateFormDataFromInputs();
       const newStep = currentStep + 1;
       setCurrentStep(newStep);
-      persistence.saveStep(newStep, configuratorSteps[newStep]?.id || 'unknown', 'step_change', { action: 'next', from: currentStep }, formData);
+      persistence.saveStep(
+        newStep,
+        configuratorSteps[newStep]?.id || "unknown",
+        "step_change",
+        { action: "next", from: currentStep },
+        formData,
+      );
     }
-  }, [currentStep, configuratorSteps, updateFormDataFromInputs, formData, persistence]);
+  }, [
+    currentStep,
+    configuratorSteps,
+    updateFormDataFromInputs,
+    formData,
+    persistence,
+  ]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 0) {
       updateFormDataFromInputs();
       const newStep = currentStep - 1;
       setCurrentStep(newStep);
-      persistence.saveStep(newStep, configuratorSteps[newStep]?.id || 'unknown', 'step_change', { action: 'prev', from: currentStep }, formData);
+      persistence.saveStep(
+        newStep,
+        configuratorSteps[newStep]?.id || "unknown",
+        "step_change",
+        { action: "prev", from: currentStep },
+        formData,
+      );
     } else if (currentStep === 0) {
       // Go back to welcome page
       setCurrentStep(-1);
-      persistence.saveStep(-1, 'welcome', 'step_change', { action: 'back_to_welcome' }, formData);
+      persistence.saveStep(
+        -1,
+        "welcome",
+        "step_change",
+        { action: "back_to_welcome" },
+        formData,
+      );
     }
-  }, [currentStep, updateFormDataFromInputs, formData, persistence, configuratorSteps]);
+  }, [
+    currentStep,
+    updateFormDataFromInputs,
+    formData,
+    persistence,
+    configuratorSteps,
+  ]);
 
   // Back to Template Selection function
   const backToTemplates = useCallback(() => {
     updateFormDataFromInputs();
     setCurrentStep(0);
-    persistence.saveStep(0, 'template', 'step_change', { action: 'back_to_templates', from: currentStep }, formData);
+    persistence.saveStep(
+      0,
+      "template",
+      "step_change",
+      { action: "back_to_templates", from: currentStep },
+      formData,
+    );
   }, [updateFormDataFromInputs, formData, persistence, currentStep]);
 
   // Normalize payload to server schema (e.g., contactMethods must be string[])
-  const normalizeConfigPayload = useCallback((data: any): Partial<Configuration> => {
-    const clone: any = { ...data };
-    if (Array.isArray(clone.contactMethods)) {
-      clone.contactMethods = clone.contactMethods
-        .map((m: any) =>
-          typeof m === "string"
-            ? m
-            : [m?.type, m?.value].filter(Boolean).join(": ").trim(),
-        )
-        .filter((s: any) => typeof s === "string" && s.trim());
-    }
-    return clone as Partial<Configuration>;
-  }, []);
+  const normalizeConfigPayload = useCallback(
+    (data: any): Partial<Configuration> => {
+      const clone: any = { ...data };
+      if (Array.isArray(clone.contactMethods)) {
+        clone.contactMethods = clone.contactMethods
+          .map((m: any) =>
+            typeof m === "string"
+              ? m
+              : [m?.type, m?.value].filter(Boolean).join(": ").trim(),
+          )
+          .filter((s: any) => typeof s === "string" && s.trim());
+      }
+      return clone as Partial<Configuration>;
+    },
+    [],
+  );
 
   // Save and publish functions
   const saveToBackend = useCallback(
@@ -773,13 +834,25 @@ export default function Configurator() {
           if (configId) {
             persistence.setConfigId(configId);
           }
-          persistence.saveStep(currentStep, 'save', 'save', { configId, success: true }, data);
+          persistence.saveStep(
+            currentStep,
+            "save",
+            "save",
+            { configId, success: true },
+            data,
+          );
 
           // Keep legacy localStorage for backward compatibility
           localStorage.setItem("configuratorData", JSON.stringify(data));
         } else {
           setSaveStatus("error");
-          persistence.saveStep(currentStep, 'save', 'save', { success: false, error: result.error }, data);
+          persistence.saveStep(
+            currentStep,
+            "save",
+            "save",
+            { success: false, error: result.error },
+            data,
+          );
         }
       } catch (error) {
         setSaveStatus("error");
@@ -790,71 +863,82 @@ export default function Configurator() {
   );
 
   // Convert File/Blob/blob: URLs to data URLs so they persist across sessions and servers
-  const fileOrUrlToDataUrl = useCallback(async (input: any): Promise<string | null> => {
-    try {
-      if (!input) return null;
-      if (typeof input === 'string') {
-        if (input.startsWith('data:')) return input;
-        if (input.startsWith('blob:')) {
-          const resp = await fetch(input);
-          const blob = await resp.blob();
+  const fileOrUrlToDataUrl = useCallback(
+    async (input: any): Promise<string | null> => {
+      try {
+        if (!input) return null;
+        if (typeof input === "string") {
+          if (input.startsWith("data:")) return input;
+          if (input.startsWith("blob:")) {
+            const resp = await fetch(input);
+            const blob = await resp.blob();
+            const reader = new FileReader();
+            return await new Promise((resolve, reject) => {
+              reader.onerror = () => reject(reader.error);
+              reader.onloadend = () => resolve(String(reader.result || ""));
+              reader.readAsDataURL(blob);
+            });
+          }
+          return input;
+        }
+        if (input instanceof Blob) {
           const reader = new FileReader();
           return await new Promise((resolve, reject) => {
             reader.onerror = () => reject(reader.error);
-            reader.onloadend = () => resolve(String(reader.result || ''));
-            reader.readAsDataURL(blob);
+            reader.onloadend = () => resolve(String(reader.result || ""));
+            reader.readAsDataURL(input);
           });
         }
-        return input;
+        return null;
+      } catch {
+        return null;
       }
-      if (input instanceof Blob) {
-        const reader = new FileReader();
-        return await new Promise((resolve, reject) => {
-          reader.onerror = () => reject(reader.error);
-          reader.onloadend = () => resolve(String(reader.result || ''));
-          reader.readAsDataURL(input);
-        });
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  }, []);
+    },
+    [],
+  );
 
-  const sanitizeMedia = useCallback(async (data: any) => {
-    const clone: any = { ...data };
-    if (clone.logo) {
-      const converted = await fileOrUrlToDataUrl(clone.logo);
-      if (converted) clone.logo = converted;
-    }
-    if (Array.isArray(clone.gallery)) {
-      const out = [] as any[];
-      for (const img of clone.gallery) {
-        const entry: any = { ...img };
-        if (entry && typeof entry.url === 'string' && entry.url.startsWith('blob:')) {
-          const converted = await fileOrUrlToDataUrl(entry.url);
-          if (converted) entry.url = converted;
-        }
-        if (entry && entry.file) delete entry.file;
-        out.push(entry);
+  const sanitizeMedia = useCallback(
+    async (data: any) => {
+      const clone: any = { ...data };
+      if (clone.logo) {
+        const converted = await fileOrUrlToDataUrl(clone.logo);
+        if (converted) clone.logo = converted;
       }
-      clone.gallery = out;
-    }
-    if (Array.isArray(clone.menuItems)) {
-      clone.menuItems = await Promise.all(
-        clone.menuItems.map(async (it: any) => {
-          const item = { ...it };
-          if (item.image) {
-            const imageToConvert = item.image.file || item.image.url || item.image;
-            const converted = await fileOrUrlToDataUrl(imageToConvert);
-            if (converted) item.image = converted;
+      if (Array.isArray(clone.gallery)) {
+        const out = [] as any[];
+        for (const img of clone.gallery) {
+          const entry: any = { ...img };
+          if (
+            entry &&
+            typeof entry.url === "string" &&
+            entry.url.startsWith("blob:")
+          ) {
+            const converted = await fileOrUrlToDataUrl(entry.url);
+            if (converted) entry.url = converted;
           }
-          return item;
-        })
-      );
-    }
-    return clone;
-  }, [fileOrUrlToDataUrl]);
+          if (entry && entry.file) delete entry.file;
+          out.push(entry);
+        }
+        clone.gallery = out;
+      }
+      if (Array.isArray(clone.menuItems)) {
+        clone.menuItems = await Promise.all(
+          clone.menuItems.map(async (it: any) => {
+            const item = { ...it };
+            if (item.image) {
+              const imageToConvert =
+                item.image.file || item.image.url || item.image;
+              const converted = await fileOrUrlToDataUrl(imageToConvert);
+              if (converted) item.image = converted;
+            }
+            return item;
+          }),
+        );
+      }
+      return clone;
+    },
+    [fileOrUrlToDataUrl],
+  );
 
   const { user, token } = useAuth();
 
@@ -875,20 +959,23 @@ export default function Configurator() {
       if (token && user) {
         const cfg = normalizeConfigPayload(mediaSafe) as any;
         const slugSource = (cfg.slug || cfg.businessName || "").toString();
-        const slug = slugSource
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "")
-          .slice(0, 63) || `site-${Date.now().toString(36)}`;
+        const slug =
+          slugSource
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "")
+            .slice(0, 63) || `site-${Date.now().toString(36)}`;
         const publishRes = await publishWebApp(slug, cfg);
-        live = publishRes.publishedUrl || publishRes.previewUrl || `/site/${slug}`;
+        live =
+          publishRes.publishedUrl || publishRes.previewUrl || `/site/${slug}`;
       } else {
         const result = await configurationApi.publish(
           currentConfigId || "new",
           normalizeConfigPayload(mediaSafe) as any,
         );
         if (result.success && result.data) {
-          live = (result.data as any).previewUrl || result.data.publishedUrl || null;
+          live =
+            (result.data as any).previewUrl || result.data.publishedUrl || null;
         }
       }
 
@@ -900,11 +987,17 @@ export default function Configurator() {
         if (live) {
           persistence.setPublishedUrl(live);
         }
-        persistence.saveStep(currentStep, 'publish', 'publish', {
-          success: true,
-          publishedUrl: live,
-          configId: currentConfigId
-        }, formData);
+        persistence.saveStep(
+          currentStep,
+          "publish",
+          "publish",
+          {
+            success: true,
+            publishedUrl: live,
+            configId: currentConfigId,
+          },
+          formData,
+        );
 
         if (live) {
           toast({
@@ -917,11 +1010,17 @@ export default function Configurator() {
         }
       } else {
         setPublishStatus("error");
-        persistence.saveStep(currentStep, 'publish', 'publish', {
-          success: false,
-          error: result.error,
-          configId: currentConfigId
-        }, formData);
+        persistence.saveStep(
+          currentStep,
+          "publish",
+          "publish",
+          {
+            success: false,
+            error: result.error,
+            configId: currentConfigId,
+          },
+          formData,
+        );
         toast({
           title: "Publish failed",
           description: result.error || "Unknown error",
@@ -931,11 +1030,17 @@ export default function Configurator() {
     } catch (error: any) {
       setPublishStatus("error");
       console.error("Publish error:", error);
-      persistence.saveStep(currentStep, 'publish', 'publish', {
-        success: false,
-        error: error?.message || String(error),
-        configId: currentConfigId
-      }, formData);
+      persistence.saveStep(
+        currentStep,
+        "publish",
+        "publish",
+        {
+          success: false,
+          error: error?.message || String(error),
+          configId: currentConfigId,
+        },
+        formData,
+      );
       toast({
         title: "Publish error",
         description: error?.message || String(error),
@@ -949,12 +1054,24 @@ export default function Configurator() {
     const t = setTimeout(() => {
       (async () => {
         try {
-          const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
+          const sid = persistence.getSessionId
+            ? persistence.getSessionId()
+            : "local";
           const mediaSafe = await sanitizeMedia(formData);
           const payload = JSON.stringify({ config: mediaSafe });
-          const blob = new Blob([payload], { type: 'application/json' });
-          if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
-            await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': sessionApi.getUserId() }, body: payload }).catch(() => {});
+          const blob = new Blob([payload], { type: "application/json" });
+          if (
+            !(navigator as any).sendBeacon ||
+            !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)
+          ) {
+            await fetch(`/api/preview/${sid}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-user-id": sessionApi.getUserId(),
+              },
+              body: payload,
+            }).catch(() => {});
           }
         } catch {}
       })();
@@ -1052,8 +1169,15 @@ export default function Configurator() {
                   checked={persistEnabled}
                   onCheckedChange={(v: boolean) => {
                     setPersistEnabled(v);
-                    try { persistence.setEnabled?.(v); } catch {}
-                    toast({ title: v ? 'Saving enabled' : 'Saving disabled', description: v ? 'Your steps will be stored and restored' : 'Progress will not be stored' });
+                    try {
+                      persistence.setEnabled?.(v);
+                    } catch {}
+                    toast({
+                      title: v ? "Saving enabled" : "Saving disabled",
+                      description: v
+                        ? "Your steps will be stored and restored"
+                        : "Progress will not be stored",
+                    });
                   }}
                 />
               </div>
@@ -1090,16 +1214,35 @@ export default function Configurator() {
                         size="sm"
                         variant="outline"
                         onClick={async () => {
-                          const sid = (persistence.getSessionId ? persistence.getSessionId() : 'local');
+                          const sid = persistence.getSessionId
+                            ? persistence.getSessionId()
+                            : "local";
                           try {
                             const mediaSafe = await sanitizeMedia(formData);
-                            const payload = JSON.stringify({ config: mediaSafe });
-                            const blob = new Blob([payload], { type: 'application/json' });
-                            if (!(navigator as any).sendBeacon || !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)) {
-                              await fetch(`/api/preview/${sid}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': sessionApi.getUserId() }, body: payload }).catch(() => {});
+                            const payload = JSON.stringify({
+                              config: mediaSafe,
+                            });
+                            const blob = new Blob([payload], {
+                              type: "application/json",
+                            });
+                            if (
+                              !(navigator as any).sendBeacon ||
+                              !(navigator as any).sendBeacon(
+                                `/api/preview/${sid}`,
+                                blob,
+                              )
+                            ) {
+                              await fetch(`/api/preview/${sid}`, {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  "x-user-id": sessionApi.getUserId(),
+                                },
+                                body: payload,
+                              }).catch(() => {});
                             }
                           } catch {}
-                          window.open(`/site/preview-${sid}`, '_blank');
+                          window.open(`/site/preview-${sid}`, "_blank");
                         }}
                         className="border-gray-300"
                       >
@@ -1153,40 +1296,52 @@ export default function Configurator() {
   const PaymentOptionsStep = () => {
     const paymentOptions = ["Credit Card", "PayPal", "Cash"];
     return (
-        <motion.div key="payment-options" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
-            <div className="space-y-4">
-                {paymentOptions.map((option) => (
-                    <div key={option} className="flex items-center justify-between rounded-lg border bg-white p-4">
-                        <label htmlFor={`payment-${option}`} className="text-sm font-medium">
-                            {option}
-                        </label>
-                        <Switch
-                            id={`payment-${option}`}
-                            checked={formData.paymentOptions?.includes(option)}
-                            onCheckedChange={(checked) => {
-                                const newOptions = checked
-                                    ? [...(formData.paymentOptions || []), option]
-                                    : formData.paymentOptions?.filter((o) => o !== option);
-                                updateFormData("paymentOptions", newOptions);
-                            }}
-                        />
-                    </div>
-                ))}
+      <motion.div
+        key="payment-options"
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -10 }}
+      >
+        <div className="space-y-4">
+          {paymentOptions.map((option) => (
+            <div
+              key={option}
+              className="flex items-center justify-between rounded-lg border bg-white p-4"
+            >
+              <label
+                htmlFor={`payment-${option}`}
+                className="text-sm font-medium"
+              >
+                {option}
+              </label>
+              <Switch
+                id={`payment-${option}`}
+                checked={formData.paymentOptions?.includes(option)}
+                onCheckedChange={(checked) => {
+                  const newOptions = checked
+                    ? [...(formData.paymentOptions || []), option]
+                    : formData.paymentOptions?.filter((o) => o !== option);
+                  updateFormData("paymentOptions", newOptions);
+                }}
+              />
             </div>
-        </motion.div>
+          ))}
+        </div>
+      </motion.div>
     );
-}
+  };
 
-const OffersBanner = ({ offers, styles, offerBanner }) => {
+  const OffersBanner = ({ offers, styles, offerBanner }) => {
     if (!offers || offers.length === 0) return null;
 
     const normalizeImageSrc = (img: any): string => {
       if (!img) return "/placeholder.svg";
-      if (typeof img === 'string') return img;
+      if (typeof img === "string") return img;
       const url = img?.url;
-      if (typeof url === 'string') return url;
+      if (typeof url === "string") return url;
       const file = (img as any)?.file || img;
-      if (typeof File !== "undefined" && file instanceof File) return URL.createObjectURL(file);
+      if (typeof File !== "undefined" && file instanceof File)
+        return URL.createObjectURL(file);
       return "/placeholder.svg";
     };
 
@@ -1200,53 +1355,75 @@ const OffersBanner = ({ offers, styles, offerBanner }) => {
 
     const offer = list[Math.max(0, Math.min(idx, list.length - 1))];
 
-    const size = offerBanner?.size === 'small' ? 'small' : 'big';
-    const cardAspect = offerBanner?.cardAspect === 'square' ? 'square' : 'rectangle';
-    const radiusClass = offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-xl';
+    const size = offerBanner?.size === "small" ? "small" : "big";
+    const cardAspect =
+      offerBanner?.cardAspect === "square" ? "square" : "rectangle";
+    const radiusClass =
+      offerBanner?.shape === "pill" ? "rounded-full" : "rounded-xl";
 
     const bannerStyles = {
-      backgroundColor: offerBanner?.backgroundColor || '#000000',
-      color: offerBanner?.textColor || '#FFFFFF',
+      backgroundColor: offerBanner?.backgroundColor || "#000000",
+      color: offerBanner?.textColor || "#FFFFFF",
     };
 
-    const textSize = offerBanner?.textSize || 'md';
-    const nameCls = textSize === 'sm' ? 'text-lg' : textSize === 'lg' ? 'text-3xl' : 'text-2xl';
-    const descCls = textSize === 'sm' ? 'text-xs' : textSize === 'lg' ? 'text-lg' : 'text-sm';
-    const priceCls = textSize === 'sm' ? 'text-base' : textSize === 'lg' ? 'text-2xl' : 'text-xl';
+    const textSize = offerBanner?.textSize || "md";
+    const nameCls =
+      textSize === "sm"
+        ? "text-lg"
+        : textSize === "lg"
+          ? "text-3xl"
+          : "text-2xl";
+    const descCls =
+      textSize === "sm" ? "text-xs" : textSize === "lg" ? "text-lg" : "text-sm";
+    const priceCls =
+      textSize === "sm"
+        ? "text-base"
+        : textSize === "lg"
+          ? "text-2xl"
+          : "text-xl";
 
     const buttonStyles = {
-      backgroundColor: offerBanner?.buttonColor || '#FFFFFF',
-      color: offerBanner?.backgroundColor || '#000000',
+      backgroundColor: offerBanner?.buttonColor || "#FFFFFF",
+      color: offerBanner?.backgroundColor || "#000000",
     };
 
-    const buttonRadius = offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-lg';
+    const buttonRadius =
+      offerBanner?.shape === "pill" ? "rounded-full" : "rounded-lg";
 
     return (
-      <div className={`relative text-white mb-4 overflow-hidden ${radiusClass}`} style={bannerStyles}>
+      <div
+        className={`relative text-white mb-4 overflow-hidden ${radiusClass}`}
+        style={bannerStyles}
+      >
         {offer.image && (
           <img
             src={normalizeImageSrc(offer.image)}
             alt={offer.name}
-            className={`${cardAspect === 'square' ? 'aspect-square' : (size === 'small' ? 'h-24' : 'h-40')} w-full object-cover opacity-50`}
+            className={`${cardAspect === "square" ? "aspect-square" : size === "small" ? "h-24" : "h-40"} w-full object-cover opacity-50`}
           />
         )}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
           <h3 className={`font-bold ${nameCls}`}>{offer.name}</h3>
-          {offer.description && <p className={`${descCls}`}>{offer.description}</p>}
-          {typeof offer.price !== 'undefined' && <p className={`font-bold mt-2 ${priceCls}`}>${offer.price}</p>}
+          {offer.description && (
+            <p className={`${descCls}`}>{offer.description}</p>
+          )}
+          {typeof offer.price !== "undefined" && (
+            <p className={`font-bold mt-2 ${priceCls}`}>${offer.price}</p>
+          )}
         </div>
       </div>
     );
-}
+  };
 
-const TemplatePreviewContent = () => {
+  const TemplatePreviewContent = () => {
     const normalizeImageSrc = (img: any): string => {
       if (!img) return "/placeholder.svg";
-      if (typeof img === 'string') return img;
+      if (typeof img === "string") return img;
       const url = img?.url;
-      if (typeof url === 'string') return url;
+      if (typeof url === "string") return url;
       const file = (img as any)?.file || img;
-      if (typeof File !== "undefined" && file instanceof File) return URL.createObjectURL(file);
+      if (typeof File !== "undefined" && file instanceof File)
+        return URL.createObjectURL(file);
       return "/placeholder.svg";
     };
     const [previewState, setPreviewState] = useState({
@@ -1339,7 +1516,6 @@ const TemplatePreviewContent = () => {
       const b = int & 255;
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
-
 
     // Template-specific content
     const selectedId =
@@ -1579,7 +1755,6 @@ const TemplatePreviewContent = () => {
       //   if (!formData.instagramSync) return;
       //   const profileUrl = formData.socialMedia?.instagram;
       //   if (!profileUrl) return;
-
       //   try {
       //     const resp = await fetch(
       //       `/api/instagram?profileUrl=${encodeURIComponent(profileUrl)}`,
@@ -1600,7 +1775,6 @@ const TemplatePreviewContent = () => {
       //     console.warn("Instagram fetch failed:", e);
       //   }
       // };
-
       // tryFetchInstagram();
       // return () => {
       //   cancelled = true;
@@ -1789,22 +1963,36 @@ const TemplatePreviewContent = () => {
               <div className="space-y-3">
                 {(formData.offers || []).length === 0 && (
                   <div className="text-center py-8">
-                    <p className={templateStyles.itemDesc}>No offers yet. Add offers in More features → Offers.</p>
+                    <p className={templateStyles.itemDesc}>
+                      No offers yet. Add offers in More features → Offers.
+                    </p>
                   </div>
                 )}
                 {(formData.offers || []).map((o: any, i: number) => (
-                  <div key={i} className={`${templateStyles.itemCard} flex items-center gap-3`}>
+                  <div
+                    key={i}
+                    className={`${templateStyles.itemCard} flex items-center gap-3`}
+                  >
                     {o.image && (
-                      <img src={normalizeImageSrc(o.image)} alt={o.name} className={`w-16 h-16 object-cover ${formData.offerBanner?.shape === 'pill' ? 'rounded-full' : 'rounded-lg'}`} />
+                      <img
+                        src={normalizeImageSrc(o.image)}
+                        alt={o.name}
+                        className={`w-16 h-16 object-cover ${formData.offerBanner?.shape === "pill" ? "rounded-full" : "rounded-lg"}`}
+                      />
                     )}
                     <div className="flex-1">
                       <div className={templateStyles.itemName}>{o.name}</div>
                       {o.description && (
-                        <div className={templateStyles.itemDesc}>{o.description}</div>
+                        <div className={templateStyles.itemDesc}>
+                          {o.description}
+                        </div>
                       )}
                     </div>
                     {o.price && (
-                      <div className={templateStyles.itemPrice} style={{ color: styles.userPrimary }}>
+                      <div
+                        className={templateStyles.itemPrice}
+                        style={{ color: styles.userPrimary }}
+                      >
                         ${o.price}
                       </div>
                     )}
@@ -2267,7 +2455,11 @@ const TemplatePreviewContent = () => {
               )}
 
               {(formData.offers || []).length > 0 && (
-                <OffersBanner offers={formData.offers} styles={styles} offerBanner={formData.offerBanner} />
+                <OffersBanner
+                  offers={formData.offers}
+                  styles={styles}
+                  offerBanner={formData.offerBanner}
+                />
               )}
 
               <div className={`mb-4 grid grid-cols-2 gap-2`}>
@@ -2283,7 +2475,13 @@ const TemplatePreviewContent = () => {
                       onClick={() => openProductModal(item)}
                     >
                       <div className="hidden">{item.emoji || "🍽️"}</div>
-                      {formData.homepageDishImageVisibility !== 'hidden' && <img src={normalizeImageSrc(item.image)} alt={item.name} className="w-full h-20 object-cover rounded-lg mb-2" />}
+                      {formData.homepageDishImageVisibility !== "hidden" && (
+                        <img
+                          src={normalizeImageSrc(item.image)}
+                          alt={item.name}
+                          className="w-full h-20 object-cover rounded-lg mb-2"
+                        />
+                      )}
                       <h3
                         className={
                           templateStyles.itemName + " text-xs truncate"
@@ -2479,41 +2677,43 @@ const TemplatePreviewContent = () => {
       const target = formData.loyaltyConfig?.stampsForReward || 10;
       const deviceId = getDeviceId();
       const [have, setHave] = useState(() => {
-          const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
-          return savedStamps ? parseInt(savedStamps, 10) : 0;
+        const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
+        return savedStamps ? parseInt(savedStamps, 10) : 0;
       });
 
       useEffect(() => {
-          const handleStorageChange = () => {
-              const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
-              setHave(savedStamps ? parseInt(savedStamps, 10) : 0);
-          };
-          window.addEventListener('storage', handleStorageChange);
-          // also listen for local changes
-          const interval = setInterval(handleStorageChange, 500);
-          return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            clearInterval(interval);
-          }
+        const handleStorageChange = () => {
+          const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
+          setHave(savedStamps ? parseInt(savedStamps, 10) : 0);
+        };
+        window.addEventListener("storage", handleStorageChange);
+        // also listen for local changes
+        const interval = setInterval(handleStorageChange, 500);
+        return () => {
+          window.removeEventListener("storage", handleStorageChange);
+          clearInterval(interval);
+        };
       }, [deviceId]);
 
       const pct = (have / target) * 100;
 
       return (
-          <div className="absolute bottom-2 left-2 right-2 bg-white p-3 border rounded-lg shadow-md z-20">
-              <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-xs font-semibold">Loyalty Card</h3>
-                  <span className="text-xs font-semibold">{have} / {target}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                      className="bg-teal-500 h-2 rounded-full"
-                      style={{ width: `${pct}%` }}
-                  ></div>
-              </div>
+        <div className="absolute bottom-2 left-2 right-2 bg-white p-3 border rounded-lg shadow-md z-20">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-xs font-semibold">Loyalty Card</h3>
+            <span className="text-xs font-semibold">
+              {have} / {target}
+            </span>
           </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-teal-500 h-2 rounded-full"
+              style={{ width: `${pct}%` }}
+            ></div>
+          </div>
+        </div>
       );
-    }
+    };
 
     const LoyaltyCardInline = () => {
       if (!formData.loyaltyEnabled) return null;
@@ -2529,10 +2729,10 @@ const TemplatePreviewContent = () => {
           setHave(saved ? parseInt(saved, 10) : 0);
         };
         const interval = setInterval(handler, 500);
-        window.addEventListener('storage', handler);
+        window.addEventListener("storage", handler);
         return () => {
           clearInterval(interval);
-          window.removeEventListener('storage', handler);
+          window.removeEventListener("storage", handler);
         };
       }, [deviceId]);
       const pct = Math.min(100, (have / target) * 100);
@@ -2540,10 +2740,15 @@ const TemplatePreviewContent = () => {
         <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold">Loyalty Card</div>
-            <div className="text-xs font-semibold">{have} / {target}</div>
+            <div className="text-xs font-semibold">
+              {have} / {target}
+            </div>
           </div>
           <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-            <div className="h-2 rounded-full" style={{ width: `${pct}%`, backgroundColor: styles.userPrimary }} />
+            <div
+              className="h-2 rounded-full"
+              style={{ width: `${pct}%`, backgroundColor: styles.userPrimary }}
+            />
           </div>
         </div>
       );
@@ -2553,16 +2758,23 @@ const TemplatePreviewContent = () => {
       if (!formData.onlineOrdering) return null;
 
       switch (previewState.orderStage) {
-        case 'payment':
+        case "payment":
           return (
             <div className="absolute inset-0 bg-white z-50 p-4 flex flex-col">
               <h2 className="text-2xl font-bold mb-4">Payment</h2>
               <div className="flex-1 overflow-y-auto">
                 <p className="text-lg font-semibold mb-4">Order Summary</p>
                 {cartItems.map((it, i) => (
-                  <div key={i} className="flex justify-between items-center mb-2">
-                    <span>{it.name} (x{it.quantity})</span>
-                    <span>${(parseFloat(it.price) * it.quantity).toFixed(2)}</span>
+                  <div
+                    key={i}
+                    className="flex justify-between items-center mb-2"
+                  >
+                    <span>
+                      {it.name} (x{it.quantity})
+                    </span>
+                    <span>
+                      ${(parseFloat(it.price) * it.quantity).toFixed(2)}
+                    </span>
                   </div>
                 ))}
                 <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
@@ -2570,49 +2782,78 @@ const TemplatePreviewContent = () => {
                   <span>${cartTotal.toFixed(2)}</span>
                 </div>
 
-                <p className="text-lg font-semibold mt-8 mb-4">Payment Method</p>
+                <p className="text-lg font-semibold mt-8 mb-4">
+                  Payment Method
+                </p>
                 <div className="space-y-4">
-                  {(formData.paymentOptions && formData.paymentOptions.length > 0 ? formData.paymentOptions : ['Credit Card']).map((option) => (
+                  {(formData.paymentOptions &&
+                  formData.paymentOptions.length > 0
+                    ? formData.paymentOptions
+                    : ["Credit Card"]
+                  ).map((option) => (
                     <Button
                       key={option}
                       className="w-full"
-                      variant={option === 'Credit Card' ? 'default' : 'outline'}
-                      onClick={() => setPreviewState(p => ({...p, orderStage: 'done'}))}
+                      variant={option === "Credit Card" ? "default" : "outline"}
+                      onClick={() =>
+                        setPreviewState((p) => ({ ...p, orderStage: "done" }))
+                      }
                     >
                       Pay with {option}
                     </Button>
                   ))}
                 </div>
               </div>
-              <Button variant="link" onClick={() => { setPreviewState(p => ({...p, orderStage: 'select'})); setShowCart(true); }}>Back to cart</Button>
+              <Button
+                variant="link"
+                onClick={() => {
+                  setPreviewState((p) => ({ ...p, orderStage: "select" }));
+                  setShowCart(true);
+                }}
+              >
+                Back to cart
+              </Button>
             </div>
           );
-        case 'done':
+        case "done":
           return (
             <div className="absolute inset-0 bg-white z-50 p-4 flex flex-col items-center justify-center text-center">
               <Check className="w-16 h-16 text-green-500 mb-4" />
               <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
               <p className="text-gray-600 mb-8">Your order has been placed.</p>
-              <Button onClick={() => {
-                const deviceId = getDeviceId();
-                const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
-                const currentStamps = savedStamps ? parseInt(savedStamps, 10) : 0;
-                const newStamps = (currentStamps + cartItems.reduce((t, i) => t + i.quantity, 0)) % (formData.loyaltyConfig?.stampsForReward || 10);
-                localStorage.setItem(`stamps_${deviceId}`, newStamps.toString());
+              <Button
+                onClick={() => {
+                  const deviceId = getDeviceId();
+                  const savedStamps = localStorage.getItem(
+                    `stamps_${deviceId}`,
+                  );
+                  const currentStamps = savedStamps
+                    ? parseInt(savedStamps, 10)
+                    : 0;
+                  const newStamps =
+                    (currentStamps +
+                      cartItems.reduce((t, i) => t + i.quantity, 0)) %
+                    (formData.loyaltyConfig?.stampsForReward || 10);
+                  localStorage.setItem(
+                    `stamps_${deviceId}`,
+                    newStamps.toString(),
+                  );
 
-                setPreviewState(p => ({...p, orderStage: 'select'}));
-                setCartItems([]);
-              }}>Back to Menu</Button>
+                  setPreviewState((p) => ({ ...p, orderStage: "select" }));
+                  setCartItems([]);
+                }}
+              >
+                Back to Menu
+              </Button>
             </div>
           );
         default:
           return null;
       }
-    }
+    };
 
     const CartSidebar = () => {
-      if (!formData.onlineOrdering || !showCart)
-        return null;
+      if (!formData.onlineOrdering || !showCart) return null;
 
       const subtotal = cartItems.reduce(
         (t, it) => t + parseFloat(it.price) * it.quantity,
@@ -2623,83 +2864,104 @@ const TemplatePreviewContent = () => {
 
       return (
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowCart(false)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowCart(false)}
         >
-            <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-xl shadow-xl w-full max-w-xs flex flex-col max-h-[90vh]"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="p-3 border-b flex justify-between items-center">
-                    <div>
-                        <h3 className="text-sm font-semibold">Cart</h3>
-                        <p className="text-xs text-gray-500">
-                            {cartItemsCount} item{cartItemsCount !== 1 ? "s" : ""}
-                        </p>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-xl shadow-xl w-full max-w-xs flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-3 border-b flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-semibold">Cart</h3>
+                <p className="text-xs text-gray-500">
+                  {cartItemsCount} item{cartItemsCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowCart(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {cartItems.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-4 text-lg font-medium">Your cart is empty</p>
+                  <p className="text-sm text-gray-500">
+                    Add items to get started
+                  </p>
+                </div>
+              ) : (
+                cartItems.map((it, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <img
+                      src={normalizeImageSrc(it.image)}
+                      alt={it.name}
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">{it.name}</div>
+                      <div className="text-sm text-gray-500">
+                        Qty: {it.quantity}
+                      </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => setShowCart(false)}>
-                        <X className="h-4 w-4" />
+                    <div className="font-semibold text-sm">
+                      ${(parseFloat(it.price) * it.quantity).toFixed(2)}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFromCart(it.name)}
+                    >
+                      <X className="h-4 w-4" />
                     </Button>
+                  </div>
+                ))
+              )}
+            </div>
+            {cartItems.length > 0 && (
+              <div className="p-3 border-t space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                    {cartItems.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8">
-                        <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-4 text-lg font-medium">Your cart is empty</p>
-                        <p className="text-sm text-gray-500">Add items to get started</p>
-                    </div>
-                    ) : (
-                    cartItems.map((it, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                            <img src={normalizeImageSrc(it.image)} alt={it.name} className="w-12 h-12 rounded-lg object-cover" />
-                            <div className="flex-1">
-                                <div className="font-medium">{it.name}</div>
-                                <div className="text-sm text-gray-500">
-                                    Qty: {it.quantity}
-                                </div>
-                            </div>
-                            <div className="font-semibold text-sm">
-                                ${(parseFloat(it.price) * it.quantity).toFixed(2)}
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => removeFromCart(it.name)}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))
-                    )}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Fees</span>
+                  <span className="font-medium">${fees.toFixed(2)}</span>
                 </div>
-                {cartItems.length > 0 && (
-                    <div className="p-3 border-t space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span className="font-medium">${subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Fees</span>
-                        <span className="font-medium">${fees.toFixed(2)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm pt-1 border-t">
-                        <span className="font-semibold">Total</span>
-                        <span className="font-semibold">${total.toFixed(2)}</span>
-                        </div>
-                        <Button
-                        className="w-full bg-teal-600 hover:bg-teal-700 mt-1"
-                        onClick={() => {
-                          setShowCart(false);
-                          setTimeout(() => setPreviewState((p) => ({ ...p, orderStage: "payment" })), 150);
-                        }}
-                        >
-                        Checkout
-                        </Button>
-                    </div>
-                )}
-            </motion.div>
+                <div className="flex items-center justify-between text-sm pt-1 border-t">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-semibold">${total.toFixed(2)}</span>
+                </div>
+                <Button
+                  className="w-full bg-teal-600 hover:bg-teal-700 mt-1"
+                  onClick={() => {
+                    setShowCart(false);
+                    setTimeout(
+                      () =>
+                        setPreviewState((p) => ({
+                          ...p,
+                          orderStage: "payment",
+                        })),
+                      150,
+                    );
+                  }}
+                >
+                  Checkout
+                </Button>
+              </div>
+            )}
+          </motion.div>
         </motion.div>
       );
     };
@@ -3598,9 +3860,7 @@ const TemplatePreviewContent = () => {
   const CartDropdown = () => {
     if (!formData.onlineOrdering || !showCart) return null;
 
-    return (
-      <div className="fixed inset-0 z-50 hidden"></div>
-    );
+    return <div className="fixed inset-0 z-50 hidden"></div>;
   };
 
   // Enhanced Interactive Live Preview Component
@@ -3906,7 +4166,9 @@ const TemplatePreviewContent = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           {/* Persistence Status Banner */}
           <div className="mb-8">
-            <Card className={`p-4 ${hasSaved ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
+            <Card
+              className={`p-4 ${hasSaved ? "bg-green-50 border-green-200" : "bg-orange-50 border-orange-200"}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {hasSaved ? (
@@ -3915,10 +4177,14 @@ const TemplatePreviewContent = () => {
                     <AlertCircle className="w-5 h-5 text-orange-600" />
                   )}
                   <div>
-                    <h3 className={`font-semibold ${hasSaved ? 'text-green-900' : 'text-orange-900'}`}>
-                      {hasSaved ? 'Progress Restored' : 'Fresh Start'}
+                    <h3
+                      className={`font-semibold ${hasSaved ? "text-green-900" : "text-orange-900"}`}
+                    >
+                      {hasSaved ? "Progress Restored" : "Fresh Start"}
                     </h3>
-                    <p className={`text-sm ${hasSaved ? 'text-green-700' : 'text-orange-700'}`}>
+                    <p
+                      className={`text-sm ${hasSaved ? "text-green-700" : "text-orange-700"}`}
+                    >
                       {summary}
                     </p>
                   </div>
@@ -3930,14 +4196,18 @@ const TemplatePreviewContent = () => {
                     onClick={() => setShowDebug(!showDebug)}
                     className="text-xs"
                   >
-                    {showDebug ? 'Hide' : 'Debug'}
+                    {showDebug ? "Hide" : "Debug"}
                   </Button>
                   {hasSaved && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        if (confirm('This will clear all saved progress. Are you sure?')) {
+                        if (
+                          confirm(
+                            "This will clear all saved progress. Are you sure?",
+                          )
+                        ) {
                           persistence.clearAll();
                           window.location.reload();
                         }
@@ -3961,17 +4231,21 @@ const TemplatePreviewContent = () => {
               </h3>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Current State</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    Current State
+                  </h4>
                   <div className="space-y-1 text-gray-600">
                     <p>Step: {currentStep}</p>
-                    <p>Config ID: {currentConfigId || 'None'}</p>
-                    <p>Business: {formData.businessName || 'None'}</p>
-                    <p>Template: {formData.template || 'None'}</p>
-                    <p>Published: {publishedUrl ? 'Yes' : 'No'}</p>
+                    <p>Config ID: {currentConfigId || "None"}</p>
+                    <p>Business: {formData.businessName || "None"}</p>
+                    <p>Template: {formData.template || "None"}</p>
+                    <p>Published: {publishedUrl ? "Yes" : "No"}</p>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Step History</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    Step History
+                  </h4>
                   <div className="max-h-32 overflow-y-auto space-y-1 text-gray-600">
                     {stepHistory.length === 0 ? (
                       <p className="text-orange-600 font-mono text-xs">
@@ -3980,7 +4254,8 @@ const TemplatePreviewContent = () => {
                     ) : (
                       stepHistory.slice(-5).map((step, index) => (
                         <div key={index} className="text-xs font-mono">
-                          {new Date(step.timestamp).toLocaleTimeString()}: {step.action} (Step {step.stepNumber})
+                          {new Date(step.timestamp).toLocaleTimeString()}:{" "}
+                          {step.action} (Step {step.stepNumber})
                         </div>
                       ))
                     )}
@@ -3995,7 +4270,10 @@ const TemplatePreviewContent = () => {
                       onClick={() => {
                         const exported = persistence.exportData();
                         navigator.clipboard.writeText(exported);
-                        toast({ title: 'Copied', description: 'Debug data copied to clipboard' });
+                        toast({
+                          title: "Copied",
+                          description: "Debug data copied to clipboard",
+                        });
                       }}
                       className="w-full text-xs"
                     >
@@ -4005,9 +4283,12 @@ const TemplatePreviewContent = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const data = prompt('Paste debug data to import:');
+                        const data = prompt("Paste debug data to import:");
                         if (data && persistence.importData(data)) {
-                          toast({ title: 'Imported', description: 'Debug data imported successfully' });
+                          toast({
+                            title: "Imported",
+                            description: "Debug data imported successfully",
+                          });
                           window.location.reload();
                         }
                       }}
@@ -4030,8 +4311,8 @@ const TemplatePreviewContent = () => {
                 </span>
               </h1>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Create a professional web app for your business in minutes. Choose
-                a template, preview it live, customize, and publish.
+                Create a professional web app for your business in minutes.
+                Choose a template, preview it live, customize, and publish.
               </p>
               <ul className="space-y-2 text-gray-700 mb-8">
                 <li className="flex items-center">
@@ -4039,11 +4320,12 @@ const TemplatePreviewContent = () => {
                   template previews
                 </li>
                 <li className="flex items-center">
-                  <Check className="w-4 h-4 text-teal-600 mr-2" /> Minimal, fast,
-                  and clean flow
+                  <Check className="w-4 h-4 text-teal-600 mr-2" /> Minimal,
+                  fast, and clean flow
                 </li>
                 <li className="flex items-center">
-                  <Check className="w-4 h-4 text-teal-600 mr-2" /> Auto-save every step
+                  <Check className="w-4 h-4 text-teal-600 mr-2" /> Auto-save
+                  every step
                 </li>
                 <li className="flex items-center">
                   <Check className="w-4 h-4 text-teal-600 mr-2" /> One-click
@@ -4059,7 +4341,7 @@ const TemplatePreviewContent = () => {
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-8 py-6 text-lg font-bold rounded-full shadow-xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
                 >
                   <Sparkles className="w-5 h-5" />
-                  {hasSaved ? 'Continue Configuration' : "Let's Get Started"}
+                  {hasSaved ? "Continue Configuration" : "Let's Get Started"}
                   <ChevronRight className="w-5 h-5" />
                 </Button>
 
@@ -4067,7 +4349,7 @@ const TemplatePreviewContent = () => {
                   <div className="mt-4">
                     <Button
                       variant="outline"
-                      onClick={() => window.open(publishedUrl, '_blank')}
+                      onClick={() => window.open(publishedUrl, "_blank")}
                       className="w-full sm:w-auto"
                     >
                       <Eye className="w-4 h-4 mr-2" />
@@ -4087,7 +4369,9 @@ const TemplatePreviewContent = () => {
                         {formData.businessName}
                       </p>
                       <p className="text-gray-600 text-sm">
-                        {formData.template ? `${formData.template} template` : 'Configuration in progress'}
+                        {formData.template
+                          ? `${formData.template} template`
+                          : "Configuration in progress"}
                       </p>
                     </>
                   ) : (
@@ -4254,7 +4538,16 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back to Welcome
           </Button>
@@ -4414,7 +4707,16 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -4892,24 +5194,28 @@ const TemplatePreviewContent = () => {
                   Homepage Images
                 </label>
                 <div className="flex items-center justify-between rounded-lg border bg-white p-4">
-                    <div className="space-y-0.5">
-                        <label htmlFor="homepageDishImageVisibility" className="text-sm font-medium">
-                            Show dish images on homepage
-                        </label>
-                        <p className="text-xs text-gray-500">
-                            Control whether dish images are shown directly on the homepage.
-                        </p>
-                    </div>
-                    <Switch
-                        id="homepageDishImageVisibility"
-                        checked={formData.homepageDishImageVisibility !== 'hidden'}
-                        onCheckedChange={(checked) =>
-                            updateFormData(
-                                "homepageDishImageVisibility",
-                                checked ? "visible" : "hidden"
-                            )
-                        }
-                    />
+                  <div className="space-y-0.5">
+                    <label
+                      htmlFor="homepageDishImageVisibility"
+                      className="text-sm font-medium"
+                    >
+                      Show dish images on homepage
+                    </label>
+                    <p className="text-xs text-gray-500">
+                      Control whether dish images are shown directly on the
+                      homepage.
+                    </p>
+                  </div>
+                  <Switch
+                    id="homepageDishImageVisibility"
+                    checked={formData.homepageDishImageVisibility !== "hidden"}
+                    onCheckedChange={(checked) =>
+                      updateFormData(
+                        "homepageDishImageVisibility",
+                        checked ? "visible" : "hidden",
+                      )
+                    }
+                  />
                 </div>
               </div>
 
@@ -5758,7 +6064,16 @@ const TemplatePreviewContent = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Zurück
           </Button>
@@ -5775,7 +6090,15 @@ const TemplatePreviewContent = () => {
     );
   };
 
-  const OffersStep = ({ onBack, onContinue, isModal }: { onBack?: () => void; onContinue?: () => void; isModal?: boolean }) => {
+  const OffersStep = ({
+    onBack,
+    onContinue,
+    isModal,
+  }: {
+    onBack?: () => void;
+    onContinue?: () => void;
+    isModal?: boolean;
+  }) => {
     const [newOffer, setNewOffer] = useState({
       name: "",
       description: "",
@@ -5795,19 +6118,21 @@ const TemplatePreviewContent = () => {
     };
 
     const removeOffer = (index: number) => {
-      const updatedOffers = (formData.offers || []).filter((_, i) => i !== index);
+      const updatedOffers = (formData.offers || []).filter(
+        (_, i) => i !== index,
+      );
       updateFormData("offers", updatedOffers);
     };
 
     const handleImageForNew = (files: FileList | null) => {
-        if (!files || !files[0]) return;
-        const file = files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            setNewOffer(prev => ({...prev, image: e.target.result}));
-        };
-        reader.readAsDataURL(file);
-    }
+      if (!files || !files[0]) return;
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setNewOffer((prev) => ({ ...prev, image: e.target.result }));
+      };
+      reader.readAsDataURL(file);
+    };
 
     return (
       <div className="py-8 max-w-4xl mx-auto">
@@ -5826,23 +6151,42 @@ const TemplatePreviewContent = () => {
             <Input
               placeholder="Offer Name (e.g., Lunch Special)"
               value={newOffer.name}
-              onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
+              onChange={(e) =>
+                setNewOffer({ ...newOffer, name: e.target.value })
+              }
             />
             <Input
               placeholder="Price (e.g., 9.99)"
               value={newOffer.price}
-              onChange={(e) => setNewOffer({ ...newOffer, price: e.target.value })}
+              onChange={(e) =>
+                setNewOffer({ ...newOffer, price: e.target.value })
+              }
             />
             <Textarea
               placeholder="Description"
               value={newOffer.description}
-              onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
+              onChange={(e) =>
+                setNewOffer({ ...newOffer, description: e.target.value })
+              }
               className="md:col-span-2"
             />
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Offer Image</label>
-                <input type="file" accept="image/*" onChange={(e) => handleImageForNew(e.target.files)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
-                {newOffer.image && <img src={newOffer.image as string} alt="preview" className="mt-4 w-32 h-32 object-cover rounded-lg" />}
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Offer Image
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageForNew(e.target.files)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+              />
+              {newOffer.image && (
+                <img
+                  src={newOffer.image as string}
+                  alt="preview"
+                  className="mt-4 w-32 h-32 object-cover rounded-lg"
+                />
+              )}
             </div>
           </div>
           <div className="mt-6 text-right">
@@ -5853,62 +6197,280 @@ const TemplatePreviewContent = () => {
         <div className="bg-white p-8 rounded-2xl shadow-lg border mt-8">
           <h3 className="text-xl font-bold mb-6">Customize Offer Banner</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
-                  <Input type="color" value={formData.offerBanner?.backgroundColor || '#000000'} onChange={(e) => updateFormData('offerBanner', {...(formData.offerBanner || {}), backgroundColor: e.target.value})} />
-              </div>
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
-                  <Input type="color" value={formData.offerBanner?.textColor || '#FFFFFF'} onChange={(e) => updateFormData('offerBanner', {...(formData.offerBanner || {}), textColor: e.target.value})} />
-              </div>
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Button Color</label>
-                  <Input type="color" value={formData.offerBanner?.buttonColor || '#FFFFFF'} onChange={(e) => updateFormData('offerBanner', {...(formData.offerBanner || {}), buttonColor: e.target.value})} />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Background Color
+              </label>
+              <Input
+                type="color"
+                value={formData.offerBanner?.backgroundColor || "#000000"}
+                onChange={(e) =>
+                  updateFormData("offerBanner", {
+                    ...(formData.offerBanner || {}),
+                    backgroundColor: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Text Color
+              </label>
+              <Input
+                type="color"
+                value={formData.offerBanner?.textColor || "#FFFFFF"}
+                onChange={(e) =>
+                  updateFormData("offerBanner", {
+                    ...(formData.offerBanner || {}),
+                    textColor: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Button Color
+              </label>
+              <Input
+                type="color"
+                value={formData.offerBanner?.buttonColor || "#FFFFFF"}
+                onChange={(e) =>
+                  updateFormData("offerBanner", {
+                    ...(formData.offerBanner || {}),
+                    buttonColor: e.target.value,
+                  })
+                }
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Placement on Home</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Placement on Home
+              </label>
               <div className="flex gap-2">
-                <Button variant={(formData.offerBanner?.position || 'top') === 'top' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), position: 'top'})}>Head</Button>
-                <Button variant={(formData.offerBanner?.position || 'top') === 'bottom' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), position: 'bottom'})}>Bottom</Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.position || "top") === "top"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      position: "top",
+                    })
+                  }
+                >
+                  Head
+                </Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.position || "top") === "bottom"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      position: "bottom",
+                    })
+                  }
+                >
+                  Bottom
+                </Button>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Show Offers Page/Tab</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Show Offers Page/Tab
+              </label>
               <div className="flex items-center gap-2">
-                <Switch id="offers-tab" checked={!!formData.offerPageEnabled} onCheckedChange={(v) => updateFormData('offerPageEnabled', v)} />
-                <label htmlFor="offers-tab" className="text-sm text-gray-600">Adds an Offers tab to your menu</label>
+                <Switch
+                  id="offers-tab"
+                  checked={!!formData.offerPageEnabled}
+                  onCheckedChange={(v) => updateFormData("offerPageEnabled", v)}
+                />
+                <label htmlFor="offers-tab" className="text-sm text-gray-600">
+                  Adds an Offers tab to your menu
+                </label>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Size
+              </label>
               <div className="flex gap-2">
-                <Button variant={(formData.offerBanner?.size || 'big') === 'small' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), size: 'small'})}>Small</Button>
-                <Button variant={(formData.offerBanner?.size || 'big') === 'big' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), size: 'big'})}>Big</Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.size || "big") === "small"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      size: "small",
+                    })
+                  }
+                >
+                  Small
+                </Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.size || "big") === "big"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      size: "big",
+                    })
+                  }
+                >
+                  Big
+                </Button>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Shape</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Shape
+              </label>
               <div className="flex gap-2">
-                <Button variant={(formData.offerBanner?.shape || 'rounded') === 'rounded' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), shape: 'rounded'})}>Rounded</Button>
-                <Button variant={(formData.offerBanner?.shape || 'rounded') === 'pill' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), shape: 'pill'})}>Pill</Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.shape || "rounded") === "rounded"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      shape: "rounded",
+                    })
+                  }
+                >
+                  Rounded
+                </Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.shape || "rounded") === "pill"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      shape: "pill",
+                    })
+                  }
+                >
+                  Pill
+                </Button>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Card Aspect</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Card Aspect
+              </label>
               <div className="flex gap-2">
-                <Button variant={(formData.offerBanner?.cardAspect || 'rectangle') === 'rectangle' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), cardAspect: 'rectangle'})}>Rectangle</Button>
-                <Button variant={(formData.offerBanner?.cardAspect || 'rectangle') === 'square' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), cardAspect: 'square'})}>Square</Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.cardAspect || "rectangle") ===
+                    "rectangle"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      cardAspect: "rectangle",
+                    })
+                  }
+                >
+                  Rectangle
+                </Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.cardAspect || "rectangle") ===
+                    "square"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      cardAspect: "square",
+                    })
+                  }
+                >
+                  Square
+                </Button>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Text Size</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Text Size
+              </label>
               <div className="flex gap-2">
-                <Button variant={(formData.offerBanner?.textSize || 'md') === 'sm' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), textSize: 'sm'})}>Small</Button>
-                <Button variant={(formData.offerBanner?.textSize || 'md') === 'md' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), textSize: 'md'})}>Medium</Button>
-                <Button variant={(formData.offerBanner?.textSize || 'md') === 'lg' ? 'default' : 'outline'} size="sm" onClick={() => updateFormData('offerBanner', {...(formData.offerBanner || {}), textSize: 'lg'})}>Large</Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.textSize || "md") === "sm"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      textSize: "sm",
+                    })
+                  }
+                >
+                  Small
+                </Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.textSize || "md") === "md"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      textSize: "md",
+                    })
+                  }
+                >
+                  Medium
+                </Button>
+                <Button
+                  variant={
+                    (formData.offerBanner?.textSize || "md") === "lg"
+                      ? "default"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() =>
+                    updateFormData("offerBanner", {
+                      ...(formData.offerBanner || {}),
+                      textSize: "lg",
+                    })
+                  }
+                >
+                  Large
+                </Button>
               </div>
             </div>
           </div>
@@ -5918,13 +6480,22 @@ const TemplatePreviewContent = () => {
           <h3 className="text-xl font-bold mb-6">Your Offers</h3>
           <div className="space-y-4">
             {(formData.offers || []).map((offer, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg shadow flex items-center justify-between">
+              <div
+                key={index}
+                className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+              >
                 <div className="flex items-center gap-4">
-                    {offer.image && <img src={offer.image as string} alt={offer.name} className="w-16 h-16 object-cover rounded-lg" />}
-                    <div>
-                        <p className="font-semibold">{offer.name}</p>
-                        <p className="text-sm text-gray-600">${offer.price}</p>
-                    </div>
+                  {offer.image && (
+                    <img
+                      src={offer.image as string}
+                      alt={offer.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                  )}
+                  <div>
+                    <p className="font-semibold">{offer.name}</p>
+                    <p className="text-sm text-gray-600">${offer.price}</p>
+                  </div>
                 </div>
                 <Button variant="ghost" onClick={() => removeOffer(index)}>
                   <X className="h-4 w-4" />
@@ -5933,25 +6504,29 @@ const TemplatePreviewContent = () => {
             ))}
           </div>
         </div>
-      <div className="flex justify-between mt-8">
-        <Button onClick={() => (onBack ? onBack() : prevStep())} variant="outline" size="lg">
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={() => (onContinue ? onContinue() : nextStep())}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
+        <div className="flex justify-between mt-8">
+          <Button
+            onClick={() => (onBack ? onBack() : prevStep())}
+            variant="outline"
+            size="lg"
+          >
+            <ArrowLeft className="mr-2 w-5 h-5" />
+            Back
+          </Button>
+          <Button
+            onClick={() => (onContinue ? onContinue() : nextStep())}
+            size="lg"
+            className="bg-gradient-to-r from-teal-500 to-purple-500"
+          >
+            Continue
+            <ChevronRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
       </div>
-    </div>
     );
-}
+  };
 
-const MenuProductsStep = () => {
+  const MenuProductsStep = () => {
     const [newItem, setNewItem] = useState({
       name: "",
       description: "",
@@ -5962,14 +6537,11 @@ const MenuProductsStep = () => {
     const addMenuItem = () => {
       if (newItem.name && newItem.price) {
         const itemToAdd = {
-            ...newItem,
-            id: Date.now().toString(),
-            image: newItem.images?.[0],
+          ...newItem,
+          id: Date.now().toString(),
+          image: newItem.images?.[0],
         };
-        const updatedItems = [
-          ...formData.menuItems,
-          itemToAdd,
-        ];
+        const updatedItems = [...formData.menuItems, itemToAdd];
         updateFormData("menuItems", updatedItems);
         setNewItem({ name: "", description: "", price: "", images: [] });
       }
@@ -6221,7 +6793,12 @@ const MenuProductsStep = () => {
                             : "";
 
                           return name && price
-                            ? { name, description, price, id: `csv-${Date.now()}-${index}` }
+                            ? {
+                                name,
+                                description,
+                                price,
+                                id: `csv-${Date.now()}-${index}`,
+                              }
                             : null;
                         })
                         .filter(Boolean) as any[];
@@ -6439,7 +7016,16 @@ const MenuProductsStep = () => {
         )}
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -6866,7 +7452,16 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -6986,7 +7581,16 @@ const MenuProductsStep = () => {
         )}
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -7686,7 +8290,16 @@ const MenuProductsStep = () => {
         {renderFeatureConfig()}
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8099,9 +8712,7 @@ const MenuProductsStep = () => {
             </Card>
           );
         case "offersEnabled":
-          return (
-            <OffersStep onBack={goBack} onContinue={finish} />
-          );
+          return <OffersStep onBack={goBack} onContinue={finish} />;
         default:
           return null;
       }
@@ -8234,7 +8845,9 @@ const MenuProductsStep = () => {
                   }
                   className="flex-1"
                 />
-                <span className="text-gray-500 font-mono">.{getBaseHost()}</span>
+                <span className="text-gray-500 font-mono">
+                  .{getBaseHost()}
+                </span>
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 Your website will be available at: {getDisplayedDomain()}
@@ -8296,7 +8909,8 @@ const MenuProductsStep = () => {
                           <strong>A Record:</strong> @ → 76.76.19.61
                         </div>
                         <div>
-                          <strong>CNAME:</strong> www → your-site.{getBaseHost()}
+                          <strong>CNAME:</strong> www → your-site.
+                          {getBaseHost()}
                         </div>
                       </div>
                     </div>
@@ -8405,7 +9019,16 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8670,9 +9293,7 @@ const MenuProductsStep = () => {
                   {formData.metaTitle ||
                     `${formData.businessName} - ${formData.slogan || "Best Local Business"}`}
                 </h4>
-                <p className="text-green-700 text-sm">
-                  {getDisplayedDomain()}
-                </p>
+                <p className="text-green-700 text-sm">{getDisplayedDomain()}</p>
                 <p className="text-gray-700 text-sm">
                   {formData.metaDescription ||
                     `Discover ${formData.businessName} ${formData.location ? `in ${formData.location}` : ""}. ${formData.uniqueDescription || "Quality service and great experience await you."}`}
@@ -8683,7 +9304,16 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -8862,7 +9492,16 @@ const MenuProductsStep = () => {
         </div>
 
         <div className="flex justify-between mt-8">
-          <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              prevStep();
+            }}
+            variant="outline"
+            size="lg"
+          >
             <ArrowLeft className="mr-2 w-5 h-5" />
             Back
           </Button>
@@ -9064,7 +9703,16 @@ const MenuProductsStep = () => {
 
         {!isPublished && (
           <div className="flex justify-between mt-8">
-            <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                prevStep();
+              }}
+              variant="outline"
+              size="lg"
+            >
               <ArrowLeft className="mr-2 w-5 h-5" />
               Back
             </Button>
@@ -9079,11 +9727,13 @@ const MenuProductsStep = () => {
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const feature = params.get('feature');
-      if (feature === 'offers') {
-        if (!formData.offersEnabled) updateFormData('offersEnabled', true);
-        setPendingFeatureConfig('offersEnabled');
-        const idx = configuratorSteps.findIndex((s) => s.id === 'feature-config');
+      const feature = params.get("feature");
+      if (feature === "offers") {
+        if (!formData.offersEnabled) updateFormData("offersEnabled", true);
+        setPendingFeatureConfig("offersEnabled");
+        const idx = configuratorSteps.findIndex(
+          (s) => s.id === "feature-config",
+        );
         if (idx !== -1) setCurrentStep(idx);
       }
     } catch {}
@@ -9142,7 +9792,16 @@ const MenuProductsStep = () => {
               Step component '{currentStepConfig.component}' is coming soon...
             </p>
             <div className="flex justify-between max-w-lg mx-auto">
-              <Button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); prevStep(); }} variant="outline" size="lg">
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  prevStep();
+                }}
+                variant="outline"
+                size="lg"
+              >
                 <ArrowLeft className="mr-2 w-5 h-5" />
                 Back
               </Button>

@@ -1,10 +1,34 @@
 import React, { useEffect, useState, memo } from "react";
-import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers, LayoutDashboard } from "lucide-react";
+import {
+  ChevronRight,
+  Play,
+  Star,
+  Check,
+  ArrowRight,
+  Zap,
+  Palette,
+  Smartphone,
+  Globe,
+  Sparkles,
+  Rocket,
+  Crown,
+  Menu,
+  X,
+  Settings,
+  Home,
+  Layers,
+  LayoutDashboard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthProvider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 export default function Index() {
@@ -30,27 +54,31 @@ export default function Index() {
     {
       icon: <Zap className="w-8 h-8 text-teal-500" />,
       title: "Quick Setup",
-      description: "Get your café or restaurant online in minutes. No technical skills needed - just add your info and go live.",
-      gradient: "from-teal-400 to-cyan-500"
+      description:
+        "Get your café or restaurant online in minutes. No technical skills needed - just add your info and go live.",
+      gradient: "from-teal-400 to-cyan-500",
     },
     {
       icon: <Palette className="w-8 h-8 text-purple-500" />,
       title: "Local Business Templates",
-      description: "Beautiful designs crafted specifically for restaurants, cafés, bakeries, and local shops.",
-      gradient: "from-purple-400 to-pink-500"
+      description:
+        "Beautiful designs crafted specifically for restaurants, cafés, bakeries, and local shops.",
+      gradient: "from-purple-400 to-pink-500",
     },
     {
       icon: <Smartphone className="w-8 h-8 text-orange-500" />,
       title: "Mobile-First Design",
-      description: "Your customers will love browsing your menu and location info on their phones.",
-      gradient: "from-orange-400 to-red-500"
+      description:
+        "Your customers will love browsing your menu and location info on their phones.",
+      gradient: "from-orange-400 to-red-500",
     },
     {
       icon: <Globe className="w-8 h-8 text-teal-500" />,
       title: "Local SEO Ready",
-      description: "Get found by local customers with built-in SEO optimization for your neighborhood.",
-      gradient: "from-blue-400 to-indigo-500"
-    }
+      description:
+        "Get found by local customers with built-in SEO optimization for your neighborhood.",
+      gradient: "from-blue-400 to-indigo-500",
+    },
   ];
 
   const pricingPlans = [
@@ -64,11 +92,11 @@ export default function Index() {
         "Menu/Product Display",
         "Contact & Location Info",
         "Mobile Optimized",
-        "Basic Analytics"
+        "Basic Analytics",
       ],
       cta: "Start Your Site",
       popular: false,
-      gradient: "from-orange-400 to-red-500"
+      gradient: "from-orange-400 to-red-500",
     },
     {
       name: "Business",
@@ -81,11 +109,11 @@ export default function Index() {
         "Social Media Integration",
         "Advanced Analytics",
         "Email Marketing",
-        "Priority Support"
+        "Priority Support",
       ],
       cta: "Grow Your Business",
       popular: true,
-      gradient: "from-teal-400 to-purple-600"
+      gradient: "from-teal-400 to-purple-600",
     },
     {
       name: "Premium",
@@ -98,30 +126,30 @@ export default function Index() {
         "Custom Integrations",
         "White-label Options",
         "Dedicated Manager",
-        "Custom Domain"
+        "Custom Domain",
       ],
       cta: "Scale Your Brand",
       popular: false,
-      gradient: "from-purple-400 to-indigo-600"
-    }
+      gradient: "from-purple-400 to-indigo-600",
+    },
   ];
 
   const demoTemplates = [
     {
       name: "Coffee Shop",
       preview: "bg-gradient-to-br from-orange-50 to-amber-100",
-      color: "from-orange-500 to-amber-600"
+      color: "from-orange-500 to-amber-600",
     },
     {
-      name: "Restaurant", 
+      name: "Restaurant",
       preview: "bg-gradient-to-br from-red-50 to-rose-100",
-      color: "from-red-500 to-rose-600"
+      color: "from-red-500 to-rose-600",
     },
     {
       name: "Local Store",
-      preview: "bg-gradient-to-br from-teal-50 to-emerald-100", 
-      color: "from-teal-500 to-emerald-600"
-    }
+      preview: "bg-gradient-to-br from-teal-50 to-emerald-100",
+      color: "from-teal-500 to-emerald-600",
+    },
   ];
 
   // Simplified particles - reduced count and removed heavy animations
@@ -133,7 +161,7 @@ export default function Index() {
           className="absolute w-1 h-1 bg-teal-400 rounded-full opacity-30"
           style={{
             left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`
+            top: `${Math.random() * 100}%`,
           }}
         />
       ))}
@@ -157,23 +185,45 @@ export default function Index() {
           ticking = true;
         }
       };
-      window.addEventListener('scroll', handleScroll, { passive: true });
-      return () => window.removeEventListener('scroll', handleScroll);
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     const navItems = [
-      { id: 'features', label: 'Features', icon: <Layers className="w-4 h-4" />, href: '#features' },
-      { id: 'demo', label: 'Demo', icon: <Play className="w-4 h-4" />, href: '#demo' },
-      { id: 'pricing', label: 'Pricing', icon: <Crown className="w-4 h-4" />, href: '#pricing' },
-      { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/dashboard' }
+      {
+        id: "features",
+        label: "Features",
+        icon: <Layers className="w-4 h-4" />,
+        href: "#features",
+      },
+      {
+        id: "demo",
+        label: "Demo",
+        icon: <Play className="w-4 h-4" />,
+        href: "#demo",
+      },
+      {
+        id: "pricing",
+        label: "Pricing",
+        icon: <Crown className="w-4 h-4" />,
+        href: "#pricing",
+      },
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: <LayoutDashboard className="w-4 h-4" />,
+        href: "/dashboard",
+      },
     ];
 
     return (
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${
-        scrolled
-          ? 'glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2'
-          : 'bg-transparent border-b border-transparent py-4'
-      }`}>
+      <nav
+        className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${
+          scrolled
+            ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2"
+            : "bg-transparent border-b border-transparent py-4"
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo with enhanced animation */}
@@ -190,32 +240,50 @@ export default function Index() {
             {/* Desktop Navigation with enhanced hover effects */}
             <div className="hidden md:block">
               <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
-                {navItems.filter(n => user ? true : n.id !== 'dashboard').map((item, index) => (
-                  <a
-                    key={item.id}
-                    href={item.href}
-                    className="relative px-4 py-2 text-sm font-bold transition-all duration-500 ease-out rounded-full group"
-                    onMouseEnter={() => setHoveredItem(item.id)}
-                    onMouseLeave={() => setHoveredItem(null)}
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20 rounded-full transition-all duration-500 ${
-                      hoveredItem === item.id ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-                    }`}></div>
-                    <div className={`relative flex items-center space-x-2 transition-all duration-500 ${
-                      hoveredItem === item.id ? 'text-teal-600 transform translate-y-[-1px]' : 'text-gray-700'
-                    }`}>
-                      <div className={`transition-all duration-500 ${
-                        hoveredItem === item.id ? 'rotate-12 scale-110' : 'rotate-0 scale-100'
-                      }`}>
-                        {item.icon}
+                {navItems
+                  .filter((n) => (user ? true : n.id !== "dashboard"))
+                  .map((item, index) => (
+                    <a
+                      key={item.id}
+                      href={item.href}
+                      className="relative px-4 py-2 text-sm font-bold transition-all duration-500 ease-out rounded-full group"
+                      onMouseEnter={() => setHoveredItem(item.id)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                    >
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20 rounded-full transition-all duration-500 ${
+                          hoveredItem === item.id
+                            ? "opacity-100 scale-100"
+                            : "opacity-0 scale-95"
+                        }`}
+                      ></div>
+                      <div
+                        className={`relative flex items-center space-x-2 transition-all duration-500 ${
+                          hoveredItem === item.id
+                            ? "text-teal-600 transform translate-y-[-1px]"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <div
+                          className={`transition-all duration-500 ${
+                            hoveredItem === item.id
+                              ? "rotate-12 scale-110"
+                              : "rotate-0 scale-100"
+                          }`}
+                        >
+                          {item.icon}
+                        </div>
+                        <span>{item.label}</span>
                       </div>
-                      <span>{item.label}</span>
-                    </div>
-                    <div className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-teal-500 to-purple-500 transition-all duration-500 ${
-                      hoveredItem === item.id ? 'w-8 -translate-x-1/2' : 'w-0 -translate-x-1/2'
-                    }`}></div>
-                  </a>
-                ))}
+                      <div
+                        className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-teal-500 to-purple-500 transition-all duration-500 ${
+                          hoveredItem === item.id
+                            ? "w-8 -translate-x-1/2"
+                            : "w-0 -translate-x-1/2"
+                        }`}
+                      ></div>
+                    </a>
+                  ))}
               </div>
             </div>
 
@@ -224,7 +292,13 @@ export default function Index() {
               {user ? (
                 <>
                   <a href="/profile">
-                    <Button variant="outline" size="sm" className="border-2 border-gray-300/60">Profile</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-2 border-gray-300/60"
+                    >
+                      Profile
+                    </Button>
                   </a>
                   <a href="/dashboard">
                     <Button
@@ -241,8 +315,30 @@ export default function Index() {
                 </>
               ) : (
                 <>
-                  <Button variant="outline" size="sm" onClick={() => { setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowLogin(true); }}>Log in</Button>
-                  <Button size="sm" className="bg-gradient-to-r from-teal-500 to-purple-500 text-white" onClick={() => { setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowSignup(true); }}>Sign up</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setAuthEmail("");
+                      setAuthPassword("");
+                      setAuthError(null);
+                      setShowLogin(true);
+                    }}
+                  >
+                    Log in
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                    onClick={() => {
+                      setAuthEmail("");
+                      setAuthPassword("");
+                      setAuthError(null);
+                      setShowSignup(true);
+                    }}
+                  >
+                    Sign up
+                  </Button>
                 </>
               )}
               <a href="/configurator">
@@ -270,8 +366,14 @@ export default function Index() {
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="relative p-2 text-gray-700 transition-all duration-300"
               >
-                <div className={`transition-all duration-300 ${isMenuOpen ? 'rotate-90 scale-110' : 'rotate-0 scale-100'}`}>
-                  {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                <div
+                  className={`transition-all duration-300 ${isMenuOpen ? "rotate-90 scale-110" : "rotate-0 scale-100"}`}
+                >
+                  {isMenuOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
                 </div>
               </Button>
             </div>
@@ -279,9 +381,11 @@ export default function Index() {
         </div>
 
         {/* Enhanced Mobile menu with slide animation */}
-        <div className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${
-          isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-        }`}>
+        <div
+          className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${
+            isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
           <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
             <div className="px-4 py-4 space-y-2">
               {navItems.map((item, index) => (
@@ -303,13 +407,40 @@ export default function Index() {
               <div className="pt-2 border-t border-gray-200/50 space-y-2">
                 {!user && (
                   <>
-                    <Button size="sm" variant="outline" className="w-full" onClick={() => { setIsMenuOpen(false); setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowLogin(true); }}>Log in</Button>
-                    <Button size="sm" className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white" onClick={() => { setIsMenuOpen(false); setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowSignup(true); }}>Sign up</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setAuthEmail("");
+                        setAuthPassword("");
+                        setAuthError(null);
+                        setShowLogin(true);
+                      }}
+                    >
+                      Log in
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setAuthEmail("");
+                        setAuthPassword("");
+                        setAuthError(null);
+                        setShowSignup(true);
+                      }}
+                    >
+                      Sign up
+                    </Button>
                   </>
                 )}
                 {user && (
                   <a href="/profile" onClick={() => setIsMenuOpen(false)}>
-                    <Button size="sm" variant="outline" className="w-full">Profile</Button>
+                    <Button size="sm" variant="outline" className="w-full">
+                      Profile
+                    </Button>
                   </a>
                 )}
                 <a href="/configurator" onClick={() => setIsMenuOpen(false)}>
@@ -335,7 +466,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      
+
       {/* Interactive cursor follower - optimized for performance */}
       <div
         className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
@@ -343,24 +474,25 @@ export default function Index() {
           left: mousePosition.x - 6,
           top: mousePosition.y - 6,
           transform: `translate3d(0, 0, 0) scale(0.8)`,
-          willChange: 'transform' // Optimize for frequent position changes
+          willChange: "transform", // Optimize for frequent position changes
         }}
       />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-teal-50 min-h-screen flex items-center">
         <Particles />
-        
+
         {/* Simplified background shapes - removed heavy animations */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-5"></div>
           <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full opacity-5"></div>
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
           <div className="text-center">
-            <div className={`transition-all duration-1500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
-              
+            <div
+              className={`transition-all duration-1500 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"}`}
+            >
               {/* Sparkle decoration */}
               <div className="flex justify-center mb-6">
                 <div className="relative">
@@ -370,18 +502,25 @@ export default function Index() {
               </div>
 
               <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
-                <span className="font-display text-gradient">Build a Stunning</span>
+                <span className="font-display text-gradient">
+                  Build a Stunning
+                </span>
                 <br />
                 <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
                   Website in Minutes
                 </span>
               </h1>
-              
+
               <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed font-medium">
-                Create your <span className="text-gradient font-bold">digital presence</span> in minutes. Perfect for cafés, restaurants, 
-                and local businesses ready to <span className="text-gradient font-bold">thrive online</span>.
+                Create your{" "}
+                <span className="text-gradient font-bold">
+                  digital presence
+                </span>{" "}
+                in minutes. Perfect for cafés, restaurants, and local businesses
+                ready to{" "}
+                <span className="text-gradient font-bold">thrive online</span>.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <a href="/configurator">
                   <Button
@@ -415,21 +554,29 @@ export default function Index() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-4xl font-black">Example Dashboard</h2>
-            <p className="text-gray-600 mt-2">A quick preview of what you get after logging in.</p>
+            <p className="text-gray-600 mt-2">
+              A quick preview of what you get after logging in.
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="rounded-2xl border p-6 bg-gradient-to-br from-teal-50 to-white">
               <div className="text-sm font-semibold text-teal-700">Traffic</div>
               <div className="mt-2 text-3xl font-bold">1,284</div>
-              <div className="text-xs text-gray-500 mt-1">visits last 7 days</div>
+              <div className="text-xs text-gray-500 mt-1">
+                visits last 7 days
+              </div>
             </div>
             <div className="rounded-2xl border p-6 bg-gradient-to-br from-purple-50 to-white">
-              <div className="text-sm font-semibold text-purple-700">Orders</div>
+              <div className="text-sm font-semibold text-purple-700">
+                Orders
+              </div>
               <div className="mt-2 text-3xl font-bold">76</div>
               <div className="text-xs text-gray-500 mt-1">this week</div>
             </div>
             <div className="rounded-2xl border p-6 bg-gradient-to-br from-orange-50 to-white">
-              <div className="text-sm font-semibold text-orange-700">Ratings</div>
+              <div className="text-sm font-semibold text-orange-700">
+                Ratings
+              </div>
               <div className="mt-2 text-3xl font-bold">4.8</div>
               <div className="text-xs text-gray-500 mt-1">average</div>
             </div>
@@ -466,10 +613,26 @@ export default function Index() {
             }}
             className="space-y-3"
           >
-            <Input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required />
-            <Input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required />
-            {authError && <div className="text-sm text-red-600">{authError}</div>}
-            <Button type="submit" className="w-full" disabled={authLoading}>{authLoading ? "Logging in…" : "Log in"}</Button>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              required
+            />
+            {authError && (
+              <div className="text-sm text-red-600">{authError}</div>
+            )}
+            <Button type="submit" className="w-full" disabled={authLoading}>
+              {authLoading ? "Logging in…" : "Log in"}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -494,18 +657,41 @@ export default function Index() {
             }}
             className="space-y-3"
           >
-            <Input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required />
-            <Input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required />
-            {authError && <div className="text-sm text-red-600">{authError}</div>}
-            <Button type="submit" className="w-full" disabled={authLoading}>{authLoading ? "Creating…" : "Create account"}</Button>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              required
+            />
+            {authError && (
+              <div className="text-sm text-red-600">{authError}</div>
+            )}
+            <Button type="submit" className="w-full" disabled={authLoading}>
+              {authLoading ? "Creating…" : "Create account"}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* How It Works Section */}
-      <section id="features" className="py-32 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden">
-        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23f1f5f9\" fill-opacity=\"0.3\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"}></div>
-        
+      <section
+        id="features"
+        className="py-32 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden"
+      >
+        <div
+          className={
+            'absolute inset-0 bg-[url(\'data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23f1f5f9" fill-opacity="0.3"%3E%3Ccircle cx="7" cy="7" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\')] opacity-50'
+          }
+        ></div>
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-100 to-purple-100 px-6 py-3 rounded-full mb-6">
@@ -516,29 +702,39 @@ export default function Index() {
               <span className="text-gradient">Three Simple Steps</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              From empty storefront to online success. Our platform helps local businesses create their digital presence effortlessly.
+              From empty storefront to online success. Our platform helps local
+              businesses create their digital presence effortlessly.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <Card 
+              <Card
                 key={index}
                 className="group hover:shadow-2xl transition-all duration-700 ease-out transform hover:-translate-y-6 hover:rotate-2 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 overflow-hidden relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500" style={{ background: `linear-gradient(to bottom right, ${feature.gradient.split(' ')[1]}, ${feature.gradient.split(' ')[3]})` }}></div>
-                
+                <div
+                  className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500"
+                  style={{
+                    background: `linear-gradient(to bottom right, ${feature.gradient.split(" ")[1]}, ${feature.gradient.split(" ")[3]})`,
+                  }}
+                ></div>
+
                 <CardContent className="p-8 text-center relative z-10">
                   <div className="mb-6 flex justify-center">
-                    <div className={`p-6 rounded-3xl bg-gradient-to-br ${feature.gradient} group-hover:scale-105 transition-transform duration-300 ease-out shadow-lg`}>
-                      <div className="text-white">
-                        {feature.icon}
-                      </div>
+                    <div
+                      className={`p-6 rounded-3xl bg-gradient-to-br ${feature.gradient} group-hover:scale-105 transition-transform duration-300 ease-out shadow-lg`}
+                    >
+                      <div className="text-white">{feature.icon}</div>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-gradient transition-all duration-500 ease-out">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed font-medium">{feature.description}</p>
-                  
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-gradient transition-all duration-500 ease-out">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed font-medium">
+                    {feature.description}
+                  </p>
+
                   {/* Step number */}
                   <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-teal-400 to-purple-400 rounded-full flex items-center justify-center text-white font-black text-lg group-hover:scale-110 transition-transform duration-500 ease-out">
                     {index + 1}
@@ -547,10 +743,10 @@ export default function Index() {
               </Card>
             ))}
           </div>
-          
+
           <div className="text-center mt-16">
             <a href="/configurator">
-              <Button 
+              <Button
                 variant="outline"
                 size="lg"
                 className="group border-2 border-teal-500 text-teal-600 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 hover:text-white px-10 py-4 text-xl font-bold rounded-full transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl"
@@ -565,16 +761,24 @@ export default function Index() {
       </section>
 
       {/* Interactive Demo Section */}
-      <section id="demo" className="py-32 bg-gradient-to-br from-gray-900 to-purple-900 relative overflow-hidden">
-        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"}></div>
-        
+      <section
+        id="demo"
+        className="py-32 bg-gradient-to-br from-gray-900 to-purple-900 relative overflow-hidden"
+      >
+        <div
+          className={
+            'absolute inset-0 bg-[url(\'data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="7" cy="7" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\')] opacity-30'
+          }
+        ></div>
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-6xl font-black text-white mb-6 font-display">
               Try It <span className="text-gradient">Live</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto font-medium">
-              Experience the magic of our website builder with this interactive demo
+              Experience the magic of our website builder with this interactive
+              demo
             </p>
           </div>
 
@@ -588,32 +792,40 @@ export default function Index() {
                   className={`px-8 py-4 rounded-full transition-all duration-500 font-bold text-lg ${
                     activeDemo === index
                       ? `bg-gradient-to-r ${template.color} text-white shadow-xl transform scale-105`
-                      : 'glass border-white/30 text-white hover:bg-white/10'
+                      : "glass border-white/30 text-white hover:bg-white/10"
                   }`}
                 >
                   {template.name}
                 </Button>
               ))}
             </div>
-            
+
             <div className="relative group">
-              <div className={`aspect-video rounded-2xl ${demoTemplates[activeDemo].preview} transition-all duration-1000 ease-out flex items-center justify-center relative overflow-hidden transform group-hover:scale-105`}>
+              <div
+                className={`aspect-video rounded-2xl ${demoTemplates[activeDemo].preview} transition-all duration-1000 ease-out flex items-center justify-center relative overflow-hidden transform group-hover:scale-105`}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
                 <div className="text-center relative z-10">
-                  <div className={`w-24 h-24 rounded-full bg-gradient-to-r ${demoTemplates[activeDemo].color} mx-auto mb-6 flex items-center justify-center shadow-2xl`}>
+                  <div
+                    className={`w-24 h-24 rounded-full bg-gradient-to-r ${demoTemplates[activeDemo].color} mx-auto mb-6 flex items-center justify-center shadow-2xl`}
+                  >
                     <Play className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-800 mb-3">{demoTemplates[activeDemo].name}</h3>
-                  <p className="text-gray-600 font-medium">Click to customize this template</p>
+                  <h3 className="text-3xl font-bold text-gray-800 mb-3">
+                    {demoTemplates[activeDemo].name}
+                  </h3>
+                  <p className="text-gray-600 font-medium">
+                    Click to customize this template
+                  </p>
                 </div>
-                
+
                 {/* Simplified decorative elements */}
                 <div className="absolute top-4 left-4 w-4 h-4 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full opacity-60"></div>
                 <div className="absolute bottom-4 right-4 w-6 h-6 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full opacity-60"></div>
               </div>
-              
+
               <a href="/configurator">
-                <Button 
+                <Button
                   size="lg"
                   className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-10 py-4 rounded-full shadow-2xl font-bold text-lg transition-colors duration-300"
                 >
@@ -628,27 +840,35 @@ export default function Index() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 bg-gradient-to-br from-gray-900 via-purple-900 to-teal-900 relative overflow-hidden">
-        <div className={"absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"}></div>
-        
+      <section
+        id="pricing"
+        className="py-32 bg-gradient-to-br from-gray-900 via-purple-900 to-teal-900 relative overflow-hidden"
+      >
+        <div
+          className={
+            'absolute inset-0 bg-[url(\'data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="7" cy="7" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\')] opacity-30'
+          }
+        ></div>
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-6xl font-black text-white mb-6 font-display">
               Simple <span className="text-gradient">Pricing</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto font-medium">
-              Affordable plans designed for local businesses. Start small, scale as you grow.
+              Affordable plans designed for local businesses. Start small, scale
+              as you grow.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (
-              <Card 
+              <Card
                 key={index}
                 className={`group transition-all duration-700 ease-out transform hover:-translate-y-10 border-0 shadow-lg relative overflow-hidden ${
                   plan.popular
-                    ? 'shadow-2xl scale-105 glass ring-2 ring-teal-400'
-                    : 'glass hover:shadow-lg transition-shadow duration-300'
+                    ? "shadow-2xl scale-105 glass ring-2 ring-teal-400"
+                    : "glass hover:shadow-lg transition-shadow duration-300"
                 }`}
               >
                 {plan.popular && (
@@ -659,31 +879,44 @@ export default function Index() {
                     </span>
                   </div>
                 )}
-                
-                <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-5 group-hover:opacity-15 transition-opacity duration-500`}></div>
-                
+
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-5 group-hover:opacity-15 transition-opacity duration-500`}
+                ></div>
+
                 <CardContent className="p-10 text-center relative z-10">
-                  <h3 className="text-3xl font-bold text-white mb-3">{plan.name}</h3>
-                  <p className="text-gray-300 mb-8 font-medium">{plan.description}</p>
+                  <h3 className="text-3xl font-bold text-white mb-3">
+                    {plan.name}
+                  </h3>
+                  <p className="text-gray-300 mb-8 font-medium">
+                    {plan.description}
+                  </p>
                   <div className="mb-8">
-                    <span className="text-6xl font-black text-white">{plan.price}</span>
+                    <span className="text-6xl font-black text-white">
+                      {plan.price}
+                    </span>
                     <span className="text-gray-300 text-lg">{plan.period}</span>
                   </div>
                   <ul className="space-y-4 mb-10">
                     {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center justify-center">
+                      <li
+                        key={featureIndex}
+                        className="flex items-center justify-center"
+                      >
                         <Check className="w-5 h-5 text-teal-400 mr-3" />
-                        <span className="text-gray-300 font-medium">{feature}</span>
+                        <span className="text-gray-300 font-medium">
+                          {feature}
+                        </span>
                       </li>
                     ))}
                   </ul>
                   <a href="/configurator">
-                    <Button 
+                    <Button
                       size="lg"
                       className={`w-full py-4 text-lg font-bold rounded-full transition-all duration-700 ease-out transform hover:scale-105 ${
                         plan.popular
-                          ? 'bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300'
-                          : 'border-2 border-gray-400 hover:border-teal-400 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 text-gray-300 hover:text-white transition-all duration-300'
+                          ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300"
+                          : "border-2 border-gray-400 hover:border-teal-400 hover:bg-gradient-to-r hover:from-teal-500 hover:to-purple-500 text-gray-300 hover:text-white transition-all duration-300"
                       }`}
                       variant={plan.popular ? "default" : "outline"}
                     >
@@ -701,7 +934,7 @@ export default function Index() {
       <section className="py-32 bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="absolute inset-0 animate-gradient bg-gradient-to-r from-teal-400 via-purple-400 to-orange-400 opacity-30"></div>
-        
+
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
           <div className="mb-8">
             <Sparkles className="w-16 h-16 text-white mx-auto animate-pulse" />
@@ -714,10 +947,11 @@ export default function Index() {
             </span>
           </h2>
           <p className="text-2xl md:text-3xl text-white/90 mb-12 max-w-3xl mx-auto font-medium">
-            Join local businesses already thriving online with their digital presence.
+            Join local businesses already thriving online with their digital
+            presence.
           </p>
           <a href="/configurator">
-            <Button 
+            <Button
               size="lg"
               className="bg-white text-gray-900 hover:bg-gray-100 px-16 py-8 text-2xl font-black rounded-full transform transition-all duration-700 ease-out hover:scale-110 shadow-2xl hover:shadow-white/25 animate-float"
             >
@@ -726,12 +960,15 @@ export default function Index() {
               <ArrowRight className="ml-4 w-8 h-8" />
             </Button>
           </a>
-          
+
           <div className="mt-12 text-white/80 font-medium">
-            <p>✨ No credit card required • 🚀 Go live in minutes • 💎 Cancel anytime</p>
+            <p>
+              ✨ No credit card required • 🚀 Go live in minutes • 💎 Cancel
+              anytime
+            </p>
           </div>
         </div>
-        
+
         {/* Decorative elements */}
         <div className="absolute top-10 left-10 w-32 h-32 bg-white opacity-10 rounded-full animate-float blur-xl"></div>
         <div className="absolute bottom-10 right-10 w-40 h-40 bg-white opacity-10 rounded-full animate-float-reverse blur-xl"></div>
@@ -741,7 +978,7 @@ export default function Index() {
       {/* Footer Section */}
       <footer className="bg-gray-900 text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
           <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div>
@@ -749,47 +986,68 @@ export default function Index() {
                 sync.a
               </h3>
               <p className="text-gray-400 leading-relaxed text-lg font-medium">
-                The easiest way for cafés, restaurants, and local shops to create their digital presence.
+                The easiest way for cafés, restaurants, and local shops to
+                create their digital presence.
               </p>
               <div className="flex space-x-4 mt-6">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className={`w-3 h-3 rounded-full bg-gradient-to-r from-teal-400 to-purple-400 animate-pulse`} style={{ animationDelay: `${i * 0.5}s` }}></div>
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full bg-gradient-to-r from-teal-400 to-purple-400 animate-pulse`}
+                    style={{ animationDelay: `${i * 0.5}s` }}
+                  ></div>
                 ))}
               </div>
             </div>
-            
+
             <div>
               <h4 className="text-xl font-bold mb-6 text-white">Product</h4>
               <ul className="space-y-3">
-                {['Features', 'Templates', 'Pricing', 'Enterprise'].map((item, i) => (
-                  <li key={i}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient">
-                      {item}
-                    </a>
-                  </li>
-                ))}
+                {["Features", "Templates", "Pricing", "Enterprise"].map(
+                  (item, i) => (
+                    <li key={i}>
+                      <a
+                        href="#"
+                        className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient"
+                      >
+                        {item}
+                      </a>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-xl font-bold mb-6 text-white">Company</h4>
               <ul className="space-y-3">
-                {['About', 'Blog', 'Careers', 'Contact'].map((item, i) => (
+                {["About", "Blog", "Careers", "Contact"].map((item, i) => (
                   <li key={i}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient">
+                    <a
+                      href="#"
+                      className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient"
+                    >
                       {item}
                     </a>
                   </li>
                 ))}
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-xl font-bold mb-6 text-white">Support</h4>
               <ul className="space-y-3">
-                {['Help Center', 'Terms of Service', 'Privacy Policy', 'Status'].map((item, i) => (
+                {[
+                  "Help Center",
+                  "Terms of Service",
+                  "Privacy Policy",
+                  "Status",
+                ].map((item, i) => (
                   <li key={i}>
-                    <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient">
+                    <a
+                      href="#"
+                      className="text-gray-400 hover:text-white transition-colors duration-300 font-medium hover:text-gradient"
+                    >
                       {item}
                     </a>
                   </li>
@@ -797,12 +1055,18 @@ export default function Index() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 pt-10 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 font-medium text-lg">© 2024 sync.a. All rights reserved. Made with ❤️</p>
+            <p className="text-gray-400 font-medium text-lg">
+              © 2024 sync.a. All rights reserved. Made with ❤️
+            </p>
             <div className="flex space-x-8 mt-6 md:mt-0">
-              {['Twitter', 'GitHub', 'LinkedIn'].map((social, i) => (
-                <a key={i} href="#" className="text-gray-400 hover:text-white transition-colors duration-300 group">
+              {["Twitter", "GitHub", "LinkedIn"].map((social, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="text-gray-400 hover:text-white transition-colors duration-300 group"
+                >
                   <span className="sr-only">{social}</span>
                   <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <div className="w-6 h-6 bg-white rounded-full"></div>

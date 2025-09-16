@@ -33,12 +33,31 @@ export default function Login() {
       <div className="w-full max-w-sm bg-white p-6 rounded-xl shadow">
         <h1 className="text-xl font-bold mb-4">Log in</h1>
         <form onSubmit={onSubmit} className="space-y-3">
-          <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           {error && <div className="text-red-600 text-sm">{error}</div>}
-          <Button type="submit" disabled={loading} className="w-full">{loading ? "Logging in…" : "Log in"}</Button>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Logging in…" : "Log in"}
+          </Button>
         </form>
-        <div className="text-sm text-gray-600 mt-4">No account? <Link to="/signup" className="text-teal-600 font-medium">Sign up</Link></div>
+        <div className="text-sm text-gray-600 mt-4">
+          No account?{" "}
+          <Link to="/signup" className="text-teal-600 font-medium">
+            Sign up
+          </Link>
+        </div>
       </div>
     </div>
   );

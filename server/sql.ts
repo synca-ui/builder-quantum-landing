@@ -1,3 +1,3 @@
-import { getSql } from './db';
+import { getSql } from "./db";
 
 export const sql = getSql();
