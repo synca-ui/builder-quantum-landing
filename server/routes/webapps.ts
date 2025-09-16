@@ -41,7 +41,18 @@ webAppsRouter.post('/apps/publish', async (req, res) => {
                           VALUES(${userId}, ${subdomain}, ${sql.json(config)})
                           ON CONFLICT (subdomain) DO UPDATE SET config_data=EXCLUDED.config_data, updated_at=now()
                           RETURNING id, user_id, subdomain, config_data, published_at, updated_at`;
-    return res.json(rows[0]);
+
+    const saved = rows && rows[0];
+    const host = (req.headers.host || '').toString();
+    const proto = ((req.headers['x-forwarded-proto'] as string) || 'https').toString();
+    const baseDomain = process.env.PUBLIC_BASE_DOMAIN || (host.includes('.') ? host.split('.').slice(-2).join('.') : host);
+    let publishedUrl = `${proto}://${subdomain}.${baseDomain}`;
+    if (host.includes('localhost') || baseDomain.includes(':')) {
+      publishedUrl = `${proto}://${host}/site/${subdomain}`;
+    }
+    const previewUrl = `${proto}://${host}/site/${subdomain}`;
+
+    return res.json({ ...saved, publishedUrl, previewUrl });
   } catch (e) {
     console.error('publish app error', e);
     return res.status(500).json({ error: 'Internal server error' });
