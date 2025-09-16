@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthProvider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
@@ -16,7 +18,13 @@ export default function Index() {
     // Mouse tracking removed for better performance
   }, []);
 
-  const { user } = useAuth();
+  const { user, login, signup } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
 
   const features = [
     {
@@ -233,10 +241,8 @@ export default function Index() {
                 </>
               ) : (
                 <>
-                  <a href="/login"><Button variant="outline" size="sm">Log in</Button></a>
-                  <a href="/signup">
-                    <Button size="sm" className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">Sign up</Button>
-                  </a>
+                  <Button variant="outline" size="sm" onClick={() => { setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowLogin(true); }}>Log in</Button>
+                  <Button size="sm" className="bg-gradient-to-r from-teal-500 to-purple-500 text-white" onClick={() => { setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowSignup(true); }}>Sign up</Button>
                 </>
               )}
               <a href="/configurator">
@@ -297,12 +303,8 @@ export default function Index() {
               <div className="pt-2 border-t border-gray-200/50 space-y-2">
                 {!user && (
                   <>
-                    <a href="/login" onClick={() => setIsMenuOpen(false)}>
-                      <Button size="sm" variant="outline" className="w-full">Log in</Button>
-                    </a>
-                    <a href="/signup" onClick={() => setIsMenuOpen(false)}>
-                      <Button size="sm" className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white">Sign up</Button>
-                    </a>
+                    <Button size="sm" variant="outline" className="w-full" onClick={() => { setIsMenuOpen(false); setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowLogin(true); }}>Log in</Button>
+                    <Button size="sm" className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white" onClick={() => { setIsMenuOpen(false); setAuthEmail(""); setAuthPassword(""); setAuthError(null); setShowSignup(true); }}>Sign up</Button>
                   </>
                 )}
                 {user && (
@@ -394,12 +396,6 @@ export default function Index() {
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </Button>
                 </a>
-                {!user && (
-                  <>
-                    <a href="/login"><Button variant="outline" size="lg">Log in</Button></a>
-                    <a href="/signup"><Button size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">Sign up</Button></a>
-                  </>
-                )}
                 <Button
                   variant="outline"
                   size="lg"
@@ -447,6 +443,64 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Auth Modals */}
+      <Dialog open={showLogin} onOpenChange={setShowLogin}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log in</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setAuthLoading(true);
+              setAuthError(null);
+              try {
+                await login(authEmail, authPassword);
+                setShowLogin(false);
+              } catch (e: any) {
+                setAuthError(e?.response?.data?.error || "Login failed");
+              } finally {
+                setAuthLoading(false);
+              }
+            }}
+            className="space-y-3"
+          >
+            <Input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required />
+            <Input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required />
+            {authError && <div className="text-sm text-red-600">{authError}</div>}
+            <Button type="submit" className="w-full" disabled={authLoading}>{authLoading ? "Logging in…" : "Log in"}</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showSignup} onOpenChange={setShowSignup}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign up</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setAuthLoading(true);
+              setAuthError(null);
+              try {
+                await signup(authEmail, authPassword);
+                setShowSignup(false);
+              } catch (e: any) {
+                setAuthError(e?.response?.data?.error || "Signup failed");
+              } finally {
+                setAuthLoading(false);
+              }
+            }}
+            className="space-y-3"
+          >
+            <Input type="email" placeholder="Email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required />
+            <Input type="password" placeholder="Password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required />
+            {authError && <div className="text-sm text-red-600">{authError}</div>}
+            <Button type="submit" className="w-full" disabled={authLoading}>{authLoading ? "Creating…" : "Create account"}</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* How It Works Section */}
       <section id="features" className="py-32 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden">
