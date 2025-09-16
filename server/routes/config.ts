@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Pool } from 'pg';
 import fs from 'fs/promises';
 import path from 'path';
+import { sql as neonSql } from '../sql';
 
 async function loadFromFile(slug: string) {
   try {
@@ -28,7 +29,27 @@ export async function getConfigBySlug(req: Request, res: Response) {
     const { slug } = req.params;
     if (!slug) return res.status(400).json({ error: 'Missing slug' });
 
+    // Try Netlify Neon first (uses NETLIFY_DATABASE_URL)
+    if (neonSql) {
+      try {
+        const mapRes = await neonSql`SELECT schema_name, restaurant_id FROM public.tenants WHERE tenant_slug = ${slug} LIMIT 1`;
+        const mapping = mapRes && mapRes[0];
+        if (mapping?.schema_name && mapping?.restaurant_id) {
+          // Switch search_path so we can query unqualified table names safely
+          await neonSql`SET search_path TO ${mapping.schema_name}`;
+          const cfgRes = await neonSql`SELECT config_json FROM restaurants WHERE id = ${mapping.restaurant_id} LIMIT 1`;
+          const row = cfgRes && cfgRes[0];
+          if (row?.config_json) {
+            return res.json(row.config_json);
+          }
+        }
+      } catch (e) {
+        console.error('Neon query failed in getConfigBySlug:', e);
+      }
+    }
+
     const databaseUrl =
+      process.env.NETLIFY_DATABASE_URL ||
       process.env.DATABASE_URL ||
       process.env.POSTGRES_URL ||
       process.env.SUPABASE_DB_URL ||
