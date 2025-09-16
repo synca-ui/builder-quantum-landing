@@ -66,6 +66,8 @@ import MenuSection from "@/components/sections/MenuSection";
 import GalleryGrid from "@/components/sections/GalleryGrid";
 import TemplateRegistry from "@/components/template/TemplateRegistry";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
+import { useAuth } from "@/context/AuthProvider";
+import { publishWebApp } from "@/lib/webapps";
 import {
   Dialog,
   DialogContent,
@@ -854,6 +856,8 @@ export default function Configurator() {
     return clone;
   }, [fileOrUrlToDataUrl]);
 
+  const { user, token } = useAuth();
+
   const publishConfiguration = useCallback(async () => {
     // Best-effort save; in serverless it may be skipped but that's fine
     if (!currentConfigId) {
@@ -865,14 +869,30 @@ export default function Configurator() {
     try {
       const mediaSafe = await sanitizeMedia(formData);
       setFormData(mediaSafe);
-      const result = await configurationApi.publish(
-        currentConfigId || "new",
-        normalizeConfigPayload(mediaSafe) as any,
-      );
 
-      if (result.success && result.data) {
-        const live =
-          (result.data as any).previewUrl || result.data.publishedUrl || null;
+      // If authenticated, publish to protected apps endpoint; else fallback
+      let live: string | null = null;
+      if (token && user) {
+        const cfg = normalizeConfigPayload(mediaSafe) as any;
+        const slugSource = (cfg.slug || cfg.businessName || "").toString();
+        const slug = slugSource
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "")
+          .slice(0, 63) || `site-${Date.now().toString(36)}`;
+        const publishRes = await publishWebApp(slug, cfg);
+        live = publishRes.publishedUrl || publishRes.previewUrl || `/site/${slug}`;
+      } else {
+        const result = await configurationApi.publish(
+          currentConfigId || "new",
+          normalizeConfigPayload(mediaSafe) as any,
+        );
+        if (result.success && result.data) {
+          live = (result.data as any).previewUrl || result.data.publishedUrl || null;
+        }
+      }
+
+      if (live) {
         setPublishStatus("published");
         setPublishedUrl(live);
 
