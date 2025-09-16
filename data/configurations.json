@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": "smoke-test",
+    "userId": "anonymous",
+    "businessName": "Neon Smoke",
+    "businessType": "cafe",
+    "template": "minimalist",
+    "primaryColor": "#111827",
+    "secondaryColor": "#6B7280",
+    "fontFamily": "sans-serif",
+    "selectedPages": [],
+    "customPages": [],
+    "openingHours": {},
+    "menuItems": [],
+    "reservationsEnabled": false,
+    "maxGuests": 10,
+    "notificationMethod": "email",
+    "contactMethods": [],
+    "socialMedia": {},
+    "gallery": [],
+    "onlineOrdering": false,
+    "onlineStore": false,
+    "teamArea": false,
+    "hasDomain": false,
+    "createdAt": "2025-09-16T11:32:00.384Z",
+    "updatedAt": "2025-09-16T11:32:00.468Z",
+    "status": "published",
+    "paymentOptions": [],
+    "offers": [],
+    "slug": "neon-smoke-e-test",
+    "publishedUrl": "https://neon-smoke-e-test.synca.digital",
+    "previewUrl": "https://synca.digital/site/neon-smoke-e-test"
+  }
+]
