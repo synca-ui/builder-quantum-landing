@@ -23,8 +23,13 @@
   },
   "dependencies": {
     "@netlify/neon": "^0.1.0",
+    "@neondatabase/serverless": "^0.10.4",
+    "axios": "^1.7.7",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "qrcode": "^1.5.4",
     "zod": "^3.25.76"
