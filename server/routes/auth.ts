@@ -23,9 +23,9 @@ authRouter.post('/signup', async (req, res) => {
     }
     const token = signToken({ id: user.id, email: user.email });
     return res.json({ user, token });
-  } catch (e) {
+  } catch (e: any) {
     console.error('signup error', e);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(503).json({ error: 'Database unavailable or misconfigured' });
   }
 });
 
@@ -40,8 +40,8 @@ authRouter.post('/login', async (req, res) => {
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
     const token = signToken({ id: user.id, email: user.email });
     return res.json({ user: { id: user.id, email: user.email }, token });
-  } catch (e) {
+  } catch (e: any) {
     console.error('login error', e);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(503).json({ error: 'Database unavailable or misconfigured' });
   }
 });
