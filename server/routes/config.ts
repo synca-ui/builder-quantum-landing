@@ -1,26 +1,77 @@
 import { Request, Response } from 'express';
-import { supabase } from '../supabase';
+import { Pool } from 'pg';
+import fs from 'fs/promises';
+import path from 'path';
+
+async function loadFromFile(slug: string) {
+  try {
+    const file = path.join(process.cwd(), 'data', 'configurations.json');
+    const raw = await fs.readFile(file, 'utf-8');
+    const list = JSON.parse(raw) as any[];
+    const match = list.find((c) =>
+      c && (
+        (c.slug && c.slug === slug) ||
+        c.previewUrl?.includes(`/site/${slug}`) ||
+        c.publishedUrl?.includes(slug) ||
+        c.selectedDomain === slug ||
+        c.domainName === slug
+      )
+    );
+    return match || null;
+  } catch {
+    return null;
+  }
+}
 
 export async function getConfigBySlug(req: Request, res: Response) {
   try {
     const { slug } = req.params;
     if (!slug) return res.status(400).json({ error: 'Missing slug' });
 
-    if (!supabase) {
-      return res.status(503).json({ error: 'Supabase not configured' });
+    const databaseUrl =
+      process.env.DATABASE_URL ||
+      process.env.POSTGRES_URL ||
+      process.env.SUPABASE_DB_URL ||
+      '';
+
+    if (databaseUrl) {
+      const pool = new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        max: 2,
+      });
+      const client = await pool.connect();
+      try {
+        // Lookup tenant mapping in public.tenants
+        const mapRes = await client.query(
+          `SELECT schema_name, restaurant_id FROM public.tenants WHERE tenant_slug = $1 LIMIT 1`,
+          [slug]
+        );
+        const mapping = mapRes.rows[0];
+        if (mapping?.schema_name && mapping?.restaurant_id) {
+          await client.query(`SET search_path TO ${mapping.schema_name};`);
+          const cfgRes = await client.query(
+            `SELECT config_json FROM restaurants WHERE id = $1 LIMIT 1`,
+            [mapping.restaurant_id]
+          );
+          const row = cfgRes.rows[0];
+          if (row?.config_json) {
+            return res.json(row.config_json);
+          }
+        }
+      } catch (e) {
+        console.error('DB read failed in getConfigBySlug:', e);
+      } finally {
+        client.release();
+        try { await pool.end(); } catch {}
+      }
     }
 
-    const { data, error } = await supabase
-      .from('configurations')
-      .select('config')
-      .eq('slug', slug)
-      .single();
+    // Fallback to file-based store (dev or read-only envs)
+    const fromFile = await loadFromFile(slug);
+    if (fromFile) return res.json(fromFile);
 
-    if (error || !data) {
-      return res.status(404).json({ error: 'Not found' });
-    }
-
-    return res.json(data.config);
+    return res.status(404).json({ error: 'Not found' });
   } catch (e) {
     console.error('getConfigBySlug error', e);
     return res.status(500).json({ error: 'Internal server error' });
