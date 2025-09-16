@@ -49,7 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string) => {
       const payload = { email, password };
       const res = await apiClient.post("/auth/signup", payload, {
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
       const data = res.data as { user: AuthUser; token: string };
       persist(data.user, data.token);
@@ -61,7 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string) => {
       const payload = { email, password };
       const res = await apiClient.post("/auth/login", payload, {
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
       const data = res.data as { user: AuthUser; token: string };
       persist(data.user, data.token);
