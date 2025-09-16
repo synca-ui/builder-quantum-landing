@@ -32,6 +32,15 @@ export function createServer() {
   // Example route
   app.get("/api/demo", handleDemo);
 
+  // Auth
+  app.use('/api/auth', authRouter);
+
+  // Apps (protected)
+  app.use('/api', webAppsRouter);
+
+  // Public apps
+  app.use('/api', publicAppsRouter);
+
   // Configuration API routes
   app.post("/api/configurations", saveConfiguration);
   app.get("/api/configurations", getConfigurations);
