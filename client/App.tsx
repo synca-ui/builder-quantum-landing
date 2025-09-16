@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Site from "./pages/Site";
 import HostAwareRoot from "./pages/HostAwareRoot";
 import TestSite from "./pages/TestSite";
+import { AuthProvider } from "./context/AuthProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,21 +38,23 @@ const queryClient = new QueryClient({
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-          <Routes>
-            <Route path="/" element={<HostAwareRoot />} />
-            <Route path="/configurator" element={<Configurator />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/site/:subdomain/*" element={<Site />} />
-            <Route path="/test-site" element={<TestSite />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+            <Routes>
+              <Route path="/" element={<HostAwareRoot />} />
+              <Route path="/configurator" element={<Configurator />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/site/:subdomain/*" element={<Site />} />
+              <Route path="/test-site" element={<TestSite />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );
