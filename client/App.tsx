@@ -15,6 +15,10 @@ import Site from "./pages/Site";
 import HostAwareRoot from "./pages/HostAwareRoot";
 import TestSite from "./pages/TestSite";
 import { AuthProvider } from "./context/AuthProvider";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Profile from "./pages/Profile";
+import RequireAuth from "./components/RequireAuth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,7 +50,10 @@ const App = () => (
             <Routes>
               <Route path="/" element={<HostAwareRoot />} />
               <Route path="/configurator" element={<Configurator />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
               <Route path="/site/:subdomain/*" element={<Site />} />
               <Route path="/test-site" element={<TestSite />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
