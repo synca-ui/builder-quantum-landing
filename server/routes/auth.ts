@@ -10,9 +10,13 @@ authRouter.post("/signup", async (req, res) => {
     let email: string | undefined;
     let password: string | undefined;
     const body = (req as any).body;
-    if (typeof body === 'string') {
-      try { const parsed = JSON.parse(body); email = parsed.email; password = parsed.password; } catch {}
-    } else if (body && typeof body === 'object') {
+    if (typeof body === "string") {
+      try {
+        const parsed = JSON.parse(body);
+        email = parsed.email;
+        password = parsed.password;
+      } catch {}
+    } else if (body && typeof body === "object") {
       email = (body as any).email;
       password = (body as any).password;
     }
@@ -46,9 +50,13 @@ authRouter.post("/login", async (req, res) => {
     let email: string | undefined;
     let password: string | undefined;
     const body = (req as any).body;
-    if (typeof body === 'string') {
-      try { const parsed = JSON.parse(body); email = parsed.email; password = parsed.password; } catch {}
-    } else if (body && typeof body === 'object') {
+    if (typeof body === "string") {
+      try {
+        const parsed = JSON.parse(body);
+        email = parsed.email;
+        password = parsed.password;
+      } catch {}
+    } else if (body && typeof body === "object") {
       email = (body as any).email;
       password = (body as any).password;
     }
