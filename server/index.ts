@@ -12,6 +12,8 @@ import {
 } from "./routes/configurations";
 import { fetchInstagramPhotos } from "./routes/instagram";
 import { setPreviewConfig } from "./routes/configurations";
+import { authRouter } from './routes/auth';
+import { webAppsRouter, publicAppsRouter } from './routes/webapps';
 
 export function createServer() {
   const app = express();
