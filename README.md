@@ -121,6 +121,8 @@
 
 The app will start with hot-reloading enabled. The backend API will be available at `http://localhost:5173/api`.
 
+<!-- tiny change -->
+
 ## 📁 Project Structure
 
 ```
