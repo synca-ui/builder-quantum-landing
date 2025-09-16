@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import React, { useEffect, useState, memo } from "react";
 import { ChevronRight, Play, Star, Check, ArrowRight, Zap, Palette, Smartphone, Globe, Sparkles, Rocket, Crown, Menu, X, Settings, Home, Layers, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
