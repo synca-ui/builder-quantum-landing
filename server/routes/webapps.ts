@@ -5,7 +5,7 @@ import { sql } from "../sql";
 export const webAppsRouter = Router();
 
 // Protect only /apps* routes with auth (avoid intercepting other /api paths)
-webAppsRouter.use('/apps', requireAuth);
+webAppsRouter.use("/apps", requireAuth);
 
 webAppsRouter.get("/apps", async (req, res) => {
   try {
@@ -43,12 +43,16 @@ webAppsRouter.post("/apps/publish", async (req, res) => {
 
     // Compute URLs immediately
     const host = (req.headers.host || "").toString();
-    const proto = ((req.headers["x-forwarded-proto"] as string) || "https").toString();
+    const proto = (
+      (req.headers["x-forwarded-proto"] as string) || "https"
+    ).toString();
     const baseDomain =
       process.env.PUBLIC_BASE_DOMAIN ||
       (host.includes(".") ? host.split(".").slice(-2).join(".") : host);
     const isLocal = host.includes("localhost") || baseDomain.includes(":");
-    const publishedUrl = isLocal ? `${proto}://${host}/site/${subdomain}` : `${proto}://${subdomain}.${baseDomain}`;
+    const publishedUrl = isLocal
+      ? `${proto}://${host}/site/${subdomain}`
+      : `${proto}://${subdomain}.${baseDomain}`;
     const previewUrl = `${proto}://${host}/site/${subdomain}`;
 
     // Fire-and-forget DB upsert to avoid request timeouts in serverless
