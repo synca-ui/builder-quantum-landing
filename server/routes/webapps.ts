@@ -4,8 +4,8 @@ import { sql } from "../sql";
 
 export const webAppsRouter = Router();
 
-// All below routes require auth
-webAppsRouter.use(requireAuth);
+// Protect only /apps* routes with auth (avoid intercepting other /api paths)
+webAppsRouter.use('/apps', requireAuth);
 
 webAppsRouter.get("/apps", async (req, res) => {
   try {
