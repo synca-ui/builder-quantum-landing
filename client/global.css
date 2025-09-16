@@ -196,9 +196,10 @@
   }
 
   .glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .text-gradient {
@@ -224,8 +225,8 @@
   .iphone-16pro .iphone-shadow {
     position: absolute;
     inset: 0;
-    filter: blur(20px);
-    opacity: 0.2;
+    filter: blur(6px);
+    opacity: 0.12;
     pointer-events: none;
   }
   .iphone-16pro .iphone-screen {
@@ -325,8 +326,8 @@
   }
 
   .optimized-blur {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
   }
 
   /* Reduce motion for users who prefer it */
