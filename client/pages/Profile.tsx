@@ -2,6 +2,7 @@ import React from "react";
 import { useAuth } from "@/context/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -81,7 +82,7 @@ export default function Profile() {
                 onChange={(e) => setCompanyName(e.target.value)}
               />
               {message && (
-                <div className="text-sm {message==='Profile updated' ? 'text-green-600' : 'text-red-600'}">
+                <div className={`text-sm ${message === 'Profile updated' ? 'text-green-600' : 'text-red-600'}`}>
                   {message}
                 </div>
               )}
