@@ -50,4 +50,15 @@ export default defineConfig({
   define: {
     "process.env.NODE_ENV": '"production"',
   },
+  server: {
+    fs: {
+      allow: [
+        // Allow shared folder
+        path.resolve(__dirname, "shared"),
+        path.resolve(__dirname, "client"), // You can add the client folder too
+        path.resolve(__dirname, "public"),
+        path.resolve(__dirname, "index.html"),
+      ],
+    },
+  },
 });
