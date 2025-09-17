@@ -2,23 +2,21 @@ import serverless from "serverless-http";
 import { createServer } from "../../server";
 
 const app = createServer();
-const handler = serverless(app);
+// 1. We rename the original handler to avoid a name conflict.
+const baseHandler = serverless(app);
 
+// 2. We export our new wrapper function as 'handler', which is what Netlify expects.
 export const handler = async (event: any, context: any) => {
-  // === DIE FINALE KORREKTUR ===
-  // Die Logs beweisen, dass 'event.body' ein JSON-String ist. Wir parsen ihn hier manuell
-  // und ersetzen den String durch das resultierende JavaScript-Objekt.
-  // Damit zwingen wir serverless-http, die bereits korrekten Daten zu verwenden.
+  // This is our manual body-parsing logic from before.
   if (event.body && typeof event.body === 'string') {
     try {
       event.body = JSON.parse(event.body);
     } catch (e) {
-      console.error("Manuelles Parsen des Body in der Netlify-Funktion ist fehlgeschlagen:", e);
-      // Falls etwas schiefgeht, übergeben wir ein leeres Objekt, um einen Absturz zu verhindern.
+      console.error("Manual JSON parsing in function handler failed:", e);
       event.body = {};
     }
   }
 
-  // Führen Sie den normalen Handler mit dem nun korrigierten Body aus.
-  return handler(event, context);
+  // 3. We call the original handler to run the Express app.
+  return baseHandler(event, context);
 };
