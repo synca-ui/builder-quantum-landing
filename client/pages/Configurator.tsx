@@ -59,6 +59,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import PhonePortal from "@/components/preview/phone-portal";
 import ReservationButton from "@/components/ui/ReservationButton";
@@ -132,6 +133,7 @@ function ShareQRButton({ url }: { url: string }) {
 export default function Configurator() {
   // Initialize persistence system FIRST
   const persistence = usePersistence();
+  const navigate = useNavigate();
 
   const [isVisible, setIsVisible] = useState(false);
   const [persistEnabled, setPersistEnabled] = useState(() => {
@@ -811,6 +813,13 @@ export default function Configurator() {
   // Save and publish functions
   const saveToBackend = useCallback(
     async (data: Partial<Configuration>) => {
+      const t = localStorage.getItem("auth_token");
+      if (!t) {
+        setSaveStatus("error");
+        toast({ title: "Please log in", description: "Sign in to save your website" });
+        navigate("/login", { replace: false, state: { from: { pathname: "/configurator" } } } as any);
+        return;
+      }
       setSaveStatus("saving");
       try {
         const mediaSafe = await sanitizeMedia(data);
@@ -943,6 +952,12 @@ export default function Configurator() {
   const { user, token } = useAuth();
 
   const publishConfiguration = useCallback(async () => {
+    if (!token || !user) {
+      toast({ title: "Please log in", description: "Sign in to publish your website" });
+      navigate("/login", { replace: false, state: { from: { pathname: "/configurator" } } } as any);
+      setPublishStatus("error");
+      return;
+    }
     // Best-effort save; in serverless it may be skipped but that's fine
     if (!currentConfigId) {
       await saveToBackend(formData as Partial<Configuration>);
