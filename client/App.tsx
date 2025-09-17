@@ -69,6 +69,7 @@ const App = () => (
                 }
               />
               <Route path="/site/:subdomain/*" element={<Site />} />
+              <Route path="/:id/:name/*" element={<Site />} />
               <Route path="/test-site" element={<TestSite />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
