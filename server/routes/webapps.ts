@@ -41,19 +41,22 @@ webAppsRouter.post("/apps/publish", async (req, res) => {
     if (!subdomain || !config)
       return res.status(400).json({ error: "Missing subdomain or config" });
 
-    // Compute URLs immediately
+    // Compute URLs preferring explicit env config
     const host = (req.headers.host || "").toString();
-    const proto = (
-      (req.headers["x-forwarded-proto"] as string) || "https"
-    ).toString();
-    const baseDomain =
-      process.env.PUBLIC_BASE_DOMAIN ||
-      (host.includes(".") ? host.split(".").slice(-2).join(".") : host);
-    const isLocal = host.includes("localhost") || baseDomain.includes(":");
-    const publishedUrl = isLocal
-      ? `${proto}://${host}/site/${subdomain}`
-      : `${proto}://${subdomain}.${baseDomain}`;
-    const previewUrl = `${proto}://${host}/site/${subdomain}`;
+    const hdrProto = ((req.headers["x-forwarded-proto"] as string) || "https").toString();
+    const siteUrlFromEnv = process.env.SITE_URL;
+    let baseHost = process.env.PUBLIC_BASE_DOMAIN || (host.includes(".") ? host.split(".").slice(-2).join(".") : host);
+    let proto = hdrProto;
+    if (siteUrlFromEnv) {
+      try {
+        const u = new URL(siteUrlFromEnv);
+        baseHost = u.hostname.replace(/^www\./, "");
+        proto = u.protocol.replace(":", "") || proto;
+      } catch {}
+    }
+    const publishedUrl = `https://${subdomain}.${baseHost}`;
+    const previewOrigin = siteUrlFromEnv ? siteUrlFromEnv.replace(/\/$/, "") : `https://${baseHost}`;
+    const previewUrl = `${previewOrigin}/site/${subdomain}`;
 
     // Fire-and-forget DB upsert to avoid request timeouts in serverless
     (async () => {
