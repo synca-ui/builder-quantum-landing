@@ -118,7 +118,7 @@ function generateSlug(businessName: string): string {
 
 export async function saveConfiguration(req: Request, res: Response) {
   try {
-    const userId = (req.headers["x-user-id"] as string) || "anonymous";
+    const userId = req.user!.id;
     const configData = {
       ...req.body,
       userId,
@@ -179,7 +179,7 @@ export async function saveConfiguration(req: Request, res: Response) {
 
 export async function getConfigurations(req: Request, res: Response) {
   try {
-    const userId = (req.headers["x-user-id"] as string) || "anonymous";
+    const userId = req.user!.id;
     const configurations = await loadConfigurations();
 
     const userConfigs = configurations.filter((c) => c.userId === userId);
@@ -197,7 +197,7 @@ export async function getConfigurations(req: Request, res: Response) {
 export async function getConfiguration(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = (req.headers["x-user-id"] as string) || "anonymous";
+    const userId = req.user!.id;
 
     const configurations = await loadConfigurations();
     const config = configurations.find(
@@ -221,7 +221,7 @@ export async function getConfiguration(req: Request, res: Response) {
 export async function deleteConfiguration(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = (req.headers["x-user-id"] as string) || "anonymous";
+    const userId = req.user!.id;
 
     const configurations = await loadConfigurations();
     const index = configurations.findIndex(
@@ -248,7 +248,7 @@ export async function deleteConfiguration(req: Request, res: Response) {
 export async function publishConfiguration(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = (req.headers["x-user-id"] as string) || "anonymous";
+    const userId = req.user!.id;
 
     // Prefer config from request payload to avoid FS on serverless; fallback to file
     const payload = (
