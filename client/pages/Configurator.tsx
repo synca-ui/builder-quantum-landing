@@ -205,6 +205,25 @@ export default function Configurator() {
     getBaseHost,
   ]);
 
+  const slugifyName = useCallback((s: string) =>
+    (s || 'site')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .slice(0, 30)
+  , []);
+
+  const getLiveUrl = useCallback(() => {
+    if (publishedUrl) return publishedUrl;
+    const origin = (() => {
+      try { return window.location.origin.replace(/\/$/, ''); } catch { return `https://${getBaseHost()}`; }
+    })();
+    const id = currentConfigId || '';
+    const name = slugifyName(formData.businessName || 'site');
+    if (id) return `${origin}/${id}/${name}`;
+    return origin;
+  }, [publishedUrl, currentConfigId, formData.businessName, getBaseHost, slugifyName]);
+
   useEffect(() => {
     setIsVisible(true);
 
@@ -1215,7 +1234,7 @@ export default function Configurator() {
                     <>
                       <Button
                         size="sm"
-                        onClick={() => window.open(publishedUrl, "_blank")}
+                        onClick={() => window.open(getLiveUrl(), "_blank")}
                         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
                       >
                         <Globe className="w-4 h-4 mr-2" />
@@ -2151,7 +2170,7 @@ export default function Configurator() {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-2">
-                            <span className="hidden">{item.emoji || "🍽️"}</span>
+                            <span className="hidden">{item.emoji || "🍽��"}</span>
                             <div>
                               <h3 className={templateStyles.itemName}>
                                 {item.name}
@@ -9649,7 +9668,7 @@ export default function Configurator() {
                         Your Live URL:
                       </p>
                       <p className="font-mono text-sm text-green-700 break-all">
-                        {publishedUrl || `https://${getDisplayedDomain()}`}
+                        {getLiveUrl()}
                       </p>
                     </div>
                   </div>
@@ -9696,7 +9715,7 @@ export default function Configurator() {
               </p>
               <div className="space-y-4">
                 <Button
-                  onClick={() => window.open(publishedUrl || "#", "_blank")}
+                  onClick={() => window.open(getLiveUrl(), "_blank")}
                   size="lg"
                   className="bg-green-500 hover:bg-green-600 text-white mr-4"
                 >
