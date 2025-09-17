@@ -11,27 +11,17 @@ authRouter.get("/signup", (_req, res) => {
     .json({ error: "Use POST /api/auth/signup with JSON { email, password }" });
 });
 
-// Konvertiert einen potenziellen Buffer in ein JSON-Objekt
-function parseBody(body: any) {
-  if (body && body.type === 'Buffer' && Array.isArray(body.data)) {
-    return JSON.parse(Buffer.from(body.data).toString());
-  }
-  return body;
-}
-
 authRouter.post("/signup", async (req, res) => {
   try {
-    // === DIE FINALE KORREKTUR ===
-    // Wir parsen den Body, um den Buffer in JSON umzuwandeln.
-    const jsonBody = parseBody(req.body);
-    const { email, password } = jsonBody;
+    // Sauberer, direkter Zugriff. Funktioniert jetzt, da der Body repariert wurde.
+    const { email, password } = req.body;
 
     if (!email || !password) {
+      console.error("Fehler in /signup: E-Mail oder Passwort fehlen immer noch!", req.body);
       return res.status(400).json({ error: "Email and password required" });
     }
     const hash = await bcrypt.hash(password, 10);
 
-    // create user if not exists
     const rows = await sql`INSERT INTO public.users(email, password_hash)
                             VALUES(${email}, ${hash})
                             ON CONFLICT (email) DO NOTHING
@@ -52,13 +42,10 @@ authRouter.post("/signup", async (req, res) => {
   }
 });
 
+// Der Login-Handler wird ebenfalls auf die saubere Version zurückgesetzt.
 authRouter.post("/login", async (req, res) => {
   try {
-    // === DIE FINALE KORREKTUR ===
-    // Wir wenden dieselbe Logik auch hier an.
-    const jsonBody = parseBody(req.body);
-    const { email, password } = jsonBody;
-
+    const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password required" });
     }
