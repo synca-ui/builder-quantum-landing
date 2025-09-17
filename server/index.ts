@@ -53,6 +53,9 @@ export function createServer() {
   // Public site serving
   app.get("/api/sites/:subdomain", getPublishedSite);
 
+  // Users profile (protected)
+  app.use('/api/users', require('./middleware/auth').requireAuth, require('./routes/users').usersRouter);
+
   // Preview config injection
   app.post("/api/preview/:session", setPreviewConfig);
 
