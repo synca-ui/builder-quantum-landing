@@ -41,7 +41,9 @@ export function createServer() {
   // Public apps
   app.use('/api', publicAppsRouter);
 
-  // Configuration API routes
+  // Configuration API routes (protected)
+  const { requireAuth } = require('./middleware/auth');
+  app.use('/api/configurations', requireAuth);
   app.post("/api/configurations", saveConfiguration);
   app.get("/api/configurations", getConfigurations);
   app.get("/api/configurations/:id", getConfiguration);
