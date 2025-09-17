@@ -269,7 +269,13 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
     const fontClass = fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";
     const menuPages = useMemo(() => Array.from(new Set<string>(["home", ...(formData.selectedPages || []), "settings"])), [formData.selectedPages]);
-    const pageLink = (p: string) => `/site/${segs[1] || ''}/${p === "home" ? "" : p}`.replace(/\/$/, "");
+    const pageLink = (p: string) => {
+      const isPreview = location.pathname.startsWith('/site/');
+      const isPathMode = !isPreview && segs.length >= 2;
+      const base = isPreview ? `/site/${segs[1]}` : isPathMode ? `/${segs[0]}/${segs[1]}` : '';
+      const path = `${base}/${p === 'home' ? '' : p}`;
+      return path.replace(/\/$/, "");
+    };
 
     const getBusinessIcon = () => {
       switch (formData.businessType) {
@@ -503,8 +509,15 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
 export default function Site() {
     const { subdomain } = useParams();
+    const location = useLocation();
     const [loading, setLoading] = useState(true);
     const [config, setConfig] = useState<Configuration | null>(null);
+
+    const slugifyName = (s: string) => s
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .substr(0, 30);
 
     const resolvedSlug = useMemo(() => {
         if (subdomain) return subdomain;
@@ -513,8 +526,19 @@ export default function Site() {
             const parts = host.split(".");
             if (parts.length >= 3) return parts[0];
         } catch {}
+        // Path-based published URL: /:id/:name
+        try {
+          const segs = location.pathname.split('/').filter(Boolean);
+          if (!location.pathname.startsWith('/site/') && segs.length >= 2) {
+            const id = segs[0];
+            const name = segs[1];
+            const shortId = (id || '').slice(-6) || id;
+            const nameSlug = slugifyName(name || 'site');
+            return `${nameSlug}-${shortId}`;
+          }
+        } catch {}
         return "";
-    }, [subdomain]);
+    }, [subdomain, location.pathname]);
 
     useEffect(() => {
         let mounted = true;
