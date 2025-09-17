@@ -424,7 +424,7 @@ export async function publishConfiguration(req: Request, res: Response) {
       })().catch((e) => console.error("Provisioning error:", e));
     }
 
-    // Generate published URL to unique subdomain like tenant.synca.digital
+    // Generate published URL in path-based format: https://<base>/{id}/{business-name}
     const siteUrlFromEnv = process.env.SITE_URL || process.env.URL;
     let baseHost = "synca.digital";
     if (siteUrlFromEnv) {
@@ -433,11 +433,14 @@ export async function publishConfiguration(req: Request, res: Response) {
         if (h) baseHost = h;
       } catch {}
     }
+    const origin = (siteUrlFromEnv || `https://${baseHost}`).replace(/\/$/, "");
+    const nameSlug = generateSlug(config.businessName || "site");
+
     const publishedUrl =
       config.hasDomain && config.domainName
         ? `https://${config.domainName}`
-        : `https://${tenantSlug}.${baseHost}`;
-    const previewUrl = `${(siteUrlFromEnv || `https://${baseHost}`).replace(/\/$/, "")}/site/${tenantSlug}`;
+        : `${origin}/${config.id}/${nameSlug}`;
+    const previewUrl = `${origin}/site/${tenantSlug}`;
 
     // Update configuration status
     config.status = "published";
