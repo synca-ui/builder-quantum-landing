@@ -326,8 +326,8 @@
     "domainName": "",
     "selectedDomain": "",
     "createdAt": "2025-09-17T14:19:40.755Z",
-    "updatedAt": "2025-09-17T14:19:40.755Z",
-    "status": "draft",
+    "updatedAt": "2025-09-17T16:44:23.456Z",
+    "status": "published",
     "paymentOptions": [],
     "offers": [
       {
@@ -406,7 +406,10 @@
         "secondary": "#10B981"
       }
     },
-    "id": "mfo2j1avg3kzc7kyrt"
+    "id": "mfo2j1avg3kzc7kyrt",
+    "slug": "hello-c7kyrt",
+    "publishedUrl": "https://hello-c7kyrt.synca.digital",
+    "previewUrl": "https://synca.digital/site/hello-c7kyrt"
   },
   {
     "id": "mfo2j1x00fj8nhxcs4ae",
