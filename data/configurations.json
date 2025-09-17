@@ -409,6 +409,7 @@
     "id": "mfo2j1avg3kzc7kyrt"
   },
   {
+    "id": "mfo2j1x00fj8nhxcs4ae",
     "userId": "aaf9e842-b21e-47db-a0b0-57ee17583468",
     "businessName": "Hello",
     "businessType": "cafe",
@@ -703,7 +704,7 @@
     "domainName": "",
     "selectedDomain": "",
     "createdAt": "2025-09-17T14:19:41.551Z",
-    "updatedAt": "2025-09-17T14:19:41.551Z",
+    "updatedAt": "2025-09-17T14:22:37.520Z",
     "status": "draft",
     "paymentOptions": [],
     "offers": [
@@ -782,7 +783,6 @@
         "primary": "#059669",
         "secondary": "#10B981"
       }
-    },
-    "id": "mfo2j1x00fj8nhxcs4ae"
+    }
   }
 ]
