@@ -59,9 +59,12 @@ export function createServer() {
   const app = express();
 
   // === Middleware ===
-  app.use(cors()); // CORS-Middleware
-  app.use(express.json({ limit: "25mb" })); // JSON Body Parser
-  app.use(express.urlencoded({ extended: true, limit: "25mb" })); // URL-encoded Body Parser
+  app.use(cors());
+
+  if (process.env.NODE_ENV !== 'production') {
+    app.use(express.json({ limit: "25mb" }));
+    app.use(express.urlencoded({ extended: true, limit: "25mb" }));
+  }
 
   // === API-Routen ===
   // Registrieren Sie den gebündelten API-Router unter dem Präfix /api
