@@ -72,7 +72,7 @@ async function apiRequest<T>(
     const response = await fetch(`/api${endpoint}`, {
       headers: {
         "Content-Type": "application/json",
-        "x-user-id": getUserId(),
+        ...(localStorage.getItem("auth_token") ? { Authorization: `Bearer ${localStorage.getItem("auth_token")}` } : {}),
         ...options.headers,
       },
       signal: controller.signal,
