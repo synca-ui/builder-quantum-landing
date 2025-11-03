@@ -59,6 +59,11 @@ export function createServer() {
   // Preview config injection
   app.post("/api/preview/:session", setPreviewConfig);
 
+  // Auto-generation endpoint (Auto Mode)
+  // Accepts JSON payload: { url?, maps_link?, business_name?, file_name?, file_base64? }
+  const { handleAutogen } = require('./routes/autogen');
+  app.post('/api/autogen', handleAutogen);
+
   // Config JSON proxy for Edge/clients
   app.get("/api/config/:slug", require('../server/routes/config').getConfigBySlug);
 
