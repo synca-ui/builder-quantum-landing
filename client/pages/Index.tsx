@@ -314,7 +314,7 @@ export default function Index() {
                   </Button>
                 </>
               )}
-              <a href="/configurator">
+              <a href="/mode-selection">
                 <Button
                   size="sm"
                   className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
@@ -482,7 +482,7 @@ export default function Index() {
                 <span className="text-gradient font-bold">thrive online</span>.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <a href="/configurator">
+                <a href="/mode-selection">
                   <Button
                     size="lg"
                     className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-colors duration-300 shadow-2xl overflow-hidden"
