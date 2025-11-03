@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Configurator from "./pages/Configurator";
 import ModeSelection from "./pages/ModeSelection";
+import AutoConfigurator from "./pages/AutoConfigurator";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Site from "./pages/Site";
