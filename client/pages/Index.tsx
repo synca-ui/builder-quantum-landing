@@ -412,7 +412,7 @@ export default function Index() {
                     </Button>
                   </a>
                 )}
-                <a href="/configurator" onClick={() => setIsMenuOpen(false)}>
+                <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                   <Button
                     size="sm"
                     className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-xl py-3 transition-all duration-300 hover:scale-105"
