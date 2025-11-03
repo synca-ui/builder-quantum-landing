@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Configurator from "./pages/Configurator";
+import ModeSelection from "./pages/ModeSelection";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Site from "./pages/Site";
@@ -49,7 +50,10 @@ const App = () => (
           <BrowserRouter future={{ v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/" element={<HostAwareRoot />} />
+              <Route path="/mode-selection" element={<ModeSelection />} />
               <Route path="/configurator" element={<Configurator />} />
+              <Route path="/configurator/manual" element={<Configurator />} />
+              <Route path="/configurator/auto" element={<Configurator />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route
