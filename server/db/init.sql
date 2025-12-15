@@ -23,6 +23,15 @@ CREATE TABLE IF NOT EXISTS public.web_apps (
   user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   subdomain varchar(63) UNIQUE NOT NULL,
   config_data jsonb NOT NULL,
+  source_url text,
+  auto_generated_at timestamptz,
+  ai_metadata jsonb,
+  asset_storage_location text,
+  privacy_compliant boolean DEFAULT false,
+  has_schema boolean DEFAULT false,
   published_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_web_apps_user_id_updated ON public.web_apps(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_web_apps_has_schema ON public.web_apps(has_schema);
