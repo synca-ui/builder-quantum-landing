@@ -8,6 +8,12 @@ CREATE TABLE IF NOT EXISTS public.users (
   password_hash varchar(255) NOT NULL,
   full_name varchar(255),
   company_name varchar(255),
+  profile_image_url text,
+  phone varchar(20),
+  subscription_tier varchar(50) DEFAULT 'free',
+  subscription_status varchar(50) DEFAULT 'active',
+  credits_used int DEFAULT 0,
+  last_login timestamptz,
   created_at timestamptz DEFAULT now()
 );
 
