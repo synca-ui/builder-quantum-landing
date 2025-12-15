@@ -439,6 +439,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
 
     return (
         <div className={`min-h-screen relative ${fontClass}`} style={{ background: styles.userBackground, color: styles.userFontColor }}>
+            <RestaurantJsonLd config={formData} />
             <div className="w-full bg-white" style={{height: 'max(env(safe-area-inset-top, 50px), 50px)'}} />
             <header className="px-4 h-14 flex items-center justify-between relative z-30 bg-white">
                 <Link to={pageLink("home")} className="flex items-center gap-2 text-lg font-extrabold text-black">
