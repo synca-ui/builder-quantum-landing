@@ -71,5 +71,9 @@ export function createServer() {
   // Instagram scraping endpoint (best-effort for public/open profiles)
   app.get("/api/instagram", fetchInstagramPhotos);
 
+  // Schema.org JSON-LD generation for Agentic Web
+  app.post("/api/schema/generate", handleGenerateSchema);
+  app.post("/api/schema/validate", handleValidateSchema);
+
   return app;
 }
