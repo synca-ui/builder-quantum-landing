@@ -46,10 +46,11 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+        <HelmetProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter future={{ v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/" element={<HostAwareRoot />} />
               <Route path="/mode-selection" element={<ModeSelection />} />
@@ -81,7 +82,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </HelmetProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
