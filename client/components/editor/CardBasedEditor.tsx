@@ -389,8 +389,36 @@ export function CardBasedEditor({
               </div>
             </SectionCard>
 
+            {/* Menu Items Card */}
+            <SectionCard
+              id="menu"
+              title="Menu Items"
+              description="Add and manage your menu items"
+              defaultExpanded={expandedSections.menu}
+              onExpandChange={(exp) => toggleSection('menu', exp)}
+            >
+              <MenuItemsCard
+                items={formData.menuItems || []}
+                onChange={(items) => updateFormData({ menuItems: items })}
+              />
+            </SectionCard>
+
+            {/* Opening Hours Card */}
+            <SectionCard
+              id="hours"
+              title="Opening Hours"
+              description="Set your business hours for each day"
+              defaultExpanded={expandedSections.hours}
+              onExpandChange={(exp) => toggleSection('hours', exp)}
+            >
+              <OpeningHoursCard
+                hours={formData.openingHours}
+                onChange={(hours) => updateFormData({ openingHours: hours })}
+              />
+            </SectionCard>
+
             {/* Additional sections would go here */}
-            {/* MenuItemsCard, OpeningHoursCard, ReservationsCard, ContactSocialCard, etc. */}
+            {/* ReservationsCard, ContactSocialCard, MediaGalleryCard, AdvancedFeaturesCard, etc. */}
           </div>
         </div>
 
