@@ -94,6 +94,7 @@ export function CardBasedEditor({
     contact: false,
     gallery: false,
     advanced: false,
+    settings: false,
     publish: false
   });
 
