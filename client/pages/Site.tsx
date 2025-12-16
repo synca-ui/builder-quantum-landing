@@ -381,13 +381,30 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
                     <section className="max-w-md mx-auto px-6 py-8">
                         <h2 className="text-lg font-bold mb-3" style={{ color: styles.userFontColor }}>Menu</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {items.map((it: any, index: number) => (
-                                <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg cursor-pointer" onClick={() => setProductOpen(it)}>
-                                    <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
-                                    <div className="text-sm font-semibold truncate" style={{ color: styles.userFontColor }}>{it.name}</div>
-                                    {typeof it.price !== "undefined" && <div className="text-xs" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>}
-                                </div>
-                            ))}
+                            {items.map((it: any, index: number) => {
+                                const itemStats = socialProofStats[it.id || it.name];
+                                return (
+                                    <div key={it.id || it.name || index} className="rounded-2xl border border-white/40 bg-white/15 backdrop-blur-md p-3 shadow-lg cursor-pointer relative" onClick={() => setProductOpen(it)}>
+                                        {/* Social proof badge */}
+                                        {itemStats?.lastOrderedMinutesAgo && (
+                                            <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                Popular
+                                            </div>
+                                        )}
+                                        <img src={normalizeUrl(it.image)} alt={it.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                                        <div className="text-sm font-semibold truncate" style={{ color: styles.userFontColor }}>{it.name}</div>
+                                        {typeof it.price !== "undefined" && <div className="text-xs" style={{ color: toRgba(String(styles.userPrimary), 0.9) }}>${Number(it.price).toFixed(2)}</div>}
+                                        {/* Social proof text */}
+                                        {itemStats?.lastOrderedMinutesAgo && (
+                                            <div className="text-xs text-green-200 mt-1">
+                                                {itemStats.lastOrderedMinutesAgo < 60
+                                                    ? `${itemStats.lastOrderedMinutesAgo}m ago`
+                                                    : `${Math.floor(itemStats.lastOrderedMinutesAgo / 60)}h ago`}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </section>
                 );
