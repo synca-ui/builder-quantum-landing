@@ -252,6 +252,12 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
     const [productOpen, setProductOpen] = useState<any | null>(null);
     const [openHoursExpanded, setOpenHoursExpanded] = useState(false);
 
+    // Get web app ID for social proof polling (use config ID if available)
+    const webAppId = formData.id || (segs.length >= 1 ? segs[0] : null);
+
+    // Poll for recent orders to display social proof
+    const { stats: socialProofStats } = useRecentOrders(webAppId, 30000, true);
+
     const getBusinessName = () => formData.businessName || "Your Business";
     const selectedIdForSwitch = formData.template || 'modern';
     const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch) || templates[0];
