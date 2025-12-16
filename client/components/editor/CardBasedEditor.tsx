@@ -6,6 +6,12 @@ import { useToast } from '@/components/ui/use-toast';
 import SectionCard from './SectionCard';
 import MenuItemsCard from './cards/MenuItemsCard';
 import OpeningHoursCard from './cards/OpeningHoursCard';
+import ReservationsCard from './cards/ReservationsCard';
+import ContactSocialCard from './cards/ContactSocialCard';
+import MediaGalleryCard from './cards/MediaGalleryCard';
+import AdvancedFeaturesCard from './cards/AdvancedFeaturesCard';
+import SettingsCard from './cards/SettingsCard';
+import PublishCard from './cards/PublishCard';
 import { Configuration } from '@/lib/api';
 
 /**
