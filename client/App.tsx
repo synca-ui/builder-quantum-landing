@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Configurator from "./pages/Configurator";
+import AdvancedConfigurator from "./pages/AdvancedConfigurator";
 import ModeSelection from "./pages/ModeSelection";
 import AutoConfigurator from "./pages/AutoConfigurator";
 import Dashboard from "./pages/Dashboard";
