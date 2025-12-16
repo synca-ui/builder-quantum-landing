@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export interface MenuItem {
@@ -8,6 +8,16 @@ export interface MenuItem {
   price: string;
   emoji?: string;
   id?: string;
+}
+
+export interface MenuItemStats {
+  itemId?: string;
+  itemName?: string;
+  lastOrderedAt?: string;
+  lastOrderedMinutesAgo?: number;
+  recentOrderCount?: number;
+  dailyOrderCount?: number;
+  userAvatarUrl?: string;
 }
 
 interface MenuSectionProps {
@@ -21,6 +31,9 @@ interface MenuSectionProps {
   primaryColor?: string;
   secondaryColor?: string;
   textColor?: string;
+  // Social proof
+  socialProofStats?: Record<string, MenuItemStats>;
+  showSocialProof?: boolean;
 }
 
 export function MenuSection({
