@@ -47,6 +47,8 @@ export function MenuSection({
   primaryColor,
   secondaryColor,
   textColor,
+  socialProofStats = {},
+  showSocialProof = true,
 }: MenuSectionProps) {
   const getTemplateStyles = () => {
     switch (templateStyle) {
