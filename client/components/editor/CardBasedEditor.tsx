@@ -423,8 +423,98 @@ export function CardBasedEditor({
               />
             </SectionCard>
 
-            {/* Additional sections would go here */}
-            {/* ReservationsCard, ContactSocialCard, MediaGalleryCard, AdvancedFeaturesCard, etc. */}
+            {/* Reservations Card */}
+            <SectionCard
+              id="reservations"
+              title="Reservations"
+              description="Configure table reservations and bookings"
+              defaultExpanded={expandedSections.reservations}
+              onExpandChange={(exp) => toggleSection('reservations', exp)}
+            >
+              <ReservationsCard
+                settings={{}}
+                onChange={(settings) => updateFormData({ reservationsSettings: settings })}
+              />
+            </SectionCard>
+
+            {/* Contact & Social Card */}
+            <SectionCard
+              id="contact"
+              title="Contact & Social Media"
+              description="Add phone, email, and social media links"
+              defaultExpanded={expandedSections.contact}
+              onExpandChange={(exp) => toggleSection('contact', exp)}
+            >
+              <ContactSocialCard
+                contacts={formData.contactMethods || []}
+                onChange={(contacts) => updateFormData({ contactMethods: contacts })}
+              />
+            </SectionCard>
+
+            {/* Media Gallery Card */}
+            <SectionCard
+              id="gallery"
+              title="Media Gallery"
+              description="Upload images and photos"
+              defaultExpanded={expandedSections.gallery}
+              onExpandChange={(exp) => toggleSection('gallery', exp)}
+            >
+              <MediaGalleryCard
+                images={formData.gallery || []}
+                onChange={(images) => updateFormData({ gallery: images })}
+              />
+            </SectionCard>
+
+            {/* Advanced Features Card */}
+            <SectionCard
+              id="advanced"
+              title="Advanced Features"
+              description="Enable premium features for your site"
+              defaultExpanded={expandedSections.advanced}
+              onExpandChange={(exp) => toggleSection('advanced', exp)}
+            >
+              <AdvancedFeaturesCard
+                features={{
+                  onlineOrdering: formData.onlineOrdering,
+                  onlineStore: formData.onlineStore,
+                  teamArea: formData.teamArea
+                }}
+                onChange={(features) => updateFormData({
+                  onlineOrdering: features.onlineOrdering || false,
+                  onlineStore: features.onlineStore || false,
+                  teamArea: features.teamArea || false
+                })}
+              />
+            </SectionCard>
+
+            {/* Settings Card */}
+            <SectionCard
+              id="settings"
+              title="Settings & SEO"
+              description="Configure SEO, analytics, and advanced options"
+              defaultExpanded={expandedSections.settings}
+              onExpandChange={(exp) => toggleSection('settings', exp)}
+            >
+              <SettingsCard
+                settings={{}}
+                onChange={(settings) => updateFormData({ seoSettings: settings })}
+              />
+            </SectionCard>
+
+            {/* Publish Card */}
+            <SectionCard
+              id="publish"
+              title="Publish"
+              description="Publish your site to the web"
+              defaultExpanded={expandedSections.publish}
+              onExpandChange={(exp) => toggleSection('publish', exp)}
+            >
+              <PublishCard
+                settings={{ isPublished: false }}
+                businessName={formData.businessName}
+                onPublish={onPublish}
+              />
+            </SectionCard>
           </div>
         </div>
 
