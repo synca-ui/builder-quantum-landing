@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { X, Upload, Trash2 } from 'lucide-react';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { X, Upload, Trash2 } from "lucide-react";
 
 export interface GalleryImage {
   id: string;
@@ -14,23 +14,26 @@ interface MediaGalleryCardProps {
   onChange?: (images: GalleryImage[]) => void;
 }
 
-export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProps) {
+export function MediaGalleryCard({
+  images = [],
+  onChange,
+}: MediaGalleryCardProps) {
   const [gallery, setGallery] = useState<GalleryImage[]>(images || []);
   const [newImage, setNewImage] = useState<Partial<GalleryImage>>({
-    url: '',
-    alt: '',
-    caption: ''
+    url: "",
+    alt: "",
+    caption: "",
   });
-  const [uploadError, setUploadError] = useState<string>('');
+  const [uploadError, setUploadError] = useState<string>("");
 
   const handleImageChange = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setUploadError('Please select an image file');
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select an image file");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Image size must be less than 5MB');
+      setUploadError("Image size must be less than 5MB");
       return;
     }
 
@@ -38,40 +41,40 @@ export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProp
     reader.onload = (e) => {
       const url = e.target?.result as string;
       setNewImage({ ...newImage, url });
-      setUploadError('');
+      setUploadError("");
     };
     reader.readAsDataURL(file);
   };
 
   const addImage = () => {
     if (!newImage.url || !newImage.alt?.trim()) {
-      setUploadError('Please provide image URL and alt text');
+      setUploadError("Please provide image URL and alt text");
       return;
     }
 
     const image: GalleryImage = {
       id: `img-${Date.now()}`,
       url: newImage.url,
-      alt: newImage.alt || 'Gallery image',
-      caption: newImage.caption
+      alt: newImage.alt || "Gallery image",
+      caption: newImage.caption,
     };
 
     const updated = [...gallery, image];
     setGallery(updated);
     onChange?.(updated);
-    setNewImage({ url: '', alt: '', caption: '' });
-    setUploadError('');
+    setNewImage({ url: "", alt: "", caption: "" });
+    setUploadError("");
   };
 
   const removeImage = (id: string) => {
-    const updated = gallery.filter(img => img.id !== id);
+    const updated = gallery.filter((img) => img.id !== id);
     setGallery(updated);
     onChange?.(updated);
   };
 
   const updateImage = (id: string, updates: Partial<GalleryImage>) => {
-    const updated = gallery.map(img =>
-      img.id === id ? { ...img, ...updates } : img
+    const updated = gallery.map((img) =>
+      img.id === id ? { ...img, ...updates } : img,
     );
     setGallery(updated);
     onChange?.(updated);
@@ -82,7 +85,9 @@ export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProp
       {/* Image Gallery Grid */}
       {gallery.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">Gallery Images ({gallery.length})</h4>
+          <h4 className="text-sm font-semibold text-gray-900 mb-3">
+            Gallery Images ({gallery.length})
+          </h4>
           <div className="grid grid-cols-2 gap-4">
             {gallery.map((image) => (
               <div key={image.id} className="relative group">
@@ -101,7 +106,9 @@ export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProp
                   </button>
                 </div>
                 {image.caption && (
-                  <p className="text-xs text-gray-600 mt-1 truncate">{image.caption}</p>
+                  <p className="text-xs text-gray-600 mt-1 truncate">
+                    {image.caption}
+                  </p>
                 )}
               </div>
             ))}
@@ -111,19 +118,25 @@ export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProp
 
       {/* Add New Image Form */}
       <div className="p-4 bg-gray-50 rounded-lg space-y-3 border border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-900">Add Gallery Image</h4>
+        <h4 className="text-sm font-semibold text-gray-900">
+          Add Gallery Image
+        </h4>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Image
+          </label>
           <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
             <Upload className="w-4 h-4 text-gray-600" />
             <span className="text-sm text-gray-600">
-              {newImage.url ? 'Change image' : 'Upload or paste image URL'}
+              {newImage.url ? "Change image" : "Upload or paste image URL"}
             </span>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleImageChange(e.target.files[0])}
+              onChange={(e) =>
+                e.target.files?.[0] && handleImageChange(e.target.files[0])
+              }
               className="hidden"
             />
           </label>
@@ -136,15 +149,15 @@ export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProp
           )}
         </div>
 
-        {uploadError && (
-          <p className="text-sm text-red-600">{uploadError}</p>
-        )}
+        {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Alt Text *</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Alt Text *
+          </label>
           <input
             type="text"
-            value={newImage.alt || ''}
+            value={newImage.alt || ""}
             onChange={(e) => setNewImage({ ...newImage, alt: e.target.value })}
             placeholder="Describe the image for accessibility"
             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -152,11 +165,15 @@ export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProp
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Caption (optional)</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Caption (optional)
+          </label>
           <input
             type="text"
-            value={newImage.caption || ''}
-            onChange={(e) => setNewImage({ ...newImage, caption: e.target.value })}
+            value={newImage.caption || ""}
+            onChange={(e) =>
+              setNewImage({ ...newImage, caption: e.target.value })
+            }
             placeholder="Display caption for the image"
             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           />
@@ -172,7 +189,9 @@ export function MediaGalleryCard({ images = [], onChange }: MediaGalleryCardProp
       </div>
 
       {gallery.length === 0 && (
-        <p className="text-sm text-gray-500 text-center py-4">No images added yet</p>
+        <p className="text-sm text-gray-500 text-center py-4">
+          No images added yet
+        </p>
       )}
     </div>
   );

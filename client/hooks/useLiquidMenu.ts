@@ -1,36 +1,37 @@
-import { useMemo } from 'react';
-import { LiquidMenuItem, LiquidContext, LiquidMenuResult } from '../shared/types/liquidUI';
+import { useMemo } from "react";
+import {
+  LiquidMenuItem,
+  LiquidContext,
+  LiquidMenuResult,
+} from "../shared/types/liquidUI";
 
 /**
  * Category display order (earlier in array = higher priority)
  */
 const CATEGORY_ORDER: Record<string, number> = {
-  'breakfast': 5,
-  'coffee': 5,
-  'brunch': 4.5,
-  'lunch': 4,
-  'lunch-specials': 4,
-  'appetizers': 3.5,
-  'mains': 3,
-  'salads': 3,
-  'sides': 2.5,
-  'desserts': 2,
-  'drinks': 2,
-  'cocktails': 1.5,
-  'wine': 1.5,
-  'beer': 1.5,
-  'non-alcoholic': 1,
-  'snacks': 0.5,
-  'other': 0
+  breakfast: 5,
+  coffee: 5,
+  brunch: 4.5,
+  lunch: 4,
+  "lunch-specials": 4,
+  appetizers: 3.5,
+  mains: 3,
+  salads: 3,
+  sides: 2.5,
+  desserts: 2,
+  drinks: 2,
+  cocktails: 1.5,
+  wine: 1.5,
+  beer: 1.5,
+  "non-alcoholic": 1,
+  snacks: 0.5,
+  other: 0,
 };
 
 /**
  * Determine if a menu item should be displayed based on current time
  */
-function isItemVisibleByTime(
-  item: LiquidMenuItem,
-  now: Date
-): boolean {
+function isItemVisibleByTime(item: LiquidMenuItem, now: Date): boolean {
   if (!item.displayRules) return true;
 
   const { startHour, endHour } = item.displayRules;
@@ -54,10 +55,7 @@ function isItemVisibleByTime(
 /**
  * Determine if a menu item should be displayed based on day of week
  */
-function isItemVisibleByDay(
-  item: LiquidMenuItem,
-  now: Date
-): boolean {
+function isItemVisibleByDay(item: LiquidMenuItem, now: Date): boolean {
   if (!item.displayRules || !item.displayRules.daysOfWeek) {
     return true;
   }
@@ -69,10 +67,7 @@ function isItemVisibleByDay(
 /**
  * Determine if a menu item should be displayed based on number of guests
  */
-function isItemVisibleByGuests(
-  item: LiquidMenuItem,
-  guests?: number
-): boolean {
+function isItemVisibleByGuests(item: LiquidMenuItem, guests?: number): boolean {
   if (guests === undefined || !item.displayRules) return true;
 
   const { minGuests, maxGuests } = item.displayRules;
@@ -85,28 +80,49 @@ function isItemVisibleByGuests(
 /**
  * Calculate priority score for sorting
  */
-function calculatePriority(item: LiquidMenuItem, context: LiquidContext): number {
+function calculatePriority(
+  item: LiquidMenuItem,
+  context: LiquidContext,
+): number {
   let score = item.priority ?? 50;
 
   // Boost items that match current time category
   const currentHour = context.currentHour;
   if (item.category) {
     const categoryLower = item.category.toLowerCase();
-    if (currentHour >= 6 && currentHour < 11 && categoryLower.includes('breakfast')) {
+    if (
+      currentHour >= 6 &&
+      currentHour < 11 &&
+      categoryLower.includes("breakfast")
+    ) {
       score += 20;
-    } else if (currentHour >= 11 && currentHour < 15 && categoryLower.includes('lunch')) {
+    } else if (
+      currentHour >= 11 &&
+      currentHour < 15 &&
+      categoryLower.includes("lunch")
+    ) {
       score += 20;
-    } else if (currentHour >= 17 && currentHour < 23 && categoryLower.includes('dinner')) {
+    } else if (
+      currentHour >= 17 &&
+      currentHour < 23 &&
+      categoryLower.includes("dinner")
+    ) {
       score += 20;
     } else if (currentHour >= 22 || currentHour < 6) {
-      if (categoryLower.includes('cocktail') || categoryLower.includes('snack')) {
+      if (
+        categoryLower.includes("cocktail") ||
+        categoryLower.includes("snack")
+      ) {
         score += 15;
       }
     }
   }
 
   // Boost recently ordered items (social proof)
-  if (item.lastOrderedMinutesAgo !== undefined && item.lastOrderedMinutesAgo < 30) {
+  if (
+    item.lastOrderedMinutesAgo !== undefined &&
+    item.lastOrderedMinutesAgo < 30
+  ) {
     score += 10;
   }
 
@@ -118,7 +134,7 @@ function calculatePriority(item: LiquidMenuItem, context: LiquidContext): number
  */
 export function useLiquidMenu(
   items: LiquidMenuItem[] = [],
-  context?: Partial<LiquidContext>
+  context?: Partial<LiquidContext>,
 ): LiquidMenuResult {
   return useMemo(() => {
     // Set up context with defaults
@@ -135,7 +151,7 @@ export function useLiquidMenu(
       timezone: context?.timezone,
       specialOccasion: context?.specialOccasion,
       dayOfMonth: context?.dayOfMonth ?? now.getDate(),
-      month: context?.month ?? now.getMonth() + 1
+      month: context?.month ?? now.getMonth() + 1,
     };
 
     // Track which filtering rules are applied
@@ -143,11 +159,11 @@ export function useLiquidMenu(
       timeFiltering: false,
       dayFiltering: false,
       guestFiltering: false,
-      specialOccasionFiltering: false
+      specialOccasionFiltering: false,
     };
 
     // Filter items
-    const filtered = items.filter(item => {
+    const filtered = items.filter((item) => {
       const visibleByTime = isItemVisibleByTime(item, now);
       const visibleByDay = isItemVisibleByDay(item, now);
       const visibleByGuests = isItemVisibleByGuests(item, guests);
@@ -167,8 +183,8 @@ export function useLiquidMenu(
       if (priorityA !== priorityB) return priorityB - priorityA;
 
       // Secondary sort: category order
-      const catA = CATEGORY_ORDER[a.category?.toLowerCase() || ''] ?? 0;
-      const catB = CATEGORY_ORDER[b.category?.toLowerCase() || ''] ?? 0;
+      const catA = CATEGORY_ORDER[a.category?.toLowerCase() || ""] ?? 0;
+      const catB = CATEGORY_ORDER[b.category?.toLowerCase() || ""] ?? 0;
       if (catA !== catB) return catB - catA;
 
       // Tertiary sort: original order
@@ -180,27 +196,27 @@ export function useLiquidMenu(
     let contextualMessage: string | undefined;
 
     if (currentHour >= 6 && currentHour < 11) {
-      suggestedCategory = 'Breakfast';
-      contextualMessage = 'Breakfast available until 11:00';
+      suggestedCategory = "Breakfast";
+      contextualMessage = "Breakfast available until 11:00";
     } else if (currentHour >= 11 && currentHour < 15) {
-      suggestedCategory = 'Lunch Specials';
-      contextualMessage = 'Lunch specials available until 15:00';
+      suggestedCategory = "Lunch Specials";
+      contextualMessage = "Lunch specials available until 15:00";
     } else if (currentHour >= 15 && currentHour < 17) {
-      suggestedCategory = 'Afternoon Menu';
-      contextualMessage = 'Afternoon menu available';
+      suggestedCategory = "Afternoon Menu";
+      contextualMessage = "Afternoon menu available";
     } else if (currentHour >= 17 && currentHour < 23) {
-      suggestedCategory = 'Dinner';
-      contextualMessage = 'Full dinner menu available';
+      suggestedCategory = "Dinner";
+      contextualMessage = "Full dinner menu available";
     } else if (currentHour >= 22 || currentHour < 6) {
-      suggestedCategory = 'Late Night';
-      contextualMessage = 'Late night menu available';
+      suggestedCategory = "Late Night";
+      contextualMessage = "Late night menu available";
     }
 
     return {
       items: sorted,
       appliedRules,
       suggestedCategory,
-      contextualMessage
+      contextualMessage,
     };
   }, [items, context]);
 }

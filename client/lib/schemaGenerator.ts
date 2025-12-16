@@ -1,4 +1,8 @@
-import { SchemaOrganization, MenuItem as SchemaMenuItem, RestaurantSchemaConfig } from '../shared/types/schema';
+import {
+  SchemaOrganization,
+  MenuItem as SchemaMenuItem,
+  RestaurantSchemaConfig,
+} from "../shared/types/schema";
 
 /**
  * Client-side schema generation (mirrors server version)
@@ -8,36 +12,36 @@ import { SchemaOrganization, MenuItem as SchemaMenuItem, RestaurantSchemaConfig 
 const DIETARY_FLAGS = {
   vegan: {
     keywords: ["vegan", "100% plant-based"],
-    url: "https://schema.org/VeganDiet"
+    url: "https://schema.org/VeganDiet",
   },
   vegetarian: {
     keywords: ["vegetarian", "no meat"],
-    url: "https://schema.org/VegetarianDiet"
+    url: "https://schema.org/VegetarianDiet",
   },
   glutenFree: {
     keywords: ["gluten-free", "gluten free", "gf"],
-    url: "https://schema.org/GlutenFreeDiet"
+    url: "https://schema.org/GlutenFreeDiet",
   },
   kosher: {
     keywords: ["kosher"],
-    url: "https://schema.org/KosherDiet"
+    url: "https://schema.org/KosherDiet",
   },
   halal: {
     keywords: ["halal"],
-    url: "https://schema.org/HalalDiet"
+    url: "https://schema.org/HalalDiet",
   },
   dairyFree: {
     keywords: ["dairy-free", "dairy free"],
-    url: "https://schema.org/DairyFree"
+    url: "https://schema.org/DairyFree",
   },
   lowFat: {
     keywords: ["low-fat", "low fat"],
-    url: "https://schema.org/LowFatDiet"
+    url: "https://schema.org/LowFatDiet",
   },
   lowSodium: {
     keywords: ["low-sodium", "low sodium"],
-    url: "https://schema.org/LowSodiumDiet"
-  }
+    url: "https://schema.org/LowSodiumDiet",
+  },
 };
 
 export function extractDietaryFlags(description?: string): string[] {
@@ -47,7 +51,7 @@ export function extractDietaryFlags(description?: string): string[] {
   const flags: string[] = [];
 
   Object.values(DIETARY_FLAGS).forEach(({ keywords, url }) => {
-    if (keywords.some(kw => lowerDesc.includes(kw))) {
+    if (keywords.some((kw) => lowerDesc.includes(kw))) {
       flags.push(url);
     }
   });
@@ -56,11 +60,11 @@ export function extractDietaryFlags(description?: string): string[] {
 }
 
 function groupByCategory(
-  items: RestaurantSchemaConfig["menuItems"] = []
+  items: RestaurantSchemaConfig["menuItems"] = [],
 ): Record<string, RestaurantSchemaConfig["menuItems"]> {
   const grouped: Record<string, RestaurantSchemaConfig["menuItems"]> = {};
 
-  items.forEach(item => {
+  items.forEach((item) => {
     const category = item.category || "Main";
     if (!grouped[category]) {
       grouped[category] = [];
@@ -72,7 +76,7 @@ function groupByCategory(
 }
 
 function formatOpeningHours(
-  hours?: Record<string, { open: string; close: string }>
+  hours?: Record<string, { open: string; close: string }>,
 ) {
   if (!hours || Object.keys(hours).length === 0) return undefined;
 
@@ -83,19 +87,19 @@ function formatOpeningHours(
     thursday: "Thursday",
     friday: "Friday",
     saturday: "Saturday",
-    sunday: "Sunday"
+    sunday: "Sunday",
   };
 
   return Object.entries(hours).map(([day, { open, close }]) => ({
     "@type": "OpeningHoursSpecification" as const,
     dayOfWeek: dayMap[day.toLowerCase()] || day,
     opens: open,
-    closes: close
+    closes: close,
   }));
 }
 
 export function generateRestaurantSchema(
-  config: RestaurantSchemaConfig
+  config: RestaurantSchemaConfig,
 ): SchemaOrganization {
   const groupedItems = groupByCategory(config.menuItems);
 
@@ -104,7 +108,7 @@ export function generateRestaurantSchema(
       "@type": "MenuSection" as const,
       name: categoryName,
       description: undefined,
-      hasMenuItem: items.map(item => ({
+      hasMenuItem: items.map((item) => ({
         "@type": "MenuItem" as const,
         name: item.name,
         description: item.description,
@@ -113,17 +117,18 @@ export function generateRestaurantSchema(
           ? {
               "@type": "Offer" as const,
               priceCurrency: "EUR",
-              price: typeof item.price === "number" 
-                ? item.price.toFixed(2) 
-                : item.price
+              price:
+                typeof item.price === "number"
+                  ? item.price.toFixed(2)
+                  : item.price,
             }
           : undefined,
-        suitableForDiet: extractDietaryFlags(item.description)
-      }))
-    })
+        suitableForDiet: extractDietaryFlags(item.description),
+      })),
+    }),
   );
 
-  const addressParts = config.address?.split(",").map(p => p.trim()) || [];
+  const addressParts = config.address?.split(",").map((p) => p.trim()) || [];
   const address =
     addressParts.length > 0
       ? {
@@ -132,7 +137,7 @@ export function generateRestaurantSchema(
           addressLocality: addressParts[1] || "",
           addressRegion: addressParts[2] || "",
           postalCode: addressParts[3] || "",
-          addressCountry: "DE"
+          addressCountry: "DE",
         }
       : undefined;
 
@@ -145,7 +150,7 @@ export function generateRestaurantSchema(
             config.reviews.length,
           ratingCount: config.reviews.length,
           bestRating: 5,
-          worstRating: 1
+          worstRating: 1,
         }
       : undefined;
 
@@ -170,8 +175,8 @@ export function generateRestaurantSchema(
           geo: {
             "@type": "GeoCoordinates" as const,
             latitude: config.latitude,
-            longitude: config.longitude
-          }
+            longitude: config.longitude,
+          },
         }
       : {}),
     openingHoursSpecification: formatOpeningHours(config.openingHours),
@@ -181,14 +186,14 @@ export function generateRestaurantSchema(
             {
               "@type": "Menu" as const,
               name: `${config.businessName} Menu`,
-              hasMenuSection: menuSections
-            }
-          ]
+              hasMenuSection: menuSections,
+            },
+          ],
         }
       : {}),
     aggregateRating: aggregateRating,
     ...(sameAs.length > 0 ? { sameAs } : {}),
-    ...(config.logo ? { logo: config.logo } : {})
+    ...(config.logo ? { logo: config.logo } : {}),
   };
 
   return schema;

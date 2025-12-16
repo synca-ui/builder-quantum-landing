@@ -12,9 +12,9 @@ import {
 } from "./routes/configurations";
 import { fetchInstagramPhotos } from "./routes/instagram";
 import { setPreviewConfig } from "./routes/configurations";
-import { authRouter } from './routes/auth';
-import { webAppsRouter, publicAppsRouter } from './routes/webapps';
-import { handleGenerateSchema, handleValidateSchema } from './routes/schema';
+import { authRouter } from "./routes/auth";
+import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
+import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
 
 export function createServer() {
   const app = express();
@@ -34,17 +34,17 @@ export function createServer() {
   app.get("/api/demo", handleDemo);
 
   // Auth
-  app.use('/api/auth', authRouter);
+  app.use("/api/auth", authRouter);
 
   // Apps (protected)
-  app.use('/api', webAppsRouter);
+  app.use("/api", webAppsRouter);
 
   // Public apps
-  app.use('/api', publicAppsRouter);
+  app.use("/api", publicAppsRouter);
 
   // Configuration API routes (protected)
-  const { requireAuth } = require('./middleware/auth');
-  app.use('/api/configurations', requireAuth);
+  const { requireAuth } = require("./middleware/auth");
+  app.use("/api/configurations", requireAuth);
   app.post("/api/configurations", saveConfiguration);
   app.get("/api/configurations", getConfigurations);
   app.get("/api/configurations/:id", getConfiguration);
@@ -55,18 +55,25 @@ export function createServer() {
   app.get("/api/sites/:subdomain", getPublishedSite);
 
   // Users profile (protected)
-  app.use('/api/users', require('./middleware/auth').requireAuth, require('./routes/users').usersRouter);
+  app.use(
+    "/api/users",
+    require("./middleware/auth").requireAuth,
+    require("./routes/users").usersRouter,
+  );
 
   // Preview config injection
   app.post("/api/preview/:session", setPreviewConfig);
 
   // Auto-generation endpoint (Auto Mode)
   // Accepts JSON payload: { url?, maps_link?, business_name?, file_name?, file_base64? }
-  const { handleAutogen } = require('./routes/autogen');
-  app.post('/api/autogen', handleAutogen);
+  const { handleAutogen } = require("./routes/autogen");
+  app.post("/api/autogen", handleAutogen);
 
   // Config JSON proxy for Edge/clients
-  app.get("/api/config/:slug", require('../server/routes/config').getConfigBySlug);
+  app.get(
+    "/api/config/:slug",
+    require("../server/routes/config").getConfigBySlug,
+  );
 
   // Instagram scraping endpoint (best-effort for public/open profiles)
   app.get("/api/instagram", fetchInstagramPhotos);
@@ -80,12 +87,12 @@ export function createServer() {
     handleCreateOrder,
     handleGetRecentOrders,
     handleGetMenuStats,
-    handleClearOldOrders
-  } = require('./routes/orders');
-  app.post('/api/orders/create', handleCreateOrder);
-  app.get('/api/orders/:webAppId/recent', handleGetRecentOrders);
-  app.get('/api/orders/:webAppId/menu-stats', handleGetMenuStats);
-  app.post('/api/orders/:webAppId/clear-old', handleClearOldOrders);
+    handleClearOldOrders,
+  } = require("./routes/orders");
+  app.post("/api/orders/create", handleCreateOrder);
+  app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
+  app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
+  app.post("/api/orders/:webAppId/clear-old", handleClearOldOrders);
 
   return app;
 }

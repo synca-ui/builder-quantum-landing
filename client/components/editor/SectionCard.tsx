@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export interface SectionCardProps {
   /**
@@ -58,7 +58,7 @@ export function SectionCard({
   children,
   badge,
   description,
-  className = ''
+  className = "",
 }: SectionCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -82,9 +82,7 @@ export function SectionCard({
       >
         <div className="flex items-center gap-3 flex-1 text-left">
           {icon && (
-            <div className="flex-shrink-0 w-5 h-5 text-gray-600">
-              {icon}
-            </div>
+            <div className="flex-shrink-0 w-5 h-5 text-gray-600">{icon}</div>
           )}
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -118,11 +116,11 @@ export function SectionCard({
             key={`content-${id}`}
             id={`content-${id}`}
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{
               duration: 0.3,
-              ease: 'easeInOut'
+              ease: "easeInOut",
             }}
           >
             <div className="px-6 py-4 border-t border-gray-200 bg-white">

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from "react";
 
 /**
  * Per-item order statistics
@@ -31,24 +31,24 @@ export interface UseRecentOrdersResult {
 
 /**
  * Poll for recent orders and menu statistics
- * 
+ *
  * This hook fetches and updates order statistics for menu items,
  * showing social proof like "Ordered X mins ago" on popular items.
- * 
+ *
  * Features:
  * - Auto-polling every 30 seconds (configurable)
  * - Error handling and retry logic
  * - Memoized stats to prevent unnecessary re-renders
  * - Manual refetch option
- * 
+ *
  * @param webAppId - The web app ID to fetch stats for
  * @param pollInterval - Polling interval in milliseconds (default: 30000)
  * @param enabled - Whether polling is enabled (default: true)
  * @returns Object with stats, loading, error, and refetch
- * 
+ *
  * @example
  * const { stats, isLoading } = useRecentOrders(webAppId);
- * 
+ *
  * // In menu item component:
  * {stats[itemId]?.lastOrderedMinutesAgo && (
  *   <span className="text-green-600 text-sm">
@@ -59,7 +59,7 @@ export interface UseRecentOrdersResult {
 export function useRecentOrders(
   webAppId: string | null | undefined,
   pollInterval: number = 30000,
-  enabled: boolean = true
+  enabled: boolean = true,
 ): UseRecentOrdersResult {
   const [stats, setStats] = useState<MenuStats>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -79,10 +79,10 @@ export function useRecentOrders(
     setIsLoading(true);
     try {
       const response = await fetch(`/api/orders/${webAppId}/menu-stats`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {
@@ -153,45 +153,49 @@ export function useRecentOrders(
     isLoading,
     error,
     lastUpdated,
-    refetch
+    refetch,
   };
 }
 
 /**
  * Hook to get social proof text for a menu item
- * 
+ *
  * @example
  * const socialProofText = useSocialProofText(stats[itemId]);
  * // Returns: "Ordered 5 mins ago" or null
  */
-export function useSocialProofText(itemStats: MenuItemStats | undefined): string | null {
+export function useSocialProofText(
+  itemStats: MenuItemStats | undefined,
+): string | null {
   if (!itemStats?.lastOrderedMinutesAgo) return null;
 
   const minutes = itemStats.lastOrderedMinutesAgo;
 
-  if (minutes < 1) return 'Just ordered';
+  if (minutes < 1) return "Just ordered";
   if (minutes < 60) return `Ordered ${minutes}m ago`;
-  
+
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `Ordered ${hours}h ago`;
-  
+
   const days = Math.floor(hours / 24);
   return `Ordered ${days}d ago`;
 }
 
 /**
  * Hook to get formatted order count text
- * 
+ *
  * @example
  * const countText = useOrderCountText(stats[itemId]);
  * // Returns: "15 orders today" or null
  */
-export function useOrderCountText(itemStats: MenuItemStats | undefined): string | null {
+export function useOrderCountText(
+  itemStats: MenuItemStats | undefined,
+): string | null {
   if (!itemStats?.dailyOrderCount) return null;
 
   const count = itemStats.dailyOrderCount;
 
-  if (count === 1) return '1 order today';
+  if (count === 1) return "1 order today";
   return `${count} orders today`;
 }
 

@@ -1,6 +1,7 @@
 # Sync.a V2 Implementation Status
 
 ## Overview
+
 This document tracks the progress of the V2 transformation from a manual configurator to an AI-driven "Instant App Platform."
 
 **Overall Progress: 19/50 tasks completed (38%)**
@@ -8,9 +9,11 @@ This document tracks the progress of the V2 transformation from a manual configu
 ---
 
 ## ✅ Phase 1: Agentic Web Layer (JSON-LD Schema.org)
+
 **Status: COMPLETE - Ready for Production**
 
 ### Completed Tasks
+
 - [x] Database schema extended (public.users, public.web_apps)
 - [x] Created `public.ai_generated_schemas` table
 - [x] Created `public.order_events` table (for social proof)
@@ -34,6 +37,7 @@ This document tracks the progress of the V2 transformation from a manual configu
 - [x] Dependencies added (react-helmet-async, schema-dts)
 
 ### What This Enables
+
 - ✨ AI agents (ChatGPT, Google Assistant, Siri) can read menus and booking info without HTML parsing
 - 📊 Better Google Search visibility with structured data
 - 🤖 Foundation for AI-driven discovery and integration
@@ -43,9 +47,11 @@ This document tracks the progress of the V2 transformation from a manual configu
 ---
 
 ## ⚙️ Phase 2: Card-Based Editor (UX Overhaul)
+
 **Status: IN PROGRESS - 50% Complete**
 
 ### Completed Tasks
+
 - [x] Main container component (`client/components/editor/CardBasedEditor.tsx`)
   - Grid layout: cards (left) + preview (right)
   - Form state management with `formData`
@@ -53,7 +59,6 @@ This document tracks the progress of the V2 transformation from a manual configu
   - Expandable sections tracking
   - Bottom action bar with status indicators
   - Full TypeScript with props interface
-  
 - [x] Reusable SectionCard component (`client/components/editor/SectionCard.tsx`)
   - Smooth expand/collapse animations (Framer Motion)
   - Icon and badge support
@@ -74,6 +79,7 @@ This document tracks the progress of the V2 transformation from a manual configu
   - 24-hour time format support
 
 ### Pending Tasks (Phase 2)
+
 - [ ] BusinessInfoCard - Name, type, location, slogan, description
 - [ ] DesignCard - Colors, fonts, template selection
 - [ ] PagesCard - Checkboxes for home, menu, gallery, contact
@@ -87,6 +93,7 @@ This document tracks the progress of the V2 transformation from a manual configu
 - [ ] Action utilities - SaveDraft, PublishFlow, DiscardChanges
 
 ### Integration Tasks (Phase 2)
+
 - [ ] Replace step-based Configurator with CardBasedEditor
 - [ ] Migrate existing form state from stepPersistence
 - [ ] Update routing in App.tsx if needed
@@ -96,9 +103,11 @@ This document tracks the progress of the V2 transformation from a manual configu
 ---
 
 ## 🎨 Phase 3: Liquid UI (Context-Aware Content)
+
 **Status: IN PROGRESS - 40% Complete**
 
 ### Completed Tasks
+
 - [x] Type definitions (`shared/types/liquidUI.ts`)
   - `DisplayRules` - Time, day, guests, special occasion
   - `LiquidMenuItem` - Menu item with display rules + social proof fields
@@ -114,12 +123,10 @@ This document tracks the progress of the V2 transformation from a manual configu
   - Fully typed with useMemo optimization
 
 ### How It Works (Example)
+
 ```typescript
 // At 12:30 PM on Wednesday
-const menuResult = useLiquidMenu(
-  menuItems,
-  { now: new Date(), guests: 4 }
-);
+const menuResult = useLiquidMenu(menuItems, { now: new Date(), guests: 4 });
 
 // Returns:
 // - Items filtered to only show those visible at 12:30 PM
@@ -129,6 +136,7 @@ const menuResult = useLiquidMenu(
 ```
 
 ### Pending Tasks (Phase 3)
+
 - [ ] Integration with MenuSection component
 - [ ] Integration with published Site component
 - [ ] UI display of contextualMessage badge
@@ -139,9 +147,11 @@ const menuResult = useLiquidMenu(
 ---
 
 ## 📊 Phase 4: Verifiable Reality & Social Proof (Order Tracking)
+
 **Status: IN PROGRESS - 40% Complete**
 
 ### Completed Tasks
+
 - [x] Database table: `public.order_events`
   - Tracks menu item orders with timestamps
   - Stores user avatar URLs
@@ -152,18 +162,16 @@ const menuResult = useLiquidMenu(
   - `POST /api/orders/create` - Record new order
     - Body: `{ webAppId, menuItemId?, menuItemName, orderSource, userAvatarUrl? }`
     - Returns: Created event with timestamp
-  
   - `GET /api/orders/:webAppId/recent` - Recent orders (last 1 hour, max 10)
     - Returns: Array of orders with `minutes_ago` calculated field
-  
   - `GET /api/orders/:webAppId/menu-stats` - Per-menu-item statistics
     - Returns: `{ [itemId]: { lastOrderedAt, recentCount, dailyCount } }`
-  
   - `POST /api/orders/:webAppId/clear-old` - Admin cleanup for orders >7 days old
 
 - [x] Routes registered in server/index.ts
 
 ### Data Flow (Stripe Integration - To Be Implemented)
+
 ```
 Stripe Payment → Webhook → /api/orders/create
   ↓
@@ -175,6 +183,7 @@ Display "Ordered 12 mins ago" badges on menu items
 ```
 
 ### Pending Tasks (Phase 4)
+
 - [ ] Stripe webhook handler (`server/webhooks/stripe.ts`)
 - [ ] Order service business logic (`server/services/orderService.ts`)
 - [ ] Frontend hook: useRecentOrders (`client/hooks/useRecentOrders.ts`)
@@ -190,19 +199,19 @@ Display "Ordered 12 mins ago" badges on menu items
 ---
 
 ## 🚀 Phase 5: AutoConfigurator + n8n Integration
+
 **Status: NOT STARTED**
 
 ### Pending Tasks
+
 - [ ] Document n8n workflow changes:
   - Add "Generate JSON-LD Schema" node after LLM analysis
   - Call `POST /api/schema/generate` with extracted business data
   - Return schema in response as `aiGeneratedSchema`
-  
 - [ ] Update AutoConfigurator (`client/pages/AutoConfigurator.tsx`)
   - Handle `aiGeneratedSchema` in API response
   - Show badge: "✓ AI-Optimized for Search Engines"
   - Pass schema to configurator
-  
 - [ ] Update autogen route (`server/routes/autogen.ts`)
   - Call schema generation service
   - Include schema in response
@@ -212,6 +221,7 @@ Display "Ordered 12 mins ago" badges on menu items
 ---
 
 ## 📋 Testing Phase
+
 **Status: PENDING**
 
 - [ ] Validate JSON-LD with Google Schema Markup Tester
@@ -227,6 +237,7 @@ Display "Ordered 12 mins ago" badges on menu items
 ## 🎯 Recommended Next Steps (Priority Order)
 
 ### Immediate (This Week)
+
 1. **Create remaining card components** (BusinessInfoCard, DesignCard, PagesCard)
    - Reuse CardBasedEditor pattern
    - Est. 2-3 hours
@@ -246,6 +257,7 @@ Display "Ordered 12 mins ago" badges on menu items
    - Est. 1-2 hours
 
 ### Short Term (Next 2 Weeks)
+
 5. **n8n workflow configuration**
    - Add schema generation node
    - Test end-to-end
@@ -262,6 +274,7 @@ Display "Ordered 12 mins ago" badges on menu items
    - Est. 2-3 hours
 
 ### Mid Term (Weeks 3-4)
+
 8. **Testing & QA**
    - Validate all features
    - Performance optimization
@@ -315,6 +328,7 @@ shared/
 ---
 
 ## 📦 Dependencies Added
+
 - ✅ `react-helmet-async@2.0.5` - Head management for SEO
 - ✅ `schema-dts@1.1.5` - Schema.org type definitions
 - ⏳ `stripe` - For webhook handling (to be added if needed)
@@ -335,21 +349,22 @@ shared/
 
 ## 🎓 Key Technical Decisions
 
-| Decision | Rationale |
-|----------|-----------|
+| Decision                                       | Rationale                                     |
+| ---------------------------------------------- | --------------------------------------------- |
 | Keep Express + add Netlify Functions gradually | Minimizes breaking changes, gradual migration |
-| React Helmet for SEO | Standard React library, SSR-compatible |
-| Neon PostgreSQL in Frankfurt | DSGVO compliance, EU data residency |
-| JSONB config storage | Flexible schema, no migrations needed |
-| Client-side schema generation | Works offline, faster than API round-trip |
-| Polling for order updates | Simple, no WebSocket complexity |
-| Card-based editor over wizard | Modern UX, better mobile experience |
+| React Helmet for SEO                           | Standard React library, SSR-compatible        |
+| Neon PostgreSQL in Frankfurt                   | DSGVO compliance, EU data residency           |
+| JSONB config storage                           | Flexible schema, no migrations needed         |
+| Client-side schema generation                  | Works offline, faster than API round-trip     |
+| Polling for order updates                      | Simple, no WebSocket complexity               |
+| Card-based editor over wizard                  | Modern UX, better mobile experience           |
 
 ---
 
 ## 📞 Support & Questions
 
 For questions or issues:
+
 1. Check this status document first
 2. Review individual file comments (marked with `/**`)
 3. Refer to the plan document (`V2_IMPLEMENTATION_PLAN.md`)

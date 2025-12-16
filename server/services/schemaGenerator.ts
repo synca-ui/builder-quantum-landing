@@ -1,4 +1,9 @@
-import { SchemaOrganization, MenuItem as SchemaMenuItem, MenuSection, RestaurantSchemaConfig } from "../../shared/types/schema";
+import {
+  SchemaOrganization,
+  MenuItem as SchemaMenuItem,
+  MenuSection,
+  RestaurantSchemaConfig,
+} from "../../shared/types/schema";
 
 /**
  * Dietary restriction keywords to detect from menu item descriptions
@@ -6,36 +11,36 @@ import { SchemaOrganization, MenuItem as SchemaMenuItem, MenuSection, Restaurant
 const DIETARY_FLAGS = {
   vegan: {
     keywords: ["vegan", "100% plant-based"],
-    url: "https://schema.org/VeganDiet"
+    url: "https://schema.org/VeganDiet",
   },
   vegetarian: {
     keywords: ["vegetarian", "no meat"],
-    url: "https://schema.org/VegetarianDiet"
+    url: "https://schema.org/VegetarianDiet",
   },
   glutenFree: {
     keywords: ["gluten-free", "gluten free", "gf"],
-    url: "https://schema.org/GlutenFreeDiet"
+    url: "https://schema.org/GlutenFreeDiet",
   },
   kosher: {
     keywords: ["kosher"],
-    url: "https://schema.org/KosherDiet"
+    url: "https://schema.org/KosherDiet",
   },
   halal: {
     keywords: ["halal"],
-    url: "https://schema.org/HalalDiet"
+    url: "https://schema.org/HalalDiet",
   },
   dairyFree: {
     keywords: ["dairy-free", "dairy free"],
-    url: "https://schema.org/DairyFree"
+    url: "https://schema.org/DairyFree",
   },
   lowFat: {
     keywords: ["low-fat", "low fat"],
-    url: "https://schema.org/LowFatDiet"
+    url: "https://schema.org/LowFatDiet",
   },
   lowSodium: {
     keywords: ["low-sodium", "low sodium"],
-    url: "https://schema.org/LowSodiumDiet"
-  }
+    url: "https://schema.org/LowSodiumDiet",
+  },
 };
 
 /**
@@ -48,7 +53,7 @@ export function extractDietaryFlags(description?: string): string[] {
   const flags: string[] = [];
 
   Object.values(DIETARY_FLAGS).forEach(({ keywords, url }) => {
-    if (keywords.some(kw => lowerDesc.includes(kw))) {
+    if (keywords.some((kw) => lowerDesc.includes(kw))) {
       flags.push(url);
     }
   });
@@ -60,11 +65,11 @@ export function extractDietaryFlags(description?: string): string[] {
  * Group menu items by category for MenuSection structure
  */
 function groupByCategory(
-  items: RestaurantSchemaConfig["menuItems"] = []
+  items: RestaurantSchemaConfig["menuItems"] = [],
 ): Record<string, RestaurantSchemaConfig["menuItems"]> {
   const grouped: Record<string, RestaurantSchemaConfig["menuItems"]> = {};
 
-  items.forEach(item => {
+  items.forEach((item) => {
     const category = item.category || "Main";
     if (!grouped[category]) {
       grouped[category] = [];
@@ -79,7 +84,7 @@ function groupByCategory(
  * Convert opening hours object to OpeningHoursSpecification array
  */
 function formatOpeningHours(
-  hours?: Record<string, { open: string; close: string }>
+  hours?: Record<string, { open: string; close: string }>,
 ) {
   if (!hours || Object.keys(hours).length === 0) return undefined;
 
@@ -90,14 +95,14 @@ function formatOpeningHours(
     thursday: "Thursday",
     friday: "Friday",
     saturday: "Saturday",
-    sunday: "Sunday"
+    sunday: "Sunday",
   };
 
   return Object.entries(hours).map(([day, { open, close }]) => ({
     "@type": "OpeningHoursSpecification" as const,
     dayOfWeek: dayMap[day.toLowerCase()] || day,
     opens: open,
-    closes: close
+    closes: close,
   }));
 }
 
@@ -105,7 +110,7 @@ function formatOpeningHours(
  * Main function: Generate full Restaurant JSON-LD schema
  */
 export function generateRestaurantSchema(
-  config: RestaurantSchemaConfig
+  config: RestaurantSchemaConfig,
 ): SchemaOrganization {
   // Group menu items by category
   const groupedItems = groupByCategory(config.menuItems);
@@ -116,7 +121,7 @@ export function generateRestaurantSchema(
       "@type": "MenuSection" as const,
       name: categoryName,
       description: undefined,
-      hasMenuItem: items.map(item => ({
+      hasMenuItem: items.map((item) => ({
         "@type": "MenuItem" as const,
         name: item.name,
         description: item.description,
@@ -125,18 +130,19 @@ export function generateRestaurantSchema(
           ? {
               "@type": "Offer" as const,
               priceCurrency: "EUR", // Default to EUR for EU restaurants
-              price: typeof item.price === "number" 
-                ? item.price.toFixed(2) 
-                : item.price
+              price:
+                typeof item.price === "number"
+                  ? item.price.toFixed(2)
+                  : item.price,
             }
           : undefined,
-        suitableForDiet: extractDietaryFlags(item.description)
-      }))
-    })
+        suitableForDiet: extractDietaryFlags(item.description),
+      })),
+    }),
   );
 
   // Build address
-  const addressParts = config.address?.split(",").map(p => p.trim()) || [];
+  const addressParts = config.address?.split(",").map((p) => p.trim()) || [];
   const address =
     addressParts.length > 0
       ? {
@@ -145,7 +151,7 @@ export function generateRestaurantSchema(
           addressLocality: addressParts[1] || "",
           addressRegion: addressParts[2] || "",
           postalCode: addressParts[3] || "",
-          addressCountry: "DE" // Default to Germany for EU
+          addressCountry: "DE", // Default to Germany for EU
         }
       : undefined;
 
@@ -159,7 +165,7 @@ export function generateRestaurantSchema(
             config.reviews.length,
           ratingCount: config.reviews.length,
           bestRating: 5,
-          worstRating: 1
+          worstRating: 1,
         }
       : undefined;
 
@@ -186,8 +192,8 @@ export function generateRestaurantSchema(
           geo: {
             "@type": "GeoCoordinates" as const,
             latitude: config.latitude,
-            longitude: config.longitude
-          }
+            longitude: config.longitude,
+          },
         }
       : {}),
     openingHoursSpecification: formatOpeningHours(config.openingHours),
@@ -197,14 +203,14 @@ export function generateRestaurantSchema(
             {
               "@type": "Menu" as const,
               name: `${config.businessName} Menu`,
-              hasMenuSection: menuSections
-            }
-          ]
+              hasMenuSection: menuSections,
+            },
+          ],
         }
       : {}),
     aggregateRating: aggregateRating,
     ...(sameAs.length > 0 ? { sameAs } : {}),
-    ...(config.logo ? { logo: config.logo } : {})
+    ...(config.logo ? { logo: config.logo } : {}),
   };
 
   return schema;
@@ -218,7 +224,10 @@ export function validateSchema(schema: any): boolean {
   if (!schema["@context"] || schema["@context"] !== "https://schema.org") {
     return false;
   }
-  if (!schema["@type"] || !["Restaurant", "LocalBusiness"].includes(schema["@type"])) {
+  if (
+    !schema["@type"] ||
+    !["Restaurant", "LocalBusiness"].includes(schema["@type"])
+  ) {
     return false;
   }
   if (!schema.name || typeof schema.name !== "string") {
@@ -237,7 +246,9 @@ export function schemaToJsonString(schema: SchemaOrganization): string {
 /**
  * Detect if config likely needs a schema (has sufficient business data)
  */
-export function hasEnoughDataForSchema(config: RestaurantSchemaConfig): boolean {
+export function hasEnoughDataForSchema(
+  config: RestaurantSchemaConfig,
+): boolean {
   return (
     !!config.businessName &&
     !!config.openingHours &&

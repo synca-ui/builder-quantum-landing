@@ -4,7 +4,7 @@ import { sql } from "../sql";
 /**
  * POST /api/orders/create
  * Record a new order event (for social proof badges)
- * 
+ *
  * Body: {
  *   webAppId: string (uuid),
  *   menuItemId?: string,
@@ -15,18 +15,13 @@ import { sql } from "../sql";
  */
 export async function handleCreateOrder(req: Request, res: Response) {
   try {
-    const {
-      webAppId,
-      menuItemId,
-      menuItemName,
-      orderSource,
-      userAvatarUrl
-    } = req.body;
+    const { webAppId, menuItemId, menuItemName, orderSource, userAvatarUrl } =
+      req.body;
 
     if (!webAppId || !menuItemName || !orderSource) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields: webAppId, menuItemName, orderSource"
+        error: "Missing required fields: webAppId, menuItemName, orderSource",
       });
     }
 
@@ -55,13 +50,13 @@ export async function handleCreateOrder(req: Request, res: Response) {
 
     return res.json({
       success: true,
-      event: result[0]
+      event: result[0],
     });
   } catch (error) {
     console.error("Create order error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create order"
+      error: error instanceof Error ? error.message : "Failed to create order",
     });
   }
 }
@@ -77,7 +72,7 @@ export async function handleGetRecentOrders(req: Request, res: Response) {
     if (!webAppId) {
       return res.status(400).json({
         success: false,
-        error: "webAppId is required"
+        error: "webAppId is required",
       });
     }
 
@@ -102,13 +97,13 @@ export async function handleGetRecentOrders(req: Request, res: Response) {
 
     return res.json({
       success: true,
-      orders: orders || []
+      orders: orders || [],
     });
   } catch (error) {
     console.error("Get recent orders error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch orders"
+      error: error instanceof Error ? error.message : "Failed to fetch orders",
     });
   }
 }
@@ -125,7 +120,7 @@ export async function handleGetMenuStats(req: Request, res: Response) {
     if (!webAppId) {
       return res.status(400).json({
         success: false,
-        error: "webAppId is required"
+        error: "webAppId is required",
       });
     }
 
@@ -152,20 +147,23 @@ export async function handleGetMenuStats(req: Request, res: Response) {
         recentCount: stat.recent_count || 0,
         dailyCount: stat.daily_count || 0,
         minutesAgo: stat.last_ordered_at
-          ? Math.round((Date.now() - new Date(stat.last_ordered_at).getTime()) / 60000)
-          : null
+          ? Math.round(
+              (Date.now() - new Date(stat.last_ordered_at).getTime()) / 60000,
+            )
+          : null,
       };
     });
 
     return res.json({
       success: true,
-      stats: statsMap
+      stats: statsMap,
     });
   } catch (error) {
     console.error("Get menu stats error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch menu stats"
+      error:
+        error instanceof Error ? error.message : "Failed to fetch menu stats",
     });
   }
 }
@@ -181,7 +179,7 @@ export async function handleClearOldOrders(req: Request, res: Response) {
     if (!webAppId) {
       return res.status(400).json({
         success: false,
-        error: "webAppId is required"
+        error: "webAppId is required",
       });
     }
 
@@ -194,13 +192,13 @@ export async function handleClearOldOrders(req: Request, res: Response) {
 
     return res.json({
       success: true,
-      message: "Old orders cleared"
+      message: "Old orders cleared",
     });
   } catch (error) {
     console.error("Clear old orders error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to clear orders"
+      error: error instanceof Error ? error.message : "Failed to clear orders",
     });
   }
 }

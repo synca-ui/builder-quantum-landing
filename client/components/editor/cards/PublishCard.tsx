@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { CheckCircle2, AlertCircle, Globe, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import React, { useState } from "react";
+import { CheckCircle2, AlertCircle, Globe, Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 export interface PublishSettings {
   domain?: string;
@@ -22,15 +22,15 @@ export function PublishCard({
   settings = {},
   onPublish,
   onUnpublish,
-  businessName
+  businessName,
 }: PublishCardProps) {
   const { toast } = useToast();
-  const [customDomain, setCustomDomain] = useState(settings.domain || '');
+  const [customDomain, setCustomDomain] = useState(settings.domain || "");
   const [isLoading, setIsLoading] = useState(false);
 
   const defaultDomain = businessName
-    ? `${businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.synca.digital`
-    : 'my-business.synca.digital';
+    ? `${businessName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.synca.digital`
+    : "my-business.synca.digital";
 
   const currentDomain = settings.domain || defaultDomain;
 
@@ -40,16 +40,16 @@ export function PublishCard({
       if (onPublish) {
         await onPublish(currentDomain);
         toast({
-          title: 'Site published!',
+          title: "Site published!",
           description: `Your site is now live at ${currentDomain}`,
-          variant: 'default'
+          variant: "default",
         });
       }
     } catch (error) {
       toast({
-        title: 'Publish failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive'
+        title: "Publish failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -57,22 +57,22 @@ export function PublishCard({
   };
 
   const handleUnpublish = async () => {
-    if (!confirm('Are you sure? Your site will be taken offline.')) return;
+    if (!confirm("Are you sure? Your site will be taken offline.")) return;
 
     setIsLoading(true);
     try {
       if (onUnpublish) {
         await onUnpublish();
         toast({
-          title: 'Site unpublished',
-          description: 'Your site is now offline'
+          title: "Site unpublished",
+          description: "Your site is now offline",
         });
       }
     } catch (error) {
       toast({
-        title: 'Unpublish failed',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive'
+        title: "Unpublish failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -82,25 +82,30 @@ export function PublishCard({
   const copyToClipboard = () => {
     navigator.clipboard.writeText(`https://${currentDomain}`);
     toast({
-      title: 'Copied!',
-      description: 'Domain URL copied to clipboard'
+      title: "Copied!",
+      description: "Domain URL copied to clipboard",
     });
   };
 
   return (
     <div className="space-y-6">
       {/* Current Status */}
-      <div className={`border rounded-lg p-4 ${settings.isPublished ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+      <div
+        className={`border rounded-lg p-4 ${settings.isPublished ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}
+      >
         <div className="flex items-start gap-3">
           {settings.isPublished ? (
             <>
               <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-green-900">Published</h3>
-                <p className="text-sm text-green-800 mt-1">Your site is live and visible to the public</p>
+                <p className="text-sm text-green-800 mt-1">
+                  Your site is live and visible to the public
+                </p>
                 {settings.publishedAt && (
                   <p className="text-xs text-green-700 mt-2">
-                    Published on {new Date(settings.publishedAt).toLocaleDateString()}
+                    Published on{" "}
+                    {new Date(settings.publishedAt).toLocaleDateString()}
                   </p>
                 )}
               </div>
@@ -110,7 +115,9 @@ export function PublishCard({
               <AlertCircle className="w-6 h-6 text-gray-600 flex-shrink-0 mt-1" />
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900">Not Published</h3>
-                <p className="text-sm text-gray-800 mt-1">Your site is currently offline. Save and publish to go live.</p>
+                <p className="text-sm text-gray-800 mt-1">
+                  Your site is currently offline. Save and publish to go live.
+                </p>
               </div>
             </>
           )}
@@ -119,7 +126,9 @@ export function PublishCard({
 
       {/* Domain Selection */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Your Domain</h4>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3">
+          Your Domain
+        </h4>
 
         <div className="space-y-3">
           {/* Default Domain */}
@@ -134,9 +143,13 @@ export function PublishCard({
             <div className="ml-3 flex-1">
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-gray-600" />
-                <code className="text-sm font-mono text-blue-600">https://{defaultDomain}</code>
+                <code className="text-sm font-mono text-blue-600">
+                  https://{defaultDomain}
+                </code>
               </div>
-              <p className="text-xs text-gray-600 mt-1">Free Sync.a subdomain (recommended)</p>
+              <p className="text-xs text-gray-600 mt-1">
+                Free Sync.a subdomain (recommended)
+              </p>
             </div>
           </label>
 
@@ -150,9 +163,13 @@ export function PublishCard({
                 readOnly
                 className="w-4 h-4 text-blue-600"
               />
-              <span className="text-sm font-medium text-gray-900">Custom Domain</span>
+              <span className="text-sm font-medium text-gray-900">
+                Custom Domain
+              </span>
               {settings.customDomainVerified && (
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Verified</span>
+                <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                  Verified
+                </span>
               )}
             </label>
 
@@ -165,7 +182,8 @@ export function PublishCard({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="text-xs text-gray-600">
-              Custom domain support coming in the next update. Contact support to get early access.
+              Custom domain support coming in the next update. Contact support
+              to get early access.
             </p>
           </div>
         </div>
@@ -196,7 +214,7 @@ export function PublishCard({
             disabled={isLoading}
             className="w-full bg-green-600 hover:bg-green-700 text-white h-10 font-medium"
           >
-            {isLoading ? 'Publishing...' : '🚀 Publish Site'}
+            {isLoading ? "Publishing..." : "🚀 Publish Site"}
           </Button>
         ) : (
           <Button
@@ -205,14 +223,16 @@ export function PublishCard({
             variant="destructive"
             className="w-full h-10 font-medium"
           >
-            {isLoading ? 'Unpublishing...' : 'Take Site Offline'}
+            {isLoading ? "Unpublishing..." : "Take Site Offline"}
           </Button>
         )}
       </div>
 
       {/* Features */}
       <div className="bg-gray-50 rounded-lg p-4">
-        <p className="text-xs font-semibold text-gray-900 mb-3">Publishing Includes:</p>
+        <p className="text-xs font-semibold text-gray-900 mb-3">
+          Publishing Includes:
+        </p>
         <ul className="text-xs text-gray-700 space-y-2">
           <li className="flex items-center gap-2">
             <CheckCircle2 className="w-3 h-3 text-green-600" />

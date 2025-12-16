@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { Plus, Trash2, Edit2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MenuItem {
   id?: string;
@@ -18,28 +18,28 @@ interface MenuItemsCardProps {
 
 export function MenuItemsCard({ items = [], onChange }: MenuItemsCardProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newItem, setNewItem] = useState<MenuItem>({ name: '' });
+  const [newItem, setNewItem] = useState<MenuItem>({ name: "" });
 
   const addItem = () => {
     if (!newItem.name.trim()) return;
     const items_list = Array.isArray(items) ? items : [];
     const item = {
       ...newItem,
-      id: `item-${Date.now()}`
+      id: `item-${Date.now()}`,
     };
     onChange([...items_list, item]);
-    setNewItem({ name: '' });
+    setNewItem({ name: "" });
   };
 
   const updateItem = (id: string, updated: MenuItem) => {
     const items_list = Array.isArray(items) ? items : [];
-    onChange(items_list.map(item => item.id === id ? updated : item));
+    onChange(items_list.map((item) => (item.id === id ? updated : item)));
   };
 
   const deleteItem = (id: string | undefined) => {
     if (!id) return;
     const items_list = Array.isArray(items) ? items : [];
-    onChange(items_list.filter(item => item.id !== id));
+    onChange(items_list.filter((item) => item.id !== id));
   };
 
   const items_list = Array.isArray(items) ? items : [];
@@ -49,17 +49,28 @@ export function MenuItemsCard({ items = [], onChange }: MenuItemsCardProps) {
       {/* Items List */}
       <div className="space-y-2 max-h-[400px] overflow-y-auto">
         {items_list.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">No menu items yet</p>
+          <p className="text-sm text-gray-500 text-center py-4">
+            No menu items yet
+          </p>
         ) : (
-          items_list.map(item => (
-            <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+          items_list.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+            >
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
+                <h4 className="font-medium text-gray-900 truncate">
+                  {item.name}
+                </h4>
                 {item.description && (
-                  <p className="text-xs text-gray-600 truncate">{item.description}</p>
+                  <p className="text-xs text-gray-600 truncate">
+                    {item.description}
+                  </p>
                 )}
                 {item.price && (
-                  <p className="text-sm font-semibold text-gray-700 mt-1">€{item.price}</p>
+                  <p className="text-sm font-semibold text-gray-700 mt-1">
+                    €{item.price}
+                  </p>
                 )}
               </div>
               <div className="flex gap-2 flex-shrink-0">
@@ -86,9 +97,11 @@ export function MenuItemsCard({ items = [], onChange }: MenuItemsCardProps) {
       {/* Add New Item Form */}
       <div className="border-t pt-4 space-y-3">
         <h4 className="font-medium text-gray-900">Add Menu Item</h4>
-        
+
         <div>
-          <label className="block text-xs font-medium text-gray-700">Name *</label>
+          <label className="block text-xs font-medium text-gray-700">
+            Name *
+          </label>
           <input
             type="text"
             value={newItem.name}
@@ -99,11 +112,15 @@ export function MenuItemsCard({ items = [], onChange }: MenuItemsCardProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-700">Description</label>
+          <label className="block text-xs font-medium text-gray-700">
+            Description
+          </label>
           <input
             type="text"
-            value={newItem.description || ''}
-            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+            value={newItem.description || ""}
+            onChange={(e) =>
+              setNewItem({ ...newItem, description: e.target.value })
+            }
             placeholder="e.g., Espresso with steamed milk"
             className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
@@ -111,23 +128,31 @@ export function MenuItemsCard({ items = [], onChange }: MenuItemsCardProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700">Price (€)</label>
+            <label className="block text-xs font-medium text-gray-700">
+              Price (€)
+            </label>
             <input
               type="number"
               step="0.01"
-              value={newItem.price || ''}
-              onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+              value={newItem.price || ""}
+              onChange={(e) =>
+                setNewItem({ ...newItem, price: e.target.value })
+              }
               placeholder="3.50"
               className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700">Category</label>
+            <label className="block text-xs font-medium text-gray-700">
+              Category
+            </label>
             <input
               type="text"
-              value={newItem.category || ''}
-              onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+              value={newItem.category || ""}
+              onChange={(e) =>
+                setNewItem({ ...newItem, category: e.target.value })
+              }
               placeholder="e.g., Coffee"
               className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />

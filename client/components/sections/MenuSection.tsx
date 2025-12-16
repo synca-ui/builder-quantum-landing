@@ -143,14 +143,18 @@ export function MenuSection({
                   >
                     {item.name}
                   </h3>
-                  {showSocialProof && socialProofStats[item.id || item.name] && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 rounded-full">
-                      <TrendingUp className="w-3 h-3 text-green-600" />
-                      <span className="text-xs font-medium text-green-700">
-                        {socialProofStats[item.id || item.name].lastOrderedMinutesAgo ? `${socialProofStats[item.id || item.name].lastOrderedMinutesAgo}m` : 'Popular'}
-                      </span>
-                    </div>
-                  )}
+                  {showSocialProof &&
+                    socialProofStats[item.id || item.name] && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 rounded-full">
+                        <TrendingUp className="w-3 h-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-700">
+                          {socialProofStats[item.id || item.name]
+                            .lastOrderedMinutesAgo
+                            ? `${socialProofStats[item.id || item.name].lastOrderedMinutesAgo}m`
+                            : "Popular"}
+                        </span>
+                      </div>
+                    )}
                 </div>
                 {item.description && (
                   <p
@@ -160,14 +164,18 @@ export function MenuSection({
                     {item.description}
                   </p>
                 )}
-                {showSocialProof && socialProofStats[item.id || item.name]?.lastOrderedMinutesAgo && (
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                    Ordered {socialProofStats[item.id || item.name].lastOrderedMinutesAgo < 60
-                      ? `${socialProofStats[item.id || item.name].lastOrderedMinutesAgo}m ago`
-                      : `${Math.floor((socialProofStats[item.id || item.name].lastOrderedMinutesAgo || 0) / 60)}h ago`}
-                  </p>
-                )}
+                {showSocialProof &&
+                  socialProofStats[item.id || item.name]
+                    ?.lastOrderedMinutesAgo && (
+                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                      Ordered{" "}
+                      {socialProofStats[item.id || item.name]
+                        .lastOrderedMinutesAgo < 60
+                        ? `${socialProofStats[item.id || item.name].lastOrderedMinutesAgo}m ago`
+                        : `${Math.floor((socialProofStats[item.id || item.name].lastOrderedMinutesAgo || 0) / 60)}h ago`}
+                    </p>
+                  )}
               </div>
             </div>
             <div className="flex items-center space-x-2">

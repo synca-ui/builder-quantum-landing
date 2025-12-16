@@ -1,16 +1,16 @@
 import { Request, Response } from "express";
-import { 
-  generateRestaurantSchema, 
-  validateSchema, 
+import {
+  generateRestaurantSchema,
+  validateSchema,
   schemaToJsonString,
-  hasEnoughDataForSchema 
+  hasEnoughDataForSchema,
 } from "../services/schemaGenerator";
 import { RestaurantSchemaConfig } from "../../shared/types/schema";
 
 /**
  * POST /api/schema/generate
  * Generate JSON-LD schema for a restaurant/business configuration
- * 
+ *
  * Request body:
  * {
  *   businessName: string,
@@ -37,7 +37,7 @@ export async function handleGenerateSchema(req: Request, res: Response) {
     if (!config.businessName) {
       return res.status(400).json({
         success: false,
-        error: "businessName is required"
+        error: "businessName is required",
       });
     }
 
@@ -45,7 +45,8 @@ export async function handleGenerateSchema(req: Request, res: Response) {
     if (!hasEnoughDataForSchema(config)) {
       return res.status(400).json({
         success: false,
-        error: "Insufficient data for schema generation. businessName and openingHours are required."
+        error:
+          "Insufficient data for schema generation. businessName and openingHours are required.",
       });
     }
 
@@ -56,7 +57,7 @@ export async function handleGenerateSchema(req: Request, res: Response) {
     if (!validateSchema(schema)) {
       return res.status(500).json({
         success: false,
-        error: "Generated schema validation failed"
+        error: "Generated schema validation failed",
       });
     }
 
@@ -64,13 +65,14 @@ export async function handleGenerateSchema(req: Request, res: Response) {
     return res.json({
       success: true,
       schema,
-      jsonString: schemaToJsonString(schema)
+      jsonString: schemaToJsonString(schema),
     });
   } catch (error) {
     console.error("Schema generation error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Schema generation failed"
+      error:
+        error instanceof Error ? error.message : "Schema generation failed",
     });
   }
 }
@@ -86,7 +88,7 @@ export async function handleValidateSchema(req: Request, res: Response) {
     if (!schema) {
       return res.status(400).json({
         success: false,
-        error: "schema is required"
+        error: "schema is required",
       });
     }
 
@@ -94,13 +96,14 @@ export async function handleValidateSchema(req: Request, res: Response) {
 
     return res.json({
       success: true,
-      valid: isValid
+      valid: isValid,
     });
   } catch (error) {
     console.error("Schema validation error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Schema validation failed"
+      error:
+        error instanceof Error ? error.message : "Schema validation failed",
     });
   }
 }
