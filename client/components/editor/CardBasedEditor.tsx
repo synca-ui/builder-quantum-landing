@@ -4,6 +4,8 @@ import { Save, Send, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import SectionCard from './SectionCard';
+import MenuItemsCard from './cards/MenuItemsCard';
+import OpeningHoursCard from './cards/OpeningHoursCard';
 import { Configuration } from '@/lib/api';
 
 /**
