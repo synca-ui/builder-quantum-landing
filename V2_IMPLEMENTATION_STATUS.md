@@ -251,16 +251,19 @@ Display "Ordered 12 mins ago" badges on menu items (via MenuSection)
 
 ### Pending Tasks (Phase 4)
 
-- [ ] Stripe webhook handler (`server/webhooks/stripe.ts`)
-  - Verify webhook signature
-  - Extract order details from payment intent
-  - Call `/api/orders/create` to log order event
-- [ ] Order service business logic (`server/services/orderService.ts`)
-  - Validate order data
-  - Calculate statistics (daily/hourly counts)
-  - Handle batch operations
+- [ ] Stripe integration testing
+  - Set up Stripe Test API keys
+  - Configure webhook endpoint in Stripe Dashboard
+  - Test payment → order event flow
+  - Verify social proof badges display correctly
 
-**Next**: Create Stripe webhook handler to connect payment processing to order tracking.
+- [ ] Production deployment
+  - Configure Stripe live keys in production environment
+  - Update webhook endpoint for production URL
+  - Monitor order event creation and polling
+  - Set up automated cleanup of old events (>7 days)
+
+**Next**: Set up Stripe webhook endpoint and test payment flow. See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for detailed instructions.
 
 ---
 
