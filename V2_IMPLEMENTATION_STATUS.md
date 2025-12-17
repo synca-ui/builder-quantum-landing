@@ -196,6 +196,25 @@ const menuResult = useLiquidMenu(menuItems, { now: new Date(), guests: 4 });
 
 - [x] Routes registered in server/index.ts
 
+- [x] Frontend hook: useRecentOrders (`client/hooks/useRecentOrders.ts`)
+  - Polls `/api/orders/:webAppId/menu-stats` every 30 seconds (configurable)
+  - Auto-retry on error with exponential backoff
+  - Provides `{ stats, isLoading, error, lastUpdated, refetch }`
+  - Helper hooks: useSocialProofText, useOrderCountText
+  - Full TypeScript support with MenuItemStats interface
+
+- [x] Updated MenuSection component (`client/components/sections/MenuSection.tsx`)
+  - Added socialProofStats prop
+  - Green trending badge with item popularity
+  - "Ordered X mins/hours ago" social proof text
+  - Pulse animation on recent orders
+
+- [x] Integrated useRecentOrders into Site.tsx
+  - Auto-polls for order stats on published sites
+  - Displays social proof badges on menu items
+  - Shows "Popular" indicator and time-since-order
+  - Menu item cards updated with green social proof UI
+
 ### Data Flow (Stripe Integration - To Be Implemented)
 
 ```
@@ -203,24 +222,23 @@ Stripe Payment → Webhook → /api/orders/create
   ↓
 Insert into order_events
   ↓
-Frontend polls /api/orders/:webAppId/menu-stats
+Frontend polls /api/orders/:webAppId/menu-stats (useRecentOrders)
   ↓
-Display "Ordered 12 mins ago" badges on menu items
+Display "Ordered 12 mins ago" badges on menu items (via MenuSection)
 ```
 
 ### Pending Tasks (Phase 4)
 
 - [ ] Stripe webhook handler (`server/webhooks/stripe.ts`)
+  - Verify webhook signature
+  - Extract order details from payment intent
+  - Call `/api/orders/create` to log order event
 - [ ] Order service business logic (`server/services/orderService.ts`)
-- [ ] Frontend hook: useRecentOrders (`client/hooks/useRecentOrders.ts`)
-  - Polls `/api/orders/:webAppId/menu-stats` every 30 seconds
-  - Provides `{ lastOrderedAt, lastOrderedMinutesAgo, recentOrderCount }`
-- [ ] Update MenuSection component to display social proof badges
-  - Green pulse badge with "Ordered X mins ago"
-  - Optional user avatar image
-- [ ] Integrate useRecentOrders into Site.tsx
+  - Validate order data
+  - Calculate statistics (daily/hourly counts)
+  - Handle batch operations
 
-**Next**: Create useRecentOrders hook and update MenuSection UI.
+**Next**: Create Stripe webhook handler to connect payment processing to order tracking.
 
 ---
 
