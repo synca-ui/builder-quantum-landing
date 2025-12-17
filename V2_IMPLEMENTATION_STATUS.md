@@ -322,19 +322,31 @@ Display "Ordered 12 mins ago" badges on menu items (via MenuSection)
    - Time-since-order display ("X mins/hours ago")
    - Fully integrated into Site.tsx
 
+### ✅ COMPLETED (Stripe Integration)
+
+1. ✅ **Stripe webhook handler** (`server/webhooks/stripe.ts`)
+   - Verifies webhook signatures with HMAC-SHA256
+   - Handles payment_intent.succeeded and charge.succeeded
+   - Extracts metadata and calls `/api/orders/create`
+   - Includes signature verification and replay protection
+
+2. ✅ **Order service business logic** (`server/services/orderService.ts`)
+   - Full CRUD operations for order events
+   - Statistics calculation (daily/recent counts)
+   - Order cleanup and summarization
+   - Input sanitization and validation
+
+3. ✅ **Stripe webhook integration**
+   - Registered endpoints in server
+   - Raw body parser for signature verification
+   - Test endpoint for development
+
 ### Immediate (Next)
 
-1. **Stripe webhook handler** (`server/webhooks/stripe.ts`)
-   - Verify webhook signatures
-   - Extract payment details and menu item info
-   - Call `/api/orders/create` to log order events
+1. **n8n workflow integration**
+   - Connect n8n to schema generation API
+   - Test auto-generated schemas in pipeline
    - Est. 1-2 hours
-
-2. **Order service business logic** (`server/services/orderService.ts`)
-   - Validate and sanitize order data
-   - Calculate per-item and daily statistics
-   - Handle edge cases and error states
-   - Est. 1 hour
 
 ### Short Term (Next 2-3 Days)
 
