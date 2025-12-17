@@ -280,42 +280,50 @@ Display "Ordered 12 mins ago" badges on menu items (via MenuSection)
 
 ## 🎯 Recommended Next Steps (Priority Order)
 
-### Immediate (This Week)
+### ✅ COMPLETED (This Session)
 
-1. **Create remaining card components** (BusinessInfoCard, DesignCard, PagesCard)
-   - Reuse CardBasedEditor pattern
-   - Est. 2-3 hours
+1. ✅ **Create all card components** (ReservationsCard, ContactSocialCard, MediaGalleryCard, AdvancedFeaturesCard, SettingsCard, PublishCard)
 
-2. **Integrate CardBasedEditor into Configurator**
-   - Wire up save/publish functions
-   - Test with existing data
+2. ✅ **Integrate CardBasedEditor into App routing**
+   - New AdvancedConfigurator page at `/configurator/advanced`
+   - Full state integration with stepPersistence
+
+3. ✅ **Create useRecentOrders hook**
+   - Polls `/api/orders/:webAppId/menu-stats` every 30 seconds
+   - Complete with error handling and manual refetch
+
+4. ✅ **Update MenuSection with social proof badges**
+   - Green badges with "Popular" indicator
+   - Time-since-order display ("X mins/hours ago")
+   - Fully integrated into Site.tsx
+
+### Immediate (Next)
+
+1. **Stripe webhook handler** (`server/webhooks/stripe.ts`)
+   - Verify webhook signatures
+   - Extract payment details and menu item info
+   - Call `/api/orders/create` to log order events
    - Est. 1-2 hours
 
-3. **Create useRecentOrders hook**
-   - Simple polling hook similar to useLiquidMenu
+2. **Order service business logic** (`server/services/orderService.ts`)
+   - Validate and sanitize order data
+   - Calculate per-item and daily statistics
+   - Handle edge cases and error states
    - Est. 1 hour
 
-4. **Update MenuSection with social proof badges**
-   - Add green pulse, "Ordered X mins ago" text
-   - Conditional avatar image display
-   - Est. 1-2 hours
+### Short Term (Next 2-3 Days)
 
-### Short Term (Next 2 Weeks)
+3. **Integrate n8n workflow changes**
+   - Document existing n8n workflow
+   - Add "Generate JSON-LD Schema" node after LLM
+   - Test schema generation in pipeline
+   - Est. 2 hours (configuration in n8n UI)
 
-5. **n8n workflow configuration**
-   - Add schema generation node
-   - Test end-to-end
-   - Est. 2-3 hours
-
-6. **AutoConfigurator integration**
-   - Handle aiGeneratedSchema response
-   - Pass to CardBasedEditor
-   - Est. 1-2 hours
-
-7. **Stripe webhook setup**
-   - Create webhook handler
-   - Test payment → order event flow
-   - Est. 2-3 hours
+4. **Update AutoConfigurator** (`client/pages/AutoConfigurator.tsx`)
+   - Handle `aiGeneratedSchema` in API response
+   - Display AI-optimized badge
+   - Pass schema through to CardBasedEditor
+   - Est. 1 hour
 
 ### Mid Term (Weeks 3-4)
 
