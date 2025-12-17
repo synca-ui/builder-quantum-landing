@@ -15,6 +15,7 @@ import { setPreviewConfig } from "./routes/configurations";
 import { authRouter } from "./routes/auth";
 import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
 import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
+import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe";
 
 export function createServer() {
   const app = express();
