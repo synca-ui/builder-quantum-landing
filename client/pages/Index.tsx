@@ -221,7 +221,7 @@ export default function Index() {
             <div className="flex items-center">
               <div className="relative group">
                 <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
-                  sync.a
+                  Maitr
                 </h1>
                 <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
@@ -465,21 +465,19 @@ export default function Index() {
               </div>
               <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
                 <span className="font-display text-gradient">
-                  Build a Stunning
+                  Your Restaurant App.
                 </span>
                 <br />
                 <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
-                  Web App in Minutes
+                  Ready in 30 Seconds
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed font-medium">
-                Create your{" "}
+                Paste your link. Maitr designs your app, menu, and bookings instantly. You just{" "}
                 <span className="text-gradient font-bold">
-                  digital presence
-                </span>{" "}
-                in minutes. Perfect for cafés, restaurants, and local businesses
-                ready to{" "}
-                <span className="text-gradient font-bold">thrive online</span>.
+                  add the cherry on top
+                </span>
+                {" "}🍒
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <a href="/mode-selection">
