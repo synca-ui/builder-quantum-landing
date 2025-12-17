@@ -100,5 +100,8 @@ export function createServer() {
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
   app.post("/api/orders/:webAppId/clear-old", handleClearOldOrders);
 
+  // Webhook test endpoint (for development/testing)
+  app.post("/api/webhooks/test", handleWebhookTest);
+
   return app;
 }
