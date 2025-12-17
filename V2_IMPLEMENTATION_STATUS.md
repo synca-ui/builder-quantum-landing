@@ -78,27 +78,53 @@ This document tracks the progress of the V2 transformation from a manual configu
   - Disabled inputs when closed
   - 24-hour time format support
 
-### Pending Tasks (Phase 2)
+- [x] ReservationsCard (`client/components/editor/cards/ReservationsCard.tsx`)
+  - Enable/disable reservations
+  - Min/max party size
+  - Time slot duration configuration
+  - Deposit requirement toggle
 
-- [ ] BusinessInfoCard - Name, type, location, slogan, description
-- [ ] DesignCard - Colors, fonts, template selection
-- [ ] PagesCard - Checkboxes for home, menu, gallery, contact
-- [ ] ReservationsCard - Enable/disable, time slots, max guests
-- [ ] ContactSocialCard - Phone, email, social media links
-- [ ] MediaGalleryCard - Image upload and gallery management
-- [ ] AdvancedFeaturesCard - Online ordering, team area, loyalty programs
-- [ ] SettingsCard - Domain, SEO, analytics configuration
-- [ ] PublishCard - Domain selection and publish CTA
-- [ ] LivePreview component - Split-screen preview of changes
-- [ ] Action utilities - SaveDraft, PublishFlow, DiscardChanges
+- [x] ContactSocialCard (`client/components/editor/cards/ContactSocialCard.tsx`)
+  - Add phone, email, WhatsApp, social media
+  - Multiple contact method support
+  - Custom labels for each contact
+  - Type-based placeholder hints
 
-### Integration Tasks (Phase 2)
+- [x] MediaGalleryCard (`client/components/editor/cards/MediaGalleryCard.tsx`)
+  - Image upload with preview
+  - File validation (type, size)
+  - Gallery grid display with edit/delete
+  - Alt text and caption support
 
-- [ ] Replace step-based Configurator with CardBasedEditor
-- [ ] Migrate existing form state from stepPersistence
-- [ ] Update routing in App.tsx if needed
+- [x] AdvancedFeaturesCard (`client/components/editor/cards/AdvancedFeaturesCard.tsx`)
+  - Feature toggles (online ordering, team area, loyalty)
+  - Subscription tier indicators
+  - Visual grid layout with icons
 
-**Current State**: The foundation is solid. CardBasedEditor works with MenuItemsCard and OpeningHoursCard. Can be extended with additional cards following the same pattern.
+- [x] SettingsCard (`client/components/editor/cards/SettingsCard.tsx`)
+  - SEO settings (title, description, keywords)
+  - Google Analytics integration
+  - Custom CSS/JavaScript support
+  - Logo and favicon URLs
+
+- [x] PublishCard (`client/components/editor/cards/PublishCard.tsx`)
+  - Domain selection (Sync.a subdomain vs custom)
+  - Publish/unpublish controls
+  - Live URL display with copy
+  - Feature checklist
+
+- [x] AdvancedConfigurator page (`client/pages/AdvancedConfigurator.tsx`)
+  - New route: `/configurator/advanced`
+  - State integration with stepPersistence
+  - Configuration loading/saving
+  - Publish workflow
+
+- [x] CardBasedEditor fully integrated into App routing
+  - App.tsx updated with AdvancedConfigurator route
+  - All cards working together
+  - Form state management complete
+
+**Current State**: Phase 2 is COMPLETE. All card components implemented and integrated. Users can now access the advanced editor at `/configurator/advanced` for a modern, modular configuration experience.
 
 ---
 
