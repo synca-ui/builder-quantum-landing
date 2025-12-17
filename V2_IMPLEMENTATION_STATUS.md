@@ -215,7 +215,29 @@ const menuResult = useLiquidMenu(menuItems, { now: new Date(), guests: 4 });
   - Shows "Popular" indicator and time-since-order
   - Menu item cards updated with green social proof UI
 
-### Data Flow (Stripe Integration - To Be Implemented)
+- [x] Stripe webhook handler (`server/webhooks/stripe.ts`)
+  - Verifies webhook signatures using HMAC-SHA256
+  - Handles `payment_intent.succeeded` and `charge.succeeded` events
+  - Extracts order metadata from Stripe payments
+  - Calls `/api/orders/create` to log order events
+  - Includes error handling and logging
+  - Test endpoint for development/testing
+
+- [x] Order service business logic (`server/services/orderService.ts`)
+  - `createOrderEvent()` - Insert orders with validation
+  - `getRecentOrders()` - Fetch last 1 hour of orders
+  - `getMenuItemStats()` - Calculate per-item statistics
+  - `clearOldOrders()` - Cleanup orders >7 days old
+  - `getOrderStatsSummary()` - Summary stats for analytics
+  - Input sanitization and email validation
+  - Full TypeScript with proper interfaces
+
+- [x] Stripe webhook registration in server
+  - Added raw body parser for signature verification
+  - Registered `/api/webhooks/stripe` endpoint
+  - Added test endpoint `/api/webhooks/test`
+
+### Data Flow (Stripe Integration - COMPLETE)
 
 ```
 Stripe Payment → Webhook → /api/orders/create
