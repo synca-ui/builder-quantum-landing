@@ -152,10 +152,7 @@ export default function AutoConfigurator() {
 
   return (
     <div>
-      <Headbar
-        title="Auto Configurator"
-        breadcrumbs={["Dashboard", "Configurator", "Auto"]}
-      />
+      <Headbar title="Automatic" breadcrumbs={["Dashboard", "Configurator", "Automatic"]} />
 
       <div className="min-h-screen flex items-start justify-center p-4 bg-gradient-to-b from-white via-purple-50 to-orange-50">
         <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
