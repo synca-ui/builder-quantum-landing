@@ -1,4 +1,4 @@
-# Sync.a - Web App Builder for Local Businesses
+# Maitr - Zero-Input App Engine for Hospitality
 
 <div align="center">
   <img src="https://img.shields.io/badge/React-18.x-blue?style=for-the-badge&logo=react" alt="React">
