@@ -1,4 +1,5 @@
 import React, { useEffect, useState, memo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronRight,
   Play,
@@ -18,6 +19,8 @@ import {
   Home,
   Layers,
   LayoutDashboard,
+  Link as LinkIcon,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,6 +51,41 @@ export default function Index() {
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Magic Input state
+  const [magicLink, setMagicLink] = useState("");
+  const [isLoadingMagic, setIsLoadingMagic] = useState(false);
+  const navigate = useNavigate();
+
+  const isMagicLinkValid = (link: string) => /^https?:\/\//i.test(link.trim());
+
+  const handleMagicSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isMagicLinkValid(magicLink)) {
+      alert("Please enter a valid URL starting with http:// or https://");
+      return;
+    }
+    setIsLoadingMagic(true);
+    try {
+      const res = await fetch(
+        "https://n8n-production-1508.up.railway.app/webhook-test/b1a76bcf-936c-4ac0-9f8e-6f3cb31bf646",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ link: magicLink, timestamp: new Date().toISOString() }),
+        }
+      );
+      if (!res.ok) throw new Error("Network response was not ok");
+      alert("Magie gestartet! ✨ Check n8n.");
+      const encoded = encodeURIComponent(magicLink);
+      navigate(`/mode-selection?sourceLink=${encoded}`);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start magic. Please try again.");
+    } finally {
+      setIsLoadingMagic(false);
+    }
+  };
 
   const features = [
     {
@@ -479,28 +517,47 @@ export default function Index() {
                 </span>
                 {" "}🍒
               </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <a href="/mode-selection">
-                  <Button
-                    size="lg"
-                    className="group relative bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-12 py-6 text-xl font-bold rounded-full transition-colors duration-300 shadow-2xl overflow-hidden"
-                  >
-                    <span className="relative z-10 flex items-center">
-                      <Rocket className="mr-3 w-6 h-6" />
-                      Get Started Now
-                      <ChevronRight className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </Button>
-                </a>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="group glass border-2 border-gray-300/50 hover:border-purple-400/50 px-10 py-6 text-xl font-bold rounded-full transition-all duration-500 ease-out hover:scale-105 backdrop-blur-sm"
-                >
-                  <Play className="mr-3 w-6 h-6 group-hover:scale-110 transition-transform" />
-                  Watch Demo
-                </Button>
+              <div className="w-full max-w-3xl mx-auto">
+                <form onSubmit={handleMagicSubmit} className="flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl border border-white/20 p-1.5">
+                  <div className="flex items-center gap-3 px-4 flex-1">
+                    <LinkIcon className="w-5 h-5 text-gray-500" />
+                    <input
+                      value={magicLink}
+                      onChange={(e) => setMagicLink(e.target.value)}
+                      placeholder="Paste Google Maps or Website Link..."
+                      className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
+                      disabled={isLoadingMagic}
+                      aria-label="Paste link"
+                    />
+                  </div>
+                  <div className="px-2">
+                    <button
+                      type="submit"
+                      aria-busy={isLoadingMagic}
+                      className={`inline-flex items-center rounded-full text-white px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
+                      disabled={isLoadingMagic || !isMagicLinkValid(magicLink)}
+                    >
+                      {isLoadingMagic ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Building...
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="mr-3 w-5 h-5" />
+                          Get Started Now
+                          <ChevronRight className="ml-3 w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="text-center mt-4">
+                  <button className="inline-flex items-center text-gray-500 hover:text-gray-700 font-medium">
+                    <Play className="mr-2 w-5 h-5" /> Watch Demo
+                  </button>
+                </div>
               </div>
             </div>
           </div>
