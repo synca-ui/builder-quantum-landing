@@ -30,7 +30,7 @@ export default function ModeSelection() {
 
   return (
     <div>
-      <Headbar title="Create App" breadcrumbs={["Dashboard", "Create App"]} />
+      <Headbar title="Selection" breadcrumbs={["Dashboard", "Selection"]} />
 
       <div className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
         <div className="max-w-5xl w-full">
