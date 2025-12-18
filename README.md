@@ -162,7 +162,7 @@ PORT=3000
 NODE_ENV=development
 
 # Optional: Custom ping message for health checks
-PING_MESSAGE="Sync.a API is running!"
+PING_MESSAGE="Maitr API is running!"
 
 # Database Configuration (for future database integration)
 # DATABASE_URL=your_database_url
