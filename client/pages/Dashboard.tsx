@@ -121,7 +121,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="text-2xl font-black text-gradient">sync.a</Link>
+              <Link to="/" className="text-2xl font-black text-gradient">Maitr</Link>
               <span className="text-gray-300">/</span>
               <span className="text-gray-600 font-medium">Dashboard</span>
             </div>
