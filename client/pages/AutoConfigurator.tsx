@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,11 +17,26 @@ function fileToDataUrl(file: File): Promise<{ name: string; dataUrl: string }> {
 
 export default function AutoConfigurator() {
   const navigate = useNavigate();
+  const { search } = useLocation();
   const { toast } = useToast();
 
   const [url, setUrl] = useState("");
   const [mapsLink, setMapsLink] = useState("");
   const [businessName, setBusinessName] = useState("");
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(search);
+      const sourceLink = params.get('sourceLink');
+      if (sourceLink) {
+        const decoded = decodeURIComponent(sourceLink);
+        if (/maps/i.test(decoded)) setMapsLink(decoded);
+        else setUrl(decoded);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [search]);
   const [fileInfo, setFileInfo] = useState<{ name: string; dataUrl: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
