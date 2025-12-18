@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 interface HeadbarProps {
   title: string; // the current page label e.g. "Selection" or "Automatic"
   breadcrumbs?: string[];
+  showBack?: boolean;
 }
 
-export default function Headbar({ title, breadcrumbs = [] }: HeadbarProps) {
+export default function Headbar({ title, breadcrumbs = [], showBack = false }: HeadbarProps) {
   const navigate = useNavigate();
 
   return (
@@ -15,9 +16,11 @@ export default function Headbar({ title, breadcrumbs = [] }: HeadbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="px-2">
-              Back
-            </Button>
+            {showBack && (
+              <Button variant="ghost" onClick={() => navigate(-1)} className="px-2">
+                Back
+              </Button>
+            )}
 
             <div className="relative group">
               <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-105">
