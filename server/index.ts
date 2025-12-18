@@ -103,5 +103,9 @@ export function createServer() {
   // Webhook test endpoint (for development/testing)
   app.post("/api/webhooks/test", handleWebhookTest);
 
+  // Proxy to n8n (avoids browser CORS issues)
+  const { handleForwardN8n } = require("./routes/n8nProxy");
+  app.post("/api/forward-to-n8n", handleForwardN8n);
+
   return app;
 }
