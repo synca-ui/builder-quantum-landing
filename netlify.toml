@@ -1,20 +1,27 @@
 [build]
-  command = "npm run build:client"
-  functions = "netlify/functions"
-  publish = "dist/spa"
+# KORREKTUR: Führen Sie den Haupt-Build-Befehl aus, der Server UND Client baut.
+command = "npm run build"
+
+# Das Verzeichnis, in dem Ihre Serverless-Funktionen nach dem Build liegen.
+functions = "netlify/functions"
+
+# Das Verzeichnis, das die fertige Frontend-App enthält.
+publish = "dist/spa"
 
 
 [functions]
-  node_bundler = "esbuild"
+node_bundler = "esbuild"
 
+# Leitet alle API-Anfragen an Ihre Serverless-Funktion weiter.
+# Diese Regel ist entscheidend und scheint bereits korrekt zu sein.
 [[redirects]]
-  force = true
-  from = "/api/*"
-  status = 200
-  to = "/.netlify/functions/api/:splat"
+from = "/api/*"
+to = "/.netlify/functions/api/:splat"
+status = 200
+force = true
 
-# SPA fallback so deep links like /configurator work
+# Fallback für Single-Page-Applications (SPA), damit Links wie /dashboard direkt aufgerufen werden können.
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200

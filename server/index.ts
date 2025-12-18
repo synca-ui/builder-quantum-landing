@@ -1,6 +1,7 @@
-import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import path from "path";
+
 import { handleDemo } from "./routes/demo";
 import {
   saveConfiguration,
@@ -16,6 +17,20 @@ import { authRouter } from "./routes/auth";
 import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
 import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
 import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe";
+import { apiRouter } from "./routes";
+
+// Middleware to fix Buffer-body issues (Netlify edge cases)
+const rawBodyMiddleware = (req: any, _res: any, next: any) => {
+  if (Buffer.isBuffer(req.body)) {
+    try {
+      req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+      console.error("Error parsing buffer body:", e);
+      req.body = {};
+    }
+  }
+  next();
+};
 
 export function createServer() {
   const app = express();
@@ -23,26 +38,24 @@ export function createServer() {
   // Middleware
   app.use(cors());
 
-  // Stripe webhook endpoint MUST be before express.json() to access raw body
+  // Stripe webhook endpoint MUST come before express.json() so we can access raw body
   app.post(
     "/api/webhooks/stripe",
     express.raw({ type: "application/json" }),
     handleStripeWebhook,
   );
 
+  // Repair raw bodies coming from certain hosting environments
+  app.use(rawBodyMiddleware);
+
   // Standard JSON middleware
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
-  // Health check
-  app.get("/api/ping", (_req, res) => {
-    const ping = process.env.PING_MESSAGE ?? "ping";
-    res.json({ message: ping });
-  });
+  // Use aggregated API router (may include common routes)
+  app.use("/api", apiRouter);
 
-  // Example route
-  app.get("/api/demo", handleDemo);
-
+  // Additional explicit routes / routers
   // Auth
   app.use("/api/auth", authRouter);
 
@@ -110,6 +123,18 @@ export function createServer() {
   // Proxy to n8n (avoids browser CORS issues)
   const { handleForwardN8n } = require("./routes/n8nProxy");
   app.post("/api/forward-to-n8n", handleForwardN8n);
+
+  // Demo endpoint
+  app.get("/api/demo", handleDemo);
+
+  // Static files for production
+  if (process.env.NODE_ENV === "production") {
+    const clientDistPath = path.join(__dirname, "../../client/dist");
+    app.use(express.static(clientDistPath));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(clientDistPath, "index.html"));
+    });
+  }
 
   return app;
 }
