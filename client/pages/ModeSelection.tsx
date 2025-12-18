@@ -1,45 +1,78 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Sparkles } from "lucide-react";
+import { Settings, Sparkles, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export default function ModeSelection() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const sourceLink = params.get("sourceLink");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(decodeURIComponent(sourceLink || ""));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      // ignore
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50 p-6">
-      <div className="max-w-5xl w-full space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
+      <div className="max-w-4xl w-full">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-black">How would you like Maitr to help?</h1>
+          <p className="mt-2 text-gray-600">Choose between a guided manual setup or let Maitr build a working app automatically from a single link.</p>
+        </div>
+
         {sourceLink && (
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-100 text-sm text-gray-700">
-            <div className="font-semibold">Detected link</div>
-            <div className="mt-1 break-words">{decodeURIComponent(sourceLink)}</div>
-            <div className="mt-3 text-sm text-gray-600">You can choose the automatic flow to let Maitr generate your app from this link, or continue manually to tweak everything yourself.</div>
+          <div className="bg-white shadow-lg rounded-2xl p-4 border border-gray-100 mb-6 flex items-center justify-between">
+            <div className="flex items-start space-x-4">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-teal-50">
+                <Sparkles className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Detected source</div>
+                <div className="mt-1 text-sm font-medium break-words text-gray-800 max-w-xl">{decodeURIComponent(sourceLink)}</div>
+                <div className="mt-2 text-xs text-gray-500">Tip: You can upload logos and tweak colors after choosing automatic mode.</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/configurator/auto?sourceLink=${encodeURIComponent(decodeURIComponent(sourceLink))}`)}>
+                Start Automatic
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleCopy} className="flex items-center">
+                <Copy className="w-4 h-4 mr-2" /> {copied ? "Copied" : "Copy"}
+              </Button>
+            </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6 hover:shadow-2xl transition-shadow duration-300">
             <CardContent>
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-gray-100">
-                  <Settings className="w-8 h-8 text-gray-700" />
+                <div className="p-3 rounded-lg bg-gradient-to-br from-teal-100 to-white">
+                  <Settings className="w-8 h-8 text-teal-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">⚙️ Halbautomatisch konfigurieren</h2>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Schritt-für-Schritt Anleitung: Inhalte, Farben und Module manuell auswählen und anpassen. Volle Kontrolle über jeden Aspekt Ihrer App.
-                  </p>
+                  <h3 className="text-2xl font-extrabold">Guided (Manual)</h3>
+                  <p className="mt-2 text-gray-600">Step through content, colors and modules with full control. Best if you want to exactly tailor the look-and-feel.</p>
+
+                  <ul className="mt-4 text-sm text-gray-600 space-y-2">
+                    <li>• Pick sections and modules</li>
+                    <li>• Upload logos & images</li>
+                    <li>• Fine-tune prices and opening hours</li>
+                  </ul>
+
                   <div className="mt-6">
-                    <Button
-                      onClick={() => navigate("/configurator/manual")}
-                      className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                    >
-                      Weiter zum halbautomatischen Konfigurator
+                    <Button onClick={() => navigate("/configurator/manual")} className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
+                      Continue to manual configurator
                     </Button>
                   </div>
                 </div>
@@ -47,29 +80,38 @@ export default function ModeSelection() {
             </CardContent>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 hover:shadow-2xl transition-shadow duration-300">
             <CardContent>
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-gray-100">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-100 to-orange-50">
                   <Sparkles className="w-8 h-8 text-purple-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">🤖 Vollautomatisch erstellen</h2>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Geben Sie eine URL, Google-Maps-Link oder Firmennamen ein. Wir extrahieren Inhalte automatisch (Name, Adresse, Öffnungszeiten, Bilder, Farben, Reviews) und schlagen ein fertiges Layout sowie Module vor. Live-Vorschau, Anpassungen und Veröffentlichung möglich.
-                  </p>
-                  <div className="mt-6">
-                    <Button
-                      onClick={() => navigate(`/configurator/auto${sourceLink ? `?sourceLink=${sourceLink}` : ""}`)}
-                      className="bg-gradient-to-r from-purple-500 to-orange-500 text-white"
-                    >
-                      {sourceLink ? "Vollautomatisch starten (with link)" : "Vollautomatisch starten"}
+                  <h3 className="text-2xl font-extrabold">Automatic (Zero-Input)</h3>
+                  <p className="mt-2 text-gray-600">We extract name, address, hours, photos and more from the link and propose a ready-to-publish app. Perfect for a fast launch.</p>
+
+                  <ul className="mt-4 text-sm text-gray-600 space-y-2">
+                    <li>• Extracts menu & images</li>
+                    <li>• Generates colors & layout</li>
+                    <li>• Live preview & edit after generation</li>
+                  </ul>
+
+                  <div className="mt-6 flex items-center gap-3">
+                    <Button onClick={() => navigate(`/configurator/auto${sourceLink ? `?sourceLink=${sourceLink}` : ""}`)} className="bg-gradient-to-r from-purple-500 to-orange-500 text-white">
+                      Start Automatic
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => navigate("/configurator/manual")}>
+                      I want to edit after
                     </Button>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="mt-10 text-center text-sm text-gray-500">
+          Need help? Our Concierge can finish the setup for you — or you can continue tweaking everything yourself.
         </div>
       </div>
     </div>
