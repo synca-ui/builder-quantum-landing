@@ -507,53 +507,58 @@ export default function Index() {
                   Ready in 30 Seconds
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed font-medium">
+              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
                 Paste your link. Maitr designs your app, menu, and bookings instantly. You just{" "}
                 <span className="text-gradient font-bold">
                   add the cherry on top
                 </span>
                 {" "}🍒
               </p>
-              <div className="w-full max-w-3xl mx-auto">
-                <form onSubmit={handleMagicSubmit} className="flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl border border-white/20 p-1.5">
-                  <div className="flex items-center gap-3 px-4 flex-1">
-                    <LinkIcon className="w-5 h-5 text-gray-500" />
-                    <input
-                      value={magicLink}
-                      onChange={(e) => setMagicLink(e.target.value)}
-                      placeholder="Paste Google Maps or Website Link..."
-                      className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
-                      disabled={isLoadingMagic}
-                      aria-label="Paste link"
-                    />
-                  </div>
-                  <div className="px-2">
-                    <button
-                      type="submit"
-                      aria-busy={isLoadingMagic}
-                      className={`inline-flex items-center rounded-full text-white px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
-                      disabled={isLoadingMagic || !isMagicLinkValid(magicLink)}
-                    >
-                      {isLoadingMagic ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Building...
-                        </>
-                      ) : (
-                        <>
-                          <Rocket className="mr-3 w-5 h-5" />
-                          Get Started Now
-                          <ChevronRight className="ml-3 w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
 
-                <div className="text-center mt-4">
-                  <button className="inline-flex items-center text-gray-500 hover:text-gray-700 font-medium">
-                    <Play className="mr-2 w-5 h-5" /> Watch Demo
-                  </button>
+              <div className="w-full max-w-3xl mx-auto mt-6">
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  <form onSubmit={handleMagicSubmit} className="flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl border border-white/20 p-1.5 flex-1">
+                    <div className="flex items-center gap-3 px-4 flex-1">
+                      <LinkIcon className="w-5 h-5 text-gray-500" />
+                      <input
+                        value={magicLink}
+                        onChange={(e) => setMagicLink(e.target.value)}
+                        placeholder="Paste Google Maps or Website Link..."
+                        className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
+                        disabled={isLoadingMagic}
+                        aria-label="Paste link"
+                      />
+                    </div>
+                    <div className="px-2">
+                      <button
+                        type="submit"
+                        aria-busy={isLoadingMagic}
+                        className={`inline-flex items-center rounded-full text-white px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
+                        disabled={isLoadingMagic || !isMagicLinkValid(magicLink)}
+                      >
+                        {isLoadingMagic ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Building...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="mr-3 w-5 h-5" />
+                            Get Started Now
+                            <ChevronRight className="ml-3 w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="flex-shrink-0">
+                    <a href="#demo" className="inline-flex">
+                      <Button variant="ghost" size="sm" className="text-gray-600 px-4 py-2">
+                        <Play className="mr-2 w-4 h-4" /> Watch Demo
+                      </Button>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
