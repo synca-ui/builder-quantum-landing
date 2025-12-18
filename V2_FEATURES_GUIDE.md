@@ -1,5 +1,7 @@
 # Sync.a V2 Features Guide
 
+# Maitr V2 Features Guide
+
 Quick reference guide for using the new V2 features.
 
 ## 🎯 New Features Overview
