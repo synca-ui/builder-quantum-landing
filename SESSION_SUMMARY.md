@@ -4,6 +4,8 @@
 **Progress**: 52 → 57 tasks completed (38% → 84%)  
 **Status**: On track for Phase 5 (n8n) integration
 
+**Rebranding**: Product name updated from Sync.a to **Maitr** (UI copy and docs). Technical domains remain unchanged.
+
 ---
 
 ## 🎉 What Was Completed This Session
