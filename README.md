@@ -10,7 +10,7 @@
 
 <br />
 
-**Sync.a** is a powerful, user-friendly web app builder designed specifically for local businesses like cafés, restaurants, bars, and shops. Create stunning, professional websites in minutes without any technical expertise.
+**Maitr** is a powerful, user-friendly app builder designed specifically for local businesses like cafés, restaurants, bars, and shops. Create stunning, professional apps in minutes without any technical expertise.
 
 ## ✨ Features
 
@@ -39,7 +39,7 @@
 ### 🚀 **Backend Integration**
 
 - **Auto-Save**: Real-time configuration saving with 3-second debouncing
-- **Dashboard**: Manage multiple website configurations
+- **Dashboard**: Manage multiple app configurations
 - **Publishing System**: One-click publishing with custom or subdomain URLs
 - **Session Management**: User tracking and configuration persistence
 - **RESTful API**: Full CRUD operations for configurations
@@ -486,7 +486,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **User Authentication**: Proper user accounts and security
 - [ ] **Advanced Templates**: More design options and customization
 - [ ] **E-commerce Integration**: Online store functionality
-- [ ] **Analytics Dashboard**: Website performance metrics
+- [ ] **Analytics Dashboard**: App performance metrics
 - [ ] **Multi-language Support**: Internationalization
 - [ ] **Mobile App**: React Native companion app
 - [ ] **White-label Solution**: Brand customization for agencies
@@ -594,7 +594,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 #### 10. **Marketing & Launch**
 
-- [ ] **Landing Page**: Create marketing website
+- [ ] **Landing Page**: Create marketing app
 - [ ] **SEO Optimization**: Optimize for search engines
 - [ ] **Social Media**: Set up business social accounts
 - [ ] **Email Marketing**: Set up Mailchimp or ConvertKit
