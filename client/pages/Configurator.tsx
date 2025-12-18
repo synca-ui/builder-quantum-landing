@@ -1136,7 +1136,7 @@ export default function Configurator() {
                 href="/"
                 className="text-3xl font-black bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent"
               >
-                sync.a
+                Maitr
               </a>
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full opacity-75"></div>
             </div>
