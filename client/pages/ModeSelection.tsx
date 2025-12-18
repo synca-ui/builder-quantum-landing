@@ -75,7 +75,12 @@ export default function ModeSelection() {
                 >
                   Start Automatic
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handleCopy} className="flex items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="flex items-center"
+                >
                   <Copy className="w-4 h-4 mr-2" /> {copied ? "Copied" : "Copy"}
                 </Button>
               </div>
@@ -107,7 +112,10 @@ export default function ModeSelection() {
                 </ul>
 
                 <div className="mt-6">
-                  <Button onClick={() => navigate("/configurator/manual")} className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
+                  <Button
+                    onClick={() => navigate("/configurator/manual")}
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                  >
                     Continue to manual configurator
                   </Button>
                 </div>
@@ -149,7 +157,11 @@ export default function ModeSelection() {
                   >
                     Start Automatic
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate("/configurator/manual")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/configurator/manual")}
+                  >
                     I want to edit after
                   </Button>
                 </div>

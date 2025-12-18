@@ -152,7 +152,10 @@ export default function AutoConfigurator() {
 
   return (
     <div>
-      <Headbar title="Automatic" breadcrumbs={["Dashboard", "Configurator", "Automatic"]} />
+      <Headbar
+        title="Automatic"
+        breadcrumbs={["Dashboard", "Configurator", "Automatic"]}
+      />
 
       <div className="min-h-screen flex items-start justify-center p-4 bg-gradient-to-b from-white via-purple-50 to-orange-50">
         <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -176,7 +179,9 @@ export default function AutoConfigurator() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium">Google Maps Link</label>
+                  <label className="text-xs font-medium">
+                    Google Maps Link
+                  </label>
                   <Input
                     value={mapsLink}
                     onChange={(e) => setMapsLink(e.target.value)}
@@ -248,7 +253,10 @@ export default function AutoConfigurator() {
                     )}
                   </Button>
 
-                  <Button variant="outline" onClick={() => navigate("/mode-selection")}>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/mode-selection")}
+                  >
                     Back
                   </Button>
                 </div>
@@ -259,11 +267,16 @@ export default function AutoConfigurator() {
           <Card>
             <CardHeader>
               <CardTitle>Preview</CardTitle>
-              <CardDescription>Vorschau der generierten Konfiguration</CardDescription>
+              <CardDescription>
+                Vorschau der generierten Konfiguration
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="relative p-0">
-              <div className="mt-3 max-h-[70vh] overflow-auto text-xs bg-white p-4 rounded-b border-b" style={{paddingBottom: 96}}>
+              <div
+                className="mt-3 max-h-[70vh] overflow-auto text-xs bg-white p-4 rounded-b border-b"
+                style={{ paddingBottom: 96 }}
+              >
                 {result ? (
                   <pre className="whitespace-pre-wrap text-sm">
                     {JSON.stringify(result, null, 2)}
@@ -278,14 +291,20 @@ export default function AutoConfigurator() {
 
               <CardFooter className="sticky bottom-0 bg-card p-4 border-t">
                 <div className="ml-auto flex items-center gap-3">
-                  <Button onClick={useConfiguration} disabled={!result} className="bg-green-600 text-white">
+                  <Button
+                    onClick={useConfiguration}
+                    disabled={!result}
+                    className="bg-green-600 text-white"
+                  >
                     Use This Configuration
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => {
                       if (!result) return;
-                      navigator.clipboard?.writeText(JSON.stringify(result, null, 2));
+                      navigator.clipboard?.writeText(
+                        JSON.stringify(result, null, 2),
+                      );
                       toast({
                         title: "Copied",
                         description: "Configuration JSON copied to clipboard",

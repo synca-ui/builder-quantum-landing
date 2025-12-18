@@ -11,12 +11,19 @@ export default function Headbar({ title, showBack = false }: HeadbarProps) {
   const navigate = useNavigate();
 
   return (
-    <nav className="w-full bg-white/70 backdrop-blur-sm mb-6 shadow-md z-40" aria-label="Breadcrumb">
+    <nav
+      className="w-full bg-white/70 backdrop-blur-sm mb-6 shadow-md z-40"
+      aria-label="Breadcrumb"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-4">
             {showBack && (
-              <Button variant="ghost" onClick={() => navigate(-1)} className="px-2">
+              <Button
+                variant="ghost"
+                onClick={() => navigate(-1)}
+                className="px-2"
+              >
                 Back
               </Button>
             )}

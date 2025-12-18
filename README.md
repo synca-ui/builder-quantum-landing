@@ -1,12 +1,12 @@
 # Maitr — Project Overview
 
 ## Kurze Projektbeschreibung
+
 Maitr ist ein Full‑Stack‑Starter für die schnelle Erstellung von Restaurant‑Apps. Die Anwendung bietet:
 
 - Eine moderne SPA-Frontend (React + Vite + TypeScript) mit TailwindCSS für Styling
 - Eine integrierte Express‑API (server/), gehostet zusammen mit Vite im Entwicklungsmodus
 - Zwei Hauptmodi: Manuelle Konfiguration (Configurator) und Automatische Generierung (Auto) aus einer Website/Google Maps URL
-
 
 ## Architektur & Ordnerstruktur (Kurzüberblick)
 
@@ -21,7 +21,6 @@ Maitr ist ein Full‑Stack‑Starter für die schnelle Erstellung von Restaurant
   - middleware/ — Auth und weitere Middlewares
 
 - shared/ — geteilte Typen/Interfaces
-
 
 ## Technologie-Stack
 
@@ -51,7 +50,6 @@ Maitr ist ein Full‑Stack‑Starter für die schnelle Erstellung von Restaurant
 
 > Verfügbare MCP Integrationen (empfohlen bei Bedarf): Supabase, Zapier, Figma (Plugin), Builder.io, Linear, Notion, Atlassian, Sentry, Context7, Semgrep, Stripe, Prisma Postgres, Netlify, Vercel, Notion, HubSpot. (Du kannst über die "Open MCP popover" UI verbinden.)
 
-
 ## Wichtige Dateien & Pfade
 
 - client/pages/Index.tsx — Landing / Hero / Beispiel Dashboard
@@ -62,7 +60,6 @@ Maitr ist ein Full‑Stack‑Starter für die schnelle Erstellung von Restaurant
 - client/components/Headbar.tsx — Top-Breadcrumb / Brand (Maitr / Page)
 - server/routes/autogen.ts — Endpoint zur automatischen Generierung
 - server/index.ts — Server-Setup, Routen-Registrierung, Middleware
-
 
 ## Lokale Entwicklung
 
@@ -86,16 +83,15 @@ Empfohlene Schritte (pnpm empfohlen):
    pnpm test
    pnpm typecheck
 
-
 ## Deployment Empfehlungen
 
 - Netlify oder Vercel funktionieren gut mit diesem Setup. Beide unterstützen Serverless/Edge Funktionen und statische Builds.
 - Wenn du eine relationale DB verwendest, empfehle ich Supabase oder Neon (Postgres). Verbinde diese über die MCP-Integrationen in der Builder UI: [Open MCP popover](#open-mcp-popover)
 
 Deployment Hinweise:
+
 - Stelle sicher, dass Environment-Variablen gesetzt sind (DATABASE_URL, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SITE_URL, ...)
 - Stripe Webhooks benötigen die raw body handling middleware — die ist bereits im server/index.ts konfiguriert.
-
 
 ## Roadmap & nächste Schritte (Empfohlen)
 
@@ -119,13 +115,11 @@ Deployment Hinweise:
   - Vitest unit tests for utils & mapping
   - Integration tests for autogen API
 
-
 ## Troubleshooting (häufige Probleme)
 
 - Sharp / native binaries: sharp versions may require specific Node versions (>=18 recommended). If you see native module errors during install, ensure your node version meets sharp's engine requirements.
 
 - Webhook raw body: Stripe webhooks must use express.raw for signature verification. The server includes a rawBody handler for Netlify edge cases; ensure it remains before JSON body parsing where needed.
-
 
 ## How it could continue
 
@@ -134,10 +128,10 @@ Deployment Hinweise:
 - Analytics & conversion tracking per site
 - AI-driven visuals: color extraction, image crop suggestions, improved fonts mapping
 
-
 ---
 
 If you want, I can now:
+
 - Add this section directly to README.md in the repo (I can write the file).
 - Create a separate docs/MAITR_OVERVIEW.md file.
 
