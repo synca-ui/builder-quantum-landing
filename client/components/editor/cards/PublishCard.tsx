@@ -148,7 +148,7 @@ export function PublishCard({
                 </code>
               </div>
               <p className="text-xs text-gray-600 mt-1">
-                Free Sync.a subdomain (recommended)
+                Free Maitr subdomain (recommended)
               </p>
             </div>
           </label>
