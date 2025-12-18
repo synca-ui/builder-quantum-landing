@@ -1,4 +1,4 @@
-# Sync.a V2 Implementation Status
+# Maitr V2 Implementation Status
 
 ## Overview
 
@@ -108,7 +108,7 @@ This document tracks the progress of the V2 transformation from a manual configu
   - Logo and favicon URLs
 
 - [x] PublishCard (`client/components/editor/cards/PublishCard.tsx`)
-  - Domain selection (Sync.a subdomain vs custom)
+  - Domain selection (Maitr subdomain vs custom)
   - Publish/unpublish controls
   - Live URL display with copy
   - Feature checklist
