@@ -26,8 +26,13 @@ export default function ModeSelection() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-black">How would you like Maitr to help?</h1>
-          <p className="mt-2 text-gray-600">Choose between a guided manual setup or let Maitr build a working app automatically from a single link.</p>
+          <h1 className="text-4xl md:text-5xl font-black">
+            How would you like Maitr to help?
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Choose between a guided manual setup or let Maitr build a working
+            app automatically from a single link.
+          </p>
         </div>
 
         {sourceLink && (
@@ -38,15 +43,33 @@ export default function ModeSelection() {
               </div>
               <div>
                 <div className="text-sm text-gray-500">Detected source</div>
-                <div className="mt-1 text-sm font-medium break-words text-gray-800 max-w-xl">{decodeURIComponent(sourceLink)}</div>
-                <div className="mt-2 text-xs text-gray-500">Tip: You can upload logos and tweak colors after choosing automatic mode.</div>
+                <div className="mt-1 text-sm font-medium break-words text-gray-800 max-w-xl">
+                  {decodeURIComponent(sourceLink)}
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Tip: You can upload logos and tweak colors after choosing
+                  automatic mode.
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" onClick={() => navigate(`/configurator/auto?sourceLink=${encodeURIComponent(decodeURIComponent(sourceLink))}`)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  navigate(
+                    `/configurator/auto?sourceLink=${encodeURIComponent(decodeURIComponent(sourceLink))}`,
+                  )
+                }
+              >
                 Start Automatic
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleCopy} className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className="flex items-center"
+              >
                 <Copy className="w-4 h-4 mr-2" /> {copied ? "Copied" : "Copy"}
               </Button>
             </div>
@@ -62,7 +85,10 @@ export default function ModeSelection() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-extrabold">Guided (Manual)</h3>
-                  <p className="mt-2 text-gray-600">Step through content, colors and modules with full control. Best if you want to exactly tailor the look-and-feel.</p>
+                  <p className="mt-2 text-gray-600">
+                    Step through content, colors and modules with full control.
+                    Best if you want to exactly tailor the look-and-feel.
+                  </p>
 
                   <ul className="mt-4 text-sm text-gray-600 space-y-2">
                     <li>• Pick sections and modules</li>
@@ -71,7 +97,10 @@ export default function ModeSelection() {
                   </ul>
 
                   <div className="mt-6">
-                    <Button onClick={() => navigate("/configurator/manual")} className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
+                    <Button
+                      onClick={() => navigate("/configurator/manual")}
+                      className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                    >
                       Continue to manual configurator
                     </Button>
                   </div>
@@ -87,8 +116,14 @@ export default function ModeSelection() {
                   <Sparkles className="w-8 h-8 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-extrabold">Automatic (Zero-Input)</h3>
-                  <p className="mt-2 text-gray-600">We extract name, address, hours, photos and more from the link and propose a ready-to-publish app. Perfect for a fast launch.</p>
+                  <h3 className="text-2xl font-extrabold">
+                    Automatic (Zero-Input)
+                  </h3>
+                  <p className="mt-2 text-gray-600">
+                    We extract name, address, hours, photos and more from the
+                    link and propose a ready-to-publish app. Perfect for a fast
+                    launch.
+                  </p>
 
                   <ul className="mt-4 text-sm text-gray-600 space-y-2">
                     <li>• Extracts menu & images</li>
@@ -97,10 +132,21 @@ export default function ModeSelection() {
                   </ul>
 
                   <div className="mt-6 flex items-center gap-3">
-                    <Button onClick={() => navigate(`/configurator/auto${sourceLink ? `?sourceLink=${sourceLink}` : ""}`)} className="bg-gradient-to-r from-purple-500 to-orange-500 text-white">
+                    <Button
+                      onClick={() =>
+                        navigate(
+                          `/configurator/auto${sourceLink ? `?sourceLink=${sourceLink}` : ""}`,
+                        )
+                      }
+                      className="bg-gradient-to-r from-purple-500 to-orange-500 text-white"
+                    >
                       Start Automatic
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigate("/configurator/manual")}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate("/configurator/manual")}
+                    >
                       I want to edit after
                     </Button>
                   </div>
@@ -111,7 +157,8 @@ export default function ModeSelection() {
         </div>
 
         <div className="mt-10 text-center text-sm text-gray-500">
-          Need help? Our Concierge can finish the setup for you — or you can continue tweaking everything yourself.
+          Need help? Our Concierge can finish the setup for you — or you can
+          continue tweaking everything yourself.
         </div>
       </div>
     </div>

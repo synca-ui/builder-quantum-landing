@@ -10,7 +10,8 @@ function fileToDataUrl(file: File): Promise<{ name: string; dataUrl: string }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(reader.error);
-    reader.onload = () => resolve({ name: file.name, dataUrl: String(reader.result || "") });
+    reader.onload = () =>
+      resolve({ name: file.name, dataUrl: String(reader.result || "") });
     reader.readAsDataURL(file);
   });
 }
@@ -27,7 +28,7 @@ export default function AutoConfigurator() {
   useEffect(() => {
     try {
       const params = new URLSearchParams(search);
-      const sourceLink = params.get('sourceLink');
+      const sourceLink = params.get("sourceLink");
       if (sourceLink) {
         const decoded = decodeURIComponent(sourceLink);
         if (/maps/i.test(decoded)) setMapsLink(decoded);
@@ -37,7 +38,10 @@ export default function AutoConfigurator() {
       // ignore
     }
   }, [search]);
-  const [fileInfo, setFileInfo] = useState<{ name: string; dataUrl: string } | null>(null);
+  const [fileInfo, setFileInfo] = useState<{
+    name: string;
+    dataUrl: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
 
@@ -51,7 +55,10 @@ export default function AutoConfigurator() {
       setFileInfo(converted);
     } catch (e) {
       console.error(e);
-      toast({ title: "File error", description: "Unable to read uploaded file" });
+      toast({
+        title: "File error",
+        description: "Unable to read uploaded file",
+      });
     }
   };
 
@@ -90,22 +97,29 @@ export default function AutoConfigurator() {
       const mapped: any = {
         userId: localStorage.getItem("sync_user_id") || undefined,
         businessName: result.business?.name || result.businessName || "",
-        businessType: result.business?.category || result.businessType || "restaurant",
+        businessType:
+          result.business?.category || result.businessType || "restaurant",
         location: result.business?.address || result.business?.location || "",
         slogan: result.business?.tagline || "",
         uniqueDescription: result.business?.description || "",
         template: result.style?.template || "minimalist",
-        primaryColor: (result.style?.colors && result.style.colors[0]) || "#2563EB",
-        secondaryColor: (result.style?.colors && result.style.colors[1]) || "#F8FAFC",
+        primaryColor:
+          (result.style?.colors && result.style.colors[0]) || "#2563EB",
+        secondaryColor:
+          (result.style?.colors && result.style.colors[1]) || "#F8FAFC",
         fontFamily: result.style?.font || "Inter",
-        selectedPages: result.modules ? Object.keys(result.modules).filter((k) => result.modules[k]) : ["home", "menu", "contact"],
+        selectedPages: result.modules
+          ? Object.keys(result.modules).filter((k) => result.modules[k])
+          : ["home", "menu", "contact"],
         customPages: [],
         openingHours: result.business?.opening_hours || {},
         menuItems: result.menu_items || [],
         reservationsEnabled: false,
         maxGuests: 0,
         notificationMethod: "email",
-        contactMethods: result.business ? [result.business.phone, result.business.email].filter(Boolean) : [],
+        contactMethods: result.business
+          ? [result.business.phone, result.business.email].filter(Boolean)
+          : [],
         socialMedia: result.business?.social || {},
         gallery: result.style?.gallery ? result.style.gallery : [],
         onlineOrdering: false,
@@ -116,11 +130,17 @@ export default function AutoConfigurator() {
 
       // Persist to localStorage so the manual configurator can pick it up
       localStorage.setItem("configuratorData", JSON.stringify(mapped));
-      toast({ title: "Configuration exported", description: "Opened configurator with generated data" });
+      toast({
+        title: "Configuration exported",
+        description: "Opened configurator with generated data",
+      });
       navigate("/configurator");
     } catch (e) {
       console.error(e);
-      toast({ title: "Export failed", description: "Could not export configuration" });
+      toast({
+        title: "Export failed",
+        description: "Could not export configuration",
+      });
     }
   };
 
@@ -130,36 +150,68 @@ export default function AutoConfigurator() {
         <Card>
           <CardContent>
             <h2 className="text-2xl font-bold">🤖 Vollautomatisch erstellen</h2>
-            <p className="mt-2 text-sm text-gray-600">Geben Sie eine Website-URL, Google-Maps-Link oder Firmennamen ein. Optional: Menü-Datei hochladen (xlsx, pdf, jpg, png).</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Geben Sie eine Website-URL, Google-Maps-Link oder Firmennamen ein.
+              Optional: Menü-Datei hochladen (xlsx, pdf, jpg, png).
+            </p>
 
             <div className="mt-4 space-y-3">
               <div>
                 <label className="text-xs font-medium">Website URL</label>
-                <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com" />
+                <Input
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com"
+                />
               </div>
               <div>
                 <label className="text-xs font-medium">Google Maps Link</label>
-                <Input value={mapsLink} onChange={(e) => setMapsLink(e.target.value)} placeholder="https://maps.app.goo.gl/..." />
+                <Input
+                  value={mapsLink}
+                  onChange={(e) => setMapsLink(e.target.value)}
+                  placeholder="https://maps.app.goo.gl/..."
+                />
               </div>
               <div>
-                <label className="text-xs font-medium">Business Name (optional)</label>
-                <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Café Central" />
+                <label className="text-xs font-medium">
+                  Business Name (optional)
+                </label>
+                <Input
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="Café Central"
+                />
               </div>
               <div>
-                <label className="text-xs font-medium">Upload menu (optional)</label>
+                <label className="text-xs font-medium">
+                  Upload menu (optional)
+                </label>
                 <input
                   type="file"
                   accept=".xlsx,.xls,.pdf,image/*"
                   onChange={(e) => handleFile(e.target.files?.[0])}
                 />
-                {fileInfo && <div className="mt-2 text-sm text-gray-600">Uploaded: {fileInfo.name}</div>}
+                {fileInfo && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Uploaded: {fileInfo.name}
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 flex items-center gap-3">
-                <Button onClick={generate} disabled={loading} className="bg-gradient-to-r from-purple-500 to-orange-500 text-white">
+                <Button
+                  onClick={generate}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-purple-500 to-orange-500 text-white"
+                >
                   {loading ? "Generating..." : "Generate Automatically"}
                 </Button>
-                <Button variant="outline" onClick={() => navigate('/mode-selection')}>Back</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/mode-selection")}
+                >
+                  Back
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -170,22 +222,36 @@ export default function AutoConfigurator() {
             <h3 className="text-lg font-semibold">Preview</h3>
             <div className="mt-3 max-h-[70vh] overflow-auto text-xs bg-white p-3 rounded border">
               {result ? (
-                <pre className="whitespace-pre-wrap">{JSON.stringify(result, null, 2)}</pre>
+                <pre className="whitespace-pre-wrap">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
               ) : (
-                <div className="text-sm text-gray-500">No generated configuration yet. Click "Generate Automatically" to start.</div>
+                <div className="text-sm text-gray-500">
+                  No generated configuration yet. Click "Generate Automatically"
+                  to start.
+                </div>
               )}
             </div>
 
             <div className="mt-4 flex gap-3">
-              <Button onClick={useConfiguration} disabled={!result} className="bg-green-600 text-white">
+              <Button
+                onClick={useConfiguration}
+                disabled={!result}
+                className="bg-green-600 text-white"
+              >
                 Use This Configuration
               </Button>
               <Button
                 variant="outline"
                 onClick={() => {
                   if (!result) return;
-                  navigator.clipboard?.writeText(JSON.stringify(result, null, 2));
-                  toast({ title: "Copied", description: "Configuration JSON copied to clipboard" });
+                  navigator.clipboard?.writeText(
+                    JSON.stringify(result, null, 2),
+                  );
+                  toast({
+                    title: "Copied",
+                    description: "Configuration JSON copied to clipboard",
+                  });
                 }}
               >
                 Copy JSON

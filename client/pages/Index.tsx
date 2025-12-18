@@ -70,7 +70,10 @@ export default function Index() {
       const res = await fetch(`/api/forward-to-n8n`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ link: magicLink, timestamp: new Date().toISOString() }),
+        body: JSON.stringify({
+          link: magicLink,
+          timestamp: new Date().toISOString(),
+        }),
       });
       if (!res.ok) throw new Error("Network response was not ok");
       alert("Magie gestartet! ✨ Check n8n.");
@@ -508,16 +511,20 @@ export default function Index() {
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
-                Paste your link. Maitr designs your app, menu, and bookings instantly. You just{" "}
+                Paste your link. Maitr designs your app, menu, and bookings
+                instantly. You just{" "}
                 <span className="text-gradient font-bold">
                   add the cherry on top
-                </span>
-                {" "}🍒
+                </span>{" "}
+                🍒
               </p>
 
               <div className="w-full max-w-3xl mx-auto mt-6">
                 <div className="flex flex-col md:flex-row items-center gap-4">
-                  <form onSubmit={handleMagicSubmit} className="flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl border border-white/20 p-1.5 flex-1">
+                  <form
+                    onSubmit={handleMagicSubmit}
+                    className="flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl border border-white/20 p-1.5 flex-1"
+                  >
                     <div className="flex items-center gap-3 px-4 flex-1">
                       <LinkIcon className="w-5 h-5 text-gray-500" />
                       <input
@@ -534,7 +541,9 @@ export default function Index() {
                         type="submit"
                         aria-busy={isLoadingMagic}
                         className={`inline-flex items-center rounded-full text-white px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
-                        disabled={isLoadingMagic || !isMagicLinkValid(magicLink)}
+                        disabled={
+                          isLoadingMagic || !isMagicLinkValid(magicLink)
+                        }
                       >
                         {isLoadingMagic ? (
                           <>
@@ -554,7 +563,11 @@ export default function Index() {
 
                   <div className="flex-shrink-0">
                     <a href="#demo" className="inline-flex">
-                      <Button variant="ghost" size="sm" className="text-gray-600 px-4 py-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-600 px-4 py-2"
+                      >
                         <Play className="mr-2 w-4 h-4" /> Watch Demo
                       </Button>
                     </a>
@@ -767,29 +780,55 @@ export default function Index() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h4 className="text-lg font-bold">Creative Studio</h4>
-              <p className="mt-2 text-gray-600">Fine-tune styles, colors and content. Your app, your brand — with delightful defaults.</p>
+              <p className="mt-2 text-gray-600">
+                Fine-tune styles, colors and content. Your app, your brand —
+                with delightful defaults.
+              </p>
             </div>
             <div>
               <h4 className="text-lg font-bold">Backstage</h4>
-              <p className="mt-2 text-gray-600">Manage menus, opening hours, and orders from a simple dashboard — built for hospitality.</p>
+              <p className="mt-2 text-gray-600">
+                Manage menus, opening hours, and orders from a simple dashboard
+                — built for hospitality.
+              </p>
             </div>
             <div>
               <h4 className="text-lg font-bold">Concierge</h4>
-              <p className="mt-2 text-gray-600">Need help? Our team can finish the setup for you, or provide custom integrations.</p>
+              <p className="mt-2 text-gray-600">
+                Need help? Our team can finish the setup for you, or provide
+                custom integrations.
+              </p>
             </div>
           </div>
 
           <div className="mt-10 flex flex-col md:flex-row items-center justify-between">
-            <div className="text-sm text-gray-600">© {new Date().getFullYear()} Maitr — The digital host for hospitality.</div>
+            <div className="text-sm text-gray-600">
+              © {new Date().getFullYear()} Maitr — The digital host for
+              hospitality.
+            </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
-              <a href="/pricing" className="text-sm font-medium text-gray-700 hover:text-teal-600">Pricing</a>
-              <a href="/docs" className="text-sm font-medium text-gray-700 hover:text-teal-600">Docs</a>
-              <a href="/contact" className="text-sm font-medium text-gray-700 hover:text-teal-600">Contact</a>
+              <a
+                href="/pricing"
+                className="text-sm font-medium text-gray-700 hover:text-teal-600"
+              >
+                Pricing
+              </a>
+              <a
+                href="/docs"
+                className="text-sm font-medium text-gray-700 hover:text-teal-600"
+              >
+                Docs
+              </a>
+              <a
+                href="/contact"
+                className="text-sm font-medium text-gray-700 hover:text-teal-600"
+              >
+                Contact
+              </a>
             </div>
           </div>
         </div>
       </footer>
-
     </div>
   );
 }

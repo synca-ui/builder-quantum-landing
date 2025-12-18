@@ -24,7 +24,11 @@ export function createServer() {
   app.use(cors());
 
   // Stripe webhook endpoint MUST be before express.json() to access raw body
-  app.post("/api/webhooks/stripe", express.raw({type: 'application/json'}), handleStripeWebhook);
+  app.post(
+    "/api/webhooks/stripe",
+    express.raw({ type: "application/json" }),
+    handleStripeWebhook,
+  );
 
   // Standard JSON middleware
   app.use(express.json({ limit: "25mb" }));

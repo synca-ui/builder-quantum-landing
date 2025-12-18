@@ -7,11 +7,13 @@ Quick reference guide for using the new V2 features.
 ## 🎯 New Features Overview
 
 ### 1. Advanced Card-Based Editor
+
 **Location**: `/configurator/advanced`
 
 A modern, modular configuration interface that replaces the multi-step wizard.
 
 #### Features:
+
 - **All settings in one place** - No more stepping through 15+ screens
 - **Expandable sections** - Click to expand/collapse any section
 - **Live preview** (coming soon) - See changes in real-time
@@ -19,6 +21,7 @@ A modern, modular configuration interface that replaces the multi-step wizard.
 - **Clean grid layout** - Cards on left, preview on right
 
 #### Available Cards:
+
 1. **Business Information** - Name, type, location, slogan, description
 2. **Design & Styling** - Colors, fonts, template selection
 3. **Pages & Features** - Which pages to include (home, menu, gallery, contact)
@@ -32,6 +35,7 @@ A modern, modular configuration interface that replaces the multi-step wizard.
 11. **Publish** - Domain selection and publish button
 
 #### Usage:
+
 ```
 1. Go to /configurator/advanced
 2. Click a card to expand it
@@ -41,21 +45,26 @@ A modern, modular configuration interface that replaces the multi-step wizard.
 ```
 
 ### 2. Social Proof Badges (Order Tracking)
+
 **Real-time indicators showing item popularity**
 
 #### How It Works:
+
 - When orders are created (via Stripe, POS, or manually), they're logged
 - Frontend polls for order statistics every 30 seconds
 - Menu items display "Ordered X mins ago" badges
 - Badges show trending items and recent activity
 
 #### What You See:
+
 On published sites, menu items show:
+
 - 🟢 Green "Popular" badge if ordered recently
 - "Ordered X mins ago" or "Ordered X hours ago"
 - Pulse animation for very recent orders
 
 #### Backend:
+
 - Stripe webhook → `/api/webhooks/stripe` → logs order event
 - Frontend hook → `useRecentOrders()` → polls `/api/orders/:webAppId/menu-stats`
 - Database table → `order_events` → stores all orders
@@ -63,15 +72,18 @@ On published sites, menu items show:
 See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for Stripe integration instructions.
 
 ### 3. JSON-LD Schema (Agentic Web)
+
 **AI-readable structured data for your business**
 
 #### What It Does:
+
 - Generates Schema.org JSON-LD for your restaurant/business
 - Includes menu items, hours, contact info, location
 - Makes your site readable by AI agents (ChatGPT, Google Assistant, etc.)
 - Improves SEO with structured data
 
 #### Automatic:
+
 - Injected into page `<head>` automatically
 - Includes:
   - Business name, type, location
@@ -82,19 +94,23 @@ See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for Stripe integration instructions.
   - Aggregate ratings and reviews
 
 #### Testing:
+
 - Validate schema at: https://schema.org/validate
 - Check Google Search Console for indexing
 
 ### 4. Liquid UI (Context-Aware Menus)
+
 **Smart menu sorting based on time, day, and guests**
 
 #### How It Works:
+
 - Menu items can have display rules (time ranges, specific days)
 - Items automatically filtered based on current time
 - Breakfast items show 6-11 AM, lunch 11 AM-3 PM, dinner 5-11 PM
 - Items boost based on popularity and context
 
 #### Future Use:
+
 - Admin interface to set display rules per item
 - Context-aware suggestions ("Lunch specials available until 3 PM")
 - Mobile app integration for smart recommendations
@@ -104,6 +120,7 @@ See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for Stripe integration instructions.
 ## 📱 Feature Matrices
 
 ### Page Types Available
+
 - ✅ Home - Hero section with business info
 - ✅ Menu - Grid view of menu items
 - ✅ Gallery - Image gallery showcase
@@ -112,18 +129,21 @@ See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for Stripe integration instructions.
 - ✅ Settings - App settings (admin only)
 
 ### Design Templates
+
 - Minimalist - Clean, simple, content-focused
 - Modern - Bold colors, glassmorphism effects
 - Stylish - Elegant serif typography
 - Cozy - Warm, inviting aesthetic
 
 ### Font Families
+
 - Inter (default)
 - Playfair Display (elegant serif)
 - Merriweather (classic serif)
 - Roboto (geometric sans-serif)
 
 ### Advanced Features (Toggle On/Off)
+
 - Online Ordering - Accept orders directly
 - Online Store - Sell products
 - Team Area - Multi-user access
@@ -138,6 +158,7 @@ See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for Stripe integration instructions.
 ## 🔧 Technical Details
 
 ### State Management
+
 - Uses `stepPersistence` system
 - Saves to localStorage automatically
 - Survives browser refresh
@@ -146,6 +167,7 @@ See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for Stripe integration instructions.
 ### API Endpoints (Phase 2+)
 
 #### Schema Generation
+
 ```
 POST /api/schema/generate
 Body: { businessName, location, menuItems, ... }
@@ -153,6 +175,7 @@ Returns: JSON-LD schema
 ```
 
 #### Order Tracking
+
 ```
 GET /api/orders/:webAppId/menu-stats
 Returns: { itemId: { lastOrderedAt, recentCount, dailyCount } }
@@ -163,6 +186,7 @@ Returns: { success, event }
 ```
 
 #### Publishing
+
 ```
 POST /api/configurations/:id/publish
 Returns: { success, url }
@@ -171,6 +195,7 @@ Returns: { success, url }
 ### Frontend Hooks
 
 #### useRecentOrders
+
 ```typescript
 const { stats, isLoading, error, refetch } = useRecentOrders(webAppId);
 
@@ -178,10 +203,11 @@ const { stats, isLoading, error, refetch } = useRecentOrders(webAppId);
 ```
 
 #### useLiquidMenu
+
 ```typescript
 const { items, suggestedCategory, contextualMessage } = useLiquidMenu(
   menuItems,
-  { now: new Date(), guests: 4 }
+  { now: new Date(), guests: 4 },
 );
 ```
 
@@ -190,6 +216,7 @@ const { items, suggestedCategory, contextualMessage } = useLiquidMenu(
 ## 📊 Database Tables
 
 ### order_events
+
 ```sql
 - id: UUID (primary key)
 - web_app_id: UUID (foreign key)
@@ -203,6 +230,7 @@ const { items, suggestedCategory, contextualMessage } = useLiquidMenu(
 ```
 
 ### ai_generated_schemas
+
 ```sql
 - id: UUID (primary key)
 - web_app_id: UUID (foreign key)
@@ -232,23 +260,27 @@ Before going live:
 ## 🆘 Troubleshooting
 
 ### Badges Not Showing
+
 - Check if `/api/orders/:webAppId/menu-stats` returns data
 - Verify orders were created (check database)
 - Browser console may show fetch errors
 - Clear browser cache and refresh
 
 ### Schema Not Appearing
+
 - Inspect page source for `<script type="application/ld+json">`
 - Validate at https://schema.org/validate
 - Check RestaurantJsonLd component is included in Site.tsx
 
 ### Editor Not Saving
+
 - Check localStorage is enabled in browser
 - Verify stepPersistence is enabled (toggle in settings)
 - Check browser console for errors
 - Try opening in private/incognito window
 
 ### Stripe Webhook Not Working
+
 - Verify webhook URL is publicly accessible
 - Check STRIPE_WEBHOOK_SECRET env var is set correctly
 - Review Stripe Dashboard webhook delivery logs

@@ -205,24 +205,36 @@ export default function Configurator() {
     getBaseHost,
   ]);
 
-  const slugifyName = useCallback((s: string) =>
-    (s || 'site')
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .slice(0, 30)
-  , []);
+  const slugifyName = useCallback(
+    (s: string) =>
+      (s || "site")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .slice(0, 30),
+    [],
+  );
 
   const getLiveUrl = useCallback(() => {
     if (publishedUrl) return publishedUrl;
     const origin = (() => {
-      try { return window.location.origin.replace(/\/$/, ''); } catch { return `https://${getBaseHost()}`; }
+      try {
+        return window.location.origin.replace(/\/$/, "");
+      } catch {
+        return `https://${getBaseHost()}`;
+      }
     })();
-    const id = currentConfigId || '';
-    const name = slugifyName(formData.businessName || 'site');
+    const id = currentConfigId || "";
+    const name = slugifyName(formData.businessName || "site");
     if (id) return `${origin}/${id}/${name}`;
     return origin;
-  }, [publishedUrl, currentConfigId, formData.businessName, getBaseHost, slugifyName]);
+  }, [
+    publishedUrl,
+    currentConfigId,
+    formData.businessName,
+    getBaseHost,
+    slugifyName,
+  ]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -835,8 +847,14 @@ export default function Configurator() {
       const t = localStorage.getItem("auth_token");
       if (!t) {
         setSaveStatus("error");
-        toast({ title: "Please log in", description: "Sign in to save your website" });
-        navigate("/login", { replace: false, state: { from: { pathname: "/configurator" } } } as any);
+        toast({
+          title: "Please log in",
+          description: "Sign in to save your website",
+        });
+        navigate("/login", {
+          replace: false,
+          state: { from: { pathname: "/configurator" } },
+        } as any);
         return;
       }
       setSaveStatus("saving");
@@ -972,8 +990,14 @@ export default function Configurator() {
 
   const publishConfiguration = useCallback(async () => {
     if (!token || !user) {
-      toast({ title: "Please log in", description: "Sign in to publish your website" });
-      navigate("/login", { replace: false, state: { from: { pathname: "/configurator" } } } as any);
+      toast({
+        title: "Please log in",
+        description: "Sign in to publish your website",
+      });
+      navigate("/login", {
+        replace: false,
+        state: { from: { pathname: "/configurator" } },
+      } as any);
       setPublishStatus("error");
       return;
     }
@@ -2170,7 +2194,9 @@ export default function Configurator() {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-2">
-                            <span className="hidden">{item.emoji || "🍽��"}</span>
+                            <span className="hidden">
+                              {item.emoji || "🍽��"}
+                            </span>
                             <div>
                               <h3 className={templateStyles.itemName}>
                                 {item.name}
