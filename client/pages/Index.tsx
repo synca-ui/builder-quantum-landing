@@ -761,6 +761,35 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      <footer className="bg-gradient-to-t from-gray-50 to-white border-t border-gray-200 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h4 className="text-lg font-bold">Creative Studio</h4>
+              <p className="mt-2 text-gray-600">Fine-tune styles, colors and content. Your app, your brand — with delightful defaults.</p>
+            </div>
+            <div>
+              <h4 className="text-lg font-bold">Backstage</h4>
+              <p className="mt-2 text-gray-600">Manage menus, opening hours, and orders from a simple dashboard — built for hospitality.</p>
+            </div>
+            <div>
+              <h4 className="text-lg font-bold">Concierge</h4>
+              <p className="mt-2 text-gray-600">Need help? Our team can finish the setup for you, or provide custom integrations.</p>
+            </div>
+          </div>
+
+          <div className="mt-10 flex flex-col md:flex-row items-center justify-between">
+            <div className="text-sm text-gray-600">© {new Date().getFullYear()} Maitr — The digital host for hospitality.</div>
+            <div className="mt-4 md:mt-0 flex items-center space-x-4">
+              <a href="/pricing" className="text-sm font-medium text-gray-700 hover:text-teal-600">Pricing</a>
+              <a href="/docs" className="text-sm font-medium text-gray-700 hover:text-teal-600">Docs</a>
+              <a href="/contact" className="text-sm font-medium text-gray-700 hover:text-teal-600">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
     </div>
   );
 }
