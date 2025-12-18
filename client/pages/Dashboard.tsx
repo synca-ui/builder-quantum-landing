@@ -128,7 +128,7 @@ export default function Dashboard() {
             <Link to="/configurator">
               <Button className="bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600">
                 <Plus className="w-4 h-4 mr-2" />
-                New Website
+                New App
               </Button>
             </Link>
           </div>
