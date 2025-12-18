@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 
 interface HeadbarProps {
   title: string; // the current page label e.g. "Selection" or "Automatic"
-  breadcrumbs?: string[];
   showBack?: boolean;
 }
 
-export default function Headbar({ title, breadcrumbs = [], showBack = false }: HeadbarProps) {
+export default function Headbar({ title, showBack = false }: HeadbarProps) {
   const navigate = useNavigate();
 
   return (
@@ -22,33 +21,29 @@ export default function Headbar({ title, breadcrumbs = [], showBack = false }: H
               </Button>
             )}
 
-            <div className="relative group">
-              <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-105">
-                Maitr
-              </h1>
-              <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
-            </div>
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-3 focus:outline-none"
+              aria-label="Go to homepage"
+            >
+              <div className="relative group">
+                <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-105">
+                  Maitr
+                </h1>
+                <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
+              </div>
 
-            <div className="text-sm text-muted-foreground">/</div>
+              <div className="text-sm text-muted-foreground">/</div>
 
-            <div className="flex flex-col">
-              <h2 className="text-lg font-semibold">{title}</h2>
-              {breadcrumbs.length > 0 && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  {breadcrumbs.map((b, i) => (
-                    <span key={b}>
-                      {b}
-                      {i < breadcrumbs.length - 1 && (
-                        <span className="mx-2">/</span>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+              <div>
+                <h2 className="text-lg font-semibold">{title}</h2>
+              </div>
+            </button>
           </div>
         </div>
+        {/* Divider line to separate headbar from content */}
+        <div className="border-b border-gray-200 mt-3" />
       </div>
     </nav>
   );
