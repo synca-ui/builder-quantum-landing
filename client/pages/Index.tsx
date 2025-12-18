@@ -67,14 +67,11 @@ export default function Index() {
     }
     setIsLoadingMagic(true);
     try {
-      const res = await fetch(
-        "https://n8n-production-1508.up.railway.app/webhook-test/b1a76bcf-936c-4ac0-9f8e-6f3cb31bf646",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ link: magicLink, timestamp: new Date().toISOString() }),
-        }
-      );
+      const res = await fetch(`/api/forward-to-n8n`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link: magicLink, timestamp: new Date().toISOString() }),
+      });
       if (!res.ok) throw new Error("Network response was not ok");
       alert("Magie gestartet! ✨ Check n8n.");
       const encoded = encodeURIComponent(magicLink);
