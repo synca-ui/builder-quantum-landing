@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Settings, Sparkles, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,17 +10,27 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import Headbar from "@/components/Headbar";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import { useAnalysis, setIsLoading, setN8nData, setSourceLink } from "@/data/analysisStore";
+import type { N8nResult } from "@/types/n8n";
 
 export default function ModeSelection() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);
-  const sourceLink = params.get("sourceLink");
+  const urlSource = params.get("sourceLink");
+  const { isLoading, n8nData } = useAnalysis();
   const [copied, setCopied] = useState(false);
+
+  const messages = [
+    "Maitr analysiert die Website...",
+    "Farben & Logo werden extrahiert...",
+    "Speisekarte wird digitalisiert...",
+  ];
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(decodeURIComponent(sourceLink || ""));
+      await navigator.clipboard.writeText(decodeURIComponent(urlSource || ""));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
@@ -28,9 +38,56 @@ export default function ModeSelection() {
     }
   };
 
+  useEffect(() => {
+    if (urlSource) {
+      setSourceLink(decodeURIComponent(urlSource));
+      // start analysis
+      runAnalysis(decodeURIComponent(urlSource));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSource]);
+
+  async function runAnalysis(link: string) {
+    try {
+      setIsLoading(true);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 25000);
+
+      const res = await fetch(`/api/forward-to-n8n`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link, timestamp: new Date().toISOString() }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        setIsLoading(false);
+        console.error("n8n forward failed", res.status);
+        return;
+      }
+
+      const payload = await res.json();
+
+      // payload shape: { success: true, forwarded: true, response: <json|text> }
+      const data = (payload?.response ?? payload) as N8nResult;
+
+      setN8nData(data || null);
+    } catch (err) {
+      console.error("n8n call error", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const recommendedFullAuto = n8nData?.analysis?.recommendation === "full_auto";
+
   return (
     <div>
       <Headbar title="Selection" breadcrumbs={["Dashboard", "Selection"]} />
+
+      <LoadingOverlay visible={isLoading} messages={messages} onCancel={() => setIsLoading(false)} />
 
       <div className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
         <div className="max-w-5xl w-full">
@@ -44,7 +101,7 @@ export default function ModeSelection() {
             </p>
           </div>
 
-          {sourceLink && (
+          {urlSource && (
             <div className="bg-white shadow-md rounded-2xl p-4 border border-gray-100 mb-6 flex items-center justify-between">
               <div className="flex items-start space-x-4">
                 <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-teal-50">
@@ -53,7 +110,7 @@ export default function ModeSelection() {
                 <div>
                   <div className="text-sm text-gray-500">Detected source</div>
                   <div className="mt-1 text-sm font-medium break-words text-gray-800 max-w-xl">
-                    {decodeURIComponent(sourceLink)}
+                    {decodeURIComponent(urlSource)}
                   </div>
                   <div className="mt-2 text-xs text-gray-500">
                     Tip: You can upload logos and tweak colors after choosing
@@ -67,20 +124,13 @@ export default function ModeSelection() {
                   size="sm"
                   onClick={() =>
                     navigate(
-                      `/configurator/auto?sourceLink=${encodeURIComponent(
-                        decodeURIComponent(sourceLink),
-                      )}`,
+                      `/configurator/auto?sourceLink=${encodeURIComponent(decodeURIComponent(urlSource))}`,
                     )
                   }
                 >
                   Start Automatic
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="flex items-center"
-                >
+                <Button variant="ghost" size="sm" onClick={handleCopy} className="flex items-center">
                   <Copy className="w-4 h-4 mr-2" /> {copied ? "Copied" : "Copy"}
                 </Button>
               </div>
@@ -92,7 +142,7 @@ export default function ModeSelection() {
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-lg bg-gradient-to-br from-teal-100 to-white">
-                    <Settings className="w-8 h-8 text-teal-600" />
+                    <Settings className="w-8 h-8 text-teal-600" style={{ color: n8nData?.branding?.primary_color }} />
                   </div>
                   <div>
                     <CardTitle>Guided (Manual)</CardTitle>
@@ -114,7 +164,9 @@ export default function ModeSelection() {
                 <div className="mt-6">
                   <Button
                     onClick={() => navigate("/configurator/manual")}
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                    variant={"outline"}
+                    size="sm"
+                    className=""
                   >
                     Continue to manual configurator
                   </Button>
@@ -126,7 +178,7 @@ export default function ModeSelection() {
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-lg bg-gradient-to-br from-purple-100 to-orange-50">
-                    <Sparkles className="w-8 h-8 text-purple-600" />
+                    <Sparkles className="w-8 h-8 text-purple-600" style={{ color: n8nData?.branding?.primary_color }} />
                   </div>
                   <div>
                     <CardTitle>Automatic (Zero-Input)</CardTitle>
@@ -150,10 +202,10 @@ export default function ModeSelection() {
                   <Button
                     onClick={() =>
                       navigate(
-                        `/configurator/auto${sourceLink ? `?sourceLink=${sourceLink}` : ""}`,
+                        `/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`,
                       )
                     }
-                    className="bg-gradient-to-r from-purple-500 to-orange-500 text-white"
+                    className={`$ {recommendedFullAuto ? "bg-gradient-to-r from-purple-500 to-orange-500 text-white animate-pulse shadow-lg" : "bg-gradient-to-r from-purple-500 to-orange-500 text-white"}`}
                   >
                     Start Automatic
                   </Button>
