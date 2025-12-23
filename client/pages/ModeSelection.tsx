@@ -100,7 +100,7 @@ export default function ModeSelection() {
               <div className="mb-4 p-4 bg-gradient-to-r from-cyan-50 to-orange-50 rounded-xl border border-cyan-200">
                 <div className="text-sm font-medium text-gray-600">Maitr Score</div>
                 <div className="text-4xl font-black bg-gradient-to-r from-cyan-500 to-orange-500 bg-clip-text text-transparent mt-1">
-                  {n8nData.analysis.maitr_score}
+                  {n8nData?.analysis?.maitr_score ?? "—"}
                 </div>
               </div>
             )}
