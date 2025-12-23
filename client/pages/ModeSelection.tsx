@@ -23,9 +23,9 @@ export default function ModeSelection() {
   const [copied, setCopied] = useState(false);
 
   const messages = [
-    "Maitr analysiert die Website...",
-    "Farben & Logo werden extrahiert...",
-    "Speisekarte wird digitalisiert...",
+    "Gathering ingredients from your site…",
+    "Analyzing branding & colors…",
+    "Digitalizing your menu…",
   ];
 
   const handleCopy = async () => {
