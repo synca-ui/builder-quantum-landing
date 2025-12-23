@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import ModeSelection from '../ModeSelection';
 import * as analysisStore from '@/data/analysisStore';
 
-import { vi } from 'vitest';
+import { vi, describe, test, expect } from 'vitest';
 
 // Mock fetch
 global.fetch = vi.fn(() =>
