@@ -85,7 +85,7 @@ export default function ModeSelection() {
   }
 
   const recommendedFullAuto = n8nData?.analysis?.recommendation === "full_auto";
-  const highScore = n8nData?.analysis?.maitr_score && n8nData.analysis.maitr_score > 80;
+  const highScore = (n8nData?.analysis?.maitr_score ?? 0) > 80;
 
   return (
     <div>
