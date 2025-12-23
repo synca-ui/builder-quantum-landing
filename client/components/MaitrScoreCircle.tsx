@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Star } from "lucide-react";
 
 interface MaitrScoreCircleProps {
   score?: number;
@@ -23,8 +22,6 @@ export default function MaitrScoreCircle({ score = 0, isLoading = false }: Maitr
         }
       }, 30);
       return () => clearInterval(interval);
-    } else if (isLoading) {
-      setDisplayScore(0);
     }
   }, [score, isLoading]);
 
