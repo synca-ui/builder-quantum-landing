@@ -40,9 +40,12 @@ export default function ModeSelection() {
 
   useEffect(() => {
     if (urlSource) {
-      setSourceLink(decodeURIComponent(urlSource));
-      // start analysis
-      runAnalysis(decodeURIComponent(urlSource));
+      const decoded = decodeURIComponent(urlSource);
+      setSourceLink(decoded);
+      // Only run analysis if we don't already have n8nData cached
+      if (!n8nData) {
+        runAnalysis(decoded);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSource]);
