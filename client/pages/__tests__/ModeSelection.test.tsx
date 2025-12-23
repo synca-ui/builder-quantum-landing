@@ -3,8 +3,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import ModeSelection from '../ModeSelection';
 import * as analysisStore from '@/data/analysisStore';
 
+import { vi } from 'vitest';
+
 // Mock fetch
-global.fetch = jest.fn(() =>
+global.fetch = vi.fn(() =>
   Promise.resolve({
     ok: true,
     json: () => Promise.resolve({ response: { restaurant: { name: 'Demo' }, analysis: { maitr_score: 85, recommendation: 'full_auto' } } }),
