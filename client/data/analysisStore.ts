@@ -51,24 +51,23 @@ export function getAnalysisState() {
 }
 
 export function setIsLoading(v: boolean) {
-  state.isLoading = v;
+  state = { ...state, isLoading: v };
   notify();
 }
 
 export function setN8nData(d: N8nResult | null) {
-  state.n8nData = d;
+  state = { ...state, n8nData: d };
   persistToStorage(d);
   notify();
 }
 
 export function setSourceLink(link: string | null) {
-  state.sourceLink = link;
+  state = { ...state, sourceLink: link };
   notify();
 }
 
 export function clearAnalysisData() {
-  state.n8nData = null;
-  state.sourceLink = null;
+  state = { ...state, n8nData: null, sourceLink: null };
   persistToStorage(null);
   notify();
 }
