@@ -97,14 +97,14 @@ export default function ModeSelection() {
       <div className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
         <div className="max-w-5xl w-full">
           <div className="text-center mb-6">
-            {n8nData && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-cyan-50 to-orange-50 rounded-xl border border-cyan-200">
-                <div className="text-sm font-medium text-gray-600">Maitr Score</div>
-                <div className="text-4xl font-black bg-gradient-to-r from-cyan-500 to-orange-500 bg-clip-text text-transparent mt-1">
-                  {n8nData?.analysis?.maitr_score ?? "—"}
-                </div>
+            {isLoading || n8nData ? (
+              <div className="mb-6">
+                <MaitrScoreCircle
+                  score={n8nData?.analysis?.maitr_score || 0}
+                  isLoading={isLoading}
+                />
               </div>
-            )}
+            ) : null}
             <h1 className="text-3xl md:text-4xl font-extrabold">
               {n8nData ? `Welcome, ${n8nData?.restaurant?.name || "Friend"}!` : "How would you like Maitr to help?"}
             </h1>
