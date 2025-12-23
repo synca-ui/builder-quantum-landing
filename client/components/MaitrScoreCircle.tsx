@@ -71,28 +71,6 @@ export default function MaitrScoreCircle({ score = 0, isLoading = false }: Maitr
           <div className="text-xs font-medium text-gray-500 mt-1">Maitr Score</div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes pulse-star {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.1);
-          }
-        }
-
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </div>
   );
 }
