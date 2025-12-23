@@ -62,7 +62,6 @@ export default function Index() {
   const handleMagicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isMagicLinkValid(magicLink)) {
-      alert("Please enter a valid URL starting with http:// or https://");
       return;
     }
     setIsLoadingMagic(true);
@@ -76,13 +75,10 @@ export default function Index() {
         }),
       });
       if (!res.ok) throw new Error("Network response was not ok");
-      alert("Magie gestartet! ✨ Check n8n.");
       const encoded = encodeURIComponent(magicLink);
       navigate(`/mode-selection?sourceLink=${encoded}`);
     } catch (err) {
       console.error(err);
-      alert("Failed to start magic. Please try again.");
-    } finally {
       setIsLoadingMagic(false);
     }
   };
