@@ -105,7 +105,7 @@ export default function ModeSelection() {
               </div>
             )}
             <h1 className="text-3xl md:text-4xl font-extrabold">
-              {n8nData ? `Welcome, ${n8nData.restaurant.name}!` : "How would you like Maitr to help?"}
+              {n8nData ? `Welcome, ${n8nData?.restaurant?.name || "Friend"}!` : "How would you like Maitr to help?"}
             </h1>
             <p className="mt-2 text-gray-600">
               {n8nData
