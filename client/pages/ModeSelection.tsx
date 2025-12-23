@@ -23,10 +23,10 @@ export default function ModeSelection() {
   const { isLoading, n8nData } = useAnalysis();
   const [copied, setCopied] = useState(false);
 
-  const messages = [
-    "Gathering ingredients from your site…",
-    "Analyzing branding & colors…",
-    "Digitalizing your menu…",
+  const loadingMessages = [
+    "Maitr is analyzing…",
+    "Gathering branding…",
+    "Almost ready…",
   ];
 
   const handleCopy = async () => {
