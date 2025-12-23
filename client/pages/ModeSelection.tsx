@@ -74,13 +74,27 @@ export default function ModeSelection() {
 
       const payload = await res.json();
 
-      // payload shape: { success: true, forwarded: true, response: <json|text> }
-      const data = (payload?.response ?? payload) as N8nResult;
+      // Extract the response - could be nested or flat
+      let data = payload?.response || payload;
 
-      setN8nData(data || null);
+      // Handle case where response is a stringified JSON
+      if (typeof data === "string") {
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          console.warn("Could not parse response as JSON", data);
+        }
+      }
+
+      // Validate it has expected structure
+      if (data && typeof data === "object") {
+        setN8nData(data as N8nResult);
+      } else {
+        console.warn("Invalid response format:", data);
+        setN8nData(null);
+      }
     } catch (err) {
       console.error("n8n call error", err);
-    } finally {
       setIsLoading(false);
     }
   }
