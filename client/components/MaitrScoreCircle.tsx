@@ -30,30 +30,8 @@ export default function MaitrScoreCircle({ score = 0, isLoading = false }: Maitr
 
   return (
     <div className="relative w-full flex justify-center items-center py-8">
-      {/* Loading state */}
-      <div
-        className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 ${
-          isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="relative w-24 h-24 flex items-center justify-center">
-          <Star
-            className="w-12 h-12 text-cyan-500 animate-spin"
-            style={{
-              animation: "pulse-star 2s ease-in-out infinite, spin 3s linear infinite",
-            }}
-            fill="currentColor"
-          />
-        </div>
-        <p className="mt-4 text-sm text-gray-500 font-medium">Maitr is calculating…</p>
-      </div>
-
-      {/* Score circle */}
-      <div
-        className={`flex flex-col items-center transition-opacity duration-500 ${
-          isLoading ? "opacity-0" : "opacity-100"
-        }`}
-      >
+      {/* Score circle with smooth fade-in */}
+      <div className="flex flex-col items-center transition-all duration-500 opacity-100">
         <svg width="160" height="160" className="transform -rotate-90">
           {/* Background circle */}
           <circle
