@@ -209,9 +209,14 @@ export default function ModeSelection() {
                         `/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`,
                       )
                     }
-                    className={`$ {recommendedFullAuto ? "bg-gradient-to-r from-purple-500 to-orange-500 text-white animate-pulse shadow-lg" : "bg-gradient-to-r from-purple-500 to-orange-500 text-white"}`}
+                    className={`${
+                      highScore
+                        ? "bg-gradient-to-r from-cyan-400 via-purple-500 to-orange-500 text-white shadow-lg shadow-orange-400/40 animate-pulse scale-105 font-bold"
+                        : "bg-gradient-to-r from-purple-500 to-orange-500 text-white"
+                    } transition-all duration-300`}
                   >
                     Start Automatic
+                    {highScore && <span className="ml-2">✨</span>}
                   </Button>
                   <Button
                     variant="outline"
