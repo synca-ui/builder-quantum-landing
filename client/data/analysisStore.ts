@@ -47,7 +47,7 @@ function persistToStorage(data: N8nResult | null) {
 }
 
 export function getAnalysisState() {
-  return { ...state };
+  return state;
 }
 
 export function setIsLoading(v: boolean) {
