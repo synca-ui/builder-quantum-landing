@@ -67,8 +67,8 @@ export default function ModeSelection() {
       clearTimeout(timer);
 
       if (!res.ok) {
-        setIsLoading(false);
         console.error("n8n forward failed", res.status);
+        setIsLoading(false);
         return;
       }
 
@@ -93,6 +93,8 @@ export default function ModeSelection() {
         console.warn("Invalid response format:", data);
         setN8nData(null);
       }
+
+      setIsLoading(false);
     } catch (err) {
       console.error("n8n call error", err);
       setIsLoading(false);
