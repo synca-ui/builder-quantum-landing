@@ -7,9 +7,23 @@ type State = {
   sourceLink: string | null;
 };
 
+const STORAGE_KEY = "maitr_analysis_data";
+
+// Initialize from localStorage if available
+function loadFromStorage(): N8nResult | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (e) {
+    console.warn("Failed to load from localStorage:", e);
+    return null;
+  }
+}
+
 let state: State = {
   isLoading: false,
-  n8nData: null,
+  n8nData: loadFromStorage(),
   sourceLink: null,
 };
 
@@ -17,6 +31,19 @@ const listeners = new Set<() => void>();
 
 function notify() {
   listeners.forEach((l) => l());
+}
+
+function persistToStorage(data: N8nResult | null) {
+  try {
+    if (typeof window === "undefined") return;
+    if (data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  } catch (e) {
+    console.warn("Failed to persist to localStorage:", e);
+  }
 }
 
 export function getAnalysisState() {
@@ -30,11 +57,19 @@ export function setIsLoading(v: boolean) {
 
 export function setN8nData(d: N8nResult | null) {
   state.n8nData = d;
+  persistToStorage(d);
   notify();
 }
 
 export function setSourceLink(link: string | null) {
   state.sourceLink = link;
+  notify();
+}
+
+export function clearAnalysisData() {
+  state.n8nData = null;
+  state.sourceLink = null;
+  persistToStorage(null);
   notify();
 }
 
@@ -50,5 +85,6 @@ export function useAnalysis() {
     setIsLoading,
     setN8nData,
     setSourceLink,
+    clearAnalysisData,
   } as const;
 }
