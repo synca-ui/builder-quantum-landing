@@ -96,12 +96,21 @@ export default function ModeSelection() {
       <div className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
         <div className="max-w-5xl w-full">
           <div className="text-center mb-6">
+            {n8nData && (
+              <div className="mb-4 p-4 bg-gradient-to-r from-cyan-50 to-orange-50 rounded-xl border border-cyan-200">
+                <div className="text-sm font-medium text-gray-600">Maitr Score</div>
+                <div className="text-4xl font-black bg-gradient-to-r from-cyan-500 to-orange-500 bg-clip-text text-transparent mt-1">
+                  {n8nData.analysis.maitr_score}
+                </div>
+              </div>
+            )}
             <h1 className="text-3xl md:text-4xl font-extrabold">
-              How would you like Maitr to help?
+              {n8nData ? `Welcome, ${n8nData.restaurant.name}!` : "How would you like Maitr to help?"}
             </h1>
             <p className="mt-2 text-gray-600">
-              Choose between a guided manual setup or let Maitr build a working
-              app automatically from a single link.
+              {n8nData
+                ? "Your site looks great! Choose how you'd like to proceed:"
+                : "Choose between a guided manual setup or let Maitr build a working app automatically from a single link."}
             </p>
           </div>
 
