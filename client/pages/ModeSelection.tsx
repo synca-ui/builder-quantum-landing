@@ -97,11 +97,11 @@ export default function ModeSelection() {
       <div className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
         <div className="max-w-5xl w-full">
           <div className="text-center mb-6">
-            {isLoading || n8nData ? (
+            {n8nData && !isLoading ? (
               <div className="mb-6">
                 <MaitrScoreCircle
-                  score={n8nData?.analysis?.maitr_score || 0}
-                  isLoading={isLoading}
+                  score={n8nData.analysis?.maitr_score || 0}
+                  isLoading={false}
                 />
               </div>
             ) : null}
