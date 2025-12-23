@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import ModeSelection from '../ModeSelection';
 import * as analysisStore from '@/data/analysisStore';
+import { MemoryRouter } from 'react-router-dom';
 
 import { vi, describe, test, expect } from 'vitest';
 
@@ -15,13 +16,13 @@ global.fetch = vi.fn(() =>
 
 describe('ModeSelection', () => {
   test('starts analysis when sourceLink present', async () => {
-    // set up URL with sourceLink
-    const url = '/mode-selection?sourceLink=https%3A%2F%2Fexample.com';
-    // mock location
-    delete (window as any).location;
-    (window as any).location = new URL('http://localhost' + url);
+    const initialEntries = ['/mode-selection?sourceLink=https%3A%2F%2Fexample.com'];
 
-    render(<ModeSelection />);
+    render(
+      <MemoryRouter initialEntries={initialEntries}>
+        <ModeSelection />
+      </MemoryRouter>,
+    );
 
     await waitFor(() => expect(fetch).toHaveBeenCalled());
   });
