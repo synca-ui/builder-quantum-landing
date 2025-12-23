@@ -14,6 +14,11 @@ global.fetch = vi.fn(() =>
   } as any),
 ) as any;
 
+// Prevent store notifications from causing re-render loops during test
+vi.spyOn(analysisStore, 'setIsLoading').mockImplementation(() => {});
+vi.spyOn(analysisStore, 'setN8nData').mockImplementation(() => {});
+vi.spyOn(analysisStore, 'setSourceLink').mockImplementation(() => {});
+
 describe('ModeSelection', () => {
   test('starts analysis when sourceLink present', async () => {
     const initialEntries = ['/mode-selection?sourceLink=https%3A%2F%2Fexample.com'];
