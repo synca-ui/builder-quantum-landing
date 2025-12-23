@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 
 const N8N_URL =
-  "https://n8n-production-1508.up.railway.app/webhook-test/b1a76bcf-936c-4ac0-9f8e-6f3cb31bf646";
+  "https://n8n-production-1508.up.railway.app/webhook/b1a76bcf-936c-4ac0-9f8e-6f3cb31bf646";
 
 export async function handleForwardN8n(req: Request, res: Response) {
   try {
