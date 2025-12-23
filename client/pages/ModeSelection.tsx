@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import Headbar from "@/components/Headbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import MaitrScoreCircle from "@/components/MaitrScoreCircle";
 import { useAnalysis, setIsLoading, setN8nData, setSourceLink } from "@/data/analysisStore";
 import type { N8nResult } from "@/types/n8n";
 
