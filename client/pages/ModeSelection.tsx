@@ -92,7 +92,7 @@ export default function ModeSelection() {
     <div>
       <Headbar title="Selection" breadcrumbs={["Dashboard", "Selection"]} />
 
-      <LoadingOverlay visible={isLoading} messages={messages} onCancel={() => setIsLoading(false)} />
+      <LoadingOverlay visible={isLoading} messages={loadingMessages} onCancel={() => setIsLoading(false)} />
 
       <div className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
         <div className="max-w-5xl w-full">
