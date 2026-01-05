@@ -11,7 +11,9 @@ declare global {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+// JWT_SECRET will be validated at startup by validateEnvironment() in node-build.ts
+// No fallback needed - server won't start without a proper JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
