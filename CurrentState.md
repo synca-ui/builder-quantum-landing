@@ -30,10 +30,10 @@ High-level architecture:
   - Vite config (vite.config.ts & vite.config.server.ts), pnpm, TailwindCSS, Vitest available
 
 Purpose of layering:
+
 - Clear separation between frontend UI and backend API
 - Server proxies external integrations (n8n, Stripe) to avoid CORS and hide secrets
 - Shared types ensure consistent client-server contracts
-
 
 ## 2. Component Breakdown (What is What)
 
@@ -78,17 +78,17 @@ Key files and their roles:
 - server/routes/configurations.ts
   - CRUD for site configuration, publish flow, preview/publish caches, optional DB provisioning
 
-
 ## 3. The App’s Mission
 
 Maitr is an AI-assisted site builder for local businesses (cafés, restaurants, shops) that:
+
 - Extracts business data (name, hours, menus, images) from a single input link
 - Produces a ready-to-publish web app or a step-based configurator for manual editing
 - Provides an automated path (High-Confidence: "Full Automatic") for fast launches
 
 Primary user problem solved:
-- Dramatically reduces friction & time-to-launch for local businesses without requiring developer resources.
 
+- Dramatically reduces friction & time-to-launch for local businesses without requiring developer resources.
 
 ## 4. Logical Flow (Happy Path)
 
@@ -101,12 +101,12 @@ Primary user problem solved:
 7. User selects Automatic or Manual configurator (navigates to /configurator/auto or /configurator/manual).
 8. Configurator assembles site configuration and publishes the site.
 
-
 ## 5. Unserious or Unprofessional Code Audit
 
 Summary: Codebase is generally professional. A few leftover debugging artifacts exist and should be cleaned up or gated.
 
 Findings:
+
 - Console debug logs and blocks:
   - `client/pages/Configurator.tsx` contains large debug `console.log` blocks (e.g., "=== Configurator Initialization ===") and many restoration logs.
   - `client/pages/TestSite.tsx` contains `console.log` debugging messages.
@@ -118,7 +118,6 @@ Findings:
 
 No offensive jokes, easter eggs, or intentionally silly names were found in the analyzed files.
 
-
 ## 6. Optimization Suggestions
 
 1. Move n8n webhook URL into env var (e.g., `N8N_WEBHOOK_URL`).
@@ -128,8 +127,7 @@ No offensive jokes, easter eggs, or intentionally silly names were found in the 
 5. Consider server-side caching for analysis results keyed by source link to protect against n8n outages and reduce cost/latency.
 6. Improve localStorage telemetry (send non-sensitive failure events to server logs) so persistence failures are visible.
 7. For larger state needs, consider adopting a small state library (Zustand or similar) if analysisStore grows.
-8. Remove leftover console.* debug statements or limit them to development builds.
-
+8. Remove leftover console.\* debug statements or limit them to development builds.
 
 ## 7. Testing & Validation Recommendations
 
@@ -144,12 +142,10 @@ No offensive jokes, easter eggs, or intentionally silly names were found in the 
 - E2E tests:
   - Simulate user pasting link -> mock n8n response -> automatic configuration flow -> publish.
 
-
 ## 8. Risk Assessment & Operational Notes
 
 - Single external dependency: n8n webhook (hardcoded). Outage affects the main "analysis" flow.
 - Recommendation: Add a server-side cache and circuit-breaker behavior to protect UX (return cached response or friendly error messaging).
-
 
 ## 9. File References
 
@@ -163,7 +159,6 @@ No offensive jokes, easter eggs, or intentionally silly names were found in the 
 - server/routes/configurations.ts
 - client/lib/apiClient.ts
 - client/pages/Configurator.tsx (debug panel)
-
 
 ## 10. Actionable Next Steps (prioritized)
 
