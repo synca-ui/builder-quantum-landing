@@ -1,9 +1,24 @@
 import type { Request, Response } from "express";
 
-const N8N_URL =
-  "https://n8n-production-1508.up.railway.app/webhook/b1a76bcf-936c-4ac0-9f8e-6f3cb31bf646";
+// Read N8N webhook URL from environment variable
+// If not set, log a warning but don't crash on import (validation happens at startup)
+let N8N_URL = process.env.N8N_WEBHOOK_URL;
+
+if (!N8N_URL) {
+  console.warn(
+    "⚠️  N8N_WEBHOOK_URL not set in environment. n8n forwarding will fail at runtime."
+  );
+}
 
 export async function handleForwardN8n(req: Request, res: Response) {
+  // Safety check: if N8N_URL not configured, return error
+  if (!N8N_URL) {
+    return res.status(500).json({
+      error: "n8n webhook not configured",
+      details: "N8N_WEBHOOK_URL environment variable is missing",
+    });
+  }
+
   try {
     const payload = req.body || {};
 
