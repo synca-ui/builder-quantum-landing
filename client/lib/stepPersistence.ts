@@ -79,13 +79,13 @@ export class StepPersistence {
       uniqueDescription: "",
 
       // Design & Style
-      primaryColor: "#2563EB",
-      secondaryColor: "#7C3AED",
+      primaryColor: "#214071",       /* Dunkelblau */
+      secondaryColor: "#F1EAD8",     /* Creme */
       fontFamily: "sans-serif",
-      fontColor: "#000000",
+      fontColor: "#214071",          /* Dunkelblau text */
       fontSize: "medium",
       backgroundType: "color",
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "#F1EAD8",    /* Creme background */
       backgroundImage: null,
       selectedPages: ["home"],
       customPages: [],
