@@ -1,0 +1,104 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"] // Required for Netlify
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- 1. USER & AUTH ---
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String?   // Hashed via bcrypt
+  fullName      String?
+  role          UserRole  @default(OWNER)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  businesses    BusinessMember[]
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+// --- 2. BUSINESS (Hybrid Model) ---
+model Business {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  
+  // Core Info
+  name            String
+  description     String?  @db.Text
+  tagline         String?
+  cuisine         String?
+  
+  // Branding
+  logoUrl         String?
+  primaryColor    String   @default("#000000")
+  secondaryColor  String   @default("#ffffff")
+  fontFamily      String   @default("sans")
+  template        String   @default("minimalist")
+  
+  // Operational Data (JSON for flexibility)
+  openingHours    Json?    
+  socialLinks     Json?    
+  contactInfo     Json?    
+  
+  // Scraper Meta
+  maitrScore      Int      @default(0)
+  originalPdfUrl  String?
+  status          BusinessStatus @default(DRAFT)
+
+  // Relations
+  members         BusinessMember[]
+  categories      MenuCategory[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum BusinessStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model BusinessMember {
+  id          String   @id @default(uuid())
+  userId      String
+  businessId  String
+  role        UserRole @default(STAFF)
+  
+  user        User     @relation(fields: [userId], references: [id])
+  business    Business @relation(fields: [businessId], references: [id])
+
+  @@unique([userId, businessId])
+}
+
+// --- 3. MENU ---
+model MenuCategory {
+  id          String     @id @default(uuid())
+  name        String
+  sortOrder   Int        @default(0)
+  businessId  String
+  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  items       MenuItem[]
+}
+
+model MenuItem {
+  id          String       @id @default(uuid())
+  name        String
+  description String?      @db.Text
+  price       Decimal      @db.Decimal(10, 2)
+  imageUrl    String?      
+  
+  categoryId  String
+  category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
