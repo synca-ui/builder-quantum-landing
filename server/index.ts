@@ -53,6 +53,9 @@ export function createServer() {
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
+  // Subdomain routing for published sites (e.g., bella.maitr.de)
+  app.use(handleSubdomainRequest);
+
   // Use aggregated API router (may include common routes)
   app.use("/api", apiRouter);
 
