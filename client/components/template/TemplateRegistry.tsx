@@ -185,38 +185,38 @@ export const defaultTemplates: Template[] = [
 
 export const defaultTemplateThemes: Record<string, TemplateTheme> = {
   minimalist: {
-    primary: "#2563EB",
-    secondary: "#7C3AED",
-    text: "#1A1A1A",
-    background: "#FFFFFF",
-    highlight: "#14B8A6",
+    primary: "#214071",    /* Dunkelblau */
+    secondary: "#F1EAD8",  /* Creme */
+    text: "#214071",       /* Dunkelblau */
+    background: "#F1EAD8", /* Creme */
+    highlight: "#214071",  /* Dunkelblau */
     buttonRadius: "rounded-lg",
     buttonHover: "grow",
   },
   modern: {
-    primary: "#4F46E5",
-    secondary: "#7C3AED",
-    text: "#FFFFFF",
-    background: "#111827",
-    highlight: "#22D3EE",
+    primary: "#F1EAD8",    /* Creme */
+    secondary: "#214071",  /* Dunkelblau */
+    text: "#F1EAD8",       /* Creme */
+    background: "#214071", /* Dunkelblau */
+    highlight: "#F1EAD8",  /* Creme */
     buttonRadius: "rounded-xl",
     buttonHover: "glow",
   },
   stylish: {
-    primary: "#059669",
-    secondary: "#10B981",
-    text: "#F9FAFB",
-    background: "#111827",
-    highlight: "#F59E0B",
+    primary: "#F1EAD8",    /* Creme */
+    secondary: "#214071",  /* Dunkelblau */
+    text: "#F1EAD8",       /* Creme */
+    background: "#214071", /* Dunkelblau */
+    highlight: "#F1EAD8",  /* Creme */
     buttonRadius: "rounded-2xl",
     buttonHover: "grow",
   },
   cozy: {
-    primary: "#EA580C",
-    secondary: "#F59E0B",
-    text: "#1F2937",
-    background: "#FFFBF0",
-    highlight: "#FDBA74",
+    primary: "#214071",    /* Dunkelblau */
+    secondary: "#F1EAD8",  /* Creme */
+    text: "#214071",       /* Dunkelblau */
+    background: "#F1EAD8", /* Creme */
+    highlight: "#214071",  /* Dunkelblau */
     buttonRadius: "rounded-2xl",
     buttonHover: "grow",
   },
