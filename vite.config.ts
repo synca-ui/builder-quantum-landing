@@ -1,7 +1,7 @@
 // Load .env files FIRST before any other imports that might use env variables
 import dotenv from 'dotenv';
 import path from "path";
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env'), override: true });
 
 import { defineConfig, Plugin, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
