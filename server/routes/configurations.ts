@@ -179,7 +179,12 @@ export async function saveConfiguration(req: Request, res: Response) {
 
 export async function getConfigurations(req: Request, res: Response) {
   try {
-    const userId = req.user!.id;
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const userId = req.user.id;
     const configurations = await loadConfigurations();
 
     const userConfigs = configurations.filter((c) => c.userId === userId);
