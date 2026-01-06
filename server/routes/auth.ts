@@ -1,6 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { sql } from "../sql";
+import prisma from "../db/prisma";
 import { signToken } from "../middleware/auth";
 
 export const authRouter = Router();
@@ -13,7 +13,6 @@ authRouter.get("/signup", (_req, res) => {
 
 authRouter.post("/signup", async (req, res) => {
   try {
-    // Sauberer, direkter Zugriff auf den Body, der jetzt korrekt geparsed wird.
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -25,18 +24,28 @@ authRouter.post("/signup", async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
 
     // Nutzer in der Datenbank anlegen, falls er noch nicht existiert
-    const rows = await sql`INSERT INTO public.users(email, password_hash)
-                            VALUES(${email}, ${hash})
-                            ON CONFLICT (email) DO NOTHING
-                            RETURNING id, email`;
-    let user = rows && rows[0];
-
-    // Wenn der Nutzer bereits existierte, holen wir seine Daten
-    if (!user) {
-      const existing =
-        await sql`SELECT id, email FROM public.users WHERE email=${email} LIMIT 1`;
-      user = existing[0];
-    }
+    let user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash: hash,
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    }).catch(async (e: any) => {
+      // Wenn der Nutzer bereits existiert, holen wir seine Daten
+      if (e.code === 'P2002') {
+        return await prisma.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            email: true,
+          },
+        });
+      }
+      throw e;
+    });
 
     // Ein Token für die Sitzung erstellen und zurücksenden
     const token = signToken({ id: user.id, email: user.email });
@@ -51,7 +60,6 @@ authRouter.post("/signup", async (req, res) => {
 
 authRouter.post("/login", async (req, res) => {
   try {
-    // Sauberer, direkter Zugriff auf den Body
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -59,15 +67,25 @@ authRouter.post("/login", async (req, res) => {
     }
 
     // Nutzer in der Datenbank suchen
-    const rows =
-      await sql`SELECT id, email, password_hash FROM public.users WHERE email=${email} LIMIT 1`;
-    const user = rows[0];
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+      },
+    });
 
     // Prüfen, ob der Nutzer existiert und das Passwort korrekt ist
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-    const ok = await bcrypt.compare(password, user.password_hash);
+
+    if (!user.passwordHash) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
