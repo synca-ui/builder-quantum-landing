@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { sql } from "../sql";
+import prisma from "../db/prisma";
 
 /**
  * POST /api/orders/create
@@ -25,32 +25,24 @@ export async function handleCreateOrder(req: Request, res: Response) {
       });
     }
 
-    // Insert into order_events table
-    const result = await sql`
-      INSERT INTO public.order_events (
-        web_app_id,
-        order_id,
-        menu_item_id,
-        menu_item_name,
-        ordered_at,
-        order_source,
-        user_avatar_url
-      )
-      VALUES (
-        ${webAppId},
-        ${`order-${Date.now()}`},
-        ${menuItemId || null},
-        ${menuItemName},
-        now(),
-        ${orderSource},
-        ${userAvatarUrl || null}
-      )
-      RETURNING id, ordered_at;
-    `;
+    const event = await prisma.orderEvent.create({
+      data: {
+        webAppId,
+        orderId: `order-${Date.now()}`,
+        menuItemId: menuItemId || null,
+        menuItemName,
+        orderSource,
+        userAvatarUrl: userAvatarUrl || null,
+      },
+      select: {
+        id: true,
+        orderedAt: true,
+      },
+    });
 
     return res.json({
       success: true,
-      event: result[0],
+      event,
     });
   } catch (error) {
     console.error("Create order error:", error);
@@ -76,28 +68,38 @@ export async function handleGetRecentOrders(req: Request, res: Response) {
       });
     }
 
-    // Fetch recent orders
-    const orders = await sql`
-      SELECT 
-        id,
-        order_id,
-        menu_item_id,
-        menu_item_name,
-        ordered_at,
-        order_source,
-        user_avatar_url,
-        EXTRACT(EPOCH FROM (now() - ordered_at)) / 60 AS minutes_ago
-      FROM public.order_events
-      WHERE 
-        web_app_id = ${webAppId}
-        AND ordered_at > now() - interval '1 hour'
-      ORDER BY ordered_at DESC
-      LIMIT 10;
-    `;
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+    const orders = await prisma.orderEvent.findMany({
+      where: {
+        webAppId,
+        orderedAt: {
+          gt: oneHourAgo,
+        },
+      },
+      orderBy: {
+        orderedAt: "desc",
+      },
+      take: 10,
+      select: {
+        id: true,
+        orderId: true,
+        menuItemId: true,
+        menuItemName: true,
+        orderedAt: true,
+        orderSource: true,
+        userAvatarUrl: true,
+      },
+    });
+
+    const ordersWithMinutesAgo = orders.map((order) => ({
+      ...order,
+      minutesAgo: Math.round((Date.now() - order.orderedAt.getTime()) / 60000),
+    }));
 
     return res.json({
       success: true,
-      orders: orders || [],
+      orders: ordersWithMinutesAgo,
     });
   } catch (error) {
     console.error("Get recent orders error:", error);
@@ -124,34 +126,53 @@ export async function handleGetMenuStats(req: Request, res: Response) {
       });
     }
 
-    // Aggregate stats per menu item
-    const stats = await sql`
-      SELECT 
-        menu_item_id,
-        menu_item_name,
-        MAX(ordered_at) as last_ordered_at,
-        COUNT(*) FILTER (WHERE ordered_at > now() - interval '1 hour') as recent_count,
-        COUNT(*) FILTER (WHERE ordered_at > now() - interval '24 hours') as daily_count
-      FROM public.order_events
-      WHERE web_app_id = ${webAppId}
-      GROUP BY menu_item_id, menu_item_name
-      ORDER BY last_ordered_at DESC;
-    `;
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // Transform to key-value format
+    const orders = await prisma.orderEvent.findMany({
+      where: {
+        webAppId,
+      },
+      select: {
+        menuItemId: true,
+        menuItemName: true,
+        orderedAt: true,
+      },
+    });
+
     const statsMap: Record<string, any> = {};
-    (stats || []).forEach((stat: any) => {
-      const key = stat.menu_item_id || stat.menu_item_name;
-      statsMap[key] = {
-        lastOrderedAt: stat.last_ordered_at,
-        recentCount: stat.recent_count || 0,
-        dailyCount: stat.daily_count || 0,
-        minutesAgo: stat.last_ordered_at
-          ? Math.round(
-              (Date.now() - new Date(stat.last_ordered_at).getTime()) / 60000,
-            )
-          : null,
-      };
+
+    orders.forEach((order) => {
+      const key = order.menuItemId || order.menuItemName;
+      if (!statsMap[key]) {
+        statsMap[key] = {
+          lastOrderedAt: null,
+          recentCount: 0,
+          dailyCount: 0,
+          minutesAgo: null,
+        };
+      }
+
+      const stats = statsMap[key];
+      if (!stats.lastOrderedAt || order.orderedAt > stats.lastOrderedAt) {
+        stats.lastOrderedAt = order.orderedAt;
+      }
+
+      if (order.orderedAt > oneHourAgo) {
+        stats.recentCount++;
+      }
+
+      if (order.orderedAt > oneDayAgo) {
+        stats.dailyCount++;
+      }
+    });
+
+    Object.values(statsMap).forEach((stat: any) => {
+      if (stat.lastOrderedAt) {
+        stat.minutesAgo = Math.round(
+          (Date.now() - stat.lastOrderedAt.getTime()) / 60000,
+        );
+      }
     });
 
     return res.json({
@@ -183,12 +204,16 @@ export async function handleClearOldOrders(req: Request, res: Response) {
       });
     }
 
-    const result = await sql`
-      DELETE FROM public.order_events
-      WHERE 
-        web_app_id = ${webAppId}
-        AND ordered_at < now() - interval '7 days';
-    `;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    await prisma.orderEvent.deleteMany({
+      where: {
+        webAppId,
+        orderedAt: {
+          lt: sevenDaysAgo,
+        },
+      },
+    });
 
     return res.json({
       success: true,
