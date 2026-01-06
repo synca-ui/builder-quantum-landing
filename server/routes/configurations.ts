@@ -118,7 +118,12 @@ function generateSlug(businessName: string): string {
 
 export async function saveConfiguration(req: Request, res: Response) {
   try {
-    const userId = req.user!.id;
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const userId = req.user.id;
     const configData = {
       ...req.body,
       userId,
@@ -230,8 +235,13 @@ export async function getConfiguration(req: Request, res: Response) {
 
 export async function deleteConfiguration(req: Request, res: Response) {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
 
     const configurations = await loadConfigurations();
     const index = configurations.findIndex(
@@ -257,8 +267,13 @@ export async function deleteConfiguration(req: Request, res: Response) {
 
 export async function publishConfiguration(req: Request, res: Response) {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
 
     // Prefer config from request payload to avoid FS on serverless; fallback to file
     const payload = (
