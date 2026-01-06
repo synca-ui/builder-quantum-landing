@@ -201,8 +201,13 @@ export async function getConfigurations(req: Request, res: Response) {
 
 export async function getConfiguration(req: Request, res: Response) {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
 
     const configurations = await loadConfigurations();
     const config = configurations.find(
