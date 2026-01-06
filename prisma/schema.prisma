@@ -97,8 +97,68 @@ model MenuItem {
   name        String
   description String?      @db.Text
   price       Decimal      @db.Decimal(10, 2)
-  imageUrl    String?      
-  
+  imageUrl    String?
+
   categoryId  String
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+// --- 4. WEB APPS (Published Websites) ---
+model WebApp {
+  id            String    @id @default(uuid())
+  userId        String
+  subdomain     String    @unique
+  configData    Json
+  publishedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders        OrderEvent[]
+
+  createdAt     DateTime  @default(now())
+}
+
+// --- 5. ORDER EVENTS (Social Proof) ---
+model OrderEvent {
+  id              String    @id @default(uuid())
+  webAppId        String
+  orderId         String?
+  menuItemId      String?
+  menuItemName    String
+  orderedAt       DateTime  @default(now())
+  orderSource     String    // 'stripe' | 'pos_api' | 'manual'
+  userAvatarUrl   String?
+
+  webApp          WebApp    @relation(fields: [webAppId], references: [id], onDelete: Cascade)
+
+  @@index([webAppId])
+  @@index([orderedAt])
+}
+
+// --- 6. TENANTS (Multi-tenant Support) ---
+model Tenant {
+  id              String    @id @default(uuid())
+  slug            String    @unique
+  userId          String
+  schemaName      String    @unique
+  restaurantId    String
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurants     Restaurant[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// --- 7. RESTAURANT (Tenant-local config) ---
+model Restaurant {
+  id              String    @id @default(uuid())
+  tenantId        String
+  name            String
+  configJson      Json?
+
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
