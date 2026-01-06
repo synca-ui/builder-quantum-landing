@@ -2,7 +2,11 @@ import { defineConfig, Plugin, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { createServer } from "./server";
+
+// Load .env files for development
 import dotenv from 'dotenv';
+import fs from 'fs';
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
