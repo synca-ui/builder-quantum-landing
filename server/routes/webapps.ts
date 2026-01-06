@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth";
-import { sql } from "../sql";
+import prisma from "../db/prisma";
 
 export const webAppsRouter = Router();
 
@@ -10,9 +10,19 @@ webAppsRouter.use("/apps", requireAuth);
 webAppsRouter.get("/apps", async (req, res) => {
   try {
     const userId = req.user!.id;
-    const rows =
-      await sql`SELECT id, user_id, subdomain, config_data, published_at, updated_at FROM public.web_apps WHERE user_id=${userId} ORDER BY updated_at DESC`;
-    return res.json({ apps: rows });
+    const apps = await prisma.webApp.findMany({
+      where: { userId },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        userId: true,
+        subdomain: true,
+        configData: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+    return res.json({ apps });
   } catch (e) {
     console.error("get apps error", e);
     return res.status(500).json({ error: "Internal server error" });
@@ -23,10 +33,20 @@ webAppsRouter.get("/apps/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
-    const rows =
-      await sql`SELECT id, user_id, subdomain, config_data, published_at, updated_at FROM public.web_apps WHERE id=${id} AND user_id=${userId} LIMIT 1`;
-    const app = rows[0];
-    if (!app) return res.status(404).json({ error: "Not found" });
+    const app = await prisma.webApp.findFirst({
+      where: { id, userId },
+      select: {
+        id: true,
+        userId: true,
+        subdomain: true,
+        configData: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!app) {
+      return res.status(404).json({ error: "Not found" });
+    }
     return res.json(app);
   } catch (e) {
     console.error("get app error", e);
@@ -61,9 +81,17 @@ webAppsRouter.post("/apps/publish", async (req, res) => {
     // Fire-and-forget DB upsert to avoid request timeouts in serverless
     (async () => {
       try {
-        await sql`INSERT INTO public.web_apps(user_id, subdomain, config_data)
-                  VALUES(${userId}, ${subdomain}, ${sql.json(config)})
-                  ON CONFLICT (subdomain) DO UPDATE SET config_data=EXCLUDED.config_data, updated_at=now()`;
+        await prisma.webApp.upsert({
+          where: { subdomain },
+          create: {
+            userId,
+            subdomain,
+            configData: config,
+          },
+          update: {
+            configData: config,
+          },
+        });
       } catch (e) {
         console.error("apps/publish background save failed", e);
       }
@@ -82,11 +110,29 @@ webAppsRouter.put("/apps/:id", async (req, res) => {
     const { id } = req.params;
     const { config } = req.body || {};
     if (!config) return res.status(400).json({ error: "Missing config" });
-    const rows =
-      await sql`UPDATE public.web_apps SET config_data=${sql.json(config)}, updated_at=now() WHERE id=${id} AND user_id=${userId} RETURNING id, user_id, subdomain, config_data, published_at, updated_at`;
-    const app = rows[0];
-    if (!app) return res.status(404).json({ error: "Not found" });
-    return res.json(app);
+
+    const app = await prisma.webApp.updateMany({
+      where: { id, userId },
+      data: { configData: config },
+    });
+
+    if (app.count === 0) {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    const updated = await prisma.webApp.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        userId: true,
+        subdomain: true,
+        configData: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return res.json(updated);
   } catch (e) {
     console.error("update app error", e);
     return res.status(500).json({ error: "Internal server error" });
@@ -98,11 +144,14 @@ export const publicAppsRouter = Router();
 publicAppsRouter.get("/public/apps/:subdomain", async (req, res) => {
   try {
     const { subdomain } = req.params;
-    const rows =
-      await sql`SELECT config_data FROM public.web_apps WHERE subdomain=${subdomain} LIMIT 1`;
-    const row = rows[0];
-    if (!row) return res.status(404).json({ error: "Not found" });
-    return res.json({ config: row.config_data });
+    const app = await prisma.webApp.findUnique({
+      where: { subdomain },
+      select: { configData: true },
+    });
+    if (!app) {
+      return res.status(404).json({ error: "Not found" });
+    }
+    return res.json({ config: app.configData });
   } catch (e) {
     console.error("public app error", e);
     return res.status(500).json({ error: "Internal server error" });
