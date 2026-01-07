@@ -33,7 +33,7 @@ const rawBodyMiddleware = (req: any, _res: any, next: any) => {
   next();
 };
 
-export function createServer() {
+export async function createServer() {
   const app = express();
 
   // Middleware
