@@ -59,35 +59,34 @@
 
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Maitr Brand Colors - Dunkelblau & Creme Theme */
-    --teal-50: 40 71% 97%;            /* Light Creme */
-    --teal-500: 218 54% 29%;          /* Dunkelblau */
-    --teal-600: 218 54% 25%;          /* Darker Dunkelblau */
+    --teal-50: 166 76% 97%;
+    --teal-500: 166 72% 40%;
+    --teal-600: 166 72% 32%;
 
-    --orange-50: 40 71% 95%;          /* Light Creme */
-    --orange-500: 218 54% 29%;        /* Dunkelblau */
-    --orange-600: 218 54% 25%;        /* Darker Dunkelblau */
+    --orange-50: 24 100% 97%;
+    --orange-500: 24 95% 53%;
+    --orange-600: 24 95% 45%;
 
-    --purple-50: 40 71% 95%;          /* Light Creme */
-    --purple-500: 218 54% 29%;        /* Dunkelblau */
-    --purple-600: 218 54% 25%;        /* Darker Dunkelblau */
+    --purple-50: 270 100% 98%;
+    --purple-500: 270 91% 65%;
+    --purple-600: 270 91% 57%;
   }
 
   .dark {
-    --background: 218 54% 15%;        /* Very Dark Dunkelblau */
-    --foreground: 40 71% 91%;         /* Creme #F1EAD8 */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 218 54% 20%;
-    --card-foreground: 40 71% 91%;    /* Creme #F1EAD8 */
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 218 54% 20%;
-    --popover-foreground: 40 71% 91%; /* Creme #F1EAD8 */
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 40 71% 91%;            /* Creme #F1EAD8 */
-    --primary-foreground: 218 54% 29%; /* Dunkelblau #214071 */
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 218 54% 35%;
-    --secondary-foreground: 40 71% 91%; /* Creme #F1EAD8 */
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
