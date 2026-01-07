@@ -6,10 +6,11 @@ export default function HostAwareRoot() {
   const shouldRenderSite = useMemo(() => {
     try {
       const host = window.location.hostname;
-      // Render Site when on a tenant subdomain like <slug>.synca.digital
-      if (host.endsWith(".synca.digital")) {
-        const base = "synca.digital";
-        if (host !== base) return true;
+      const baseDomain = process.env.VITE_BASE_DOMAIN || "maitr.de";
+
+      // Render Site when on a tenant subdomain like <slug>.maitr.de
+      if (host.endsWith(`.${baseDomain}`)) {
+        if (host !== baseDomain) return true;
       }
     } catch {}
     return false;
