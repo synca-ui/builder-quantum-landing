@@ -80,9 +80,7 @@ export function createServer() {
   app.use("/api", publicAppsRouter);
 
   // Configuration API routes (protected)
-  // Load auth middleware dynamically for ESM compatibility
-  const authMiddleware = await import("./middleware/auth.js");
-  const { requireAuth } = authMiddleware;
+  const { requireAuth } = require("./middleware/auth.js");
   app.use("/api/configurations", requireAuth);
   app.post("/api/configurations", saveConfiguration);
   app.get("/api/configurations", getConfigurations);
@@ -94,11 +92,10 @@ export function createServer() {
   app.get("/api/sites/:subdomain", getPublishedSite);
 
   // Users profile (protected)
-  const usersModule = await import("./routes/users.js");
   app.use(
     "/api/users",
-    authMiddleware.requireAuth,
-    usersModule.usersRouter,
+    require("./middleware/auth.js").requireAuth,
+    require("./routes/users.js").usersRouter,
   );
 
   // Preview config injection
@@ -106,14 +103,13 @@ export function createServer() {
 
   // Auto-generation endpoint (Auto Mode)
   // Accepts JSON payload: { url?, maps_link?, business_name?, file_name?, file_base64? }
-  const autogenModule = await import("./routes/autogen.js");
-  app.post("/api/autogen", autogenModule.handleAutogen);
+  const { handleAutogen } = require("./routes/autogen.js");
+  app.post("/api/autogen", handleAutogen);
 
   // Config JSON proxy for Edge/clients
-  const configModule = await import("./routes/config.js");
   app.get(
     "/api/config/:slug",
-    configModule.getConfigBySlug,
+    require("./routes/config.js").getConfigBySlug,
   );
 
   // Instagram scraping endpoint (best-effort for public/open profiles)
