@@ -11,6 +11,7 @@ publish = "dist/spa"
 
 [functions]
 node_bundler = "esbuild"
+external_node_modules = ["@prisma/client", ".prisma"]
 
 # Leitet alle API-Anfragen an Ihre Serverless-Funktion weiter.
 # Diese Regel ist entscheidend und scheint bereits korrekt zu sein.
