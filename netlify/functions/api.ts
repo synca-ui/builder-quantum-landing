@@ -1,5 +1,5 @@
 import serverless from "serverless-http";
-import { createServer } from "../../server";
+import { createServer } from "../../server/index.js";
 
 // Die Funktion startet einfach nur den Server. Keine weitere Logik hier.
 export const handler = serverless(createServer());
