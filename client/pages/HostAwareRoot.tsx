@@ -7,24 +7,34 @@ export default function HostAwareRoot() {
     try {
       const host = window.location.hostname;
 
-      // List of main domains (not subdomains)
+      // 1. Liste deiner Haupt-Domains (Dashboard)
       const mainDomains = [
         "maitr.de",
+        "www.maitr.de",      // WICHTIG: Auch mit www
         "synca.digital",
+        "www.synca.digital", // Sicherheitshalber auch hier mit www
         "localhost",
         "127.0.0.1",
       ];
 
-      // If it's a main domain or localhost, show Index
+      // 2. CHECK: Ist es eine deiner Haupt-Domains?
       if (mainDomains.includes(host)) {
-        return false;
+        return false; // Zeige Dashboard / Landing Page
       }
 
-      // If it has dots and doesn't match a main domain, it's a subdomain - show Site
+      // 3. CHECK: Ist es eine Netlify Vorschau- oder System-URL?
+      // Das erkennt "starlit-madeleine...netlify.app" korrekt als System-Seite
+      if (host.endsWith(".netlify.app")) {
+        return false; // Zeige Dashboard / Landing Page
+      }
+
+      // 4. Fallback: Hat die Domain Punkte? Dann ist es eine Kunden-Subdomain
+      // (z.B. kunde.maitr.de -> Zeige JuJu/User-Site)
       if (host.includes(".")) {
-        return true;
+        return true; 
       }
     } catch {}
+    
     return false;
   }, []);
 
