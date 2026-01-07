@@ -5,7 +5,6 @@ dotenv.config({ path: path.resolve(__dirname, ".env"), override: true });
 
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import { createServer } from "./server";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
