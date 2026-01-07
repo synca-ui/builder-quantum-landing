@@ -1,15 +1,30 @@
 import { PrismaClient } from '@prisma/client';
 
 let prisma: PrismaClient;
+let connectionPromise: Promise<void> | null = null;
 
 function initializePrisma() {
   const dbUrl = process.env.DATABASE_URL || '';
   const host = dbUrl.match(/ep-([a-z-]+)/)?.[1] || 'unknown';
   console.log(`[Prisma] Initializing connection to database: ep-${host}`);
 
-  return new PrismaClient({
+  const client = new PrismaClient({
     log: ['warn', 'error'],
   });
+
+  // Test connection in background, don't block server startup
+  if (!connectionPromise) {
+    connectionPromise = client.$queryRaw`SELECT 1`
+      .then(() => {
+        console.log('[Prisma] ✅ Database connection successful');
+      })
+      .catch((err) => {
+        console.error('[Prisma] ⚠️  Initial connection test failed:', err.message);
+        // Don't throw - let server start anyway, will retry on first query
+      });
+  }
+
+  return client;
 }
 
 if (process.env.NODE_ENV === 'production') {
