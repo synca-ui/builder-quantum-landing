@@ -100,11 +100,7 @@ export function createServer() {
   app.get("/api/sites/:subdomain", getPublishedSite);
 
   // Users profile (protected)
-  app.use(
-    "/api/users",
-    requireAuth,
-    usersRouter,
-  );
+  app.use("/api/users", requireAuth, usersRouter);
 
   // Preview config injection
   app.post("/api/preview/:session", setPreviewConfig);
@@ -114,10 +110,7 @@ export function createServer() {
   app.post("/api/autogen", handleAutogen);
 
   // Config JSON proxy for Edge/clients
-  app.get(
-    "/api/config/:slug",
-    getConfigBySlug,
-  );
+  app.get("/api/config/:slug", getConfigBySlug);
 
   // Instagram scraping endpoint (best-effort for public/open profiles)
   app.get("/api/instagram", fetchInstagramPhotos);
