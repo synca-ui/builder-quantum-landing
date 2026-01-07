@@ -80,7 +80,7 @@ export function createServer() {
   app.use("/api", publicAppsRouter);
 
   // Configuration API routes (protected)
-  const { requireAuth } = require("./middleware/auth.js");
+  const { requireAuth } = require("./middleware/auth");
   app.use("/api/configurations", requireAuth);
   app.post("/api/configurations", saveConfiguration);
   app.get("/api/configurations", getConfigurations);
@@ -94,8 +94,8 @@ export function createServer() {
   // Users profile (protected)
   app.use(
     "/api/users",
-    require("./middleware/auth.js").requireAuth,
-    require("./routes/users.js").usersRouter,
+    require("./middleware/auth").requireAuth,
+    require("./routes/users").usersRouter,
   );
 
   // Preview config injection
@@ -103,13 +103,13 @@ export function createServer() {
 
   // Auto-generation endpoint (Auto Mode)
   // Accepts JSON payload: { url?, maps_link?, business_name?, file_name?, file_base64? }
-  const { handleAutogen } = require("./routes/autogen.js");
+  const { handleAutogen } = require("./routes/autogen");
   app.post("/api/autogen", handleAutogen);
 
   // Config JSON proxy for Edge/clients
   app.get(
     "/api/config/:slug",
-    require("./routes/config.js").getConfigBySlug,
+    require("./routes/config").getConfigBySlug,
   );
 
   // Instagram scraping endpoint (best-effort for public/open profiles)
