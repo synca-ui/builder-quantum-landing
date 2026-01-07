@@ -1,6 +1,11 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import { createRequire } from "module";
+import { fileURLToPath } from "url";
+
+const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { handleDemo } from "./routes/demo.js";
 import { handleSubdomainRequest } from "./routes/subdomains.js";
