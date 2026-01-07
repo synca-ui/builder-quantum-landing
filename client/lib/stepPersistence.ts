@@ -7,7 +7,12 @@ export interface StepData {
   stepNumber: number;
   stepId: string;
   timestamp: number;
-  action: 'step_change' | 'field_update' | 'template_select' | 'publish' | 'save';
+  action:
+    | "step_change"
+    | "field_update"
+    | "template_select"
+    | "publish"
+    | "save";
   data: any;
   formData: any; // Complete form state at this step
 }
@@ -22,8 +27,8 @@ export interface PersistenceState {
   publishedUrl?: string;
 }
 
-const STORAGE_KEY = 'configurator_persistence';
-const SESSION_STORAGE_KEY = 'configurator_session';
+const STORAGE_KEY = "configurator_persistence";
+const SESSION_STORAGE_KEY = "configurator_session";
 
 /**
  * Step Persistence Manager
@@ -36,9 +41,11 @@ export class StepPersistence {
   constructor() {
     this.sessionId = this.generateSessionId();
     try {
-      const raw = localStorage.getItem('configurator_persist_enabled');
-      this.enabled = raw === null ? true : raw === 'true';
-    } catch { this.enabled = true; }
+      const raw = localStorage.getItem("configurator_persist_enabled");
+      this.enabled = raw === null ? true : raw === "true";
+    } catch {
+      this.enabled = true;
+    }
     this.state = this.loadState() || this.createInitialState();
   }
 
@@ -192,13 +199,13 @@ export class StepPersistence {
         }
       }
     } catch (error) {
-      console.warn('Failed to load persistence state:', error);
+      console.warn("Failed to load persistence state:", error);
       // Try to clear corrupted data
       try {
         localStorage.removeItem(STORAGE_KEY);
         sessionStorage.removeItem(SESSION_STORAGE_KEY);
       } catch (clearError) {
-        console.warn('Failed to clear corrupted persistence data:', clearError);
+        console.warn("Failed to clear corrupted persistence data:", clearError);
       }
     }
     return null;
@@ -217,7 +224,7 @@ export class StepPersistence {
       try {
         localStorage.setItem(STORAGE_KEY, serialized);
       } catch (localError) {
-        console.warn('localStorage failed, trying sessionStorage:', localError);
+        console.warn("localStorage failed, trying sessionStorage:", localError);
         // Fallback to sessionStorage if localStorage fails
         sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
       }
@@ -226,17 +233,23 @@ export class StepPersistence {
       try {
         sessionStorage.setItem(SESSION_STORAGE_KEY, serialized);
       } catch (sessionError) {
-        console.warn('sessionStorage backup failed:', sessionError);
+        console.warn("sessionStorage backup failed:", sessionError);
       }
     } catch (error) {
-      console.error('Failed to save persistence state:', error);
+      console.error("Failed to save persistence state:", error);
     }
   }
 
   /**
    * Record a new step
    */
-  saveStep(stepNumber: number, stepId: string, action: StepData['action'], data: any, formData: any): void {
+  saveStep(
+    stepNumber: number,
+    stepId: string,
+    action: StepData["action"],
+    data: any,
+    formData: any,
+  ): void {
     try {
       const stepData: StepData = {
         stepNumber,
@@ -258,7 +271,7 @@ export class StepPersistence {
 
       this.saveState();
     } catch (error) {
-      console.error('Failed to save step:', error);
+      console.error("Failed to save step:", error);
     }
   }
 
@@ -270,9 +283,15 @@ export class StepPersistence {
       this.state.formData = formData ? { ...formData } : {};
 
       // Record field update
-      this.saveStep(-1, 'field_update', 'field_update', { field, value }, formData);
+      this.saveStep(
+        -1,
+        "field_update",
+        "field_update",
+        { field, value },
+        formData,
+      );
     } catch (error) {
-      console.error('Failed to update form data:', error);
+      console.error("Failed to update form data:", error);
     }
   }
 
@@ -389,7 +408,7 @@ export class StepPersistence {
         return true;
       }
     } catch (error) {
-      console.error('Failed to import data:', error);
+      console.error("Failed to import data:", error);
     }
     return false;
   }
@@ -404,24 +423,34 @@ export class StepPersistence {
 
     const businessName = this.state.formData.businessName || "Your Business";
     const stepCount = this.state.steps.length;
-    const lastAction = this.state.steps[this.state.steps.length - 1]?.action || "unknown";
-    
+    const lastAction =
+      this.state.steps[this.state.steps.length - 1]?.action || "unknown";
+
     return `${businessName} - ${stepCount} steps saved, last action: ${lastAction}`;
   }
 
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
-    try { localStorage.setItem('configurator_persist_enabled', String(enabled)); } catch {}
+    try {
+      localStorage.setItem("configurator_persist_enabled", String(enabled));
+    } catch {}
     if (!enabled) {
-      try { localStorage.removeItem(STORAGE_KEY); sessionStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      } catch {}
     } else {
       this.saveState();
     }
   }
 
-  getEnabled(): boolean { return this.enabled; }
+  getEnabled(): boolean {
+    return this.enabled;
+  }
 
-  getSessionId(): string { return this.sessionId; }
+  getSessionId(): string {
+    return this.sessionId;
+  }
 }
 
 // Global instance

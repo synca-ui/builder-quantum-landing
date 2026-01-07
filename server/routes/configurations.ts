@@ -34,7 +34,7 @@ const ConfigurationSchema = z
           .map((m) =>
             typeof m === "string"
               ? m
-              : [m?.type, m?.value].filter(Boolean).join(": ")
+              : [m?.type, m?.value].filter(Boolean).join(": "),
           )
           .filter((s) => typeof s === "string" && s.trim()),
       ) as unknown as z.ZodType<string[]>,
@@ -473,7 +473,6 @@ export async function publishConfiguration(req: Request, res: Response) {
     (config as any).previewUrl = previewUrl;
     config.updatedAt = new Date().toISOString();
 
-
     // Cache for 10 minutes so preview works immediately
     publishedCache.set(tenantSlug, {
       config,
@@ -509,25 +508,28 @@ export async function publishConfiguration(req: Request, res: Response) {
 export async function setPreviewConfig(req: Request, res: Response) {
   try {
     const { session } = req.params as any;
-    if (!session) return res.status(400).json({ error: 'Missing session' });
-    const config = req.body && (req.body as any).config ? (req.body as any).config : req.body;
-    if (!config || typeof config !== 'object') return res.status(400).json({ error: 'Invalid config' });
+    if (!session) return res.status(400).json({ error: "Missing session" });
+    const config =
+      req.body && (req.body as any).config
+        ? (req.body as any).config
+        : req.body;
+    if (!config || typeof config !== "object")
+      return res.status(400).json({ error: "Invalid config" });
     const key = `preview-${session}`;
     previewCache.set(key, { config, expiresAt: Date.now() + 5 * 60 * 1000 });
     return res.json({ success: true, key });
   } catch (e) {
-    console.error('setPreviewConfig error', e);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("setPreviewConfig error", e);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
 
 export async function getPublishedSite(req: Request, res: Response) {
   try {
     const { subdomain } = req.params; // actually tenantSlug
-    console.log('=== getPublishedSite Debug ===');
-    console.log('Requested subdomain:', subdomain);
-    console.log('Preview Cache keys:', Array.from(previewCache.keys()));
-
+    console.log("=== getPublishedSite Debug ===");
+    console.log("Requested subdomain:", subdomain);
+    console.log("Preview Cache keys:", Array.from(previewCache.keys()));
 
     // Preview cache first
     const previewHit = previewCache.get(subdomain);
@@ -540,7 +542,6 @@ export async function getPublishedSite(req: Request, res: Response) {
     if (cached && cached.expiresAt > Date.now()) {
       return res.json({ success: true, site: cached.config });
     }
-
 
     // Fallback to DB source if configured
     const databaseUrl =
@@ -583,14 +584,18 @@ export async function getPublishedSite(req: Request, res: Response) {
     }
 
     // Fallback to file-based store (for local dev)
-    console.log('Falling back to file-based store');
+    console.log("Falling back to file-based store");
     const configurations = await loadConfigurations();
-    console.log('Loaded configurations:', configurations.length);
+    console.log("Loaded configurations:", configurations.length);
 
-    const publishedConfigs = configurations.filter(c => c.status === "published");
-    console.log('Published configurations:', publishedConfigs.length);
-    publishedConfigs.forEach(c => {
-      console.log(`- ${c.businessName}: publishedUrl=${c.publishedUrl}, selectedDomain=${c.selectedDomain}, domainName=${c.domainName}`);
+    const publishedConfigs = configurations.filter(
+      (c) => c.status === "published",
+    );
+    console.log("Published configurations:", publishedConfigs.length);
+    publishedConfigs.forEach((c) => {
+      console.log(
+        `- ${c.businessName}: publishedUrl=${c.publishedUrl}, selectedDomain=${c.selectedDomain}, domainName=${c.domainName}`,
+      );
     });
 
     const config = configurations.find(
@@ -604,15 +609,15 @@ export async function getPublishedSite(req: Request, res: Response) {
     );
 
     if (config) {
-      console.log('Found matching config:', config.businessName);
+      console.log("Found matching config:", config.businessName);
       return res.json({ success: true, site: config });
     }
 
-    console.log('No matching config found for subdomain:', subdomain);
+    console.log("No matching config found for subdomain:", subdomain);
 
     // Generic fallback for any slug: return a minimal site so users never see 404
     if (subdomain) {
-      const nameFromSlug = subdomain.split('-')[0] || subdomain;
+      const nameFromSlug = subdomain.split("-")[0] || subdomain;
       const fallbackConfig = {
         id: `fallback-${subdomain}`,
         userId: "anonymous",
@@ -620,7 +625,8 @@ export async function getPublishedSite(req: Request, res: Response) {
         businessType: "cafe",
         location: "",
         slogan: "Welcome!",
-        uniqueDescription: "This is a generated preview. Publish to sync full content.",
+        uniqueDescription:
+          "This is a generated preview. Publish to sync full content.",
         template: "minimalist",
         primaryColor: "#059669",
         secondaryColor: "#10B981",
@@ -630,20 +636,28 @@ export async function getPublishedSite(req: Request, res: Response) {
         openingHours: {
           Monday: { open: "09:00", close: "17:00", closed: false },
           Tuesday: { open: "09:00", close: "17:00", closed: false },
-          Wednesday: { open: "09:00", close: "17:00", closed: false }
+          Wednesday: { open: "09:00", close: "17:00", closed: false },
         },
         menuItems: [
-          { id: "americano", name: "Americano", description: "Rich espresso", price: 4.5 },
-          { id: "latte", name: "Latte", description: "Espresso + milk", price: 5.25 }
+          {
+            id: "americano",
+            name: "Americano",
+            description: "Rich espresso",
+            price: 4.5,
+          },
+          {
+            id: "latte",
+            name: "Latte",
+            description: "Espresso + milk",
+            price: 5.25,
+          },
         ],
         reservationsEnabled: false,
         maxGuests: 10,
         notificationMethod: "email",
         contactMethods: ["Email: hello@example.com"],
         socialMedia: {},
-        gallery: [
-          { id: "g1", url: "/placeholder.svg", alt: "Preview" }
-        ],
+        gallery: [{ id: "g1", url: "/placeholder.svg", alt: "Preview" }],
         onlineOrdering: false,
         onlineStore: false,
         teamArea: false,
@@ -654,7 +668,7 @@ export async function getPublishedSite(req: Request, res: Response) {
         updatedAt: new Date().toISOString(),
         status: "published",
         publishedUrl: `https://${subdomain}.synca.digital`,
-        previewUrl: `https://synca.digital/site/${subdomain}`
+        previewUrl: `https://synca.digital/site/${subdomain}`,
       };
       return res.json({ success: true, site: fallbackConfig });
     }
