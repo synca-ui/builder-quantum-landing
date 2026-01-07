@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 
-import { handleDemo } from "./routes/demo";
-import { handleSubdomainRequest } from "./routes/subdomains";
+import { handleDemo } from "./routes/demo.js";
+import { handleSubdomainRequest } from "./routes/subdomains.js";
 import {
   saveConfiguration,
   getConfigurations,
@@ -11,14 +11,14 @@ import {
   deleteConfiguration,
   publishConfiguration,
   getPublishedSite,
-} from "./routes/configurations";
-import { fetchInstagramPhotos } from "./routes/instagram";
-import { setPreviewConfig } from "./routes/configurations";
-import { authRouter } from "./routes/auth";
-import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
-import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
-import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe";
-import { apiRouter } from "./routes";
+} from "./routes/configurations.js";
+import { fetchInstagramPhotos } from "./routes/instagram.js";
+import { setPreviewConfig } from "./routes/configurations.js";
+import { authRouter } from "./routes/auth.js";
+import { webAppsRouter, publicAppsRouter } from "./routes/webapps.js";
+import { handleGenerateSchema, handleValidateSchema } from "./routes/schema.js";
+import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe.js";
+import { apiRouter } from "./routes/index.js";
 
 // Middleware to fix Buffer-body issues (Netlify edge cases)
 const rawBodyMiddleware = (req: any, _res: any, next: any) => {
