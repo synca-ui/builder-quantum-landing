@@ -66,8 +66,8 @@ export function CardBasedEditor({
       slogan: "",
       uniqueDescription: "",
       template: "modern",
-      primaryColor: "#214071",       /* Dunkelblau */
-      secondaryColor: "#F1EAD8",     /* Creme */
+      primaryColor: "#2563EB",
+      secondaryColor: "#F8FAFC",
       fontFamily: "Inter",
       selectedPages: ["home", "menu", "contact"],
       customPages: [],
