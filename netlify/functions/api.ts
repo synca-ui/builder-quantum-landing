@@ -1,5 +1,8 @@
 import serverless from "serverless-http";
-import { createServer } from "../../server/index";
 
-// Die Funktion startet einfach nur den Server. Keine weitere Logik hier.
+// WICHTIG: Pfad auf den "dist"-Ordner und die .mjs Datei ändern!
+// Vorher: import { createServer } from "../../server/index";
+import { createServer } from "../../dist/server/node-build.mjs";
+
+// Die Funktion startet einfach nur den Server.
 export const handler = serverless(createServer());
