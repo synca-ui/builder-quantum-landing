@@ -125,7 +125,7 @@ export function createServer() {
     handleGetRecentOrders,
     handleGetMenuStats,
     handleClearOldOrders,
-  } = require("./routes/orders.js");
+  } = require("./routes/orders");
   app.post("/api/orders/create", handleCreateOrder);
   app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
@@ -135,7 +135,7 @@ export function createServer() {
   app.post("/api/webhooks/test", handleWebhookTest);
 
   // Proxy to n8n (avoids browser CORS issues)
-  const { handleForwardN8n } = require("./routes/n8nProxy.js");
+  const { handleForwardN8n } = require("./routes/n8nProxy");
   app.post("/api/forward-to-n8n", handleForwardN8n);
 
   // Demo endpoint
