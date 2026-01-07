@@ -14,14 +14,15 @@ function initializePrisma() {
 
   // Test connection in background, don't block server startup
   if (!connectionPromise) {
-    connectionPromise = client.$queryRaw`SELECT 1`
-      .then(() => {
+    connectionPromise = (async () => {
+      try {
+        await (client as any).$queryRawUnsafe('SELECT 1');
         console.log('[Prisma] ✅ Database connection successful');
-      })
-      .catch((err) => {
-        console.error('[Prisma] ⚠️  Initial connection test failed:', err.message);
+      } catch (err: any) {
+        console.error('[Prisma] ⚠️  Initial connection test failed:', err?.message || String(err));
         // Don't throw - let server start anyway, will retry on first query
-      });
+      }
+    })();
   }
 
   return client;
