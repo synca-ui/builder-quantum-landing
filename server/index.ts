@@ -39,6 +39,11 @@ export function createServer() {
   // Middleware
   app.use(cors());
 
+  // Health check endpoint (for dev server readiness)
+  app.get("/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
   // Stripe webhook endpoint MUST come before express.json() so we can access raw body
   app.post(
     "/api/webhooks/stripe",
