@@ -44,8 +44,11 @@ function expressPlugin(): Plugin {
   return {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
-    configureServer(server) {
-      const app = createServer(); // Import the Express server
+    async configureServer(server) {
+      // Dynamically import the server only during dev server startup
+      // This prevents Prisma and other backend code from being evaluated during the Vite build
+      const { createServer } = await import("./server");
+      const app = createServer();
 
       // Add the Express app as middleware to Vite dev server
       server.middlewares.use(app);
