@@ -1,7 +1,7 @@
 // Load .env files FIRST before any other imports that might use env variables
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 import path from "path";
-dotenv.config({ path: path.resolve(__dirname, '.env'), override: true });
+dotenv.config({ path: path.resolve(__dirname, ".env"), override: true });
 
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
@@ -15,15 +15,10 @@ export default defineConfig(({ mode }) => ({
     fs: {
       // Allow Vite to access specific directories
       allow: [
-        path.resolve(__dirname, "client"),   // Allow 'client' directory
-        path.resolve(__dirname, "shared"),   // Allow 'shared' directory
+        path.resolve(__dirname, "client"), // Allow 'client' directory
+        path.resolve(__dirname, "shared"), // Allow 'shared' directory
       ],
-      deny: [
-        ".env",
-        ".env.*",
-        "*.{crt,pem}",
-        "**/.git/**",
-      ],
+      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
     },
     // Optional: You can proxy API requests to your backend if needed
     // proxy: {
@@ -39,7 +34,7 @@ export default defineConfig(({ mode }) => ({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./client"),   // Alias for 'client' directory
+      "@": path.resolve(__dirname, "./client"), // Alias for 'client' directory
       "@shared": path.resolve(__dirname, "./shared"), // Alias for 'shared' directory
     },
   },
