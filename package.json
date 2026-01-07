@@ -13,8 +13,7 @@
   "scripts": {
     "dev": "vite",
     "generate-static": "node scripts/generate-static-app.cjs",
-    "build": "prisma generate && npm run build:client && npm run build:server && npm run copy:prisma",
-    "copy:prisma": "mkdir -p dist/server/node_modules && cp -r node_modules/.prisma dist/server/node_modules/ 2>/dev/null || true",
+    "build": "prisma generate && npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
     "start": "node dist/server/node-build.mjs",
