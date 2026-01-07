@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import path from "path";
 dotenv.config({ path: path.resolve(__dirname, '.env'), override: true });
 
-import { defineConfig, Plugin, loadEnv } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { createServer } from "./server";
 
