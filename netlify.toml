@@ -11,8 +11,13 @@ publish = "dist/spa"
 
 [functions]
 node_bundler = "nft"
-included_files = ["node_modules/.prisma/**/*", "prisma/schema.prisma", "node_modules/@prisma/**/*"]
-external_node_modules = ["@prisma/client"]
+# Include Prisma-related files and folders - nft will trace dependencies automatically
+included_files = [
+  "node_modules/.prisma/**/*",
+  "node_modules/@prisma/**/*",
+  "prisma/schema.prisma",
+  "dist/server/**/*"
+]
 
 # Leitet alle API-Anfragen an Ihre Serverless-Funktion weiter.
 # Diese Regel ist entscheidend und scheint bereits korrekt zu sein.
