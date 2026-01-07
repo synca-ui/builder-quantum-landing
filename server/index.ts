@@ -127,12 +127,6 @@ export function createServer() {
   app.post("/api/schema/validate", handleValidateSchema);
 
   // Orders API (for social proof tracking - V2.2)
-  const {
-    handleCreateOrder,
-    handleGetRecentOrders,
-    handleGetMenuStats,
-    handleClearOldOrders,
-  } = require("./routes/orders");
   app.post("/api/orders/create", handleCreateOrder);
   app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
@@ -142,7 +136,6 @@ export function createServer() {
   app.post("/api/webhooks/test", handleWebhookTest);
 
   // Proxy to n8n (avoids browser CORS issues)
-  const { handleForwardN8n } = require("./routes/n8nProxy");
   app.post("/api/forward-to-n8n", handleForwardN8n);
 
   // Demo endpoint
