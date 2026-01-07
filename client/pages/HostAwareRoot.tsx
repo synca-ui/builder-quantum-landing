@@ -10,7 +10,7 @@ export default function HostAwareRoot() {
       // 1. Liste deiner Haupt-Domains (Dashboard)
       const mainDomains = [
         "maitr.de",
-        "www.maitr.de",      // WICHTIG: Auch mit www
+        "www.maitr.de", // WICHTIG: Auch mit www
         "synca.digital",
         "www.synca.digital", // Sicherheitshalber auch hier mit www
         "localhost",
@@ -31,10 +31,10 @@ export default function HostAwareRoot() {
       // 4. Fallback: Hat die Domain Punkte? Dann ist es eine Kunden-Subdomain
       // (z.B. kunde.maitr.de -> Zeige JuJu/User-Site)
       if (host.includes(".")) {
-        return true; 
+        return true;
       }
     } catch {}
-    
+
     return false;
   }, []);
 
