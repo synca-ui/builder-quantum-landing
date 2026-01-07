@@ -13,20 +13,20 @@
    * A different format will require also updating the theme in tailwind.config.ts.
   */
   :root {
-    --background: 40 71% 91%;        /* Creme #F1EAD8 */
-    --foreground: 218 54% 29%;        /* Dunkelblau #214071 */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 218 54% 29%;   /* Dunkelblau #214071 */
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 218 54% 29%; /* Dunkelblau #214071 */
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 218 54% 29%;           /* Dunkelblau #214071 */
-    --primary-foreground: 40 71% 91%; /* Creme #F1EAD8 */
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 40 71% 91%;          /* Creme #F1EAD8 */
-    --secondary-foreground: 218 54% 29%; /* Dunkelblau #214071 */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;

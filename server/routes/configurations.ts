@@ -16,8 +16,8 @@ const ConfigurationSchema = z
     uniqueDescription: z.string().optional(),
     template: z.string().default(""),
     homepageDishImageVisibility: z.string().optional(),
-    primaryColor: z.string().default("#214071"),   /* Dunkelblau */
-    secondaryColor: z.string().default("#F1EAD8"), /* Creme */
+    primaryColor: z.string().default("#111827"),
+    secondaryColor: z.string().default("#6B7280"),
     fontFamily: z.string().default("sans-serif"),
     selectedPages: z.array(z.string()).default([]),
     customPages: z.array(z.string()).default([]),
