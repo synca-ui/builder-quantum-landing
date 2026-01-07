@@ -6,11 +6,23 @@ export default function HostAwareRoot() {
   const shouldRenderSite = useMemo(() => {
     try {
       const host = window.location.hostname;
-      const baseDomain = process.env.VITE_BASE_DOMAIN || "maitr.de";
 
-      // Render Site when on a tenant subdomain like <slug>.maitr.de
-      if (host.endsWith(`.${baseDomain}`)) {
-        if (host !== baseDomain) return true;
+      // List of main domains (not subdomains)
+      const mainDomains = [
+        "maitr.de",
+        "synca.digital",
+        "localhost",
+        "127.0.0.1",
+      ];
+
+      // If it's a main domain or localhost, show Index
+      if (mainDomains.includes(host)) {
+        return false;
+      }
+
+      // If it has dots and doesn't match a main domain, it's a subdomain - show Site
+      if (host.includes(".")) {
+        return true;
       }
     } catch {}
     return false;
