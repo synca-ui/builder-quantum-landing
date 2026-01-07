@@ -109,18 +109,17 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Maitr Brand Colors - Dark Mode - Dunkelblau & Creme */
-    --teal-50: 218 54% 10%;
-    --teal-500: 40 71% 80%;           /* Light Creme */
-    --teal-600: 40 71% 85%;           /* Lighter Creme */
+    --teal-50: 166 76% 5%;
+    --teal-500: 166 72% 60%;
+    --teal-600: 166 72% 68%;
 
-    --orange-50: 218 54% 10%;
-    --orange-500: 40 71% 80%;         /* Light Creme */
-    --orange-600: 40 71% 85%;         /* Lighter Creme */
+    --orange-50: 24 100% 5%;
+    --orange-500: 24 95% 65%;
+    --orange-600: 24 95% 73%;
 
-    --purple-50: 218 54% 10%;
-    --purple-500: 40 71% 80%;         /* Light Creme */
-    --purple-600: 40 71% 85%;         /* Lighter Creme */
+    --purple-50: 270 100% 5%;
+    --purple-500: 270 91% 75%;
+    --purple-600: 270 91% 83%;
   }
 }
 
