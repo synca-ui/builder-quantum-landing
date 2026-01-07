@@ -1,6 +1,6 @@
 [build]
-# KORREKTUR: Führen Sie den Haupt-Build-Befehl aus, der Server UND Client baut.
-command = "npm run build"
+# Generate Prisma client first, then build
+command = "npx prisma generate && npm run build"
 
 # Das Verzeichnis, in dem Ihre Serverless-Funktionen nach dem Build liegen.
 functions = "netlify/functions"
