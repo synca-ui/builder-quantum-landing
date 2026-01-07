@@ -23,7 +23,6 @@ export default defineConfig(({ mode }) => ({
         ".env.*",
         "*.{crt,pem}",
         "**/.git/**",
-        "server/**", // Deny server folder
       ],
     },
     // Optional: You can proxy API requests to your backend if needed
