@@ -1,14 +1,12 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
-import { createRequire } from "module";
 import { fileURLToPath } from "url";
 
-const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { handleDemo } from "./routes/demo.js";
-import { handleSubdomainRequest } from "./routes/subdomains.js";
+import { handleDemo } from "./routes/demo";
+import { handleSubdomainRequest } from "./routes/subdomains";
 import {
   saveConfiguration,
   getConfigurations,
@@ -16,14 +14,25 @@ import {
   deleteConfiguration,
   publishConfiguration,
   getPublishedSite,
-} from "./routes/configurations.js";
-import { fetchInstagramPhotos } from "./routes/instagram.js";
-import { setPreviewConfig } from "./routes/configurations.js";
-import { authRouter } from "./routes/auth.js";
-import { webAppsRouter, publicAppsRouter } from "./routes/webapps.js";
-import { handleGenerateSchema, handleValidateSchema } from "./routes/schema.js";
-import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe.js";
-import { apiRouter } from "./routes/index.js";
+} from "./routes/configurations";
+import { fetchInstagramPhotos } from "./routes/instagram";
+import { setPreviewConfig } from "./routes/configurations";
+import { authRouter } from "./routes/auth";
+import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
+import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
+import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe";
+import { apiRouter } from "./routes";
+import { requireAuth } from "./middleware/auth";
+import { usersRouter } from "./routes/users";
+import { handleAutogen } from "./routes/autogen";
+import { getConfigBySlug } from "./routes/config";
+import {
+  handleCreateOrder,
+  handleGetRecentOrders,
+  handleGetMenuStats,
+  handleClearOldOrders,
+} from "./routes/orders";
+import { handleForwardN8n } from "./routes/n8nProxy";
 
 // Middleware to fix Buffer-body issues (Netlify edge cases)
 const rawBodyMiddleware = (req: any, _res: any, next: any) => {
