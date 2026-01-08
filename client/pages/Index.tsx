@@ -27,6 +27,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
 import {
   useAuth as useClerkAuth,
+  useUser,
   SignInButton,
   SignUpButton,
 } from "@clerk/clerk-react";
@@ -42,6 +43,7 @@ export default function Index() {
   }, []);
 
   const { isSignedIn } = useClerkAuth();
+  const { user, isLoaded } = useUser();
 
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
@@ -256,7 +258,7 @@ export default function Index() {
             <div className="hidden md:block">
               <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
                 {navItems
-                  .filter((n) => (user ? true : n.id !== "dashboard"))
+                  .filter((n) => (isSignedIn ? true : n.id !== "dashboard"))
                   .map((item) => (
                     <a
                       key={item.id}
@@ -388,7 +390,7 @@ export default function Index() {
               ))}
 
               <div className="pt-2 border-t border-gray-200/50 space-y-2">
-                {!user && (
+                {!isSignedIn && (
                   <>
                     <SignInButton mode="modal">
                       <Button
@@ -579,7 +581,7 @@ export default function Index() {
             </div>
           </div>
           <div className="text-center mt-8">
-            {user ? (
+            {isSignedIn ? (
               <a href="/dashboard">
                 <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
                   Go to Dashboard
