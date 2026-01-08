@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 export default function Profile() {
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const { user } = useUser();
   const [fullName, setFullName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -24,15 +24,14 @@ export default function Profile() {
     setSaving(true);
     setMessage(null);
     try {
+      const token = await getToken();
       const res = await fetch("/api/users/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          ...(localStorage.getItem("auth_token")
-            ? { Authorization: `Bearer ${localStorage.getItem("auth_token")}` }
-            : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ fullName, companyName }),
+        body: JSON.stringify({ fullName }),
       });
       if (!res.ok) throw new Error("Failed to update profile");
       setMessage("Profile updated");
@@ -84,12 +83,6 @@ export default function Profile() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                 />
-                <Input
-                  type="text"
-                  placeholder="Company name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
                 {message && (
                   <div className={`text-sm ${message === 'Profile updated' ? 'text-green-600' : 'text-red-600'}`}>
                     {message}
@@ -100,7 +93,7 @@ export default function Profile() {
                 </Button>
               </form>
 
-              <Button onClick={logout} variant="outline">
+              <Button onClick={() => signOut()} variant="outline">
                 Log out
               </Button>
             </div>
