@@ -290,7 +290,7 @@ export default function Index() {
             </div>
 
             <div className="hidden md:flex items-center space-x-3">
-              {user ? (
+              {isSignedIn ? (
                 <>
                   <a href="/profile">
                     <Button
