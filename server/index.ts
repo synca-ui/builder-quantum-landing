@@ -36,15 +36,20 @@ import { handleForwardN8n } from "./routes/n8nProxy";
 
 // Middleware to fix Buffer-body issues (Netlify edge cases)
 const rawBodyMiddleware = (req: any, _res: any, next: any) => {
-  if (Buffer.isBuffer(req.body)) {
-    try {
-      req.body = JSON.parse(req.body.toString());
-    } catch (e) {
-      console.error("Error parsing buffer body:", e);
-      req.body = {};
+  try {
+    if (Buffer.isBuffer(req.body)) {
+      try {
+        req.body = JSON.parse(req.body.toString());
+      } catch (e) {
+        console.error("Error parsing buffer body:", e);
+        req.body = {};
+      }
     }
+    next();
+  } catch (err) {
+    console.error("Error in rawBodyMiddleware:", err);
+    next(err);
   }
-  next();
 };
 
 export function createServer() {
@@ -139,6 +144,22 @@ export function createServer() {
       res.sendFile(path.join(clientDistPath, "index.html"));
     });
   }
+
+  // Global error handler middleware (must be last)
+  app.use(
+    (
+      err: any,
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction,
+    ) => {
+      console.error("Express error handler caught:", err);
+      res.status(err.status || 500).json({
+        error: "Internal Server Error",
+        message: err.message || "An unexpected error occurred",
+      });
+    },
+  );
 
   return app;
 }
