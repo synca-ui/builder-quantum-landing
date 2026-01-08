@@ -140,12 +140,17 @@ export const configurationApi = {
   // Save configuration (create or update)
   async save(
     config: Partial<Configuration>,
+    token?: string,
   ): Promise<ApiResponse<Configuration>> {
     try {
-      return await apiRequest<Configuration>("/configurations", {
-        method: "POST",
-        body: JSON.stringify(config),
-      });
+      return await apiRequest<Configuration>(
+        "/configurations",
+        {
+          method: "POST",
+          body: JSON.stringify(config),
+        },
+        token,
+      );
     } catch (error) {
       console.warn("Failed to save configuration:", error);
       return {
@@ -156,9 +161,9 @@ export const configurationApi = {
   },
 
   // Get all user configurations
-  async getAll(): Promise<ApiResponse<Configuration[]>> {
+  async getAll(token?: string): Promise<ApiResponse<Configuration[]>> {
     try {
-      return await apiRequest<Configuration[]>("/configurations");
+      return await apiRequest<Configuration[]>("/configurations", {}, token);
     } catch (error) {
       console.warn("Failed to get configurations:", error);
       return {
@@ -170,9 +175,9 @@ export const configurationApi = {
   },
 
   // Get specific configuration
-  async get(id: string): Promise<ApiResponse<Configuration>> {
+  async get(id: string, token?: string): Promise<ApiResponse<Configuration>> {
     try {
-      return await apiRequest<Configuration>(`/configurations/${id}`);
+      return await apiRequest<Configuration>(`/configurations/${id}`, {}, token);
     } catch (error) {
       console.warn("Failed to get configuration:", error);
       return {
@@ -183,11 +188,15 @@ export const configurationApi = {
   },
 
   // Delete configuration
-  async delete(id: string): Promise<ApiResponse<void>> {
+  async delete(id: string, token?: string): Promise<ApiResponse<void>> {
     try {
-      return await apiRequest<void>(`/configurations/${id}`, {
-        method: "DELETE",
-      });
+      return await apiRequest<void>(
+        `/configurations/${id}`,
+        {
+          method: "DELETE",
+        },
+        token,
+      );
     } catch (error) {
       console.warn("Failed to delete configuration:", error);
       return {
@@ -201,12 +210,17 @@ export const configurationApi = {
   async publish(
     id: string,
     config?: Partial<Configuration>,
+    token?: string,
   ): Promise<ApiResponse<Configuration>> {
     try {
-      return await apiRequest<Configuration>(`/configurations/${id}/publish`, {
-        method: "POST",
-        body: config ? JSON.stringify({ config }) : undefined,
-      });
+      return await apiRequest<Configuration>(
+        `/configurations/${id}/publish`,
+        {
+          method: "POST",
+          body: config ? JSON.stringify({ config }) : undefined,
+        },
+        token,
+      );
     } catch (error) {
       console.warn("Failed to publish configuration:", error);
       return {
@@ -305,9 +319,9 @@ export const sessionApi = {
   getUserId,
 
   // Check if user has saved configurations with fallback
-  async hasSavedConfigurations(): Promise<boolean> {
+  async hasSavedConfigurations(token?: string): Promise<boolean> {
     try {
-      const result = await configurationApi.getAll();
+      const result = await configurationApi.getAll(token);
       return result.success && result.data && result.data.length > 0;
     } catch (error) {
       console.warn(
@@ -326,9 +340,9 @@ export const sessionApi = {
   },
 
   // Get user's latest configuration with fallback
-  async getLatestConfiguration(): Promise<Configuration | null> {
+  async getLatestConfiguration(token?: string): Promise<Configuration | null> {
     try {
-      const result = await configurationApi.getAll();
+      const result = await configurationApi.getAll(token);
       if (result.success && result.data && result.data.length > 0) {
         // Sort by updatedAt and return the most recent
         const sorted = result.data.sort(
