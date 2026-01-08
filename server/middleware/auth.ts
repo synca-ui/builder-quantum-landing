@@ -1,7 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { verifyClerkToken, getOrCreateUser } from '../utils/clerk';
 
-export interface AuthUser { id: string; email: string }
+export interface AuthUser {
+  id: string;
+  email: string;
+  clerkId: string;
+}
 
 declare global {
   namespace Express {
@@ -11,23 +15,31 @@ declare global {
   }
 }
 
-// JWT_SECRET will be validated at startup by validateEnvironment() in node-build.ts
-// No fallback needed - server won't start without a proper JWT_SECRET
-const JWT_SECRET = process.env.JWT_SECRET as string;
-
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const auth = req.headers.authorization || '';
-    const token = auth.startsWith('Bearer ')? auth.slice(7) : '';
-    if (!token) return res.status(401).json({ error: 'Missing token' });
-    const payload = jwt.verify(token, JWT_SECRET) as AuthUser & { iat: number, exp?: number };
-    req.user = { id: payload.id, email: (payload as any).email };
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+
+    if (!token) {
+      return res.status(401).json({ error: 'Missing token' });
+    }
+
+    // Verify Clerk token
+    const verified = await verifyClerkToken(token);
+
+    // Lazy sync: get or create Prisma user
+    const prismaUser = await getOrCreateUser(verified.sub, verified.email);
+
+    // Attach user to request
+    req.user = {
+      id: prismaUser.id,
+      email: prismaUser.email,
+      clerkId: prismaUser.clerkId,
+    };
+
     return next();
   } catch (e) {
+    console.error('Auth error:', e);
     return res.status(401).json({ error: 'Invalid token' });
   }
-}
-
-export function signToken(user: AuthUser) {
-  return jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
 }
