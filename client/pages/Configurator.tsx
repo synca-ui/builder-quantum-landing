@@ -986,10 +986,10 @@ export default function Configurator() {
     [fileOrUrlToDataUrl],
   );
 
-  const { user, token } = useAuth();
+  const { isSignedIn, getToken } = useAuth();
 
   const publishConfiguration = useCallback(async () => {
-    if (!token || !user) {
+    if (!isSignedIn) {
       toast({
         title: "Please log in",
         description: "Sign in to publish your website",
