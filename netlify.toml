@@ -1,5 +1,4 @@
 [build]
-# KORREKTUR: Führen Sie den Haupt-Build-Befehl aus, der Server UND Client baut.
 command = "npm run build"
 
 # Das Verzeichnis, in dem Ihre Serverless-Funktionen nach dem Build liegen.
@@ -10,7 +9,14 @@ publish = "dist/spa"
 
 
 [functions]
-node_bundler = "esbuild"
+node_bundler = "nft"
+# Include Prisma-related files and folders - nft will trace dependencies automatically
+included_files = [
+  "node_modules/.prisma/**/*",
+  "node_modules/@prisma/**/*",
+  "prisma/schema.prisma",
+  "dist/server/**/*"
+]
 
 # Leitet alle API-Anfragen an Ihre Serverless-Funktion weiter.
 # Diese Regel ist entscheidend und scheint bereits korrekt zu sein.

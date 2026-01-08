@@ -1,6 +1,6 @@
 # Maitr — Project Overview
 
-## Kurze Projektbeschreibung
+## Kurze Projektbeschreibung Maitr. 
 
 Maitr ist ein Full‑Stack‑Starter für die schnelle Erstellung von Restaurant‑Apps. Die Anwendung bietet:
 

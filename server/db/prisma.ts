@@ -1,18 +1,19 @@
-import { PrismaClient } from '@prisma/client';
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
 
 let prisma: PrismaClient;
 
 function initializePrisma() {
-  const dbUrl = process.env.DATABASE_URL || '';
-  const host = dbUrl.match(/ep-([a-z-]+)/)?.[1] || 'unknown';
+  const dbUrl = process.env.DATABASE_URL || "";
+  const host = dbUrl.match(/ep-([a-z-]+)/)?.[1] || "unknown";
   console.log(`[Prisma] Initializing connection to database: ep-${host}`);
 
   return new PrismaClient({
-    log: ['warn', 'error'],
+    log: ["error"], // Only log errors to reduce noise
   });
 }
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   prisma = initializePrisma();
 } else {
   // In development, use a global variable to avoid multiple instances

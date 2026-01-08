@@ -1,8 +1,12 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { handleDemo } from "./routes/demo";
+import { handleSubdomainRequest } from "./routes/subdomains";
 import {
   saveConfiguration,
   getConfigurations,
@@ -17,6 +21,17 @@ import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
 import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
 import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe";
 import { apiRouter } from "./routes";
+import { requireAuth } from "./middleware/auth";
+import { usersRouter } from "./routes/users";
+import { handleAutogen } from "./routes/autogen";
+import { getConfigBySlug } from "./routes/config";
+import {
+  handleCreateOrder,
+  handleGetRecentOrders,
+  handleGetMenuStats,
+  handleClearOldOrders,
+} from "./routes/orders";
+import { handleForwardN8n } from "./routes/n8nProxy";
 
 // Middleware to fix Buffer-body issues (Netlify edge cases)
 const rawBodyMiddleware = (req: any, _res: any, next: any) => {
@@ -37,6 +52,11 @@ export function createServer() {
   // Middleware
   app.use(cors());
 
+  // Health check endpoint (for dev server readiness)
+  app.get("/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
   // Stripe webhook endpoint MUST come before express.json() so we can access raw body
   app.post(
     "/api/webhooks/stripe",
@@ -51,6 +71,9 @@ export function createServer() {
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
+  // Subdomain routing for published sites (e.g., bella.maitr.de)
+  app.use(handleSubdomainRequest);
+
   // Use aggregated API router (may include common routes)
   app.use("/api", apiRouter);
 
@@ -62,7 +85,6 @@ export function createServer() {
   app.use("/api", publicAppsRouter);
 
   // Configuration API routes (protected)
-  const { requireAuth } = require("./middleware/auth");
   app.use("/api/configurations", requireAuth);
   app.post("/api/configurations", saveConfiguration);
   app.get("/api/configurations", getConfigurations);
@@ -74,25 +96,17 @@ export function createServer() {
   app.get("/api/sites/:subdomain", getPublishedSite);
 
   // Users profile (protected)
-  app.use(
-    "/api/users",
-    require("./middleware/auth").requireAuth,
-    require("./routes/users").usersRouter,
-  );
+  app.use("/api/users", requireAuth, usersRouter);
 
   // Preview config injection
   app.post("/api/preview/:session", setPreviewConfig);
 
   // Auto-generation endpoint (Auto Mode)
   // Accepts JSON payload: { url?, maps_link?, business_name?, file_name?, file_base64? }
-  const { handleAutogen } = require("./routes/autogen");
   app.post("/api/autogen", handleAutogen);
 
   // Config JSON proxy for Edge/clients
-  app.get(
-    "/api/config/:slug",
-    require("../server/routes/config").getConfigBySlug,
-  );
+  app.get("/api/config/:slug", getConfigBySlug);
 
   // Instagram scraping endpoint (best-effort for public/open profiles)
   app.get("/api/instagram", fetchInstagramPhotos);
@@ -102,12 +116,6 @@ export function createServer() {
   app.post("/api/schema/validate", handleValidateSchema);
 
   // Orders API (for social proof tracking - V2.2)
-  const {
-    handleCreateOrder,
-    handleGetRecentOrders,
-    handleGetMenuStats,
-    handleClearOldOrders,
-  } = require("./routes/orders");
   app.post("/api/orders/create", handleCreateOrder);
   app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
@@ -117,7 +125,6 @@ export function createServer() {
   app.post("/api/webhooks/test", handleWebhookTest);
 
   // Proxy to n8n (avoids browser CORS issues)
-  const { handleForwardN8n } = require("./routes/n8nProxy");
   app.post("/api/forward-to-n8n", handleForwardN8n);
 
   // Demo endpoint
@@ -127,7 +134,7 @@ export function createServer() {
   if (process.env.NODE_ENV === "production") {
     const clientDistPath = path.join(__dirname, "../../client/dist");
     app.use(express.static(clientDistPath));
-    app.get("*", (_req, res) => {
+   app.get(/.*/, (_req, res) => {
       res.sendFile(path.join(clientDistPath, "index.html"));
     });
   }
