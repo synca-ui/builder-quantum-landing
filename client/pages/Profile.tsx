@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
@@ -7,31 +7,17 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { signOut } = useAuth();
+  const { user } = useUser();
   const [fullName, setFullName] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/users/me", {
-          headers: {
-            "Content-Type": "application/json",
-            ...(localStorage.getItem("auth_token")
-              ? { Authorization: `Bearer ${localStorage.getItem("auth_token")}` }
-              : {}),
-          },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setFullName(data.user?.full_name || "");
-          setCompanyName(data.user?.company_name || "");
-        }
-      } catch {}
-    })();
-  }, []);
+    if (user) {
+      setFullName(user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "");
+    }
+  }, [user]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
