@@ -12,6 +12,7 @@
 ### Tech Stack
 
 #### Frontend
+
 - **Framework:** React 18.3.1 with TypeScript
 - **Build Tool:** Vite 7.1.2 (SPA mode)
 - **Styling:** Tailwind CSS 3.4.17 + PostCSS
@@ -22,6 +23,7 @@
 - **HTTP Client:** Axios with Clerk token injection
 
 #### Backend
+
 - **Runtime:** Node.js (ES Modules)
 - **Framework:** Express 5.1.0
 - **Authentication Provider:** Clerk (@clerk/clerk-sdk-node)
@@ -29,11 +31,13 @@
 - **Validation:** Zod
 
 #### Database
+
 - **Provider:** PostgreSQL (Neon)
 - **Database Name:** `neondb`
 - **Connection Pool:** Netlify Postgres Pooler
 
 #### Hosting & Deployment
+
 - **Frontend Hosting:** Netlify (deployed via `npm run build`)
 - **Backend Deployment:** Netlify Serverless Functions (`/.netlify/functions/`)
 - **Database Host:** Neon (PostgreSQL SaaS)
@@ -87,6 +91,7 @@ The **Lazy Sync** pattern ensures that Clerk manages authentication while Prisma
 ### Detailed Authentication Flow
 
 #### Step 1: Frontend - Clerk Session Setup
+
 **File:** `client/App.tsx`
 
 ```
@@ -96,6 +101,7 @@ The **Lazy Sync** pattern ensures that Clerk manages authentication while Prisma
 ```
 
 #### Step 2: Frontend - Token Acquisition
+
 **File:** `client/pages/Configurator.tsx` (example authenticated page)
 
 ```javascript
@@ -109,6 +115,7 @@ export default function Configurator() {
 ```
 
 #### Step 3: Frontend - Dynamic API Client Creation
+
 **File:** `client/lib/api.ts` & `client/lib/apiClient.ts`
 
 The frontend uses a factory pattern to create authenticated API clients:
@@ -126,6 +133,7 @@ apiClient.interceptors.request.use(async (config) => {
 ```
 
 **Key Pages Using This Pattern:**
+
 - `client/pages/Dashboard.tsx` - passes token to `configurationApi.getAll(token)`
 - `client/pages/Configurator.tsx` - passes token to `configurationApi.save(configData, token)`
 - `client/lib/webapps.ts` - `publishWebApp(subdomain, config, token)`
@@ -133,6 +141,7 @@ apiClient.interceptors.request.use(async (config) => {
 #### Step 4: HTTP Request - Bearer Token Attached
 
 Frontend sends:
+
 ```
 POST /api/configurations
 Authorization: Bearer eyJhbGci0.eyJzdWIiOiJ1c2VyXzJq...
@@ -142,6 +151,7 @@ Content-Type: application/json
 ```
 
 #### Step 5: Backend - Token Verification
+
 **File:** `server/middleware/auth.ts`
 
 ```javascript
@@ -169,6 +179,7 @@ export async function requireAuth(req, res, next) {
 ```
 
 #### Step 6: Backend - Clerk Token Verification
+
 **File:** `server/utils/clerk.ts`
 
 ```javascript
@@ -188,6 +199,7 @@ export async function verifyClerkToken(token: string): Promise<VerifiedToken> {
 ```
 
 #### Step 7: Backend - Lazy Sync (Create User if Not Exists)
+
 **File:** `server/utils/clerk.ts`
 
 ```javascript
@@ -213,6 +225,7 @@ export async function getOrCreateUser(clerkId: string, email?: string) {
 ```
 
 #### Step 8: Backend - Request Handler Executes
+
 **File:** `server/routes/configurations.ts` (example)
 
 ```javascript
@@ -270,18 +283,18 @@ Browser                  Frontend                Backend              Database
 
 ### File Chain Summary
 
-| Layer | File | Purpose |
-|-------|------|---------|
-| **Frontend** | `client/App.tsx` | Wraps app in `<ClerkProvider>` |
-| **Frontend** | `client/pages/Configurator.tsx` | Calls `useAuth()` to get `getToken()` |
-| **Frontend** | `client/lib/api.ts` | `configurationApi.save(config, token)` |
-| **Frontend** | `client/lib/apiClient.ts` | Factory: `createApiClient(getToken)` |
-| **Frontend** | `client/lib/webapps.ts` | `publishWebApp(subdomain, config, token)` |
-| **HTTP** | N/A | Bearer token in Authorization header |
-| **Backend** | `server/index.ts` | Mounts `requireAuth` middleware on protected routes |
-| **Backend** | `server/middleware/auth.ts` | Extracts token, calls verify & sync |
-| **Backend** | `server/utils/clerk.ts` | `verifyClerkToken()` & `getOrCreateUser()` |
-| **Database** | `prisma/schema.prisma` | User model with `clerkId` unique constraint |
+| Layer        | File                            | Purpose                                             |
+| ------------ | ------------------------------- | --------------------------------------------------- |
+| **Frontend** | `client/App.tsx`                | Wraps app in `<ClerkProvider>`                      |
+| **Frontend** | `client/pages/Configurator.tsx` | Calls `useAuth()` to get `getToken()`               |
+| **Frontend** | `client/lib/api.ts`             | `configurationApi.save(config, token)`              |
+| **Frontend** | `client/lib/apiClient.ts`       | Factory: `createApiClient(getToken)`                |
+| **Frontend** | `client/lib/webapps.ts`         | `publishWebApp(subdomain, config, token)`           |
+| **HTTP**     | N/A                             | Bearer token in Authorization header                |
+| **Backend**  | `server/index.ts`               | Mounts `requireAuth` middleware on protected routes |
+| **Backend**  | `server/middleware/auth.ts`     | Extracts token, calls verify & sync                 |
+| **Backend**  | `server/utils/clerk.ts`         | `verifyClerkToken()` & `getOrCreateUser()`          |
+| **Database** | `prisma/schema.prisma`          | User model with `clerkId` unique constraint         |
 
 ---
 
@@ -290,6 +303,7 @@ Browser                  Frontend                Backend              Database
 ### Current Prisma Schema (`prisma/schema.prisma`)
 
 #### Core User Model
+
 ```prisma
 model User {
   id          String       @id @default(uuid())
@@ -314,11 +328,13 @@ enum UserRole {
 ```
 
 **Key Points:**
+
 - `clerkId` is **UNIQUE** - one Clerk user maps to exactly one Prisma user
 - `email` is **UNIQUE** - prevents duplicates
 - No `passwordHash` field (auth delegated to Clerk)
 
 #### Business & Menu Models
+
 ```prisma
 model Business {
   id              String          @id @default(uuid())
@@ -361,6 +377,7 @@ model MenuItem {
 ```
 
 #### Web Apps & Publishing
+
 ```prisma
 model WebApp {
   id          String      @id @default(uuid())
@@ -393,6 +410,7 @@ model OrderEvent {
 ```
 
 #### Multi-Tenancy Models
+
 ```prisma
 model Tenant {
   id              String      @id @default(uuid())
@@ -460,6 +478,7 @@ model Restaurant {
 ## 4. API Structure
 
 ### Main API Router
+
 **File:** `server/routes/index.ts`
 
 ### Protected Endpoints (Require Clerk Token)
@@ -467,6 +486,7 @@ model Restaurant {
 All endpoints under `/api/` that are protected require the `requireAuth` middleware:
 
 #### User API
+
 ```
 GET  /api/users/me
      - Returns: { user: { id, email, fullName, role } }
@@ -479,6 +499,7 @@ PUT  /api/users/profile
 ```
 
 #### Configuration API
+
 ```
 POST /api/configurations
      - Body: { businessName, template, colors, ... }
@@ -512,6 +533,7 @@ POST /api/configurations/:id/publish
 ```
 
 #### Web Apps API
+
 ```
 POST /api/apps/publish
      - Body: { subdomain, config }
@@ -573,6 +595,7 @@ app.use("/api/users", requireAuth, usersRouter);
 ## 5. Current Folder Structure
 
 ### Root Level
+
 ```
 .
 ├── .env                           # Environment variables (local dev)
@@ -593,6 +616,7 @@ app.use("/api/users", requireAuth, usersRouter);
 ```
 
 ### Frontend (`client/`)
+
 ```
 client/
 ├── App.tsx                        # Root component (ClerkProvider wrapper)
@@ -654,6 +678,7 @@ client/
 ```
 
 ### Backend (`server/`)
+
 ```
 server/
 ├── index.ts                       # Express app setup
@@ -683,6 +708,7 @@ server/
 ```
 
 ### Database (`prisma/`)
+
 ```
 prisma/
 └── schema.prisma                  # Prisma schema (User, Business, WebApp, Tenant, etc.)
@@ -697,26 +723,26 @@ prisma/
 **Location:** `.env` (root)  
 **Access:** Via `import.meta.env.VITE_*`
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `VITE_CLERK_PUBLISHABLE_KEY` | `pk_test_...` | Clerk public key for ClerkProvider |
-| `VITE_STACK_PROJECT_ID` | UUID | Stack Auth (legacy, may be deprecated) |
-| `VITE_STACK_PUBLISHABLE_CLIENT_KEY` | Key string | Stack Auth client key (legacy) |
+| Variable                            | Value         | Purpose                                |
+| ----------------------------------- | ------------- | -------------------------------------- |
+| `VITE_CLERK_PUBLISHABLE_KEY`        | `pk_test_...` | Clerk public key for ClerkProvider     |
+| `VITE_STACK_PROJECT_ID`             | UUID          | Stack Auth (legacy, may be deprecated) |
+| `VITE_STACK_PUBLISHABLE_CLIENT_KEY` | Key string    | Stack Auth client key (legacy)         |
 
 ### Backend Environment Variables (Node.js)
 
 **Location:** `.env` (root)  
 **Access:** Via `process.env.*`
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `DATABASE_URL` | `postgresql://...@ep-bitter-silence...` | Neon PostgreSQL connection string |
-| `NETLIFY_DATABASE_URL` | `postgresql://...@ep-bitter-silence...` | Netlify proxy connection string (same as above) |
-| `CLERK_SECRET_KEY` | `sk_test_...` | Clerk secret key for server-side token verification |
-| `JWT_SECRET` | Secret string | Legacy JWT secret (may be deprecated) |
-| `SITE_URL` | `https://maitr.de` | Production site URL |
-| `PUBLIC_BASE_DOMAIN` | `maitr.de` | Base domain for subdomains |
-| `PING_MESSAGE` | `ping` | Health check message |
+| Variable               | Value                                   | Purpose                                             |
+| ---------------------- | --------------------------------------- | --------------------------------------------------- |
+| `DATABASE_URL`         | `postgresql://...@ep-bitter-silence...` | Neon PostgreSQL connection string                   |
+| `NETLIFY_DATABASE_URL` | `postgresql://...@ep-bitter-silence...` | Netlify proxy connection string (same as above)     |
+| `CLERK_SECRET_KEY`     | `sk_test_...`                           | Clerk secret key for server-side token verification |
+| `JWT_SECRET`           | Secret string                           | Legacy JWT secret (may be deprecated)               |
+| `SITE_URL`             | `https://maitr.de`                      | Production site URL                                 |
+| `PUBLIC_BASE_DOMAIN`   | `maitr.de`                              | Base domain for subdomains                          |
+| `PING_MESSAGE`         | `ping`                                  | Health check message                                |
 
 ### Example `.env.example`
 
@@ -762,6 +788,7 @@ status = 200
 ```
 
 **How It Works:**
+
 1. Frontend build output → `dist/spa/` (served by Netlify CDN)
 2. API requests `/api/*` → routed to `/.netlify/functions/api/` (serverless Express)
 3. SPA routing → any unmatched route → `index.html` (client-side React Router handles it)
@@ -785,6 +812,7 @@ npx prisma db push
 ```
 
 **What Happens:**
+
 - Vite dev server runs on port 8080
 - Express server integrated via Vite plugin (see `vite.config.ts`)
 - Database changes synchronized via `npx prisma db push`
@@ -824,6 +852,7 @@ npx prisma db push --force-reset
 ### Clerk Integration Status
 
 ✅ **Completed:**
+
 - Frontend ClerkProvider setup in `client/App.tsx`
 - Clerk modal components in Login/Signup pages
 - Backend token verification in `server/utils/clerk.ts`
@@ -834,6 +863,7 @@ npx prisma db push --force-reset
 ### Database Synchronization
 
 ✅ **Completed:**
+
 - Prisma schema with `clerkId` unique constraint
 - Neon PostgreSQL connection via `DATABASE_URL`
 - Netlify pooler support via `NETLIFY_DATABASE_URL`
@@ -883,6 +913,7 @@ Database:
 ## 9. Deployment Architecture
 
 ### Netlify Frontend
+
 - **Build Command:** `npm run build:client`
 - **Output Directory:** `dist/spa/`
 - **Asset Optimization:** CSS/JS bundling, minification
@@ -890,6 +921,7 @@ Database:
 - **Redirects:** `/api/*` → serverless functions, `/*` → SPA fallback
 
 ### Netlify Serverless Backend
+
 - **Function:** `netlify/functions/api.ts`
 - **Runtime:** Node.js
 - **Build Command:** `npm run build:server`
@@ -897,6 +929,7 @@ Database:
 - **Cold Starts:** Minimal due to Node.js warmup
 
 ### Neon PostgreSQL
+
 - **Instance:** `ep-bitter-silence` (production)
 - **Connection Pool:** Netlify built-in pooler
 - **Schema:** Managed via Prisma migrations
