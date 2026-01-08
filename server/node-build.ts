@@ -19,7 +19,7 @@ function validateEnvironment() {
   // Check N8N_WEBHOOK_URL
   if (!process.env.N8N_WEBHOOK_URL) {
     errors.push(
-      "❌ N8N_WEBHOOK_URL is not set (required for n8n analysis flow)"
+      "❌ N8N_WEBHOOK_URL is not set (required for n8n analysis flow)",
     );
   }
 
@@ -28,14 +28,17 @@ function validateEnvironment() {
     process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
   if (!hasDatabase) {
     errors.push(
-      "❌ DATABASE_URL or NETLIFY_DATABASE_URL is not set (required for data persistence)"
+      "❌ DATABASE_URL or NETLIFY_DATABASE_URL is not set (required for data persistence)",
     );
   }
 
   // Check JWT_SECRET
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "dev-secret-change-me") {
+  if (
+    !process.env.JWT_SECRET ||
+    process.env.JWT_SECRET === "dev-secret-change-me"
+  ) {
     errors.push(
-      "❌ JWT_SECRET is not set or using dev default (required for authentication security)"
+      "❌ JWT_SECRET is not set or using dev default (required for authentication security)",
     );
   }
 
@@ -45,7 +48,7 @@ function validateEnvironment() {
     console.error("Missing critical environment variables:\n");
     errors.forEach((error) => console.error(error));
     console.error(
-      "\n📖 Please configure these variables in your .env file or environment.\n"
+      "\n📖 Please configure these variables in your .env file or environment.\n",
     );
     process.exit(1);
   }
