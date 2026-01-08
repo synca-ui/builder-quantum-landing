@@ -1,5 +1,5 @@
-import type { Request, Response, NextFunction } from 'express';
-import { verifyClerkToken, getOrCreateUser } from '../utils/clerk';
+import type { Request, Response, NextFunction } from "express";
+import { verifyClerkToken, getOrCreateUser } from "../utils/clerk";
 
 export interface AuthUser {
   id: string;
@@ -15,13 +15,17 @@ declare global {
   }
 }
 
-export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const auth = req.headers.authorization || '';
-    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    const auth = req.headers.authorization || "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
 
     if (!token) {
-      return res.status(401).json({ error: 'Missing token' });
+      return res.status(401).json({ error: "Missing token" });
     }
 
     // Verify Clerk token
@@ -39,7 +43,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
     return next();
   } catch (e) {
-    console.error('Auth error:', e);
-    return res.status(401).json({ error: 'Invalid token' });
+    console.error("Auth error:", e);
+    return res.status(401).json({ error: "Invalid token" });
   }
 }

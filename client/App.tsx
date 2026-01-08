@@ -46,7 +46,7 @@ const queryClient = new QueryClient({
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY environment variable');
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
 }
 
 const App = () => (

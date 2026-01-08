@@ -1,7 +1,7 @@
-import { verifyToken } from '@clerk/clerk-sdk-node';
-import prisma from '../db/prisma';
+import { verifyToken } from "@clerk/clerk-sdk-node";
+import prisma from "../db/prisma";
 
-const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY || '';
+const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY || "";
 
 export interface VerifiedToken {
   sub: string;
@@ -18,11 +18,11 @@ export interface VerifiedToken {
  */
 export async function verifyClerkToken(token: string): Promise<VerifiedToken> {
   if (!token) {
-    throw new Error('Missing token');
+    throw new Error("Missing token");
   }
 
   if (!CLERK_SECRET_KEY) {
-    throw new Error('CLERK_SECRET_KEY not configured');
+    throw new Error("CLERK_SECRET_KEY not configured");
   }
 
   try {
@@ -31,19 +31,21 @@ export async function verifyClerkToken(token: string): Promise<VerifiedToken> {
     });
 
     if (!decoded || !decoded.sub) {
-      throw new Error('Invalid token: no sub claim');
+      throw new Error("Invalid token: no sub claim");
     }
 
     return {
       sub: decoded.sub,
-      email: (decoded as any).email || (decoded as any).emailAddresses?.[0]?.emailAddress,
+      email:
+        (decoded as any).email ||
+        (decoded as any).emailAddresses?.[0]?.emailAddress,
       firstName: (decoded as any).firstName,
       lastName: (decoded as any).lastName,
       emailVerified: (decoded as any).emailVerified,
     };
   } catch (error) {
-    console.error('Token verification error:', error);
-    throw new Error('Invalid or expired token');
+    console.error("Token verification error:", error);
+    throw new Error("Invalid or expired token");
   }
 }
 
@@ -54,12 +56,9 @@ export async function verifyClerkToken(token: string): Promise<VerifiedToken> {
  * @param email - User's email (from Clerk token)
  * @returns The Prisma User object
  */
-export async function getOrCreateUser(
-  clerkId: string,
-  email?: string
-) {
+export async function getOrCreateUser(clerkId: string, email?: string) {
   if (!clerkId) {
-    throw new Error('Missing clerkId');
+    throw new Error("Missing clerkId");
   }
 
   try {
@@ -72,21 +71,23 @@ export async function getOrCreateUser(
     }
 
     if (!email) {
-      throw new Error('Cannot create user without email');
+      throw new Error("Cannot create user without email");
     }
 
-    console.log(`[Lazy Sync] Creating new user: clerkId=${clerkId}, email=${email}`);
+    console.log(
+      `[Lazy Sync] Creating new user: clerkId=${clerkId}, email=${email}`,
+    );
     user = await prisma.user.create({
       data: {
         clerkId,
         email,
-        role: 'OWNER',
+        role: "OWNER",
       },
     });
 
     return user;
   } catch (error) {
-    console.error('Error in getOrCreateUser:', error);
+    console.error("Error in getOrCreateUser:", error);
     throw error;
   }
 }
@@ -103,14 +104,15 @@ export async function syncUserFromClerk(
   clerkId: string,
   email: string,
   firstName?: string,
-  lastName?: string
+  lastName?: string,
 ) {
   if (!clerkId) {
-    throw new Error('Missing clerkId');
+    throw new Error("Missing clerkId");
   }
 
   try {
-    const fullName = [firstName, lastName].filter(Boolean).join(' ') || undefined;
+    const fullName =
+      [firstName, lastName].filter(Boolean).join(" ") || undefined;
 
     const user = await prisma.user.update({
       where: { clerkId },
@@ -122,7 +124,7 @@ export async function syncUserFromClerk(
 
     return user;
   } catch (error) {
-    console.error('Error syncing user from Clerk:', error);
+    console.error("Error syncing user from Clerk:", error);
     throw error;
   }
 }

@@ -16,6 +16,7 @@ export default function RequireAuth({
         Loading…
       </div>
     );
-  if (!isSignedIn) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!isSignedIn)
+    return <Navigate to="/login" state={{ from: location }} replace />;
   return <>{children}</>;
 }

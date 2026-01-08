@@ -15,7 +15,9 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
-      setFullName(user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "");
+      setFullName(
+        user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "",
+      );
     }
   }, [user]);
 
@@ -49,7 +51,9 @@ export default function Profile() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="text-2xl font-black text-gradient">Maitr</Link>
+              <Link to="/" className="text-2xl font-black text-gradient">
+                Maitr
+              </Link>
               <span className="text-gray-300">/</span>
               <span className="text-gray-600 font-medium">Profile</span>
             </div>
@@ -84,7 +88,9 @@ export default function Profile() {
                   onChange={(e) => setFullName(e.target.value)}
                 />
                 {message && (
-                  <div className={`text-sm ${message === 'Profile updated' ? 'text-green-600' : 'text-red-600'}`}>
+                  <div
+                    className={`text-sm ${message === "Profile updated" ? "text-green-600" : "text-red-600"}`}
+                  >
                     {message}
                   </div>
                 )}

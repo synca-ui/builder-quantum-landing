@@ -1,5 +1,5 @@
-import { useAuth, useUser } from '@clerk/clerk-react';
-import { useEffect, useState } from 'react';
+import { useAuth, useUser } from "@clerk/clerk-react";
+import { useEffect, useState } from "react";
 
 export default function AdminPortal() {
   const { getToken } = useAuth();
@@ -12,17 +12,17 @@ export default function AdminPortal() {
       try {
         if (!user) return;
         const token = await getToken();
-        const res = await fetch('/api/users/me', {
+        const res = await fetch("/api/users/me", {
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
         if (res.ok) {
           const data = await res.json();
-          setIsAdmin(data.user?.role === 'ADMIN');
+          setIsAdmin(data.user?.role === "ADMIN");
         }
       } catch (e) {
-        console.error('Failed to fetch user role:', e);
+        console.error("Failed to fetch user role:", e);
       } finally {
         setLoading(false);
       }
@@ -36,7 +36,9 @@ export default function AdminPortal() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Admin Portal</h1>
-      <p className="text-gray-600 mb-6">Signed in as {user?.emailAddresses[0]?.emailAddress}</p>
+      <p className="text-gray-600 mb-6">
+        Signed in as {user?.emailAddresses[0]?.emailAddress}
+      </p>
       {!isAdmin && (
         <div className="p-4 border rounded text-sm text-amber-700 bg-amber-50">
           You are signed in, but your role is not "admin". Limited access.

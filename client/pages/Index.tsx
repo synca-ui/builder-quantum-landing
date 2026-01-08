@@ -25,7 +25,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
-import { useAuth as useClerkAuth, SignInButton, SignUpButton } from "@clerk/clerk-react";
+import {
+  useAuth as useClerkAuth,
+  SignInButton,
+  SignUpButton,
+} from "@clerk/clerk-react";
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
@@ -591,7 +595,6 @@ export default function Index() {
           </div>
         </div>
       </section>
-
 
       <section
         id="features"
