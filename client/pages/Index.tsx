@@ -393,36 +393,28 @@ export default function Index() {
               <div className="pt-2 border-t border-gray-200/50 space-y-2">
                 {!user && (
                   <>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setAuthEmail("");
-                        setAuthPassword("");
-                        setAuthError(null);
-                        setShowLogin(true);
-                      }}
-                    >
-                      Log in
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setAuthEmail("");
-                        setAuthPassword("");
-                        setAuthError(null);
-                        setShowSignup(true);
-                      }}
-                    >
-                      Sign up
-                    </Button>
+                    <SignInButton mode="modal">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Log in
+                      </Button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <Button
+                        size="sm"
+                        className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Sign up
+                      </Button>
+                    </SignUpButton>
                   </>
                 )}
-                {user && (
+                {isSignedIn && (
                   <a href="/profile" onClick={() => setIsMenuOpen(false)}>
                     <Button size="sm" variant="outline" className="w-full">
                       Profile
