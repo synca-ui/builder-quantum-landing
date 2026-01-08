@@ -131,7 +131,8 @@ function ShareQRButton({ url }: { url: string }) {
 }
 
 export default function Configurator() {
-  // Initialize persistence system FIRST
+  // Initialize Clerk auth and persistence system FIRST (before any callbacks)
+  const { isSignedIn, getToken } = useAuth();
   const persistence = usePersistence();
   const navigate = useNavigate();
 
