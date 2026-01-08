@@ -55,9 +55,6 @@ export function createServer() {
   app.use("/api", apiRouter);
 
   // Additional explicit routes / routers
-  // Auth
-  app.use("/api/auth", authRouter);
-
   // Apps (protected)
   app.use("/api", webAppsRouter);
 
