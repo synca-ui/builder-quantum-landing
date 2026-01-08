@@ -22,7 +22,7 @@ included_files = [
 # Diese Regel ist entscheidend und scheint bereits korrekt zu sein.
 [[redirects]]
 from = "/api/*"
-to = "/.netlify/functions/api/:splat"
+to = "/.netlify/functions/api/"
 status = 200
 force = true
 
