@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import {
   Plus,
   Edit3,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/api";
 
 export default function Dashboard() {
+  const { getToken } = useAuth();
   const [configurations, setConfigurations] = useState<Configuration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,13 +32,14 @@ export default function Dashboard() {
   // Load configurations on mount
   useEffect(() => {
     loadConfigurations();
-  }, []);
+  }, [getToken]);
 
   const loadConfigurations = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await configurationApi.getAll();
+      const token = await getToken();
+      const result = await configurationApi.getAll(token || undefined);
       if (result.success && result.data) {
         setConfigurations(result.data);
       } else {
@@ -54,7 +57,8 @@ export default function Dashboard() {
   const deleteConfiguration = async (id: string) => {
     setDeleteLoading(id);
     try {
-      const result = await configurationApi.delete(id);
+      const token = await getToken();
+      const result = await configurationApi.delete(id, token || undefined);
       if (result.success) {
         setConfigurations((prev) => prev.filter((config) => config.id !== id));
       } else {
@@ -71,7 +75,8 @@ export default function Dashboard() {
 
   const publishConfiguration = async (id: string) => {
     try {
-      const result = await configurationApi.publish(id);
+      const token = await getToken();
+      const result = await configurationApi.publish(id, undefined, token || undefined);
       if (result.success && result.data) {
         setConfigurations((prev) =>
           prev.map((config) => (config.id === id ? result.data! : config)),
