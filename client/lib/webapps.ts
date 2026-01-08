@@ -1,14 +1,22 @@
 import axios from "axios";
 
-export async function publishWebApp(subdomain: string, config: any, token?: string) {
+export async function publishWebApp(
+  subdomain: string,
+  config: any,
+  token?: string,
+) {
   try {
-    const res = await axios.post("/api/apps/publish", { subdomain, config }, {
-      baseURL: "",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    const res = await axios.post(
+      "/api/apps/publish",
+      { subdomain, config },
+      {
+        baseURL: "",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       },
-    });
+    );
     return res.data as {
       id: string;
       user_id: string;
@@ -59,13 +67,17 @@ export async function getMyApp(id: string, token?: string) {
 
 export async function updateMyApp(id: string, config: any, token?: string) {
   try {
-    const res = await axios.put(`/api/apps/${id}`, { config }, {
-      baseURL: "",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    const res = await axios.put(
+      `/api/apps/${id}`,
+      { config },
+      {
+        baseURL: "",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       },
-    });
+    );
     return res.data as any;
   } catch (error) {
     console.error("Failed to update app:", error);
