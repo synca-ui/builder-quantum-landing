@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { authRouter } from "./auth";
 import { webAppsRouter, publicAppsRouter } from "./webapps";
 import {
   saveConfiguration,
