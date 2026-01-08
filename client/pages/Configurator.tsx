@@ -67,7 +67,7 @@ import MenuSection from "@/components/sections/MenuSection";
 import GalleryGrid from "@/components/sections/GalleryGrid";
 import TemplateRegistry from "@/components/template/TemplateRegistry";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@clerk/clerk-react";
 import { publishWebApp } from "@/lib/webapps";
 import {
   Dialog,
