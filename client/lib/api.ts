@@ -63,6 +63,7 @@ function getUserId(): string {
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
+  token?: string,
 ): Promise<ApiResponse<T>> {
   try {
     // Add timeout to prevent hanging requests
@@ -72,7 +73,7 @@ async function apiRequest<T>(
     const response = await fetch(`/api${endpoint}`, {
       headers: {
         "Content-Type": "application/json",
-        ...(localStorage.getItem("auth_token") ? { Authorization: `Bearer ${localStorage.getItem("auth_token")}` } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
       signal: controller.signal,
