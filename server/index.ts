@@ -34,24 +34,6 @@ import {
 } from "./routes/orders";
 import { handleForwardN8n } from "./routes/n8nProxy";
 
-// Middleware to fix Buffer-body issues (Netlify edge cases)
-const rawBodyMiddleware = (req: any, _res: any, next: any) => {
-  try {
-    if (Buffer.isBuffer(req.body)) {
-      try {
-        req.body = JSON.parse(req.body.toString());
-      } catch (e) {
-        console.error("Error parsing buffer body:", e);
-        req.body = {};
-      }
-    }
-    next();
-  } catch (err) {
-    console.error("Error in rawBodyMiddleware:", err);
-    next(err);
-  }
-};
-
 export function createServer() {
   const app = express();
 
@@ -70,8 +52,38 @@ export function createServer() {
     handleStripeWebhook,
   );
 
-  // Repair raw bodies coming from certain hosting environments
-  app.use(rawBodyMiddleware);
+  // Safe JSON parsing for Netlify empty buffers (serverless-first approach)
+  app.use((req, res, next) => {
+    // Skip if not a Buffer or if body is already parsed
+    if (!Buffer.isBuffer(req.body)) {
+      return next();
+    }
+
+    // Handle empty buffers (common in Netlify cold starts)
+    if (req.body.length === 0) {
+      req.body = {};
+      return next();
+    }
+
+    // Only parse if Content-Type suggests JSON
+    const contentType = req.headers["content-type"] || "";
+    if (!contentType.includes("application/json")) {
+      return next();
+    }
+
+    try {
+      req.body = JSON.parse(req.body.toString("utf8"));
+      next();
+    } catch (err) {
+      console.error("❌ JSON Parse Error in Netlify:", err);
+      // CRITICAL: Send response immediately. Do NOT call next(err).
+      // This ensures Netlify/Lambda receives a response before timeout.
+      return res.status(400).json({
+        error: "Invalid JSON",
+        message: "The request body could not be parsed as JSON.",
+      });
+    }
+  });
 
   // Standard JSON middleware
   app.use(express.json({ limit: "25mb" }));
@@ -153,10 +165,21 @@ export function createServer() {
       res: express.Response,
       _next: express.NextFunction,
     ) => {
-      console.error("Express error handler caught:", err);
-      res.status(err.status || 500).json({
+      // Don't send response if headers already sent
+      if (res.headersSent) {
+        console.error("⚠️  Headers already sent, error will not be transmitted:", err?.message);
+        return;
+      }
+
+      console.error("🔥 Express error handler caught:", {
+        message: err?.message || "Unknown error",
+        status: err?.status || 500,
+        code: err?.code,
+      });
+
+      res.status(err?.status || 500).json({
         error: "Internal Server Error",
-        message: err.message || "An unexpected error occurred",
+        message: err?.message || "An unexpected error occurred",
       });
     },
   );
