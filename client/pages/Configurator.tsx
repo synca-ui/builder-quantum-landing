@@ -1014,7 +1014,8 @@ export default function Configurator() {
 
       // If authenticated, publish to protected apps endpoint; else fallback
       let live: string | null = null;
-      if (token && user) {
+      if (isSignedIn) {
+        const token = await getToken();
         const cfg = normalizeConfigPayload(mediaSafe) as any;
         const slugSource = (cfg.slug || cfg.businessName || "").toString();
         const slug =
@@ -1023,7 +1024,7 @@ export default function Configurator() {
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "")
             .slice(0, 63) || `site-${Date.now().toString(36)}`;
-        const publishRes = await publishWebApp(slug, cfg);
+        const publishRes = await publishWebApp(slug, cfg, token);
         live =
           publishRes.publishedUrl || publishRes.previewUrl || `/site/${slug}`;
       } else {
