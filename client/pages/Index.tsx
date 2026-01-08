@@ -316,30 +316,19 @@ export default function Index() {
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setAuthEmail("");
-                      setAuthPassword("");
-                      setAuthError(null);
-                      setShowLogin(true);
-                    }}
-                  >
-                    Log in
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                    onClick={() => {
-                      setAuthEmail("");
-                      setAuthPassword("");
-                      setAuthError(null);
-                      setShowSignup(true);
-                    }}
-                  >
-                    Sign up
-                  </Button>
+                  <SignInButton mode="modal">
+                    <Button variant="outline" size="sm">
+                      Log in
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                    >
+                      Sign up
+                    </Button>
+                  </SignUpButton>
                 </>
               )}
               <a href="/mode-selection">
