@@ -44,13 +44,7 @@ export default function Index() {
     setIsVisible(true);
   }, []);
 
-  const { user, login, signup } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(false);
+  const { isSignedIn } = useClerkAuth();
 
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
