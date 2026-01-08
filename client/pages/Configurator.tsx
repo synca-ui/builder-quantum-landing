@@ -987,8 +987,6 @@ export default function Configurator() {
     [fileOrUrlToDataUrl],
   );
 
-  const { isSignedIn, getToken } = useAuth();
-
   const publishConfiguration = useCallback(async () => {
     if (!isSignedIn) {
       toast({
