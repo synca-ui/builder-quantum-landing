@@ -177,7 +177,11 @@ export const configurationApi = {
   // Get specific configuration
   async get(id: string, token?: string): Promise<ApiResponse<Configuration>> {
     try {
-      return await apiRequest<Configuration>(`/configurations/${id}`, {}, token);
+      return await apiRequest<Configuration>(
+        `/configurations/${id}`,
+        {},
+        token,
+      );
     } catch (error) {
       console.warn("Failed to get configuration:", error);
       return {

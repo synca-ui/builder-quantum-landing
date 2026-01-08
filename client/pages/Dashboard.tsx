@@ -76,7 +76,11 @@ export default function Dashboard() {
   const publishConfiguration = async (id: string) => {
     try {
       const token = await getToken();
-      const result = await configurationApi.publish(id, undefined, token || undefined);
+      const result = await configurationApi.publish(
+        id,
+        undefined,
+        token || undefined,
+      );
       if (result.success && result.data) {
         setConfigurations((prev) =>
           prev.map((config) => (config.id === id ? result.data! : config)),
