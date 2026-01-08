@@ -11,8 +11,8 @@ datasource db {
 // --- 1. USER & AUTH ---
 model User {
   id            String    @id @default(uuid())
+  clerkId       String    @unique @map("clerk_id")  // Clerk user ID for authentication
   email         String    @unique
-  passwordHash  String?   // Hashed via bcrypt
   fullName      String?
   role          UserRole  @default(OWNER)
 
