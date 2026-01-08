@@ -905,7 +905,7 @@ export default function Configurator() {
         console.error("Save error:", error);
       }
     },
-    [currentConfigId, currentStep, persistence],
+    [currentConfigId, currentStep, persistence, getToken],
   );
 
   // Convert File/Blob/blob: URLs to data URLs so they persist across sessions and servers
