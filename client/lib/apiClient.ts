@@ -9,18 +9,8 @@ const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
-  try {
-    const token = localStorage.getItem("auth_token");
-    // Check if token and headers object exist before setting the header
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  } catch (e) {
-    // It's good practice to log potential errors
-    console.error("Error setting auth token in interceptor", e);
-  }
-  return config;
-});
+// Note: Token attachment for Clerk is now handled by individual API calls
+// using getToken() from @clerk/clerk-react. Axios interceptor is left minimal
+// to avoid circular dependencies with React hooks.
 
 export default apiClient;
