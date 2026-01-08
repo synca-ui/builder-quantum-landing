@@ -167,7 +167,10 @@ export function createServer() {
     ) => {
       // Don't send response if headers already sent
       if (res.headersSent) {
-        console.error("⚠️  Headers already sent, error will not be transmitted:", err?.message);
+        console.error(
+          "⚠️  Headers already sent, error will not be transmitted:",
+          err?.message,
+        );
         return;
       }
 
