@@ -17,7 +17,6 @@ import { handleDemo } from "./demo";
 export const apiRouter = Router();
 
 // Binden Sie alle importierten Routen an den Haupt-Router
-apiRouter.use('/auth', authRouter);
 apiRouter.use(webAppsRouter);
 apiRouter.use(publicAppsRouter);
 
