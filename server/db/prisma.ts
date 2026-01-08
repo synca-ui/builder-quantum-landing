@@ -1,7 +1,7 @@
 import pkg from "@prisma/client";
 const { PrismaClient } = pkg;
 
-let prisma: PrismaClient;
+let prisma: PrismaClient | null = null;
 
 function initializePrisma() {
   const dbUrl = process.env.DATABASE_URL || "";
@@ -13,15 +13,25 @@ function initializePrisma() {
   });
 }
 
-if (process.env.NODE_ENV === "production") {
-  prisma = initializePrisma();
-} else {
-  // In development, use a global variable to avoid multiple instances
-  const globalWithPrisma = global as unknown as { prisma?: PrismaClient };
-  if (!globalWithPrisma.prisma) {
-    globalWithPrisma.prisma = initializePrisma();
+// Lazy initialization: only create PrismaClient when first accessed
+function getPrismaInstance(): PrismaClient {
+  if (!prisma) {
+    prisma = initializePrisma();
   }
-  prisma = globalWithPrisma.prisma;
+  return prisma;
 }
 
-export default prisma;
+// Handle serverless disconnect: called after each request
+export async function disconnectPrisma() {
+  if (prisma) {
+    await prisma.$disconnect();
+    prisma = null;
+  }
+}
+
+// Get singleton instance (lazy-loaded)
+export default new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return (getPrismaInstance() as any)[prop];
+  },
+});
