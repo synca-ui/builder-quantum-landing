@@ -844,7 +844,7 @@ export default function Configurator() {
   // Save and publish functions
   const saveToBackend = useCallback(
     async (data: Partial<Configuration>) => {
-      const t = localStorage.getItem("auth_token");
+      const t = await getToken();
       if (!t) {
         setSaveStatus("error");
         toast({
