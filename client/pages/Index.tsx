@@ -26,13 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
 import { useAuth as useClerkAuth, SignInButton, SignUpButton } from "@clerk/clerk-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
@@ -589,105 +582,16 @@ export default function Index() {
                 </Button>
               </a>
             ) : (
-              <Button
-                className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                onClick={() => setShowLogin(true)}
-              >
-                Log in to access Dashboard
-              </Button>
+              <SignInButton mode="modal">
+                <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
+                  Log in to access Dashboard
+                </Button>
+              </SignInButton>
             )}
           </div>
         </div>
       </section>
 
-      <Dialog open={showLogin} onOpenChange={setShowLogin}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Log in</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setAuthLoading(true);
-              setAuthError(null);
-              try {
-                await login(authEmail, authPassword);
-                setShowLogin(false);
-              } catch (e: any) {
-                setAuthError(e?.response?.data?.error || "Login failed");
-              } finally {
-                setAuthLoading(false);
-              }
-            }}
-            className="space-y-3"
-          >
-            <Input
-              type="email"
-              placeholder="Email"
-              value={authEmail}
-              onChange={(e) => setAuthEmail(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={authPassword}
-              onChange={(e) => setAuthPassword(e.target.value)}
-              required
-            />
-            {authError && (
-              <div className="text-sm text-red-600">{authError}</div>
-            )}
-            <Button type="submit" className="w-full" disabled={authLoading}>
-              {authLoading ? "Logging in…" : "Log in"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={showSignup} onOpenChange={setShowSignup}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Sign up</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setAuthLoading(true);
-              setAuthError(null);
-              try {
-                await signup(authEmail, authPassword);
-                setShowSignup(false);
-              } catch (e: any) {
-                setAuthError(e?.response?.data?.error || "Signup failed");
-              } finally {
-                setAuthLoading(false);
-              }
-            }}
-            className="space-y-3"
-          >
-            <Input
-              type="email"
-              placeholder="Email"
-              value={authEmail}
-              onChange={(e) => setAuthEmail(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={authPassword}
-              onChange={(e) => setAuthPassword(e.target.value)}
-              required
-            />
-            {authError && (
-              <div className="text-sm text-red-600">{authError}</div>
-            )}
-            <Button type="submit" className="w-full" disabled={authLoading}>
-              {authLoading ? "Creating…" : "Create account"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       <section
         id="features"
