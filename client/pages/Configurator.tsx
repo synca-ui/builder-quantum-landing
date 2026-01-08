@@ -869,7 +869,7 @@ export default function Configurator() {
           configData.id = currentConfigId;
         }
 
-        const result = await configurationApi.save(configData);
+        const result = await configurationApi.save(configData, t);
 
         if (result.success && result.data) {
           const configId = result.data.id || null;
