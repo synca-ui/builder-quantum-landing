@@ -1,7 +1,7 @@
 import pkg from "@prisma/client";
 const { PrismaClient } = pkg;
 
-let prisma: PrismaClient | null = null;
+export let prisma: PrismaClient | null = null;
 
 function initializePrisma() {
   const dbUrl = process.env.DATABASE_URL || "";

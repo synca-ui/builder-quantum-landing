@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import { handleClerkWebhook } from "./webhooks/clerk";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -75,6 +76,11 @@ export function createServer() {
     handleStripeWebhook,
   );
 
+  app.post(
+    "/api/webhooks/clerk",
+    express.raw({ type: "application/json" }),
+    handleClerkWebhook,
+  );
   // Repair raw bodies coming from certain hosting environments
   app.use(rawBodyMiddleware);
 
