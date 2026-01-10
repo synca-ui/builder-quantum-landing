@@ -10,9 +10,9 @@ export default function HostAwareRoot() {
       // 1. Liste deiner Haupt-Domains (Dashboard)
       const mainDomains = [
         "maitr.de",
-        "www.maitr.de", // WICHTIG: Auch mit www
-        "synca.digital",
-        "www.synca.digital", // Sicherheitshalber auch hier mit www
+        "www.maitr.de",
+        "staging.maitr.de",
+        "www.staging.maitr.de",
         "localhost",
         "127.0.0.1",
       ];
