@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
-        production: path.resolve(__dirname, "server/node-build.ts"),
+        "node-build": path.resolve(__dirname, "server/node-build.ts"),
         netlify: path.resolve(__dirname, "server/netlify.ts"),
       },
       formats: ["es"],

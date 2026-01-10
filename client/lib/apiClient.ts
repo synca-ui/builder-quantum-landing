@@ -1,8 +1,12 @@
 import axios from "axios";
 
+// WICHTIG: Hier holen wir die Railway-Adresse aus der Netlify-Umgebungsvariable.
+// Falls wir lokal arbeiten (keine Variable), nutzen wir weiterhin "/api" (Proxy).
+const baseURL = import.meta.env.VITE_API_URL || "/api";
+
 export function createApiClient(getToken: () => Promise<string | null>) {
   const apiClient = axios.create({
-    baseURL: "/api",
+    baseURL: baseURL, // <--- Hier nutzen wir jetzt die variable URL
     withCredentials: false,
     headers: {
       "Content-Type": "application/json",
@@ -27,7 +31,7 @@ export function createApiClient(getToken: () => Promise<string | null>) {
 
 // Default instance without auth for non-authenticated requests
 const apiClient = axios.create({
-  baseURL: "/api",
+  baseURL: baseURL, // <--- Auch hier angepasst
   withCredentials: false,
   headers: {
     "Content-Type": "application/json",
