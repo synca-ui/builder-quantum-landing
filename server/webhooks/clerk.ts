@@ -1,6 +1,10 @@
 import { Webhook } from 'svix';
-import { prisma } from '../db/prisma';
+// WICHTIG: Wir importieren die Klasse direkt, nicht die Instanz aus ../db/prisma
+import { PrismaClient } from '@prisma/client';
 import type { WebhookEvent } from '@clerk/clerk-sdk-node';
+
+// Wir erstellen hier eine eigene Instanz für den Webhook, um Import-Probleme zu umgehen
+const prisma = new PrismaClient();
 
 export async function handleClerkWebhook(req: any, res: any) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -10,7 +14,6 @@ export async function handleClerkWebhook(req: any, res: any) {
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
-  // Header für die Verifizierung holen
   const svix_id = req.headers["svix-id"] as string;
   const svix_timestamp = req.headers["svix-timestamp"] as string;
   const svix_signature = req.headers["svix-signature"] as string;
@@ -19,9 +22,7 @@ export async function handleClerkWebhook(req: any, res: any) {
     return res.status(400).send('Error occured -- no svix headers');
   }
 
-  // Wichtig: Body muss String sein
   const body = req.body.toString();
-
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt: WebhookEvent;
 
@@ -38,13 +39,14 @@ export async function handleClerkWebhook(req: any, res: any) {
 
   const eventType = evt.type;
 
-  // USER CREATED oder UPDATED
+  // --- USER CREATED / UPDATED ---
   if (eventType === 'user.created' || eventType === 'user.updated') {
     const { id, email_addresses, first_name, last_name } = evt.data;
     const email = email_addresses[0]?.email_address;
     const fullName = `${first_name || ''} ${last_name || ''}`.trim();
 
     try {
+      // Hier stürzte es vorher ab, weil prisma null war. Jetzt ist es fix.
       await prisma.user.upsert({
         where: { clerkId: id },
         update: {
@@ -65,7 +67,7 @@ export async function handleClerkWebhook(req: any, res: any) {
     }
   }
 
-  // USER DELETED
+  // --- USER DELETED ---
   if (eventType === 'user.deleted') {
     const { id } = evt.data;
     if (id) {
