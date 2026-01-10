@@ -1,4 +1,3 @@
-import "express-async-errors";
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -34,15 +33,39 @@ import {
 } from "./routes/orders";
 import { handleForwardN8n } from "./routes/n8nProxy";
 
+// Middleware to fix Buffer-body issues (Netlify edge cases)
+const rawBodyMiddleware = (req: any, _res: any, next: any) => {
+  if (Buffer.isBuffer(req.body)) {
+    try {
+      req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+      console.error("Error parsing buffer body:", e);
+      req.body = {};
+    }
+  }
+  next();
+};
+
 export function createServer() {
   const app = express();
 
   // Middleware
+  // Da Frontend (Netlify) und Backend (Railway) getrennt sind, ist CORS wichtig.
+  // Standard cors() erlaubt alle Origins, was für den Start okay ist.
   app.use(cors());
 
-  // Health check endpoint (for dev server readiness)
+  // Health check endpoint (for dev server readiness & monitoring)
   app.get("/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Root endpoint: Zeigt an, dass das Backend auf Railway läuft
+  app.get("/", (req, res) => {
+    res.json({
+      status: "online",
+      message: "Maitr Backend is running on Railway 🚀",
+      service: "api"
+    });
   });
 
   // Stripe webhook endpoint MUST come before express.json() so we can access raw body
@@ -52,38 +75,8 @@ export function createServer() {
     handleStripeWebhook,
   );
 
-  // Safe JSON parsing for Netlify empty buffers (serverless-first approach)
-  app.use((req, res, next) => {
-    // Skip if not a Buffer or if body is already parsed
-    if (!Buffer.isBuffer(req.body)) {
-      return next();
-    }
-
-    // Handle empty buffers (common in Netlify cold starts)
-    if (req.body.length === 0) {
-      req.body = {};
-      return next();
-    }
-
-    // Only parse if Content-Type suggests JSON
-    const contentType = req.headers["content-type"] || "";
-    if (!contentType.includes("application/json")) {
-      return next();
-    }
-
-    try {
-      req.body = JSON.parse(req.body.toString("utf8"));
-      next();
-    } catch (err) {
-      console.error("❌ JSON Parse Error in Netlify:", err);
-      // CRITICAL: Send response immediately. Do NOT call next(err).
-      // This ensures Netlify/Lambda receives a response before timeout.
-      return res.status(400).json({
-        error: "Invalid JSON",
-        message: "The request body could not be parsed as JSON.",
-      });
-    }
-  });
+  // Repair raw bodies coming from certain hosting environments
+  app.use(rawBodyMiddleware);
 
   // Standard JSON middleware
   app.use(express.json({ limit: "25mb" }));
@@ -148,44 +141,8 @@ export function createServer() {
   // Demo endpoint
   app.get("/api/demo", handleDemo);
 
-  // Static files for production
-  if (process.env.NODE_ENV === "production") {
-    const clientDistPath = path.join(__dirname, "../../client/dist");
-    app.use(express.static(clientDistPath));
-    app.get(/.*/, (_req, res) => {
-      res.sendFile(path.join(clientDistPath, "index.html"));
-    });
-  }
-
-  // Global error handler middleware (must be last)
-  app.use(
-    (
-      err: any,
-      _req: express.Request,
-      res: express.Response,
-      _next: express.NextFunction,
-    ) => {
-      // Don't send response if headers already sent
-      if (res.headersSent) {
-        console.error(
-          "⚠️  Headers already sent, error will not be transmitted:",
-          err?.message,
-        );
-        return;
-      }
-
-      console.error("🔥 Express error handler caught:", {
-        message: err?.message || "Unknown error",
-        status: err?.status || 500,
-        code: err?.code,
-      });
-
-      res.status(err?.status || 500).json({
-        error: "Internal Server Error",
-        message: err?.message || "An unexpected error occurred",
-      });
-    },
-  );
+  // WICHTIG: Der Block für "static files" (client/dist) wurde entfernt.
+  // Das Backend kümmert sich jetzt NUR noch um API-Daten.
 
   return app;
 }
