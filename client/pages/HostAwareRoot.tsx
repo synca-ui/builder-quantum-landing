@@ -11,8 +11,8 @@ export default function HostAwareRoot() {
       const mainDomains = [
         "maitr.de",
         "www.maitr.de", // WICHTIG: Auch mit www
-        "synca.digital",
-        "www.synca.digital", // Sicherheitshalber auch hier mit www
+        "staging.maitr.de",
+        "www.staging.maitr.de",// Sicherheitshalber auch hier mit www
         "localhost",
         "127.0.0.1",
       ];
