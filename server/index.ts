@@ -51,25 +51,23 @@ export function createServer() {
   const app = express();
 
   // Middleware
-  // Da Frontend (Netlify) und Backend (Railway) getrennt sind, ist CORS wichtig.
-  // Standard cors() erlaubt alle Origins, was für den Start okay ist.
   app.use(cors());
 
-  // Health check endpoint (for dev server readiness & monitoring)
-  app.get("/health", (req, res) => {
+  // Health check endpoint
+  app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
   });
 
-  // Root endpoint: Zeigt an, dass das Backend auf Railway läuft
-  app.get("/", (req, res) => {
+  // Root endpoint
+  app.get("/", (_req, res) => {
     res.json({
       status: "online",
       message: "Maitr Backend is running on Railway 🚀",
-      service: "api"
+      service: "api",
     });
   });
 
-  // Stripe webhook endpoint MUST come before express.json() so we can access raw body
+  // --- WEBHOOKS (VOR JSON PARSING) ---
   app.post(
     "/api/webhooks/stripe",
     express.raw({ type: "application/json" }),
@@ -81,24 +79,21 @@ export function createServer() {
     express.raw({ type: "application/json" }),
     handleClerkWebhook,
   );
-  // Repair raw bodies coming from certain hosting environments
-  app.use(rawBodyMiddleware);
+  // --- ENDE WEBHOOKS ---
 
-  // Standard JSON middleware
+  // Repair raw bodies & JSON Middleware
+  app.use(rawBodyMiddleware);
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
-  // Subdomain routing for published sites (e.g., bella.maitr.de)
-  app.use(handleSubdomainRequest);
+  // --- API ROUTEN (WICHTIG: ZUERST DEFINIEREN) ---
+  // Damit haben API-Calls Vorrang vor Subdomain-Routing
 
-  // Use aggregated API router (may include common routes)
+  // Use aggregated API router
   app.use("/api", apiRouter);
 
   // Additional explicit routes / routers
-  // Apps (protected)
   app.use("/api", webAppsRouter);
-
-  // Public apps
   app.use("/api", publicAppsRouter);
 
   // Configuration API routes (protected)
@@ -118,37 +113,36 @@ export function createServer() {
   // Preview config injection
   app.post("/api/preview/:session", setPreviewConfig);
 
-  // Auto-generation endpoint (Auto Mode)
-  // Accepts JSON payload: { url?, maps_link?, business_name?, file_name?, file_base64? }
+  // Auto-generation endpoint
   app.post("/api/autogen", handleAutogen);
 
-  // Config JSON proxy for Edge/clients
+  // Config JSON proxy
   app.get("/api/config/:slug", getConfigBySlug);
 
-  // Instagram scraping endpoint (best-effort for public/open profiles)
+  // Instagram scraping
   app.get("/api/instagram", fetchInstagramPhotos);
 
-  // Schema.org JSON-LD generation for Agentic Web
+  // Schema.org
   app.post("/api/schema/generate", handleGenerateSchema);
   app.post("/api/schema/validate", handleValidateSchema);
 
-  // Orders API (for social proof tracking - V2.2)
+  // Orders API
   app.post("/api/orders/create", handleCreateOrder);
   app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
   app.post("/api/orders/:webAppId/clear-old", handleClearOldOrders);
 
-  // Webhook test endpoint (for development/testing)
+  // Webhook test & n8n
   app.post("/api/webhooks/test", handleWebhookTest);
-
-  // Proxy to n8n (avoids browser CORS issues)
   app.post("/api/forward-to-n8n", handleForwardN8n);
 
   // Demo endpoint
   app.get("/api/demo", handleDemo);
 
-  // WICHTIG: Der Block für "static files" (client/dist) wurde entfernt.
-  // Das Backend kümmert sich jetzt NUR noch um API-Daten.
+  // --- SUBDOMAIN ROUTING (GANZ AM ENDE) ---
+  // Erst wenn keine API-Route gepasst hat, prüfen wir auf Subdomains.
+  // Das verhindert, dass API-Calls blockiert werden oder Timeouts werfen.
+  app.use(handleSubdomainRequest);
 
   return app;
 }
