@@ -1,32 +1,20 @@
 [build]
 command = "npm run build"
-
-# Das Verzeichnis, in dem Ihre Serverless-Funktionen nach dem Build liegen.
 functions = "netlify/functions"
-
-# Das Verzeichnis, das die fertige Frontend-App enthält.
 publish = "dist/spa"
-
 
 [functions]
 node_bundler = "nft"
-# Include Prisma-related files and folders - nft will trace dependencies automatically
-included_files = [
-  "node_modules/.prisma/**/*",
-  "node_modules/@prisma/**/*",
-  "prisma/schema.prisma",
-  "dist/server/**/*"
-]
 
-# Leitet alle API-Anfragen an Ihre Serverless-Funktion weiter.
-# Diese Regel ist entscheidend und scheint bereits korrekt zu sein.
+# --- WICHTIG: Die Änderung für Railway ---
+# Leitet alle API-Anfragen an dein Railway-Backend weiter.
 [[redirects]]
 from = "/api/*"
-to = "/.netlify/functions/api/"
+to = "https://builder-quantum-landing-production.up.railway.app/api/:splat"
 status = 200
 force = true
 
-# Fallback für Single-Page-Applications (SPA), damit Links wie /dashboard direkt aufgerufen werden können.
+# Fallback für Single-Page-Application (Bleibt so)
 [[redirects]]
 from = "/*"
 to = "/index.html"
