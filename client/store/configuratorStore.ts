@@ -716,54 +716,95 @@ export const useConfiguratorUI = () =>
 
 export const useConfiguratorActions = () => {
   const store = useConfiguratorStore();
-  return {
-    business: {
-      setBusinessInfo: store.setBusinessInfo,
-      updateBusinessName: store.updateBusinessName,
-      updateBusinessType: store.updateBusinessType,
-      updateLocation: store.updateLocation,
-      updateSlogan: store.updateSlogan,
-    },
-    design: {
-      updateDesign: store.updateDesign,
-      updateTemplate: store.updateTemplate,
-      updatePrimaryColor: store.updatePrimaryColor,
-      updateSecondaryColor: store.updateSecondaryColor,
-      updateFontFamily: store.updateFontFamily,
-    },
-    content: {
-      addMenuItem: store.addMenuItem,
-      removeMenuItem: store.removeMenuItem,
-      updateMenuItem: store.updateMenuItem,
-      addGalleryImage: store.addGalleryImage,
-      removeGalleryImage: store.removeGalleryImage,
-      updateOpeningHours: store.updateOpeningHours,
-      setCategories: store.setCategories,
-    },
-    features: {
-      updateFeatureFlags: store.updateFeatureFlags,
-      toggleReservations: store.toggleReservations,
-      toggleOnlineOrdering: store.toggleOnlineOrdering,
-      toggleOnlineStore: store.toggleOnlineStore,
-      toggleTeamArea: store.toggleTeamArea,
-    },
-    navigation: {
-      nextStep: store.nextStep,
-      prevStep: store.prevStep,
-      goToStep: store.goToStep,
-      setCurrentStep: store.setCurrentStep,
-    },
-    ui: {
-      setSidebarOpen: store.setSidebarOpen,
-      toggleSectionExpand: store.toggleSectionExpand,
-      setSaveLoading: store.setSaveLoading,
-      setSaveError: store.setSaveError,
-    },
-    data: {
-      resetConfig: store.resetConfig,
-      getFullConfiguration: store.getFullConfiguration,
-      loadConfiguration: store.loadConfiguration,
-      clearAllData: store.clearAllData,
-    },
-  };
+
+  // Memoize the returned object to prevent creating new references on every render
+  // This prevents infinite loops when actions are used as dependencies in useCallback/useMemo
+  return useMemo(
+    () => ({
+      business: {
+        setBusinessInfo: store.setBusinessInfo,
+        updateBusinessName: store.updateBusinessName,
+        updateBusinessType: store.updateBusinessType,
+        updateLocation: store.updateLocation,
+        updateSlogan: store.updateSlogan,
+      },
+      design: {
+        updateDesign: store.updateDesign,
+        updateTemplate: store.updateTemplate,
+        updatePrimaryColor: store.updatePrimaryColor,
+        updateSecondaryColor: store.updateSecondaryColor,
+        updateFontFamily: store.updateFontFamily,
+      },
+      content: {
+        addMenuItem: store.addMenuItem,
+        removeMenuItem: store.removeMenuItem,
+        updateMenuItem: store.updateMenuItem,
+        addGalleryImage: store.addGalleryImage,
+        removeGalleryImage: store.removeGalleryImage,
+        updateOpeningHours: store.updateOpeningHours,
+        setCategories: store.setCategories,
+      },
+      features: {
+        updateFeatureFlags: store.updateFeatureFlags,
+        toggleReservations: store.toggleReservations,
+        toggleOnlineOrdering: store.toggleOnlineOrdering,
+        toggleOnlineStore: store.toggleOnlineStore,
+        toggleTeamArea: store.toggleTeamArea,
+      },
+      navigation: {
+        nextStep: store.nextStep,
+        prevStep: store.prevStep,
+        goToStep: store.goToStep,
+        setCurrentStep: store.setCurrentStep,
+      },
+      ui: {
+        setSidebarOpen: store.setSidebarOpen,
+        toggleSectionExpand: store.toggleSectionExpand,
+        setSaveLoading: store.setSaveLoading,
+        setSaveError: store.setSaveError,
+      },
+      data: {
+        resetConfig: store.resetConfig,
+        getFullConfiguration: store.getFullConfiguration,
+        loadConfiguration: store.loadConfiguration,
+        clearAllData: store.clearAllData,
+      },
+    }),
+    [
+      store.setBusinessInfo,
+      store.updateBusinessName,
+      store.updateBusinessType,
+      store.updateLocation,
+      store.updateSlogan,
+      store.updateDesign,
+      store.updateTemplate,
+      store.updatePrimaryColor,
+      store.updateSecondaryColor,
+      store.updateFontFamily,
+      store.addMenuItem,
+      store.removeMenuItem,
+      store.updateMenuItem,
+      store.addGalleryImage,
+      store.removeGalleryImage,
+      store.updateOpeningHours,
+      store.setCategories,
+      store.updateFeatureFlags,
+      store.toggleReservations,
+      store.toggleOnlineOrdering,
+      store.toggleOnlineStore,
+      store.toggleTeamArea,
+      store.nextStep,
+      store.prevStep,
+      store.goToStep,
+      store.setCurrentStep,
+      store.setSidebarOpen,
+      store.toggleSectionExpand,
+      store.setSaveLoading,
+      store.setSaveError,
+      store.resetConfig,
+      store.getFullConfiguration,
+      store.loadConfiguration,
+      store.clearAllData,
+    ]
+  );
 };
