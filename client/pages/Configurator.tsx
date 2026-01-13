@@ -4514,10 +4514,136 @@ export default function Configurator() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Color Themes */}
+        {pageOptions.map((page) => {
+          const isSelected = formData.selectedPages.includes(page.id);
+          const isVisible =
+            !page.condition || page.condition.includes(formData.businessType);
+
+          if (!isVisible) return null;
+
+          return (
+            <Card
+              key={page.id}
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                isSelected
+                  ? "border-teal-500 bg-teal-50"
+                  : "border-gray-200 hover:border-teal-300"
+              } ${page.required ? "opacity-75" : ""}`}
+              onClick={() => {
+                if (page.required) return;
+                const newPages = isSelected
+                  ? formData.selectedPages.filter((p) => p !== page.id)
+                  : [...formData.selectedPages, page.id];
+                updateFormData("selectedPages", newPages);
+              }}
+            >
+              <CardContent className="p-6 text-center">
+                <div
+                  className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-r ${
+                    isSelected
+                      ? "from-teal-500 to-purple-500"
+                      : "from-gray-400 to-gray-500"
+                  } flex items-center justify-center text-white`}
+                >
+                  {page.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  {page.name}
+                </h3>
+                {page.required && (
+                  <p className="text-xs text-gray-500">Required</p>
+                )}
+                {isSelected && !page.required && (
+                  <div className="mt-2">
+                    <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Page-Specific Configuration Info */}
+      <Card className="p-6 mt-8">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">
+          Homepage Options
+        </h3>
+        <label className="inline-flex items-center space-x-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!formData.showHomeHero}
+            onChange={(e) => updateFormData("showHomeHero", e.target.checked)}
+          />
+          <span>Show header block under headline (logo + name)</span>
+        </label>
+      </Card>
+
+      {formData.selectedPages.length > 1 && (
+        <Card className="p-6 mt-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">
+            Selected Pages Configuration
+          </h3>
+          <p className="text-gray-600 text-sm mb-4">
+            You've selected multiple pages. During the next steps, you'll be
+            able to configure specific content for each page:
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {formData.selectedPages.map((pageId) => {
+              const pageInfo = {
+                home: {
+                  name: "Home",
+                  config: "Business info, hero section, featured content",
+                },
+                menu: {
+                  name: "Menu",
+                  config: "Menu items, categories, pricing",
+                },
+                gallery: {
+                  name: "Gallery",
+                  config: "Photo uploads, image organization",
+                },
+                about: {
+                  name: "About",
+                  config: "Business story, team members, mission",
+                },
+                reservations: {
+                  name: "Reservations",
+                  config: "Booking system, time slots, policies",
+                },
+                contact: {
+                  name: "Contact",
+                  config: "Contact details, location, hours",
+                },
+              };
+
+              const page = pageInfo[pageId];
+              if (!page) return null;
+
+              return (
+                <div
+                  key={pageId}
+                  className="p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">
+                    {page.name}
+                  </h4>
+                  <p className="text-xs text-gray-600">{page.config}</p>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* OLD CODE REMOVED - EVERYTHING BELOW THIS WAS DELETED */}
+      <div style={{ display: 'none' }}>
+        {/* DELETED: Color Themes, Custom Colors, Font Selection, etc. */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">
-            Color Themes
+            Color Themes (DELETED)
           </label>
           <p className="text-sm text-gray-500 mb-6">
             Choose a preset or customize your own colors below
