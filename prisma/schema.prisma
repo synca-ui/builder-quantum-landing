@@ -197,7 +197,7 @@ model OrderEvent {
   @@index([orderedAt])
 }
 
-// --- 6. TENANTS (Multi-tenant Support) ---
+// --- 7. TENANTS (Multi-tenant Support) ---
 model Tenant {
   id              String    @id @default(uuid())
   slug            String    @unique
