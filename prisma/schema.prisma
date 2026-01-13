@@ -180,7 +180,7 @@ model WebApp {
   createdAt     DateTime  @default(now())
 }
 
-// --- 5. ORDER EVENTS (Social Proof) ---
+// --- 6. ORDER EVENTS (Social Proof) ---
 model OrderEvent {
   id              String    @id @default(uuid())
   webAppId        String
