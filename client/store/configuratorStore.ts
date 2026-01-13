@@ -255,12 +255,10 @@ const defaultUIState: UIState = {
 
 /**
  * Create the Zustand store with persist middleware
- * TEMPORARILY DISABLED PERSIST MIDDLEWARE for debugging
  */
 export const useConfiguratorStore = create<ConfiguratorState>()(
-  // NOTE: persist middleware COMMENTED OUT temporarily to test if rehydration is causing loops
-  // persist(
-  (set, get) => ({
+  persist(
+    (set, get) => ({
     // Initial state
     business: { ...defaultBusinessInfo },
     design: { ...defaultDesignConfig },
@@ -788,21 +786,20 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
       localStorage.removeItem("configurator-store");
     },
   }),
-  // NOTE: Persistence middleware COMMENTED OUT
-  // {
-  //   name: "configurator-store",
-  //   partialize: (state) => ({
-  //     business: state.business,
-  //     design: state.design,
-  //     content: state.content,
-  //     features: state.features,
-  //     contact: state.contact,
-  //     publishing: state.publishing,
-  //     pages: state.pages,
-  //     payments: state.payments,
-  //   }),
-  // }
-  // )
+    {
+      name: "configurator-store",
+      partialize: (state) => ({
+        business: state.business,
+        design: state.design,
+        content: state.content,
+        features: state.features,
+        contact: state.contact,
+        publishing: state.publishing,
+        pages: state.pages,
+        payments: state.payments,
+      }),
+    },
+  ),
 );
 
 /**
