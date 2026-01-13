@@ -29,148 +29,15 @@ import ReservationButton from "@/components/ui/ReservationButton";
 import { RestaurantJsonLd } from "@/components/seo/RestaurantJsonLd";
 import { defaultTemplates } from "@/components/template/TemplateRegistry";
 
-// Re-using the same data structures from the configurator for consistency
+// Shared configuration
 const fontOptions = [
   { id: "sans-serif", class: "font-sans" },
   { id: "serif", class: "font-serif" },
   { id: "display", class: "font-mono" },
 ];
 
-const templates = [
-  {
-    id: "minimalist",
-    name: "Minimalist",
-    description:
-      "Clean, simple design focusing on content with perfect readability",
-    preview: "bg-gradient-to-br from-white to-gray-100",
-    businessTypes: ["cafe", "restaurant", "bar"],
-    style: {
-      background: "#FFFFFF",
-      accent: "#000000",
-      text: "#1A1A1A",
-      secondary: "#F8F9FA",
-      layout: "minimal-grid",
-      navigation: "borderless-clean",
-      typography: "minimal-sans",
-    },
-    features: ["Ultra Clean", "Fast Loading", "Content Focus"],
-    mockup: {
-      nav: {
-        bg: "bg-white",
-        text: "text-black",
-        border: "border-transparent",
-      },
-      hero: { bg: "bg-white", text: "text-black" },
-      cards: {
-        bg: "bg-gray-50",
-        border: "border-gray-100",
-        text: "text-gray-800",
-      },
-    },
-  },
-  {
-    id: "modern",
-    name: "Modern",
-    description: "Contemporary design with bold colors and sleek animations",
-    preview: "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600",
-    businessTypes: ["cafe", "restaurant", "bar"],
-    style: {
-      background:
-        "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)",
-      accent: "#2563EB",
-      text: "#FFFFFF",
-      secondary: "#1D4ED8",
-      layout: "modern-cards",
-      navigation: "glassmorphism",
-      typography: "modern-geometric",
-    },
-    features: ["Vibrant Colors", "Glass Effects", "Rectangular Layout"],
-    mockup: {
-      nav: {
-        bg: "bg-white/10 backdrop-blur-md",
-        text: "text-white",
-        border: "border-white/20",
-      },
-      hero: {
-        bg: "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600",
-        text: "text-white",
-      },
-      cards: {
-        bg: "bg-white/15 backdrop-blur-sm",
-        border: "border-white/30",
-        text: "text-white",
-      },
-    },
-  },
-  {
-    id: "stylish",
-    name: "Stylish",
-    description:
-      "Visual-first design with overlays, mixed sections, and motion",
-    preview: "bg-gradient-to-br from-emerald-50 to-slate-800",
-    businessTypes: ["cafe", "restaurant", "bar"],
-    style: {
-      background: "#111827",
-      accent: "#059669",
-      text: "#F9FAFB",
-      secondary: "#1F2937",
-      layout: "visual-overlap",
-      navigation: "contrast",
-      typography: "decorative-serif",
-    },
-    features: ["Soft Colors", "Great Spacing", "Easy Reading"],
-    mockup: {
-      nav: {
-        bg: "bg-slate-900/80 backdrop-blur",
-        text: "text-white",
-        border: "border-emerald-300/20",
-      },
-      hero: {
-        bg: "bg-gradient-to-r from-emerald-500/20 to-transparent",
-        text: "text-white",
-      },
-      cards: {
-        bg: "bg-white/5 backdrop-blur",
-        border: "border-white/10",
-        text: "text-slate-100",
-      },
-    },
-  },
-  {
-    id: "cozy",
-    name: "Cozy",
-    description:
-      "Warm, personal, and grounded aesthetic with authentic photography.",
-    preview: "bg-gradient-to-br from-amber-100 via-orange-50 to-rose-50",
-    businessTypes: ["cafe", "restaurant", "bar"],
-    style: {
-      background: "#FFFBF0",
-      accent: "#EA580C",
-      text: "#1F2937",
-      secondary: "#FEF3C7",
-      layout: "cozy-grid",
-      navigation: "rounded-top",
-      typography: "handwritten-sans",
-    },
-    features: ["Warm Colors", "Rounded Corners", "Community Feel"],
-    mockup: {
-      nav: {
-        bg: "bg-white/90",
-        text: "text-amber-900",
-        border: "border-amber-200",
-      },
-      hero: {
-        bg: "bg-amber-50",
-        text: "text-amber-900",
-      },
-      cards: {
-        bg: "bg-white",
-        border: "border-amber-200",
-        text: "text-slate-800",
-      },
-    },
-  },
-];
+// Use canonical template definitions from TemplateRegistry
+const templates = defaultTemplates;
 
 const FALLBACK_CONFIG: Configuration = {
   id: "fallback",
