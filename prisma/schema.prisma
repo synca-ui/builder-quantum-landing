@@ -95,6 +95,40 @@ enum BusinessStatus {
   ARCHIVED
 }
 
+// --- TEMPLATE ENGINE (Template Marketplace) ---
+model Template {
+  id              String    @id  // Manually controlled IDs (e.g., "modern", "minimalist", "stylish", "cozy")
+
+  // Metadata
+  name            String
+  description     String    @db.Text
+  version         String    @default("1.0.0")  // Semantic versioning for template updates
+  isPremium       Boolean   @default(false)
+
+  // Categorization
+  category        BusinessType[]  // PostgreSQL native array for supported business types
+
+  // Design System (JSON-based for flexibility)
+  /// Layout configuration: { intent, navigation, typography }
+  layout          Json      @default("{}")
+
+  /// Design tokens: { colors, typography, spacing, shapes }
+  tokens          Json      @default("{}")
+
+  /// Preview information: { thumbnail, features }
+  preview         Json      @default("{}")
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  businesses      Business[]
+
+  @@index([isPremium])
+  @@index([category])
+}
+
 model BusinessMember {
   id          String   @id @default(uuid())
   userId      String
