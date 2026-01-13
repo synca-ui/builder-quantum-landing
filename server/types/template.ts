@@ -4,6 +4,47 @@
  * This ensures consistency between frontend and backend template handling
  */
 
+// Design Tokens JSON structure from Prisma
+export interface DesignTokens {
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    text: string;
+    background: string;
+    border: string;
+  };
+  typography: {
+    h1: { size: string; weight: number; lineHeight: string };
+    h2: { size: string; weight: number; lineHeight: string };
+    body: { size: string; weight: number; lineHeight: string };
+  };
+  spacing: {
+    xs: string;
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
+  };
+}
+
+// Layout configuration JSON structure from Prisma
+export interface TemplateLayout {
+  intent: string;
+  navigation: string;
+  sections?: string[];
+  typography?: {
+    headingFont: string;
+    bodyFont: string;
+  };
+}
+
+// Preview information JSON structure from Prisma
+export interface TemplatePreview {
+  thumbnail?: string;
+  features: string[];
+}
+
 export interface TemplateStyle {
   background: string;
   accent: string;
