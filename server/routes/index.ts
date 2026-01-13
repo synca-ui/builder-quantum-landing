@@ -12,6 +12,7 @@ import {
 import { fetchInstagramPhotos } from "./instagram";
 import { getConfigBySlug } from "./config";
 import { handleDemo } from "./demo";
+import templatesRouter from "./templates";
 
 // Erstellen Sie einen Haupt-API-Router, um alle Teil-Routen zu bündeln
 export const apiRouter = Router();
@@ -33,6 +34,9 @@ apiRouter.post("/preview/:session", setPreviewConfig);
 // Andere Routen
 apiRouter.get("/demo", handleDemo);
 apiRouter.get("/instagram", fetchInstagramPhotos);
+
+// Templates API - Exposes TemplateEngine service
+apiRouter.use("/templates", templatesRouter);
 
 // Health-Check
 apiRouter.get("/ping", (_req, res) => {
