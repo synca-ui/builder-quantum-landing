@@ -4495,8 +4495,8 @@ export default function Configurator() {
     );
   };
 
-  // Design Customization (Step 2)
-  const DesignCustomizationStep = () => (
+  // Page Structure Step
+  const PageStructureStep = () => (
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
