@@ -105,7 +105,66 @@ model MenuItem {
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 }
 
-// --- 4. WEB APPS (Published Websites) ---
+// --- 4. CONFIGURATIONS (User Site Drafts & Published Configs) ---
+model Configuration {
+  id            String    @id @default(uuid())
+  userId        String
+
+  // Business Info
+  businessName  String    @default("")
+  businessType  String    @default("")
+  location      String?
+  slogan        String?
+  uniqueDescription String?
+
+  // Design
+  template      String    @default("")
+  primaryColor  String    @default("#111827")
+  secondaryColor String   @default("#6B7280")
+  fontFamily    String    @default("sans-serif")
+
+  // Content
+  menuItems     Json      @default("[]") // Array<MenuItem>
+  gallery       Json      @default("[]") // Array<GalleryImage>
+  openingHours  Json      @default("{}") // OpeningHours object
+
+  // Features
+  reservationsEnabled Boolean @default(false)
+  maxGuests     Int       @default(10)
+  onlineOrdering Boolean  @default(false)
+  onlineStore   Boolean   @default(false)
+  teamArea      Boolean   @default(false)
+
+  // Contact & Social
+  contactMethods Json     @default("[]") // Array<string>
+  socialMedia   Json      @default("{}") // Record<string, string>
+
+  // Pages
+  selectedPages Json      @default("[\"home\"]") // Array<string>
+  customPages   Json      @default("[]") // Array<string>
+
+  // Publishing
+  status        String    @default("draft") // "draft" | "published" | "archived"
+  publishedUrl  String?
+  previewUrl    String?
+
+  // Extra
+  domainName    String?
+  selectedDomain String?
+  paymentOptions Json     @default("[]")
+  offers        Json      @default("[]")
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// --- 5. WEB APPS (Published Websites) ---
 model WebApp {
   id            String    @id @default(uuid())
   userId        String
