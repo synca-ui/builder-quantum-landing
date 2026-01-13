@@ -1038,10 +1038,11 @@ export default function Configurator() {
   }, [formData, persistence, sanitizeMedia]);
 
   // Progress calculation
+  // Only depends on currentStep since configuratorSteps is stable
   const progressPercentage = useMemo(() => {
     if (currentStep < 0) return 0;
     return ((currentStep + 1) / configuratorSteps.length) * 100;
-  }, [currentStep, configuratorSteps.length]);
+  }, [currentStep]);
 
   // Current phase data
   // Only depends on currentStep since configuratorSteps is stable (external constant)
