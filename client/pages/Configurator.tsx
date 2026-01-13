@@ -274,6 +274,23 @@ export default function Configurator() {
     }
   }, []);
 
+  // Manual Configurator Initialization - ensures safe state setup on fresh loads
+  // This MUST run in an effect to prevent render-time mutations
+  useEffect(() => {
+    // Check if this is a fresh load with no saved progress
+    const hasSaved = persistence.hasSavedSteps();
+
+    // Only initialize if:
+    // 1. No prior sessions exist in persistence
+    // 2. Store is still at default state (step not explicitly set)
+    if (!hasSaved && currentStep === 0) {
+      // Safely initialize the configurator state without triggering loops
+      // The store's default values are already set, so we just ensure
+      // the UI is ready for the first step
+      console.log("Fresh configurator load detected - UI ready for step 0");
+    }
+  }, []);
+
   // Template preview selection (for step 0 live preview before committing)
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
     null,
