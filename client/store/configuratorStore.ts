@@ -34,6 +34,37 @@ import type {
   Configuration,
 } from "@/types/domain";
 
+// ============================================
+// EMERGENCY THROTTLE GUARD (to detect infinite loops)
+// ============================================
+let lastUpdate = 0;
+let updateCount = 0;
+
+function checkThrottleGuard(actionName?: string) {
+  const now = Date.now();
+  if (now - lastUpdate < 1000) {
+    updateCount++;
+  } else {
+    updateCount = 1;
+  }
+  lastUpdate = now;
+
+  console.log(
+    `ST_UPDATE: [${updateCount}] ${actionName || "unknown"} at ${new Date().toISOString()}`,
+  );
+
+  // Hard stop at 50+ updates per second
+  if (updateCount > 50) {
+    console.error(
+      `🚨 THROTTLE GUARD TRIGGERED: ${updateCount} updates in 1 second!`,
+    );
+    console.trace("Stack trace at update trigger:");
+    throw new Error(
+      `Infinite loop detected: ${updateCount} state updates in <1 second. Last action: ${actionName}`,
+    );
+  }
+}
+
 /**
  * UI-specific state (not persisted across full config)
  */
@@ -224,463 +255,496 @@ const defaultUIState: UIState = {
 
 /**
  * Create the Zustand store with persist middleware
+ * TEMPORARILY DISABLED PERSIST MIDDLEWARE for debugging
  */
 export const useConfiguratorStore = create<ConfiguratorState>()(
-  persist(
-    (set, get) => ({
-      // Initial state
-      business: { ...defaultBusinessInfo },
-      design: { ...defaultDesignConfig },
-      content: { ...defaultContentData },
-      features: { ...defaultFeatureFlags },
-      contact: { ...defaultContactInfo },
-      publishing: { ...defaultPublishingInfo },
-      pages: { ...defaultPageManagement },
-      payments: { ...defaultPaymentAndOffers },
-      ui: { ...defaultUIState },
+  // NOTE: persist middleware COMMENTED OUT temporarily to test if rehydration is causing loops
+  // persist(
+  (set, get) => ({
+    // Initial state
+    business: { ...defaultBusinessInfo },
+    design: { ...defaultDesignConfig },
+    content: { ...defaultContentData },
+    features: { ...defaultFeatureFlags },
+    contact: { ...defaultContactInfo },
+    publishing: { ...defaultPublishingInfo },
+    pages: { ...defaultPageManagement },
+    payments: { ...defaultPaymentAndOffers },
+    ui: { ...defaultUIState },
 
-      // Selectors/Computed state
-      isComplete: () => {
-        const state = get();
-        return !!(
-          state.business.name &&
-          state.business.type &&
-          state.design.template &&
-          state.contact.email
-        );
-      },
+    // Selectors/Computed state
+    isComplete: () => {
+      const state = get();
+      return !!(
+        state.business.name &&
+        state.business.type &&
+        state.design.template &&
+        state.contact.email
+      );
+    },
 
-      canPublish: () => {
-        const state = get();
-        return state.isComplete();
-      },
+    canPublish: () => {
+      const state = get();
+      return state.isComplete();
+    },
 
-      // ============================================
-      // Business Domain Actions
-      // ============================================
-      setBusinessInfo: (info) =>
-        set((state) => ({
-          business: { ...state.business, ...info },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
+    // ============================================
+    // Business Domain Actions
+    // ============================================
+    setBusinessInfo: (info) => {
+      checkThrottleGuard("setBusinessInfo");
+      set((state) => ({
+        business: { ...state.business, ...info },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateBusinessName: (name) => {
+      checkThrottleGuard("updateBusinessName");
+      set((state) => ({
+        business: { ...state.business, name },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateBusinessType: (type) => {
+      checkThrottleGuard("updateBusinessType");
+      set((state) => ({
+        business: { ...state.business, type },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateLocation: (location) => {
+      checkThrottleGuard("updateLocation");
+      set((state) => ({
+        business: { ...state.business, location },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateSlogan: (slogan) => {
+      checkThrottleGuard("updateSlogan");
+      set((state) => ({
+        business: { ...state.business, slogan },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Design Domain Actions
+    // ============================================
+    updateDesign: (config) => {
+      checkThrottleGuard("updateDesign");
+      set((state) => ({
+        design: { ...state.design, ...config },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateTemplate: (templateId) => {
+      checkThrottleGuard("updateTemplate");
+      set((state) => ({
+        design: { ...state.design, template: templateId },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updatePrimaryColor: (color) => {
+      checkThrottleGuard("updatePrimaryColor");
+      set((state) => ({
+        design: { ...state.design, primaryColor: color },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateSecondaryColor: (color) => {
+      checkThrottleGuard("updateSecondaryColor");
+      set((state) => ({
+        design: { ...state.design, secondaryColor: color },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateFontFamily: (font) => {
+      checkThrottleGuard("updateFontFamily");
+      set((state) => ({
+        design: { ...state.design, fontFamily: font },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Content Domain Actions
+    // ============================================
+    addMenuItem: (item) => {
+      checkThrottleGuard("addMenuItem");
+      set((state) => ({
+        content: {
+          ...state.content,
+          menuItems: [...state.content.menuItems, item],
+        },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    removeMenuItem: (id) => {
+      checkThrottleGuard("removeMenuItem");
+      set((state) => ({
+        content: {
+          ...state.content,
+          menuItems: state.content.menuItems.filter((item) => item.id !== id),
+        },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateMenuItem: (id, updates) => {
+      checkThrottleGuard("updateMenuItem");
+      set((state) => ({
+        content: {
+          ...state.content,
+          menuItems: state.content.menuItems.map((item) =>
+            item.id === id ? { ...item, ...updates } : item,
+          ),
+        },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    addGalleryImage: (image) => {
+      checkThrottleGuard("addGalleryImage");
+      set((state) => ({
+        content: {
+          ...state.content,
+          gallery: [...state.content.gallery, image],
+        },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    removeGalleryImage: (id) => {
+      checkThrottleGuard("removeGalleryImage");
+      set((state) => ({
+        content: {
+          ...state.content,
+          gallery: state.content.gallery.filter((img) => img.id !== id),
+        },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateOpeningHours: (hours) => {
+      checkThrottleGuard("updateOpeningHours");
+      set((state) => ({
+        content: { ...state.content, openingHours: hours },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    setCategories: (categories) => {
+      checkThrottleGuard("setCategories");
+      set((state) => ({
+        content: { ...state.content, categories },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Features Domain Actions
+    // ============================================
+    updateFeatureFlags: (flags) => {
+      checkThrottleGuard("updateFeatureFlags");
+      set((state) => ({
+        features: { ...state.features, ...flags },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    toggleReservations: (enabled) => {
+      checkThrottleGuard("toggleReservations");
+      set((state) => ({
+        features: { ...state.features, reservationsEnabled: enabled },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    toggleOnlineOrdering: (enabled) => {
+      checkThrottleGuard("toggleOnlineOrdering");
+      set((state) => ({
+        features: { ...state.features, onlineOrderingEnabled: enabled },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    toggleOnlineStore: (enabled) => {
+      checkThrottleGuard("toggleOnlineStore");
+      set((state) => ({
+        features: { ...state.features, onlineStoreEnabled: enabled },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    toggleTeamArea: (enabled) => {
+      checkThrottleGuard("toggleTeamArea");
+      set((state) => ({
+        features: { ...state.features, teamAreaEnabled: enabled },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Contact Domain Actions
+    // ============================================
+    updateContactInfo: (contact) => {
+      checkThrottleGuard("updateContactInfo");
+      set((state) => ({
+        contact: { ...state.contact, ...contact },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    updateSocialMedia: (platform, url) => {
+      checkThrottleGuard("updateSocialMedia");
+      set((state) => ({
+        contact: {
+          ...state.contact,
+          socialMedia: { ...state.contact.socialMedia, [platform]: url },
+        },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Publishing Domain Actions
+    // ============================================
+    updatePublishingInfo: (info) => {
+      checkThrottleGuard("updatePublishingInfo");
+      set((state) => ({
+        publishing: {
+          ...state.publishing,
+          ...info,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    publishConfiguration: () => {
+      checkThrottleGuard("publishConfiguration");
+      set((state) => ({
+        publishing: {
+          ...state.publishing,
+          status: "published",
+          publishedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    archiveConfiguration: () => {
+      checkThrottleGuard("archiveConfiguration");
+      set((state) => ({
+        publishing: {
+          ...state.publishing,
+          status: "archived",
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Pages Domain Actions
+    // ============================================
+    updatePageManagement: (pages) => {
+      checkThrottleGuard("updatePageManagement");
+      set((state) => ({
+        pages: { ...state.pages, ...pages },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Payments Domain Actions
+    // ============================================
+    updatePaymentsAndOffers: (payments) => {
+      checkThrottleGuard("updatePaymentsAndOffers");
+      set((state) => ({
+        payments: { ...state.payments, ...payments },
+        publishing: {
+          ...state.publishing,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    },
+
+    // ============================================
+    // Navigation Actions
+    // ============================================
+    nextStep: () => {
+      checkThrottleGuard("nextStep");
+      set((state) => ({
+        ui: { ...state.ui, currentStep: state.ui.currentStep + 1 },
+      }));
+    },
+
+    prevStep: () => {
+      checkThrottleGuard("prevStep");
+      set((state) => ({
+        ui: {
+          ...state.ui,
+          currentStep: Math.max(state.ui.currentStep - 1, 0),
+        },
+      }));
+    },
+
+    goToStep: (step) => {
+      checkThrottleGuard("goToStep");
+      set((state) => ({
+        ui: { ...state.ui, currentStep: step },
+      }));
+    },
+
+    setCurrentStep: (step) => {
+      checkThrottleGuard("setCurrentStep");
+      set((state) => ({
+        ui: { ...state.ui, currentStep: step },
+      }));
+    },
+
+    // ============================================
+    // UI Actions
+    // ============================================
+    setSidebarOpen: (open) => {
+      checkThrottleGuard("setSidebarOpen");
+      set((state) => ({
+        ui: { ...state.ui, isSidebarOpen: open },
+      }));
+    },
+
+    toggleSectionExpand: (sectionId) => {
+      checkThrottleGuard("toggleSectionExpand");
+      set((state) => ({
+        ui: {
+          ...state.ui,
+          expandedSections: {
+            ...state.ui.expandedSections,
+            [sectionId]: !state.ui.expandedSections[sectionId],
           },
-        })),
+        },
+      }));
+    },
 
-      updateBusinessName: (name) =>
-        set((state) => ({
-          business: { ...state.business, name },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
+    setSaveLoading: (loading) => {
+      checkThrottleGuard("setSaveLoading");
+      set((state) => ({
+        ui: { ...state.ui, saveLoading: loading },
+      }));
+    },
 
-      updateBusinessType: (type) =>
-        set((state) => ({
-          business: { ...state.business, type },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
+    setSaveError: (error) => {
+      checkThrottleGuard("setSaveError");
+      set((state) => ({
+        ui: { ...state.ui, saveError: error },
+      }));
+    },
 
-      updateLocation: (location) =>
-        set((state) => ({
-          business: { ...state.business, location },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
+    // ============================================
+    // Data Management Actions
+    // ============================================
+    resetConfig: () => {
+      checkThrottleGuard("resetConfig");
+      set({
+        business: { ...defaultBusinessInfo },
+        design: { ...defaultDesignConfig },
+        content: { ...defaultContentData },
+        features: { ...defaultFeatureFlags },
+        contact: { ...defaultContactInfo },
+        publishing: { ...defaultPublishingInfo },
+        pages: { ...defaultPageManagement },
+        payments: { ...defaultPaymentAndOffers },
+        ui: { ...defaultUIState },
+      });
+    },
 
-      updateSlogan: (slogan) =>
-        set((state) => ({
-          business: { ...state.business, slogan },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Design Domain Actions
-      // ============================================
-      updateDesign: (config) =>
-        set((state) => ({
-          design: { ...state.design, ...config },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      updateTemplate: (templateId) =>
-        set((state) => ({
-          design: { ...state.design, template: templateId },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      updatePrimaryColor: (color) =>
-        set((state) => ({
-          design: { ...state.design, primaryColor: color },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      updateSecondaryColor: (color) =>
-        set((state) => ({
-          design: { ...state.design, secondaryColor: color },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      updateFontFamily: (font) =>
-        set((state) => ({
-          design: { ...state.design, fontFamily: font },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Content Domain Actions
-      // ============================================
-      addMenuItem: (item) =>
-        set((state) => ({
-          content: {
-            ...state.content,
-            menuItems: [...state.content.menuItems, item],
-          },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      removeMenuItem: (id) =>
-        set((state) => ({
-          content: {
-            ...state.content,
-            menuItems: state.content.menuItems.filter((item) => item.id !== id),
-          },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      updateMenuItem: (id, updates) =>
-        set((state) => ({
-          content: {
-            ...state.content,
-            menuItems: state.content.menuItems.map((item) =>
-              item.id === id ? { ...item, ...updates } : item,
-            ),
-          },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      addGalleryImage: (image) =>
-        set((state) => ({
-          content: {
-            ...state.content,
-            gallery: [...state.content.gallery, image],
-          },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      removeGalleryImage: (id) =>
-        set((state) => ({
-          content: {
-            ...state.content,
-            gallery: state.content.gallery.filter((img) => img.id !== id),
-          },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      updateOpeningHours: (hours) =>
-        set((state) => ({
-          content: { ...state.content, openingHours: hours },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      setCategories: (categories) =>
-        set((state) => ({
-          content: { ...state.content, categories },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Features Domain Actions
-      // ============================================
-      updateFeatureFlags: (flags) =>
-        set((state) => ({
-          features: { ...state.features, ...flags },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      toggleReservations: (enabled) =>
-        set((state) => ({
-          features: { ...state.features, reservationsEnabled: enabled },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      toggleOnlineOrdering: (enabled) =>
-        set((state) => ({
-          features: { ...state.features, onlineOrderingEnabled: enabled },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      toggleOnlineStore: (enabled) =>
-        set((state) => ({
-          features: { ...state.features, onlineStoreEnabled: enabled },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      toggleTeamArea: (enabled) =>
-        set((state) => ({
-          features: { ...state.features, teamAreaEnabled: enabled },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Contact Domain Actions
-      // ============================================
-      updateContactInfo: (contact) =>
-        set((state) => ({
-          contact: { ...state.contact, ...contact },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      updateSocialMedia: (platform, url) =>
-        set((state) => ({
-          contact: {
-            ...state.contact,
-            socialMedia: { ...state.contact.socialMedia, [platform]: url },
-          },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Publishing Domain Actions
-      // ============================================
-      updatePublishingInfo: (info) =>
-        set((state) => ({
-          publishing: {
-            ...state.publishing,
-            ...info,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      publishConfiguration: () =>
-        set((state) => ({
-          publishing: {
-            ...state.publishing,
-            status: "published",
-            publishedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      archiveConfiguration: () =>
-        set((state) => ({
-          publishing: {
-            ...state.publishing,
-            status: "archived",
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Pages Domain Actions
-      // ============================================
-      updatePageManagement: (pages) =>
-        set((state) => ({
-          pages: { ...state.pages, ...pages },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Payments Domain Actions
-      // ============================================
-      updatePaymentsAndOffers: (payments) =>
-        set((state) => ({
-          payments: { ...state.payments, ...payments },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        })),
-
-      // ============================================
-      // Navigation Actions
-      // ============================================
-      nextStep: () =>
-        set((state) => ({
-          ui: { ...state.ui, currentStep: state.ui.currentStep + 1 },
-        })),
-
-      prevStep: () =>
-        set((state) => ({
-          ui: {
-            ...state.ui,
-            currentStep: Math.max(state.ui.currentStep - 1, 0),
-          },
-        })),
-
-      goToStep: (step) =>
-        set((state) => ({
-          ui: { ...state.ui, currentStep: step },
-        })),
-
-      setCurrentStep: (step) =>
-        set((state) => ({
-          ui: { ...state.ui, currentStep: step },
-        })),
-
-      // ============================================
-      // UI Actions
-      // ============================================
-      setSidebarOpen: (open) =>
-        set((state) => ({
-          ui: { ...state.ui, isSidebarOpen: open },
-        })),
-
-      toggleSectionExpand: (sectionId) =>
-        set((state) => ({
-          ui: {
-            ...state.ui,
-            expandedSections: {
-              ...state.ui.expandedSections,
-              [sectionId]: !state.ui.expandedSections[sectionId],
-            },
-          },
-        })),
-
-      setSaveLoading: (loading) =>
-        set((state) => ({
-          ui: { ...state.ui, saveLoading: loading },
-        })),
-
-      setSaveError: (error) =>
-        set((state) => ({
-          ui: { ...state.ui, saveError: error },
-        })),
-
-      // ============================================
-      // Data Management Actions
-      // ============================================
-      resetConfig: () =>
-        set({
-          business: { ...defaultBusinessInfo },
-          design: { ...defaultDesignConfig },
-          content: { ...defaultContentData },
-          features: { ...defaultFeatureFlags },
-          contact: { ...defaultContactInfo },
-          publishing: { ...defaultPublishingInfo },
-          pages: { ...defaultPageManagement },
-          payments: { ...defaultPaymentAndOffers },
-          ui: { ...defaultUIState },
-        }),
-
-      getFullConfiguration: () => {
-        const state = get();
-        return {
-          userId: "", // Will be set by API
-          business: state.business,
-          design: state.design,
-          content: state.content,
-          features: state.features,
-          contact: state.contact,
-          publishing: state.publishing,
-          pages: state.pages,
-          payments: state.payments,
-        };
-      },
-
-      loadConfiguration: (config) => {
-        const updates: Partial<ConfiguratorState> = {};
-
-        if (config.business) updates.business = config.business;
-        if (config.design) updates.design = config.design;
-        if (config.content) updates.content = config.content;
-        if (config.features) updates.features = config.features;
-        if (config.contact) updates.contact = config.contact;
-        if (config.publishing) updates.publishing = config.publishing;
-        if (config.pages) updates.pages = config.pages;
-        if (config.payments) updates.payments = config.payments;
-
-        set((state) => ({ ...state, ...updates }));
-      },
-
-      clearAllData: () => {
-        set({
-          business: { ...defaultBusinessInfo },
-          design: { ...defaultDesignConfig },
-          content: { ...defaultContentData },
-          features: { ...defaultFeatureFlags },
-          contact: { ...defaultContactInfo },
-          publishing: { ...defaultPublishingInfo },
-          pages: { ...defaultPageManagement },
-          payments: { ...defaultPaymentAndOffers },
-          ui: { ...defaultUIState },
-        });
-        // Also clear localStorage
-        localStorage.removeItem("configurator-store");
-      },
-    }),
-    {
-      name: "configurator-store",
-      partialize: (state) => ({
+    getFullConfiguration: () => {
+      const state = get();
+      return {
+        userId: "",
         business: state.business,
         design: state.design,
         content: state.content,
@@ -689,10 +753,56 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         publishing: state.publishing,
         pages: state.pages,
         payments: state.payments,
-        // Note: ui state is not persisted to avoid persistent navigation state
-      }),
+      };
     },
-  ),
+
+    loadConfiguration: (config) => {
+      checkThrottleGuard("loadConfiguration");
+      const updates: Partial<ConfiguratorState> = {};
+
+      if (config.business) updates.business = config.business;
+      if (config.design) updates.design = config.design;
+      if (config.content) updates.content = config.content;
+      if (config.features) updates.features = config.features;
+      if (config.contact) updates.contact = config.contact;
+      if (config.publishing) updates.publishing = config.publishing;
+      if (config.pages) updates.pages = config.pages;
+      if (config.payments) updates.payments = config.payments;
+
+      set((state) => ({ ...state, ...updates }));
+    },
+
+    clearAllData: () => {
+      checkThrottleGuard("clearAllData");
+      set({
+        business: { ...defaultBusinessInfo },
+        design: { ...defaultDesignConfig },
+        content: { ...defaultContentData },
+        features: { ...defaultFeatureFlags },
+        contact: { ...defaultContactInfo },
+        publishing: { ...defaultPublishingInfo },
+        pages: { ...defaultPageManagement },
+        payments: { ...defaultPaymentAndOffers },
+        ui: { ...defaultUIState },
+      });
+      localStorage.removeItem("configurator-store");
+    },
+  }),
+  // NOTE: Persistence middleware COMMENTED OUT
+  // {
+  //   name: "configurator-store",
+  //   partialize: (state) => ({
+  //     business: state.business,
+  //     design: state.design,
+  //     content: state.content,
+  //     features: state.features,
+  //     contact: state.contact,
+  //     publishing: state.publishing,
+  //     pages: state.pages,
+  //     payments: state.payments,
+  //   }),
+  // }
+  // )
 );
 
 /**
@@ -717,8 +827,6 @@ export const useConfiguratorUI = () =>
 export const useConfiguratorActions = () => {
   const store = useConfiguratorStore();
 
-  // Memoize the returned object to prevent creating new references on every render
-  // This prevents infinite loops when actions are used as dependencies in useCallback/useMemo
   return useMemo(
     () => ({
       business: {
@@ -770,8 +878,6 @@ export const useConfiguratorActions = () => {
         clearAllData: store.clearAllData,
       },
     }),
-    // Empty dependency array - Zustand store methods are stable references
-    // The store instance itself never changes, so memoization is purely for the object wrapper
     [],
   );
 };
