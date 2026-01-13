@@ -674,7 +674,7 @@ export default function Configurator() {
     }
   }, [
     currentStep,
-    configuratorSteps,
+    // configuratorSteps is stable (external constant), no need as dependency
     updateFormDataFromInputs,
     formData,
     persistence,
@@ -708,7 +708,7 @@ export default function Configurator() {
     updateFormDataFromInputs,
     formData,
     persistence,
-    configuratorSteps,
+    // configuratorSteps is stable (external constant), no need as dependency
   ]);
 
   // Back to Template Selection function
