@@ -772,6 +772,6 @@ export const useConfiguratorActions = () => {
     }),
     // Empty dependency array - Zustand store methods are stable references
     // The store instance itself never changes, so memoization is purely for the object wrapper
-    []
+    [],
   );
 };
