@@ -97,6 +97,159 @@ export function normalizeImageSrc(img: any): string {
   return "/placeholder.svg";
 }
 
+// ===== STABLE CONFIGURATOR STEPS DEFINITION =====
+// Moved outside component to prevent recreating on every render
+// This ensures stable references for useMemo dependencies
+const CONFIGURATOR_STEPS_CONFIG = [
+  // Step 0: Template Selection
+  {
+    id: "template",
+    title: "Choose your template",
+    description: "Select a design that matches your vision",
+    phase: 0,
+    phaseTitle: "Template Selection",
+    component: "template",
+  },
+
+  // Step 1: Business Information
+  {
+    id: "business-info",
+    title: "Tell us about your business",
+    description: "Basic information to get started",
+    phase: 1,
+    phaseTitle: "Business Information",
+    component: "business-info",
+  },
+
+  // Step 2: Design Customization
+  {
+    id: "design-customization",
+    title: "Customize your design",
+    description: "Colors, fonts, and styling",
+    phase: 2,
+    phaseTitle: "Design Customization",
+    component: "design-customization",
+  },
+
+  // Step 3: Page Structure
+  {
+    id: "page-structure",
+    title: "Select your pages",
+    description: "Choose which pages your website will include",
+    phase: 3,
+    phaseTitle: "Content Structure",
+    component: "page-structure",
+  },
+
+  // Step 4: Opening Hours
+  {
+    id: "opening-hours",
+    title: "Set your opening hours",
+    description: "When are you open for business?",
+    phase: 4,
+    phaseTitle: "Business Details",
+    component: "opening-hours",
+  },
+
+  // Step 5: Menu/Products
+  {
+    id: "menu-products",
+    title: "Add your menu or products",
+    description: "Showcase what you offer",
+    phase: 4,
+    phaseTitle: "Business Details",
+    component: "menu-products",
+  },
+
+  // Step 6: Reservations
+  {
+    id: "reservations",
+    title: "Setup reservations",
+    description: "Enable table bookings for your business",
+    phase: 4,
+    phaseTitle: "Business Details",
+    component: "reservations",
+  },
+
+  // Step 7: Contact & Social
+  {
+    id: "contact-social",
+    title: "Contact & social media",
+    description: "How can customers reach you?",
+    phase: 4,
+    phaseTitle: "Business Details",
+    component: "contact-social",
+  },
+
+  // Step 8: Media Gallery
+  {
+    id: "media-gallery",
+    title: "Upload your photos",
+    description: "Show off your space, food, and atmosphere",
+    phase: 5,
+    phaseTitle: "Media & Advanced",
+    component: "media-gallery",
+  },
+
+  // Step 9: Advanced Features
+  {
+    id: "advanced-features",
+    title: "Optional features",
+    description: "Enable advanced functionality",
+    phase: 5,
+    phaseTitle: "Media & Advanced",
+    component: "advanced-features",
+  },
+  {
+    id: "feature-config",
+    title: "Configure selected feature",
+    description: "Adjust settings for the feature you just enabled",
+    phase: 5,
+    phaseTitle: "Media & Advanced",
+    component: "feature-config",
+  },
+
+  // Step 10: Domain & Hosting
+  {
+    id: "domain-hosting",
+    title: "Choose your domain",
+    description: "Select how customers will find your website",
+    phase: 6,
+    phaseTitle: "Publishing",
+    component: "domain-hosting",
+  },
+
+  // Step 11: SEO Optimization
+  {
+    id: "seo-optimization",
+    title: "SEO Optimization",
+    description: "Improve your search engine visibility",
+    phase: 6,
+    phaseTitle: "Publishing",
+    component: "seo-optimization",
+  },
+
+  // Step 12: Preview & Adjustments
+  {
+    id: "preview-adjustments",
+    title: "Preview & Final Adjustments",
+    description: "Review your site and make last-minute changes",
+    phase: 6,
+    phaseTitle: "Publishing",
+    component: "preview-adjustments",
+  },
+
+  // Step 13: Publish
+  {
+    id: "publish",
+    title: "Publish your website",
+    description: "Go live with your new website",
+    phase: 6,
+    phaseTitle: "Publishing",
+    component: "publish",
+  },
+];
+
 function ShareQRButton({ url }: { url: string }) {
   return (
     <Dialog>
