@@ -2,14 +2,17 @@
  * Design Customization Step Component
  * Handles template selection, colors, fonts, and styling
  * Consumes Zustand store directly - zero prop drilling
+ *
+ * Templates are fetched from the server API (useTemplates hook)
+ * ensuring the server is the Single Source of Truth
  */
 
 import { useCallback, useMemo } from "react";
-import { Check, ArrowLeft, ChevronRight } from "lucide-react";
+import { Check, ArrowLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { defaultTemplates } from "@/components/template/TemplateRegistry";
+import { useTemplates } from "@/hooks/useTemplates";
 import {
   useConfiguratorDesign,
   useConfiguratorBusiness,
