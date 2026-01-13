@@ -5373,6 +5373,8 @@ export default function Configurator() {
     </div>
   );
 
+  // [OLD DUPLICATE PageStructureStep REMOVED - CORRECT ONE BELOW]
+
   // Page Structure Step
   const PageStructureStep = () => (
     <div className="py-8 max-w-4xl mx-auto">
