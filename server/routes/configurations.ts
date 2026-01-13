@@ -711,3 +711,13 @@ export async function getPublishedSite(req: Request, res: Response) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+// Create and export the configurations router
+export const configurationsRouter = Router();
+
+configurationsRouter.post("/", saveConfiguration);
+configurationsRouter.get("/", getConfigurations);
+configurationsRouter.get("/:id", getConfiguration);
+configurationsRouter.delete("/:id", deleteConfiguration);
+configurationsRouter.post("/:id/publish", publishConfiguration);
+configurationsRouter.post("/preview/:session", setPreviewConfig);
