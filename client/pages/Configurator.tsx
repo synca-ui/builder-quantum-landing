@@ -4496,6 +4496,7 @@ export default function Configurator() {
   };
 
   // [OLD DESIGN CUSTOMIZATION STEP - REMOVED IN REFACTOR]
+  const _DeleteOldDesignCode = 1; // placeholder
 
   // Page Structure Step
   const PageStructureStep = () => (
