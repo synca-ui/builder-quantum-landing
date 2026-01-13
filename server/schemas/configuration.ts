@@ -163,49 +163,49 @@ export const ConfigurationSchema = z
   .strict(); // 🔥 STRICT: Rejects unknown fields!
 
 /**
- * LEGACY Configuration Schema - FOR MIGRATION/BACKWARD COMPATIBILITY
- * Accepts old flat structure, maps to new domain structure
+ * LEGACY Configuration Schema - FOR BACKWARD COMPATIBILITY
+ * Accepts old flat structure, BUT IS STRICT (no passthrough)
+ * Migration to domain-driven structure happens in Phase 1
  */
-export const LegacyConfigurationSchema = z
-  .object({
-    id: z.string().optional(),
-    userId: z.string().default("anonymous"),
-    businessName: z.string().default(""),
-    businessType: z.string().default(""),
-    location: z.string().optional(),
-    slogan: z.string().optional(),
-    uniqueDescription: z.string().optional(),
-    template: z.string().default(""),
-    homepageDishImageVisibility: z.string().optional(),
-    primaryColor: z.string().default("#111827"),
-    secondaryColor: z.string().default("#6B7280"),
-    fontFamily: z.string().default("sans-serif"),
-    selectedPages: z.array(z.string()).default([]),
-    customPages: z.array(z.string()).default([]),
-    openingHours: z.record(z.any()).default({}),
-    menuItems: z.array(z.any()).default([]),
-    reservationsEnabled: z.coerce.boolean().default(false),
-    maxGuests: z.coerce.number().default(10),
-    notificationMethod: z.string().default("email"),
-    contactMethods: z.array(z.any()).default([]),
-    socialMedia: z.record(z.string()).default({}),
-    gallery: z.array(z.any()).default([]),
-    onlineOrdering: z.coerce.boolean().default(false),
-    onlineStore: z.coerce.boolean().default(false),
-    teamArea: z.coerce.boolean().default(false),
-    hasDomain: z.coerce.boolean().default(false),
-    domainName: z.string().optional(),
-    selectedDomain: z.string().optional(),
-    createdAt: z.string().optional(),
-    updatedAt: z.string().optional(),
-    status: z.enum(["draft", "published", "archived"]).default("draft"),
-    publishedUrl: z.string().optional(),
-    previewUrl: z.string().optional(),
-    paymentOptions: z.array(z.string()).default([]),
-    offers: z.array(z.any()).default([]),
-    offerBanner: z.any().optional(),
-  })
-  .passthrough(); // Allows backward compatibility for legacy data
+export const LegacyConfigurationSchema = z.object({
+  id: z.string().optional(),
+  userId: z.string().default("anonymous"),
+  businessName: z.string().default(""),
+  businessType: z.string().default(""),
+  location: z.string().optional(),
+  slogan: z.string().optional(),
+  uniqueDescription: z.string().optional(),
+  template: z.string().default(""),
+  homepageDishImageVisibility: z.string().optional(),
+  primaryColor: z.string().default("#111827"),
+  secondaryColor: z.string().default("#6B7280"),
+  fontFamily: z.string().default("sans-serif"),
+  selectedPages: z.array(z.string()).default([]),
+  customPages: z.array(z.string()).default([]),
+  openingHours: z.record(z.any()).default({}),
+  menuItems: z.array(z.any()).default([]),
+  reservationsEnabled: z.coerce.boolean().default(false),
+  maxGuests: z.coerce.number().default(10),
+  notificationMethod: z.string().default("email"),
+  contactMethods: z.array(z.any()).default([]),
+  socialMedia: z.record(z.string()).default({}),
+  gallery: z.array(z.any()).default([]),
+  onlineOrdering: z.coerce.boolean().default(false),
+  onlineStore: z.coerce.boolean().default(false),
+  teamArea: z.coerce.boolean().default(false),
+  hasDomain: z.coerce.boolean().default(false),
+  domainName: z.string().optional(),
+  selectedDomain: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  publishedUrl: z.string().optional(),
+  previewUrl: z.string().optional(),
+  paymentOptions: z.array(z.string()).default([]),
+  offers: z.array(z.any()).default([]),
+  offerBanner: z.any().optional(),
+})
+  .strict(); // 🔥 STRICT! No unknown fields allowed (unlike before with .passthrough())
 
 export type Configuration = z.infer<typeof ConfigurationSchema>;
 export type LegacyConfiguration = z.infer<typeof LegacyConfigurationSchema>;
