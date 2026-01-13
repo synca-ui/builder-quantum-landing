@@ -4498,7 +4498,9 @@ export default function Configurator() {
   // [OLD DESIGN CUSTOMIZATION STEP - REMOVED IN REFACTOR]
   const _DeleteOldDesignCode = 1; // placeholder
 
-  // Page Structure Step (refactored to use form data and pageOptions)
+  // [OLD DUPLICATE PageStructureStep REMOVED IN REFACTOR]
+
+  // Page Structure Step - CORRECT IMPLEMENTATION
   const PageStructureStep = () => (
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
