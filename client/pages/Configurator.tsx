@@ -9520,7 +9520,7 @@ export default function Configurator() {
       case "business-info":
         return <BusinessInfoStep />;
       case "design-customization":
-        return <DesignCustomizationStep />;
+        return <DesignStep />;
       case "page-structure":
         return <PageStructureStep />;
       case "opening-hours":
