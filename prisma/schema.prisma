@@ -212,7 +212,7 @@ model Tenant {
   updatedAt       DateTime  @updatedAt
 }
 
-// --- 7. RESTAURANT (Tenant-local config) ---
+// --- 8. RESTAURANT (Tenant-local config) ---
 model Restaurant {
   id              String    @id @default(uuid())
   tenantId        String
