@@ -78,46 +78,26 @@ export async function saveConfiguration(req: Request, res: Response) {
     }
 
     const userId = req.user.id;
-    const configData = req.body || {};
-
-    // Attempt to parse as new domain-driven structure first
-    let config: Configuration;
-    let parsed = ConfigurationSchema.safeParse(configData);
-
-    if (!parsed.success) {
-      // Try to parse as legacy format and migrate
-      const legacyParsed = LegacyConfigurationSchema.safeParse(configData);
-      if (!legacyParsed.success) {
-        return res.status(400).json({
-          error: "Invalid configuration data",
-          details: legacyParsed.error.issues,
-        });
-      }
-      // Migrate legacy to new structure
-      config = migrateLegacyConfiguration(legacyParsed.data);
-    } else {
-      config = parsed.data;
-    }
-
-    // Set userId and timestamps
-    config.userId = userId;
-    config.publishing.updatedAt = new Date().toISOString();
+    const configData = {
+      ...req.body,
+      userId,
+      updatedAt: new Date().toISOString(),
+    };
 
     // Set createdAt if it doesn't exist (new configuration)
-    if (!config.publishing.createdAt) {
-      config.publishing.createdAt = new Date().toISOString();
+    if (!configData.createdAt) {
+      configData.createdAt = new Date().toISOString();
     }
 
-    // Final validation with strict schema
-    const finalValidation = ConfigurationSchema.safeParse(config);
-    if (!finalValidation.success) {
+    // Validate with LEGACY schema (strict validation, but same structure)
+    // Migration to domain-driven structure will happen in Phase 1
+    const parsed = LegacyConfigurationSchema.safeParse(configData);
+    if (!parsed.success) {
       return res.status(400).json({
-        error: "Configuration validation failed after migration",
-        details: finalValidation.error.issues,
+        error: "Invalid configuration data",
+        details: parsed.error.issues,
       });
     }
-
-    config = finalValidation.data;
 
     const config = parsed.data;
     const configurations = await loadConfigurations();
