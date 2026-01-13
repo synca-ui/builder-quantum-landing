@@ -4498,12 +4498,14 @@ export default function Configurator() {
   // [OLD DESIGN CUSTOMIZATION STEP - REMOVED IN REFACTOR]
   const _DeleteOldDesignCode = 1; // placeholder
 
+  // Actual Page Structure Step (note: old DesignCustomizationStep was here, now removed)
+
   // Page Structure Step
   const PageStructureStep = () => (
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Customize your design
+          Select your pages
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Choose colors, fonts and styling that represent your business
