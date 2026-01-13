@@ -1,63 +1,17 @@
 import { Request, Response } from "express";
-import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
 import { Pool } from "pg";
+import {
+  ConfigurationSchema,
+  LegacyConfigurationSchema,
+  migrateLegacyConfiguration,
+  validateConfiguration,
+  validateLegacyConfiguration,
+  type Configuration,
+} from "../schemas/configuration";
 
-// Configuration data schema
-const ConfigurationSchema = z
-  .object({
-    id: z.string().optional(),
-    userId: z.string().default("anonymous"),
-    businessName: z.string().default(""),
-    businessType: z.string().default(""),
-    location: z.string().optional(),
-    slogan: z.string().optional(),
-    uniqueDescription: z.string().optional(),
-    template: z.string().default(""),
-    homepageDishImageVisibility: z.string().optional(),
-    primaryColor: z.string().default("#111827"),
-    secondaryColor: z.string().default("#6B7280"),
-    fontFamily: z.string().default("sans-serif"),
-    selectedPages: z.array(z.string()).default([]),
-    customPages: z.array(z.string()).default([]),
-    openingHours: z.record(z.any()).default({}),
-    menuItems: z.array(z.any()).default([]),
-    reservationsEnabled: z.coerce.boolean().default(false),
-    maxGuests: z.coerce.number().default(10),
-    notificationMethod: z.string().default("email"),
-    contactMethods: z
-      .array(z.any())
-      .default([])
-      .transform((arr) =>
-        (arr as any[])
-          .map((m) =>
-            typeof m === "string"
-              ? m
-              : [m?.type, m?.value].filter(Boolean).join(": "),
-          )
-          .filter((s) => typeof s === "string" && s.trim()),
-      ) as unknown as z.ZodType<string[]>,
-    socialMedia: z.record(z.string()).default({}),
-    gallery: z.array(z.any()).default([]),
-    onlineOrdering: z.coerce.boolean().default(false),
-    onlineStore: z.coerce.boolean().default(false),
-    teamArea: z.coerce.boolean().default(false),
-    hasDomain: z.coerce.boolean().default(false),
-    domainName: z.string().optional(),
-    selectedDomain: z.string().optional(),
-    createdAt: z.string().optional(),
-    updatedAt: z.string().optional(),
-    status: z.enum(["draft", "published", "archived"]).default("draft"),
-    publishedUrl: z.string().optional(),
-    previewUrl: z.string().optional(),
-    paymentOptions: z.array(z.string()).default([]),
-    offers: z.array(z.any()).default([]),
-    offerBanner: z.any().optional(),
-  })
-  .passthrough();
-
-type Configuration = z.infer<typeof ConfigurationSchema>;
+// Type for Configuration (imported from schema)
 
 // Ephemeral in-memory cache for immediate site availability after publish
 const publishedCache = new Map<
