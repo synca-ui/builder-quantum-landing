@@ -27,6 +27,7 @@ import GalleryGrid from "@/components/sections/GalleryGrid";
 import { configurationApi, type Configuration } from "@/lib/api";
 import ReservationButton from "@/components/ui/ReservationButton";
 import { RestaurantJsonLd } from "@/components/seo/RestaurantJsonLd";
+import { defaultTemplates } from "@/components/template/TemplateRegistry";
 
 // Re-using the same data structures from the configurator for consistency
 const fontOptions = [
