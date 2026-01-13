@@ -143,8 +143,9 @@ export default function Configurator() {
 
   // Get step orchestration from Zustand store
   const currentStep = useConfiguratorStore((state) => state.ui.currentStep);
-  const { goToStep } = useConfiguratorStore((state) => ({
+  const { goToStep, setCurrentStep } = useConfiguratorStore((state) => ({
     goToStep: state.goToStep,
+    setCurrentStep: state.setCurrentStep,
   }));
 
   const [isVisible, setIsVisible] = useState(false);
