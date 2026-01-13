@@ -4495,8 +4495,10 @@ export default function Configurator() {
     );
   };
 
-  // DUPLICATE_DESIGN_STEP_DELETE_ME
-  const DUPLICATE_DESIGN_STEP_DELETE_ME = () => (
+  // [OLD DESIGN CUSTOMIZATION STEP - REMOVED IN REFACTOR]
+
+  // Page Structure Step
+  const PageStructureStep = () => (
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
