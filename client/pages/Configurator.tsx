@@ -8091,7 +8091,7 @@ export default function Configurator() {
       if (!pendingFeatureConfig) {
         nextStep();
       }
-    }, [pendingFeatureConfig]);
+    }, [pendingFeatureConfig, nextStep]);
 
     const finish = () => {
       setPendingFeatureConfig(null);
