@@ -4508,12 +4508,12 @@ export default function Configurator() {
           Select your pages
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose colors, fonts and styling that represent your business
-          personality and create a memorable brand experience.
+          Choose which pages your website will include. You can always add more
+          later.
         </p>
       </div>
 
-      <div className="space-y-12">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Color Themes */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">
