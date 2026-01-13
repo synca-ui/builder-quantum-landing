@@ -5571,7 +5571,7 @@ export default function Configurator() {
 
         updateFormData("openingHours", defaultOpeningHours);
       }
-    }, []);
+    }, [formData.openingHours, updateFormData]);
 
     const applyWeekdaySchedule = () => {
       const newHours = { ...formData.openingHours };
