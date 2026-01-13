@@ -237,8 +237,44 @@ export default function DesignStep() {
           <p className="text-sm text-gray-500 mb-4">
             Select a design template that matches your vision
           </p>
-          <div className="space-y-3">
-            {availableTemplates.map((template) => (
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mb-3"></div>
+                <p className="text-gray-600 text-sm">Loading templates...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !isLoading && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-red-900 mb-2">
+                    Failed to load templates
+                  </p>
+                  <p className="text-sm text-red-700 mb-3">{error}</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void retry()}
+                    className="text-red-700 border-red-300 hover:bg-red-50"
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Templates List */}
+          {!isLoading && !error && (
+            <div className="space-y-3">
+              {availableTemplates.map((template) => (
               <Card
                 key={template.id}
                 className={`cursor-pointer transition-all duration-300 border-2 ${
@@ -270,7 +306,8 @@ export default function DesignStep() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Color Themes */}
