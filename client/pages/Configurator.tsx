@@ -4639,7 +4639,7 @@ export default function Configurator() {
       )}
 
       {/* OLD CODE REMOVED - EVERYTHING BELOW THIS WAS DELETED */}
-      <div style={{ display: 'none' }}>
+      <div style={{ display: "none" }}>
         {/* DELETED: Color Themes, Custom Colors, Font Selection, etc. */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">
