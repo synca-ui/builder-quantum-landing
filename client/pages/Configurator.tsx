@@ -65,7 +65,9 @@ import PhonePortal from "@/components/preview/phone-portal";
 import ReservationButton from "@/components/ui/ReservationButton";
 import MenuSection from "@/components/sections/MenuSection";
 import GalleryGrid from "@/components/sections/GalleryGrid";
-import TemplateRegistry, { defaultTemplates } from "@/components/template/TemplateRegistry";
+import TemplateRegistry, {
+  defaultTemplates,
+} from "@/components/template/TemplateRegistry";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
 import { useAuth } from "@clerk/clerk-react";
 import { publishWebApp } from "@/lib/webapps";

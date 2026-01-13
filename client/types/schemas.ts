@@ -35,12 +35,8 @@ export const BusinessInfoSchema = z.object({
 // Design Config Schema
 export const DesignConfigSchema = z.object({
   template: z.string().min(1, "Template is required"),
-  primaryColor: z
-    .string()
-    .regex(/^#[0-9A-F]{6}$/i, "Invalid hex color"),
-  secondaryColor: z
-    .string()
-    .regex(/^#[0-9A-F]{6}$/i, "Invalid hex color"),
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid hex color"),
+  secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid hex color"),
   fontFamily: z.enum(["sans-serif", "serif", "monospace"]),
   fontColor: z.string().optional(),
   fontSize: z.enum(["small", "medium", "large"]).optional(),
@@ -76,7 +72,7 @@ export const OpeningHoursSchema = z.record(
     open: z.string().regex(/^\d{2}:\d{2}$/),
     close: z.string().regex(/^\d{2}:\d{2}$/),
     closed: z.boolean(),
-  })
+  }),
 );
 
 // Content Data Schema
@@ -132,7 +128,7 @@ export const PaymentAndOffersSchema = z.object({
         title: z.string(),
         description: z.string().optional(),
         discount: z.number().optional(),
-      })
+      }),
     )
     .optional(),
   offerBanner: z

@@ -5,11 +5,7 @@
  */
 
 import { useCallback, useMemo } from "react";
-import {
-  Check,
-  ArrowLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Check, ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -122,10 +118,8 @@ export default function DesignStep() {
   const business = useConfiguratorBusiness();
 
   // Get actions from store
-  const {
-    design: designActions,
-    navigation: navigationActions,
-  } = useConfiguratorActions();
+  const { design: designActions, navigation: navigationActions } =
+    useConfiguratorActions();
 
   // Filter templates by business type
   const availableTemplates = useMemo(() => {
@@ -133,69 +127,73 @@ export default function DesignStep() {
       (template) =>
         !template.businessTypes ||
         template.businessTypes.includes(business.type) ||
-        !business.type
+        !business.type,
     );
   }, [business.type]);
 
   // Validation - require at least one template and primary/secondary colors
-  const isValid = !!(design.template && design.primaryColor && design.secondaryColor);
+  const isValid = !!(
+    design.template &&
+    design.primaryColor &&
+    design.secondaryColor
+  );
 
   // Handlers
   const handleTemplateSelect = useCallback(
     (templateId: string) => {
       designActions.updateTemplate(templateId);
     },
-    [designActions]
+    [designActions],
   );
 
   const handleColorPresetSelect = useCallback(
-    (preset: typeof COLOR_PRESETS[0]) => {
+    (preset: (typeof COLOR_PRESETS)[0]) => {
       designActions.updatePrimaryColor(preset.primary);
       designActions.updateSecondaryColor(preset.secondary);
     },
-    [designActions]
+    [designActions],
   );
 
   const handlePrimaryColorChange = useCallback(
     (value: string) => {
       designActions.updatePrimaryColor(value);
     },
-    [designActions]
+    [designActions],
   );
 
   const handleSecondaryColorChange = useCallback(
     (value: string) => {
       designActions.updateSecondaryColor(value);
     },
-    [designActions]
+    [designActions],
   );
 
   const handleFontFamilySelect = useCallback(
     (fontId: string) => {
       designActions.updateFontFamily(fontId);
     },
-    [designActions]
+    [designActions],
   );
 
   const handleFontSizeSelect = useCallback(
     (sizeId: string) => {
       designActions.updateDesign({ fontSize: sizeId });
     },
-    [designActions]
+    [designActions],
   );
 
   const handleFontColorChange = useCallback(
     (value: string) => {
       designActions.updateDesign({ fontColor: value });
     },
-    [designActions]
+    [designActions],
   );
 
   const handleShowHomeHeroToggle = useCallback(
     (checked: boolean) => {
       designActions.updateDesign({ showHomeHero: checked });
     },
-    [designActions]
+    [designActions],
   );
 
   const handlePrevStep = useCallback(() => {
@@ -209,7 +207,7 @@ export default function DesignStep() {
   }, [isValid, navigationActions]);
 
   // Check if color preset is selected
-  const isColorPresetSelected = (preset: typeof COLOR_PRESETS[0]) => {
+  const isColorPresetSelected = (preset: (typeof COLOR_PRESETS)[0]) => {
     return (
       design.primaryColor === preset.primary &&
       design.secondaryColor === preset.secondary
@@ -507,7 +505,9 @@ export default function DesignStep() {
                   >
                     {size.name}
                   </div>
-                  <div className="text-xs text-gray-500">{size.description}</div>
+                  <div className="text-xs text-gray-500">
+                    {size.description}
+                  </div>
                   {design.fontSize === size.id && (
                     <div className="mt-2">
                       <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">

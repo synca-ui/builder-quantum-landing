@@ -24,9 +24,7 @@ export const BusinessInfoSchema = z.object({
 // Design Config Schema
 export const DesignConfigSchema = z.object({
   template: z.string().min(1, "Template is required"),
-  primaryColor: z
-    .string()
-    .regex(/^#[0-9A-F]{6}$/i, "Invalid hex color format"),
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid hex color format"),
   secondaryColor: z
     .string()
     .regex(/^#[0-9A-F]{6}$/i, "Invalid hex color format"),
@@ -64,14 +62,10 @@ export const GalleryImageSchema = z.object({
 export const OpeningHoursSchema = z.record(
   z.string(),
   z.object({
-    open: z
-      .string()
-      .regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
-    close: z
-      .string()
-      .regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
+    open: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
+    close: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
     closed: z.boolean(),
-  })
+  }),
 );
 
 // Content Data Schema
@@ -127,7 +121,7 @@ export const PaymentAndOffersSchema = z.object({
         title: z.string(),
         description: z.string().optional(),
         discount: z.number().optional(),
-      })
+      }),
     )
     .optional(),
   offerBanner: z
@@ -167,44 +161,45 @@ export const ConfigurationSchema = z
  * Accepts old flat structure, BUT IS STRICT (no passthrough)
  * Migration to domain-driven structure happens in Phase 1
  */
-export const LegacyConfigurationSchema = z.object({
-  id: z.string().optional(),
-  userId: z.string().default("anonymous"),
-  businessName: z.string().default(""),
-  businessType: z.string().default(""),
-  location: z.string().optional(),
-  slogan: z.string().optional(),
-  uniqueDescription: z.string().optional(),
-  template: z.string().default(""),
-  homepageDishImageVisibility: z.string().optional(),
-  primaryColor: z.string().default("#111827"),
-  secondaryColor: z.string().default("#6B7280"),
-  fontFamily: z.string().default("sans-serif"),
-  selectedPages: z.array(z.string()).default([]),
-  customPages: z.array(z.string()).default([]),
-  openingHours: z.record(z.any()).default({}),
-  menuItems: z.array(z.any()).default([]),
-  reservationsEnabled: z.coerce.boolean().default(false),
-  maxGuests: z.coerce.number().default(10),
-  notificationMethod: z.string().default("email"),
-  contactMethods: z.array(z.any()).default([]),
-  socialMedia: z.record(z.string()).default({}),
-  gallery: z.array(z.any()).default([]),
-  onlineOrdering: z.coerce.boolean().default(false),
-  onlineStore: z.coerce.boolean().default(false),
-  teamArea: z.coerce.boolean().default(false),
-  hasDomain: z.coerce.boolean().default(false),
-  domainName: z.string().optional(),
-  selectedDomain: z.string().optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-  status: z.enum(["draft", "published", "archived"]).default("draft"),
-  publishedUrl: z.string().optional(),
-  previewUrl: z.string().optional(),
-  paymentOptions: z.array(z.string()).default([]),
-  offers: z.array(z.any()).default([]),
-  offerBanner: z.any().optional(),
-})
+export const LegacyConfigurationSchema = z
+  .object({
+    id: z.string().optional(),
+    userId: z.string().default("anonymous"),
+    businessName: z.string().default(""),
+    businessType: z.string().default(""),
+    location: z.string().optional(),
+    slogan: z.string().optional(),
+    uniqueDescription: z.string().optional(),
+    template: z.string().default(""),
+    homepageDishImageVisibility: z.string().optional(),
+    primaryColor: z.string().default("#111827"),
+    secondaryColor: z.string().default("#6B7280"),
+    fontFamily: z.string().default("sans-serif"),
+    selectedPages: z.array(z.string()).default([]),
+    customPages: z.array(z.string()).default([]),
+    openingHours: z.record(z.any()).default({}),
+    menuItems: z.array(z.any()).default([]),
+    reservationsEnabled: z.coerce.boolean().default(false),
+    maxGuests: z.coerce.number().default(10),
+    notificationMethod: z.string().default("email"),
+    contactMethods: z.array(z.any()).default([]),
+    socialMedia: z.record(z.string()).default({}),
+    gallery: z.array(z.any()).default([]),
+    onlineOrdering: z.coerce.boolean().default(false),
+    onlineStore: z.coerce.boolean().default(false),
+    teamArea: z.coerce.boolean().default(false),
+    hasDomain: z.coerce.boolean().default(false),
+    domainName: z.string().optional(),
+    selectedDomain: z.string().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+    status: z.enum(["draft", "published", "archived"]).default("draft"),
+    publishedUrl: z.string().optional(),
+    previewUrl: z.string().optional(),
+    paymentOptions: z.array(z.string()).default([]),
+    offers: z.array(z.any()).default([]),
+    offerBanner: z.any().optional(),
+  })
   .strict(); // 🔥 STRICT! No unknown fields allowed (unlike before with .passthrough())
 
 export type Configuration = z.infer<typeof ConfigurationSchema>;
@@ -214,7 +209,7 @@ export type LegacyConfiguration = z.infer<typeof LegacyConfigurationSchema>;
  * Migration function: Convert legacy flat structure to new domain-driven structure
  */
 export function migrateLegacyConfiguration(
-  legacy: LegacyConfiguration
+  legacy: LegacyConfiguration,
 ): Configuration {
   return {
     id: legacy.id,
@@ -287,17 +282,19 @@ export function validateConfiguration(data: unknown): Configuration {
     return ConfigurationSchema.parse(data);
   } catch (error) {
     throw new Error(
-      `Configuration validation failed: ${error instanceof z.ZodError ? error.message : String(error)}`
+      `Configuration validation failed: ${error instanceof z.ZodError ? error.message : String(error)}`,
     );
   }
 }
 
-export function validateLegacyConfiguration(data: unknown): LegacyConfiguration {
+export function validateLegacyConfiguration(
+  data: unknown,
+): LegacyConfiguration {
   try {
     return LegacyConfigurationSchema.parse(data);
   } catch (error) {
     throw new Error(
-      `Legacy configuration validation failed: ${error instanceof z.ZodError ? error.message : String(error)}`
+      `Legacy configuration validation failed: ${error instanceof z.ZodError ? error.message : String(error)}`,
     );
   }
 }

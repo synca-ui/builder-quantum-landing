@@ -19,6 +19,7 @@
 Maitr's template and configurator system is currently built on **hardcoded TypeScript objects** that define 4 pre-built templates (Minimalist, Modern, Stylish, Cozy). The architecture works well for a **fixed set of templates** but suffers from significant **duplication and scaling limitations**.
 
 **What Works:**
+
 - ✅ Template selection and live preview are fully functional
 - ✅ Form data is properly persisted to localStorage and server
 - ✅ Each template has distinct visual styles and layouts
@@ -26,6 +27,7 @@ Maitr's template and configurator system is currently built on **hardcoded TypeS
 - ✅ Publishing/deployment flows are stable
 
 **What Doesn't Work Well:**
+
 - ❌ Template definitions are duplicated across 4 files (TemplateRegistry, Configurator, Site, Index)
 - ❌ Adding new templates requires code changes in 4+ locations + new switch cases in components
 - ❌ All templates are bundled as JavaScript (no lazy-loading or dynamic loading)
@@ -35,6 +37,7 @@ Maitr's template and configurator system is currently built on **hardcoded TypeS
 ### Why This Matters
 
 As the business grows and requires 10, 20, or 50+ templates, the current approach becomes **unmaintainable**. Each new template requires:
+
 1. Adding object to 4 files (duplication risk)
 2. Adding new switch-case to every component using templates (GalleryGrid, MenuSection, etc.)
 3. Adding new theme to defaultTemplateThemes
@@ -52,51 +55,51 @@ This document serves as a **diagnostic report** and blueprint for refactoring to
 
 ```typescript
 export interface TemplateStyle {
-  background: string;      // Color or gradient, e.g., "#FFFFFF" or "linear-gradient(...)"
-  accent: string;          // Primary accent color, e.g., "#111827"
-  text: string;            // Default text color, e.g., "#111827"
-  secondary: string;       // Secondary accent color, e.g., "#F3F4F6"
-  layout: string;          // Layout semantic, e.g., "narrative-fullscreen", "modern-cards"
-  navigation: string;      // Navigation style, e.g., "overlay-hamburger", "glassmorphism"
-  typography: string;      // Typography style, e.g., "minimal-sans", "decorative-serif"
+  background: string; // Color or gradient, e.g., "#FFFFFF" or "linear-gradient(...)"
+  accent: string; // Primary accent color, e.g., "#111827"
+  text: string; // Default text color, e.g., "#111827"
+  secondary: string; // Secondary accent color, e.g., "#F3F4F6"
+  layout: string; // Layout semantic, e.g., "narrative-fullscreen", "modern-cards"
+  navigation: string; // Navigation style, e.g., "overlay-hamburger", "glassmorphism"
+  typography: string; // Typography style, e.g., "minimal-sans", "decorative-serif"
 }
 
 export interface TemplateMockup {
   nav: {
-    bg: string;            // Tailwind classes for nav background, e.g., "bg-white"
-    text: string;          // Tailwind classes for nav text, e.g., "text-black"
-    border: string;        // Tailwind classes for nav border, e.g., "border-transparent"
+    bg: string; // Tailwind classes for nav background, e.g., "bg-white"
+    text: string; // Tailwind classes for nav text, e.g., "text-black"
+    border: string; // Tailwind classes for nav border, e.g., "border-transparent"
   };
   hero: {
-    bg: string;            // Tailwind classes for hero background
-    text: string;          // Tailwind classes for hero text
+    bg: string; // Tailwind classes for hero background
+    text: string; // Tailwind classes for hero text
   };
   cards: {
-    bg: string;            // Tailwind classes for card background
-    border: string;        // Tailwind classes for card border
-    text: string;          // Tailwind classes for card text
+    bg: string; // Tailwind classes for card background
+    border: string; // Tailwind classes for card border
+    text: string; // Tailwind classes for card text
   };
 }
 
 export interface Template {
-  id: string;                    // Unique identifier, e.g., "minimalist", "modern"
-  name: string;                  // Display name, e.g., "Minimalist"
-  description: string;           // User-facing description
-  preview: string;               // Tailwind gradient class for preview thumbnail
-  businessTypes: string[];       // Array of applicable business types, e.g., ["cafe", "restaurant", "bar"]
-  style: TemplateStyle;          // Style configuration object
-  features: string[];            // Feature tags shown in template selector UI
-  mockup: TemplateMockup;        // Pre-defined Tailwind classes for sections
+  id: string; // Unique identifier, e.g., "minimalist", "modern"
+  name: string; // Display name, e.g., "Minimalist"
+  description: string; // User-facing description
+  preview: string; // Tailwind gradient class for preview thumbnail
+  businessTypes: string[]; // Array of applicable business types, e.g., ["cafe", "restaurant", "bar"]
+  style: TemplateStyle; // Style configuration object
+  features: string[]; // Feature tags shown in template selector UI
+  mockup: TemplateMockup; // Pre-defined Tailwind classes for sections
 }
 
 export interface TemplateTheme {
-  primary: string;               // Primary color, e.g., "#2563EB"
-  secondary: string;             // Secondary color, e.g., "#7C3AED"
-  text: string;                  // Text color, e.g., "#1A1A1A"
-  background: string;            // Background color, e.g., "#FFFFFF"
-  highlight: string;             // Highlight/accent color, e.g., "#14B8A6"
-  buttonRadius: string;          // Button border-radius class, e.g., "rounded-lg"
-  buttonHover: string;           // Button hover effect class, e.g., "grow"
+  primary: string; // Primary color, e.g., "#2563EB"
+  secondary: string; // Secondary color, e.g., "#7C3AED"
+  text: string; // Text color, e.g., "#1A1A1A"
+  background: string; // Background color, e.g., "#FFFFFF"
+  highlight: string; // Highlight/accent color, e.g., "#14B8A6"
+  buttonRadius: string; // Button border-radius class, e.g., "rounded-lg"
+  buttonHover: string; // Button hover effect class, e.g., "grow"
 }
 ```
 
@@ -113,10 +116,10 @@ export interface Configuration {
   location?: string;
   slogan?: string;
   uniqueDescription?: string;
-  template: string;              // ← Template ID stored here (e.g., "minimalist")
+  template: string; // ← Template ID stored here (e.g., "minimalist")
   homepageDishImageVisibility?: string;
-  primaryColor: string;          // User's custom primary color override
-  secondaryColor: string;        // User's custom secondary color override
+  primaryColor: string; // User's custom primary color override
+  secondaryColor: string; // User's custom secondary color override
   fontFamily: string;
   selectedPages: string[];
   customPages: string[];
@@ -180,28 +183,29 @@ export interface PersistenceState {
 {
   // Template Selection
   template: "",                  // ← Stored as empty string, later set to template ID
-  
+
   // Business Information
   businessName: "",
   businessType: "",
   location: "",
   slogan: "",
   uniqueDescription: "",
-  
+
   // Colors & Design
   primaryColor: "#2563EB",
   secondaryColor: "#7C3AED",
   fontFamily: "sans-serif",
-  
+
   // Gallery, Menu, etc.
   gallery: [],
   menuItems: [],
-  
+
   // ... ~25 more fields
 }
 ```
 
 **Key Point:** `formData.template` is a string ID that gets synchronized across:
+
 - localStorage (via StepPersistence)
 - server (via Configuration API)
 - UI state (via React useState)
@@ -210,21 +214,23 @@ export interface PersistenceState {
 
 **Critical Finding:** Templates are duplicated across 4 files:
 
-| File | Lines | Type | Status | Source? |
-|------|-------|------|--------|---------|
-| `client/components/template/TemplateRegistry.tsx` | 51-185 | `export const defaultTemplates: Template[]` | Primary | ✅ YES - CANONICAL |
-| `client/pages/Configurator.tsx` | 487-620 | `const templates = [...]` | Duplicate | ❌ NO - OUT OF SYNC |
-| `client/pages/Site.tsx` | 38-160 | `const templates = [...]` | Duplicate | ❌ NO - OUT OF SYNC |
-| `client/pages/Index.tsx` | 163-180 | `const demoTemplates = [...]` | Demo | ❌ NO - SIMPLIFIED |
+| File                                              | Lines   | Type                                        | Status    | Source?             |
+| ------------------------------------------------- | ------- | ------------------------------------------- | --------- | ------------------- |
+| `client/components/template/TemplateRegistry.tsx` | 51-185  | `export const defaultTemplates: Template[]` | Primary   | ✅ YES - CANONICAL  |
+| `client/pages/Configurator.tsx`                   | 487-620 | `const templates = [...]`                   | Duplicate | ❌ NO - OUT OF SYNC |
+| `client/pages/Site.tsx`                           | 38-160  | `const templates = [...]`                   | Duplicate | ❌ NO - OUT OF SYNC |
+| `client/pages/Index.tsx`                          | 163-180 | `const demoTemplates = [...]`               | Demo      | ❌ NO - SIMPLIFIED  |
 
 **Example Inconsistency Found:**
 
 In **TemplateRegistry.tsx** (Line 93):
+
 ```typescript
 accent: "#4F46E5",  // "modern" template accent
 ```
 
 In **Configurator.tsx** (Line 528):
+
 ```typescript
 accent: "#2563EB",  // DIFFERENT! "modern" template accent
 ```
@@ -278,14 +284,14 @@ export const defaultTemplateThemes: Record<string, TemplateTheme> = {
 
 ### 1.6 Summary: Data Layer
 
-| Aspect | Current State | Problem |
-|--------|---------------|---------|
-| **Type Definitions** | Clear interfaces, well-typed | ✅ Good |
-| **Templates Storage** | Hardcoded arrays in 4 files | ❌ Duplicated |
-| **Themes Storage** | Record<string, TemplateTheme> in TemplateRegistry | ⚠️ Not synced with templates |
-| **Configuration** | Stores template ID as string | ✅ Correct approach |
-| **Type Safety** | Template ID is `string` (no enum) | ❌ No compile-time checks |
-| **Scalability** | Hard to add >10 templates | ❌ Not scalable |
+| Aspect                | Current State                                     | Problem                      |
+| --------------------- | ------------------------------------------------- | ---------------------------- |
+| **Type Definitions**  | Clear interfaces, well-typed                      | ✅ Good                      |
+| **Templates Storage** | Hardcoded arrays in 4 files                       | ❌ Duplicated                |
+| **Themes Storage**    | Record<string, TemplateTheme> in TemplateRegistry | ⚠️ Not synced with templates |
+| **Configuration**     | Stores template ID as string                      | ✅ Correct approach          |
+| **Type Safety**       | Template ID is `string` (no enum)                 | ❌ No compile-time checks    |
+| **Scalability**       | Hard to add >10 templates                         | ❌ Not scalable              |
 
 ---
 
@@ -330,6 +336,7 @@ const [publishedUrl, setPublishedUrl] = useState<string | null>(() => {
 ```
 
 **Data Flow:**
+
 1. Component mounts
 2. `persistence.getFormData()` reads from localStorage
 3. `formData` is initialized with previous state (including `formData.template`)
@@ -392,7 +399,7 @@ const TemplatePreviewContent = () => {
 
   // Use selectedTemplateDef.mockup for sections rendering
   // Pass formData and template together to child components
-  
+
   return (
     <div style={{ background: baseTemplateStyle.background }}>
       {/* Render sections with both formData and template */}
@@ -411,6 +418,7 @@ const TemplatePreviewContent = () => {
 ```
 
 **Critical Finding:**
+
 - Template object is looked up **inside TemplatePreviewContent**
 - Both `formData` AND `selectedTemplateDef` are passed to child components
 - Preview updates via React's closure - if `formData` or `previewTemplateId` change, re-render happens automatically
@@ -420,6 +428,7 @@ const TemplatePreviewContent = () => {
 **How Changes Trigger Updates:**
 
 1. **User changes template:**
+
    ```
    onClick in TemplateRegistry
    → updateFormData({ template: "modern" })
@@ -431,6 +440,7 @@ const TemplatePreviewContent = () => {
    ```
 
 2. **User changes colors:**
+
    ```
    onChange in color input
    → updateFormData({ primaryColor: "#FF0000" })
@@ -452,14 +462,14 @@ const TemplatePreviewContent = () => {
 
 ### 2.5 Summary: Logic Layer
 
-| Aspect | Current State | Assessment |
-|--------|---------------|-----------|
-| **State Management** | localStorage + React useState | ✅ Works well |
-| **Template ID Storage** | string in formData | ✅ Correct |
-| **Live Preview** | Looks up template object on render | ⚠️ O(n) search every render |
-| **Data Persistence** | localStorage + server save | ✅ Robust |
-| **Reactivity** | Instant via React closure | ✅ Smooth |
-| **Decoupling** | formData depends on templates array | ❌ Tight coupling |
+| Aspect                  | Current State                       | Assessment                  |
+| ----------------------- | ----------------------------------- | --------------------------- |
+| **State Management**    | localStorage + React useState       | ✅ Works well               |
+| **Template ID Storage** | string in formData                  | ✅ Correct                  |
+| **Live Preview**        | Looks up template object on render  | ⚠️ O(n) search every render |
+| **Data Persistence**    | localStorage + server save          | ✅ Robust                   |
+| **Reactivity**          | Instant via React closure           | ✅ Smooth                   |
+| **Decoupling**          | formData depends on templates array | ❌ Tight coupling           |
 
 ---
 
@@ -470,6 +480,7 @@ const TemplatePreviewContent = () => {
 Components use **two parallel styling approaches:**
 
 **Pattern A: Static Tailwind Classes from Mockup**
+
 ```typescript
 // From template.mockup object
 const navClasses = selectedTemplateDef.mockup.nav.bg;  // "bg-white/10 backdrop-blur-md"
@@ -477,6 +488,7 @@ return <nav className={navClasses}>...</nav>;
 ```
 
 **Pattern B: Switch-Statement Based on Template ID**
+
 ```typescript
 const getTemplateStyles = () => {
   switch (templateStyle) {
@@ -490,6 +502,7 @@ const getTemplateStyles = () => {
 ```
 
 **Pattern C: Inline Styles from Props**
+
 ```typescript
 style={{
   backgroundColor: primaryColor ? `${primaryColor}20` : undefined,
@@ -588,6 +601,7 @@ const GalleryGrid = ({
 ```
 
 **Analysis:**
+
 - Each template gets **dedicated CSS classes** hardcoded in the switch statement
 - All 4 templates return different class sets
 - Problem: Adding a 5th template requires editing this component
@@ -701,6 +715,7 @@ const MenuSection = ({
 ```
 
 **Key Insight:**
+
 - MenuSection also uses switch-statement (8 cases total for 4 templates)
 - Cozy template uses **inline styles** for colors (only one that does)
 - Modern and Stylish have hardcoded text colors
@@ -752,14 +767,14 @@ switch (templateStyle) {
 
 ### 3.5 Summary: View Layer
 
-| Aspect | Current State | Problem |
-|--------|---------------|---------|
-| **Styling Approach** | Mix of switch statements + Tailwind | ⚠️ Not unified |
-| **Dynamic Colors** | Props passed to components | ✅ Works |
-| **Template-specific Classes** | Hardcoded in switch statements | ❌ High duplication |
-| **Mockup Usage** | Defined but not leveraged | ⚠️ Wasted potential |
-| **Component Count with Switches** | 2+ components (GalleryGrid, MenuSection) | ❌ Growth issue |
-| **Type Safety** | templateStyle is `string` | ❌ No compile-time checks |
+| Aspect                            | Current State                            | Problem                   |
+| --------------------------------- | ---------------------------------------- | ------------------------- |
+| **Styling Approach**              | Mix of switch statements + Tailwind      | ⚠️ Not unified            |
+| **Dynamic Colors**                | Props passed to components               | ✅ Works                  |
+| **Template-specific Classes**     | Hardcoded in switch statements           | ❌ High duplication       |
+| **Mockup Usage**                  | Defined but not leveraged                | ⚠️ Wasted potential       |
+| **Component Count with Switches** | 2+ components (GalleryGrid, MenuSection) | ❌ Growth issue           |
+| **Type Safety**                   | templateStyle is `string`                | ❌ No compile-time checks |
 
 ---
 
@@ -769,14 +784,15 @@ switch (templateStyle) {
 
 **Template Array Duplication:**
 
-| File | Duplication | Impact |
-|------|-------------|--------|
-| TemplateRegistry.tsx | `export const defaultTemplates` | Source |
-| Configurator.tsx | `const templates = [...]` | Manual sync required |
-| Site.tsx | `const templates = [...]` | Manual sync required |
-| Index.tsx | `const demoTemplates = [...]` | Simplified version |
+| File                 | Duplication                     | Impact               |
+| -------------------- | ------------------------------- | -------------------- |
+| TemplateRegistry.tsx | `export const defaultTemplates` | Source               |
+| Configurator.tsx     | `const templates = [...]`       | Manual sync required |
+| Site.tsx             | `const templates = [...]`       | Manual sync required |
+| Index.tsx            | `const demoTemplates = [...]`   | Simplified version   |
 
 **When TemplateRegistry.tsx is updated, developers must:**
+
 1. ✅ Update 1 place (TemplateRegistry.tsx)
 2. ❌ Manually update Configurator.tsx
 3. ❌ Manually update Site.tsx
@@ -815,6 +831,7 @@ const getTemplateStyles = () => {
 ### 4.2 Hardcoded Values
 
 **Template IDs:**
+
 ```typescript
 // Hardcoded in switch statements across codebase
 case "minimalist":
@@ -825,33 +842,37 @@ case "cozy":
 ```
 
 **Tailwind Classes:**
+
 ```typescript
 // Hardcoded in mockup and switch statements
-bg: "bg-white/10 backdrop-blur-md"
-border: "border-white/20"
+bg: "bg-white/10 backdrop-blur-md";
+border: "border-white/20";
 // No way to change these without code changes
 ```
 
 **Layout Semantics:**
+
 ```typescript
 // In template.style.layout
-layout: "narrative-fullscreen"
-layout: "modern-cards"
-layout: "visual-overlap"
-layout: "cozy-grid"
+layout: "narrative-fullscreen";
+layout: "modern-cards";
+layout: "visual-overlap";
+layout: "cozy-grid";
 // These strings drive conditional rendering somewhere
 ```
 
 **Business Types:**
+
 ```typescript
 // Same for all templates
-businessTypes: ["cafe", "restaurant", "bar"]
+businessTypes: ["cafe", "restaurant", "bar"];
 // Cannot add "hotel" or "gym" without code changes
 ```
 
 **Feature Strings:**
+
 ```typescript
-features: ["Ultra Clean", "Fast Loading", "Content Focus"]
+features: ["Ultra Clean", "Fast Loading", "Content Focus"];
 // Not translated, not dynamic, not a separate registry
 ```
 
@@ -870,10 +891,11 @@ features: ["Ultra Clean", "Fast Loading", "Content Focus"]
    - HeroSection.tsx (10 new cases = 300 lines)
    - FooterSection.tsx (10 new cases = 300 lines)
    - Any other sections (×5 more = 1500+ lines)
-   
+
 **Total Impact:** 2000-3000 lines of code added, mostly duplication, error-prone
 
 **Problem Cascade:**
+
 - Larger JavaScript bundle size
 - Slower component renders (O(n) switch statements)
 - Higher maintenance burden
@@ -883,20 +905,23 @@ features: ["Ultra Clean", "Fast Loading", "Content Focus"]
 ### 4.4 Maintenance & Type Safety Issues
 
 **No Type Safety for Template IDs:**
+
 ```typescript
 // This compiles fine:
-const template: string = "modernnn";  // Typo, but no error!
+const template: string = "modernnn"; // Typo, but no error!
 // Only discovered at runtime when templates.find() returns undefined
 ```
 
 **Proposed Solution:**
+
 ```typescript
 // Future approach:
 type TemplateId = "minimalist" | "modern" | "stylish" | "cozy";
-const template: TemplateId = "modernnn";  // ✅ Compile error caught
+const template: TemplateId = "modernnn"; // ✅ Compile error caught
 ```
 
 **Inconsistent Data Formats:**
+
 - TemplateRegistry.tsx: Template object with nested mockup
 - Configurator.tsx: Template object (slightly different properties)
 - Site.tsx: Template object (again, different)
@@ -904,6 +929,7 @@ const template: TemplateId = "modernnn";  // ✅ Compile error caught
 - localStorage: Entire formData object
 
 **No Validation Layer:**
+
 - What if someone manually edits localStorage and sets `template: "xyz"`?
 - Site.tsx calls `templates.find(t => t.id === formData.template)` - returns undefined
 - Renders with `templates[0]` as fallback (silent error)
@@ -911,12 +937,14 @@ const template: TemplateId = "modernnn";  // ✅ Compile error caught
 ### 4.5 Performance Implications
 
 **Bundle Size:**
+
 - All 4 template objects are bundled in the JavaScript
 - Users who only need "modern" still load definitions for "minimalist", "stylish", "cozy"
 - Uncompressed: ~5-8 KB per template definition
 - With 10 templates: 50-80 KB of unused code
 
 **Runtime Performance:**
+
 ```typescript
 // Every render of a component with template styles:
 const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch);
@@ -925,6 +953,7 @@ const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch);
 ```
 
 **Browser Parsing:**
+
 - More JavaScript = longer parse time
 - Especially problematic on low-end devices / slow networks
 
@@ -952,12 +981,14 @@ const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch);
 ### 5.1 Current Source of Truth
 
 **Primary Source (Canonical):**
+
 - **`client/components/template/TemplateRegistry.tsx`** (Lines 51-223)
 - Exports: `defaultTemplates`, `defaultTemplateThemes`
 - Also exports: Template, TemplateTheme, TemplateStyle, TemplateMockup interfaces
 - This is the only place where templates are "officially" defined
 
 **Secondary Sources (Replicas - Out of Sync Risk):**
+
 - `client/pages/Configurator.tsx` (Lines 487-620): Duplicate `templates` array
 - `client/pages/Site.tsx` (Lines 38-160): Duplicate `templates` array
 - `client/pages/Index.tsx` (Lines 163-180): Simplified `demoTemplates` array
@@ -965,6 +996,7 @@ const selectedTemplateDef = templates.find((t) => t.id === selectedIdForSwitch);
 **Why This is Problematic:**
 
 When TemplateRegistry.tsx is updated, there's no enforcement mechanism to update the other files. Changes can easily be missed, leading to:
+
 - Visual inconsistencies between preview and published site
 - Confusion about which template definition to trust
 - Silent errors (no type checking, no compile errors)
@@ -974,6 +1006,7 @@ When TemplateRegistry.tsx is updated, there's no enforcement mechanism to update
 **Example #1: Modern Template Accent Color Mismatch**
 
 In `TemplateRegistry.tsx` (Line 93):
+
 ```typescript
 {
   id: "modern",
@@ -986,6 +1019,7 @@ In `TemplateRegistry.tsx` (Line 93):
 ```
 
 In `Configurator.tsx` (Line 528):
+
 ```typescript
 {
   id: "modern",
@@ -1002,13 +1036,15 @@ In `Configurator.tsx` (Line 528):
 **Example #2: Modern Template Gradient**
 
 In `TemplateRegistry.tsx` (Line 76):
+
 ```typescript
-background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
 ```
 
 In `Configurator.tsx` (Line 526-527):
+
 ```typescript
-background: "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)"
+background: "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)";
 ```
 
 **Result:** Different gradient = different visual result between preview and published.
@@ -1020,9 +1056,11 @@ background: "linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #1e40af 100%)"
 This roadmap outlines a phased approach to move from hardcoded objects to a centralized, JSON-based Theme Store.
 
 #### **Phase 1: Consolidation (Immediate - 1-2 hours)**
+
 Goal: Single source of truth without changing how templates are loaded
 
 **Steps:**
+
 1. Keep `TemplateRegistry.tsx` as the canonical source
 2. Update `Configurator.tsx` to import from TemplateRegistry:
    ```typescript
@@ -1038,10 +1076,13 @@ Goal: Single source of truth without changing how templates are loaded
 **Risk:** None - import is compatible with existing code
 
 #### **Phase 2: JSON Externalization (1 day)**
+
 Goal: Move template definitions from TypeScript to JSON file
 
 **Steps:**
+
 1. Create `data/templates.json`:
+
    ```json
    {
      "templates": [
@@ -1067,6 +1108,7 @@ Goal: Move template definitions from TypeScript to JSON file
    ```
 
 2. Create `client/lib/templates.ts`:
+
    ```typescript
    import templatesData from "../../data/templates.json";
    export const defaultTemplates = templatesData.templates;
@@ -1082,10 +1124,13 @@ Goal: Move template definitions from TypeScript to JSON file
 **Risk:** Minimal - Zod validation can ensure JSON matches TypeScript interface
 
 #### **Phase 3: Zod Validation & Runtime Type Safety (2-3 hours)**
+
 Goal: Validate template data at build time and runtime
 
 **Steps:**
+
 1. Create `client/lib/templates.schema.ts`:
+
    ```typescript
    import { z } from "zod";
 
@@ -1110,6 +1155,7 @@ Goal: Validate template data at build time and runtime
    ```
 
 2. Validate on load:
+
    ```typescript
    const validated = TemplatesDataSchema.parse(templatesData);
    ```
@@ -1124,10 +1170,13 @@ Goal: Validate template data at build time and runtime
 **Risk:** None - validation only adds safety
 
 #### **Phase 4: Dynamic Theme Store & Admin UI (1-2 days)**
+
 Goal: Load templates from server, enable runtime management
 
 **Steps:**
+
 1. Create API endpoint: `GET /api/templates`
+
    ```typescript
    app.get("/api/templates", (req, res) => {
      res.json({
@@ -1138,6 +1187,7 @@ Goal: Load templates from server, enable runtime management
    ```
 
 2. Create client-side theme store with caching:
+
    ```typescript
    const useTemplateStore = create((set) => ({
      templates: [],
@@ -1146,11 +1196,12 @@ Goal: Load templates from server, enable runtime management
        const res = await fetch("/api/templates");
        const data = await res.json();
        set({ templates: data.templates, themes: data.themes });
-     }
+     },
    }));
    ```
 
 3. Load templates at app startup:
+
    ```typescript
    useEffect(() => {
      useTemplateStore.getState().loadTemplates();
@@ -1168,21 +1219,25 @@ Goal: Load templates from server, enable runtime management
 After implementing this roadmap:
 
 **After Phase 1:**
+
 - ✅ Single source of truth
 - ✅ No duplication
 - ✅ Guaranteed sync
 
 **After Phase 2:**
+
 - ✅ Data separated from code
 - ✅ Templates easier to edit (JSON)
 - ✅ Smaller TypeScript bundles
 
 **After Phase 3:**
+
 - ✅ Type-safe template IDs (via type aliases)
 - ✅ Runtime validation prevents bad data
 - ✅ Refactoring safe (renames checked at compile time)
 
 **After Phase 4:**
+
 - ✅ Dynamic template management
 - ✅ No deploy needed for new templates
 - ✅ A/B testing & feature flags possible
@@ -1190,21 +1245,25 @@ After implementing this roadmap:
 ### 5.5 Short-Term Recommendations
 
 **Priority 1 (This week):**
+
 - [ ] Implement Phase 1 (consolidation)
 - [ ] Add test to verify template sync across files
 - [ ] Document which file is source of truth
 
 **Priority 2 (Next week):**
+
 - [ ] Create `data/templates.json`
 - [ ] Move template objects to JSON
 - [ ] Keep TypeScript interfaces for type safety
 
 **Priority 3 (Next sprint):**
+
 - [ ] Add Zod validation
 - [ ] Create TypeScript union type for template IDs
 - [ ] Update switch statements to use typeof checks
 
 **Priority 4 (Future):**
+
 - [ ] Create API endpoint for templates
 - [ ] Add admin UI for template management
 - [ ] Implement server-side caching
@@ -1215,26 +1274,28 @@ After implementing this roadmap:
 
 ### Key Files Analyzed
 
-| File | Purpose | Lines | Type |
-|------|---------|-------|------|
-| `client/components/template/TemplateRegistry.tsx` | Template definitions & UI | 1-284 | Component + Data |
-| `client/pages/Configurator.tsx` | Main configurator UI | 1-9700+ | Page Component |
-| `client/pages/Site.tsx` | Site rendering | 1-500+ | Page Component |
-| `client/lib/api.ts` | API client & Configuration type | 1-200+ | Utilities |
-| `client/lib/stepPersistence.ts` | State persistence | 1-300+ | Service |
-| `client/components/sections/GalleryGrid.tsx` | Gallery section component | 1-150+ | Component |
-| `client/components/sections/MenuSection.tsx` | Menu section component | 1-300+ | Component |
-| `client/pages/Index.tsx` | Home page with demo | 1-300+ | Page |
+| File                                              | Purpose                         | Lines   | Type             |
+| ------------------------------------------------- | ------------------------------- | ------- | ---------------- |
+| `client/components/template/TemplateRegistry.tsx` | Template definitions & UI       | 1-284   | Component + Data |
+| `client/pages/Configurator.tsx`                   | Main configurator UI            | 1-9700+ | Page Component   |
+| `client/pages/Site.tsx`                           | Site rendering                  | 1-500+  | Page Component   |
+| `client/lib/api.ts`                               | API client & Configuration type | 1-200+  | Utilities        |
+| `client/lib/stepPersistence.ts`                   | State persistence               | 1-300+  | Service          |
+| `client/components/sections/GalleryGrid.tsx`      | Gallery section component       | 1-150+  | Component        |
+| `client/components/sections/MenuSection.tsx`      | Menu section component          | 1-300+  | Component        |
+| `client/pages/Index.tsx`                          | Home page with demo             | 1-300+  | Page             |
 
 ### Key Sections by File
 
 #### TemplateRegistry.tsx
+
 - **Lines 3-50:** Interface definitions (TemplateStyle, TemplateMockup, Template, TemplateTheme)
 - **Lines 51-185:** defaultTemplates array with 4 template objects
 - **Lines 187-223:** defaultTemplateThemes mapping
 - **Lines 225-284:** TemplateRegistry React component
 
 #### Configurator.tsx
+
 - **Lines 2-70:** Imports
 - **Lines 140-174:** State initialization (formData, currentStep, configId)
 - **Lines 270-273:** Preview template state
@@ -1243,26 +1304,31 @@ After implementing this roadmap:
 - **Lines 4455+:** Template selection step
 
 #### Site.tsx
+
 - **Lines 32-36:** Font options
 - **Lines 38-160:** Local templates array (DUPLICATE)
 - **Lines 200+:** SiteRenderer component and rendering logic
 
 #### API.ts
+
 - **Lines 5-42:** Configuration interface with template field
 - **Lines 52-60:** User ID utilities
 - **Lines 63-150:** API request and configuration methods
 
 #### StepPersistence.ts
+
 - **Lines 6-28:** StepData and PersistenceState interfaces
 - **Lines 36-150:** StepPersistence class
 - **Lines 72-96:** Default form data structure
 
 #### GalleryGrid.tsx
+
 - **Lines 1-26:** Props interface and default values
 - **Lines 27-80:** getTemplateStyles() switch statement
 - **Lines 82+:** Rendering logic
 
 #### MenuSection.tsx
+
 - **Lines 1-52:** Props interface
 - **Lines 53-104:** getTemplateStyles() switch statement
 - **Lines 105-300+:** Rendering logic with inline styles

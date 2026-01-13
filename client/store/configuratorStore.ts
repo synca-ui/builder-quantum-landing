@@ -1,9 +1,9 @@
 /**
  * Global Configurator Store (Zustand + Persist Middleware)
- * 
+ *
  * Replaces prop drilling in Configurator.tsx with atomic, domain-organized state.
  * Automatically syncs to localStorage via persist middleware.
- * 
+ *
  * State Structure:
  * - business: BusinessInfo
  * - design: DesignConfig
@@ -16,8 +16,8 @@
  * - ui: Navigation and UI state
  */
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type {
   BusinessInfo,
   DesignConfig,
@@ -31,7 +31,7 @@ import type {
   GalleryImage,
   OpeningHours,
   Configuration,
-} from '@/types/domain';
+} from "@/types/domain";
 
 /**
  * UI-specific state (not persisted across full config)
@@ -133,8 +133,8 @@ interface ConfiguratorState {
  * Default values for each domain
  */
 const defaultBusinessInfo: BusinessInfo = {
-  name: '',
-  type: '',
+  name: "",
+  type: "",
   location: undefined,
   slogan: undefined,
   uniqueDescription: undefined,
@@ -146,37 +146,37 @@ const defaultBusinessInfo: BusinessInfo = {
 };
 
 const defaultDesignConfig: DesignConfig = {
-  template: 'modern',
-  primaryColor: '#4F46E5',
-  secondaryColor: '#7C3AED',
-  fontFamily: 'sans-serif',
-  fontColor: '#000000',
-  fontSize: 'medium',
-  backgroundColor: '#FFFFFF',
+  template: "modern",
+  primaryColor: "#4F46E5",
+  secondaryColor: "#7C3AED",
+  fontFamily: "sans-serif",
+  fontColor: "#000000",
+  fontSize: "medium",
+  backgroundColor: "#FFFFFF",
   backgroundImage: null,
-  backgroundType: 'color',
+  backgroundType: "color",
 };
 
 const defaultContentData: ContentData = {
   menuItems: [],
   gallery: [],
   openingHours: {
-    monday: { open: '09:00', close: '22:00', closed: false },
-    tuesday: { open: '09:00', close: '22:00', closed: false },
-    wednesday: { open: '09:00', close: '22:00', closed: false },
-    thursday: { open: '09:00', close: '22:00', closed: false },
-    friday: { open: '09:00', close: '23:00', closed: false },
-    saturday: { open: '10:00', close: '23:00', closed: false },
-    sunday: { open: '10:00', close: '22:00', closed: false },
+    monday: { open: "09:00", close: "22:00", closed: false },
+    tuesday: { open: "09:00", close: "22:00", closed: false },
+    wednesday: { open: "09:00", close: "22:00", closed: false },
+    thursday: { open: "09:00", close: "22:00", closed: false },
+    friday: { open: "09:00", close: "23:00", closed: false },
+    saturday: { open: "10:00", close: "23:00", closed: false },
+    sunday: { open: "10:00", close: "22:00", closed: false },
   },
-  homepageDishImageVisibility: 'visible',
+  homepageDishImageVisibility: "visible",
   categories: [],
 };
 
 const defaultFeatureFlags: FeatureFlags = {
   reservationsEnabled: false,
   maxGuests: 100,
-  notificationMethod: 'email',
+  notificationMethod: "email",
   onlineOrderingEnabled: false,
   onlineStoreEnabled: false,
   teamAreaEnabled: false,
@@ -190,7 +190,7 @@ const defaultContactInfo: ContactInfo = {
 };
 
 const defaultPublishingInfo: PublishingInfo = {
-  status: 'draft',
+  status: "draft",
   publishedUrl: undefined,
   previewUrl: undefined,
   publishedAt: undefined,
@@ -382,7 +382,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           content: {
             ...state.content,
             menuItems: state.content.menuItems.map((item) =>
-              item.id === id ? { ...item, ...updates } : item
+              item.id === id ? { ...item, ...updates } : item,
             ),
           },
           publishing: {
@@ -521,7 +521,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         set((state) => ({
           publishing: {
             ...state.publishing,
-            status: 'published',
+            status: "published",
             publishedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           },
@@ -531,7 +531,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         set((state) => ({
           publishing: {
             ...state.publishing,
-            status: 'archived',
+            status: "archived",
             updatedAt: new Date().toISOString(),
           },
         })),
@@ -634,7 +634,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
       getFullConfiguration: () => {
         const state = get();
         return {
-          userId: '', // Will be set by API
+          userId: "", // Will be set by API
           business: state.business,
           design: state.design,
           content: state.content,
@@ -674,11 +674,11 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           ui: { ...defaultUIState },
         });
         // Also clear localStorage
-        localStorage.removeItem('configurator-store');
+        localStorage.removeItem("configurator-store");
       },
     }),
     {
-      name: 'configurator-store',
+      name: "configurator-store",
       partialize: (state) => ({
         business: state.business,
         design: state.design,
@@ -690,8 +690,8 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         payments: state.payments,
         // Note: ui state is not persisted to avoid persistent navigation state
       }),
-    }
-  )
+    },
+  ),
 );
 
 /**

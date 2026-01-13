@@ -150,7 +150,7 @@ export interface IntegrationConfig {
 export interface Configuration {
   id?: string;
   userId: string;
-  
+
   // Main domains
   business: BusinessInfo;
   design: DesignConfig;
@@ -160,7 +160,7 @@ export interface Configuration {
   publishing: PublishingInfo;
   pages: PageManagement;
   payments: PaymentAndOffers;
-  
+
   // Integrations (dynamic, can hold any integration config)
   integrations?: Record<string, IntegrationConfig>;
 }

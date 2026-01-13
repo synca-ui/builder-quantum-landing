@@ -19,7 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { useConfiguratorBusiness, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorBusiness,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 // Business type options matching the original Configurator
 const BUSINESS_TYPES = [
@@ -46,12 +49,10 @@ const BUSINESS_TYPES = [
 export default function BusinessInfoStep() {
   // Get state from store
   const business = useConfiguratorBusiness();
-  
+
   // Get actions from store
-  const {
-    business: businessActions,
-    navigation: navigationActions,
-  } = useConfiguratorActions();
+  const { business: businessActions, navigation: navigationActions } =
+    useConfiguratorActions();
 
   // Local UI state for optional fields visibility
   const [showOptionalFields, setShowOptionalFields] = useState(false);
@@ -64,35 +65,35 @@ export default function BusinessInfoStep() {
     (value: string) => {
       businessActions.updateBusinessName(value);
     },
-    [businessActions]
+    [businessActions],
   );
 
   const handleBusinessTypeChange = useCallback(
     (type: string) => {
       businessActions.updateBusinessType(type);
     },
-    [businessActions]
+    [businessActions],
   );
 
   const handleLocationChange = useCallback(
     (value: string) => {
       businessActions.updateLocation(value);
     },
-    [businessActions]
+    [businessActions],
   );
 
   const handleSloganChange = useCallback(
     (value: string) => {
       businessActions.updateSlogan(value);
     },
-    [businessActions]
+    [businessActions],
   );
 
   const handleDescriptionChange = useCallback(
     (value: string) => {
       businessActions.setBusinessInfo({ uniqueDescription: value });
     },
-    [businessActions]
+    [businessActions],
   );
 
   const handlePrevStep = useCallback(() => {
