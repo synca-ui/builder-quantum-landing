@@ -21,6 +21,7 @@ model User {
 
   businesses    BusinessMember[]
   webApps       WebApp[]
+  configurations Configuration[]
   tenants       Tenant[]
 }
 
