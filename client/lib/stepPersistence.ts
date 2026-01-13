@@ -456,25 +456,28 @@ export class StepPersistence {
 // Global instance
 export const stepPersistence = new StepPersistence();
 
-// Helper functions for React components
+// Memoized persistence API for React components (prevent re-creation on every render)
+const memoizedPersistenceAPI = {
+  saveStep: stepPersistence.saveStep.bind(stepPersistence),
+  updateFormData: stepPersistence.updateFormData.bind(stepPersistence),
+  setConfigId: stepPersistence.setConfigId.bind(stepPersistence),
+  setPublishedUrl: stepPersistence.setPublishedUrl.bind(stepPersistence),
+  getState: stepPersistence.getState.bind(stepPersistence),
+  getFormData: stepPersistence.getFormData.bind(stepPersistence),
+  getCurrentStep: stepPersistence.getCurrentStep.bind(stepPersistence),
+  getConfigId: stepPersistence.getConfigId.bind(stepPersistence),
+  getPublishedUrl: stepPersistence.getPublishedUrl.bind(stepPersistence),
+  hasSavedSteps: stepPersistence.hasSavedSteps.bind(stepPersistence),
+  getStepHistory: stepPersistence.getStepHistory.bind(stepPersistence),
+  restoreToStep: stepPersistence.restoreToStep.bind(stepPersistence),
+  clearAll: stepPersistence.clearAll.bind(stepPersistence),
+  getSummary: stepPersistence.getSummary.bind(stepPersistence),
+  setEnabled: stepPersistence.setEnabled.bind(stepPersistence),
+  getEnabled: stepPersistence.getEnabled.bind(stepPersistence),
+  getSessionId: stepPersistence.getSessionId.bind(stepPersistence),
+};
+
+// Helper function for React components (returns stable, memoized reference)
 export function usePersistence() {
-  return {
-    saveStep: stepPersistence.saveStep.bind(stepPersistence),
-    updateFormData: stepPersistence.updateFormData.bind(stepPersistence),
-    setConfigId: stepPersistence.setConfigId.bind(stepPersistence),
-    setPublishedUrl: stepPersistence.setPublishedUrl.bind(stepPersistence),
-    getState: stepPersistence.getState.bind(stepPersistence),
-    getFormData: stepPersistence.getFormData.bind(stepPersistence),
-    getCurrentStep: stepPersistence.getCurrentStep.bind(stepPersistence),
-    getConfigId: stepPersistence.getConfigId.bind(stepPersistence),
-    getPublishedUrl: stepPersistence.getPublishedUrl.bind(stepPersistence),
-    hasSavedSteps: stepPersistence.hasSavedSteps.bind(stepPersistence),
-    getStepHistory: stepPersistence.getStepHistory.bind(stepPersistence),
-    restoreToStep: stepPersistence.restoreToStep.bind(stepPersistence),
-    clearAll: stepPersistence.clearAll.bind(stepPersistence),
-    getSummary: stepPersistence.getSummary.bind(stepPersistence),
-    setEnabled: stepPersistence.setEnabled.bind(stepPersistence),
-    getEnabled: stepPersistence.getEnabled.bind(stepPersistence),
-    getSessionId: stepPersistence.getSessionId.bind(stepPersistence),
-  };
+  return memoizedPersistenceAPI;
 }
