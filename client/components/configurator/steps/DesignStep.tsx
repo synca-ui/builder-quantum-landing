@@ -124,15 +124,14 @@ export default function DesignStep() {
   const { design: designActions, navigation: navigationActions } =
     useConfiguratorActions();
 
-  // Filter templates by business type
+  // Fetch templates from server API
+  // Pass business.type to filter server-side
+  const { templates, isLoading, error, retry } = useTemplates(business.type);
+
+  // Use fetched templates directly (server already filtered by business type)
   const availableTemplates = useMemo(() => {
-    return defaultTemplates.filter(
-      (template) =>
-        !template.businessTypes ||
-        template.businessTypes.includes(business.type) ||
-        !business.type,
-    );
-  }, [business.type]);
+    return templates;
+  }, [templates]);
 
   // Validation - require at least one template and primary/secondary colors
   const isValid = !!(
