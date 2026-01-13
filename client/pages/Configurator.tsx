@@ -249,21 +249,33 @@ export default function Configurator() {
     slugifyName,
   ]);
 
+  // ===== LOCKED ENTRY INITIALIZATION EFFECT =====
+  // This effect runs EXACTLY ONCE on component mount, regardless of re-renders
+  // The isInitialized ref prevents any subsequent executions
   useEffect(() => {
+    // Block second execution - this is the critical guard
+    if (isInitialized.current) return;
+
     setIsVisible(true);
 
     // Log restoration status
     const hasSaved = persistence.hasSavedSteps();
     const summary = persistence.getSummary();
 
-    console.log("=== Configurator Initialization ===");
+    console.log("=== Configurator Locked-Entry Initialization ===");
     console.log("Has saved steps:", hasSaved);
     console.log("Summary:", summary);
     console.log("Current step:", currentStep);
-    console.log("Form data:", formData);
+    console.log("Business name:", businessName);
     console.log("Config ID:", currentConfigId);
     console.log("Published URL:", publishedUrl);
-    console.log("=====================================");
+    console.log("================================================");
+
+    // Check if this is a fresh load with no business data
+    if (!businessName) {
+      console.log("Fresh session detected - no business data yet");
+      // Store defaults are already initialized, so UI is ready for step 0
+    }
 
     // Show toast with restoration status
     if (hasSaved) {
@@ -277,23 +289,9 @@ export default function Configurator() {
         description: "Starting fresh - all steps will be saved automatically",
       });
     }
-  }, []);
 
-  // Manual Configurator Initialization - ensures safe state setup on fresh loads
-  // This MUST run in an effect to prevent render-time mutations
-  useEffect(() => {
-    // Check if this is a fresh load with no saved progress
-    const hasSaved = persistence.hasSavedSteps();
-
-    // Only initialize if:
-    // 1. No prior sessions exist in persistence
-    // 2. Store is still at default state (step not explicitly set)
-    if (!hasSaved && currentStep === 0) {
-      // Safely initialize the configurator state without triggering loops
-      // The store's default values are already set, so we just ensure
-      // the UI is ready for the first step
-      console.log("Fresh configurator load detected - UI ready for step 0");
-    }
+    // Mark initialization as complete - prevents re-execution
+    isInitialized.current = true;
   }, []);
 
   // Template preview selection (for step 0 live preview before committing)
