@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { webAppsRouter, publicAppsRouter } from "./webapps";
-import { configurationsRouter, getPublishedSite, getConfigBySlug } from "./configurations";
+import { configurationsRouter, getPublishedSite } from "./configurations";
+import { getConfigBySlug } from "./config";
 import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
