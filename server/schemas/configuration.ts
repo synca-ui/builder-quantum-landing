@@ -1,0 +1,307 @@
+/**
+ * Server-side Configuration Validation Schemas
+ * STRICT validation - no passthrough, rejects unknown fields
+ */
+
+import { z } from "zod";
+
+// Business Info Schema
+export const BusinessInfoSchema = z.object({
+  name: z.string().min(1, "Business name is required").max(100),
+  type: z.string().min(1, "Business type is required"),
+  location: z.string().optional(),
+  slogan: z.string().optional(),
+  uniqueDescription: z.string().optional(),
+  domain: z
+    .object({
+      hasDomain: z.boolean().default(false),
+      domainName: z.string().optional(),
+      selectedDomain: z.string().optional(),
+    })
+    .optional(),
+});
+
+// Design Config Schema
+export const DesignConfigSchema = z.object({
+  template: z.string().min(1, "Template is required"),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i, "Invalid hex color format"),
+  secondaryColor: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i, "Invalid hex color format"),
+  fontFamily: z
+    .enum(["sans-serif", "serif", "monospace"])
+    .default("sans-serif"),
+  fontColor: z.string().optional(),
+  fontSize: z.enum(["small", "medium", "large"]).optional(),
+  backgroundColor: z.string().optional(),
+  backgroundImage: z.string().nullable().optional(),
+  backgroundType: z.enum(["color", "image"]).optional(),
+});
+
+// Menu Item Schema
+export const MenuItemSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  price: z.number().positive().optional(),
+  imageUrl: z.string().url().optional().or(z.string().length(0)),
+  emoji: z.string().optional(),
+  available: z.boolean().optional().default(true),
+  category: z.string().optional(),
+});
+
+// Gallery Image Schema
+export const GalleryImageSchema = z.object({
+  id: z.string(),
+  url: z.string().url(),
+  title: z.string().optional(),
+  alt: z.string().optional(),
+});
+
+// Opening Hours Schema
+export const OpeningHoursSchema = z.record(
+  z.string(),
+  z.object({
+    open: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
+    close: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
+    closed: z.boolean(),
+  })
+);
+
+// Content Data Schema
+export const ContentDataSchema = z.object({
+  menuItems: z.array(MenuItemSchema).default([]),
+  gallery: z.array(GalleryImageSchema).default([]),
+  openingHours: OpeningHoursSchema.default({}),
+  homepageDishImageVisibility: z.string().optional(),
+  categories: z.array(z.string()).default([]),
+});
+
+// Feature Flags Schema
+export const FeatureFlagsSchema = z.object({
+  reservationsEnabled: z.boolean().default(false),
+  maxGuests: z.number().positive().default(10),
+  notificationMethod: z.string().default("email"),
+  onlineOrderingEnabled: z.boolean().default(false),
+  onlineStoreEnabled: z.boolean().default(false),
+  teamAreaEnabled: z.boolean().default(false),
+});
+
+// Contact Info Schema
+export const ContactInfoSchema = z.object({
+  contactMethods: z.array(z.string()).default([]),
+  socialMedia: z.record(z.string()).default({}),
+  phone: z.string().optional(),
+  email: z.string().email().optional(),
+});
+
+// Publishing Info Schema
+export const PublishingInfoSchema = z.object({
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  publishedUrl: z.string().url().optional(),
+  previewUrl: z.string().url().optional(),
+  publishedAt: z.string().datetime().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+// Page Management Schema
+export const PageManagementSchema = z.object({
+  selectedPages: z.array(z.string()).default(["home"]),
+  customPages: z.array(z.string()).default([]),
+});
+
+// Payment and Offers Schema
+export const PaymentAndOffersSchema = z.object({
+  paymentOptions: z.array(z.string()).optional(),
+  offers: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        description: z.string().optional(),
+        discount: z.number().optional(),
+      })
+    )
+    .optional(),
+  offerBanner: z
+    .object({
+      enabled: z.boolean(),
+      text: z.string().optional(),
+      backgroundColor: z.string().optional(),
+    })
+    .optional(),
+});
+
+// Integration Config Schema (flexible, no strict validation)
+export const IntegrationConfigSchema = z.record(z.any());
+
+/**
+ * STRICT Configuration Schema - NEW DOMAIN-DRIVEN STRUCTURE
+ * Rejects any unknown fields
+ */
+export const ConfigurationSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    userId: z.string().min(1, "User ID is required"),
+    business: BusinessInfoSchema,
+    design: DesignConfigSchema,
+    content: ContentDataSchema,
+    features: FeatureFlagsSchema,
+    contact: ContactInfoSchema,
+    publishing: PublishingInfoSchema,
+    pages: PageManagementSchema,
+    payments: PaymentAndOffersSchema,
+    integrations: IntegrationConfigSchema.optional(),
+  })
+  .strict(); // 🔥 STRICT: Rejects unknown fields!
+
+/**
+ * LEGACY Configuration Schema - FOR MIGRATION/BACKWARD COMPATIBILITY
+ * Accepts old flat structure, maps to new domain structure
+ */
+export const LegacyConfigurationSchema = z
+  .object({
+    id: z.string().optional(),
+    userId: z.string().default("anonymous"),
+    businessName: z.string().default(""),
+    businessType: z.string().default(""),
+    location: z.string().optional(),
+    slogan: z.string().optional(),
+    uniqueDescription: z.string().optional(),
+    template: z.string().default(""),
+    homepageDishImageVisibility: z.string().optional(),
+    primaryColor: z.string().default("#111827"),
+    secondaryColor: z.string().default("#6B7280"),
+    fontFamily: z.string().default("sans-serif"),
+    selectedPages: z.array(z.string()).default([]),
+    customPages: z.array(z.string()).default([]),
+    openingHours: z.record(z.any()).default({}),
+    menuItems: z.array(z.any()).default([]),
+    reservationsEnabled: z.coerce.boolean().default(false),
+    maxGuests: z.coerce.number().default(10),
+    notificationMethod: z.string().default("email"),
+    contactMethods: z.array(z.any()).default([]),
+    socialMedia: z.record(z.string()).default({}),
+    gallery: z.array(z.any()).default([]),
+    onlineOrdering: z.coerce.boolean().default(false),
+    onlineStore: z.coerce.boolean().default(false),
+    teamArea: z.coerce.boolean().default(false),
+    hasDomain: z.coerce.boolean().default(false),
+    domainName: z.string().optional(),
+    selectedDomain: z.string().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+    status: z.enum(["draft", "published", "archived"]).default("draft"),
+    publishedUrl: z.string().optional(),
+    previewUrl: z.string().optional(),
+    paymentOptions: z.array(z.string()).default([]),
+    offers: z.array(z.any()).default([]),
+    offerBanner: z.any().optional(),
+  })
+  .passthrough(); // Allows backward compatibility for legacy data
+
+export type Configuration = z.infer<typeof ConfigurationSchema>;
+export type LegacyConfiguration = z.infer<typeof LegacyConfigurationSchema>;
+
+/**
+ * Migration function: Convert legacy flat structure to new domain-driven structure
+ */
+export function migrateLegacyConfiguration(
+  legacy: LegacyConfiguration
+): Configuration {
+  return {
+    id: legacy.id,
+    userId: legacy.userId || "anonymous",
+    business: {
+      name: legacy.businessName || "",
+      type: legacy.businessType || "",
+      location: legacy.location,
+      slogan: legacy.slogan,
+      uniqueDescription: legacy.uniqueDescription,
+      domain: {
+        hasDomain: legacy.hasDomain || false,
+        domainName: legacy.domainName,
+        selectedDomain: legacy.selectedDomain,
+      },
+    },
+    design: {
+      template: legacy.template || "",
+      primaryColor: legacy.primaryColor || "#111827",
+      secondaryColor: legacy.secondaryColor || "#6B7280",
+      fontFamily: (legacy.fontFamily || "sans-serif") as any,
+      backgroundColor: legacy.backgroundColor,
+      backgroundType: legacy.backgroundType as any,
+    },
+    content: {
+      menuItems: legacy.menuItems || [],
+      gallery: legacy.gallery || [],
+      openingHours: legacy.openingHours || {},
+      homepageDishImageVisibility: legacy.homepageDishImageVisibility,
+      categories: [],
+    },
+    features: {
+      reservationsEnabled: legacy.reservationsEnabled || false,
+      maxGuests: legacy.maxGuests || 10,
+      notificationMethod: legacy.notificationMethod || "email",
+      onlineOrderingEnabled: legacy.onlineOrdering || false,
+      onlineStoreEnabled: legacy.onlineStore || false,
+      teamAreaEnabled: legacy.teamArea || false,
+    },
+    contact: {
+      contactMethods: Array.isArray(legacy.contactMethods)
+        ? legacy.contactMethods
+        : [],
+      socialMedia: legacy.socialMedia || {},
+    },
+    publishing: {
+      status: (legacy.status || "draft") as any,
+      publishedUrl: legacy.publishedUrl,
+      previewUrl: legacy.previewUrl,
+      publishedAt: legacy.createdAt,
+      updatedAt: legacy.updatedAt,
+    },
+    pages: {
+      selectedPages: legacy.selectedPages || ["home"],
+      customPages: legacy.customPages || [],
+    },
+    payments: {
+      paymentOptions: legacy.paymentOptions,
+      offers: legacy.offers,
+      offerBanner: legacy.offerBanner,
+    },
+  };
+}
+
+/**
+ * Validation helpers
+ */
+export function validateConfiguration(data: unknown): Configuration {
+  try {
+    return ConfigurationSchema.parse(data);
+  } catch (error) {
+    throw new Error(
+      `Configuration validation failed: ${error instanceof z.ZodError ? error.message : String(error)}`
+    );
+  }
+}
+
+export function validateLegacyConfiguration(data: unknown): LegacyConfiguration {
+  try {
+    return LegacyConfigurationSchema.parse(data);
+  } catch (error) {
+    throw new Error(
+      `Legacy configuration validation failed: ${error instanceof z.ZodError ? error.message : String(error)}`
+    );
+  }
+}
+
+export function safeParse(data: unknown) {
+  return ConfigurationSchema.safeParse(data);
+}
