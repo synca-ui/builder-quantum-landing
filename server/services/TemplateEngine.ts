@@ -1,10 +1,10 @@
 /**
  * Template Engine Service
- * 
+ *
  * Singleton service acting as the Source of Truth for all template definitions.
  * Currently uses static/mock data, but designed to transition to Prisma/Database
  * without requiring changes to consuming code (async methods future-proof this).
- * 
+ *
  * Responsibilities:
  * - Provide centralized access to all template definitions
  * - Validate template configurations
@@ -12,7 +12,11 @@
  * - Act as an abstraction layer for template storage (DB, JSON files, etc.)
  */
 
-import type { Template, TemplateFilter, TemplateValidationResult } from "./template";
+import type {
+  Template,
+  TemplateFilter,
+  TemplateValidationResult,
+} from "./template";
 
 class TemplateEngine {
   private static instance: TemplateEngine;
@@ -188,7 +192,7 @@ class TemplateEngine {
 
         if (filter.businessType) {
           filtered = filtered.filter((template) =>
-            template.businessTypes.includes(filter.businessType!)
+            template.businessTypes.includes(filter.businessType!),
           );
         }
 
@@ -234,7 +238,7 @@ class TemplateEngine {
    */
   async validateConfig(
     templateId: string,
-    tokens: any
+    tokens: any,
   ): Promise<TemplateValidationResult> {
     // Simulate async DB call
     return new Promise((resolve) => {
@@ -253,17 +257,17 @@ class TemplateEngine {
         const colorRegex = /^#[0-9A-Fa-f]{6}$/;
         if (tokens.primaryColor && !colorRegex.test(tokens.primaryColor)) {
           errors.push(
-            `Invalid primaryColor format: "${tokens.primaryColor}" (must be hex like #RRGGBB)`
+            `Invalid primaryColor format: "${tokens.primaryColor}" (must be hex like #RRGGBB)`,
           );
         }
         if (tokens.secondaryColor && !colorRegex.test(tokens.secondaryColor)) {
           errors.push(
-            `Invalid secondaryColor format: "${tokens.secondaryColor}" (must be hex like #RRGGBB)`
+            `Invalid secondaryColor format: "${tokens.secondaryColor}" (must be hex like #RRGGBB)`,
           );
         }
         if (tokens.fontColor && !colorRegex.test(tokens.fontColor)) {
           errors.push(
-            `Invalid fontColor format: "${tokens.fontColor}" (must be hex like #RRGGBB)`
+            `Invalid fontColor format: "${tokens.fontColor}" (must be hex like #RRGGBB)`,
           );
         }
 
@@ -271,7 +275,7 @@ class TemplateEngine {
         const validFonts = ["sans-serif", "serif", "display", "monospace"];
         if (tokens.fontFamily && !validFonts.includes(tokens.fontFamily)) {
           errors.push(
-            `Invalid fontFamily: "${tokens.fontFamily}". Allowed: ${validFonts.join(", ")}`
+            `Invalid fontFamily: "${tokens.fontFamily}". Allowed: ${validFonts.join(", ")}`,
           );
         }
 
@@ -279,7 +283,7 @@ class TemplateEngine {
         const validSizes = ["small", "medium", "large"];
         if (tokens.fontSize && !validSizes.includes(tokens.fontSize)) {
           errors.push(
-            `Invalid fontSize: "${tokens.fontSize}". Allowed: ${validSizes.join(", ")}`
+            `Invalid fontSize: "${tokens.fontSize}". Allowed: ${validSizes.join(", ")}`,
           );
         }
 
@@ -323,13 +327,13 @@ class TemplateEngine {
    */
   async supportsBusinessType(
     templateId: string,
-    businessType: string
+    businessType: string,
   ): Promise<boolean> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const template = this.templates.find((t) => t.id === templateId);
         resolve(
-          template?.businessTypes.includes(businessType.toLowerCase()) ?? false
+          template?.businessTypes.includes(businessType.toLowerCase()) ?? false,
         );
       }, 0);
     });

@@ -15,7 +15,10 @@
 
 import { Router, Request, Response } from "express";
 import { templateEngine } from "../services/TemplateEngine";
-import type { TemplateFilter, TemplateValidationResult } from "../types/template";
+import type {
+  TemplateFilter,
+  TemplateValidationResult,
+} from "../types/template";
 
 const router = Router();
 
@@ -173,10 +176,8 @@ router.post("/validate", async (req: Request, res: Response) => {
     }
 
     // Validate configuration
-    const result: TemplateValidationResult = await templateEngine.validateConfig(
-      templateId,
-      tokens
-    );
+    const result: TemplateValidationResult =
+      await templateEngine.validateConfig(templateId, tokens);
 
     res.json({
       success: result.valid,
