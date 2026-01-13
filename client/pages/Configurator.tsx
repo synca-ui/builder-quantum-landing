@@ -1044,10 +1044,11 @@ export default function Configurator() {
   }, [currentStep, configuratorSteps.length]);
 
   // Current phase data
+  // Only depends on currentStep since configuratorSteps is stable (external constant)
   const currentPhase = useMemo(() => {
     if (currentStep < 0) return null;
     return configuratorSteps[currentStep] || null;
-  }, [currentStep, configuratorSteps]);
+  }, [currentStep]);
 
   // Enhanced Navigation component
   const Navigation = () => (
