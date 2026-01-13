@@ -1,5 +1,8 @@
 import { getDeviceId } from "@/lib/utils";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useConfiguratorStore } from "@/store/configuratorStore";
+import BusinessInfoStep from "@/components/configurator/steps/BusinessInfoStep";
+import DesignStep from "@/components/configurator/steps/DesignStep";
 import {
   ChevronRight,
   ArrowLeft,
@@ -138,6 +141,12 @@ export default function Configurator() {
   const persistence = usePersistence();
   const navigate = useNavigate();
 
+  // Get step orchestration from Zustand store
+  const currentStep = useConfiguratorStore((state) => state.ui.currentStep);
+  const { goToStep } = useConfiguratorStore((state) => ({
+    goToStep: state.goToStep,
+  }));
+
   const [isVisible, setIsVisible] = useState(false);
   const [persistEnabled, setPersistEnabled] = useState(() => {
     try {
@@ -147,11 +156,6 @@ export default function Configurator() {
     }
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(() => {
-    const restoredStep = persistence.getCurrentStep();
-    console.log("Restored current step:", restoredStep);
-    return restoredStep;
-  });
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
