@@ -122,7 +122,9 @@ class TemplateEngine {
         where,
       });
 
-      return prismaTemplates.map((t: any) => this.mapPrismaTemplateToTemplate(t));
+      return prismaTemplates.map((t: any) =>
+        this.mapPrismaTemplateToTemplate(t),
+      );
     } catch (error) {
       console.error("[TemplateEngine] Error fetching all templates:", error);
       throw new Error("Failed to fetch templates from database");

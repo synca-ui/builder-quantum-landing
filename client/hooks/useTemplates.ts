@@ -24,9 +24,7 @@ interface UseTemplatesReturn {
   retry: () => Promise<void>;
 }
 
-export function useTemplates(
-  businessType?: string
-): UseTemplatesReturn {
+export function useTemplates(businessType?: string): UseTemplatesReturn {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +49,7 @@ export function useTemplates(
 
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch templates: ${response.status} ${response.statusText}`
+          `Failed to fetch templates: ${response.status} ${response.statusText}`,
         );
       }
 

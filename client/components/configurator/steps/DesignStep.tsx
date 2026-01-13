@@ -275,37 +275,37 @@ export default function DesignStep() {
           {!isLoading && !error && (
             <div className="space-y-3">
               {availableTemplates.map((template) => (
-              <Card
-                key={template.id}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  design.template === template.id
-                    ? "border-teal-500 bg-teal-50 shadow-lg"
-                    : "border-gray-200 hover:border-teal-300"
-                }`}
-                onClick={() => handleTemplateSelect(template.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-3 h-3 rounded-full ${template.preview} flex-shrink-0`}
-                    ></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="text-md font-bold text-gray-900 truncate">
-                          {template.name}
-                        </h4>
-                        {design.template === template.id && (
-                          <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />
-                        )}
+                <Card
+                  key={template.id}
+                  className={`cursor-pointer transition-all duration-300 border-2 ${
+                    design.template === template.id
+                      ? "border-teal-500 bg-teal-50 shadow-lg"
+                      : "border-gray-200 hover:border-teal-300"
+                  }`}
+                  onClick={() => handleTemplateSelect(template.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-3 h-3 rounded-full ${template.preview} flex-shrink-0`}
+                      ></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-md font-bold text-gray-900 truncate">
+                            {template.name}
+                          </h4>
+                          {design.template === template.id && (
+                            <Check className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-gray-600 text-xs mt-1 line-clamp-2">
+                          {template.description}
+                        </p>
                       </div>
-                      <p className="text-gray-600 text-xs mt-1 line-clamp-2">
-                        {template.description}
-                      </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </div>
