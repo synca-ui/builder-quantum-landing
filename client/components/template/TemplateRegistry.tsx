@@ -1,4 +1,54 @@
 import React from "react";
+import { z } from "zod";
+
+// Zod schemas for runtime validation
+export const TemplateStyleSchema = z.object({
+  background: z.string(),
+  accent: z.string(),
+  text: z.string(),
+  secondary: z.string(),
+  layout: z.string(),
+  navigation: z.string(),
+  typography: z.string(),
+});
+
+export const TemplateMockupSchema = z.object({
+  nav: z.object({
+    bg: z.string(),
+    text: z.string(),
+    border: z.string(),
+  }),
+  hero: z.object({
+    bg: z.string(),
+    text: z.string(),
+  }),
+  cards: z.object({
+    bg: z.string(),
+    border: z.string(),
+    text: z.string(),
+  }),
+});
+
+export const TemplateSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string(),
+  preview: z.string(),
+  businessTypes: z.array(z.string()),
+  style: TemplateStyleSchema,
+  features: z.array(z.string()),
+  mockup: TemplateMockupSchema,
+});
+
+export const TemplateThemeSchema = z.object({
+  primary: z.string(),
+  secondary: z.string(),
+  text: z.string(),
+  background: z.string(),
+  highlight: z.string(),
+  buttonRadius: z.string(),
+  buttonHover: z.string(),
+});
 
 export interface TemplateStyle {
   background: string;
