@@ -102,6 +102,81 @@ export async function saveConfiguration(req: Request, res: Response) {
     }
 
     const config = parsed.data;
+
+    // ============ MARKETPLACE ARCHITECTURE: Template Validation & Dual-Write ============
+    // Extract templateId from the request payload
+    const templateId = (req.body as any).templateId || config.template;
+
+    // Validate template exists in the database via TemplateEngine
+    if (templateId) {
+      try {
+        const template = await templateEngine.getById(templateId);
+        if (!template) {
+          return res.status(400).json({
+            error: "Invalid template",
+            details: `Template "${templateId}" does not exist in the database`,
+          });
+        }
+      } catch (error) {
+        console.error("[Configurations] Error validating template:", error);
+        return res.status(500).json({
+          error: "Failed to validate template",
+        });
+      }
+    }
+
+    // Sync Business model with new Marketplace architecture (dual-write strategy)
+    // This ensures Business -> Template relation is established while maintaining legacy template string field
+    if (templateId && config.businessName) {
+      try {
+        const businessSlug = generateSlug(config.businessName);
+
+        await (prisma as any).business.upsert({
+          where: { slug: businessSlug },
+          update: {
+            // Update new Marketplace relation
+            templateId: templateId,
+            // Also update deprecated string field for backward compatibility
+            template: templateId,
+            // Update design tokens if provided
+            primaryColor: config.primaryColor || "#000000",
+            secondaryColor: config.secondaryColor || "#ffffff",
+            fontFamily: config.fontFamily || "sans",
+            name: config.businessName,
+            description: config.uniqueDescription || config.slogan,
+          },
+          create: {
+            slug: businessSlug,
+            // Core info
+            name: config.businessName,
+            description: config.uniqueDescription || config.slogan,
+            tagline: config.slogan,
+            // Design system
+            primaryColor: config.primaryColor || "#000000",
+            secondaryColor: config.secondaryColor || "#ffffff",
+            fontFamily: config.fontFamily || "sans",
+            // Template reference (Marketplace)
+            templateId: templateId,
+            // Also set deprecated string field for backward compatibility
+            template: templateId,
+          },
+        });
+
+        console.log(
+          `[Configurations] Business synced: slug="${businessSlug}", templateId="${templateId}"`,
+        );
+      } catch (error) {
+        console.error(
+          "[Configurations] Error syncing Business to Marketplace:",
+          error,
+        );
+        // Don't block the configuration save if Business sync fails
+        // Log the error but allow the response to continue
+      }
+    }
+
+    // ============ END MARKETPLACE SYNC ============
+
     const configurations = await loadConfigurations();
 
     if (config.id) {
