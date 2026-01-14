@@ -4123,8 +4123,8 @@ export default function Configurator() {
     const renderPreviewContent = () => {
       const selectedId =
         currentStep === 0
-          ? previewTemplateId || formData.template
-          : formData.template;
+          ? previewTemplateId || templateId
+          : templateId;
       if (!selectedId) {
         return (
           <div className="h-full flex items-center justify-center bg-gray-50">
@@ -4164,22 +4164,22 @@ export default function Configurator() {
       // Render different templates based on selection with INTERACTIVE FEATURES
       const selectedIdForSwitch =
         currentStep === 0
-          ? previewTemplateId || formData.template
-          : formData.template;
+          ? previewTemplateId || templateId
+          : templateId;
 
-      // Get theme colors for CSS variable theming
-      const primaryColor = formData.primaryColor || "#2563EB";
-      const secondaryColor = formData.secondaryColor || "#7C3AED";
+      // Use colors from store with fallbacks
+      const themedPrimaryColor = primaryColor || "#2563EB";
+      const themedSecondaryColor = secondaryColor || "#7C3AED";
 
       // Wrap content with CSS variables for theme colors
-      // Use a key to force re-mount when template or colors change
+      // Use a key to force re-mount when template, colors, or business name change (critical for reactivity)
       return (
         <div
-          key={`${selectedIdForSwitch}-${primaryColor}-${secondaryColor}`}
+          key={`${selectedIdForSwitch}-${themedPrimaryColor}-${themedSecondaryColor}-${businessName}`}
           style={
             {
-              "--primary": primaryColor,
-              "--secondary": secondaryColor,
+              "--primary": themedPrimaryColor,
+              "--secondary": themedSecondaryColor,
             } as React.CSSProperties
           }
         >
