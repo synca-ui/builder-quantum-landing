@@ -36,6 +36,13 @@ export default function Profile() {
         body: JSON.stringify({ fullName }),
       });
       if (!res.ok) throw new Error("Failed to update profile");
+
+      // Critical: Refresh Clerk's cached user object after successful update
+      // This ensures the UI reflects the new name immediately and on subsequent navigations
+      if (user) {
+        await user.reload();
+      }
+
       setMessage("Profile updated");
     } catch (e: any) {
       setMessage(e?.message || "Update failed");
