@@ -1479,6 +1479,13 @@ export default function Configurator() {
   };
 
   const TemplatePreviewContent = () => {
+    // STRICT STORE SUBSCRIPTIONS: Only read critical data from Zustand
+    const storeBusinessName = useConfiguratorStore((s) => s.business.name);
+    const storeBusinessType = useConfiguratorStore((s) => s.business.type);
+    const storeTemplate = useConfiguratorStore((s) => s.design.template);
+    const storePrimaryColor = useConfiguratorStore((s) => s.design.primaryColor);
+    const storeSecondaryColor = useConfiguratorStore((s) => s.design.secondaryColor);
+
     const normalizeImageSrc = (img: any): string => {
       if (!img) return "/placeholder.svg";
       if (typeof img === "string") return img;
@@ -1502,8 +1509,9 @@ export default function Configurator() {
     });
 
     const getBusinessName = () => {
-      if (formData.businessName) return formData.businessName;
-      // Template-specific business names
+      // CRITICAL: Use ONLY store value, no defaults
+      if (storeBusinessName) return storeBusinessName;
+      // Template-specific business names as fallback
       const templateNames = {
         minimalist: "Simple",
         modern: "FLUX",
@@ -1511,9 +1519,7 @@ export default function Configurator() {
         cozy: "Cozy",
       };
       const selectedId =
-        currentStep === 0
-          ? previewTemplateId || formData.template
-          : formData.template;
+        currentStep === 0 ? previewTemplateId || storeTemplate : storeTemplate;
       return templateNames[selectedId] || "Your Business";
     };
 
@@ -1551,7 +1557,8 @@ export default function Configurator() {
     };
 
     const getBusinessIcon = () => {
-      switch (formData.businessType) {
+      // CRITICAL: Use ONLY store value
+      switch (storeBusinessType) {
         case "cafe":
           return <Coffee className="w-4 h-4" />;
         case "restaurant":
