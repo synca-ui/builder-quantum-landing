@@ -2643,8 +2643,17 @@ export default function Configurator() {
         return savedStamps ? parseInt(savedStamps, 10) : 0;
       });
 
+      // Track mounted state to prevent state updates on unmount
+      const isMountedRef = useRef(true);
+      useEffect(() => {
+        return () => {
+          isMountedRef.current = false;
+        };
+      }, []);
+
       useEffect(() => {
         const handleStorageChange = () => {
+          if (!isMountedRef.current) return;
           const savedStamps = localStorage.getItem(`stamps_${deviceId}`);
           setHave(savedStamps ? parseInt(savedStamps, 10) : 0);
         };
