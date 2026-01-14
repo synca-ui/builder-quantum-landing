@@ -3065,11 +3065,16 @@ export default function Configurator() {
         return (
           <div
             className={`h-full overflow-y-auto max-h-full ${fontClass} relative`}
-            style={{
-              backgroundColor: formData.backgroundColor || "#FFFFFF",
-              "--primary": styles.userPrimary,
-              "--secondary": styles.userSecondary,
-            } as React.CSSProperties & { "--primary": string; "--secondary": string }}
+            style={
+              {
+                backgroundColor: formData.backgroundColor || "#FFFFFF",
+                "--primary": styles.userPrimary,
+                "--secondary": styles.userSecondary,
+              } as React.CSSProperties & {
+                "--primary": string;
+                "--secondary": string;
+              }
+            }
           >
             <CheckoutFlow />
 
@@ -3265,11 +3270,16 @@ export default function Configurator() {
         return (
           <div
             className={`h-full overflow-y-auto max-h-full text-white ${fontClass} relative`}
-            style={{
-              background: `linear-gradient(135deg, ${styles.userSecondary} 0%, ${styles.userPrimary} 50%, ${styles.userSecondary} 100%)`,
-              "--primary": styles.userPrimary,
-              "--secondary": styles.userSecondary,
-            } as React.CSSProperties & { "--primary": string; "--secondary": string }}
+            style={
+              {
+                background: `linear-gradient(135deg, ${styles.userSecondary} 0%, ${styles.userPrimary} 50%, ${styles.userSecondary} 100%)`,
+                "--primary": styles.userPrimary,
+                "--secondary": styles.userSecondary,
+              } as React.CSSProperties & {
+                "--primary": string;
+                "--secondary": string;
+              }
+            }
           >
             <CheckoutFlow />
 
@@ -3489,14 +3499,19 @@ export default function Configurator() {
         return (
           <div
             className={`h-full overflow-y-auto max-h-full ${fontClass} relative`}
-            style={{
-              background:
-                formData.backgroundType === "gradient"
-                  ? `linear-gradient(135deg, ${styles.userPrimary} 0%, ${styles.userSecondary} 100%)`
-                  : styles.userBackground || "#ffffff",
-              "--primary": styles.userPrimary,
-              "--secondary": styles.userSecondary,
-            } as React.CSSProperties & { "--primary": string; "--secondary": string }}
+            style={
+              {
+                background:
+                  formData.backgroundType === "gradient"
+                    ? `linear-gradient(135deg, ${styles.userPrimary} 0%, ${styles.userSecondary} 100%)`
+                    : styles.userBackground || "#ffffff",
+                "--primary": styles.userPrimary,
+                "--secondary": styles.userSecondary,
+              } as React.CSSProperties & {
+                "--primary": string;
+                "--secondary": string;
+              }
+            }
           >
             <CheckoutFlow />
 
@@ -3740,10 +3755,15 @@ export default function Configurator() {
         return (
           <div
             className={`h-full overflow-y-auto max-h-full bg-orange-50 ${fontClass} relative`}
-            style={{
-              "--primary": styles.userPrimary,
-              "--secondary": styles.userSecondary,
-            } as React.CSSProperties & { "--primary": string; "--secondary": string }}
+            style={
+              {
+                "--primary": styles.userPrimary,
+                "--secondary": styles.userSecondary,
+              } as React.CSSProperties & {
+                "--primary": string;
+                "--secondary": string;
+              }
+            }
           >
             <CheckoutFlow />
 
