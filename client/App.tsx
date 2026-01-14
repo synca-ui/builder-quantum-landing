@@ -103,10 +103,14 @@ const App = () => (
   </ErrorBoundary>
 );
 
+// Module-level flag to ensure root is created only once
+let isRootMounted = false;
+
 // Only mount the app once - prevent multiple root creations from HMR or re-imports
-if (!document.getElementById("root")?._reactRootContainer) {
+if (!isRootMounted) {
+  isRootMounted = true;
   const rootElement = document.getElementById("root");
-  if (rootElement) {
+  if (rootElement && !rootElement.hasChildNodes()) {
     createRoot(rootElement).render(<App />);
   }
 }
