@@ -126,57 +126,38 @@ export async function saveConfiguration(req: Request, res: Response) {
       }
     }
 
-    // Sync Business model with new Marketplace architecture (dual-write strategy)
-    // This ensures Business -> Template relation is established while maintaining legacy template string field
-    if (templateId && config.businessName) {
-      try {
-        const businessSlug = generateSlug(config.businessName);
+    // ============ MULTI-TENANCY: Ensure User -> Business -> BusinessMember Link ============
+    // This is CRITICAL for the app to function: every configuration must belong to a business
+    // that is owned by the user. This ensures proper access control and data isolation.
+    let businessId: string | undefined;
+    try {
+      const businessSetup = await ensureUserBusiness(
+        userId,
+        config.businessName || "Unnamed Business",
+        templateId,
+        {
+          primaryColor: config.primaryColor || "#000000",
+          secondaryColor: config.secondaryColor || "#ffffff",
+          fontFamily: config.fontFamily || "sans",
+        }
+      );
+      businessId = businessSetup.businessId;
 
-        await (prisma as any).business.upsert({
-          where: { slug: businessSlug },
-          update: {
-            // Update new Marketplace relation
-            templateId: templateId,
-            // Also update deprecated string field for backward compatibility
-            template: templateId,
-            // Update design tokens if provided
-            primaryColor: config.primaryColor || "#000000",
-            secondaryColor: config.secondaryColor || "#ffffff",
-            fontFamily: config.fontFamily || "sans",
-            name: config.businessName,
-            description: config.uniqueDescription || config.slogan,
-          },
-          create: {
-            slug: businessSlug,
-            // Core info
-            name: config.businessName,
-            description: config.uniqueDescription || config.slogan,
-            tagline: config.slogan,
-            // Design system
-            primaryColor: config.primaryColor || "#000000",
-            secondaryColor: config.secondaryColor || "#ffffff",
-            fontFamily: config.fontFamily || "sans",
-            // Template reference (Marketplace)
-            templateId: templateId,
-            // Also set deprecated string field for backward compatibility
-            template: templateId,
-          },
-        });
-
-        console.log(
-          `[Configurations] Business synced: slug="${businessSlug}", templateId="${templateId}"`,
-        );
-      } catch (error) {
-        console.error(
-          "[Configurations] Error syncing Business to Marketplace:",
-          error,
-        );
-        // Don't block the configuration save if Business sync fails
-        // Log the error but allow the response to continue
-      }
+      console.log(
+        `[Configurations] User-Business link established: userId="${userId}", businessId="${businessId}", isNew=${businessSetup.isMembershipNew}`
+      );
+    } catch (error) {
+      console.error(
+        "[Configurations] FATAL: Failed to establish User-Business link:",
+        error
+      );
+      return res.status(500).json({
+        error: "Failed to setup business ownership",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
     }
 
-    // ============ END MARKETPLACE SYNC ============
+    // ============ END MULTI-TENANCY SETUP ============
 
     const configurations = await loadConfigurations();
 
