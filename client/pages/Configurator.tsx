@@ -4165,8 +4165,10 @@ export default function Configurator() {
       const secondaryColor = formData.secondaryColor || "#7C3AED";
 
       // Wrap content with CSS variables for theme colors
+      // Use a key to force re-mount when template or colors change
       return (
         <div
+          key={`${selectedIdForSwitch}-${primaryColor}-${secondaryColor}`}
           style={
             {
               "--primary": primaryColor,
