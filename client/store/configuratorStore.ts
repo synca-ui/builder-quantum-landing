@@ -803,6 +803,29 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         pages: state.pages,
         payments: state.payments,
       }),
+      version: 2,
+      // CRITICAL FIX: Migrate function prevents localStorage from overwriting live store
+      // If version changes, clear stale data to prevent template drift
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          console.log(
+            "[Store Migration] Clearing v1 stale data to prevent template drift",
+          );
+          // Clear localStorage to force fresh state
+          return {
+            business: { ...defaultBusinessInfo },
+            design: { ...defaultDesignConfig },
+            content: { ...defaultContentData },
+            features: { ...defaultFeatureFlags },
+            contact: { ...defaultContactInfo },
+            publishing: { ...defaultPublishingInfo },
+            pages: { ...defaultPageManagement },
+            payments: { ...defaultPaymentAndOffers },
+            ui: { ...defaultUIState },
+          } as ConfiguratorState;
+        }
+        return persistedState as ConfiguratorState;
+      },
     },
   ),
 );
