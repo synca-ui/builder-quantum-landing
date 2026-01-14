@@ -1068,204 +1068,204 @@ export default function Configurator() {
     }, []);
 
     return (
-    <nav className="fixed top-0 w-full z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <a
-                href="/"
-                className="text-3xl font-black bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent"
-              >
-                Maitr
-              </a>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full opacity-75"></div>
-            </div>
+      <nav className="fixed top-0 w-full z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <a
+                  href="/"
+                  className="text-3xl font-black bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent"
+                >
+                  Maitr
+                </a>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full opacity-75"></div>
+              </div>
 
-            {/* Progress indicator - only show when in configurator steps */}
-            {currentStep >= 0 && (
-              <div className="hidden md:flex items-center ml-8">
-                <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-full">
-                  <Settings className="w-4 h-4 text-teal-500" />
-                  <span className="text-sm font-bold text-gray-700">
-                    Step {currentStep + 1} of {configuratorSteps.length}
-                  </span>
-                  <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-transform duration-300 ease-out"
-                      style={{ width: `${progressPercentage}%` }}
-                    ></div>
+              {/* Progress indicator - only show when in configurator steps */}
+              {currentStep >= 0 && (
+                <div className="hidden md:flex items-center ml-8">
+                  <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-full">
+                    <Settings className="w-4 h-4 text-teal-500" />
+                    <span className="text-sm font-bold text-gray-700">
+                      Step {currentStep + 1} of {configuratorSteps.length}
+                    </span>
+                    <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full transition-transform duration-300 ease-out"
+                        style={{ width: `${progressPercentage}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Save Status */}
-            {currentStep >= 0 && (
-              <div className="hidden lg:flex items-center space-x-2 ml-4">
-                {saveStatus === "saving" && (
-                  <div className="flex items-center space-x-2 text-orange-600">
-                    <Cloud className="w-4 h-4 animate-pulse" />
-                    <span className="text-xs">Saving...</span>
-                  </div>
-                )}
-                {saveStatus === "saved" && (
-                  <div className="flex items-center space-x-2 text-green-600">
-                    <Check className="w-4 h-4" />
-                    <span className="text-xs">Saved</span>
-                  </div>
-                )}
-                {saveStatus === "error" && (
-                  <div className="flex items-center space-x-2 text-red-600">
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="text-xs">Save failed</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Phase indicator */}
-            {currentPhase && (
-              <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-teal-500/10 to-purple-500/10 px-3 py-1 rounded-full border border-teal-500/20">
-                <Crown className="w-3 h-3 text-teal-600" />
-                <span className="text-xs font-bold text-teal-700">
-                  {currentPhase.phaseTitle}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-6">
-              {/* Persist toggle */}
-              <div className="hidden md:flex items-center gap-2 text-xs text-gray-600">
-                <span>Save progress</span>
-                <Switch
-                  checked={persistEnabled}
-                  onCheckedChange={(v: boolean) => {
-                    if (!isMountedRef.current) return;
-                    setPersistEnabled(v);
-                    try {
-                      persistence.setEnabled?.(v);
-                    } catch {}
-                    toast({
-                      title: v ? "Saving enabled" : "Saving disabled",
-                      description: v
-                        ? "Your steps will be stored and restored"
-                        : "Progress will not be stored",
-                    });
-                  }}
-                />
-              </div>
-              {/* Back to Templates button - only show after template selection */}
-              {currentStep > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={backToTemplates}
-                  className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Back to Templates
-                </Button>
               )}
 
+              {/* Save Status */}
               {currentStep >= 0 && (
-                <div className="flex items-center space-x-2">
-                  {publishStatus === "published" && publishedUrl ? (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={() => window.open(getLiveUrl(), "_blank")}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
-                      >
-                        <Globe className="w-4 h-4 mr-2" />
-                        View Live Site
-                      </Button>
-                      <ShareQRButton url={publishedUrl} />
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={async () => {
-                          const sid = persistence.getSessionId
-                            ? persistence.getSessionId()
-                            : "local";
-                          try {
-                            const mediaSafe = await sanitizeMedia(formData);
-                            const payload = JSON.stringify({
-                              config: mediaSafe,
-                            });
-                            const blob = new Blob([payload], {
-                              type: "application/json",
-                            });
-                            if (
-                              !(navigator as any).sendBeacon ||
-                              !(navigator as any).sendBeacon(
-                                `/api/preview/${sid}`,
-                                blob,
-                              )
-                            ) {
-                              await fetch(`/api/preview/${sid}`, {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  "x-user-id": sessionApi.getUserId(),
-                                },
-                                body: payload,
-                              }).catch(() => {});
-                            }
-                          } catch {}
-                          window.open(`/site/preview-${sid}`, "_blank");
-                        }}
-                        className="border-gray-300"
-                      >
-                        1:1 Preview
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={publishConfiguration}
-                        disabled={publishStatus === "publishing"}
-                        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg ml-2"
-                      >
-                        {publishStatus === "publishing" ? (
-                          <>
-                            <Cloud className="w-4 h-4 mr-2 animate-pulse" />
-                            Publishing...
-                          </>
-                        ) : (
-                          <>
-                            <Rocket className="w-4 h-4 mr-2" />
-                            Publish Website
-                          </>
-                        )}
-                      </Button>
-                    </>
+                <div className="hidden lg:flex items-center space-x-2 ml-4">
+                  {saveStatus === "saving" && (
+                    <div className="flex items-center space-x-2 text-orange-600">
+                      <Cloud className="w-4 h-4 animate-pulse" />
+                      <span className="text-xs">Saving...</span>
+                    </div>
+                  )}
+                  {saveStatus === "saved" && (
+                    <div className="flex items-center space-x-2 text-green-600">
+                      <Check className="w-4 h-4" />
+                      <span className="text-xs">Saved</span>
+                    </div>
+                  )}
+                  {saveStatus === "error" && (
+                    <div className="flex items-center space-x-2 text-red-600">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="text-xs">Save failed</span>
+                    </div>
                   )}
                 </div>
               )}
+
+              {/* Phase indicator */}
+              {currentPhase && (
+                <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-teal-500/10 to-purple-500/10 px-3 py-1 rounded-full border border-teal-500/20">
+                  <Crown className="w-3 h-3 text-teal-600" />
+                  <span className="text-xs font-bold text-teal-700">
+                    {currentPhase.phaseTitle}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-6">
+                {/* Persist toggle */}
+                <div className="hidden md:flex items-center gap-2 text-xs text-gray-600">
+                  <span>Save progress</span>
+                  <Switch
+                    checked={persistEnabled}
+                    onCheckedChange={(v: boolean) => {
+                      if (!isMountedRef.current) return;
+                      setPersistEnabled(v);
+                      try {
+                        persistence.setEnabled?.(v);
+                      } catch {}
+                      toast({
+                        title: v ? "Saving enabled" : "Saving disabled",
+                        description: v
+                          ? "Your steps will be stored and restored"
+                          : "Progress will not be stored",
+                      });
+                    }}
+                  />
+                </div>
+                {/* Back to Templates button - only show after template selection */}
+                {currentStep > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={backToTemplates}
+                    className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                  >
+                    <Home className="w-4 h-4 mr-2" />
+                    Back to Templates
+                  </Button>
+                )}
+
+                {currentStep >= 0 && (
+                  <div className="flex items-center space-x-2">
+                    {publishStatus === "published" && publishedUrl ? (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => window.open(getLiveUrl(), "_blank")}
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-bold rounded-full shadow-lg"
+                        >
+                          <Globe className="w-4 h-4 mr-2" />
+                          View Live Site
+                        </Button>
+                        <ShareQRButton url={publishedUrl} />
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            const sid = persistence.getSessionId
+                              ? persistence.getSessionId()
+                              : "local";
+                            try {
+                              const mediaSafe = await sanitizeMedia(formData);
+                              const payload = JSON.stringify({
+                                config: mediaSafe,
+                              });
+                              const blob = new Blob([payload], {
+                                type: "application/json",
+                              });
+                              if (
+                                !(navigator as any).sendBeacon ||
+                                !(navigator as any).sendBeacon(
+                                  `/api/preview/${sid}`,
+                                  blob,
+                                )
+                              ) {
+                                await fetch(`/api/preview/${sid}`, {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    "x-user-id": sessionApi.getUserId(),
+                                  },
+                                  body: payload,
+                                }).catch(() => {});
+                              }
+                            } catch {}
+                            window.open(`/site/preview-${sid}`, "_blank");
+                          }}
+                          className="border-gray-300"
+                        >
+                          1:1 Preview
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={publishConfiguration}
+                          disabled={publishStatus === "publishing"}
+                          className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-6 py-2 text-sm font-bold rounded-full shadow-lg ml-2"
+                        >
+                          {publishStatus === "publishing" ? (
+                            <>
+                              <Cloud className="w-4 h-4 mr-2 animate-pulse" />
+                              Publishing...
+                            </>
+                          ) : (
+                            <>
+                              <Rocket className="w-4 h-4 mr-2" />
+                              Publish Website
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-gray-700"
+              >
+                {isMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
+              </Button>
             </div>
           </div>
-
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700"
-            >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </Button>
-          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
     );
   };
 

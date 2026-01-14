@@ -78,14 +78,22 @@ export function subscribe(listener: () => void) {
 }
 
 export function useAnalysis() {
-  const snapshot = useSyncExternalStore(subscribe, getAnalysisState, getAnalysisState);
+  const snapshot = useSyncExternalStore(
+    subscribe,
+    getAnalysisState,
+    getAnalysisState,
+  );
 
   // Memoize the returned object to prevent infinite loops from changing references
-  return useMemo(() => ({
-    ...snapshot,
-    setIsLoading,
-    setN8nData,
-    setSourceLink,
-    clearAnalysisData,
-  } as const), [snapshot.isLoading, snapshot.n8nData, snapshot.sourceLink]);
+  return useMemo(
+    () =>
+      ({
+        ...snapshot,
+        setIsLoading,
+        setN8nData,
+        setSourceLink,
+        clearAnalysisData,
+      }) as const,
+    [snapshot.isLoading, snapshot.n8nData, snapshot.sourceLink],
+  );
 }
