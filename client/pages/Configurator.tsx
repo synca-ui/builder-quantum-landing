@@ -5286,7 +5286,10 @@ export default function Configurator() {
                 <Switch
                   id="offers-tab"
                   checked={!!formData.offerPageEnabled}
-                  onCheckedChange={(v) => updateFormData("offerPageEnabled", v)}
+                  onCheckedChange={(v) => {
+                    if (!isMountedRef.current) return;
+                    updateFormData("offerPageEnabled", v);
+                  }}
                 />
                 <label htmlFor="offers-tab" className="text-sm text-gray-600">
                   Adds an Offers tab to your menu
