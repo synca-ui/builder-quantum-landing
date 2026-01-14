@@ -103,4 +103,10 @@ const App = () => (
   </ErrorBoundary>
 );
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Only mount the app once - prevent multiple root creations from HMR or re-imports
+if (!document.getElementById("root")?._reactRootContainer) {
+  const rootElement = document.getElementById("root");
+  if (rootElement) {
+    createRoot(rootElement).render(<App />);
+  }
+}
