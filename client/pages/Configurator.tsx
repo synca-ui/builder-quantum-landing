@@ -3327,7 +3327,7 @@ export default function Configurator() {
                   <div
                     className="relative w-full max-w-none p-6 pt-6 backdrop-blur-xl ring-1 ring-white/10"
                     style={{
-                      background: `linear-gradient(135deg, ${toRgba(styles.userSecondary || "#38bdf8", 0.65)} 0%, ${toRgba(styles.userPrimary || "#2563eb", 0.65)} 50%, ${toRgba(styles.userSecondary || "#1e40af", 0.65)} 100%)`,
+                      background: `linear-gradient(135deg, ${toRgba(styles.userSecondary, 0.65)} 0%, ${toRgba(styles.userPrimary, 0.65)} 50%, ${toRgba(styles.userSecondary, 0.65)} 100%)`,
                       borderTop: "1px solid rgba(255,255,255,0.15)",
                       color: "#ffffff",
                     }}
@@ -3359,7 +3359,7 @@ export default function Configurator() {
                             className="w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border"
                             style={{
                               backgroundColor: isActive
-                                ? toRgba(styles.userPrimary || "#2563eb", 0.18)
+                                ? toRgba(styles.userPrimary, 0.18)
                                 : "rgba(255,255,255,0.06)",
                               borderColor: "rgba(255,255,255,0.12)",
                               color: "#ffffff",
