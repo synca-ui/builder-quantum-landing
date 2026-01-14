@@ -4,6 +4,7 @@ import path from "path";
 import { Pool } from "pg";
 import prisma from "../db/prisma";
 import { templateEngine } from "../services/TemplateEngine";
+import { ensureUserBusiness } from "../services/BusinessService";
 import {
   ConfigurationSchema,
   LegacyConfigurationSchema,
