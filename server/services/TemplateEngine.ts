@@ -46,54 +46,112 @@ class TemplateEngine {
   /**
    * Convert Prisma Template to internal Template format
    * Maps database model to the interface expected by consuming code
+   *
+   * Defensive implementation handles:
+   * - Empty or null JSON objects from database
+   * - Missing properties
+   * - Type mismatches
    */
   private mapPrismaTemplateToTemplate(prismaTemplate: any): Template {
-    const layout = this.castJsonValue<TemplateLayout>(prismaTemplate.layout);
-    const tokens = this.castJsonValue<DesignTokens>(prismaTemplate.tokens);
-    const preview = this.castJsonValue<TemplatePreview>(prismaTemplate.preview);
+    try {
+      // Safely cast JSON values with null checks
+      const layout = this.castJsonValue<TemplateLayout>(
+        prismaTemplate.layout && Object.keys(prismaTemplate.layout).length > 0
+          ? prismaTemplate.layout
+          : { intent: "narrative", navigation: "top" }
+      );
 
-    // Map Prisma category array to businessTypes for backward compatibility
-    const businessTypes = prismaTemplate.category || [];
+      const tokens = this.castJsonValue<DesignTokens>(
+        prismaTemplate.tokens && Object.keys(prismaTemplate.tokens).length > 0
+          ? prismaTemplate.tokens
+          : {
+              colors: {
+                background: "#ffffff",
+                accent: "#000000",
+                text: "#000000",
+                primary: "#000000",
+                secondary: "#ffffff",
+                border: "#e0e0e0",
+              },
+              typography: {
+                h1: { size: "2rem", weight: 700, lineHeight: "1.2" },
+                h2: { size: "1.5rem", weight: 600, lineHeight: "1.3" },
+                body: { size: "1rem", weight: 400, lineHeight: "1.5" },
+              },
+              spacing: {
+                xs: "0.25rem",
+                sm: "0.5rem",
+                md: "1rem",
+                lg: "1.5rem",
+                xl: "2rem",
+              },
+            }
+      );
 
-    // Build style object from tokens
-    const style = {
-      background: tokens.colors?.background || "#ffffff",
-      accent: tokens.colors?.accent || "#000000",
-      text: tokens.colors?.text || "#000000",
-      secondary: tokens.colors?.secondary || "#ffffff",
-      layout: layout.intent || "narrative",
-      navigation: layout.navigation || "top",
-      typography: layout.typography?.headingFont || "sans-serif",
-    };
+      const preview = this.castJsonValue<TemplatePreview>(
+        prismaTemplate.preview && Object.keys(prismaTemplate.preview).length > 0
+          ? prismaTemplate.preview
+          : { thumbnail: "bg-white", features: [] }
+      );
 
-    // Build mockup object with reasonable defaults
-    const mockup = {
-      nav: {
-        bg: "bg-white",
-        text: "text-black",
-        border: "border-gray-200",
-      },
-      hero: {
-        bg: "bg-white",
-        text: "text-black",
-      },
-      cards: {
-        bg: "bg-gray-50",
-        border: "border-gray-200",
-        text: "text-gray-800",
-      },
-    };
+      // Map Prisma category array to businessTypes for backward compatibility
+      const businessTypes = Array.isArray(prismaTemplate.category)
+        ? prismaTemplate.category
+        : [];
 
-    return {
-      id: prismaTemplate.id,
-      name: prismaTemplate.name,
-      description: prismaTemplate.description,
-      preview: preview.thumbnail || "bg-white",
-      businessTypes,
-      style,
-      features: preview.features || [],
-      mockup,
-    };
+      // Build style object from tokens with defensive fallbacks
+      const style = {
+        background: tokens.colors?.background || "#ffffff",
+        accent: tokens.colors?.accent || "#000000",
+        text: tokens.colors?.text || "#000000",
+        secondary: tokens.colors?.secondary || "#ffffff",
+        layout: layout.intent || "narrative",
+        navigation: layout.navigation || "top",
+        typography: layout.typography?.headingFont || "sans-serif",
+      };
+
+      // Build mockup object with reasonable defaults
+      const mockup = {
+        nav: {
+          bg: "bg-white",
+          text: "text-black",
+          border: "border-gray-200",
+        },
+        hero: {
+          bg: "bg-white",
+          text: "text-black",
+        },
+        cards: {
+          bg: "bg-gray-50",
+          border: "border-gray-200",
+          text: "text-gray-800",
+        },
+      };
+
+      return {
+        id: prismaTemplate.id || "unknown",
+        name: prismaTemplate.name || "Unnamed Template",
+        description: prismaTemplate.description || "",
+        preview: preview.thumbnail || "bg-white",
+        businessTypes,
+        style,
+        features: Array.isArray(preview.features) ? preview.features : [],
+        mockup,
+      };
+    } catch (error) {
+      console.error(
+        "[TemplateEngine] Error mapping Prisma template to Template:",
+        {
+          templateId: prismaTemplate?.id,
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          prismaTemplate: JSON.stringify(prismaTemplate),
+        }
+      );
+      throw new Error(
+        `Failed to map template ${prismaTemplate?.id}: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
   }
 
   /**
