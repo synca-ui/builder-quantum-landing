@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
+import { ensureUserBusiness } from "../services/BusinessService";
 
 export const webAppsRouter = Router();
 
