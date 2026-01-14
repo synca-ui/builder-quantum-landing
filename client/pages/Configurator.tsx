@@ -1769,14 +1769,15 @@ export default function Configurator() {
           : formData.fontColor;
     const styles = {
       ...baseTemplateStyle,
+      // CRITICAL: Use ONLY store colors, no formData fallbacks
       userPrimary:
         themeOverride.primary ||
-        formData.primaryColor ||
+        storePrimaryColor ||
         (baseTemplateStyle as any).accent,
       userSecondary: isDark
         ? "#0F172A"
         : themeOverride.secondary ||
-          formData.secondaryColor ||
+          storeSecondaryColor ||
           (baseTemplateStyle as any).secondary,
       userFontColor: themeOverride.text || forcedTextColor,
       userFontSize: formData.fontSize,
