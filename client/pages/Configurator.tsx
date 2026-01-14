@@ -1588,10 +1588,11 @@ export default function Configurator() {
     };
 
     // Template-specific content
+    // CRITICAL: Use ONLY store template, never fall back to formData
     const selectedId =
       currentStep === 0
-        ? previewTemplateId || formData.template
-        : formData.template;
+        ? previewTemplateId || storeTemplate
+        : storeTemplate;
 
     // i18n dictionary and helper for preview UI
     const dict = {
