@@ -58,7 +58,7 @@ class TemplateEngine {
       const layout = this.castJsonValue<TemplateLayout>(
         prismaTemplate.layout && Object.keys(prismaTemplate.layout).length > 0
           ? prismaTemplate.layout
-          : { intent: "narrative", navigation: "top" }
+          : { intent: "narrative", navigation: "top" },
       );
 
       const tokens = this.castJsonValue<DesignTokens>(
@@ -85,13 +85,13 @@ class TemplateEngine {
                 lg: "1.5rem",
                 xl: "2rem",
               },
-            }
+            },
       );
 
       const preview = this.castJsonValue<TemplatePreview>(
         prismaTemplate.preview && Object.keys(prismaTemplate.preview).length > 0
           ? prismaTemplate.preview
-          : { thumbnail: "bg-white", features: [] }
+          : { thumbnail: "bg-white", features: [] },
       );
 
       // Map Prisma category array to businessTypes for backward compatibility
@@ -146,10 +146,10 @@ class TemplateEngine {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           prismaTemplate: JSON.stringify(prismaTemplate),
-        }
+        },
       );
       throw new Error(
-        `Failed to map template ${prismaTemplate?.id}: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to map template ${prismaTemplate?.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -189,7 +189,8 @@ class TemplateEngine {
           where,
         });
       } catch (dbError) {
-        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorMessage =
+          dbError instanceof Error ? dbError.message : String(dbError);
         const errorCode = (dbError as any)?.code;
         const errorDetails = {
           message: errorMessage,
@@ -200,12 +201,15 @@ class TemplateEngine {
             : "NOT CONFIGURED",
           timestamp: new Date().toISOString(),
         };
-        console.error("[TemplateEngine] DATABASE_ERROR in findMany:", errorDetails);
+        console.error(
+          "[TemplateEngine] DATABASE_ERROR in findMany:",
+          errorDetails,
+        );
         throw dbError;
       }
 
       console.log(
-        `[TemplateEngine] Successfully fetched ${prismaTemplates.length} templates from database`
+        `[TemplateEngine] Successfully fetched ${prismaTemplates.length} templates from database`,
       );
 
       // Map each Prisma template to internal Template format
@@ -215,7 +219,7 @@ class TemplateEngine {
         } catch (mapError) {
           console.error(
             `[TemplateEngine] Error mapping template ${t?.id}:`,
-            mapError
+            mapError,
           );
           throw mapError;
         }
@@ -223,7 +227,8 @@ class TemplateEngine {
 
       return templates;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const errorCode = (error as any)?.code;
       const errorDetails = {
         message: errorMessage,
@@ -231,7 +236,10 @@ class TemplateEngine {
         stack: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString(),
       };
-      console.error("[TemplateEngine] FATAL: Failed to fetch templates:", errorDetails);
+      console.error(
+        "[TemplateEngine] FATAL: Failed to fetch templates:",
+        errorDetails,
+      );
       throw error;
     }
   }
@@ -254,7 +262,8 @@ class TemplateEngine {
           where: { id },
         });
       } catch (dbError) {
-        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorMessage =
+          dbError instanceof Error ? dbError.message : String(dbError);
         const errorCode = (dbError as any)?.code;
         const errorDetails = {
           templateId: id,
@@ -262,7 +271,10 @@ class TemplateEngine {
           code: errorCode,
           stack: dbError instanceof Error ? dbError.stack : undefined,
         };
-        console.error("[TemplateEngine] DATABASE_ERROR in findUnique:", errorDetails);
+        console.error(
+          "[TemplateEngine] DATABASE_ERROR in findUnique:",
+          errorDetails,
+        );
         throw dbError;
       }
 
@@ -274,7 +286,8 @@ class TemplateEngine {
       console.log(`[TemplateEngine] Successfully fetched template: ${id}`);
       return this.mapPrismaTemplateToTemplate(prismaTemplate);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const errorCode = (error as any)?.code;
       const errorDetails = {
         templateId: id,
@@ -282,7 +295,10 @@ class TemplateEngine {
         code: errorCode,
         stack: error instanceof Error ? error.stack : undefined,
       };
-      console.error("[TemplateEngine] FATAL: Failed to fetch template:", errorDetails);
+      console.error(
+        "[TemplateEngine] FATAL: Failed to fetch template:",
+        errorDetails,
+      );
       throw error;
     }
   }
@@ -323,7 +339,8 @@ class TemplateEngine {
           where: { id: templateId },
         });
       } catch (dbError) {
-        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorMessage =
+          dbError instanceof Error ? dbError.message : String(dbError);
         const errorCode = (dbError as any)?.code;
         console.error("[TemplateEngine] DATABASE_ERROR in validateConfig:", {
           templateId,
@@ -385,7 +402,8 @@ class TemplateEngine {
         errors: errors.length > 0 ? errors : undefined,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const errorCode = (error as any)?.code;
       console.error("[TemplateEngine] FATAL: Validation failed:", {
         templateId,
@@ -420,7 +438,8 @@ class TemplateEngine {
           },
         });
       } catch (dbError) {
-        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorMessage =
+          dbError instanceof Error ? dbError.message : String(dbError);
         const errorCode = (dbError as any)?.code;
         console.error("[TemplateEngine] DATABASE_ERROR in getBusinessTypes:", {
           message: errorMessage,
@@ -445,7 +464,8 @@ class TemplateEngine {
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const errorCode = (error as any)?.code;
       console.error("[TemplateEngine] FATAL: Failed to fetch business types:", {
         message: errorMessage,
@@ -484,21 +504,25 @@ class TemplateEngine {
           },
         });
       } catch (dbError) {
-        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorMessage =
+          dbError instanceof Error ? dbError.message : String(dbError);
         const errorCode = (dbError as any)?.code;
-        console.error("[TemplateEngine] DATABASE_ERROR in supportsBusinessType:", {
-          templateId,
-          businessType,
-          message: errorMessage,
-          code: errorCode,
-          stack: dbError instanceof Error ? dbError.stack : undefined,
-        });
+        console.error(
+          "[TemplateEngine] DATABASE_ERROR in supportsBusinessType:",
+          {
+            templateId,
+            businessType,
+            message: errorMessage,
+            code: errorCode,
+            stack: dbError instanceof Error ? dbError.stack : undefined,
+          },
+        );
         return false;
       }
 
       if (!template) {
         console.log(
-          `[TemplateEngine] Template not found for business type check: ${templateId}`
+          `[TemplateEngine] Template not found for business type check: ${templateId}`,
         );
         return false;
       }
@@ -515,7 +539,8 @@ class TemplateEngine {
 
       return supports;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const errorCode = (error as any)?.code;
       console.error("[TemplateEngine] ERROR checking business type support:", {
         templateId,

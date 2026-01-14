@@ -48,7 +48,8 @@ function getPrismaInstance(): PrismaClient {
       prisma = initializePrisma();
       console.log("[Prisma] PrismaClient initialized successfully");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error("[Prisma] FATAL: Failed to initialize PrismaClient:", {
         message: errorMessage,
         timestamp: new Date().toISOString(),
