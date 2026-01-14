@@ -8097,7 +8097,17 @@ export default function Configurator() {
 
   // Feature Config Step (dynamic)
   const FeatureConfigStep = () => {
+    // Track mounted state to prevent state updates on unmount
+    const isMountedRef = useRef(true);
     useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
+
+    useEffect(() => {
+      if (!isMountedRef.current) return;
+
       if (!pendingFeatureConfig) {
         nextStep();
       }
