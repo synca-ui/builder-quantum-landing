@@ -246,18 +246,44 @@ class TemplateEngine {
    */
   async getById(id: string): Promise<Template | null> {
     try {
-      const prismaTemplate = await (prisma as any).template.findUnique({
-        where: { id },
-      });
+      console.log("[TemplateEngine] Fetching template by ID", { id });
+
+      let prismaTemplate: any;
+      try {
+        prismaTemplate = await (prisma as any).template.findUnique({
+          where: { id },
+        });
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorCode = (dbError as any)?.code;
+        const errorDetails = {
+          templateId: id,
+          message: errorMessage,
+          code: errorCode,
+          stack: dbError instanceof Error ? dbError.stack : undefined,
+        };
+        console.error("[TemplateEngine] DATABASE_ERROR in findUnique:", errorDetails);
+        throw dbError;
+      }
 
       if (!prismaTemplate) {
+        console.log(`[TemplateEngine] Template not found: ${id}`);
         return null;
       }
 
+      console.log(`[TemplateEngine] Successfully fetched template: ${id}`);
       return this.mapPrismaTemplateToTemplate(prismaTemplate);
     } catch (error) {
-      console.error(`[TemplateEngine] Error fetching template ${id}:`, error);
-      throw new Error(`Failed to fetch template ${id} from database`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = (error as any)?.code;
+      const errorDetails = {
+        templateId: id,
+        message: errorMessage,
+        code: errorCode,
+        stack: error instanceof Error ? error.stack : undefined,
+      };
+      console.error("[TemplateEngine] FATAL: Failed to fetch template:", errorDetails);
+      throw error;
     }
   }
 
