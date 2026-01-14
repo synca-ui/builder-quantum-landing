@@ -301,6 +301,12 @@ export default function Configurator() {
   const goToStep = useConfiguratorStore((state) => state.goToStep);
   const setCurrentStep = useConfiguratorStore((state) => state.setCurrentStep);
 
+  // Sync design colors from Zustand store to formData for live preview updates
+  const designPrimaryColor = useConfiguratorStore((state) => state.design.primaryColor);
+  const designSecondaryColor = useConfiguratorStore((state) => state.design.secondaryColor);
+  const designFontFamily = useConfiguratorStore((state) => state.design.fontFamily);
+  const designTemplate = useConfiguratorStore((state) => state.design.template);
+
   // ===== LOCKED ENTRY PATTERN =====
   // Ensures initialization logic runs exactly once per session
   const isInitialized = useRef(false);
