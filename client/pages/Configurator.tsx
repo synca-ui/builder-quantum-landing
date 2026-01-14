@@ -1314,9 +1314,22 @@ export default function Configurator() {
 
     const list = Array.isArray(offers) ? offers : [];
     const [idx, setIdx] = useState(0);
+
+    // Track mounted state to prevent state updates on unmount
+    const isMountedRef = useRef(true);
+    useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
+
     useEffect(() => {
       if (list.length <= 1) return;
-      const t = setInterval(() => setIdx((i) => (i + 1) % list.length), 3000);
+      const t = setInterval(() => {
+        if (isMountedRef.current) {
+          setIdx((i) => (i + 1) % list.length);
+        }
+      }, 3000);
       return () => clearInterval(t);
     }, [list.length]);
 
