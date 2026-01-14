@@ -4122,9 +4122,7 @@ export default function Configurator() {
 
     const renderPreviewContent = () => {
       const selectedId =
-        currentStep === 0
-          ? previewTemplateId || templateId
-          : templateId;
+        currentStep === 0 ? previewTemplateId || templateId : templateId;
       if (!selectedId) {
         return (
           <div className="h-full flex items-center justify-center bg-gray-50">
@@ -4163,9 +4161,7 @@ export default function Configurator() {
 
       // Render different templates based on selection with INTERACTIVE FEATURES
       const selectedIdForSwitch =
-        currentStep === 0
-          ? previewTemplateId || templateId
-          : templateId;
+        currentStep === 0 ? previewTemplateId || templateId : templateId;
 
       // Use colors from store with fallbacks
       const themedPrimaryColor = primaryColor || "#2563EB";
