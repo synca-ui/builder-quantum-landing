@@ -1009,8 +1009,10 @@ export default function Configurator() {
 
   // Sync current draft to server preview cache (debounced)
   useEffect(() => {
+    let isMounted = true;
     const t = setTimeout(() => {
       (async () => {
+        if (!isMounted) return;
         try {
           const sid = persistence.getSessionId
             ? persistence.getSessionId()
@@ -1022,19 +1024,24 @@ export default function Configurator() {
             !(navigator as any).sendBeacon ||
             !(navigator as any).sendBeacon(`/api/preview/${sid}`, blob)
           ) {
-            await fetch(`/api/preview/${sid}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-user-id": sessionApi.getUserId(),
-              },
-              body: payload,
-            }).catch(() => {});
+            if (isMounted) {
+              await fetch(`/api/preview/${sid}`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-user-id": sessionApi.getUserId(),
+                },
+                body: payload,
+              }).catch(() => {});
+            }
           }
         } catch {}
       })();
     }, 500);
-    return () => clearTimeout(t);
+    return () => {
+      isMounted = false;
+      clearTimeout(t);
+    };
   }, [formData, persistence, sanitizeMedia]);
 
   // Progress calculation
