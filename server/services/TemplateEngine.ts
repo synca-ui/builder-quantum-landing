@@ -470,26 +470,60 @@ class TemplateEngine {
     businessType: string,
   ): Promise<boolean> {
     try {
-      const template = await (prisma as any).template.findUnique({
-        where: { id: templateId },
-        select: {
-          category: true,
-        },
+      console.log("[TemplateEngine] Checking business type support", {
+        templateId,
+        businessType,
       });
 
-      if (!template) {
+      let template: any;
+      try {
+        template = await (prisma as any).template.findUnique({
+          where: { id: templateId },
+          select: {
+            category: true,
+          },
+        });
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorCode = (dbError as any)?.code;
+        console.error("[TemplateEngine] DATABASE_ERROR in supportsBusinessType:", {
+          templateId,
+          businessType,
+          message: errorMessage,
+          code: errorCode,
+          stack: dbError instanceof Error ? dbError.stack : undefined,
+        });
         return false;
       }
 
-      return (
+      if (!template) {
+        console.log(
+          `[TemplateEngine] Template not found for business type check: ${templateId}`
+        );
+        return false;
+      }
+
+      const supports =
         Array.isArray(template.category) &&
-        template.category.includes(businessType.toUpperCase())
-      );
+        template.category.includes(businessType.toUpperCase());
+
+      console.log("[TemplateEngine] Business type support result:", {
+        templateId,
+        businessType,
+        supports,
+      });
+
+      return supports;
     } catch (error) {
-      console.error(
-        `[TemplateEngine] Error checking business type support:`,
-        error,
-      );
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = (error as any)?.code;
+      console.error("[TemplateEngine] ERROR checking business type support:", {
+        templateId,
+        businessType,
+        message: errorMessage,
+        code: errorCode,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return false;
     }
   }
