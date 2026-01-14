@@ -62,6 +62,39 @@ webAppsRouter.post("/apps/publish", async (req, res) => {
     if (!subdomain || !config)
       return res.status(400).json({ error: "Missing subdomain or config" });
 
+    // ============ MULTI-TENANCY: Ensure User -> Business -> BusinessMember Link ============
+    // Before creating/updating WebApp, ensure the user owns a business
+    // This prevents orphaned WebApps and ensures proper access control
+    let businessId: string | undefined;
+    try {
+      const businessSetup = await ensureUserBusiness(
+        userId,
+        config?.businessName || "Unnamed Business",
+        undefined,
+        {
+          primaryColor: config?.primaryColor || "#000000",
+          secondaryColor: config?.secondaryColor || "#ffffff",
+          fontFamily: config?.fontFamily || "sans",
+        }
+      );
+      businessId = businessSetup.businessId;
+
+      console.log(
+        `[WebApps] Publish: User-Business link verified: userId="${userId}", businessId="${businessId}"`
+      );
+    } catch (error) {
+      console.error(
+        "[WebApps] FATAL: Failed to establish User-Business link during publish:",
+        error
+      );
+      return res.status(500).json({
+        error: "Failed to verify business ownership for webapp publish",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+
+    // ============ END MULTI-TENANCY VERIFICATION ============
+
     // Compute URLs preferring explicit env config
     const host = (req.headers.host || "").toString();
     const hdrProto = ((req.headers["x-forwarded-proto"] as string) || "https").toString();
