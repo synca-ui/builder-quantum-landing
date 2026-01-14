@@ -355,7 +355,14 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
       updateDesign: (config) => {
         checkThrottleGuard("updateDesign");
         set((state) => ({
-          design: { ...state.design, ...config },
+          design: {
+            ...state.design,
+            ...config,
+            // CRITICAL FIX: Explicitly preserve template to prevent drift
+            // Even if config is spread, template stays locked to its current value
+            // unless explicitly updated by updateTemplate()
+            template: config.template || state.design.template,
+          },
           publishing: {
             ...state.publishing,
             updatedAt: new Date().toISOString(),
