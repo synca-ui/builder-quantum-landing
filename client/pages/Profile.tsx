@@ -109,6 +109,30 @@ export default function Profile() {
               <Button onClick={() => signOut()} variant="outline">
                 Log out
               </Button>
+
+              {/* Emergency Reset Button - Clears all cached data */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-xs text-gray-500 mb-3">
+                  Having sync issues? Clear the cache and reload.
+                </p>
+                <Button
+                  onClick={() => {
+                    if (
+                      confirm(
+                        "This will clear all cached data and reload the page. Continue?",
+                      )
+                    ) {
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      window.location.reload();
+                    }
+                  }}
+                  variant="outline"
+                  className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                >
+                  Clear Cache & Reload
+                </Button>
+              </div>
             </div>
           ) : (
             <div>Not logged in.</div>
