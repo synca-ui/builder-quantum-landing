@@ -6,7 +6,7 @@ export let prisma: PrismaClient | null = null;
 function initializePrisma() {
   const dbUrl = process.env.DATABASE_URL || "";
 
-  // Validate DATABASE_URL is configureds
+  // Validate DATABASE_URL is configured
   if (!dbUrl) {
     const errorMessage =
       "[Prisma] FATAL: DATABASE_URL environment variable is not configured";
