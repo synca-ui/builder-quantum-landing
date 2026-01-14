@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useMemo } from "react";
 import type { N8nResult } from "@/types/n8n";
 
 type State = {
