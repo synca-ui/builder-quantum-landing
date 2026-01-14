@@ -4008,10 +4008,11 @@ export default function Configurator() {
     };
 
     // Sample content for realistic previews - template specific
+    // CRITICAL: Use ONLY store templateId, never fall back to formData
     const selectedId =
       currentStep === 0
-        ? previewTemplateId || formData.template
-        : formData.template;
+        ? previewTemplateId || templateId
+        : templateId;
     const templateContent = {
       minimalist: {
         items: [
