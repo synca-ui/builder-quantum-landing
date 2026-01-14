@@ -10,7 +10,7 @@ import react from "@vitejs/plugin-react-swc";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::", // Expose the server to all addresses (IPv6)
-    port: 8081, // Set the port for the dev server
+    port: 8080, // Set the port for the dev server
     fs: {
       // Allow Vite to access specific directories
       allow: [
