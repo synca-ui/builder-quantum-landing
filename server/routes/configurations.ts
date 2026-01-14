@@ -322,6 +322,38 @@ export async function publishConfiguration(req: Request, res: Response) {
       return res.status(404).json({ error: "Configuration not found" });
     }
 
+    // ============ MULTI-TENANCY: Ensure User -> Business -> BusinessMember Link ============
+    // Critical: Before publishing, ensure the user owns the business
+    let businessId: string | undefined;
+    try {
+      const businessSetup = await ensureUserBusiness(
+        userId,
+        config.businessName || "Unnamed Business",
+        undefined, // publishConfiguration may not have templateId in body
+        {
+          primaryColor: config.primaryColor || "#000000",
+          secondaryColor: config.secondaryColor || "#ffffff",
+          fontFamily: config.fontFamily || "sans",
+        }
+      );
+      businessId = businessSetup.businessId;
+
+      console.log(
+        `[Configurations] Publish: User-Business link verified: userId="${userId}", businessId="${businessId}"`
+      );
+    } catch (error) {
+      console.error(
+        "[Configurations] FATAL: Failed to establish User-Business link during publish:",
+        error
+      );
+      return res.status(500).json({
+        error: "Failed to verify business ownership for publish",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+
+    // ============ END MULTI-TENANCY VERIFICATION ============
+
     // Prepare tenant details
     const baseSlug = generateSlug(config.businessName) || "site";
     const shortId =
