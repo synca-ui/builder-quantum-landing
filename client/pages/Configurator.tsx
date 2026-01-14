@@ -5543,8 +5543,18 @@ export default function Configurator() {
       closed: false,
     });
 
+    // Track mounted state to prevent state updates on unmount
+    const isMountedRef = useRef(true);
+    useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
+
     // Auto-load default opening hours when reaching this step
     useEffect(() => {
+      if (!isMountedRef.current) return;
+
       if (
         !formData.openingHours ||
         Object.keys(formData.openingHours).length === 0
