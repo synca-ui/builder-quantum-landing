@@ -295,12 +295,11 @@ export default function Configurator() {
   const navigate = useNavigate();
 
   // Get step orchestration from Zustand store with strict selector hygiene
+  // Use separate selectors to avoid object reference changes on every render
   const currentStep = useConfiguratorStore((state) => state.ui.currentStep);
   const businessName = useConfiguratorStore((state) => state.business.name);
-  const { goToStep, setCurrentStep } = useConfiguratorStore((state) => ({
-    goToStep: state.goToStep,
-    setCurrentStep: state.setCurrentStep,
-  }));
+  const goToStep = useConfiguratorStore((state) => state.goToStep);
+  const setCurrentStep = useConfiguratorStore((state) => state.setCurrentStep);
 
   // ===== LOCKED ENTRY PATTERN =====
   // Ensures initialization logic runs exactly once per session
