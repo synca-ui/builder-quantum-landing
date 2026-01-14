@@ -4707,7 +4707,6 @@ export default function Configurator() {
         </Card>
       )}
 
-
       <div className="flex justify-between mt-8">
         <Button type="button" onClick={prevStep} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
