@@ -4159,8 +4159,24 @@ export default function Configurator() {
         currentStep === 0
           ? previewTemplateId || formData.template
           : formData.template;
-      // Use the main TemplatePreviewContent component for consistent rendering
-      return <TemplatePreviewContent />;
+
+      // Get theme colors for CSS variable theming
+      const primaryColor = formData.primaryColor || "#2563EB";
+      const secondaryColor = formData.secondaryColor || "#7C3AED";
+
+      // Wrap content with CSS variables for theme colors
+      return (
+        <div
+          style={
+            {
+              "--primary": primaryColor,
+              "--secondary": secondaryColor,
+            } as React.CSSProperties
+          }
+        >
+          <TemplatePreviewContent />
+        </div>
+      );
     };
 
     return (
