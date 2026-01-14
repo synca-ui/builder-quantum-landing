@@ -167,6 +167,12 @@ class TemplateEngine {
    */
   async getAll(filter?: TemplateFilter): Promise<Template[]> {
     try {
+      // Log database connection attempt
+      console.log("[TemplateEngine] Fetching templates from database", {
+        filter,
+        databaseUrl: process.env.DATABASE_URL ? "configured" : "NOT CONFIGURED",
+      });
+
       const where: any = {};
 
       // Filter by business type using Prisma's array contains operator
@@ -176,16 +182,57 @@ class TemplateEngine {
         };
       }
 
-      const prismaTemplates = await (prisma as any).template.findMany({
-        where,
+      // Execute Prisma query with detailed error handling
+      let prismaTemplates: any[];
+      try {
+        prismaTemplates = await (prisma as any).template.findMany({
+          where,
+        });
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorCode = (dbError as any)?.code;
+        const errorDetails = {
+          message: errorMessage,
+          code: errorCode,
+          stack: dbError instanceof Error ? dbError.stack : undefined,
+          databaseUrl: process.env.DATABASE_URL
+            ? `${process.env.DATABASE_URL.substring(0, 30)}...`
+            : "NOT CONFIGURED",
+          timestamp: new Date().toISOString(),
+        };
+        console.error("[TemplateEngine] DATABASE_ERROR in findMany:", errorDetails);
+        throw dbError;
+      }
+
+      console.log(
+        `[TemplateEngine] Successfully fetched ${prismaTemplates.length} templates from database`
+      );
+
+      // Map each Prisma template to internal Template format
+      const templates = prismaTemplates.map((t: any) => {
+        try {
+          return this.mapPrismaTemplateToTemplate(t);
+        } catch (mapError) {
+          console.error(
+            `[TemplateEngine] Error mapping template ${t?.id}:`,
+            mapError
+          );
+          throw mapError;
+        }
       });
 
-      return prismaTemplates.map((t: any) =>
-        this.mapPrismaTemplateToTemplate(t),
-      );
+      return templates;
     } catch (error) {
-      console.error("[TemplateEngine] Error fetching all templates:", error);
-      throw new Error("Failed to fetch templates from database");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = (error as any)?.code;
+      const errorDetails = {
+        message: errorMessage,
+        code: errorCode,
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      };
+      console.error("[TemplateEngine] FATAL: Failed to fetch templates:", errorDetails);
+      throw error;
     }
   }
 
