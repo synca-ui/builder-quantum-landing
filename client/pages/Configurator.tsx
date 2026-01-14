@@ -1483,8 +1483,12 @@ export default function Configurator() {
     const storeBusinessName = useConfiguratorStore((s) => s.business.name);
     const storeBusinessType = useConfiguratorStore((s) => s.business.type);
     const storeTemplate = useConfiguratorStore((s) => s.design.template);
-    const storePrimaryColor = useConfiguratorStore((s) => s.design.primaryColor);
-    const storeSecondaryColor = useConfiguratorStore((s) => s.design.secondaryColor);
+    const storePrimaryColor = useConfiguratorStore(
+      (s) => s.design.primaryColor,
+    );
+    const storeSecondaryColor = useConfiguratorStore(
+      (s) => s.design.secondaryColor,
+    );
 
     const normalizeImageSrc = (img: any): string => {
       if (!img) return "/placeholder.svg";
@@ -1590,9 +1594,7 @@ export default function Configurator() {
     // Template-specific content
     // CRITICAL: Use ONLY store template, never fall back to formData
     const selectedId =
-      currentStep === 0
-        ? previewTemplateId || storeTemplate
-        : storeTemplate;
+      currentStep === 0 ? previewTemplateId || storeTemplate : storeTemplate;
 
     // i18n dictionary and helper for preview UI
     const dict = {
@@ -1744,9 +1746,7 @@ export default function Configurator() {
     // Ensure selectedIdForSwitch is available for styling
     // CRITICAL: Use ONLY store template value
     const selectedIdForSwitch =
-      currentStep === 0
-        ? previewTemplateId || storeTemplate
-        : storeTemplate;
+      currentStep === 0 ? previewTemplateId || storeTemplate : storeTemplate;
 
     // Compose runtime styles from template defaults and user selections
     const themeOverride =
@@ -4020,9 +4020,7 @@ export default function Configurator() {
     // Sample content for realistic previews - template specific
     // CRITICAL: Use ONLY store templateId, never fall back to formData
     const selectedId =
-      currentStep === 0
-        ? previewTemplateId || templateId
-        : templateId;
+      currentStep === 0 ? previewTemplateId || templateId : templateId;
     const templateContent = {
       minimalist: {
         items: [
