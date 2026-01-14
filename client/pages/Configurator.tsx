@@ -1742,10 +1742,11 @@ export default function Configurator() {
       .filter(Boolean);
 
     // Ensure selectedIdForSwitch is available for styling
+    // CRITICAL: Use ONLY store template value
     const selectedIdForSwitch =
       currentStep === 0
-        ? previewTemplateId || formData.template
-        : formData.template;
+        ? previewTemplateId || storeTemplate
+        : storeTemplate;
 
     // Compose runtime styles from template defaults and user selections
     const themeOverride =
