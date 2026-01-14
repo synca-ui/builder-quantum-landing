@@ -103,14 +103,18 @@ const App = () => (
   </ErrorBoundary>
 );
 
-// Module-level flag to ensure root is created only once
-let isRootMounted = false;
-
-// Only mount the app once - prevent multiple root creations from HMR or re-imports
-if (!isRootMounted) {
-  isRootMounted = true;
-  const rootElement = document.getElementById("root");
-  if (rootElement && !rootElement.hasChildNodes()) {
-    createRoot(rootElement).render(<App />);
+// Store root instance globally to handle HMR properly
+declare global {
+  interface Window {
+    __APP_ROOT__?: ReturnType<typeof createRoot>;
   }
+}
+
+// Only create root once - reuse existing root for HMR updates
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  if (!window.__APP_ROOT__) {
+    window.__APP_ROOT__ = createRoot(rootElement);
+  }
+  window.__APP_ROOT__.render(<App />);
 }
