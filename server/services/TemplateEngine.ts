@@ -8,7 +8,7 @@
  * - Provide centralized access to all template definitions
  * - Validate template configurations
  * - Filter templates by business type or category
- * - Act as an abstraction layer for template storage (Prisma/Database)
+ * - Act as an abstraction layer for template storagee (Prisma/Database)
  */
 
 import type {
