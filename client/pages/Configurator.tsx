@@ -302,9 +302,15 @@ export default function Configurator() {
   const setCurrentStep = useConfiguratorStore((state) => state.setCurrentStep);
 
   // Sync design colors from Zustand store to formData for live preview updates
-  const designPrimaryColor = useConfiguratorStore((state) => state.design.primaryColor);
-  const designSecondaryColor = useConfiguratorStore((state) => state.design.secondaryColor);
-  const designFontFamily = useConfiguratorStore((state) => state.design.fontFamily);
+  const designPrimaryColor = useConfiguratorStore(
+    (state) => state.design.primaryColor,
+  );
+  const designSecondaryColor = useConfiguratorStore(
+    (state) => state.design.secondaryColor,
+  );
+  const designFontFamily = useConfiguratorStore(
+    (state) => state.design.fontFamily,
+  );
   const designTemplate = useConfiguratorStore((state) => state.design.template);
 
   // ===== LOCKED ENTRY PATTERN =====
@@ -465,7 +471,10 @@ export default function Configurator() {
         hasChanges = true;
       }
 
-      if (designSecondaryColor && prev.secondaryColor !== designSecondaryColor) {
+      if (
+        designSecondaryColor &&
+        prev.secondaryColor !== designSecondaryColor
+      ) {
         updates.secondaryColor = designSecondaryColor;
         hasChanges = true;
       }
@@ -482,13 +491,23 @@ export default function Configurator() {
 
       if (hasChanges) {
         const newData = { ...prev, ...updates };
-        persistence.updateFormData(Object.keys(updates)[0], updates[Object.keys(updates)[0]], newData);
+        persistence.updateFormData(
+          Object.keys(updates)[0],
+          updates[Object.keys(updates)[0]],
+          newData,
+        );
         return newData;
       }
 
       return prev;
     });
-  }, [designPrimaryColor, designSecondaryColor, designFontFamily, designTemplate, persistence]);
+  }, [
+    designPrimaryColor,
+    designSecondaryColor,
+    designFontFamily,
+    designTemplate,
+    persistence,
+  ]);
 
   // Template preview selection (for step 0 live preview before committing)
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
