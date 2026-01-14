@@ -309,12 +309,30 @@ class TemplateEngine {
     tokens: any,
   ): Promise<TemplateValidationResult> {
     try {
+      console.log("[TemplateEngine] Validating template configuration", {
+        templateId,
+        hasTokens: !!tokens,
+      });
+
       const errors: string[] = [];
 
       // 1. Verify template exists in database
-      const template = await (prisma as any).template.findUnique({
-        where: { id: templateId },
-      });
+      let template: any;
+      try {
+        template = await (prisma as any).template.findUnique({
+          where: { id: templateId },
+        });
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorCode = (dbError as any)?.code;
+        console.error("[TemplateEngine] DATABASE_ERROR in validateConfig:", {
+          templateId,
+          message: errorMessage,
+          code: errorCode,
+          stack: dbError instanceof Error ? dbError.stack : undefined,
+        });
+        throw dbError;
+      }
 
       if (!template) {
         errors.push(`Template "${templateId}" does not exist`);
@@ -355,16 +373,27 @@ class TemplateEngine {
         );
       }
 
+      const isValid = errors.length === 0;
+      console.log("[TemplateEngine] Validation result:", {
+        templateId,
+        valid: isValid,
+        errorCount: errors.length,
+      });
+
       return {
-        valid: errors.length === 0,
+        valid: isValid,
         errors: errors.length > 0 ? errors : undefined,
       };
     } catch (error) {
-      console.error(
-        `[TemplateEngine] Error validating template ${templateId}:`,
-        error,
-      );
-      throw new Error(`Failed to validate template ${templateId}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = (error as any)?.code;
+      console.error("[TemplateEngine] FATAL: Validation failed:", {
+        templateId,
+        message: errorMessage,
+        code: errorCode,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
     }
   }
 
