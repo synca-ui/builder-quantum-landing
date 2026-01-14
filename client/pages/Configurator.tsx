@@ -3949,6 +3949,13 @@ export default function Configurator() {
 
   // Enhanced Interactive Live Preview Component
   const LivePreview = () => {
+    // STRICT SELECTORS: Subscribe to specific store slices for reactive updates
+    const businessName = useConfiguratorStore((s) => s.business.name);
+    const businessType = useConfiguratorStore((s) => s.business.type);
+    const primaryColor = useConfiguratorStore((s) => s.design.primaryColor);
+    const secondaryColor = useConfiguratorStore((s) => s.design.secondaryColor);
+    const templateId = useConfiguratorStore((s) => s.design.template);
+
     const [previewState, setPreviewState] = useState({
       menuOpen: false,
       activePage: "home",
@@ -3956,7 +3963,7 @@ export default function Configurator() {
     });
 
     const getBusinessName = () => {
-      if (formData.businessName) return formData.businessName;
+      if (businessName) return businessName;
       // Use realistic names based on selected template for preview
       const templateNames = {
         minimalist: "Simple",
@@ -3966,13 +3973,13 @@ export default function Configurator() {
       };
       const selectedId =
         currentStep === 0
-          ? previewTemplateId || formData.template
-          : formData.template;
+          ? previewTemplateId || templateId || formData.template
+          : templateId || formData.template;
       return templateNames[selectedId] || "Your Business";
     };
 
     const getBusinessIcon = () => {
-      switch (formData.businessType) {
+      switch (businessType) {
         case "cafe":
           return <Coffee className="w-5 h-5" />;
         case "restaurant":
