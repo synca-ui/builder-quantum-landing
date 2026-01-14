@@ -1,6 +1,6 @@
 /**
  * Business Service
- * 
+ *
  * Handles multi-tenancy setup with transactional consistency:
  * - Ensures User -> Business -> BusinessMember link
  * - Prevents orphaned business records
@@ -19,13 +19,13 @@ export interface BusinessSetupResult {
 
 /**
  * Ensures a User has a Business with proper BusinessMember linkage.
- * 
+ *
  * Flow:
  * 1. Verify User exists in Prisma (already done by auth middleware)
  * 2. Upsert Business using slug (create if doesn't exist, update if does)
  * 3. Create BusinessMember with OWNER role if user-business pairing is new
  * 4. All in a single transaction for atomicity
- * 
+ *
  * @param userId The Prisma User ID (from req.user.id)
  * @param businessName The business name to use for slug generation
  * @param templateId Optional template ID to link
@@ -41,7 +41,7 @@ export async function ensureUserBusiness(
     primaryColor?: string;
     secondaryColor?: string;
     fontFamily?: string;
-  }
+  },
 ): Promise<BusinessSetupResult> {
   const businessSlug = generateBusinessSlug(businessName);
 
@@ -139,25 +139,27 @@ export async function ensureUserBusiness(
  * @returns A slug suitable for use as a database slug
  */
 export function generateBusinessSlug(businessName: string): string {
-  return businessName
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50) || "business";
+  return (
+    businessName
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 50) || "business"
+  );
 }
 
 /**
  * Link a Configuration to a Business (via the Configuration.userId relationship)
  * This ensures configurations are associated with a business for publish operations
- * 
+ *
  * @param businessId The Business ID
- * @param configurationId The Configuration ID  
+ * @param configurationId The Configuration ID
  * @returns Promise that resolves when link is established
  */
 export async function linkConfigurationToBusiness(
   businessId: string,
-  configurationId: string
+  configurationId: string,
 ): Promise<void> {
   try {
     // Note: Configuration has userId field, so the link is implicit via User -> Business -> BusinessMember
@@ -196,7 +198,10 @@ export async function getUserPrimaryBusiness(userId: string) {
 
     return membership?.business || null;
   } catch (error) {
-    console.error("[BusinessService] Error getting user primary business:", error);
+    console.error(
+      "[BusinessService] Error getting user primary business:",
+      error,
+    );
     return null;
   }
 }

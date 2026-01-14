@@ -75,17 +75,17 @@ webAppsRouter.post("/apps/publish", async (req, res) => {
           primaryColor: config?.primaryColor || "#000000",
           secondaryColor: config?.secondaryColor || "#ffffff",
           fontFamily: config?.fontFamily || "sans",
-        }
+        },
       );
       businessId = businessSetup.businessId;
 
       console.log(
-        `[WebApps] Publish: User-Business link verified: userId="${userId}", businessId="${businessId}"`
+        `[WebApps] Publish: User-Business link verified: userId="${userId}", businessId="${businessId}"`,
       );
     } catch (error) {
       console.error(
         "[WebApps] FATAL: Failed to establish User-Business link during publish:",
-        error
+        error,
       );
       return res.status(500).json({
         error: "Failed to verify business ownership for webapp publish",
@@ -97,9 +97,13 @@ webAppsRouter.post("/apps/publish", async (req, res) => {
 
     // Compute URLs preferring explicit env config
     const host = (req.headers.host || "").toString();
-    const hdrProto = ((req.headers["x-forwarded-proto"] as string) || "https").toString();
+    const hdrProto = (
+      (req.headers["x-forwarded-proto"] as string) || "https"
+    ).toString();
     const siteUrlFromEnv = process.env.SITE_URL;
-    let baseHost = process.env.PUBLIC_BASE_DOMAIN || (host.includes(".") ? host.split(".").slice(-2).join(".") : host);
+    let baseHost =
+      process.env.PUBLIC_BASE_DOMAIN ||
+      (host.includes(".") ? host.split(".").slice(-2).join(".") : host);
     let proto = hdrProto;
     if (siteUrlFromEnv) {
       try {
@@ -109,7 +113,9 @@ webAppsRouter.post("/apps/publish", async (req, res) => {
       } catch {}
     }
     const publishedUrl = `https://${subdomain}.${baseHost}`;
-    const previewOrigin = siteUrlFromEnv ? siteUrlFromEnv.replace(/\/$/, "") : `https://${baseHost}`;
+    const previewOrigin = siteUrlFromEnv
+      ? siteUrlFromEnv.replace(/\/$/, "")
+      : `https://${baseHost}`;
     const previewUrl = `${previewOrigin}/site/${subdomain}`;
 
     // Fire-and-forget DB upsert to avoid request timeouts in serverless

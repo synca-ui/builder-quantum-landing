@@ -139,17 +139,17 @@ export async function saveConfiguration(req: Request, res: Response) {
           primaryColor: config.primaryColor || "#000000",
           secondaryColor: config.secondaryColor || "#ffffff",
           fontFamily: config.fontFamily || "sans",
-        }
+        },
       );
       businessId = businessSetup.businessId;
 
       console.log(
-        `[Configurations] User-Business link established: userId="${userId}", businessId="${businessId}", isNew=${businessSetup.isMembershipNew}`
+        `[Configurations] User-Business link established: userId="${userId}", businessId="${businessId}", isNew=${businessSetup.isMembershipNew}`,
       );
     } catch (error) {
       console.error(
         "[Configurations] FATAL: Failed to establish User-Business link:",
-        error
+        error,
       );
       return res.status(500).json({
         error: "Failed to setup business ownership",
@@ -334,17 +334,17 @@ export async function publishConfiguration(req: Request, res: Response) {
           primaryColor: config.primaryColor || "#000000",
           secondaryColor: config.secondaryColor || "#ffffff",
           fontFamily: config.fontFamily || "sans",
-        }
+        },
       );
       businessId = businessSetup.businessId;
 
       console.log(
-        `[Configurations] Publish: User-Business link verified: userId="${userId}", businessId="${businessId}"`
+        `[Configurations] Publish: User-Business link verified: userId="${userId}", businessId="${businessId}"`,
       );
     } catch (error) {
       console.error(
         "[Configurations] FATAL: Failed to establish User-Business link during publish:",
-        error
+        error,
       );
       return res.status(500).json({
         error: "Failed to verify business ownership for publish",
