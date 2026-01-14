@@ -410,11 +410,25 @@ class TemplateEngine {
    */
   async getBusinessTypes(): Promise<string[]> {
     try {
-      const templates = await (prisma as any).template.findMany({
-        select: {
-          category: true,
-        },
-      });
+      console.log("[TemplateEngine] Fetching all business types");
+
+      let templates: any[];
+      try {
+        templates = await (prisma as any).template.findMany({
+          select: {
+            category: true,
+          },
+        });
+      } catch (dbError) {
+        const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);
+        const errorCode = (dbError as any)?.code;
+        console.error("[TemplateEngine] DATABASE_ERROR in getBusinessTypes:", {
+          message: errorMessage,
+          code: errorCode,
+          stack: dbError instanceof Error ? dbError.stack : undefined,
+        });
+        throw dbError;
+      }
 
       const types = new Set<string>();
       templates.forEach((t: any) => {
@@ -423,10 +437,22 @@ class TemplateEngine {
         }
       });
 
-      return Array.from(types).sort();
+      const result = Array.from(types).sort();
+      console.log("[TemplateEngine] Retrieved business types:", {
+        count: result.length,
+        types: result,
+      });
+
+      return result;
     } catch (error) {
-      console.error("[TemplateEngine] Error fetching business types:", error);
-      throw new Error("Failed to fetch business types from database");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorCode = (error as any)?.code;
+      console.error("[TemplateEngine] FATAL: Failed to fetch business types:", {
+        message: errorMessage,
+        code: errorCode,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
     }
   }
 
