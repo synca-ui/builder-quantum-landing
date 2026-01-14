@@ -4410,6 +4410,25 @@ export default function Configurator() {
                     >
                       Import Debug Data
                     </Button>
+                    {/* EMERGENCY RESET: Clear all caches and reload */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (
+                          confirm(
+                            "This will clear ALL cached data (localStorage, sessionStorage, Zustand) and reload the page. This is a nuclear option - only use if experiencing severe sync issues. Continue?",
+                          )
+                        ) {
+                          localStorage.clear();
+                          sessionStorage.clear();
+                          window.location.reload();
+                        }
+                      }}
+                      className="w-full text-xs text-red-600 hover:text-red-800 hover:bg-red-50"
+                    >
+                      🚨 Emergency: Clear Cache & Reload
+                    </Button>
                   </div>
                 </div>
               </div>
