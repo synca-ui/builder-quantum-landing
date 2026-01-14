@@ -452,6 +452,44 @@ export default function Configurator() {
     isInitialized.current = true;
   }, []);
 
+  // ===== SYNC ZUSTAND DESIGN STATE TO FORMDATA FOR LIVE PREVIEW =====
+  // Critical: When DesignStep updates colors via Zustand store,
+  // this effect propagates changes to formData so the preview updates immediately
+  useEffect(() => {
+    setFormData((prev) => {
+      let hasChanges = false;
+      const updates: any = {};
+
+      if (designPrimaryColor && prev.primaryColor !== designPrimaryColor) {
+        updates.primaryColor = designPrimaryColor;
+        hasChanges = true;
+      }
+
+      if (designSecondaryColor && prev.secondaryColor !== designSecondaryColor) {
+        updates.secondaryColor = designSecondaryColor;
+        hasChanges = true;
+      }
+
+      if (designFontFamily && prev.fontFamily !== designFontFamily) {
+        updates.fontFamily = designFontFamily;
+        hasChanges = true;
+      }
+
+      if (designTemplate && prev.template !== designTemplate) {
+        updates.template = designTemplate;
+        hasChanges = true;
+      }
+
+      if (hasChanges) {
+        const newData = { ...prev, ...updates };
+        persistence.updateFormData(Object.keys(updates)[0], updates[Object.keys(updates)[0]], newData);
+        return newData;
+      }
+
+      return prev;
+    });
+  }, [designPrimaryColor, designSecondaryColor, designFontFamily, designTemplate, persistence]);
+
   // Template preview selection (for step 0 live preview before committing)
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
     null,
