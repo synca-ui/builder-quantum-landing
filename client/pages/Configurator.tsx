@@ -5090,7 +5090,16 @@ export default function Configurator() {
       image: null,
     });
 
+    // Track mounted state to prevent state updates on unmount
+    const isMountedRef = useRef(true);
+    useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
+
     const addOffer = () => {
+      if (!isMountedRef.current) return;
       if (newOffer.name && newOffer.price) {
         const updatedOffers = [
           ...(formData.offers || []),
@@ -5102,6 +5111,7 @@ export default function Configurator() {
     };
 
     const removeOffer = (index: number) => {
+      if (!isMountedRef.current) return;
       const updatedOffers = (formData.offers || []).filter(
         (_, i) => i !== index,
       );
