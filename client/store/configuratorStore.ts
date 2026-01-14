@@ -255,6 +255,11 @@ const defaultUIState: UIState = {
 
 /**
  * Create the Zustand store with persist middleware
+ *
+ * CRITICAL HARDENING:
+ * - Version: Bumped to 2 to invalidate v1 stale data
+ * - Migrate: Clears localStorage if version mismatch detected
+ * - This prevents localStorage from overwriting live store updates
  */
 export const useConfiguratorStore = create<ConfiguratorState>()(
   persist(
