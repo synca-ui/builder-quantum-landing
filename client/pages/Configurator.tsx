@@ -1058,7 +1058,16 @@ export default function Configurator() {
   }, [currentStep]);
 
   // Enhanced Navigation component
-  const Navigation = () => (
+  const Navigation = () => {
+    // Track mounted state to prevent state updates on unmount
+    const isMountedRef = useRef(true);
+    useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
+
+    return (
     <nav className="fixed top-0 w-full z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -1134,6 +1143,7 @@ export default function Configurator() {
                 <Switch
                   checked={persistEnabled}
                   onCheckedChange={(v: boolean) => {
+                    if (!isMountedRef.current) return;
                     setPersistEnabled(v);
                     try {
                       persistence.setEnabled?.(v);
@@ -1256,7 +1266,8 @@ export default function Configurator() {
         </div>
       </div>
     </nav>
-  );
+    );
+  };
 
   // Modern App-Style Template Preview
   const PaymentOptionsStep = () => {
