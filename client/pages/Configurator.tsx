@@ -1262,6 +1262,15 @@ export default function Configurator() {
   // Modern App-Style Template Preview
   const PaymentOptionsStep = () => {
     const paymentOptions = ["Credit Card", "PayPal", "Cash"];
+
+    // Track mounted state to prevent state updates on unmount
+    const isMountedRef = useRef(true);
+    useEffect(() => {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }, []);
+
     return (
       <motion.div
         key="payment-options"
@@ -1285,6 +1294,7 @@ export default function Configurator() {
                 id={`payment-${option}`}
                 checked={formData.paymentOptions?.includes(option)}
                 onCheckedChange={(checked) => {
+                  if (!isMountedRef.current) return;
                   const newOptions = checked
                     ? [...(formData.paymentOptions || []), option]
                     : formData.paymentOptions?.filter((o) => o !== option);
