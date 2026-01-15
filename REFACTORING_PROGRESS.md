@@ -285,17 +285,44 @@ const handleTemplateClick = (templateId: string) => {
 
 **File:** `client/pages/Configurator.tsx`
 
-**Required Changes:**
-1. Import all extracted step components
-2. Remove internal component definitions
-3. Refactor `renderMainContent` to use imported components
-4. Keep: `useAuth`, `usePersistence`, `isInitialized` (Locked Entry)
-5. Remove: Legacy `formData` state (except for persistence/preview if strictly needed)
-6. Pass only navigation props (`nextStep`, `prevStep`) to step components
+**Status:** ⏳ Pending - Ready to execute
 
-**Example Pattern:**
+**Required Changes:**
+
+### 1. Add Imports for All Extracted Components
+```typescript
+import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
+import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
+import { BusinessInfoStep } from "@/components/configurator/steps/BusinessInfoStep";
+import { DesignStep } from "@/components/configurator/steps/DesignStep";
+import { PageStructureStep } from "@/components/configurator/steps/PageStructureStep";
+import { OpeningHoursStep } from "@/components/configurator/steps/OpeningHoursStep";
+import { MenuProductsStep } from "@/components/configurator/steps/MenuProductsStep";
+import { ReservationsStep } from "@/components/configurator/steps/ReservationsStep";
+import { ContactSocialStep } from "@/components/configurator/steps/ContactSocialStep";
+import { MediaGalleryStep } from "@/components/configurator/steps/MediaGalleryStep";
+import { AdvancedFeaturesStep } from "@/components/configurator/steps/AdvancedFeaturesStep";
+import { FeatureConfigStep } from "@/components/configurator/steps/FeatureConfigStep";
+import { DomainHostingStep } from "@/components/configurator/steps/DomainHostingStep";
+import { SEOOptimizationStep } from "@/components/configurator/steps/SEOOptimizationStep";
+import { PreviewAdjustmentsStep } from "@/components/configurator/steps/PreviewAdjustmentsStep";
+import { PublishStep } from "@/components/configurator/steps/PublishStep";
+```
+
+### 2. Remove Internal Component Definitions
+- Remove all `const ComponentName = () => { ... }` definitions from Configurator.tsx
+- Keep only: Navigation, LivePreview, helper functions
+
+### 3. Update `renderMainContent()` Switch Statement
 ```typescript
 const renderMainContent = () => {
+  if (currentStep === -1) {
+    return <WelcomePage onStart={handleStart} currentConfigId={currentConfigId} publishedUrl={publishedUrl} />;
+  }
+
+  const currentStepConfig = configuratorSteps[currentStep];
+  if (!currentStepConfig) return null;
+
   switch (currentStepConfig.component) {
     case "template":
       return (
@@ -306,12 +333,101 @@ const renderMainContent = () => {
           setPreviewTemplateId={setPreviewTemplateId}
         />
       );
+    case "business-info":
+      return <BusinessInfoStep nextStep={nextStep} prevStep={prevStep} />;
+    case "design-customization":
+      return <DesignStep nextStep={nextStep} prevStep={prevStep} />;
     case "page-structure":
       return <PageStructureStep nextStep={nextStep} prevStep={prevStep} />;
-    // ... etc
+    case "opening-hours":
+      return <OpeningHoursStep nextStep={nextStep} prevStep={prevStep} />;
+    case "menu-products":
+      return <MenuProductsStep nextStep={nextStep} prevStep={prevStep} />;
+    case "reservations":
+      return <ReservationsStep nextStep={nextStep} prevStep={prevStep} />;
+    case "contact-social":
+      return <ContactSocialStep nextStep={nextStep} prevStep={prevStep} />;
+    case "media-gallery":
+      return <MediaGalleryStep nextStep={nextStep} prevStep={prevStep} />;
+    case "advanced-features":
+      return (
+        <AdvancedFeaturesStep
+          nextStep={nextStep}
+          prevStep={prevStep}
+          setPendingFeatureConfig={setPendingFeatureConfig}
+          setCurrentStep={setCurrentStep}
+          configuratorSteps={configuratorSteps}
+        />
+      );
+    case "feature-config":
+      return (
+        <FeatureConfigStep
+          nextStep={nextStep}
+          prevStep={prevStep}
+          pendingFeatureConfig={pendingFeatureConfig}
+          setPendingFeatureConfig={setPendingFeatureConfig}
+          setCurrentStep={setCurrentStep}
+          configuratorSteps={configuratorSteps}
+        />
+      );
+    case "domain-hosting":
+      return (
+        <DomainHostingStep
+          nextStep={nextStep}
+          prevStep={prevStep}
+          getBaseHost={getBaseHost}
+          getDisplayedDomain={getDisplayedDomain}
+        />
+      );
+    case "seo-optimization":
+      return (
+        <SEOOptimizationStep
+          nextStep={nextStep}
+          prevStep={prevStep}
+          getDisplayedDomain={getDisplayedDomain}
+        />
+      );
+    case "preview-adjustments":
+      return (
+        <PreviewAdjustmentsStep
+          nextStep={nextStep}
+          prevStep={prevStep}
+          TemplatePreviewContent={TemplatePreviewContent}
+          getDisplayedDomain={getDisplayedDomain}
+        />
+      );
+    case "publish":
+      return (
+        <PublishStep
+          prevStep={prevStep}
+          getLiveUrl={getLiveUrl}
+          getDisplayedDomain={getDisplayedDomain}
+          saveToBackend={saveToBackend}
+        />
+      );
+    default:
+      return null;
   }
 };
 ```
+
+### 4. Keep Essential Functions
+- `useAuth` from Clerk
+- `usePersistence` hook
+- `isInitialized` check
+- `saveToBackend` function
+- Helper functions: `getBaseHost`, `getDisplayedDomain`, `getLiveUrl`
+- Navigation functions: `nextStep`, `prevStep`
+- `LivePreview` component integration
+
+### 5. Bridge formData for Backward Compatibility (if needed)
+- Keep minimal `formData` sync for LivePreview if it still reads from local state
+- Otherwise, remove entirely and rely on Zustand
+
+### 6. Clean Up Unused Code
+- Remove all internal component JSX
+- Remove unused imports
+- Remove legacy state management code
 
 ---
 
