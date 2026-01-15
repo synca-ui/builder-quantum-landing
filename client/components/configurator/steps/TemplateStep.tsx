@@ -9,7 +9,7 @@ interface TemplateStepProps {
   prevStep: () => void;
 }
 
-export default function TemplateStep({ nextStep, prevStep }: TemplateStepProps) {
+export function TemplateStep({ nextStep, prevStep }: TemplateStepProps) {
   // 1. ZUGRIFF AUF DEN STORE (Source of Truth)
   // Wir lesen direkt "template" aus dem Design-Slice.
   const currentTemplateId = useConfiguratorStore((state) => state.design.template);
