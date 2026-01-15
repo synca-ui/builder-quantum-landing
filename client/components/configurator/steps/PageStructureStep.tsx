@@ -1,4 +1,4 @@
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import { useConfiguratorStore } from "@/store/configuratorStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, ArrowLeft, ChevronRight } from "lucide-react";
@@ -16,8 +16,6 @@ export default function PageStructureStep({
   // Read from Zustand store
   const selectedPages = useConfiguratorStore((s) => s.pages.selectedPages);
   const businessType = useConfiguratorStore((s) => s.business.type);
-  // Get actions
-  const actions = useConfiguratorActions();
   const updatePageManagement = useConfiguratorStore((s) => s.updatePageManagement);
 
   const togglePage = (pageId: string, required: boolean) => {
@@ -88,24 +86,6 @@ export default function PageStructureStep({
           );
         })}
       </div>
-
-      {/* Page-Specific Configuration Info */}
-      <Card className="p-6 mt-8">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">
-          Homepage Options
-        </h3>
-        <label className="inline-flex items-center space-x-2 text-sm">
-          <input
-            type="checkbox"
-            checked={!!useConfiguratorStore.getState().content.showHomeHero}
-            onChange={(e) => {
-              const store = useConfiguratorStore.getState();
-              store.updateContentData?.({ showHomeHero: e.target.checked });
-            }}
-          />
-          <span>Show header block under headline (logo + name)</span>
-        </label>
-      </Card>
 
       {selectedPages.length > 1 && (
         <Card className="p-6 mt-8">
