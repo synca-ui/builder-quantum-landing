@@ -9,7 +9,7 @@ interface PageStructureStepProps {
   prevStep: () => void;
 }
 
-export default function PageStructureStep({
+export function PageStructureStep({
   nextStep,
   prevStep,
 }: PageStructureStepProps) {
