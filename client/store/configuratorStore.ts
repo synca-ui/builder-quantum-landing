@@ -810,6 +810,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         pages: state.pages,
         payments: state.payments,
       }),
+      storage: typeof window !== "undefined" ? sessionStorage : undefined,
       version: 2,
       // CRITICAL FIX: Migrate function prevents localStorage from overwriting live store
       // If version changes, clear stale data to prevent template drift
