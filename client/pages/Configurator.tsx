@@ -36,10 +36,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+// Step Components
+// ACHTUNG: Stelle sicher, dass diese Dateien "export function Name" verwenden!
 import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
 import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
 import { BusinessInfoStep } from "@/components/configurator/steps/BusinessInfoStep";
-import { DesignStep } from "@/components/configurator/steps/DesignStep"; // Achte darauf, dass DesignStep.tsx "export function DesignStep" hat!
+import { DesignStep } from "@/components/configurator/steps/DesignStep";
 import { PageStructureStep } from "@/components/configurator/steps/PageStructureStep";
 import { OpeningHoursStep } from "@/components/configurator/steps/OpeningHoursStep";
 import { MenuProductsStep } from "@/components/configurator/steps/MenuProductsStep";
@@ -56,8 +58,8 @@ import { PublishStep } from "@/components/configurator/steps/PublishStep";
 // Preview & Template Components
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import PhonePortal from "@/components/preview/phone-portal";
+// Wir importieren die Preview-Komponente direkt und überschreiben sie NICHT lokal
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
-import { defaultTemplates } from "@/components/template/TemplateRegistry";
 import QRCode from "@/components/qr/QRCode";
 
 // API & Utils
@@ -65,133 +67,27 @@ import { configurationApi, type Configuration } from "@/lib/api";
 import { publishWebApp } from "@/lib/webapps";
 import { usePersistence } from "@/lib/stepPersistence";
 import { toast } from "@/hooks/use-toast";
-import { normalizeImageSrc, fontOptions } from "@/lib/configurator-data";
+import { normalizeImageSrc, fontOptions } from "@/lib/configurator-data"; //
 
 // ===== CONFIGURATOR STEPS DEFINITION =====
 const CONFIGURATOR_STEPS_CONFIG = [
-  {
-    id: "template",
-    title: "Choose your template",
-    description: "Select a design that matches your vision",
-    phase: 0,
-    phaseTitle: "Template Selection",
-    component: "template",
-  },
-  {
-    id: "business-info",
-    title: "Tell us about your business",
-    description: "Basic information to get started",
-    phase: 1,
-    phaseTitle: "Business Information",
-    component: "business-info",
-  },
-  {
-    id: "design-customization",
-    title: "Customize your design",
-    description: "Colors, fonts, and styling",
-    phase: 2,
-    phaseTitle: "Design Customization",
-    component: "design-customization",
-  },
-  {
-    id: "page-structure",
-    title: "Select your pages",
-    description: "Choose which pages your website will include",
-    phase: 3,
-    phaseTitle: "Content Structure",
-    component: "page-structure",
-  },
-  {
-    id: "opening-hours",
-    title: "Set your opening hours",
-    description: "When are you open for business?",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "opening-hours",
-  },
-  {
-    id: "menu-products",
-    title: "Add your menu or products",
-    description: "Showcase what you offer",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "menu-products",
-  },
-  {
-    id: "reservations",
-    title: "Setup reservations",
-    description: "Enable table bookings for your business",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "reservations",
-  },
-  {
-    id: "contact-social",
-    title: "Contact & social media",
-    description: "How can customers reach you?",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "contact-social",
-  },
-  {
-    id: "media-gallery",
-    title: "Upload your photos",
-    description: "Show off your space, food, and atmosphere",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "media-gallery",
-  },
-  {
-    id: "advanced-features",
-    title: "Optional features",
-    description: "Enable advanced functionality",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "advanced-features",
-  },
-  {
-    id: "feature-config",
-    title: "Configure selected feature",
-    description: "Adjust settings for the feature you just enabled",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "feature-config",
-  },
-  {
-    id: "domain-hosting",
-    title: "Choose your domain",
-    description: "Select how customers will find your website",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "domain-hosting",
-  },
-  {
-    id: "seo-optimization",
-    title: "SEO Optimization",
-    description: "Improve your search engine visibility",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "seo-optimization",
-  },
-  {
-    id: "preview-adjustments",
-    title: "Preview & Final Adjustments",
-    description: "Review your site and make last-minute changes",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "preview-adjustments",
-  },
-  {
-    id: "publish",
-    title: "Publish your website",
-    description: "Go live with your new website",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "publish",
-  },
+  { id: "template", title: "Choose your template", description: "Select a design that matches your vision", phase: 0, phaseTitle: "Template Selection", component: "template" },
+  { id: "business-info", title: "Tell us about your business", description: "Basic information to get started", phase: 1, phaseTitle: "Business Information", component: "business-info" },
+  { id: "design-customization", title: "Customize your design", description: "Colors, fonts, and styling", phase: 2, phaseTitle: "Design Customization", component: "design-customization" },
+  { id: "page-structure", title: "Select your pages", description: "Choose which pages your website will include", phase: 3, phaseTitle: "Content Structure", component: "page-structure" },
+  { id: "opening-hours", title: "Set your opening hours", description: "When are you open for business?", phase: 4, phaseTitle: "Business Details", component: "opening-hours" },
+  { id: "menu-products", title: "Add your menu or products", description: "Showcase what you offer", phase: 4, phaseTitle: "Business Details", component: "menu-products" },
+  { id: "reservations", title: "Setup reservations", description: "Enable table bookings for your business", phase: 4, phaseTitle: "Business Details", component: "reservations" },
+  { id: "contact-social", title: "Contact & social media", description: "How can customers reach you?", phase: 4, phaseTitle: "Business Details", component: "contact-social" },
+  { id: "media-gallery", title: "Upload your photos", description: "Show off your space, food, and atmosphere", phase: 5, phaseTitle: "Media & Advanced", component: "media-gallery" },
+  { id: "advanced-features", title: "Optional features", description: "Enable advanced functionality", phase: 5, phaseTitle: "Media & Advanced", component: "advanced-features" },
+  { id: "feature-config", title: "Configure selected feature", description: "Adjust settings for the feature you just enabled", phase: 5, phaseTitle: "Media & Advanced", component: "feature-config" },
+  { id: "domain-hosting", title: "Choose your domain", description: "Select how customers will find your website", phase: 6, phaseTitle: "Publishing", component: "domain-hosting" },
+  { id: "seo-optimization", title: "SEO Optimization", description: "Improve your search engine visibility", phase: 6, phaseTitle: "Publishing", component: "seo-optimization" },
+  { id: "preview-adjustments", title: "Preview & Final Adjustments", description: "Review your site and make last-minute changes", phase: 6, phaseTitle: "Publishing", component: "preview-adjustments" },
+  { id: "publish", title: "Publish your website", description: "Go live with your new website", phase: 6, phaseTitle: "Publishing", component: "publish" },
 ];
 
-// QR Share Dialog Component
 function ShareQRButton({ url }: { url: string }) {
   return (
     <Dialog>
@@ -210,17 +106,10 @@ function ShareQRButton({ url }: { url: string }) {
             {url}
           </div>
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={() => navigator.clipboard.writeText(url)}
-            >
+            <Button size="sm" onClick={() => navigator.clipboard.writeText(url)}>
               Copy Link
             </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => window.open(url, "_blank")}
-            >
+            <Button size="sm" variant="secondary" onClick={() => window.open(url, "_blank")}>
               Open
             </Button>
           </div>
@@ -231,66 +120,36 @@ function ShareQRButton({ url }: { url: string }) {
 }
 
 export default function Configurator() {
-  // ===== AUTHENTICATION & PERSISTENCE =====
   const { isSignedIn, getToken } = useAuth();
   const persistence = usePersistence();
   const navigate = useNavigate();
   const actions = useConfiguratorActions();
 
-  // ===== ZUSTAND STORE STATE =====
+  // Store Hooks
   const currentStep = useConfiguratorStore((state) => state.ui.currentStep);
   const businessName = useConfiguratorStore((state) => state.business.name);
-  const goToStep = useConfiguratorStore((state) => state.goToStep);
-  const setCurrentStep = useConfiguratorStore((state) => state.setCurrentStep);
-  const nextStepStore = useConfiguratorStore((state) => state.nextStep);
-  const prevStepStore = useConfiguratorStore((state) => state.prevStep);
-
-  // Full store state for formData sync (backward compatibility with LivePreview)
+  // Wir holen die Actions direkt, um Re-Render Loops zu vermeiden
+  const { goToStep, setCurrentStep, nextStep: nextStepStore, prevStep: prevStepStore } = useConfiguratorStore((state) => ({
+    goToStep: state.goToStep,
+    setCurrentStep: state.setCurrentStep,
+    nextStep: state.nextStep,
+    prevStep: state.prevStep,
+  }));
   const fullStoreState = useConfiguratorStore((state) => state);
 
-  // ===== LOCAL UI STATE =====
+  // Local State
   const isInitialized = useRef(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
-  const [currentConfigId, setCurrentConfigId] = useState<string | null>(() => {
-    return persistence.getConfigId() || null;
-  });
-  const [publishStatus, setPublishStatus] = useState<
-    "idle" | "publishing" | "published" | "error"
-  >("idle");
-  const [publishedUrl, setPublishedUrl] = useState<string | null>(() => {
-    return persistence.getPublishedUrl() || null;
-  });
-  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<
-    string | null
-  >(null);
-  
-  // NOTE: previewTemplateId is mainly managed by store now, but kept if steps use it as prop
-  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
-    null,
-  );
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [currentConfigId, setCurrentConfigId] = useState<string | null>(() => persistence.getConfigId() || null);
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(() => persistence.getPublishedUrl() || null);
+  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<string | null>(null);
 
-  // Cart state for online ordering
-  const [cartItems, setCartItems] = useState<any[]>([]);
-  const [showCart, setShowCart] = useState(false);
-
-  // ===== FORMDATA BRIDGE FOR LIVEPREVIEW =====
+  // FormData Bridge für Kompatibilität mit Komponenten die noch Props brauchen
   const formData = useMemo(() => {
     return {
-      // Business
       businessName: fullStoreState.business.name,
-      businessType: fullStoreState.business.type,
-      location: fullStoreState.business.location,
-      slogan: fullStoreState.business.slogan,
-      uniqueDescription: fullStoreState.business.uniqueDescription,
-      hasDomain: fullStoreState.business.domain?.hasDomain || false,
-      domainName: fullStoreState.business.domain?.domainName,
-      selectedDomain: fullStoreState.business.domain?.selectedDomain,
-
-      // Design
       template: fullStoreState.design.template,
       primaryColor: fullStoreState.design.primaryColor,
       secondaryColor: fullStoreState.design.secondaryColor,
@@ -298,459 +157,107 @@ export default function Configurator() {
       fontColor: fullStoreState.design.fontColor,
       fontSize: fullStoreState.design.fontSize,
       backgroundColor: fullStoreState.design.backgroundColor,
-      // Fallbacks
-      themeMode: fullStoreState.settings?.themeMode || 'light',
-
-      // Content
+      domainName: fullStoreState.business.domain?.domainName,
+      hasDomain: fullStoreState.business.domain?.hasDomain,
+      selectedDomain: fullStoreState.business.domain?.selectedDomain,
       menuItems: fullStoreState.content.menuItems,
-      gallery: fullStoreState.content.gallery,
-      openingHours: fullStoreState.content.openingHours,
-      categories: fullStoreState.content.categories,
-
-      // Features
-      reservationsEnabled: fullStoreState.features.reservationsEnabled,
-      maxGuests: fullStoreState.features.maxGuests,
-      notificationMethod: fullStoreState.features.notificationMethod,
-      onlineOrderingEnabled: fullStoreState.features.onlineOrderingEnabled,
-      onlineStoreEnabled: fullStoreState.features.onlineStoreEnabled,
-      teamAreaEnabled: fullStoreState.features.teamAreaEnabled,
-      offerPageEnabled: (fullStoreState.payments as any)?.offerPageEnabled,
-
-      // Contact
-      contactMethods: fullStoreState.contact.contactMethods,
-      socialMedia: fullStoreState.contact.socialMedia,
-      phone: fullStoreState.contact.phone,
-      email: fullStoreState.contact.email,
-
-      // Pages
-      selectedPages: fullStoreState.pages.selectedPages,
-
-      // Payments
-      offers: (fullStoreState.payments as any).offers || [],
-      offerBanner: (fullStoreState.payments as any).offerBanner || {},
-
-      // Extended features
-      ...(fullStoreState.features as any),
+      // ... weitere Felder werden bei Bedarf automatisch durch fullStoreState abgedeckt
     };
   }, [fullStoreState]);
 
-  // ===== HELPER FUNCTIONS =====
+  // Helpers
   const configuratorSteps = CONFIGURATOR_STEPS_CONFIG;
 
   const getBaseHost = useCallback(() => {
     try {
-      const h = window.location.hostname.replace(/^www\./, "");
-      const parts = h.split(".");
-      if (parts.length >= 2) return parts.slice(-2).join(".");
-      return h;
-    } catch {
-      return "maitr.de";
-    }
+      return window.location.hostname.replace(/^www\./, "");
+    } catch { return "maitr.de"; }
   }, []);
 
-  const getDisplayedDomain = useCallback(() => {
-    if (publishedUrl) {
-      try {
-        return new URL(publishedUrl).hostname;
-      } catch {}
-    }
-    if (formData.hasDomain && formData.domainName) return formData.domainName;
-    const slug = (formData.selectedDomain || formData.businessName || "site")
-      .toLowerCase()
-      .replace(/\s+/g, "");
-    return `${slug}.${getBaseHost()}`;
-  }, [
-    formData.hasDomain,
-    formData.domainName,
-    formData.selectedDomain,
-    formData.businessName,
-    publishedUrl,
-    getBaseHost,
-  ]);
-
-  const slugifyName = useCallback(
-    (s: string) =>
-      (s || "site")
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .slice(0, 30),
-    [],
-  );
+  const slugifyName = useCallback((s: string) => 
+    (s || "site").toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 30), 
+  []);
 
   const getLiveUrl = useCallback(() => {
     if (publishedUrl) return publishedUrl;
-    const origin = (() => {
-      try {
-        return window.location.origin.replace(/\/$/, "");
-      } catch {
-        return `https://${getBaseHost()}`;
-      }
-    })();
+    const origin = (() => { try { return window.location.origin.replace(/\/$/, ""); } catch { return `https://${getBaseHost()}`; } })();
     const id = currentConfigId || "";
     const name = slugifyName(formData.businessName || "site");
     if (id) return `${origin}/${id}/${name}`;
     return origin;
-  }, [
-    publishedUrl,
-    currentConfigId,
-    formData.businessName,
-    getBaseHost,
-    slugifyName,
-  ]);
+  }, [publishedUrl, currentConfigId, formData.businessName, getBaseHost, slugifyName]);
 
-  // Cart functions
-  const addToCart = useCallback((item: any, qty: number = 1) => {
-    const quantity = Math.max(1, Math.floor(qty || 1));
-    setCartItems((prev) => {
-      const existingItem = prev.find((cartItem) => cartItem.name === item.name);
-      if (existingItem) {
-        return prev.map((cartItem) =>
-          cartItem.name === item.name
-            ? { ...cartItem, quantity: cartItem.quantity + quantity }
-            : cartItem,
-        );
-      }
-      return [...prev, { ...item, quantity }];
-    });
-  }, []);
+  const getDisplayedDomain = useCallback(() => {
+    if (publishedUrl) { try { return new URL(publishedUrl).hostname; } catch {} }
+    if (formData.hasDomain && formData.domainName) return formData.domainName;
+    const slug = slugifyName(formData.selectedDomain || formData.businessName || "site");
+    return `${slug}.${getBaseHost()}`;
+  }, [publishedUrl, formData, getBaseHost, slugifyName]);
 
-  const removeFromCart = useCallback((itemName: string) => {
-    setCartItems((prev) => prev.filter((item) => item.name !== itemName));
-  }, []);
-
-  const cartItemsCount = useMemo(() => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
-  }, [cartItems]);
-
-  // Save to backend
-  const saveToBackend = useCallback(
-    async (data: Partial<Configuration>) => {
-      if (!isSignedIn) {
-        console.warn("Cannot save: user not signed in");
-        return;
-      }
-
-      setSaveStatus("saving");
-      try {
-        const token = await getToken();
-        if (!token) {
-          throw new Error("No auth token available");
-        }
-
-        let configId = currentConfigId;
-
-        if (!configId) {
-          const newConfig = await configurationApi.create(data, token);
-          configId = newConfig.id;
-          setCurrentConfigId(configId);
-          persistence.setConfigId(configId);
-        } else {
-          await configurationApi.update(configId, data, token);
-        }
-
-        setSaveStatus("saved");
-        setTimeout(() => setSaveStatus("idle"), 2000);
-      } catch (error) {
-        console.error("Failed to save configuration:", error);
-        setSaveStatus("error");
-        setTimeout(() => setSaveStatus("idle"), 3000);
-      }
-    },
-    [isSignedIn, getToken, currentConfigId, persistence],
-  );
-
-  // Publish configuration
-  const publishConfiguration = useCallback(async () => {
-    if (!isSignedIn) {
-      alert("Please sign in to publish your website");
-      return;
-    }
-
-    setPublishStatus("publishing");
+  // Actions
+  const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
+    if (!isSignedIn) return;
+    setSaveStatus("saving");
     try {
       const token = await getToken();
-      if (!token) throw new Error("No auth token available");
-
-      const configData = actions.data.getFullConfiguration();
-      await saveToBackend(configData);
-
-      const subdomain =
-        formData.selectedDomain ||
-        formData.businessName.toLowerCase().replace(/\s+/g, "");
-
-      const result = await publishWebApp(subdomain, configData, token);
-
-      setPublishedUrl(result.publishedUrl || getLiveUrl());
-      persistence.setPublishedUrl(result.publishedUrl || getLiveUrl());
-      actions.publishing.publishConfiguration();
-
-      setPublishStatus("published");
-      toast({
-        title: "Website Published!",
-        description: "Your website is now live.",
-      });
+      if (!token) throw new Error("No token");
+      let configId = currentConfigId;
+      if (!configId) {
+        const newConfig = await configurationApi.create(data, token);
+        configId = newConfig.id;
+        setCurrentConfigId(configId);
+        persistence.setConfigId(configId);
+      } else {
+        await configurationApi.update(configId, data, token);
+      }
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (error) {
-      console.error("Publishing failed:", error);
-      setPublishStatus("error");
-      toast({
-        title: "Publishing Failed",
-        description: "There was an error publishing your website.",
-        variant: "destructive",
-      });
-      setTimeout(() => setPublishStatus("idle"), 3000);
+      console.error("Save failed", error);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 3000);
     }
-  }, [
-    isSignedIn,
-    getToken,
-    formData.selectedDomain,
-    formData.businessName,
-    saveToBackend,
-    getLiveUrl,
-    persistence,
-    actions,
-  ]);
+  }, [isSignedIn, getToken, currentConfigId, persistence]);
 
-  // ===== INITIALIZATION (LOCKED ENTRY PATTERN) =====
+  // Init
   useEffect(() => {
     if (isInitialized.current) return;
-
     setIsVisible(true);
-
     const hasSaved = persistence.hasSavedSteps();
-    const summary = persistence.getSummary();
-
-    console.log("=== Configurator Initialization ===");
-    console.log("Has saved steps:", hasSaved);
-    console.log("Summary:", summary);
-    console.log("Current step:", currentStep);
-    console.log("Business name:", businessName);
-    console.log("===================================");
-
-    if (hasSaved) {
-      toast({
-        title: "State Restored",
-        description: `Loaded your previous progress: ${summary}`,
-      });
-    } else {
-      toast({
-        title: "New Session",
-        description: "Starting fresh - all steps will be saved automatically",
-      });
-    }
-
+    if (hasSaved) toast({ title: "State Restored", description: "Loaded previous progress" });
     isInitialized.current = true;
   }, []);
 
-  // ===== NAVIGATION =====
-  const nextStep = useCallback(() => {
-    nextStepStore();
-  }, [nextStepStore]);
+  // Navigation Wrappers
+  const nextStep = useCallback(() => nextStepStore(), [nextStepStore]);
+  const prevStep = useCallback(() => prevStepStore(), [prevStepStore]);
+  const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
 
-  const prevStep = useCallback(() => {
-    prevStepStore();
-  }, [prevStepStore]);
-
-  const handleStart = useCallback(() => {
-    setCurrentStep(0);
-  }, [setCurrentStep]);
-
-  // ===== LIVE PREVIEW RENDERING =====
+  // --- LIVE PREVIEW ---
   const LivePreview = useCallback(() => {
     return (
       <div className="sticky top-24 h-[calc(100vh-7rem)]">
         <Card className="h-full p-4 bg-gray-50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700">
-              Live Preview
-            </h3>
+            <h3 className="text-sm font-semibold text-gray-700">Live Preview</h3>
             <ShareQRButton url={getLiveUrl()} />
           </div>
           <div className="h-[calc(100%-3rem)] flex items-center justify-center">
-            <LivePhoneFrame
-              widthClass="w-full max-w-[280px]"
-              heightClass="h-full max-h-[580px]"
-            >
+            <LivePhoneFrame widthClass="w-full max-w-[280px]" heightClass="h-full max-h-[580px]">
               <PhonePortal>
-                {/* WICHTIG: Hier nutzen wir die importierte Komponente und übergeben alle Props */}
-                <TemplatePreviewContent 
-                  currentStep={currentStep}
-                  previewTemplateId={previewTemplateId}
-                  fontOptions={fontOptions}
-                  templates={defaultTemplates}
-                  formData={formData}
-                  setShowCart={setShowCart}
-                  showCart={showCart}
-                  cartItems={cartItems}
-                  cartItemsCount={cartItemsCount}
-                  addToCart={addToCart}
-                  removeFromCart={removeFromCart}
-                  normalizeImageSrc={normalizeImageSrc}
-                />
+                <TemplatePreviewContent />
               </PhonePortal>
             </LivePhoneFrame>
           </div>
         </Card>
       </div>
     );
-  }, [
-    getLiveUrl, 
-    currentStep, 
-    previewTemplateId, 
-    formData, 
-    showCart, 
-    cartItems, 
-    cartItemsCount, 
-    addToCart, 
-    removeFromCart
-  ]);
+  }, [getLiveUrl]); 
 
-  // ===== NAVIGATION BAR =====
-  const Navigation = () => {
-    const progress = ((currentStep + 1) / configuratorSteps.length) * 100;
-
-    return (
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center space-x-2 text-gray-900 hover:text-teal-600 transition-colors"
-              >
-                <Home className="w-5 h-5" />
-                <span className="font-semibold hidden sm:inline">Maitr</span>
-              </button>
-
-              {currentStep >= 0 && (
-                <div className="hidden md:flex items-center space-x-2 text-sm">
-                  <span className="text-gray-500">Step {currentStep + 1}</span>
-                  <span className="text-gray-300">/</span>
-                  <span className="text-gray-500">
-                    {configuratorSteps.length}
-                  </span>
-                  <span className="text-gray-300 mx-2">·</span>
-                  <span className="text-gray-700 font-medium">
-                    {configuratorSteps[currentStep]?.title || "Configuration"}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-3">
-              {saveStatus === "saving" && (
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Cloud className="w-4 h-4 animate-pulse" />
-                  <span className="hidden sm:inline">Saving...</span>
-                </div>
-              )}
-              {saveStatus === "saved" && (
-                <div className="flex items-center space-x-2 text-sm text-green-600">
-                  <Save className="w-4 h-4" />
-                  <span className="hidden sm:inline">Saved</span>
-                </div>
-              )}
-              {saveStatus === "error" && (
-                <div className="flex items-center space-x-2 text-sm text-red-600">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="hidden sm:inline">Error</span>
-                </div>
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                {isMenuOpen ? (
-                  <X className="w-4 h-4" />
-                ) : (
-                  <Menu className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {currentStep >= 0 && (
-            <div className="h-1 bg-gray-100">
-              <motion.div
-                className="h-full bg-gradient-to-r from-teal-500 to-purple-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3 }}
-              />
-            </div>
-          )}
-        </div>
-
-        {isMenuOpen && (
-          <div className="border-t border-gray-200 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    actions.data.resetConfig();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Reset
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const config = actions.data.getFullConfiguration();
-                    saveToBackend(config);
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Now
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    window.open(getLiveUrl(), "_blank");
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Preview
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => {
-                    goToStep(configuratorSteps.length - 1);
-                    setIsMenuOpen(false);
-                  }}
-                  className="bg-gradient-to-r from-teal-500 to-purple-500"
-                >
-                  <Rocket className="w-4 h-4 mr-2" />
-                  Publish
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
-    );
-  };
-
-  // ===== RENDER MAIN CONTENT =====
+  // --- RENDER MAIN CONTENT ---
   const renderMainContent = () => {
     if (currentStep === -1) {
-      return (
-        <WelcomePage
-          onStart={handleStart}
-          currentConfigId={currentConfigId}
-          publishedUrl={publishedUrl}
-        />
-      );
+      return <WelcomePage onStart={handleStart} currentConfigId={currentConfigId} publishedUrl={publishedUrl} />;
     }
 
     const currentStepConfig = configuratorSteps[currentStep];
@@ -758,13 +265,7 @@ export default function Configurator() {
 
     switch (currentStepConfig.component) {
       case "template":
-        return (
-          // @ts-ignore - props mismatch workaround if interface not updated yet
-          <TemplateStep
-            nextStep={nextStep}
-            prevStep={prevStep}
-          />
-        );
+        return <TemplateStep nextStep={nextStep} prevStep={prevStep} />;
       case "business-info":
         return <BusinessInfoStep nextStep={nextStep} prevStep={prevStep} />;
       case "design-customization":
@@ -782,151 +283,88 @@ export default function Configurator() {
       case "media-gallery":
         return <MediaGalleryStep nextStep={nextStep} prevStep={prevStep} />;
       case "advanced-features":
-        return (
-          <AdvancedFeaturesStep
-            nextStep={nextStep}
-            prevStep={prevStep}
-            setPendingFeatureConfig={setPendingFeatureConfig}
-            setCurrentStep={setCurrentStep}
-            configuratorSteps={configuratorSteps}
-          />
-        );
+        return <AdvancedFeaturesStep nextStep={nextStep} prevStep={prevStep} setPendingFeatureConfig={setPendingFeatureConfig} setCurrentStep={setCurrentStep} configuratorSteps={configuratorSteps} />;
       case "feature-config":
-        return (
-          <FeatureConfigStep
-            nextStep={nextStep}
-            prevStep={prevStep}
-            pendingFeatureConfig={pendingFeatureConfig}
-            setPendingFeatureConfig={setPendingFeatureConfig}
-            setCurrentStep={setCurrentStep}
-            configuratorSteps={configuratorSteps}
-          />
-        );
+        return <FeatureConfigStep nextStep={nextStep} prevStep={prevStep} pendingFeatureConfig={pendingFeatureConfig} setPendingFeatureConfig={setPendingFeatureConfig} setCurrentStep={setCurrentStep} configuratorSteps={configuratorSteps} />;
       case "domain-hosting":
-        return (
-          <DomainHostingStep
-            nextStep={nextStep}
-            prevStep={prevStep}
-            getBaseHost={getBaseHost}
-            getDisplayedDomain={getDisplayedDomain}
-          />
-        );
+        return <DomainHostingStep nextStep={nextStep} prevStep={prevStep} getBaseHost={getBaseHost} getDisplayedDomain={getDisplayedDomain} />;
       case "seo-optimization":
-        return (
-          <SEOOptimizationStep
-            nextStep={nextStep}
-            prevStep={prevStep}
-            getDisplayedDomain={getDisplayedDomain}
-          />
-        );
+        return <SEOOptimizationStep nextStep={nextStep} prevStep={prevStep} getDisplayedDomain={getDisplayedDomain} />;
       case "preview-adjustments":
-        return (
-          <PreviewAdjustmentsStep
-            nextStep={nextStep}
-            prevStep={prevStep}
-            TemplatePreviewContent={TemplatePreviewContent}
-            getDisplayedDomain={getDisplayedDomain}
-          />
-        );
+        return <PreviewAdjustmentsStep nextStep={nextStep} prevStep={prevStep} TemplatePreviewContent={TemplatePreviewContent} getDisplayedDomain={getDisplayedDomain} />;
       case "publish":
-        return (
-          <PublishStep
-            nextStep={nextStep} // Prop fix
-            prevStep={prevStep}
-            getLiveUrl={getLiveUrl}
-            getDisplayedDomain={getDisplayedDomain}
-            saveToBackend={saveToBackend}
-          />
-        );
+        return <PublishStep nextStep={nextStep} prevStep={prevStep} getLiveUrl={getLiveUrl} getDisplayedDomain={getDisplayedDomain} saveToBackend={saveToBackend} />;
       default:
-        return (
-          <div className="py-16 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {currentStepConfig.title}
-            </h2>
-            <p className="text-gray-600 mb-8">
-              {currentStepConfig.description}
-            </p>
-            <p className="text-sm text-gray-500 mb-8">
-              Step component '{currentStepConfig.component}' is coming soon...
-            </p>
-            <div className="flex justify-between max-w-lg mx-auto">
-              <Button
-                type="button"
-                onClick={prevStep}
-                variant="outline"
-                size="lg"
-              >
-                <ArrowLeft className="mr-2 w-5 h-5" />
-                Back
-              </Button>
-              <Button
-                onClick={nextStep}
-                size="lg"
-                className="bg-gradient-to-r from-teal-500 to-purple-500"
-              >
-                Continue
-                <ChevronRight className="ml-2 w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        );
+        return <div>Unknown Step</div>;
     }
   };
 
-  // ===== MAIN RENDER =====
+  // Main Layout
   return (
-    <div
-      className={`min-h-screen bg-white transition-opacity duration-1000 ${
-        isVisible ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <Navigation />
-
-      {currentStep === -1 ? (
-        <div className="pt-20">{renderMainContent()}</div>
-      ) : currentStep === 0 ? (
-        <div className="pt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {renderMainContent()}
-          </div>
-        </div>
-      ) : (
-        <div className="pt-20">
-          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="lg:hidden mb-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const preview = document.getElementById("mobile-preview");
-                  if (preview) {
-                    preview.style.display =
-                      preview.style.display === "none" ? "block" : "none";
-                  }
-                }}
-                className="w-full"
-              >
-                <Smartphone className="w-4 h-4 mr-2" />
-                Toggle Preview
+    <div className={`min-h-screen bg-white transition-opacity duration-1000 ${isVisible ? "opacity-100" : "opacity-0"}`}>
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <button onClick={() => navigate("/")} className="flex items-center space-x-2 text-gray-900 hover:text-teal-600">
+                <Home className="w-5 h-5" /><span className="font-semibold hidden sm:inline">Maitr</span>
+              </button>
+              {currentStep >= 0 && (
+                <div className="hidden md:flex items-center space-x-2 text-sm text-gray-500">
+                  <span>Step {currentStep + 1}</span><span>/</span><span>{configuratorSteps.length}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-3">
+              {saveStatus === "saving" && <Cloud className="w-4 h-4 animate-pulse text-gray-600" />}
+              {saveStatus === "saved" && <Save className="w-4 h-4 text-green-600" />}
+              <Button variant="outline" size="sm" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </Button>
-              <div id="mobile-preview" className="mt-4 hidden lg:hidden">
-                <LivePreview />
-              </div>
-            </div>
-
-            <div className="lg:col-span-2 order-2 lg:order-1">
-              <div className="min-h-[60vh] lg:min-h-[80vh]">
-                {renderMainContent()}
-              </div>
-            </div>
-
-            <div className="hidden lg:block order-1 lg:order-2">
-              <LivePreview />
             </div>
           </div>
+          {currentStep >= 0 && (
+             <div className="h-1 bg-gray-100">
+                <motion.div className="h-full bg-gradient-to-r from-teal-500 to-purple-500" 
+                  initial={{ width: 0 }} 
+                  animate={{ width: `${((currentStep + 1) / configuratorSteps.length) * 100}%` }} 
+                />
+             </div>
+          )}
         </div>
-      )}
+        {isMenuOpen && (
+          <div className="border-t border-gray-200 bg-white p-4">
+             <div className="flex gap-4">
+                <Button variant="outline" size="sm" onClick={() => { actions.data.resetConfig(); setIsMenuOpen(false); }}>
+                  <Settings className="w-4 h-4 mr-2" /> Reset
+                </Button>
+                <Button variant="default" size="sm" onClick={() => { goToStep(configuratorSteps.length - 1); setIsMenuOpen(false); }}>
+                  <Rocket className="w-4 h-4 mr-2" /> Publish
+                </Button>
+             </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Content Area */}
+      <div className="pt-20">
+        {currentStep === -1 ? renderMainContent() : (
+          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="lg:hidden mb-4">
+              <Button variant="outline" size="sm" className="w-full" onClick={() => {
+                 const el = document.getElementById("mobile-preview");
+                 if(el) el.style.display = el.style.display === "none" ? "block" : "none";
+              }}>
+                <Smartphone className="w-4 h-4 mr-2" /> Toggle Preview
+              </Button>
+              <div id="mobile-preview" className="mt-4 hidden"><LivePreview /></div>
+            </div>
+            <div className="lg:col-span-2 min-h-[80vh]">{renderMainContent()}</div>
+            <div className="hidden lg:block"><LivePreview /></div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
