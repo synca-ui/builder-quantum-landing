@@ -77,17 +77,78 @@ const handleTemplateClick = (templateId: string) => {
 
 ---
 
-### 📋 Remaining Components (11/14):
+### ✅ Batch A Complete (4/14):
+
+#### 4. `OpeningHoursStep.tsx` ✅
+**Location:** `client/components/configurator/steps/OpeningHoursStep.tsx`
+
+**Features:**
+- Uses Zustand store: `content.openingHours`, `design.fontColor`
+- Actions: `content.updateOpeningHours`, `design.updateDesign`
+- Local state: `useWeekdaySchedule`, `weekdayHours` (for UI convenience)
+- Syncs weekday hours to store on every change
+- Props: `nextStep`, `prevStep` only
+
+**Key Changes:**
+- No formData/updateFormData props
+- Direct Zustand integration
+- Maintains local UI state for weekday schedule toggle
+
+#### 5. `MenuProductsStep.tsx` ✅
+**Location:** `client/components/configurator/steps/MenuProductsStep.tsx`
+
+**Features:**
+- Uses Zustand store: `content.menuItems`
+- Actions: `content.addMenuItem`, `content.removeMenuItem`, `content.updateMenuItem`
+- Local state: `newItem` for the add form
+- CSV upload with robust parsing (handles delimiters, quotes, headers)
+- Image upload for individual menu items
+- Uses `normalizeImageSrc` from centralized data
+
+**Key Changes:**
+- No formData/updateFormData props
+- CSV import adds items directly to store
+- Image handling integrated with store actions
+
+#### 6. `ReservationsStep.tsx` ✅
+**Location:** `client/components/configurator/steps/ReservationsStep.tsx`
+
+**Features:**
+- Uses Zustand store: `features.reservationsEnabled`, `features.maxGuests`, `features.notificationMethod`
+- Actions: `features.toggleReservations`, `features.updateFeatureFlags`
+- Button styling uses `design.primaryColor` and `design.backgroundColor`
+- Time slots stored in features (with fallback defaults)
+- Props: `nextStep`, `prevStep` only
+
+**Key Changes:**
+- No formData/updateFormData props
+- Reservation button styling integrated with design theme
+- Time slots and button shape stored in features
+
+#### 7. `ContactSocialStep.tsx` ✅
+**Location:** `client/components/configurator/steps/ContactSocialStep.tsx`
+
+**Features:**
+- Uses Zustand store: `contact.phone`, `contact.email`, `contact.contactMethods`, `contact.socialMedia`
+- Actions: `contact.updateContactInfo`, `contact.updateSocialMedia`
+- Controlled inputs with onChange handlers (no ref/blur pattern)
+- Instagram sync toggle integrated
+- Props: `nextStep`, `prevStep` only
+
+**Key Changes:**
+- No formData/updateFormData props
+- Replaced setInputRef/handleInputBlur with controlled inputs
+- Direct store updates on every change
+
+---
+
+### 📋 Remaining Components (7/14):
 
 These need to be extracted following the same architectural pattern:
 
-4. ❌ `OpeningHoursStep.tsx` - Business hours configuration
-5. ❌ `MenuProductsStep.tsx` - Menu items management
-6. ❌ `ReservationsStep.tsx` - Reservation settings
-7. ❌ `ContactSocialStep.tsx` - Contact info and social media
 8. ❌ `MediaGalleryStep.tsx` - Photo uploads
 9. ❌ `AdvancedFeaturesStep.tsx` - Feature toggles
-10. ❌ `FeatureConfigStep.tsx` - Dynamic feature configuration
+10. ❌ `FeatureConfigStep.tsx` - Dynamic feature configuration (includes OffersStep)
 11. ❌ `DomainHostingStep.tsx` - Domain selection
 12. ❌ `SEOOptimizationStep.tsx` - SEO settings
 13. ❌ `PreviewAdjustmentsStep.tsx` - Final preview
