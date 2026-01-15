@@ -343,8 +343,33 @@ export default function Configurator() {
     string | null
   >(null);
 
-  // Initialize form data from persistence system
-  // REMOVED: Local formData state - all state now comes from useConfiguratorStore
+  // Derive formData from store selectors (replaces local useState)
+  // This maintains backward compatibility while using store as source of truth
+  const formData = useMemo(() => ({
+    businessName: businessName,
+    businessType: useConfiguratorStore((s) => s.business.type),
+    location: useConfiguratorStore((s) => s.business.location),
+    slogan: useConfiguratorStore((s) => s.business.slogan),
+    template: designTemplate,
+    primaryColor: useConfiguratorStore((s) => s.design.primaryColor),
+    secondaryColor: useConfiguratorStore((s) => s.design.secondaryColor),
+    fontFamily: designFontFamily,
+    fontSize: useConfiguratorStore((s) => s.design.fontSize),
+    fontColor: useConfiguratorStore((s) => s.design.fontColor),
+    backgroundColor: useConfiguratorStore((s) => s.design.backgroundColor),
+    selectedPages: useConfiguratorStore((s) => s.pages.selectedPages),
+    onlineOrdering: useConfiguratorStore((s) => s.features.onlineOrderingEnabled),
+    onlineStore: useConfiguratorStore((s) => s.features.onlineStoreEnabled),
+    menuItems: useConfiguratorStore((s) => s.content.menuItems),
+    gallery: useConfiguratorStore((s) => s.content.gallery),
+    offers: useConfiguratorStore((s) => s.payments.offers),
+    offersEnabled: useConfiguratorStore((s) => s.payments.offerBanner.enabled),
+    socialMedia: useConfiguratorStore((s) => s.contact.socialMedia),
+    contactMethods: useConfiguratorStore((s) => s.contact.contactMethods),
+    language: "en",
+    themeMode: "light",
+    categories: useConfiguratorStore((s) => s.content.categories),
+  }), [businessName, designTemplate, designFontFamily, useConfiguratorStore]);
 
   // Compute base host dynamically (e.g., synca.digital)
   const getBaseHost = useCallback(() => {
