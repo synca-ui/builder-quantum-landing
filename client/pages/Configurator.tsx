@@ -240,6 +240,12 @@ export default function Configurator() {
   }, [getLiveUrl]);
   // --- RENDER MAIN CONTENT ---
   const renderMainContent = () => {
+    return (
+      <div className="p-10 border-4 border-red-500 text-center text-red-600 font-bold text-xl">
+        TEST MODUS: KEINE STEPS GELADEN
+      </div>
+    );
+    /*
     if (currentStep === -1) {
       return <WelcomePage onStart={handleStart} currentConfigId={currentConfigId} publishedUrl={publishedUrl} />;
     }
@@ -280,7 +286,7 @@ export default function Configurator() {
         return <PublishStep nextStep={nextStep} prevStep={prevStep} getLiveUrl={getLiveUrl} getDisplayedDomain={getDisplayedDomain} saveToBackend={saveToBackend} />;
       default:
         return <div>Unknown Step</div>;
-    }
+    } */
   };
 
   // Main Layout
@@ -345,10 +351,10 @@ export default function Configurator() {
               <div id="mobile-preview" className="mt-4 hidden"><LivePreview /></div>
             </div>
             <div className="lg:col-span-2 min-h-[80vh]">{renderMainContent()}</div>
-            {/* <div className="hidden lg:block order-1 lg:order-2"><LivePreview /></div> */}
+            <div className="hidden lg:block order-1 lg:order-2"><LivePreview /></div>
           </div>
         )}
       </div>
     </div>
-  );
+  ); 
 }
