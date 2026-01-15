@@ -71,6 +71,7 @@ import GalleryGrid from "@/components/sections/GalleryGrid";
 import TemplateRegistry, {
   defaultTemplates,
 } from "@/components/template/TemplateRegistry";
+import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
 import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
 import { useAuth } from "@clerk/clerk-react";
 import { publishWebApp } from "@/lib/webapps";
@@ -343,11 +344,7 @@ export default function Configurator() {
   >(null);
 
   // Initialize form data from persistence system
-  const [formData, setFormData] = useState(() => {
-    const restoredData = persistence.getFormData();
-    console.log("Restored form data:", restoredData);
-    return restoredData;
-  });
+  // REMOVED: Local formData state - all state now comes from useConfiguratorStore
 
   // Compute base host dynamically (e.g., synca.digital)
   const getBaseHost = useCallback(() => {
@@ -413,35 +410,47 @@ export default function Configurator() {
     slugifyName,
   ]);
 
-  // ===== LOCKED ENTRY INITIALIZATION EFFECT =====
-  // This effect runs EXACTLY ONCE on component mount, regardless of re-renders
-  // The isInitialized ref prevents any subsequent executions
+  // ===== INITIALIZATION EFFECT WITH BACKEND HYDRATION =====
+  // This effect runs EXACTLY ONCE on component mount
+  // Handles user authentication state and configuration loading
+  const loadConfiguration = useConfiguratorStore((s) => s.loadConfiguration);
+  const getFullConfiguration = useConfiguratorStore((s) => s.getFullConfiguration);
+
   useEffect(() => {
-    // Block second execution - this is the critical guard
     if (isInitialized.current) return;
 
     setIsVisible(true);
 
-    // Log restoration status
+    // Hydrate from backend when user is authenticated
+    if (isSignedIn) {
+      (async () => {
+        try {
+          const token = await getToken();
+          const resp = await fetch("/api/configurations/active", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (resp.ok) {
+            const { configuration } = await resp.json();
+            if (configuration) {
+              loadConfiguration(configuration);
+              console.log("[Hydration] Loaded active configuration from backend");
+            }
+          }
+        } catch (e) {
+          console.warn("[Hydration] Failed to load active configuration:", e);
+        }
+      })();
+    }
+
     const hasSaved = persistence.hasSavedSteps();
     const summary = persistence.getSummary();
 
-    console.log("=== Configurator Locked-Entry Initialization ===");
+    console.log("=== Configurator Initialization ===");
+    console.log("User signed in:", isSignedIn);
     console.log("Has saved steps:", hasSaved);
-    console.log("Summary:", summary);
     console.log("Current step:", currentStep);
     console.log("Business name:", businessName);
-    console.log("Config ID:", currentConfigId);
-    console.log("Published URL:", publishedUrl);
-    console.log("================================================");
 
-    // Check if this is a fresh load with no business data
-    if (!businessName) {
-      console.log("Fresh session detected - no business data yet");
-      // Store defaults are already initialized, so UI is ready for step 0
-    }
-
-    // Show toast with restoration status
     if (hasSaved) {
       toast({
         title: "State Restored",
@@ -454,60 +463,10 @@ export default function Configurator() {
       });
     }
 
-    // Mark initialization as complete - prevents re-execution
     isInitialized.current = true;
-  }, []);
+  }, [isSignedIn, getToken, loadConfiguration, currentStep, businessName, persistence]);
 
-  // ===== SYNC ZUSTAND DESIGN STATE TO FORMDATA FOR LIVE PREVIEW =====
-  // Critical: When DesignStep updates colors via Zustand store,
-  // this effect propagates changes to formData so the preview updates immediately
-  useEffect(() => {
-    setFormData((prev) => {
-      let hasChanges = false;
-      const updates: any = {};
-
-      if (designPrimaryColor && prev.primaryColor !== designPrimaryColor) {
-        updates.primaryColor = designPrimaryColor;
-        hasChanges = true;
-      }
-
-      if (
-        designSecondaryColor &&
-        prev.secondaryColor !== designSecondaryColor
-      ) {
-        updates.secondaryColor = designSecondaryColor;
-        hasChanges = true;
-      }
-
-      if (designFontFamily && prev.fontFamily !== designFontFamily) {
-        updates.fontFamily = designFontFamily;
-        hasChanges = true;
-      }
-
-      if (designTemplate && prev.template !== designTemplate) {
-        updates.template = designTemplate;
-        hasChanges = true;
-      }
-
-      if (hasChanges) {
-        const newData = { ...prev, ...updates };
-        persistence.updateFormData(
-          Object.keys(updates)[0],
-          updates[Object.keys(updates)[0]],
-          newData,
-        );
-        return newData;
-      }
-
-      return prev;
-    });
-  }, [
-    designPrimaryColor,
-    designSecondaryColor,
-    designFontFamily,
-    designTemplate,
-    persistence,
-  ]);
+  // REMOVED: Zustand-to-formData sync effect - all state now comes directly from store
 
   // Template preview selection (for step 0 live preview before committing)
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
@@ -726,19 +685,27 @@ export default function Configurator() {
       updateFormDataFromInputs();
       const newStep = currentStep + 1;
       setCurrentStep(newStep);
+
+      // Auto-save to backend if authenticated
+      if (isSignedIn) {
+        const fullConfig = getFullConfiguration();
+        saveToBackend(fullConfig);
+      }
+
       persistence.saveStep(
         newStep,
         configuratorSteps[newStep]?.id || "unknown",
         "step_change",
         { action: "next", from: currentStep },
-        formData,
+        {},
       );
     }
   }, [
     currentStep,
-    // configuratorSteps is stable (external constant), no need as dependency
+    isSignedIn,
+    getFullConfiguration,
+    saveToBackend,
     updateFormDataFromInputs,
-    formData,
     persistence,
   ]);
 
@@ -752,25 +719,22 @@ export default function Configurator() {
         configuratorSteps[newStep]?.id || "unknown",
         "step_change",
         { action: "prev", from: currentStep },
-        formData,
+        {},
       );
     } else if (currentStep === 0) {
-      // Go back to welcome page
       setCurrentStep(-1);
       persistence.saveStep(
         -1,
         "welcome",
         "step_change",
         { action: "back_to_welcome" },
-        formData,
+        {},
       );
     }
   }, [
     currentStep,
     updateFormDataFromInputs,
-    formData,
     persistence,
-    // configuratorSteps is stable (external constant), no need as dependency
   ]);
 
   // Back to Template Selection function
@@ -782,9 +746,9 @@ export default function Configurator() {
       "template",
       "step_change",
       { action: "back_to_templates", from: currentStep },
-      formData,
+      {},
     );
-  }, [updateFormDataFromInputs, formData, persistence, currentStep]);
+  }, [updateFormDataFromInputs, persistence, currentStep]);
 
   // Normalize payload to server schema (e.g., contactMethods must be string[])
   const normalizeConfigPayload = useCallback(
