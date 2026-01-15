@@ -97,7 +97,7 @@ export function normalizeImageSrc(img: any): string {
   return "/placeholder.svg";
 }
 
-// ===== STABLE CONFIGURATOR STEPS DEFINITION =====
+// ===== STABLE CONFIGURATOR STEPS DEFINITIONn =====
 // Moved outside component to prevent recreating on every render
 // This ensures stable references for useMemo dependencies
 const CONFIGURATOR_STEPS_CONFIG = [
