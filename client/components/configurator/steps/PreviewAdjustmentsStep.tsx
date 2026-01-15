@@ -3,7 +3,10 @@ import { ArrowLeft, ChevronRight, Smartphone, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 import { LivePhoneFrame } from "@/components/preview/LivePhoneFrame";
 
 interface PreviewAdjustmentsStepProps {
@@ -19,8 +22,10 @@ export function PreviewAdjustmentsStep({
   TemplatePreviewContent,
   getDisplayedDomain,
 }: PreviewAdjustmentsStepProps) {
-  const [previewMode, setPreviewMode] = useState<"mobile" | "desktop">("mobile");
-  
+  const [previewMode, setPreviewMode] = useState<"mobile" | "desktop">(
+    "mobile",
+  );
+
   const business = useConfiguratorStore((s) => s.business);
   const design = useConfiguratorStore((s) => s.design);
   const actions = useConfiguratorActions();
@@ -67,7 +72,9 @@ export function PreviewAdjustmentsStep({
                 <Input
                   type="text"
                   value={business.slogan || ""}
-                  onChange={(e) => actions.business.updateSlogan(e.target.value)}
+                  onChange={(e) =>
+                    actions.business.updateSlogan(e.target.value)
+                  }
                 />
               </div>
 
@@ -158,7 +165,11 @@ export function PreviewAdjustmentsStep({
             <div className="flex justify-center">
               {previewMode === "mobile" ? (
                 <LivePhoneFrame widthClass="w-64" heightClass="h-[480px]">
-                  {TemplatePreviewContent ? <TemplatePreviewContent /> : <div>Preview</div>}
+                  {TemplatePreviewContent ? (
+                    <TemplatePreviewContent />
+                  ) : (
+                    <div>Preview</div>
+                  )}
                 </LivePhoneFrame>
               ) : (
                 <div className="w-full max-w-4xl h-96 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
@@ -168,7 +179,11 @@ export function PreviewAdjustmentsStep({
                     </span>
                   </div>
                   <div className="h-full overflow-hidden">
-                    {TemplatePreviewContent ? <TemplatePreviewContent /> : <div>Preview</div>}
+                    {TemplatePreviewContent ? (
+                      <TemplatePreviewContent />
+                    ) : (
+                      <div>Preview</div>
+                    )}
                   </div>
                 </div>
               )}

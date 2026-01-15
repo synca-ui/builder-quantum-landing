@@ -1,9 +1,20 @@
-import { ArrowLeft, ChevronRight, Search, Share2, Eye, Camera, Crown } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Search,
+  Share2,
+  Eye,
+  Camera,
+  Crown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 interface SEOOptimizationStepProps {
   nextStep: () => void;
@@ -238,8 +249,8 @@ export function SEOOptimizationStep({
                 </label>
                 <p className="text-sm text-gray-700 mt-1">
                   Our AI will automatically optimize your content, generate
-                  additional meta tags, create structured data, and monitor
-                  your search rankings.
+                  additional meta tags, create structured data, and monitor your
+                  search rankings.
                 </p>
                 <div className="mt-3">
                   <span className="text-lg font-bold text-orange-600">
@@ -262,18 +273,16 @@ export function SEOOptimizationStep({
                   <li>
                     ✓ Schema markup generation for better search visibility
                   </li>
-                  <li>
-                    ✓ Local SEO optimization for location-based searches
-                  </li>
+                  <li>✓ Local SEO optimization for location-based searches</li>
                   <li>✓ Weekly SEO performance reports</li>
                   <li>✓ Competitor analysis and recommendations</li>
                   <li>✓ Priority support and SEO consultation</li>
                 </ul>
                 <div className="mt-3 p-2 bg-orange-100 rounded">
                   <p className="text-xs text-orange-800">
-                    <strong>Integration:</strong> We'll connect with leading
-                    SEO APIs including SEMrush, Ahrefs, and Google Search
-                    Console for comprehensive optimization.
+                    <strong>Integration:</strong> We'll connect with leading SEO
+                    APIs including SEMrush, Ahrefs, and Google Search Console
+                    for comprehensive optimization.
                   </p>
                 </div>
               </div>

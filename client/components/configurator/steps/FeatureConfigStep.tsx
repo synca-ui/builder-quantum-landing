@@ -5,7 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 interface FeatureConfigStepProps {
   nextStep: () => void;
@@ -50,7 +53,9 @@ export function FeatureConfigStep({
   const goBack = () => {
     setPendingFeatureConfig(null);
     if (setCurrentStep && configuratorSteps) {
-      const idx = configuratorSteps.findIndex((s) => s.id === "advanced-features");
+      const idx = configuratorSteps.findIndex(
+        (s) => s.id === "advanced-features",
+      );
       if (idx !== -1) setCurrentStep(idx);
     } else {
       prevStep();
@@ -74,7 +79,9 @@ export function FeatureConfigStep({
                 </label>
                 <select
                   value={(storeState.features as any).posProvider || "none"}
-                  onChange={(e) => updateFeatureData("posProvider", e.target.value)}
+                  onChange={(e) =>
+                    updateFeatureData("posProvider", e.target.value)
+                  }
                   className="w-full p-2 border rounded"
                 >
                   <option value="none">None</option>
@@ -88,23 +95,31 @@ export function FeatureConfigStep({
                   Payment Options
                 </label>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  {(["applePay", "googlePay", "card", "cash"] as const).map((k) => (
-                    <label key={k} className="inline-flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={!!((storeState.features as any).paymentMethods?.[k])}
-                        onChange={(e) =>
-                          updateFeatureData("paymentMethods", {
-                            ...((storeState.features as any).paymentMethods || {}),
-                            [k]: e.target.checked,
-                          })
-                        }
-                      />
-                      <span className="capitalize">
-                        {k.replace(/([A-Z])/g, " $1")}
-                      </span>
-                    </label>
-                  ))}
+                  {(["applePay", "googlePay", "card", "cash"] as const).map(
+                    (k) => (
+                      <label
+                        key={k}
+                        className="inline-flex items-center space-x-2"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={
+                            !!(storeState.features as any).paymentMethods?.[k]
+                          }
+                          onChange={(e) =>
+                            updateFeatureData("paymentMethods", {
+                              ...((storeState.features as any).paymentMethods ||
+                                {}),
+                              [k]: e.target.checked,
+                            })
+                          }
+                        />
+                        <span className="capitalize">
+                          {k.replace(/([A-Z])/g, " $1")}
+                        </span>
+                      </label>
+                    ),
+                  )}
                 </div>
               </div>
               <div>
@@ -113,13 +128,19 @@ export function FeatureConfigStep({
                 </label>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   {(["delivery", "pickup", "table"] as const).map((k) => (
-                    <label key={k} className="inline-flex items-center space-x-2">
+                    <label
+                      key={k}
+                      className="inline-flex items-center space-x-2"
+                    >
                       <input
                         type="checkbox"
-                        checked={!!((storeState.features as any).orderOptions?.[k])}
+                        checked={
+                          !!(storeState.features as any).orderOptions?.[k]
+                        }
                         onChange={(e) =>
                           updateFeatureData("orderOptions", {
-                            ...((storeState.features as any).orderOptions || {}),
+                            ...((storeState.features as any).orderOptions ||
+                              {}),
                             [k]: e.target.checked,
                           })
                         }
@@ -133,9 +154,14 @@ export function FeatureConfigStep({
                 <label className="inline-flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={!!((storeState.features as any).deliveryAddressRequired)}
+                    checked={
+                      !!(storeState.features as any).deliveryAddressRequired
+                    }
                     onChange={(e) =>
-                      updateFeatureData("deliveryAddressRequired", e.target.checked)
+                      updateFeatureData(
+                        "deliveryAddressRequired",
+                        e.target.checked,
+                      )
                     }
                   />
                   <span>Require delivery address for delivery orders</span>
@@ -151,7 +177,9 @@ export function FeatureConfigStep({
             <h4 className="text-lg font-bold mb-3">Online Store Settings</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Categories</label>
+                <label className="block text-sm font-medium mb-1">
+                  Categories
+                </label>
                 <div className="flex items-center space-x-2 mb-2">
                   <Input
                     type="text"
@@ -170,19 +198,26 @@ export function FeatureConfigStep({
                   <span className="text-xs text-gray-500">Press Enter</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {(storeState.content.categories || []).map((c: string, i: number) => (
-                    <span key={i} className="px-2 py-1 bg-gray-100 rounded text-xs">
-                      {c}
-                    </span>
-                  ))}
+                  {(storeState.content.categories || []).map(
+                    (c: string, i: number) => (
+                      <span
+                        key={i}
+                        className="px-2 py-1 bg-gray-100 rounded text-xs"
+                      >
+                        {c}
+                      </span>
+                    ),
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium mb-1">Options</label>
+                <label className="block text-sm font-medium mb-1">
+                  Options
+                </label>
                 <label className="inline-flex items-center space-x-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={!!((storeState.features as any).showStockLevels)}
+                    checked={!!(storeState.features as any).showStockLevels}
                     onChange={(e) =>
                       updateFeatureData("showStockLevels", e.target.checked)
                     }
@@ -192,7 +227,7 @@ export function FeatureConfigStep({
                 <label className="inline-flex items-center space-x-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={!!((storeState.features as any).discountsEnabled)}
+                    checked={!!(storeState.features as any).discountsEnabled}
                     onChange={(e) =>
                       updateFeatureData("discountsEnabled", e.target.checked)
                     }
@@ -202,7 +237,7 @@ export function FeatureConfigStep({
                 <label className="inline-flex items-center space-x-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={!!((storeState.features as any).bundlesEnabled)}
+                    checked={!!(storeState.features as any).bundlesEnabled}
                     onChange={(e) =>
                       updateFeatureData("bundlesEnabled", e.target.checked)
                     }
@@ -212,9 +247,14 @@ export function FeatureConfigStep({
                 <label className="inline-flex items-center space-x-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={!!((storeState.features as any).seasonalOffersEnabled)}
+                    checked={
+                      !!(storeState.features as any).seasonalOffersEnabled
+                    }
                     onChange={(e) =>
-                      updateFeatureData("seasonalOffersEnabled", e.target.checked)
+                      updateFeatureData(
+                        "seasonalOffersEnabled",
+                        e.target.checked,
+                      )
                     }
                   />
                   <span>Enable seasonal offers</span>
@@ -250,7 +290,9 @@ export function FeatureConfigStep({
                 <p className="text-xs text-gray-400 mt-1">Press Enter to add</p>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Quick Roles</label>
+                <label className="block text-sm font-medium mb-1">
+                  Quick Roles
+                </label>
                 <div className="flex flex-wrap gap-2 text-xs">
                   {["chef", "barista", "waiter"].map((r) => (
                     <button
@@ -287,7 +329,10 @@ export function FeatureConfigStep({
                 </label>
                 <Input
                   type="number"
-                  value={((storeState.features as any).loyaltyConfig?.stampsForReward) || 10}
+                  value={
+                    (storeState.features as any).loyaltyConfig
+                      ?.stampsForReward || 10
+                  }
                   onChange={(e) =>
                     updateFeatureData("loyaltyConfig", {
                       ...((storeState.features as any).loyaltyConfig || {}),
@@ -297,9 +342,14 @@ export function FeatureConfigStep({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Reward type</label>
+                <label className="block text-sm font-medium mb-1">
+                  Reward type
+                </label>
                 <select
-                  value={((storeState.features as any).loyaltyConfig?.rewardType) || "discount"}
+                  value={
+                    (storeState.features as any).loyaltyConfig?.rewardType ||
+                    "discount"
+                  }
                   onChange={(e) =>
                     updateFeatureData("loyaltyConfig", {
                       ...((storeState.features as any).loyaltyConfig || {}),
@@ -319,7 +369,9 @@ export function FeatureConfigStep({
                 </label>
                 <Input
                   type="date"
-                  value={((storeState.features as any).loyaltyConfig?.expiryDate) || ""}
+                  value={
+                    (storeState.features as any).loyaltyConfig?.expiryDate || ""
+                  }
                   onChange={(e) =>
                     updateFeatureData("loyaltyConfig", {
                       ...((storeState.features as any).loyaltyConfig || {}),
@@ -352,10 +404,14 @@ export function FeatureConfigStep({
                 <Button
                   onClick={() => {
                     const type = (
-                      document.getElementById("coupon-type-step") as HTMLSelectElement
+                      document.getElementById(
+                        "coupon-type-step",
+                      ) as HTMLSelectElement
                     ).value;
                     const value = (
-                      document.getElementById("coupon-value-step") as HTMLInputElement
+                      document.getElementById(
+                        "coupon-value-step",
+                      ) as HTMLInputElement
                     ).value;
                     const conditions = (
                       document.getElementById(
@@ -384,14 +440,18 @@ export function FeatureConfigStep({
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {((storeState.features as any).coupons || []).map((c: any, i: number) => (
-                  <div key={i} className="p-3 border rounded">
-                    <div className="text-sm font-semibold">
-                      {c.type} - {c.value}
+                {((storeState.features as any).coupons || []).map(
+                  (c: any, i: number) => (
+                    <div key={i} className="p-3 border rounded">
+                      <div className="text-sm font-semibold">
+                        {c.type} - {c.value}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {c.conditions}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-600">{c.conditions}</div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             </div>
           </Card>
@@ -445,7 +505,12 @@ interface OffersStepProps {
   actions: any;
 }
 
-function OffersStep({ onBack, onContinue, storeState, actions }: OffersStepProps) {
+function OffersStep({
+  onBack,
+  onContinue,
+  storeState,
+  actions,
+}: OffersStepProps) {
   const [newOffer, setNewOffer] = useState({
     name: "",
     description: "",
@@ -515,7 +580,9 @@ function OffersStep({ onBack, onContinue, storeState, actions }: OffersStepProps
           <Input
             placeholder="Price (e.g., 9.99)"
             value={newOffer.price}
-            onChange={(e) => setNewOffer({ ...newOffer, price: e.target.value })}
+            onChange={(e) =>
+              setNewOffer({ ...newOffer, price: e.target.value })
+            }
           />
           <Textarea
             placeholder="Description"
@@ -613,10 +680,12 @@ function OffersStep({ onBack, onContinue, storeState, actions }: OffersStepProps
             <div className="flex items-center gap-2">
               <Switch
                 id="offers-tab"
-                checked={!!((storeState.payments as any).offerPageEnabled)}
+                checked={!!(storeState.payments as any).offerPageEnabled}
                 onCheckedChange={(v) => {
                   if (!isMountedRef.current) return;
-                  actions.payments.updatePaymentsAndOffers({ offerPageEnabled: v });
+                  actions.payments.updatePaymentsAndOffers({
+                    offerPageEnabled: v,
+                  });
                 }}
               />
               <label htmlFor="offers-tab" className="text-sm text-gray-600">

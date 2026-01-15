@@ -1,15 +1,29 @@
-import { ArrowLeft, ChevronRight, Phone, Mail, MapPin, Instagram, Facebook } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Phone,
+  Mail,
+  MapPin,
+  Instagram,
+  Facebook,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 interface ContactSocialStepProps {
   nextStep: () => void;
   prevStep: () => void;
 }
 
-export function ContactSocialStep({ nextStep, prevStep }: ContactSocialStepProps) {
+export function ContactSocialStep({
+  nextStep,
+  prevStep,
+}: ContactSocialStepProps) {
   const contact = useConfiguratorStore((s) => s.contact);
   const actions = useConfiguratorActions();
 
@@ -52,10 +66,12 @@ export function ContactSocialStep({ nextStep, prevStep }: ContactSocialStepProps
   const getContactValue = (methodId: string) => {
     if (methodId === "phone") return contact.phone || "";
     if (methodId === "email") return contact.email || "";
-    
+
     if (!contact.contactMethods) return "";
     if (Array.isArray(contact.contactMethods)) {
-      const contactItem = contact.contactMethods.find((c) => c.type === methodId);
+      const contactItem = contact.contactMethods.find(
+        (c) => c.type === methodId,
+      );
       return contactItem ? contactItem.value : "";
     }
     return (contact.contactMethods as any)[methodId] || "";
@@ -75,16 +91,18 @@ export function ContactSocialStep({ nextStep, prevStep }: ContactSocialStepProps
       const currentMethods = Array.isArray(contact.contactMethods)
         ? contact.contactMethods
         : [];
-      
-      const existingIndex = currentMethods.findIndex((c) => c.type === methodId);
+
+      const existingIndex = currentMethods.findIndex(
+        (c) => c.type === methodId,
+      );
       const updatedMethods = [...currentMethods];
-      
+
       if (existingIndex >= 0) {
         updatedMethods[existingIndex] = { type: methodId, value };
       } else {
         updatedMethods.push({ type: methodId, value });
       }
-      
+
       actions.contact.updateContactInfo({ contactMethods: updatedMethods });
     }
   };
@@ -101,7 +119,8 @@ export function ContactSocialStep({ nextStep, prevStep }: ContactSocialStepProps
           Contact & social media
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          How can customers reach you? Add your contact information and social media links.
+          How can customers reach you? Add your contact information and social
+          media links.
         </p>
       </div>
 
@@ -124,7 +143,9 @@ export function ContactSocialStep({ nextStep, prevStep }: ContactSocialStepProps
                     type="text"
                     placeholder={method.placeholder}
                     value={getContactValue(method.id)}
-                    onChange={(e) => updateContactValue(method.id, e.target.value)}
+                    onChange={(e) =>
+                      updateContactValue(method.id, e.target.value)
+                    }
                     className="pl-12"
                   />
                 </div>
@@ -150,7 +171,10 @@ export function ContactSocialStep({ nextStep, prevStep }: ContactSocialStepProps
                     placeholder={platform.placeholder}
                     value={getSocialValue(platform.id)}
                     onChange={(e) =>
-                      actions.contact.updateSocialMedia(platform.id, e.target.value)
+                      actions.contact.updateSocialMedia(
+                        platform.id,
+                        e.target.value,
+                      )
                     }
                     className="pl-12"
                   />

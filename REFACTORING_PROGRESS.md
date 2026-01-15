@@ -1,17 +1,20 @@
 # Configurator Refactoring Progress
 
 ## Summary
+
 Refactoring the monolithic `Configurator.tsx` to resolve Input Focus Loss bugs and State Synchronization issues.
 
 ## ✅ PHASE 1: COMPLETE - Centralize Shared Data
+
 **File:** `src/lib/configurator-data.ts`
 
 **Status:** ✅ Complete (created earlier)
 
 **Contents:**
+
 - `normalizeImageSrc` function
 - `businessTypes` array
-- `fontOptions` array  
+- `fontOptions` array
 - `pageOptions` array
 - All necessary `lucide-react` icons imported
 
@@ -22,9 +25,11 @@ Refactoring the monolithic `Configurator.tsx` to resolve Input Focus Loss bugs a
 ### ✅ Completed Components (3/14):
 
 #### 1. `WelcomePage.tsx` ✅
+
 **Location:** `client/components/configurator/steps/WelcomePage.tsx`
 
 **Features:**
+
 - Uses Zustand store directly via `useConfiguratorStore`
 - Reads: `currentStep`, `businessName`, `template`
 - Props: `onStart`, `currentConfigId`, `publishedUrl`
@@ -32,14 +37,17 @@ Refactoring the monolithic `Configurator.tsx` to resolve Input Focus Loss bugs a
 - Debug panel for development
 
 **Key Changes:**
+
 - No formData prop - reads from Zustand
 - Maintains persistence integration
 - Clean separation of concerns
 
 #### 2. `TemplateStep.tsx` ✅ (CRITICAL BUG FIX)
+
 **Location:** `client/components/configurator/steps/TemplateStep.tsx`
 
 **Critical Bug Fix Implemented:**
+
 ```typescript
 const handleTemplateClick = (templateId: string) => {
   setSelectedTemplate(templateId);
@@ -50,6 +58,7 @@ const handleTemplateClick = (templateId: string) => {
 ```
 
 **Features:**
+
 - Uses `useConfiguratorActions()` hook
 - Calls `actions.design.updateTemplate(id)` immediately on click
 - Ensures Live Preview updates instantly
@@ -57,20 +66,24 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep`, `previewTemplateId`, `setPreviewTemplateId`
 
 **Key Changes:**
+
 - Fixed the "Split Source of Truth" issue
 - Template selection now syncs to store immediately
 - Preview updates without delay
 
 #### 3. `PageStructureStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/PageStructureStep.tsx`
 
 **Features:**
+
 - Uses direct store actions: `updatePageManagement`
 - Reads: `selectedPages`, `businessType`
 - Uses shared data from `@/lib/configurator-data` (pageOptions)
 - Props: `nextStep`, `prevStep` only
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Direct Zustand integration
 - Imports page options from centralized data
@@ -80,9 +93,11 @@ const handleTemplateClick = (templateId: string) => {
 ### ✅ Batch A Complete (4/14):
 
 #### 4. `OpeningHoursStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/OpeningHoursStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `content.openingHours`, `design.fontColor`
 - Actions: `content.updateOpeningHours`, `design.updateDesign`
 - Local state: `useWeekdaySchedule`, `weekdayHours` (for UI convenience)
@@ -90,14 +105,17 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep` only
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Direct Zustand integration
 - Maintains local UI state for weekday schedule toggle
 
 #### 5. `MenuProductsStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/MenuProductsStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `content.menuItems`
 - Actions: `content.addMenuItem`, `content.removeMenuItem`, `content.updateMenuItem`
 - Local state: `newItem` for the add form
@@ -106,14 +124,17 @@ const handleTemplateClick = (templateId: string) => {
 - Uses `normalizeImageSrc` from centralized data
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - CSV import adds items directly to store
 - Image handling integrated with store actions
 
 #### 6. `ReservationsStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/ReservationsStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `features.reservationsEnabled`, `features.maxGuests`, `features.notificationMethod`
 - Actions: `features.toggleReservations`, `features.updateFeatureFlags`
 - Button styling uses `design.primaryColor` and `design.backgroundColor`
@@ -121,14 +142,17 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep` only
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Reservation button styling integrated with design theme
 - Time slots and button shape stored in features
 
 #### 7. `ContactSocialStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/ContactSocialStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `contact.phone`, `contact.email`, `contact.contactMethods`, `contact.socialMedia`
 - Actions: `contact.updateContactInfo`, `contact.updateSocialMedia`
 - Controlled inputs with onChange handlers (no ref/blur pattern)
@@ -136,6 +160,7 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep` only
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Replaced setInputRef/handleInputBlur with controlled inputs
 - Direct store updates on every change
@@ -145,9 +170,11 @@ const handleTemplateClick = (templateId: string) => {
 ### ✅ Batch B Complete (3/14):
 
 #### 8. `MediaGalleryStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/MediaGalleryStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `content.gallery`
 - Actions: `content.addGalleryImage`, `content.removeGalleryImage`
 - Local state: `selectedFiles` for tracking uploads
@@ -156,14 +183,17 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep` only
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Gallery images added directly to store via actions
 - Each image gets unique ID and file reference
 
 #### 9. `AdvancedFeaturesStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/AdvancedFeaturesStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `features` (all feature flags)
 - Actions: `features.updateFeatureFlags`
 - Feature cards with enable/disable toggle
@@ -171,15 +201,18 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep`, optional `setPendingFeatureConfig`, `setCurrentStep`, `configuratorSteps`
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Feature toggles update store immediately
 - Premium badge for paid features
 - Can trigger FeatureConfigStep navigation when enabling features
 
 #### 10. `FeatureConfigStep.tsx` (includes OffersStep) ✅
+
 **Location:** `client/components/configurator/steps/FeatureConfigStep.tsx`
 
 **Features:**
+
 - Dynamic feature configuration based on `pendingFeatureConfig`
 - Includes inline `OffersStep` component for offers management
 - Handles: onlineOrdering, onlineStore, teamArea, loyalty, coupons, offers
@@ -188,6 +221,7 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep`, `pendingFeatureConfig`, `setPendingFeatureConfig`, optional navigation props
 
 **Key Changes:**
+
 - OffersStep is defined as internal component (tightly coupled)
 - Reads from multiple store slices for complex configurations
 - Offers management uses `payments` slice
@@ -198,9 +232,11 @@ const handleTemplateClick = (templateId: string) => {
 ### ✅ Batch C Complete (4/14):
 
 #### 11. `DomainHostingStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/DomainHostingStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `business.domain` (hasDomain, domainName, selectedDomain)
 - Actions: `business.setBusinessInfo` for domain updates
 - Free subdomain vs custom domain selection
@@ -209,14 +245,17 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep`, optional `getBaseHost`, `getDisplayedDomain`
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Domain configuration stored in `business.domain` object
 - Supports helper functions for domain display
 
 #### 12. `SEOOptimizationStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/SEOOptimizationStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `business`, `publishing` (for SEO metadata)
 - Actions: `publishing.updatePublishingInfo` for SEO fields
 - Meta title, description, keywords
@@ -226,14 +265,17 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep`, optional `getDisplayedDomain`
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - SEO metadata stored in `publishing` slice (extended)
 - Search preview shows real-time updates
 
 #### 13. `PreviewAdjustmentsStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/PreviewAdjustmentsStep.tsx`
 
 **Features:**
+
 - Uses Zustand store: `business.name`, `business.slogan`, `design.primaryColor`
 - Actions: `business.updateBusinessName`, `business.updateSlogan`, `design.updatePrimaryColor`
 - Mobile/desktop preview toggle
@@ -242,14 +284,17 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `nextStep`, `prevStep`, optional `TemplatePreviewContent`, `getDisplayedDomain`
 
 **Key Changes:**
+
 - ⚠️ **CRITICAL:** Updates write directly to store, so Live Preview updates instantly
 - No formData/updateFormData props
 - Final adjustment step before publishing
 
 #### 14. `PublishStep.tsx` ✅
+
 **Location:** `client/components/configurator/steps/PublishStep.tsx`
 
 **Features:**
+
 - Uses Clerk `useAuth` hook for authentication
 - Uses `publishWebApp` from `@/lib/webapps`
 - Reads full store state via `actions.data.getFullConfiguration()`
@@ -259,6 +304,7 @@ const handleTemplateClick = (templateId: string) => {
 - Props: `prevStep`, optional `getLiveUrl`, `getDisplayedDomain`, `saveToBackend`
 
 **Key Changes:**
+
 - No formData/updateFormData props
 - Integrates Clerk authentication
 - Calls publishWebApp API
@@ -272,6 +318,7 @@ const handleTemplateClick = (templateId: string) => {
 **Status:** ✅ All step components have been successfully extracted and refactored to use Zustand exclusively.
 
 **Summary:**
+
 - **14/14 components** created in `client/components/configurator/steps/`
 - All components follow strict Zustand architecture (no formData props)
 - All shared data imported from `@/lib/configurator-data`
@@ -290,6 +337,7 @@ const handleTemplateClick = (templateId: string) => {
 **Required Changes:**
 
 ### 1. Add Imports for All Extracted Components
+
 ```typescript
 import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
 import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
@@ -310,10 +358,12 @@ import { PublishStep } from "@/components/configurator/steps/PublishStep";
 ```
 
 ### 2. Remove Internal Component Definitions
+
 - Remove all `const ComponentName = () => { ... }` definitions from Configurator.tsx
 - Keep only: Navigation, LivePreview, helper functions
 
 ### 3. Update `renderMainContent()` Switch Statement
+
 ```typescript
 const renderMainContent = () => {
   if (currentStep === -1) {
@@ -412,6 +462,7 @@ const renderMainContent = () => {
 ```
 
 ### 4. Keep Essential Functions
+
 - `useAuth` from Clerk
 - `usePersistence` hook
 - `isInitialized` check
@@ -421,10 +472,12 @@ const renderMainContent = () => {
 - `LivePreview` component integration
 
 ### 5. Bridge formData for Backward Compatibility (if needed)
+
 - Keep minimal `formData` sync for LivePreview if it still reads from local state
 - Otherwise, remove entirely and rely on Zustand
 
 ### 6. Clean Up Unused Code
+
 - Remove all internal component JSX
 - Remove unused imports
 - Remove legacy state management code
@@ -476,11 +529,13 @@ const renderMainContent = () => {
    - Mobile preview toggle
 
 **File Size Reduction:**
+
 - **Before:** 8,980 lines
 - **After:** 918 lines
 - **Reduction:** 89.8% smaller (8,062 lines removed)
 
 **Architecture Improvements:**
+
 - ✅ Separation of concerns (components in dedicated files)
 - ✅ Single Responsibility Principle (each component has one job)
 - ✅ Centralized state management (Zustand)
@@ -490,6 +545,7 @@ const renderMainContent = () => {
 - ✅ Faster development iteration
 
 **Next Steps (Optional Enhancements):**
+
 1. Update LivePreview to read directly from Zustand (remove formData bridge)
 2. Add error boundaries for each step
 3. Add loading states for async operations
@@ -501,6 +557,7 @@ const renderMainContent = () => {
 ## 🔑 Architectural Rules Followed
 
 ### ✅ Implemented:
+
 1. **No Nested Definitions** - All components are top-level exports
 2. **Zustand Reading** - Use `useConfiguratorStore((s) => s.slice.field)` directly
 3. **Zustand Writing** - Use store actions or `useConfiguratorActions()` hook
@@ -509,6 +566,7 @@ const renderMainContent = () => {
 6. **Bug Fix** - TemplateStep calls `updateTemplate` immediately
 
 ### ⚠️ Notes:
+
 - Some components may need `formData` for backward compatibility with preview
 - Persistence layer may still reference `formData` - to be evaluated in Phase 3
 - Store may need additional actions for all step needs

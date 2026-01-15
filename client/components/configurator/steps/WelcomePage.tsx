@@ -27,7 +27,7 @@ export default function WelcomePage({
   publishedUrl,
 }: WelcomePageProps) {
   const [showDebug, setShowDebug] = useState(false);
-  
+
   // Read from Zustand store
   const currentStep = useConfiguratorStore((s) => s.ui.currentStep);
   const businessName = useConfiguratorStore((s) => s.business.name);
@@ -189,8 +189,8 @@ export default function WelcomePage({
               </span>
             </h1>
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              Create a professional web app for your business in minutes.
-              Choose a template, preview it live, customize, and publish.
+              Create a professional web app for your business in minutes. Choose
+              a template, preview it live, customize, and publish.
             </p>
             <ul className="space-y-2 text-gray-700 mb-8">
               <li className="flex items-center">
@@ -198,12 +198,12 @@ export default function WelcomePage({
                 template previews
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> Minimal,
-                fast, and clean flow
+                <Check className="w-4 h-4 text-teal-600 mr-2" /> Minimal, fast,
+                and clean flow
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> Auto-save
-                every step
+                <Check className="w-4 h-4 text-teal-600 mr-2" /> Auto-save every
+                step
               </li>
               <li className="flex items-center">
                 <Check className="w-4 h-4 text-teal-600 mr-2" /> One-click

@@ -3,7 +3,10 @@ import { ArrowLeft, ChevronRight, Zap, Globe, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 interface DomainHostingStepProps {
   nextStep: () => void;
@@ -126,10 +129,16 @@ export function DomainHostingStep({
               <Input
                 type="text"
                 placeholder="yourbusiness"
-                value={selectedDomain || business.name.toLowerCase().replace(/\s+/g, "")}
+                value={
+                  selectedDomain ||
+                  business.name.toLowerCase().replace(/\s+/g, "")
+                }
                 onChange={(e) =>
                   actions.business.setBusinessInfo({
-                    domain: { ...business.domain, selectedDomain: e.target.value },
+                    domain: {
+                      ...business.domain,
+                      selectedDomain: e.target.value,
+                    },
                   })
                 }
                 className="flex-1"
@@ -160,7 +169,10 @@ export function DomainHostingStep({
                       value={domainName}
                       onChange={(e) =>
                         actions.business.setBusinessInfo({
-                          domain: { ...business.domain, domainName: e.target.value },
+                          domain: {
+                            ...business.domain,
+                            domainName: e.target.value,
+                          },
                         })
                       }
                       className="flex-1"

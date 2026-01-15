@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { ArrowLeft, ChevronRight, ShoppingBag, Store, Users, Star, Crown, Zap, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  ShoppingBag,
+  Store,
+  Users,
+  Star,
+  Crown,
+  Zap,
+  Check,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 interface AdvancedFeaturesStepProps {
   nextStep: () => void;
@@ -33,7 +46,8 @@ export function AdvancedFeaturesStep({
     {
       id: "onlineStoreEnabled",
       title: "Online Store",
-      description: "Sell products and merchandise online with payment processing",
+      description:
+        "Sell products and merchandise online with payment processing",
       icon: <Store className="w-8 h-8" />,
       premium: true,
     },
@@ -69,10 +83,15 @@ export function AdvancedFeaturesStep({
 
   const handleFeatureClick = (featureId: string, enabled: boolean) => {
     const willEnable = !enabled;
-    
+
     actions.features.updateFeatureFlags({ [featureId]: willEnable } as any);
-    
-    if (willEnable && setPendingFeatureConfig && setCurrentStep && configuratorSteps) {
+
+    if (
+      willEnable &&
+      setPendingFeatureConfig &&
+      setCurrentStep &&
+      configuratorSteps
+    ) {
       setPendingFeatureConfig(featureId);
       const idx = configuratorSteps.findIndex((s) => s.id === "feature-config");
       if (idx !== -1) setCurrentStep(idx);

@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Check,
-  Eye,
-  Sparkles,
-  ChevronRight,
-  ArrowLeft,
-} from "lucide-react";
+import { Check, Eye, Sparkles, ChevronRight, ArrowLeft } from "lucide-react";
 import { defaultTemplates } from "@/components/template/TemplateRegistry";
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import TemplatePreviewContent from "@/components/preview/TemplatePreviewContent";
@@ -29,7 +26,7 @@ export default function TemplateStep({
   // Read from Zustand store
   const template = useConfiguratorStore((s) => s.design.template);
   const businessType = useConfiguratorStore((s) => s.business.type);
-  
+
   // Get actions
   const actions = useConfiguratorActions();
 

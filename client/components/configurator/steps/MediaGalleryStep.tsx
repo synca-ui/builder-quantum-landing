@@ -2,7 +2,10 @@ import { useState } from "react";
 import { ArrowLeft, ChevronRight, Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 import { normalizeImageSrc } from "@/lib/configurator-data";
 import type { GalleryImage } from "@/types/domain";
 
@@ -11,7 +14,10 @@ interface MediaGalleryStepProps {
   prevStep: () => void;
 }
 
-export function MediaGalleryStep({ nextStep, prevStep }: MediaGalleryStepProps) {
+export function MediaGalleryStep({
+  nextStep,
+  prevStep,
+}: MediaGalleryStepProps) {
   const gallery = useConfiguratorStore((s) => s.content.gallery);
   const actions = useConfiguratorActions();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -20,7 +26,7 @@ export function MediaGalleryStep({ nextStep, prevStep }: MediaGalleryStepProps) 
     if (files) {
       const newFiles = Array.from(files);
       setSelectedFiles((prev) => [...prev, ...newFiles]);
-      
+
       newFiles.forEach((file) => {
         const newImage: GalleryImage = {
           id: `${Date.now()}-${Math.random()}`,
@@ -83,9 +89,7 @@ export function MediaGalleryStep({ nextStep, prevStep }: MediaGalleryStepProps) 
 
       {gallery.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">
-            Your Gallery
-          </h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Your Gallery</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {gallery.map((image) => (
               <div key={image.id} className="relative group">

@@ -23,7 +23,10 @@ import {
 } from "lucide-react";
 
 // Zustand Store
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -264,16 +267,24 @@ export default function Configurator() {
     }
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(() => {
     return persistence.getConfigId() || null;
   });
-  const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle");
+  const [publishStatus, setPublishStatus] = useState<
+    "idle" | "publishing" | "published" | "error"
+  >("idle");
   const [publishedUrl, setPublishedUrl] = useState<string | null>(() => {
     return persistence.getPublishedUrl() || null;
   });
-  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<string | null>(null);
-  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
+  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<
+    string | null
+  >(null);
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
+    null,
+  );
 
   // Cart state for online ordering
   const [cartItems, setCartItems] = useState<any[]>([]);
@@ -375,7 +386,7 @@ export default function Configurator() {
         .replace(/[^a-z0-9\s-]/g, "")
         .replace(/\s+/g, "-")
         .slice(0, 30),
-    []
+    [],
   );
 
   const getLiveUrl = useCallback(() => {
@@ -391,7 +402,13 @@ export default function Configurator() {
     const name = slugifyName(formData.businessName || "site");
     if (id) return `${origin}/${id}/${name}`;
     return origin;
-  }, [publishedUrl, currentConfigId, formData.businessName, getBaseHost, slugifyName]);
+  }, [
+    publishedUrl,
+    currentConfigId,
+    formData.businessName,
+    getBaseHost,
+    slugifyName,
+  ]);
 
   // Cart functions
   const addToCart = useCallback((item: any, qty: number = 1) => {
@@ -402,7 +419,7 @@ export default function Configurator() {
         return prev.map((cartItem) =>
           cartItem.name === item.name
             ? { ...cartItem, quantity: cartItem.quantity + quantity }
-            : cartItem
+            : cartItem,
         );
       }
       return [...prev, { ...item, quantity }];
@@ -420,7 +437,7 @@ export default function Configurator() {
   const cartTotal = useMemo(() => {
     return cartItems.reduce(
       (total, item) => total + parseFloat(item.price) * item.quantity,
-      0
+      0,
     );
   }, [cartItems]);
 
@@ -458,7 +475,7 @@ export default function Configurator() {
         setTimeout(() => setSaveStatus("idle"), 3000);
       }
     },
-    [isSignedIn, getToken, currentConfigId, persistence]
+    [isSignedIn, getToken, currentConfigId, persistence],
   );
 
   // Publish configuration
@@ -592,11 +609,16 @@ export default function Configurator() {
       <div className="sticky top-24 h-[calc(100vh-7rem)]">
         <Card className="h-full p-4 bg-gray-50">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700">Live Preview</h3>
+            <h3 className="text-sm font-semibold text-gray-700">
+              Live Preview
+            </h3>
             <ShareQRButton url={getLiveUrl()} />
           </div>
           <div className="h-[calc(100%-3rem)] flex items-center justify-center">
-            <LivePhoneFrame widthClass="w-full max-w-[280px]" heightClass="h-full max-h-[580px]">
+            <LivePhoneFrame
+              widthClass="w-full max-w-[280px]"
+              heightClass="h-full max-h-[580px]"
+            >
               <PhonePortal>
                 <TemplatePreviewContent />
               </PhonePortal>
@@ -628,7 +650,9 @@ export default function Configurator() {
                 <div className="hidden md:flex items-center space-x-2 text-sm">
                   <span className="text-gray-500">Step {currentStep + 1}</span>
                   <span className="text-gray-300">/</span>
-                  <span className="text-gray-500">{configuratorSteps.length}</span>
+                  <span className="text-gray-500">
+                    {configuratorSteps.length}
+                  </span>
                   <span className="text-gray-300 mx-2">·</span>
                   <span className="text-gray-700 font-medium">
                     {configuratorSteps[currentStep]?.title || "Configuration"}
@@ -662,7 +686,11 @@ export default function Configurator() {
                 size="sm"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
-                {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                {isMenuOpen ? (
+                  <X className="w-4 h-4" />
+                ) : (
+                  <Menu className="w-4 h-4" />
+                )}
               </Button>
             </div>
           </div>
@@ -840,16 +868,27 @@ export default function Configurator() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               {currentStepConfig.title}
             </h2>
-            <p className="text-gray-600 mb-8">{currentStepConfig.description}</p>
+            <p className="text-gray-600 mb-8">
+              {currentStepConfig.description}
+            </p>
             <p className="text-sm text-gray-500 mb-8">
               Step component '{currentStepConfig.component}' is coming soon...
             </p>
             <div className="flex justify-between max-w-lg mx-auto">
-              <Button type="button" onClick={prevStep} variant="outline" size="lg">
+              <Button
+                type="button"
+                onClick={prevStep}
+                variant="outline"
+                size="lg"
+              >
                 <ArrowLeft className="mr-2 w-5 h-5" />
                 Back
               </Button>
-              <Button onClick={nextStep} size="lg" className="bg-gradient-to-r from-teal-500 to-purple-500">
+              <Button
+                onClick={nextStep}
+                size="lg"
+                className="bg-gradient-to-r from-teal-500 to-purple-500"
+              >
                 Continue
                 <ChevronRight className="ml-2 w-5 h-5" />
               </Button>

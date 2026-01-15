@@ -16,7 +16,9 @@ export default function PageStructureStep({
   // Read from Zustand store
   const selectedPages = useConfiguratorStore((s) => s.pages.selectedPages);
   const businessType = useConfiguratorStore((s) => s.business.type);
-  const updatePageManagement = useConfiguratorStore((s) => s.updatePageManagement);
+  const updatePageManagement = useConfiguratorStore(
+    (s) => s.updatePageManagement,
+  );
 
   const togglePage = (pageId: string, required: boolean) => {
     if (required) return;

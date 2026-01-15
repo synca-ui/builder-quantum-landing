@@ -3,7 +3,10 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 import type { OpeningHours } from "@/types/domain";
 
 interface OpeningHoursStepProps {
@@ -11,12 +14,17 @@ interface OpeningHoursStepProps {
   prevStep: () => void;
 }
 
-export function OpeningHoursStep({ nextStep, prevStep }: OpeningHoursStepProps) {
+export function OpeningHoursStep({
+  nextStep,
+  prevStep,
+}: OpeningHoursStepProps) {
   const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   const weekends = ["Saturday", "Sunday"];
 
   const openingHours = useConfiguratorStore((s) => s.content.openingHours);
-  const openingHoursTextColor = useConfiguratorStore((s) => s.design.fontColor || "#0F172A");
+  const openingHoursTextColor = useConfiguratorStore(
+    (s) => s.design.fontColor || "#0F172A",
+  );
   const actions = useConfiguratorActions();
 
   const [useWeekdaySchedule, setUseWeekdaySchedule] = useState(true);
@@ -191,10 +199,7 @@ export function OpeningHoursStep({ nextStep, prevStep }: OpeningHoursStepProps) 
                   closed: false,
                 };
                 return (
-                  <div
-                    key={day}
-                    className="flex items-center justify-between"
-                  >
+                  <div key={day} className="flex items-center justify-between">
                     <div className="w-24">
                       <span className="text-sm font-medium text-gray-700">
                         {day.slice(0, 3)}
@@ -297,9 +302,8 @@ export function OpeningHoursStep({ nextStep, prevStep }: OpeningHoursStepProps) 
 
           <div className="mt-4 p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-700">
-              💡 <strong>Tipp:</strong> Feiertage werden automatisch wie
-              Sonntag behandelt. Sie können diese später in den Einstellungen
-              anpassen.
+              💡 <strong>Tipp:</strong> Feiertage werden automatisch wie Sonntag
+              behandelt. Sie können diese später in den Einstellungen anpassen.
             </p>
           </div>
         </Card>

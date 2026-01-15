@@ -3,7 +3,10 @@ import { ArrowLeft, ChevronRight, Camera, Upload, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 import { normalizeImageSrc } from "@/lib/configurator-data";
 import type { MenuItem } from "@/types/domain";
 
@@ -12,7 +15,10 @@ interface MenuProductsStepProps {
   prevStep: () => void;
 }
 
-export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) {
+export function MenuProductsStep({
+  nextStep,
+  prevStep,
+}: MenuProductsStepProps) {
   const menuItems = useConfiguratorStore((s) => s.content.menuItems);
   const actions = useConfiguratorActions();
 
@@ -49,7 +55,7 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
       alt: file.name,
       file,
     }));
-    
+
     const item = menuItems[index];
     if (item) {
       const prevImages = Array.isArray(item.images) ? item.images : [];
@@ -74,13 +80,13 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         let text = String(event.target?.result || "");
         if (!text) return;
-        
+
         text = text.replace(/^\uFEFF/, "").replace(/\r\n?|\n/g, "\n");
 
         const firstLine = text.split("\n")[0] || "";
@@ -120,10 +126,20 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
         if (rows.length === 0) return;
 
         const headerCells = parseLine(rows[0]).map((h) =>
-          h.toLowerCase().replace(/^"(.*)"$/, "$1").trim()
+          h
+            .toLowerCase()
+            .replace(/^"(.*)"$/, "$1")
+            .trim(),
         );
 
-        const nameKeys = ["name", "dish", "item", "title", "produkt", "gericht"];
+        const nameKeys = [
+          "name",
+          "dish",
+          "item",
+          "title",
+          "produkt",
+          "gericht",
+        ];
         const descKeys = ["description", "desc", "details", "beschreibung"];
         const priceKeys = ["price", "preis", "cost", "amount"];
 
@@ -131,7 +147,7 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
           (h) =>
             nameKeys.includes(h) ||
             priceKeys.includes(h) ||
-            descKeys.includes(h)
+            descKeys.includes(h),
         );
 
         let dataRows = headerMatched ? rows.slice(1) : rows;
@@ -169,7 +185,9 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
               (s || "").replace(/[^0-9,\.\-]/g, "").replace(/,/g, ".");
 
             const name = clean(cells[nameIdx] || "");
-            const description = clean(descIdx !== -1 ? cells[descIdx] || "" : "");
+            const description = clean(
+              descIdx !== -1 ? cells[descIdx] || "" : "",
+            );
             const priceRaw = num(cells[priceIdx] || "");
 
             const price = priceRaw
@@ -215,7 +233,8 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
           Add your menu or products
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Showcase what you offer. You can add items manually or upload your menu.
+          Showcase what you offer. You can add items manually or upload your
+          menu.
         </p>
       </div>
 
@@ -234,7 +253,9 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
             <Button
               variant="outline"
               className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700"
-              onClick={() => document.getElementById("menu-img-upload")?.click()}
+              onClick={() =>
+                document.getElementById("menu-img-upload")?.click()
+              }
             >
               <Upload className="w-4 h-4 mr-2" />
               Choose Image File
@@ -451,7 +472,9 @@ export function MenuProductsStep({ nextStep, prevStep }: MenuProductsStepProps) 
                   accept="image/*"
                   multiple
                   className="hidden"
-                  onChange={(e) => handleUploadImagesForItem(index, e.target.files)}
+                  onChange={(e) =>
+                    handleUploadImagesForItem(index, e.target.files)
+                  }
                 />
                 <div className="text-xs text-gray-500">
                   {Array.isArray(item.images) ? item.images.length : 0} images

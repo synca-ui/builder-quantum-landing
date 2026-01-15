@@ -2,22 +2,32 @@ import { ArrowLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 
 interface ReservationsStepProps {
   nextStep: () => void;
   prevStep: () => void;
 }
 
-export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) {
-  const reservationsEnabled = useConfiguratorStore((s) => s.features.reservationsEnabled);
+export function ReservationsStep({
+  nextStep,
+  prevStep,
+}: ReservationsStepProps) {
+  const reservationsEnabled = useConfiguratorStore(
+    (s) => s.features.reservationsEnabled,
+  );
   const maxGuests = useConfiguratorStore((s) => s.features.maxGuests);
-  const notificationMethod = useConfiguratorStore((s) => s.features.notificationMethod);
-  
+  const notificationMethod = useConfiguratorStore(
+    (s) => s.features.notificationMethod,
+  );
+
   const design = useConfiguratorStore((s) => s.design);
   const reservationButtonColor = design.primaryColor || "#2563EB";
   const reservationButtonTextColor = design.backgroundColor || "#FFFFFF";
-  
+
   const actions = useConfiguratorActions();
 
   const timeSlots = Array.from({ length: 14 }, (_, i) => {
@@ -27,10 +37,14 @@ export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) 
 
   const selectedTimeSlots = useConfiguratorStore((s) => {
     const storedSlots = (s.features as any).timeSlots;
-    return Array.isArray(storedSlots) ? storedSlots : ["12:00", "13:00", "18:00", "19:00"];
+    return Array.isArray(storedSlots)
+      ? storedSlots
+      : ["12:00", "13:00", "18:00", "19:00"];
   });
 
-  const reservationButtonShape = (useConfiguratorStore((s) => s.features) as any).reservationButtonShape || "rounded";
+  const reservationButtonShape =
+    (useConfiguratorStore((s) => s.features) as any).reservationButtonShape ||
+    "rounded";
 
   const updateTimeSlots = (slots: string[]) => {
     actions.features.updateFeatureFlags({ timeSlots: slots } as any);
@@ -47,7 +61,8 @@ export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) 
           Setup reservations
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Enable table bookings for your business. Perfect for restaurants and cafés.
+          Enable table bookings for your business. Perfect for restaurants and
+          cafés.
         </p>
       </div>
 
@@ -58,12 +73,18 @@ export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) 
               <h3 className="text-lg font-bold text-gray-900 mb-2">
                 Enable Reservations
               </h3>
-              <p className="text-gray-600">Allow customers to book tables online</p>
+              <p className="text-gray-600">
+                Allow customers to book tables online
+              </p>
             </div>
             <Button
               variant={reservationsEnabled ? "default" : "outline"}
-              onClick={() => actions.features.toggleReservations(!reservationsEnabled)}
-              className={reservationsEnabled ? "bg-teal-500 hover:bg-teal-600" : ""}
+              onClick={() =>
+                actions.features.toggleReservations(!reservationsEnabled)
+              }
+              className={
+                reservationsEnabled ? "bg-teal-500 hover:bg-teal-600" : ""
+              }
             >
               {reservationsEnabled ? "Enabled" : "Disabled"}
             </Button>
@@ -153,7 +174,9 @@ export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) 
                       type="color"
                       value={reservationButtonTextColor}
                       onChange={(e) =>
-                        actions.design.updateDesign({ backgroundColor: e.target.value })
+                        actions.design.updateDesign({
+                          backgroundColor: e.target.value,
+                        })
                       }
                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
                     />
@@ -161,7 +184,9 @@ export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) 
                       type="text"
                       value={reservationButtonTextColor}
                       onChange={(e) =>
-                        actions.design.updateDesign({ backgroundColor: e.target.value })
+                        actions.design.updateDesign({
+                          backgroundColor: e.target.value,
+                        })
                       }
                       className="font-mono flex-1"
                       placeholder="#FFFFFF"
@@ -180,9 +205,15 @@ export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) 
                     ].map((shape) => (
                       <Button
                         key={shape.id}
-                        variant={reservationButtonShape === shape.id ? "default" : "outline"}
+                        variant={
+                          reservationButtonShape === shape.id
+                            ? "default"
+                            : "outline"
+                        }
                         size="sm"
-                        onClick={() => updateButtonStyle("reservationButtonShape", shape.id)}
+                        onClick={() =>
+                          updateButtonStyle("reservationButtonShape", shape.id)
+                        }
                         className={`${shape.class} ${reservationButtonShape === shape.id ? "bg-teal-500 hover:bg-teal-600" : ""}`}
                       >
                         {shape.name}
@@ -236,7 +267,9 @@ export function ReservationsStep({ nextStep, prevStep }: ReservationsStepProps) 
                           : [...selectedTimeSlots, time];
                         updateTimeSlots(newSlots);
                       }}
-                      className={isSelected ? "bg-teal-500 hover:bg-teal-600" : ""}
+                      className={
+                        isSelected ? "bg-teal-500 hover:bg-teal-600" : ""
+                      }
                     >
                       {time}
                     </Button>

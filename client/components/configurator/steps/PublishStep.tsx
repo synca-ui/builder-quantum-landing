@@ -3,7 +3,10 @@ import { ArrowLeft, Cloud, Rocket, Check, Eye, Home } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
+import {
+  useConfiguratorStore,
+  useConfiguratorActions,
+} from "@/store/configuratorStore";
 import { publishWebApp } from "@/lib/webapps";
 import type { Configuration } from "@/types/domain";
 
@@ -36,7 +39,7 @@ export function PublishStep({
   const liveUrl = getLiveUrl
     ? getLiveUrl()
     : `https://${business.domain?.selectedDomain || business.name.toLowerCase().replace(/\s+/g, "")}.maitr.de`;
-  
+
   const displayDomain = getDisplayedDomain
     ? getDisplayedDomain()
     : `${business.domain?.selectedDomain || business.name.toLowerCase().replace(/\s+/g, "")}.maitr.de`;
@@ -55,7 +58,11 @@ export function PublishStep({
         business.domain?.selectedDomain ||
         business.name.toLowerCase().replace(/\s+/g, "");
 
-      const result = await publishWebApp(subdomain, configData, token || undefined);
+      const result = await publishWebApp(
+        subdomain,
+        configData,
+        token || undefined,
+      );
 
       actions.publishing.publishConfiguration();
       actions.publishing.updatePublishingInfo({
@@ -111,7 +118,9 @@ export function PublishStep({
                 },
                 {
                   item: "Domain or subdomain selected",
-                  checked: !!business.domain?.selectedDomain || !!business.domain?.domainName,
+                  checked:
+                    !!business.domain?.selectedDomain ||
+                    !!business.domain?.domainName,
                 },
               ].map((check, index) => (
                 <div key={index} className="flex items-center space-x-3">
@@ -141,8 +150,12 @@ export function PublishStep({
                 <h4 className="font-semibold text-gray-900 mb-2">
                   Business Details
                 </h4>
-                <p className="text-gray-600 text-sm mb-1">Name: {business.name}</p>
-                <p className="text-gray-600 text-sm mb-1">Type: {business.type}</p>
+                <p className="text-gray-600 text-sm mb-1">
+                  Name: {business.name}
+                </p>
+                <p className="text-gray-600 text-sm mb-1">
+                  Type: {business.type}
+                </p>
                 <p className="text-gray-600 text-sm">
                   Location: {business.location}
                 </p>
@@ -158,7 +171,9 @@ export function PublishStep({
                   Pages: {pages.selectedPages.length}
                 </p>
                 <div className="space-y-1">
-                  <p className="text-gray-600 text-sm">Domain: {displayDomain}</p>
+                  <p className="text-gray-600 text-sm">
+                    Domain: {displayDomain}
+                  </p>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
                     <p className="text-sm font-semibold text-green-800 mb-1">
                       Your Live URL:
