@@ -314,6 +314,24 @@ export default function Configurator() {
   );
   const designTemplate = useConfiguratorStore((state) => state.design.template);
 
+  // Extract all store selectors for formData derivation
+  const businessType = useConfiguratorStore((s) => s.business.type);
+  const businessLocation = useConfiguratorStore((s) => s.business.location);
+  const businessSlogan = useConfiguratorStore((s) => s.business.slogan);
+  const designFontSize = useConfiguratorStore((s) => s.design.fontSize);
+  const designFontColor = useConfiguratorStore((s) => s.design.fontColor);
+  const designBackgroundColor = useConfiguratorStore((s) => s.design.backgroundColor);
+  const pagesSelectedPages = useConfiguratorStore((s) => s.pages.selectedPages);
+  const featuresOnlineOrdering = useConfiguratorStore((s) => s.features.onlineOrderingEnabled);
+  const featuresOnlineStore = useConfiguratorStore((s) => s.features.onlineStoreEnabled);
+  const contentMenuItems = useConfiguratorStore((s) => s.content.menuItems);
+  const contentGallery = useConfiguratorStore((s) => s.content.gallery);
+  const paymentOffers = useConfiguratorStore((s) => s.payments.offers);
+  const paymentOfferBanner = useConfiguratorStore((s) => s.payments.offerBanner);
+  const contactSocialMedia = useConfiguratorStore((s) => s.contact.socialMedia);
+  const contactContactMethods = useConfiguratorStore((s) => s.contact.contactMethods);
+  const contentCategories = useConfiguratorStore((s) => s.content.categories);
+
   // ===== LOCKED ENTRY PATTERN =====
   // Ensures initialization logic runs exactly once per session
   const isInitialized = useRef(false);
