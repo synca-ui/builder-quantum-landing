@@ -345,7 +345,7 @@ export default function Configurator() {
               <div id="mobile-preview" className="mt-4 hidden"><LivePreview /></div>
             </div>
             <div className="lg:col-span-2 min-h-[80vh]">{renderMainContent()}</div>
-            <div className="hidden lg:block"><LivePreview /></div>
+            {/* <div className="hidden lg:block order-1 lg:order-2"><LivePreview /></div> */}
           </div>
         )}
       </div>
