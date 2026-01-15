@@ -1,68 +1,67 @@
-import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
-import { Coffee, Utensils, Star, Building, Menu, ShoppingBag, MapPin, Phone, Mail, Clock, Instagram, Facebook, Plus, ChevronRight, X, Camera } from "lucide-react";
-import { normalizeImageSrc, fontOptions, defaultTemplates } from "@/lib/configurator-data";
-import { useState, useMemo, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { motion } from "framer-motion";
+import { useConfiguratorStore } from "@/store/configuratorStore";
+import { Coffee, Utensils, Star, Building, Menu } from "lucide-react";
+// FIX: defaultTemplates entfernt, da es hier nicht existiert
+import { normalizeImageSrc, fontOptions } from "@/lib/configurator-data"; 
+// FIX: defaultTemplates von hier importieren
+import { defaultTemplates } from "@/components/template/TemplateRegistry"; 
+import { useState } from "react";
 
-export function TemplatePreviewContent() {
-  // Store Access
-  const formData = useConfiguratorStore((s) => ({
+// Types für Props (optional, aber gut für Typescript)
+interface TemplatePreviewContentProps {
+  currentStep?: number;
+  previewTemplateId?: string | null;
+  fontOptions?: any[];
+  templates?: any[];
+  formData?: any;
+  setShowCart?: (show: boolean) => void;
+  showCart?: boolean;
+  cartItems?: any[];
+  cartItemsCount?: number;
+  addToCart?: (item: any) => void;
+  removeFromCart?: (item: string) => void;
+  normalizeImageSrc?: (img: any) => string;
+}
+
+export function TemplatePreviewContent({
+  // Wir akzeptieren Props, greifen aber zur Sicherheit auch auf den Store zu
+  previewTemplateId
+}: TemplatePreviewContentProps) {
+  
+  // 1. Store Access (als Fallback/Source of Truth)
+  const storeData = useConfiguratorStore((s) => ({
     businessName: s.business.name,
     businessType: s.business.type,
     template: s.design.template,
     primaryColor: s.design.primaryColor,
     secondaryColor: s.design.secondaryColor,
     fontFamily: s.design.fontFamily,
-    fontSize: s.design.fontSize,
-    language: s.settings.language,
-    themeMode: s.settings.themeMode,
-    selectedPages: s.content.selectedPages,
-    menuItems: s.content.menuItems,
-    gallery: s.content.gallery,
-    contactMethods: s.business.contactMethods,
-    openingHours: s.business.openingHours,
-    socialMedia: s.business.socialMedia,
-    onlineOrdering: s.features.onlineOrdering,
-    // Add other fields as needed
+    // ... andere Felder bei Bedarf
   }));
 
-  // Local State for Preview Interaction
-  const [activePage, setActivePage] = useState("home");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showCart, setShowCart] = useState(false);
-  const [cartItems, setCartItems] = useState<any[]>([]);
-
-  // Derived Values
-  const currentTemplate = defaultTemplates.find(t => t.id === formData.template) || defaultTemplates[0];
-  const fontClass = fontOptions.find(f => f.id === formData.fontFamily)?.class || "font-sans";
+  // 2. Bestimme das aktive Template (Prop > Store > Default)
+  const activeTemplateId = previewTemplateId || storeData.template || "modern";
   
-  // Helper to determine text color style
+  // 3. Suche die Template-Daten
+  const currentTemplate = defaultTemplates.find(t => t.id === activeTemplateId) || defaultTemplates[0];
+  const fontClass = fontOptions.find(f => f.id === storeData.fontFamily)?.class || "font-sans";
+
+  // 4. Styles berechnen
   const styles = {
-    userPrimary: formData.primaryColor,
-    userSecondary: formData.secondaryColor,
-    // Add logic for text colors based on theme if needed
+    color: storeData.primaryColor || "#000",
+    // Hier können weitere dynamische Styles hin
   };
 
-  const getBusinessIcon = () => {
-    switch (formData.businessType) {
-      case "cafe": return <Coffee className="w-5 h-5" />;
-      case "restaurant": return <Utensils className="w-5 h-5" />;
-      case "bar": return <Star className="w-5 h-5" />;
-      default: return <Building className="w-5 h-5" />;
-    }
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // --- Render Helpers ---
-  // (Simplified for brevity - assumes logic similar to original file)
   const renderHome = () => (
     <div className="p-4 space-y-4">
        <div className="text-center py-8">
-          <h1 className="text-2xl font-bold" style={{ color: styles.userPrimary }}>{formData.businessName || "Your Business"}</h1>
+          <h1 className="text-2xl font-bold" style={{ color: styles.color }}>
+            {storeData.businessName || "Your Business"}
+          </h1>
           <p className="text-gray-500 mt-2">Welcome to our new app!</p>
        </div>
-       {/* Example Content */}
        <div className="grid grid-cols-2 gap-2">
           {[1,2,3,4].map(i => (
              <div key={i} className="bg-gray-100 rounded-lg h-24 flex items-center justify-center">
@@ -73,50 +72,50 @@ export function TemplatePreviewContent() {
     </div>
   );
 
-  const renderContent = () => {
-     switch(activePage) {
-        case "home": return renderHome();
-        case "menu": return <div className="p-4">Menu Page Placeholder</div>;
-        default: return <div className="p-4">Page {activePage}</div>;
-     }
-  }
-
   // --- Template Shells ---
+  
   // Minimalist Shell
-  if (formData.template === "minimalist") {
+  if (activeTemplateId === "minimalist") {
     return (
       <div className={`h-full bg-white flex flex-col ${fontClass}`}>
         <div className="flex items-center justify-between p-4 border-b">
-           <span className="font-bold">{formData.businessName}</span>
+           <span className="font-bold">{storeData.businessName}</span>
            <Menu className="w-5 h-5" onClick={() => setMenuOpen(!menuOpen)} />
         </div>
         <div className="flex-1 overflow-y-auto pb-20">
-           {renderContent()}
+           {renderHome()}
         </div>
-        {/* Navigation Bar if needed */}
       </div>
     );
   }
 
-  // Modern Shell (Gradient)
-  if (formData.template === "modern") {
+  // Modern Shell
+  if (activeTemplateId === "modern") {
      return (
-      <div className={`h-full flex flex-col ${fontClass}`} style={{ background: `linear-gradient(135deg, ${styles.userSecondary || '#eee'}, ${styles.userPrimary || '#ccc'})` }}>
+      <div className={`h-full flex flex-col ${fontClass}`} style={{ background: `linear-gradient(135deg, ${storeData.secondaryColor || '#f3f4f6'}, ${storeData.primaryColor || '#e5e7eb'})` }}>
         <div className="p-4 text-white flex justify-between items-center backdrop-blur-md bg-white/10">
-           <span className="font-bold">{formData.businessName}</span>
+           <span className="font-bold">{storeData.businessName}</span>
            <Menu className="w-5 h-5" />
         </div>
-        <div className="flex-1 overflow-y-auto p-4 pb-20 text-white">
-           {renderContent()}
+        <div className="flex-1 overflow-y-auto p-4 pb-20">
+           <div className="bg-white/80 backdrop-blur-sm rounded-xl min-h-full shadow-lg overflow-hidden">
+              {renderHome()}
+           </div>
         </div>
       </div>
      )
   }
 
-  // Default Fallback
+  // Fallback / Generic View
   return (
-    <div className="h-full bg-gray-50 flex items-center justify-center text-gray-400">
-       Select a template to view preview
+    <div className={`h-full bg-gray-50 flex flex-col ${fontClass}`}>
+      <div className="p-4 bg-white shadow-sm flex justify-between items-center">
+         <span className="font-bold text-gray-800">{storeData.businessName || "Preview"}</span>
+      </div>
+      <div className="flex-1 p-4 flex items-center justify-center text-gray-400 text-sm text-center">
+         Select a template to view content.<br/>
+         Current: {currentTemplate?.name}
+      </div>
     </div>
   );
 }
