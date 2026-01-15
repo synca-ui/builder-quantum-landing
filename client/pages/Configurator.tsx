@@ -215,7 +215,8 @@ export default function Configurator() {
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
 
   // --- LIVE PREVIEW ---
-  // Diese Komponente ist jetzt viel stabiler, da sie nicht mehr bei jedem Store-Update neu erstellt wird.
+  // Diese Version verhindert die Endlosschleife, 
+  // da sie keine Props mehr durchreicht.
   const LivePreview = useCallback(() => {
     return (
       <div className="sticky top-24 h-[calc(100vh-7rem)]">
@@ -227,7 +228,8 @@ export default function Configurator() {
           <div className="h-[calc(100%-3rem)] flex items-center justify-center">
             <LivePhoneFrame widthClass="w-full max-w-[280px]" heightClass="h-full max-h-[580px]">
               <PhonePortal>
-                {/* Die Content-Komponente holt sich ihre Daten selbst aus dem Store */}
+                {/* WICHTIG: Hier KEINE Props übergeben! */}
+                {/* Die Komponente holt sich die Daten selbst aus dem Store. */}
                 <TemplatePreviewContent />
               </PhonePortal>
             </LivePhoneFrame>
@@ -235,8 +237,7 @@ export default function Configurator() {
         </Card>
       </div>
     );
-  }, [getLiveUrl]); 
-
+  }, [getLiveUrl]);
   // --- RENDER MAIN CONTENT ---
   const renderMainContent = () => {
     if (currentStep === -1) {
