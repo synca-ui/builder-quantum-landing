@@ -16,10 +16,9 @@ export default function PageStructureStep({
   // Read from Zustand store
   const selectedPages = useConfiguratorStore((s) => s.pages.selectedPages);
   const businessType = useConfiguratorStore((s) => s.business.type);
-  const showHomeHero = useConfiguratorStore((s) => s.content.showHomeHero);
-
   // Get actions
   const actions = useConfiguratorActions();
+  const updatePageManagement = useConfiguratorStore((s) => s.updatePageManagement);
 
   const togglePage = (pageId: string, required: boolean) => {
     if (required) return;
@@ -28,7 +27,7 @@ export default function PageStructureStep({
       ? selectedPages.filter((p) => p !== pageId)
       : [...selectedPages, pageId];
 
-    actions.pages.updatePageManagement({ selectedPages: newPages });
+    updatePageManagement({ selectedPages: newPages });
   };
 
   return (
@@ -98,10 +97,11 @@ export default function PageStructureStep({
         <label className="inline-flex items-center space-x-2 text-sm">
           <input
             type="checkbox"
-            checked={!!showHomeHero}
-            onChange={(e) =>
-              actions.content.updateContent({ showHomeHero: e.target.checked })
-            }
+            checked={!!useConfiguratorStore.getState().content.showHomeHero}
+            onChange={(e) => {
+              const store = useConfiguratorStore.getState();
+              store.updateContentData?.({ showHomeHero: e.target.checked });
+            }}
           />
           <span>Show header block under headline (logo + name)</span>
         </label>
