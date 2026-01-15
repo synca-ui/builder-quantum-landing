@@ -42,7 +42,9 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
   const storeBusinessType = useConfiguratorStore((s) => s.business.type);
   const storeTemplate = useConfiguratorStore((s) => s.design.template);
   const storePrimaryColor = useConfiguratorStore((s) => s.design.primaryColor);
-  const storeSecondaryColor = useConfiguratorStore((s) => s.design.secondaryColor);
+  const storeSecondaryColor = useConfiguratorStore(
+    (s) => s.design.secondaryColor,
+  );
 
   const [previewState, setPreviewState] = useState({
     menuOpen: false,
@@ -61,7 +63,8 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
       stylish: "Style",
       cozy: "Cozy",
     };
-    const selectedId = currentStep === 0 ? previewTemplateId || storeTemplate : storeTemplate;
+    const selectedId =
+      currentStep === 0 ? previewTemplateId || storeTemplate : storeTemplate;
     return templateNames[selectedId] || "Your Business";
   };
 
@@ -82,7 +85,10 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
     if (!hex) return `rgba(0,0,0,${alpha})`;
     let h = hex.replace("#", "");
     if (h.length === 3) {
-      h = h.split("").map((c) => c + c).join("");
+      h = h
+        .split("")
+        .map((c) => c + c)
+        .join("");
     }
     const int = parseInt(h, 16);
     const r = (int >> 16) & 255;
@@ -91,16 +97,21 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
-  const selectedId = currentStep === 0 ? previewTemplateId || storeTemplate : storeTemplate;
+  const selectedId =
+    currentStep === 0 ? previewTemplateId || storeTemplate : storeTemplate;
 
   const selectedTemplateDef = templates.find((t) => t.id === selectedId);
-  const baseTemplateStyle = selectedTemplateDef ? selectedTemplateDef.style : templates[0]?.style;
+  const baseTemplateStyle = selectedTemplateDef
+    ? selectedTemplateDef.style
+    : templates[0]?.style;
   const isDark = formData.themeMode === "dark";
 
   const styles = {
     ...baseTemplateStyle,
-    userPrimary: storePrimaryColor || (baseTemplateStyle as any)?.accent || "#4F46E5",
-    userSecondary: storeSecondaryColor || (baseTemplateStyle as any)?.secondary || "#7C3AED",
+    userPrimary:
+      storePrimaryColor || (baseTemplateStyle as any)?.accent || "#4F46E5",
+    userSecondary:
+      storeSecondaryColor || (baseTemplateStyle as any)?.secondary || "#7C3AED",
     userFontColor: isDark ? "#F8FAFC" : formData.fontColor || "#000000",
     userBackground: isDark ? "#0B1020" : formData.backgroundColor || "#FFFFFF",
   };
@@ -147,7 +158,8 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
     );
   }
 
-  const fontClass = fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";
+  const fontClass =
+    fontOptions.find((f) => f.id === formData.fontFamily)?.class || "font-sans";
 
   const menuPages = useMemo(() => {
     const set = new Set<string>([
@@ -191,14 +203,16 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
       return (
         <div
           className={`h-full max-h-full overflow-y-auto overflow-x-hidden custom-scrollbar ${fontClass} relative`}
-          style={{
-            backgroundColor: formData.backgroundColor || "#FFFFFF",
-            "--primary": styles.userPrimary,
-            "--secondary": styles.userSecondary,
-          } as React.CSSProperties & {
-            "--primary": string;
-            "--secondary": string;
-          }}
+          style={
+            {
+              backgroundColor: formData.backgroundColor || "#FFFFFF",
+              "--primary": styles.userPrimary,
+              "--secondary": styles.userSecondary,
+            } as React.CSSProperties & {
+              "--primary": string;
+              "--secondary": string;
+            }
+          }
         >
           <nav className="bg-white px-4 py-4 border-b sticky top-0 z-10">
             <div className="flex items-center justify-between">
@@ -225,14 +239,16 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
       return (
         <div
           className={`h-full max-h-full overflow-y-auto overflow-x-hidden custom-scrollbar text-white ${fontClass} relative`}
-          style={{
-            background: `linear-gradient(135deg, ${styles.userSecondary} 0%, ${styles.userPrimary} 50%, ${styles.userSecondary} 100%)`,
-            "--primary": styles.userPrimary,
-            "--secondary": styles.userSecondary,
-          } as React.CSSProperties & {
-            "--primary": string;
-            "--secondary": string;
-          }}
+          style={
+            {
+              background: `linear-gradient(135deg, ${styles.userSecondary} 0%, ${styles.userPrimary} 50%, ${styles.userSecondary} 100%)`,
+              "--primary": styles.userPrimary,
+              "--secondary": styles.userSecondary,
+            } as React.CSSProperties & {
+              "--primary": string;
+              "--secondary": string;
+            }
+          }
         >
           <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-3 sticky top-0 z-10">
             <div className="flex items-center justify-between">
@@ -261,16 +277,19 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
       return (
         <div
           className={`h-full max-h-full overflow-y-auto overflow-x-hidden custom-scrollbar ${fontClass} relative`}
-          style={{
-            background: formData.backgroundType === "gradient"
-              ? `linear-gradient(135deg, ${styles.userPrimary} 0%, ${styles.userSecondary} 100%)`
-              : styles.userBackground || "#ffffff",
-            "--primary": styles.userPrimary,
-            "--secondary": styles.userSecondary,
-          } as React.CSSProperties & {
-            "--primary": string;
-            "--secondary": string;
-          }}
+          style={
+            {
+              background:
+                formData.backgroundType === "gradient"
+                  ? `linear-gradient(135deg, ${styles.userPrimary} 0%, ${styles.userSecondary} 100%)`
+                  : styles.userBackground || "#ffffff",
+              "--primary": styles.userPrimary,
+              "--secondary": styles.userSecondary,
+            } as React.CSSProperties & {
+              "--primary": string;
+              "--secondary": string;
+            }
+          }
         >
           <nav
             className="px-4 py-4 shadow-sm border-b sticky top-0 z-10"
@@ -288,16 +307,24 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
                 </h1>
               </div>
               <button onClick={toggleMenu} aria-label="Menu">
-                <Menu className="w-5 h-5" style={{ color: styles.userFontColor }} />
+                <Menu
+                  className="w-5 h-5"
+                  style={{ color: styles.userFontColor }}
+                />
               </button>
             </div>
           </nav>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="text-center">
-              <h2 className="text-lg font-bold mb-4" style={{ color: styles.userFontColor }}>
+              <h2
+                className="text-lg font-bold mb-4"
+                style={{ color: styles.userFontColor }}
+              >
                 Stylish Design
               </h2>
-              <p style={{ color: styles.userFontColor }}>Fresh, healthy, natural</p>
+              <p style={{ color: styles.userFontColor }}>
+                Fresh, healthy, natural
+              </p>
             </div>
           </div>
           <CartSidebar />
@@ -308,13 +335,15 @@ export const TemplatePreviewContent: React.FC<TemplatePreviewContentProps> = ({
       return (
         <div
           className={`h-full max-h-full overflow-y-auto overflow-x-hidden custom-scrollbar bg-orange-50 ${fontClass} relative`}
-          style={{
-            "--primary": styles.userPrimary,
-            "--secondary": styles.userSecondary,
-          } as React.CSSProperties & {
-            "--primary": string;
-            "--secondary": string;
-          }}
+          style={
+            {
+              "--primary": styles.userPrimary,
+              "--secondary": styles.userSecondary,
+            } as React.CSSProperties & {
+              "--primary": string;
+              "--secondary": string;
+            }
+          }
         >
           <div className="h-8 bg-amber-100" />
           <div className="px-3 pt-2 pb-4 sticky top-0 z-10 bg-orange-50">

@@ -320,16 +320,26 @@ export default function Configurator() {
   const businessSlogan = useConfiguratorStore((s) => s.business.slogan);
   const designFontSize = useConfiguratorStore((s) => s.design.fontSize);
   const designFontColor = useConfiguratorStore((s) => s.design.fontColor);
-  const designBackgroundColor = useConfiguratorStore((s) => s.design.backgroundColor);
+  const designBackgroundColor = useConfiguratorStore(
+    (s) => s.design.backgroundColor,
+  );
   const pagesSelectedPages = useConfiguratorStore((s) => s.pages.selectedPages);
-  const featuresOnlineOrdering = useConfiguratorStore((s) => s.features.onlineOrderingEnabled);
-  const featuresOnlineStore = useConfiguratorStore((s) => s.features.onlineStoreEnabled);
+  const featuresOnlineOrdering = useConfiguratorStore(
+    (s) => s.features.onlineOrderingEnabled,
+  );
+  const featuresOnlineStore = useConfiguratorStore(
+    (s) => s.features.onlineStoreEnabled,
+  );
   const contentMenuItems = useConfiguratorStore((s) => s.content.menuItems);
   const contentGallery = useConfiguratorStore((s) => s.content.gallery);
   const paymentOffers = useConfiguratorStore((s) => s.payments.offers);
-  const paymentOfferBanner = useConfiguratorStore((s) => s.payments.offerBanner);
+  const paymentOfferBanner = useConfiguratorStore(
+    (s) => s.payments.offerBanner,
+  );
   const contactSocialMedia = useConfiguratorStore((s) => s.contact.socialMedia);
-  const contactContactMethods = useConfiguratorStore((s) => s.contact.contactMethods);
+  const contactContactMethods = useConfiguratorStore(
+    (s) => s.contact.contactMethods,
+  );
   const contentCategories = useConfiguratorStore((s) => s.content.categories);
 
   // ===== LOCKED ENTRY PATTERN =====
@@ -363,54 +373,57 @@ export default function Configurator() {
 
   // Derive formData from store selectors (replaces local useState)
   // This maintains backward compatibility while using store as source of truth
-  const formData = useMemo(() => ({
-    businessName,
-    businessType,
-    location: businessLocation,
-    slogan: businessSlogan,
-    template: designTemplate,
-    primaryColor: designPrimaryColor,
-    secondaryColor: designSecondaryColor,
-    fontFamily: designFontFamily,
-    fontSize: designFontSize,
-    fontColor: designFontColor,
-    backgroundColor: designBackgroundColor,
-    selectedPages: pagesSelectedPages,
-    onlineOrdering: featuresOnlineOrdering,
-    onlineStore: featuresOnlineStore,
-    menuItems: contentMenuItems,
-    gallery: contentGallery,
-    offers: paymentOffers,
-    offersEnabled: paymentOfferBanner.enabled,
-    offerBanner: paymentOfferBanner,
-    socialMedia: contactSocialMedia,
-    contactMethods: contactContactMethods,
-    language: "en",
-    themeMode: "light",
-    categories: contentCategories,
-  }), [
-    businessName,
-    businessType,
-    businessLocation,
-    businessSlogan,
-    designTemplate,
-    designPrimaryColor,
-    designSecondaryColor,
-    designFontFamily,
-    designFontSize,
-    designFontColor,
-    designBackgroundColor,
-    pagesSelectedPages,
-    featuresOnlineOrdering,
-    featuresOnlineStore,
-    contentMenuItems,
-    contentGallery,
-    paymentOffers,
-    paymentOfferBanner,
-    contactSocialMedia,
-    contactContactMethods,
-    contentCategories,
-  ]);
+  const formData = useMemo(
+    () => ({
+      businessName,
+      businessType,
+      location: businessLocation,
+      slogan: businessSlogan,
+      template: designTemplate,
+      primaryColor: designPrimaryColor,
+      secondaryColor: designSecondaryColor,
+      fontFamily: designFontFamily,
+      fontSize: designFontSize,
+      fontColor: designFontColor,
+      backgroundColor: designBackgroundColor,
+      selectedPages: pagesSelectedPages,
+      onlineOrdering: featuresOnlineOrdering,
+      onlineStore: featuresOnlineStore,
+      menuItems: contentMenuItems,
+      gallery: contentGallery,
+      offers: paymentOffers,
+      offersEnabled: paymentOfferBanner.enabled,
+      offerBanner: paymentOfferBanner,
+      socialMedia: contactSocialMedia,
+      contactMethods: contactContactMethods,
+      language: "en",
+      themeMode: "light",
+      categories: contentCategories,
+    }),
+    [
+      businessName,
+      businessType,
+      businessLocation,
+      businessSlogan,
+      designTemplate,
+      designPrimaryColor,
+      designSecondaryColor,
+      designFontFamily,
+      designFontSize,
+      designFontColor,
+      designBackgroundColor,
+      pagesSelectedPages,
+      featuresOnlineOrdering,
+      featuresOnlineStore,
+      contentMenuItems,
+      contentGallery,
+      paymentOffers,
+      paymentOfferBanner,
+      contactSocialMedia,
+      contactContactMethods,
+      contentCategories,
+    ],
+  );
 
   // Compute base host dynamically (e.g., synca.digital)
   const getBaseHost = useCallback(() => {
@@ -480,7 +493,9 @@ export default function Configurator() {
   // This effect runs EXACTLY ONCE on component mount
   // Handles user authentication state and configuration loading
   const loadConfiguration = useConfiguratorStore((s) => s.loadConfiguration);
-  const getFullConfiguration = useConfiguratorStore((s) => s.getFullConfiguration);
+  const getFullConfiguration = useConfiguratorStore(
+    (s) => s.getFullConfiguration,
+  );
 
   useEffect(() => {
     if (isInitialized.current) return;
@@ -499,7 +514,9 @@ export default function Configurator() {
             const { configuration } = await resp.json();
             if (configuration) {
               loadConfiguration(configuration);
-              console.log("[Hydration] Loaded active configuration from backend");
+              console.log(
+                "[Hydration] Loaded active configuration from backend",
+              );
             }
           }
         } catch (e) {
@@ -530,7 +547,14 @@ export default function Configurator() {
     }
 
     isInitialized.current = true;
-  }, [isSignedIn, getToken, loadConfiguration, currentStep, businessName, persistence]);
+  }, [
+    isSignedIn,
+    getToken,
+    loadConfiguration,
+    currentStep,
+    businessName,
+    persistence,
+  ]);
 
   // REMOVED: Zustand-to-formData sync effect - all state now comes directly from store
 
@@ -797,11 +821,7 @@ export default function Configurator() {
         {},
       );
     }
-  }, [
-    currentStep,
-    updateFormDataFromInputs,
-    persistence,
-  ]);
+  }, [currentStep, updateFormDataFromInputs, persistence]);
 
   // Back to Template Selection function
   const backToTemplates = useCallback(() => {
