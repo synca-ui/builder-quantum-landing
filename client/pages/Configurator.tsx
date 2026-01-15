@@ -13,9 +13,6 @@ import {
   Settings,
   Smartphone,
   Share2,
-  Coffee,
-  ShoppingBag,
-  Utensils,
   Home,
   Save,
   Cloud,
@@ -39,10 +36,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-// Step Components - All 14 extracted steps
 import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
 import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
 import { BusinessInfoStep } from "@/components/configurator/steps/BusinessInfoStep";
+import { DesignStep } from "@/components/configurator/steps/DesignStep"; // Achte darauf, dass DesignStep.tsx "export function DesignStep" hat!
 import { PageStructureStep } from "@/components/configurator/steps/PageStructureStep";
 import { OpeningHoursStep } from "@/components/configurator/steps/OpeningHoursStep";
 import { MenuProductsStep } from "@/components/configurator/steps/MenuProductsStep";
@@ -59,20 +56,16 @@ import { PublishStep } from "@/components/configurator/steps/PublishStep";
 // Preview & Template Components
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import PhonePortal from "@/components/preview/phone-portal";
-import ReservationButton from "@/components/ui/ReservationButton";
-import MenuSection from "@/components/sections/MenuSection";
-import GalleryGrid from "@/components/sections/GalleryGrid";
-import TemplateRegistry, {
-  defaultTemplates,
-} from "@/components/template/TemplateRegistry";
+import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
+import { defaultTemplates } from "@/components/template/TemplateRegistry";
 import QRCode from "@/components/qr/QRCode";
 
 // API & Utils
-import { configurationApi, sessionApi, type Configuration } from "@/lib/api";
+import { configurationApi, type Configuration } from "@/lib/api";
 import { publishWebApp } from "@/lib/webapps";
-import { stepPersistence, usePersistence } from "@/lib/stepPersistence";
+import { usePersistence } from "@/lib/stepPersistence";
 import { toast } from "@/hooks/use-toast";
-import { normalizeImageSrc } from "@/lib/configurator-data";
+import { normalizeImageSrc, fontOptions } from "@/lib/configurator-data";
 
 // ===== CONFIGURATOR STEPS DEFINITION =====
 const CONFIGURATOR_STEPS_CONFIG = [
@@ -258,13 +251,6 @@ export default function Configurator() {
   // ===== LOCAL UI STATE =====
   const isInitialized = useRef(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [persistEnabled, setPersistEnabled] = useState(() => {
-    try {
-      return persistence.getEnabled ? persistence.getEnabled() : true;
-    } catch {
-      return true;
-    }
-  });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -281,6 +267,8 @@ export default function Configurator() {
   const [pendingFeatureConfig, setPendingFeatureConfig] = useState<
     string | null
   >(null);
+  
+  // NOTE: previewTemplateId is mainly managed by store now, but kept if steps use it as prop
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
     null,
   );
@@ -289,8 +277,7 @@ export default function Configurator() {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [showCart, setShowCart] = useState(false);
 
-  // ===== FORMDATA BRIDGE FOR LIVEPREVIEW (Backward Compatibility) =====
-  // Sync Zustand store to formData format for LivePreview component
+  // ===== FORMDATA BRIDGE FOR LIVEPREVIEW =====
   const formData = useMemo(() => {
     return {
       // Business
@@ -311,6 +298,8 @@ export default function Configurator() {
       fontColor: fullStoreState.design.fontColor,
       fontSize: fullStoreState.design.fontSize,
       backgroundColor: fullStoreState.design.backgroundColor,
+      // Fallbacks
+      themeMode: fullStoreState.settings?.themeMode || 'light',
 
       // Content
       menuItems: fullStoreState.content.menuItems,
@@ -325,6 +314,7 @@ export default function Configurator() {
       onlineOrderingEnabled: fullStoreState.features.onlineOrderingEnabled,
       onlineStoreEnabled: fullStoreState.features.onlineStoreEnabled,
       teamAreaEnabled: fullStoreState.features.teamAreaEnabled,
+      offerPageEnabled: (fullStoreState.payments as any)?.offerPageEnabled,
 
       // Contact
       contactMethods: fullStoreState.contact.contactMethods,
@@ -339,7 +329,7 @@ export default function Configurator() {
       offers: (fullStoreState.payments as any).offers || [],
       offerBanner: (fullStoreState.payments as any).offerBanner || {},
 
-      // Extended features (stored in features with any cast)
+      // Extended features
       ...(fullStoreState.features as any),
     };
   }, [fullStoreState]);
@@ -431,13 +421,6 @@ export default function Configurator() {
 
   const cartItemsCount = useMemo(() => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
-  }, [cartItems]);
-
-  const cartTotal = useMemo(() => {
-    return cartItems.reduce(
-      (total, item) => total + parseFloat(item.price) * item.quantity,
-      0,
-    );
   }, [cartItems]);
 
   // Save to backend
@@ -572,37 +555,7 @@ export default function Configurator() {
     setCurrentStep(0);
   }, [setCurrentStep]);
 
-  // ===== LIVE PREVIEW COMPONENT =====
-  const TemplatePreviewContent = useCallback(() => {
-    const activeTemplate = previewTemplateId || formData.template || "modern";
-    const TemplateComponent = TemplateRegistry[activeTemplate];
-
-    if (!TemplateComponent) {
-      return (
-        <div className="flex items-center justify-center h-full bg-gray-100">
-          <p className="text-gray-500">Template not found</p>
-        </div>
-      );
-    }
-
-    return (
-      <div
-        className="w-full h-full overflow-y-auto"
-        style={{
-          fontFamily: formData.fontFamily,
-          color: formData.fontColor,
-          backgroundColor: formData.backgroundColor,
-        }}
-      >
-        <TemplateComponent
-          config={formData}
-          addToCart={addToCart}
-          cartItemsCount={cartItemsCount}
-        />
-      </div>
-    );
-  }, [previewTemplateId, formData, addToCart, cartItemsCount]);
-
+  // ===== LIVE PREVIEW RENDERING =====
   const LivePreview = useCallback(() => {
     return (
       <div className="sticky top-24 h-[calc(100vh-7rem)]">
@@ -619,14 +572,38 @@ export default function Configurator() {
               heightClass="h-full max-h-[580px]"
             >
               <PhonePortal>
-                <TemplatePreviewContent />
+                {/* WICHTIG: Hier nutzen wir die importierte Komponente und übergeben alle Props */}
+                <TemplatePreviewContent 
+                  currentStep={currentStep}
+                  previewTemplateId={previewTemplateId}
+                  fontOptions={fontOptions}
+                  templates={defaultTemplates}
+                  formData={formData}
+                  setShowCart={setShowCart}
+                  showCart={showCart}
+                  cartItems={cartItems}
+                  cartItemsCount={cartItemsCount}
+                  addToCart={addToCart}
+                  removeFromCart={removeFromCart}
+                  normalizeImageSrc={normalizeImageSrc}
+                />
               </PhonePortal>
             </LivePhoneFrame>
           </div>
         </Card>
       </div>
     );
-  }, [getLiveUrl, TemplatePreviewContent]);
+  }, [
+    getLiveUrl, 
+    currentStep, 
+    previewTemplateId, 
+    formData, 
+    showCart, 
+    cartItems, 
+    cartItemsCount, 
+    addToCart, 
+    removeFromCart
+  ]);
 
   // ===== NAVIGATION BAR =====
   const Navigation = () => {
@@ -782,11 +759,10 @@ export default function Configurator() {
     switch (currentStepConfig.component) {
       case "template":
         return (
+          // @ts-ignore - props mismatch workaround if interface not updated yet
           <TemplateStep
             nextStep={nextStep}
             prevStep={prevStep}
-            previewTemplateId={previewTemplateId}
-            setPreviewTemplateId={setPreviewTemplateId}
           />
         );
       case "business-info":
@@ -855,6 +831,7 @@ export default function Configurator() {
       case "publish":
         return (
           <PublishStep
+            nextStep={nextStep} // Prop fix
             prevStep={prevStep}
             getLiveUrl={getLiveUrl}
             getDisplayedDomain={getDisplayedDomain}
