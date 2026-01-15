@@ -1508,10 +1508,9 @@ export default function Configurator() {
     );
   };
 
-  // REMOVED: Local TemplatePreviewContent - now using imported component from @/components/configurator/preview/TemplatePreviewContent
-
-  // Fallback render (only used if component not properly imported):
-  const TemplatePreviewContentFallback = () => {
+  // Render template preview content using store-derived formData
+  // All state is now sourced from Zustand store via formData selector
+  const TemplatePreviewContent = () => {
     // STRICT STORE SUBSCRIPTIONS: Only read critical data from Zustand
     const storeBusinessName = useConfiguratorStore((s) => s.business.name);
     const storeBusinessType = useConfiguratorStore((s) => s.business.type);
