@@ -42,8 +42,7 @@ import {
 // Step Components - All 14 extracted steps
 import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
 import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
-import BusinessInfoStep from "@/components/configurator/steps/BusinessInfoStep";
-import DesignStep from "@/components/configurator/steps/DesignStep";
+import { BusinessInfoStep } from "@/components/configurator/steps/BusinessInfoStep";
 import { PageStructureStep } from "@/components/configurator/steps/PageStructureStep";
 import { OpeningHoursStep } from "@/components/configurator/steps/OpeningHoursStep";
 import { MenuProductsStep } from "@/components/configurator/steps/MenuProductsStep";
