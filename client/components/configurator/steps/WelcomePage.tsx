@@ -21,7 +21,7 @@ interface WelcomePageProps {
   publishedUrl: string | null;
 }
 
-export default function WelcomePage({
+export function WelcomePage({
   onStart,
   currentConfigId,
   publishedUrl,
