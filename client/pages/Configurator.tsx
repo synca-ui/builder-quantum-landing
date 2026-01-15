@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Sparkles,
   Rocket,
-  Crown,
   Menu,
   X,
   Settings,
@@ -37,7 +36,6 @@ import {
 } from "@/components/ui/dialog";
 
 // Step Components
-// ACHTUNG: Stelle sicher, dass diese Dateien "export function Name" verwenden!
 import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
 import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
 import { BusinessInfoStep } from "@/components/configurator/steps/BusinessInfoStep";
@@ -58,7 +56,6 @@ import { PublishStep } from "@/components/configurator/steps/PublishStep";
 // Preview & Template Components
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import PhonePortal from "@/components/preview/phone-portal";
-// Wir importieren die Preview-Komponente direkt und überschreiben sie NICHT lokal
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
 import QRCode from "@/components/qr/QRCode";
 
@@ -67,7 +64,6 @@ import { configurationApi, type Configuration } from "@/lib/api";
 import { publishWebApp } from "@/lib/webapps";
 import { usePersistence } from "@/lib/stepPersistence";
 import { toast } from "@/hooks/use-toast";
-import { normalizeImageSrc, fontOptions } from "@/lib/configurator-data"; //
 
 // ===== CONFIGURATOR STEPS DEFINITION =====
 const CONFIGURATOR_STEPS_CONFIG = [
@@ -125,17 +121,20 @@ export default function Configurator() {
   const navigate = useNavigate();
   const actions = useConfiguratorActions();
 
-  // Store Hooks
+  // === OPTIMIZED STORE ACCESS ===
+  // Wir abonnieren NUR die Felder, die wir für die UI/Navigation brauchen.
+  // Das verhindert die Endlosschleife (#185 Error).
   const currentStep = useConfiguratorStore((state) => state.ui.currentStep);
   const businessName = useConfiguratorStore((state) => state.business.name);
-  // Wir holen die Actions direkt, um Re-Render Loops zu vermeiden
+  const domainData = useConfiguratorStore((state) => state.business.domain);
+  
+  // Actions holen (diese ändern sich nie, daher sicher)
   const { goToStep, setCurrentStep, nextStep: nextStepStore, prevStep: prevStepStore } = useConfiguratorStore((state) => ({
     goToStep: state.goToStep,
     setCurrentStep: state.setCurrentStep,
     nextStep: state.nextStep,
     prevStep: state.prevStep,
   }));
-  const fullStoreState = useConfiguratorStore((state) => state);
 
   // Local State
   const isInitialized = useRef(false);
@@ -145,25 +144,6 @@ export default function Configurator() {
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(() => persistence.getConfigId() || null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(() => persistence.getPublishedUrl() || null);
   const [pendingFeatureConfig, setPendingFeatureConfig] = useState<string | null>(null);
-
-  // FormData Bridge für Kompatibilität mit Komponenten die noch Props brauchen
-  const formData = useMemo(() => {
-    return {
-      businessName: fullStoreState.business.name,
-      template: fullStoreState.design.template,
-      primaryColor: fullStoreState.design.primaryColor,
-      secondaryColor: fullStoreState.design.secondaryColor,
-      fontFamily: fullStoreState.design.fontFamily,
-      fontColor: fullStoreState.design.fontColor,
-      fontSize: fullStoreState.design.fontSize,
-      backgroundColor: fullStoreState.design.backgroundColor,
-      domainName: fullStoreState.business.domain?.domainName,
-      hasDomain: fullStoreState.business.domain?.hasDomain,
-      selectedDomain: fullStoreState.business.domain?.selectedDomain,
-      menuItems: fullStoreState.content.menuItems,
-      // ... weitere Felder werden bei Bedarf automatisch durch fullStoreState abgedeckt
-    };
-  }, [fullStoreState]);
 
   // Helpers
   const configuratorSteps = CONFIGURATOR_STEPS_CONFIG;
@@ -178,21 +158,22 @@ export default function Configurator() {
     (s || "site").toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 30), 
   []);
 
+  // Berechnet die Live-URL nur basierend auf den notwendigen Feldern (nicht mehr "formData")
   const getLiveUrl = useCallback(() => {
     if (publishedUrl) return publishedUrl;
     const origin = (() => { try { return window.location.origin.replace(/\/$/, ""); } catch { return `https://${getBaseHost()}`; } })();
     const id = currentConfigId || "";
-    const name = slugifyName(formData.businessName || "site");
+    const name = slugifyName(businessName || "site");
     if (id) return `${origin}/${id}/${name}`;
     return origin;
-  }, [publishedUrl, currentConfigId, formData.businessName, getBaseHost, slugifyName]);
+  }, [publishedUrl, currentConfigId, businessName, getBaseHost, slugifyName]);
 
   const getDisplayedDomain = useCallback(() => {
     if (publishedUrl) { try { return new URL(publishedUrl).hostname; } catch {} }
-    if (formData.hasDomain && formData.domainName) return formData.domainName;
-    const slug = slugifyName(formData.selectedDomain || formData.businessName || "site");
+    if (domainData?.hasDomain && domainData?.domainName) return domainData.domainName;
+    const slug = slugifyName(domainData?.selectedDomain || businessName || "site");
     return `${slug}.${getBaseHost()}`;
-  }, [publishedUrl, formData, getBaseHost, slugifyName]);
+  }, [publishedUrl, domainData, businessName, getBaseHost, slugifyName]);
 
   // Actions
   const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
@@ -234,6 +215,7 @@ export default function Configurator() {
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
 
   // --- LIVE PREVIEW ---
+  // Diese Komponente ist jetzt viel stabiler, da sie nicht mehr bei jedem Store-Update neu erstellt wird.
   const LivePreview = useCallback(() => {
     return (
       <div className="sticky top-24 h-[calc(100vh-7rem)]">
@@ -245,6 +227,7 @@ export default function Configurator() {
           <div className="h-[calc(100%-3rem)] flex items-center justify-center">
             <LivePhoneFrame widthClass="w-full max-w-[280px]" heightClass="h-full max-h-[580px]">
               <PhonePortal>
+                {/* Die Content-Komponente holt sich ihre Daten selbst aus dem Store */}
                 <TemplatePreviewContent />
               </PhonePortal>
             </LivePhoneFrame>
