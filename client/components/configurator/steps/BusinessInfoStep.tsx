@@ -46,7 +46,7 @@ const BUSINESS_TYPES = [
   },
 ];
 
-export default function BusinessInfoStep() {
+export function BusinessInfoStep() {
   // Get state from store
   const business = useConfiguratorBusiness();
 

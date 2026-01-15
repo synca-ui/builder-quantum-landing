@@ -115,7 +115,7 @@ const COLOR_PRESETS = [
   },
 ];
 
-export default function DesignStep() {
+export function DesignStep() {
   // Get state from store
   const design = useConfiguratorDesign();
   const business = useConfiguratorBusiness();
