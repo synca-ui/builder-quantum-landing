@@ -3,21 +3,10 @@
  *
  * Replaces prop drilling in Configurator.tsx with atomic, domain-organized state.
  * Automatically syncs to localStorage via persist middleware.
- *
- * State Structure:
- * - business: BusinessInfo
- * - design: DesignConfig
- * - content: ContentData
- * - features: FeatureFlags
- * - contact: ContactInfo
- * - publishing: PublishingInfo
- * - pages: PageManagement
- * - payments: PaymentAndOffers
- * - ui: Navigation and UI state
  */
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { useMemo } from "react";
 import type {
   BusinessInfo,
@@ -49,16 +38,10 @@ function checkThrottleGuard(actionName?: string) {
   }
   lastUpdate = now;
 
-  console.log(
-    `ST_UPDATE: [${updateCount}] ${actionName || "unknown"} at ${new Date().toISOString()}`,
-  );
-
-  // Hard stop at 50+ updates per second
   if (updateCount > 50) {
     console.error(
       `🚨 THROTTLE GUARD TRIGGERED: ${updateCount} updates in 1 second!`,
     );
-    console.trace("Stack trace at update trigger:");
     throw new Error(
       `Infinite loop detected: ${updateCount} state updates in <1 second. Last action: ${actionName}`,
     );
@@ -255,11 +238,6 @@ const defaultUIState: UIState = {
 
 /**
  * Create the Zustand store with persist middleware
- *
- * CRITICAL HARDENING:
- * - Version: Bumped to 2 to invalidate v1 stale data
- * - Migrate: Clears localStorage if version mismatch detected
- * - This prevents localStorage from overwriting live store updates
  */
 export const useConfiguratorStore = create<ConfiguratorState>()(
   persist(
@@ -359,8 +337,6 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
             ...state.design,
             ...config,
             // CRITICAL FIX: Explicitly preserve template to prevent drift
-            // Even if config is spread, template stays locked to its current value
-            // unless explicitly updated by updateTemplate()
             template: config.template || state.design.template,
           },
           publishing: {
@@ -754,7 +730,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
       getFullConfiguration: () => {
         const state = get();
         return {
-          userId: "",
+          userId: "", // Placeholder or from auth context
           business: state.business,
           design: state.design,
           content: state.content,
@@ -800,26 +776,26 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
     }),
     {
       name: "configurator-store",
-      partialize: (state) => ({
-        business: state.business,
-        design: state.design,
-        content: state.content,
-        features: state.features,
-        contact: state.contact,
-        publishing: state.publishing,
-        pages: state.pages,
-        payments: state.payments,
-      }),
-      storage: typeof window !== "undefined" ? sessionStorage : undefined,
+      partialize: (state) =>
+        ({
+          business: state.business,
+          design: state.design,
+          content: state.content,
+          features: state.features,
+          contact: state.contact,
+          publishing: state.publishing,
+          pages: state.pages,
+          payments: state.payments,
+        }) as unknown as ConfiguratorState,
+
+      storage: createJSONStorage(() => sessionStorage),
+
       version: 2,
-      // CRITICAL FIX: Migrate function prevents localStorage from overwriting live store
-      // If version changes, clear stale data to prevent template drift
       migrate: (persistedState: any, version: number) => {
         if (version < 2) {
           console.log(
             "[Store Migration] Clearing v1 stale data to prevent template drift",
           );
-          // Clear localStorage to force fresh state
           return {
             business: { ...defaultBusinessInfo },
             design: { ...defaultDesignConfig },
@@ -838,10 +814,8 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
   ),
 );
 
-/**
- * Hook factory for subscription to specific slices of state
- * Usage: const businessInfo = useConfiguratorStore((state) => state.business);
- */
+// --- Hooks Exports ---
+
 export const useConfiguratorBusiness = () =>
   useConfiguratorStore((state) => state.business);
 
@@ -891,6 +865,22 @@ export const useConfiguratorActions = () => {
         toggleOnlineOrdering: store.toggleOnlineOrdering,
         toggleOnlineStore: store.toggleOnlineStore,
         toggleTeamArea: store.toggleTeamArea,
+      },
+      // FIX: Added missing action groups
+      contact: {
+        updateContactInfo: store.updateContactInfo,
+        updateSocialMedia: store.updateSocialMedia,
+      },
+      publishing: {
+        updatePublishingInfo: store.updatePublishingInfo,
+        publishConfiguration: store.publishConfiguration,
+        archiveConfiguration: store.archiveConfiguration,
+      },
+      pages: {
+        updatePageManagement: store.updatePageManagement,
+      },
+      payments: {
+        updatePaymentsAndOffers: store.updatePaymentsAndOffers,
       },
       navigation: {
         nextStep: store.nextStep,

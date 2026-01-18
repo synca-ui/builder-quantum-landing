@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useCallback } from "react";
 import { Save, Send, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,34 +13,38 @@ import SettingsCard from "./cards/SettingsCard";
 import PublishCard from "./cards/PublishCard";
 import { Configuration } from "@/lib/api";
 
-/**
- * Main card-based editor for the V2 configurator
- * Replaces the 15+ step wizard with an infinite-scroll card interface
- *
- * Features:
- * - Modular card-based sections
- * - Live preview on the right
- * - Save/Publish/Discard buttons at bottom
- * - Expandable/collapsible sections
- * - Real-time form state management
- */
+// --- 1. DEFAULT CONFIGURATION ---
+const DEFAULT_CONFIG: Configuration = {
+  userId: "",
+  reservationsEnabled: false,
+  maxGuests: 0,
+  notificationMethod: "email",
+  businessName: "",
+  businessType: "restaurant",
+  location: "",
+  slogan: "",
+  uniqueDescription: "",
+  template: "modern",
+  primaryColor: "#2563EB",
+  secondaryColor: "#F8FAFC",
+  fontFamily: "Inter",
+  selectedPages: ["home", "menu", "contact"],
+  customPages: [],
+  menuItems: [],
+  gallery: [],
+  openingHours: {},
+  contactMethods: [],
+  socialMedia: {},
+  onlineOrdering: false,
+  onlineStore: false,
+  teamArea: false,
+  hasDomain: false,
+};
 
 interface CardBasedEditorProps {
-  /**
-   * Initial configuration (existing site or auto-generated)
-   */
   initialConfig?: Configuration;
-  /**
-   * Callback when configuration is saved
-   */
   onSave?: (config: Configuration) => Promise<void>;
-  /**
-   * Callback when site is published
-   */
   onPublish?: (config: Configuration) => Promise<void>;
-  /**
-   * Whether to show live preview on the right
-   */
   showPreview?: boolean;
 }
 
@@ -50,40 +53,18 @@ interface ExpandedSections {
 }
 
 export function CardBasedEditor({
-  initialConfig,
-  onSave,
-  onPublish,
-  showPreview = true,
-}: CardBasedEditorProps) {
+                                  initialConfig,
+                                  onSave,
+                                  onPublish,
+                                  showPreview = true,
+                                }: CardBasedEditorProps) {
   const { toast } = useToast();
 
-  // Form state
+  // --- 2. STATE ---
   const [formData, setFormData] = useState<Configuration>(
-    initialConfig || {
-      businessName: "",
-      businessType: "restaurant",
-      location: "",
-      slogan: "",
-      uniqueDescription: "",
-      template: "modern",
-      primaryColor: "#2563EB",
-      secondaryColor: "#F8FAFC",
-      fontFamily: "Inter",
-      selectedPages: ["home", "menu", "contact"],
-      customPages: [],
-      menuItems: [],
-      gallery: [],
-      openingHours: {},
-      contactMethods: [],
-      socialMedia: {},
-      onlineOrdering: false,
-      onlineStore: false,
-      teamArea: false,
-      hasDomain: false,
-    },
+    initialConfig || DEFAULT_CONFIG
   );
 
-  // UI state
   const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
     business: true,
     design: true,
@@ -102,13 +83,12 @@ export function CardBasedEditor({
   const [isPublishing, setIsPublishing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Update form data and track changes
+  // --- 3. HELPER FUNCTIONS ---
   const updateFormData = useCallback((updates: Partial<Configuration>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
     setHasChanges(true);
   }, []);
 
-  // Toggle section expanded state
   const toggleSection = useCallback((sectionId: string, expanded: boolean) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -116,17 +96,9 @@ export function CardBasedEditor({
     }));
   }, []);
 
-  // Save draft
+  // --- 4. HANDLERS ---
   const handleSave = async () => {
-    if (!onSave) {
-      toast({
-        title: "Save function not configured",
-        description: "Please provide an onSave callback",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!onSave) return;
     setIsSaving(true);
     try {
       await onSave(formData);
@@ -146,18 +118,8 @@ export function CardBasedEditor({
     }
   };
 
-  // Publish site
   const handlePublish = async () => {
-    if (!onPublish) {
-      toast({
-        title: "Publish function not configured",
-        description: "Please provide an onPublish callback",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate required fields
+    if (!onPublish) return;
     if (!formData.businessName || !formData.businessType) {
       toast({
         title: "Missing required fields",
@@ -166,7 +128,6 @@ export function CardBasedEditor({
       });
       return;
     }
-
     setIsPublishing(true);
     try {
       await onPublish(formData);
@@ -186,11 +147,34 @@ export function CardBasedEditor({
     }
   };
 
-  // Discard changes
+  // Wrapper für die PublishCard
+  const handlePublishFromCard = async (domain: string) => {
+    updateFormData({ domainName: domain, hasDomain: !!domain } as any);
+
+    const configToPublish = {
+      ...formData,
+      domainName: domain,
+      hasDomain: !!domain
+    } as Configuration;
+
+    if (onPublish) {
+      setIsPublishing(true);
+      try {
+        await onPublish(configToPublish);
+        setHasChanges(false);
+        toast({ title: "Published successfully", description: "Your site is live!" });
+      } catch (error) {
+        toast({ title: "Publish failed", variant: "destructive" });
+      } finally {
+        setIsPublishing(false);
+      }
+    }
+  };
+
   const handleDiscard = () => {
     if (!hasChanges) return;
     if (confirm("Discard all changes? This cannot be undone.")) {
-      setFormData(initialConfig || {});
+      setFormData(initialConfig || DEFAULT_CONFIG);
       setHasChanges(false);
       toast({
         title: "Changes discarded",
@@ -201,24 +185,14 @@ export function CardBasedEditor({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Split Layout: Cards (left) + Preview (right) */}
-      <div
-        className={`grid ${showPreview ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"} gap-6 p-6`}
-      >
+      <div className={`grid ${showPreview ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"} gap-6 p-6`}>
         {/* Left Panel: Cards */}
         <div className="space-y-4">
-          {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Configure Your Site
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Edit your site configuration below. Changes are auto-saved to your
-              draft.
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">Configure Your Site</h1>
+            <p className="text-gray-600 mt-2">Edit your site configuration below. Changes are auto-saved to your draft.</p>
           </div>
 
-          {/* Sections - placeholder for actual card components */}
           <div className="space-y-4">
             {/* Business Info Card */}
             <SectionCard
@@ -230,29 +204,19 @@ export function CardBasedEditor({
             >
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Business Name *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Business Name *</label>
                   <input
                     type="text"
                     value={formData.businessName || ""}
-                    onChange={(e) =>
-                      updateFormData({ businessName: e.target.value })
-                    }
-                    placeholder="e.g., Café Vienna"
+                    onChange={(e) => updateFormData({ businessName: e.target.value })}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Business Type *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Business Type *</label>
                   <select
                     value={formData.businessType || ""}
-                    onChange={(e) =>
-                      updateFormData({ businessType: e.target.value })
-                    }
+                    onChange={(e) => updateFormData({ businessType: e.target.value })}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="restaurant">Restaurant</option>
@@ -263,45 +227,29 @@ export function CardBasedEditor({
                     <option value="other">Other</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Location
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Location</label>
                   <input
                     type="text"
                     value={formData.location || ""}
-                    onChange={(e) =>
-                      updateFormData({ location: e.target.value })
-                    }
-                    placeholder="e.g., Berlin, Germany"
+                    onChange={(e) => updateFormData({ location: e.target.value })}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Slogan
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Slogan</label>
                   <input
                     type="text"
                     value={formData.slogan || ""}
                     onChange={(e) => updateFormData({ slogan: e.target.value })}
-                    placeholder="e.g., The Best Coffee in the City"
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
                   <textarea
                     value={formData.uniqueDescription || ""}
-                    onChange={(e) =>
-                      updateFormData({ uniqueDescription: e.target.value })
-                    }
-                    placeholder="Tell your customers what makes you special..."
+                    onChange={(e) => updateFormData({ uniqueDescription: e.target.value })}
                     rows={3}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -320,63 +268,45 @@ export function CardBasedEditor({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Primary Color
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700">Primary Color</label>
                     <div className="mt-1 flex items-center gap-2">
                       <input
                         type="color"
                         value={formData.primaryColor || "#2563EB"}
-                        onChange={(e) =>
-                          updateFormData({ primaryColor: e.target.value })
-                        }
+                        onChange={(e) => updateFormData({ primaryColor: e.target.value })}
                         className="w-12 h-10 rounded cursor-pointer border border-gray-300"
                       />
                       <input
                         type="text"
                         value={formData.primaryColor || "#2563EB"}
-                        onChange={(e) =>
-                          updateFormData({ primaryColor: e.target.value })
-                        }
+                        onChange={(e) => updateFormData({ primaryColor: e.target.value })}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       />
                     </div>
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Secondary Color
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700">Secondary Color</label>
                     <div className="mt-1 flex items-center gap-2">
                       <input
                         type="color"
                         value={formData.secondaryColor || "#F8FAFC"}
-                        onChange={(e) =>
-                          updateFormData({ secondaryColor: e.target.value })
-                        }
+                        onChange={(e) => updateFormData({ secondaryColor: e.target.value })}
                         className="w-12 h-10 rounded cursor-pointer border border-gray-300"
                       />
                       <input
                         type="text"
                         value={formData.secondaryColor || "#F8FAFC"}
-                        onChange={(e) =>
-                          updateFormData({ secondaryColor: e.target.value })
-                        }
+                        onChange={(e) => updateFormData({ secondaryColor: e.target.value })}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       />
                     </div>
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Template
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Template</label>
                   <select
                     value={formData.template || "modern"}
-                    onChange={(e) =>
-                      updateFormData({ template: e.target.value })
-                    }
+                    onChange={(e) => updateFormData({ template: e.target.value })}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="minimalist">Minimalist</option>
@@ -385,16 +315,11 @@ export function CardBasedEditor({
                     <option value="cozy">Cozy</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Font Family
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Font Family</label>
                   <select
                     value={formData.fontFamily || "Inter"}
-                    onChange={(e) =>
-                      updateFormData({ fontFamily: e.target.value })
-                    }
+                    onChange={(e) => updateFormData({ fontFamily: e.target.value })}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="Inter">Inter</option>
@@ -415,33 +340,24 @@ export function CardBasedEditor({
               onExpandChange={(exp) => toggleSection("pages", exp)}
             >
               <div className="space-y-3">
-                {["home", "menu", "gallery", "contact", "reservations"].map(
-                  (page) => (
-                    <label
-                      key={page}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={(formData.selectedPages || []).includes(page)}
-                        onChange={(e) => {
-                          const pages = formData.selectedPages || [];
-                          if (e.target.checked) {
-                            updateFormData({ selectedPages: [...pages, page] });
-                          } else {
-                            updateFormData({
-                              selectedPages: pages.filter((p) => p !== page),
-                            });
-                          }
-                        }}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700 capitalize">
-                        {page}
-                      </span>
-                    </label>
-                  ),
-                )}
+                {["home", "menu", "gallery", "contact", "reservations"].map((page) => (
+                  <label key={page} className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={(formData.selectedPages || []).includes(page)}
+                      onChange={(e) => {
+                        const pages = formData.selectedPages || [];
+                        if (e.target.checked) {
+                          updateFormData({ selectedPages: [...pages, page] });
+                        } else {
+                          updateFormData({ selectedPages: pages.filter((p) => p !== page) });
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700 capitalize">{page}</span>
+                  </label>
+                ))}
               </div>
             </SectionCard>
 
@@ -481,11 +397,14 @@ export function CardBasedEditor({
               defaultExpanded={expandedSections.reservations}
               onExpandChange={(exp) => toggleSection("reservations", exp)}
             >
+              {/* FIX: Use spread or map to ensure 'enabled' is present for TS2741 */}
               <ReservationsCard
-                settings={{}}
-                onChange={(settings) =>
-                  updateFormData({ reservationsSettings: settings })
-                }
+                settings={{ enabled: formData.reservationsEnabled ?? false }}
+                onChange={(settings) => updateFormData({
+                  reservationsSettings: settings,
+                  // sync the flat flag too
+                  reservationsEnabled: settings.enabled
+                } as any)}
               />
             </SectionCard>
 
@@ -498,10 +417,8 @@ export function CardBasedEditor({
               onExpandChange={(exp) => toggleSection("contact", exp)}
             >
               <ContactSocialCard
-                contacts={formData.contactMethods || []}
-                onChange={(contacts) =>
-                  updateFormData({ contactMethods: contacts })
-                }
+                contacts={(formData.contactMethods || []) as any}
+                onChange={(contacts) => updateFormData({ contactMethods: contacts as any })}
               />
             </SectionCard>
 
@@ -553,9 +470,7 @@ export function CardBasedEditor({
             >
               <SettingsCard
                 settings={{}}
-                onChange={(settings) =>
-                  updateFormData({ seoSettings: settings })
-                }
+                onChange={(settings) => updateFormData({ ...settings } as any)}
               />
             </SectionCard>
 
@@ -570,7 +485,7 @@ export function CardBasedEditor({
               <PublishCard
                 settings={{ isPublished: false }}
                 businessName={formData.businessName}
-                onPublish={onPublish}
+                onPublish={handlePublishFromCard}
               />
             </SectionCard>
           </div>
@@ -592,7 +507,6 @@ export function CardBasedEditor({
         )}
       </div>
 
-      {/* Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
           <div className="flex items-center gap-4">
@@ -636,8 +550,6 @@ export function CardBasedEditor({
           </div>
         </div>
       </div>
-
-      {/* Padding for fixed bottom bar */}
       <div className="h-24" />
     </div>
   );

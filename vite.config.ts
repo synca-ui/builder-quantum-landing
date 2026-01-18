@@ -40,13 +40,12 @@ export default defineConfig(({ mode }) => ({
 }));
 
 // Custom plugin for integrating Express into Vite's dev server
-// Custom plugin for integrating Express into Vite's dev server
 function expressPlugin(): Plugin {
   return {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
     configureServer(server) {
-      // WICHTIG: Das 'return async () =>' sorgt dafür, dass dieser Code erst NACH 
+      // WICHTIG: Das 'return async () =>' sorgt dafür, dass dieser Code erst NACH
       // den Vite-Standards (Frontend) ausgeführt wird.
       return async () => {
         // Dynamically import the server only during dev server startup
@@ -55,7 +54,7 @@ function expressPlugin(): Plugin {
 
         // Add the Express app as middleware to Vite dev server
         server.middlewares.use(app);
-      };
-    },
+      }
+    }
   };
 }

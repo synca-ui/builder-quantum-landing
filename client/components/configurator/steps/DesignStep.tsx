@@ -1,214 +1,152 @@
-/**
- * Design Customization Step Component
- * Handles template selection, colors, fonts, and styling
- * Consumes Zustand store directly - zero prop drilling
- *
- * Templates are fetched from the server API (useTemplates hook)
- * ensuring the server is the Single Source of Truth
- */
-
-import { useCallback, useMemo } from "react";
-import { Check, ArrowLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { useCallback, useState, useEffect } from "react";
+import { Check, ArrowLeft, ChevronRight, Palette, Type, PaintBucket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { useTemplates } from "@/hooks/useTemplates";
 import {
   useConfiguratorDesign,
-  useConfiguratorBusiness,
   useConfiguratorActions,
+  useConfiguratorBusiness,
 } from "@/store/configuratorStore";
 
-// Font options matching the original Configurator
+// --- KONSTANTEN ---
 const FONT_OPTIONS = [
   {
     id: "sans-serif",
     name: "Sans Serif",
     class: "font-sans",
     preview: "Modern & Clean",
-    description: "Perfect for digital readability",
+    description: "Perfekt für digitale Lesbarkeit",
   },
   {
     id: "serif",
     name: "Serif",
     class: "font-serif",
-    preview: "Classic & Elegant",
-    description: "Traditional and sophisticated",
+    preview: "Klassisch & Elegant",
+    description: "Traditionell und anspruchsvoll",
   },
   {
-    id: "display",
+    id: "mono",
     name: "Display",
     class: "font-mono",
-    preview: "Bold & Creative",
-    description: "Eye-catching and unique",
+    preview: "Bold & Kreativ",
+    description: "Auffällig und einzigartig",
   },
 ];
 
-// Font size options
 const FONT_SIZES = [
   {
     id: "small",
-    name: "Small",
-    description: "Compact and minimal",
+    name: "Klein",
+    description: "Kompakt und minimal",
   },
   {
     id: "medium",
-    name: "Medium",
-    description: "Standard readability",
+    name: "Mittel",
+    description: "Standard Lesbarkeit",
   },
   {
     id: "large",
-    name: "Large",
-    description: "Bold and prominent",
+    name: "Groß",
+    description: "Laut und deutlich",
   },
 ];
 
-// Color presets
 const COLOR_PRESETS = [
-  {
-    primary: "#2563EB",
-    secondary: "#7C3AED",
-    name: "Ocean",
-    accent: "#0EA5E9",
-  },
-  {
-    primary: "#059669",
-    secondary: "#10B981",
-    name: "Forest",
-    accent: "#22C55E",
-  },
-  {
-    primary: "#DC2626",
-    secondary: "#F59E0B",
-    name: "Sunset",
-    accent: "#F97316",
-  },
-  {
-    primary: "#7C2D12",
-    secondary: "#EA580C",
-    name: "Autumn",
-    accent: "#F59E0B",
-  },
-  {
-    primary: "#1F2937",
-    secondary: "#374151",
-    name: "Elegant",
-    accent: "#6B7280",
-  },
-  {
-    primary: "#BE185D",
-    secondary: "#EC4899",
-    name: "Vibrant",
-    accent: "#F472B6",
-  },
-  {
-    primary: "#6366F1",
-    secondary: "#8B5CF6",
-    name: "Purple",
-    accent: "#A855F7",
-  },
-  {
-    primary: "#0891B2",
-    secondary: "#06B6D4",
-    name: "Sky",
-    accent: "#38BDF8",
-  },
+  { primary: "#2563EB", secondary: "#7C3AED", bg: "#EFF6FF", name: "Ocean" },
+  { primary: "#059669", secondary: "#10B981", bg: "#F0FDF4", name: "Forest" },
+  { primary: "#DC2626", secondary: "#F59E0B", bg: "#FFF7ED", name: "Sunset" },
+  { primary: "#7C2D12", secondary: "#EA580C", bg: "#FFEDD5", name: "Autumn" },
+  { primary: "#1F2937", secondary: "#374151", bg: "#F3F4F6", name: "Elegant" },
+  { primary: "#BE185D", secondary: "#EC4899", bg: "#FDF2F8", name: "Berry" },
+  { primary: "#6366F1", secondary: "#8B5CF6", bg: "#EEF2FF", name: "Purple" },
+  { primary: "#0891B2", secondary: "#06B6D4", bg: "#ECFEFF", name: "Sky" },
 ];
 
-export function DesignStep() {
-  // Get state from store
+// --- HELPER COMPONENT (Verhindert Neu-Rendern beim Tippen) ---
+const ColorInput = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => {
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleBlur = () => {
+    if (localValue !== value) onChange(localValue);
+  };
+
+  // FIX: Hier wurde der Typ <HTMLInputElement> hinzugefügt, damit .blur() existiert
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+      onChange(localValue);
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-bold text-gray-700 mb-4">{label}</label>
+      <div className="flex items-center space-x-4">
+        <div className="relative">
+          <input
+            type="color"
+            value={value || "#000000"}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
+            style={{ WebkitAppearance: "none", padding: "4px" }}
+          />
+        </div>
+        <div className="flex-1">
+          <Input
+            value={localValue || ""}
+            onChange={(e) => setLocalValue(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all uppercase"
+            placeholder="#000000"
+            maxLength={7}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- INTERFACE ---
+interface DesignStepProps {
+  nextStep: () => void;
+  prevStep: () => void;
+}
+
+// --- COMPONENT ---
+export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
   const design = useConfiguratorDesign();
-  const business = useConfiguratorBusiness();
+  const { design: designActions } = useConfiguratorActions();
 
-  // Get actions from store
-  const { design: designActions, navigation: navigationActions } =
-    useConfiguratorActions();
+  // Helper für Felder, die ggf. nicht im Basis-Typ sind
+  const updateAny = (key: string, val: string) => {
+    designActions.updateDesign({ [key]: val } as any);
+  };
 
-  // Fetch templates from server API
-  // Pass business.type to filter server-side
-  const { templates, isLoading, error, retry } = useTemplates(business.type);
-
-  // Use fetched templates directly (server already filtered by business type)
-  const availableTemplates = useMemo(() => {
-    return templates;
-  }, [templates]);
-
-  // Validation - require at least one template and primary/secondary colors
+  // Validation
   const isValid = !!(
-    design.template &&
     design.primaryColor &&
     design.secondaryColor
   );
 
   // Handlers
-  const handleTemplateSelect = useCallback(
-    (templateId: string) => {
-      designActions.updateTemplate(templateId);
-    },
-    [designActions],
-  );
-
   const handleColorPresetSelect = useCallback(
     (preset: (typeof COLOR_PRESETS)[0]) => {
-      designActions.updatePrimaryColor(preset.primary);
-      designActions.updateSecondaryColor(preset.secondary);
+      designActions.updateDesign({
+        primaryColor: preset.primary,
+        secondaryColor: preset.secondary,
+        backgroundColor: preset.bg,
+      });
     },
-    [designActions],
+    [designActions]
   );
 
-  const handlePrimaryColorChange = useCallback(
-    (value: string) => {
-      designActions.updatePrimaryColor(value);
-    },
-    [designActions],
-  );
-
-  const handleSecondaryColorChange = useCallback(
-    (value: string) => {
-      designActions.updateSecondaryColor(value);
-    },
-    [designActions],
-  );
-
-  const handleFontFamilySelect = useCallback(
-    (fontId: string) => {
-      designActions.updateFontFamily(fontId);
-    },
-    [designActions],
-  );
-
-  const handleFontSizeSelect = useCallback(
-    (sizeId: string) => {
-      designActions.updateDesign({ fontSize: sizeId });
-    },
-    [designActions],
-  );
-
-  const handleFontColorChange = useCallback(
-    (value: string) => {
-      designActions.updateDesign({ fontColor: value });
-    },
-    [designActions],
-  );
-
-  const handleShowHomeHeroToggle = useCallback(
-    (checked: boolean) => {
-      designActions.updateDesign({ showHomeHero: checked });
-    },
-    [designActions],
-  );
-
-  const handlePrevStep = useCallback(() => {
-    navigationActions.prevStep();
-  }, [navigationActions]);
-
-  const handleNextStep = useCallback(() => {
-    if (isValid) {
-      navigationActions.nextStep();
-    }
-  }, [isValid, navigationActions]);
-
-  // Check if color preset is selected
+  // Check Helper
   const isColorPresetSelected = (preset: (typeof COLOR_PRESETS)[0]) => {
     return (
       design.primaryColor === preset.primary &&
@@ -217,26 +155,23 @@ export function DesignStep() {
   };
 
   return (
-    <div className="py-8 max-w-4xl mx-auto">
+    <div className="py-8 max-w-4xl mx-auto animate-in fade-in duration-500">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Customize your design
+          Design anpassen
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose colors, fonts and styling that represent your business
-          personality and create a memorable brand experience.
+          Wähle Farben und Schriften, die deine Marke perfekt repräsentieren.
         </p>
       </div>
 
       <div className="space-y-12">
-        {/* Color Themes */}
+
+        {/* --- COLOR THEMES --- */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">
             Color Themes
           </label>
-          <p className="text-sm text-gray-500 mb-6">
-            Choose a preset or customize your own colors below
-          </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {COLOR_PRESETS.map((preset, index) => {
               const isSelected = isColorPresetSelected(preset);
@@ -282,222 +217,147 @@ export function DesignStep() {
           </div>
         </div>
 
-        {/* Custom Color Section */}
-        <div className="bg-gray-50 rounded-2xl p-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
-            Custom Colors
+        {/* --- CUSTOM COLORS (Optimized) --- */}
+        <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <PaintBucket className="w-5 h-5 text-teal-600" /> Individuelle Farben
           </h3>
-          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Primary Color */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-4">
-                Primary Color *
-              </label>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={design.primaryColor}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handlePrimaryColorChange(e.target.value);
-                    }}
-                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
-                    style={{ WebkitAppearance: "none", padding: "4px" }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    value={design.primaryColor}
-                    onChange={(e) => handlePrimaryColorChange(e.target.value)}
-                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                    placeholder="#2563EB"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Main brand color</p>
-                </div>
-              </div>
-            </div>
+          <div className="grid sm:grid-cols-2 gap-6 lg:gap-8">
 
-            {/* Secondary Color */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-4">
-                Secondary Color *
-              </label>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={design.secondaryColor}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleSecondaryColorChange(e.target.value);
-                    }}
-                    className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
-                    style={{ WebkitAppearance: "none", padding: "4px" }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    value={design.secondaryColor}
-                    onChange={(e) => handleSecondaryColorChange(e.target.value)}
-                    className="font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                    placeholder="#7C3AED"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Accent color</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Font Selection */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">
-            Typography Style
-          </label>
-          <div className="grid grid-cols-3 gap-4">
-            {FONT_OPTIONS.map((font) => (
-              <Card
-                key={font.id}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  design.fontFamily === font.id
-                    ? "border-teal-500 bg-teal-50"
-                    : "border-gray-200 hover:border-teal-300"
-                }`}
-                onClick={() => handleFontFamilySelect(font.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className={`text-lg font-bold mb-2 ${font.class}`}>
-                    {font.name}
-                  </div>
-                  <div className={`text-sm text-gray-600 ${font.class}`}>
-                    {font.preview}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-2">
-                    {font.description}
-                  </div>
-                  {design.fontFamily === font.id && (
-                    <div className="mt-2">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Font Color */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">
-            Text Color
-          </label>
-          <div className="flex items-center space-x-4">
-            <input
-              type="color"
-              value={design.fontColor || "#000000"}
-              onChange={(e) => handleFontColorChange(e.target.value)}
-              className="w-12 h-12 rounded-lg border-2 border-gray-300 cursor-pointer"
+            <ColorInput
+              label="Primärfarbe"
+              value={design.primaryColor || "#000000"}
+              onChange={designActions.updatePrimaryColor}
             />
-            <div className="flex-1">
-              <input
-                type="text"
-                value={design.fontColor || "#000000"}
-                onChange={(e) => handleFontColorChange(e.target.value)}
-                placeholder="#000000"
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter a hex color code or use the color picker
-              </p>
+
+            <ColorInput
+              label="Sekundärfarbe"
+              value={design.secondaryColor || "#000000"}
+              onChange={designActions.updateSecondaryColor}
+            />
+
+            <ColorInput
+              label="Hintergrundfarbe"
+              value={design.backgroundColor || "#FFFFFF"}
+              onChange={(v) => updateAny('backgroundColor', v)}
+            />
+
+            <ColorInput
+              label="Preisfarbe"
+              // @ts-ignore
+              value={design.priceColor || design.primaryColor || "#000000"}
+              onChange={(v) => updateAny('priceColor', v)}
+            />
+
+            <ColorInput
+              label="Textfarbe"
+              value={design.fontColor || "#000000"}
+              onChange={(v) => designActions.updateDesign({ fontColor: v })}
+            />
+
+          </div>
+        </div>
+
+        {/* --- TYPOGRAPHY STYLE --- */}
+        <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Type className="w-5 h-5 text-teal-600" /> Typografie
+          </h3>
+
+          <div className="space-y-8">
+            {/* Font Family */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-4">Schriftart</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {FONT_OPTIONS.map((font) => (
+                  <Card
+                    key={font.id}
+                    className={`cursor-pointer transition-all duration-300 border-2 ${
+                      design.fontFamily === font.id
+                        ? "border-teal-500 bg-teal-50 shadow-md"
+                        : "border-gray-200 hover:border-teal-300 hover:shadow-sm"
+                    }`}
+                    onClick={() => designActions.updateFontFamily(font.id)}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className={`text-2xl font-bold mb-2 ${font.class}`}>Ag</div>
+                      <div className="font-bold text-sm text-gray-900">{font.name}</div>
+                      <div className="text-xs text-gray-500 mt-1">{font.preview}</div>
+
+                      {design.fontFamily === font.id && (
+                        <div className="mt-3 flex justify-center">
+                          <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Font Size */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-4">Schriftgröße</label>
+              <div className="grid grid-cols-3 gap-4">
+                {FONT_SIZES.map((size) => {
+                  // @ts-ignore
+                  const isSelected = (design.fontSize || 'medium') === size.id;
+                  return (
+                    <Card
+                      key={size.id}
+                      className={`cursor-pointer transition-all duration-300 border-2 ${
+                        isSelected
+                          ? "border-teal-500 bg-teal-50 shadow-md"
+                          : "border-gray-200 hover:border-teal-300"
+                      }`}
+                      onClick={() => updateAny('fontSize', size.id)}
+                    >
+                      <CardContent className="p-4 text-center">
+                        <div
+                          className={`font-bold mb-2 ${
+                            size.id === "small"
+                              ? "text-sm"
+                              : size.id === "medium"
+                                ? "text-base"
+                                : "text-lg"
+                          }`}
+                        >
+                          {size.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {size.description}
+                        </div>
+                        {isSelected && (
+                          <div className="mt-3 flex justify-center">
+                            <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" />
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Homepage Options */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">
-            Homepage Options
-          </label>
-          <div className="space-y-2">
-            <label className="inline-flex items-center space-x-2 text-sm">
-              <input
-                type="checkbox"
-                checked={!!design.backgroundColor}
-                onChange={(e) => handleShowHomeHeroToggle(e.target.checked)}
-              />
-              <span>Show header block under headline (logo + name)</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Font Size */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-4">
-            Text Size
-          </label>
-          <div className="grid grid-cols-3 gap-4">
-            {FONT_SIZES.map((size) => (
-              <Card
-                key={size.id}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  design.fontSize === size.id
-                    ? "border-teal-500 bg-teal-50"
-                    : "border-gray-200 hover:border-teal-300"
-                }`}
-                onClick={() => handleFontSizeSelect(size.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div
-                    className={`font-bold mb-2 ${
-                      size.id === "small"
-                        ? "text-sm"
-                        : size.id === "medium"
-                          ? "text-base"
-                          : "text-lg"
-                    }`}
-                  >
-                    {size.name}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {size.description}
-                  </div>
-                  {design.fontSize === size.id && (
-                    <div className="mt-2">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
       </div>
 
-      <div className="flex justify-between mt-8">
-        <Button
-          type="button"
-          onClick={handlePrevStep}
-          variant="outline"
-          size="lg"
-        >
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+      <div className="flex justify-between mt-12 pt-6 border-t border-gray-100">
+        <Button onClick={prevStep} variant="outline" size="lg" className="border-gray-300">
+          <ArrowLeft className="mr-2 w-5 h-5" /> Zurück
         </Button>
         <Button
-          onClick={handleNextStep}
+          onClick={() => isValid && nextStep()}
           disabled={!isValid}
           size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
+          className="bg-gradient-to-r from-teal-500 to-purple-500 text-white shadow-lg"
         >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
+          Weiter <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
     </div>

@@ -1,41 +1,19 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 import {
-  ChevronRight,
-  ArrowLeft,
-  Sparkles,
-  Rocket,
-  Menu,
-  X,
-  Settings,
-  Smartphone,
-  Share2,
-  Home,
-  Save,
-  Cloud,
-  AlertCircle,
+  Rocket, Menu, X, Settings, Smartphone, Share2, Home,
+  Save, Cloud, Check, Crown
 } from "lucide-react";
 
-// Zustand Store
-import {
-  useConfiguratorStore,
-  useConfiguratorActions,
-} from "@/store/configuratorStore";
-
-// UI Components
+import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-// Step Components
+// Steps Imports
 import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
 import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
 import { BusinessInfoStep } from "@/components/configurator/steps/BusinessInfoStep";
@@ -53,62 +31,46 @@ import { SEOOptimizationStep } from "@/components/configurator/steps/SEOOptimiza
 import { PreviewAdjustmentsStep } from "@/components/configurator/steps/PreviewAdjustmentsStep";
 import { PublishStep } from "@/components/configurator/steps/PublishStep";
 
-// Preview & Template Components
+// Preview & Utils
 import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import PhonePortal from "@/components/preview/phone-portal";
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
 import QRCode from "@/components/qr/QRCode";
 
-// API & Utils
 import { configurationApi, type Configuration } from "@/lib/api";
-import { publishWebApp } from "@/lib/webapps";
 import { usePersistence } from "@/lib/stepPersistence";
-import { toast } from "@/hooks/use-toast";
 
-// ===== CONFIGURATOR STEPS DEFINITION =====
 const CONFIGURATOR_STEPS_CONFIG = [
-  { id: "template", title: "Choose your template", description: "Select a design that matches your vision", phase: 0, phaseTitle: "Template Selection", component: "template" },
-  { id: "business-info", title: "Tell us about your business", description: "Basic information to get started", phase: 1, phaseTitle: "Business Information", component: "business-info" },
-  { id: "design-customization", title: "Customize your design", description: "Colors, fonts, and styling", phase: 2, phaseTitle: "Design Customization", component: "design-customization" },
-  { id: "page-structure", title: "Select your pages", description: "Choose which pages your website will include", phase: 3, phaseTitle: "Content Structure", component: "page-structure" },
-  { id: "opening-hours", title: "Set your opening hours", description: "When are you open for business?", phase: 4, phaseTitle: "Business Details", component: "opening-hours" },
-  { id: "menu-products", title: "Add your menu or products", description: "Showcase what you offer", phase: 4, phaseTitle: "Business Details", component: "menu-products" },
-  { id: "reservations", title: "Setup reservations", description: "Enable table bookings for your business", phase: 4, phaseTitle: "Business Details", component: "reservations" },
-  { id: "contact-social", title: "Contact & social media", description: "How can customers reach you?", phase: 4, phaseTitle: "Business Details", component: "contact-social" },
-  { id: "media-gallery", title: "Upload your photos", description: "Show off your space, food, and atmosphere", phase: 5, phaseTitle: "Media & Advanced", component: "media-gallery" },
-  { id: "advanced-features", title: "Optional features", description: "Enable advanced functionality", phase: 5, phaseTitle: "Media & Advanced", component: "advanced-features" },
-  { id: "feature-config", title: "Configure selected feature", description: "Adjust settings for the feature you just enabled", phase: 5, phaseTitle: "Media & Advanced", component: "feature-config" },
-  { id: "domain-hosting", title: "Choose your domain", description: "Select how customers will find your website", phase: 6, phaseTitle: "Publishing", component: "domain-hosting" },
-  { id: "seo-optimization", title: "SEO Optimization", description: "Improve your search engine visibility", phase: 6, phaseTitle: "Publishing", component: "seo-optimization" },
-  { id: "preview-adjustments", title: "Preview & Final Adjustments", description: "Review your site and make last-minute changes", phase: 6, phaseTitle: "Publishing", component: "preview-adjustments" },
-  { id: "publish", title: "Publish your website", description: "Go live with your new website", phase: 6, phaseTitle: "Publishing", component: "publish" },
+  { id: "template", title: "Choose your template", phase: 0, phaseTitle: "Template Selection", component: "template" },
+  { id: "business-info", title: "Tell us about your business", phase: 1, phaseTitle: "Business Information", component: "business-info" },
+  { id: "design-customization", title: "Design Customization", phase: 2, phaseTitle: "Design Customization", component: "design-customization" },
+  { id: "page-structure", title: "Select your pages", phase: 3, phaseTitle: "Content Structure", component: "page-structure" },
+  { id: "opening-hours", title: "Set your opening hours", phase: 4, phaseTitle: "Business Details", component: "opening-hours" },
+  { id: "menu-products", title: "Add your menu or products", phase: 4, phaseTitle: "Business Details", component: "menu-products" },
+  { id: "reservations", title: "Setup reservations", phase: 4, phaseTitle: "Business Details", component: "reservations" },
+  { id: "contact-social", title: "Contact & social media", phase: 4, phaseTitle: "Business Details", component: "contact-social" },
+  { id: "media-gallery", title: "Upload your photos", phase: 5, phaseTitle: "Media & Advanced", component: "media-gallery" },
+  { id: "advanced-features", title: "Optional features", phase: 5, phaseTitle: "Media & Advanced", component: "advanced-features" },
+  { id: "feature-config", title: "Configure feature", phase: 5, phaseTitle: "Media & Advanced", component: "feature-config" },
+  { id: "domain-hosting", title: "Choose your domain", phase: 6, phaseTitle: "Publishing", component: "domain-hosting" },
+  { id: "seo-optimization", title: "SEO Optimization", phase: 6, phaseTitle: "Publishing", component: "seo-optimization" },
+  { id: "preview-adjustments", title: "Preview & final tweaks", phase: 6, phaseTitle: "Publishing", component: "preview-adjustments" },
+  { id: "publish", title: "Publish your website", phase: 6, phaseTitle: "Publishing", component: "publish" },
 ];
 
 function ShareQRButton({ url }: { url: string }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="border-gray-300">
-          <Share2 className="w-4 h-4 mr-2" /> Share QR
+        <Button size="sm" variant="ghost" className="h-8 text-xs text-gray-500 hover:text-gray-900 hover:bg-white/50">
+          <Share2 className="w-3 h-3 mr-2" /> Share QR
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Scan to open</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>Scan to open</DialogTitle></DialogHeader>
         <div className="flex flex-col items-center gap-4 py-2">
           <QRCode value={url} size={220} />
-          <div className="text-xs text-gray-600 break-all text-center max-w-[90%]">
-            {url}
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => navigator.clipboard.writeText(url)}>
-              Copy Link
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => window.open(url, "_blank")}>
-              Open
-            </Button>
-          </div>
+          <div className="text-xs text-gray-600 break-all text-center">{url}</div>
         </div>
       </DialogContent>
     </Dialog>
@@ -121,240 +83,239 @@ export default function Configurator() {
   const navigate = useNavigate();
   const actions = useConfiguratorActions();
 
-  // === OPTIMIZED STORE ACCESS ===
-  // Wir abonnieren NUR die Felder, die wir für die UI/Navigation brauchen.
-  // Das verhindert die Endlosschleife (#185 Error).
-  const currentStep = useConfiguratorStore((state) => state.ui.currentStep);
-  const businessName = useConfiguratorStore((state) => state.business.name);
-  const domainData = useConfiguratorStore((state) => state.business.domain);
-  
-  // Actions holen (diese ändern sich nie, daher sicher)
-  const { goToStep, setCurrentStep, nextStep: nextStepStore, prevStep: prevStepStore } = useConfiguratorStore((state) => ({
-    goToStep: state.goToStep,
-    setCurrentStep: state.setCurrentStep,
-    nextStep: state.nextStep,
-    prevStep: state.prevStep,
-  }));
+  // Zustand State Access
+  const currentStep = useConfiguratorStore((s) => s.ui.currentStep);
+  const nextStepStore = useConfiguratorStore((s) => s.nextStep);
+  const prevStepStore = useConfiguratorStore((s) => s.prevStep);
+  const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
 
   // Local State
-  const isInitialized = useRef(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(() => persistence.getConfigId() || null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(() => persistence.getPublishedUrl() || null);
-  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle"|"saving"|"saved">("idle");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Helpers
-  const configuratorSteps = CONFIGURATOR_STEPS_CONFIG;
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
+  const [pendingFeatureConfig, setPendingFeatureConfig] = useState<any>(null);
 
-  const getBaseHost = useCallback(() => {
-    try {
-      return window.location.hostname.replace(/^www\./, "");
-    } catch { return "maitr.de"; }
-  }, []);
+  const getLiveUrl = useCallback(() => publishedUrl || "https://site.maitr.de", [publishedUrl]);
+  const getDisplayedDomain = useCallback(() => "site.maitr.de", []);
 
-  const slugifyName = useCallback((s: string) => 
-    (s || "site").toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 30), 
-  []);
-
-  // Berechnet die Live-URL nur basierend auf den notwendigen Feldern (nicht mehr "formData")
-  const getLiveUrl = useCallback(() => {
-    if (publishedUrl) return publishedUrl;
-    const origin = (() => { try { return window.location.origin.replace(/\/$/, ""); } catch { return `https://${getBaseHost()}`; } })();
-    const id = currentConfigId || "";
-    const name = slugifyName(businessName || "site");
-    if (id) return `${origin}/${id}/${name}`;
-    return origin;
-  }, [publishedUrl, currentConfigId, businessName, getBaseHost, slugifyName]);
-
-  const getDisplayedDomain = useCallback(() => {
-    if (publishedUrl) { try { return new URL(publishedUrl).hostname; } catch {} }
-    if (domainData?.hasDomain && domainData?.domainName) return domainData.domainName;
-    const slug = slugifyName(domainData?.selectedDomain || businessName || "site");
-    return `${slug}.${getBaseHost()}`;
-  }, [publishedUrl, domainData, businessName, getBaseHost, slugifyName]);
-
-  // Actions
+  // Save Logic
   const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
     if (!isSignedIn) return;
     setSaveStatus("saving");
     try {
       const token = await getToken();
       if (!token) throw new Error("No token");
-      let configId = currentConfigId;
-      if (!configId) {
-        const newConfig = await configurationApi.create(data, token);
-        configId = newConfig.id;
-        setCurrentConfigId(configId);
-        persistence.setConfigId(configId);
-      } else {
-        await configurationApi.update(configId, data, token);
+      const payload = currentConfigId ? { ...data, id: currentConfigId } : data;
+      const res = await configurationApi.save(payload, token);
+      const saved = (res as any).data || res;
+      if (!currentConfigId && saved?.id) {
+        setCurrentConfigId(saved.id);
+        persistence.setConfigId(saved.id);
       }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
-    } catch (error) {
-      console.error("Save failed", error);
-      setSaveStatus("error");
-      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch (e) {
+      console.error(e);
+      setSaveStatus("idle");
     }
   }, [isSignedIn, getToken, currentConfigId, persistence]);
 
-  // Init
-  useEffect(() => {
-    if (isInitialized.current) return;
-    setIsVisible(true);
-    const hasSaved = persistence.hasSavedSteps();
-    if (hasSaved) toast({ title: "State Restored", description: "Loaded previous progress" });
-    isInitialized.current = true;
-  }, []);
-
-  // Navigation Wrappers
+  // Navigation
   const nextStep = useCallback(() => nextStepStore(), [nextStepStore]);
   const prevStep = useCallback(() => prevStepStore(), [prevStepStore]);
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
 
-  // --- LIVE PREVIEW ---
-  // Diese Version verhindert die Endlosschleife, 
-  // da sie keine Props mehr durchreicht.
-  const LivePreview = useCallback(() => {
-    return (
-      <div className="sticky top-24 h-[calc(100vh-7rem)]">
-        <Card className="h-full p-4 bg-gray-50">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700">Live Preview</h3>
-            <ShareQRButton url={getLiveUrl()} />
-          </div>
-          <div className="h-[calc(100%-3rem)] flex items-center justify-center">
-            <LivePhoneFrame widthClass="w-full max-w-[280px]" heightClass="h-full max-h-[580px]">
-              <PhonePortal>
-                {/* WICHTIG: Hier KEINE Props übergeben! */}
-                {/* Die Komponente holt sich die Daten selbst aus dem Store. */}
-                <TemplatePreviewContent />
-              </PhonePortal>
-            </LivePhoneFrame>
-          </div>
-        </Card>
+  const progressPercentage = useMemo(() => {
+    if (currentStep < 0) return 0;
+    return ((currentStep + 1) / CONFIGURATOR_STEPS_CONFIG.length) * 100;
+  }, [currentStep]);
+
+  const currentPhase = useMemo(() => {
+    if (currentStep < 0) return null;
+    return CONFIGURATOR_STEPS_CONFIG[currentStep] || null;
+  }, [currentStep]);
+
+  const isFullWidthStep = useMemo(() => {
+    const stepId = CONFIGURATOR_STEPS_CONFIG[currentStep]?.id;
+    return stepId === 'preview-adjustments';
+  }, [currentStep]);
+
+  // --- LIVE PREVIEW COMPONENT ---
+  const LivePreview = () => (
+    // FIX STICKY:
+    // top-32 (128px) gibt genug Abstand zur Headbar (80px), damit nichts überlappt.
+    // h-[calc(100vh-8rem)] begrenzt die Höhe, damit das Scrolling innerhalb des Grids funktioniert.
+    <div className="lg:sticky lg:top-32 h-[calc(100vh-8rem)] flex flex-col items-center justify-start pt-2 overflow-visible">
+
+      {/* Header */}
+      <div className="w-[280px] xl:w-[320px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Preview</h3>
+        </div>
+        <ShareQRButton url={getLiveUrl()} />
       </div>
-    );
-  }, [getLiveUrl]);
-  // --- RENDER MAIN CONTENT ---
-  const renderMainContent = () => {
-    return (
-      <div className="p-10 border-4 border-red-500 text-center text-red-600 font-bold text-xl">
-        TEST MODUS: KEINE STEPS GELADEN
+
+      {/* HANDY CONTAINER + SCALING */}
+      <div className="relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-transform duration-300">
+        {/* Glow Effekt */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/10 to-purple-500/10 blur-3xl rounded-full opacity-30 -z-10" />
+
+        <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
+          <PhonePortal>
+            <TemplatePreviewContent />
+          </PhonePortal>
+        </LivePhoneFrame>
       </div>
-    );
-    /*
-    if (currentStep === -1) {
-      return <WelcomePage onStart={handleStart} currentConfigId={currentConfigId} publishedUrl={publishedUrl} />;
-    }
 
-    const currentStepConfig = configuratorSteps[currentStep];
-    if (!currentStepConfig) return null;
+      <div className="mt-[-80px] xl:mt-[-40px] text-center opacity-60 shrink-0">
+        <p className="text-[10px] text-gray-400 font-medium">Interactive • Scrollable</p>
+      </div>
+    </div>
+  );
 
-    switch (currentStepConfig.component) {
-      case "template":
-        return <TemplateStep nextStep={nextStep} prevStep={prevStep} />;
-      case "business-info":
-        return <BusinessInfoStep nextStep={nextStep} prevStep={prevStep} />;
-      case "design-customization":
-        return <DesignStep nextStep={nextStep} prevStep={prevStep} />;
-      case "page-structure":
-        return <PageStructureStep nextStep={nextStep} prevStep={prevStep} />;
-      case "opening-hours":
-        return <OpeningHoursStep nextStep={nextStep} prevStep={prevStep} />;
-      case "menu-products":
-        return <MenuProductsStep nextStep={nextStep} prevStep={prevStep} />;
-      case "reservations":
-        return <ReservationsStep nextStep={nextStep} prevStep={prevStep} />;
-      case "contact-social":
-        return <ContactSocialStep nextStep={nextStep} prevStep={prevStep} />;
-      case "media-gallery":
-        return <MediaGalleryStep nextStep={nextStep} prevStep={prevStep} />;
-      case "advanced-features":
-        return <AdvancedFeaturesStep nextStep={nextStep} prevStep={prevStep} setPendingFeatureConfig={setPendingFeatureConfig} setCurrentStep={setCurrentStep} configuratorSteps={configuratorSteps} />;
-      case "feature-config":
-        return <FeatureConfigStep nextStep={nextStep} prevStep={prevStep} pendingFeatureConfig={pendingFeatureConfig} setPendingFeatureConfig={setPendingFeatureConfig} setCurrentStep={setCurrentStep} configuratorSteps={configuratorSteps} />;
-      case "domain-hosting":
-        return <DomainHostingStep nextStep={nextStep} prevStep={prevStep} getBaseHost={getBaseHost} getDisplayedDomain={getDisplayedDomain} />;
-      case "seo-optimization":
-        return <SEOOptimizationStep nextStep={nextStep} prevStep={prevStep} getDisplayedDomain={getDisplayedDomain} />;
-      case "preview-adjustments":
-        return <PreviewAdjustmentsStep nextStep={nextStep} prevStep={prevStep} TemplatePreviewContent={TemplatePreviewContent} getDisplayedDomain={getDisplayedDomain} />;
-      case "publish":
-        return <PublishStep nextStep={nextStep} prevStep={prevStep} getLiveUrl={getLiveUrl} getDisplayedDomain={getDisplayedDomain} saveToBackend={saveToBackend} />;
-      default:
-        return <div>Unknown Step</div>;
-    } */
-  };
-
-  // Main Layout
-  return (
-    <div className={`min-h-screen bg-white transition-opacity duration-1000 ${isVisible ? "opacity-100" : "opacity-0"}`}>
-      {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button onClick={() => navigate("/")} className="flex items-center space-x-2 text-gray-900 hover:text-teal-600">
-                <Home className="w-5 h-5" /><span className="font-semibold hidden sm:inline">Maitr</span>
-              </button>
+  // --- NAVIGATION HEADER ---
+  const NavigationHeader = () => (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200/80 h-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex items-center justify-between h-full">
+          <div className="flex items-center space-x-4">
+            <button onClick={() => navigate("/")} className="relative group">
+              <span className="text-3xl font-black bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">Maitr</span>
+            </button>
+            {currentStep >= 0 && (
+              <div className="hidden md:flex items-center ml-8">
+                <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+                  <Settings className="w-4 h-4 text-teal-500" />
+                  <span className="text-sm font-bold text-gray-700">Step {currentStep + 1} of {CONFIGURATOR_STEPS_CONFIG.length}</span>
+                  <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden ml-2">
+                    <motion.div className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full" initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 0.5 }} />
+                  </div>
+                </div>
+              </div>
+            )}
+            {currentPhase && (
+              <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-teal-500/10 to-purple-500/10 px-3 py-1 rounded-full border border-teal-500/20">
+                <Crown className="w-3 h-3 text-teal-600" />
+                <span className="text-xs font-bold text-teal-700">{currentPhase.phaseTitle}</span>
+              </div>
+            )}
+          </div>
+          <div className="hidden md:block">
+            <div className="flex items-center space-x-6">
+              <div className="hidden md:flex items-center gap-2 text-xs text-gray-600">
+                {saveStatus === 'saving' && <Cloud className="w-3 h-3 animate-pulse text-orange-500" />}
+                {saveStatus === 'saved' && <Check className="w-3 h-3 text-green-500" />}
+                <span>Save progress</span>
+                <Switch checked={true} onCheckedChange={() => {}} />
+              </div>
               {currentStep >= 0 && (
-                <div className="hidden md:flex items-center space-x-2 text-sm text-gray-500">
-                  <span>Step {currentStep + 1}</span><span>/</span><span>{configuratorSteps.length}</span>
+                <div className="flex items-center space-x-2">
+                  <Button size="sm" variant="outline" onClick={() => window.open(getLiveUrl(), "_blank")} className="border-gray-300">1:1 Preview</Button>
+                  <Button size="sm" onClick={() => { saveToBackend(actions.data.getFullConfiguration()); }} className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white font-bold rounded-full shadow-lg ml-2">
+                    <Rocket className="w-4 h-4 mr-2" /> Publish Website
+                  </Button>
                 </div>
               )}
             </div>
-            <div className="flex items-center space-x-3">
-              {saveStatus === "saving" && <Cloud className="w-4 h-4 animate-pulse text-gray-600" />}
-              {saveStatus === "saved" && <Save className="w-4 h-4 text-green-600" />}
-              <Button variant="outline" size="sm" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-              </Button>
+          </div>
+          <div className="md:hidden">
+            <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+
+  // --- CONTENT RENDERER ---
+  const renderMainContent = () => {
+    if (currentStep === -1) return <WelcomePage onStart={handleStart} currentConfigId={currentConfigId} publishedUrl={publishedUrl} />;
+
+    const config = CONFIGURATOR_STEPS_CONFIG[currentStep];
+    if (!config) return <div>Unknown Step</div>;
+
+    switch (config.component) {
+      case "template": return <TemplateStep nextStep={nextStep} prevStep={prevStep} previewTemplateId={previewTemplateId} setPreviewTemplateId={setPreviewTemplateId} />;
+      case "business-info": return <BusinessInfoStep nextStep={nextStep} prevStep={prevStep} />;
+      case "design-customization": return <DesignStep nextStep={nextStep} prevStep={prevStep} />;
+      case "page-structure": return <PageStructureStep nextStep={nextStep} prevStep={prevStep} />;
+      case "opening-hours": return <OpeningHoursStep nextStep={nextStep} prevStep={prevStep} />;
+      case "menu-products": return <MenuProductsStep nextStep={nextStep} prevStep={prevStep} />;
+      case "reservations": return <ReservationsStep nextStep={nextStep} prevStep={prevStep} />;
+      case "contact-social": return <ContactSocialStep nextStep={nextStep} prevStep={prevStep} />;
+      case "media-gallery": return <MediaGalleryStep nextStep={nextStep} prevStep={prevStep} />;
+      case "advanced-features": return <AdvancedFeaturesStep nextStep={nextStep} prevStep={prevStep} setPendingFeatureConfig={setPendingFeatureConfig} setCurrentStep={setCurrentStep} configuratorSteps={CONFIGURATOR_STEPS_CONFIG} />;
+      case "feature-config": return <FeatureConfigStep nextStep={nextStep} prevStep={prevStep} pendingFeatureConfig={pendingFeatureConfig} setPendingFeatureConfig={setPendingFeatureConfig} setCurrentStep={setCurrentStep} configuratorSteps={CONFIGURATOR_STEPS_CONFIG} />;
+      case "domain-hosting": return <DomainHostingStep nextStep={nextStep} prevStep={prevStep} getBaseHost={() => "maitr.de"} getDisplayedDomain={getDisplayedDomain} />;
+      case "seo-optimization": return <SEOOptimizationStep nextStep={nextStep} prevStep={prevStep} getDisplayedDomain={getDisplayedDomain} />;
+      case "preview-adjustments": return <PreviewAdjustmentsStep nextStep={nextStep} prevStep={prevStep} TemplatePreviewContent={TemplatePreviewContent} getDisplayedDomain={getDisplayedDomain} />;
+      case "publish": return <PublishStep prevStep={prevStep} getLiveUrl={getLiveUrl} getDisplayedDomain={getDisplayedDomain} saveToBackend={saveToBackend} />;
+      default: return <div>Step coming soon</div>;
+    }
+  };
+
+  return (
+    // FIX: overflow-x-hidden statt overflow-hidden, damit sticky in Grid-Systemen funktioniert
+    <div className="min-h-screen bg-gray-50/30 transition-opacity duration-700 overflow-x-hidden">
+      <NavigationHeader />
+
+      {currentStep === -1 ? (
+        <div className="pt-20">{renderMainContent()}</div>
+      ) : currentStep === 0 ? (
+        // Step 0: Layout ohne Karte links
+        <div className="pt-24 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-7 xl:col-span-8 order-2 lg:order-1">{renderMainContent()}</div>
+            {/* Sticky Preview */}
+            <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2 lg:sticky lg:top-32">
+              <LivePreview />
             </div>
           </div>
-          {currentStep >= 0 && (
-             <div className="h-1 bg-gray-100">
-                <motion.div className="h-full bg-gradient-to-r from-teal-500 to-purple-500" 
-                  initial={{ width: 0 }} 
-                  animate={{ width: `${((currentStep + 1) / configuratorSteps.length) * 100}%` }} 
-                />
-             </div>
-          )}
         </div>
-        {isMenuOpen && (
-          <div className="border-t border-gray-200 bg-white p-4">
-             <div className="flex gap-4">
-                <Button variant="outline" size="sm" onClick={() => { actions.data.resetConfig(); setIsMenuOpen(false); }}>
-                  <Settings className="w-4 h-4 mr-2" /> Reset
-                </Button>
-                <Button variant="default" size="sm" onClick={() => { goToStep(configuratorSteps.length - 1); setIsMenuOpen(false); }}>
-                  <Rocket className="w-4 h-4 mr-2" /> Publish
-                </Button>
-             </div>
-          </div>
-        )}
-      </nav>
+      ) : (
+        // Step 1+: Standard Layout
+        <div className="pt-24 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* ITEMS-START sorgt dafür, dass die sticky Spalte nicht gestreckt wird und gleiten kann */}
+          <div className="grid lg:grid-cols-12 gap-8 items-start relative">
 
-      {/* Content Area */}
-      <div className="pt-20">
-        {currentStep === -1 ? renderMainContent() : (
-          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="lg:hidden mb-4">
-              <Button variant="outline" size="sm" className="w-full" onClick={() => {
-                 const el = document.getElementById("mobile-preview");
-                 if(el) el.style.display = el.style.display === "none" ? "block" : "none";
+            {/* Mobile Toggle */}
+            <div className="lg:hidden w-full mb-4 order-1 col-span-12">
+              <Button variant="outline" className="w-full" onClick={() => {
+                const el = document.getElementById("mobile-preview-area");
+                if(el) el.classList.toggle("hidden");
               }}>
                 <Smartphone className="w-4 h-4 mr-2" /> Toggle Preview
               </Button>
-              <div id="mobile-preview" className="mt-4 hidden"><LivePreview /></div>
+              <div id="mobile-preview-area" className="hidden mt-4 bg-white p-4 rounded-xl border flex justify-center">
+                <div className="relative transform scale-[0.8] origin-top">
+                  <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
+                    <PhonePortal><TemplatePreviewContent /></PhonePortal>
+                  </LivePhoneFrame>
+                </div>
+              </div>
             </div>
-            <div className="lg:col-span-2 min-h-[80vh]">{renderMainContent()}</div>
-            <div className="hidden lg:block order-1 lg:order-2"><LivePreview /></div>
+
+            {/* LINKES PANEL */}
+            <div className={`${isFullWidthStep ? "lg:col-span-12" : "lg:col-span-7 xl:col-span-8"} order-2 lg:order-1`}>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 min-h-[600px]">
+                {renderMainContent()}
+              </div>
+            </div>
+
+            {/* RECHTES PANEL: Sticky Live Preview */}
+            {!isFullWidthStep && (
+              <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2">
+                <LivePreview />
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
-  ); 
+  );
 }

@@ -12,10 +12,14 @@ interface ReservationsStepProps {
   prevStep: () => void;
 }
 
+// FIX: Konstante außerhalb definieren, damit die Referenz stabil bleibt (verhindert Loop)
+const DEFAULT_SLOTS = ["12:00", "13:00", "18:00", "19:00"];
+
 export function ReservationsStep({
-  nextStep,
-  prevStep,
-}: ReservationsStepProps) {
+                                   nextStep,
+                                   prevStep,
+                                 }: ReservationsStepProps) {
+  // Store Selectors (einzeln selektiert für Performance)
   const reservationsEnabled = useConfiguratorStore(
     (s) => s.features.reservationsEnabled,
   );
@@ -24,27 +28,29 @@ export function ReservationsStep({
     (s) => s.features.notificationMethod,
   );
 
-  const design = useConfiguratorStore((s) => s.design);
-  const reservationButtonColor = design.primaryColor || "#2563EB";
-  const reservationButtonTextColor = design.backgroundColor || "#FFFFFF";
+  // Design Werte selektieren
+  const primaryColor = useConfiguratorStore((s) => s.design.primaryColor);
+  const designBgColor = useConfiguratorStore((s) => s.design.backgroundColor);
+
+  const reservationButtonColor = primaryColor || "#2563EB";
+  const reservationButtonTextColor = designBgColor || "#FFFFFF";
 
   const actions = useConfiguratorActions();
 
+  // Generierte Time Slots für die Auswahl
   const timeSlots = Array.from({ length: 14 }, (_, i) => {
     const hour = 10 + i;
     return `${hour}:00`;
   });
 
-  const selectedTimeSlots = useConfiguratorStore((s) => {
-    const storedSlots = (s.features as any).timeSlots;
-    return Array.isArray(storedSlots)
-      ? storedSlots
-      : ["12:00", "13:00", "18:00", "19:00"];
-  });
+  // FIX: Sichere Selektion der TimeSlots ohne neues Array-Objekt
+  const rawSlots = useConfiguratorStore((s) => (s.features as any).timeSlots);
+  const selectedTimeSlots = Array.isArray(rawSlots) ? rawSlots : DEFAULT_SLOTS;
 
-  const reservationButtonShape =
-    (useConfiguratorStore((s) => s.features) as any).reservationButtonShape ||
-    "rounded";
+  // FIX: Sichere Selektion der Button Shape
+  const reservationButtonShape = useConfiguratorStore(
+    (s) => (s.features as any).reservationButtonShape || "rounded"
+  );
 
   const updateTimeSlots = (slots: string[]) => {
     actions.features.updateFeatureFlags({ timeSlots: slots } as any);
@@ -263,7 +269,7 @@ export function ReservationsStep({
                       size="sm"
                       onClick={() => {
                         const newSlots = isSelected
-                          ? selectedTimeSlots.filter((slot) => slot !== time)
+                          ? selectedTimeSlots.filter((slot: string) => slot !== time)
                           : [...selectedTimeSlots, time];
                         updateTimeSlots(newSlots);
                       }}

@@ -1,3 +1,4 @@
+
 /**
  * Business Information Step Component
  * Extracts business name, type, location, slogan, and description
@@ -46,13 +47,19 @@ const BUSINESS_TYPES = [
   },
 ];
 
-export function BusinessInfoStep() {
+interface StepProps {
+  nextStep: () => void;
+  prevStep: () => void;
+}
+
+export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   // Get state from store
   const business = useConfiguratorBusiness();
 
   // Get actions from store
-  const { business: businessActions, navigation: navigationActions } =
-    useConfiguratorActions();
+  // FIX: Wir holen hier NUR 'business', 'navigation' brauchen wir nicht mehr,
+  // da wir die Props nutzen.
+  const { business: businessActions } = useConfiguratorActions();
 
   // Local UI state for optional fields visibility
   const [showOptionalFields, setShowOptionalFields] = useState(false);
@@ -91,20 +98,28 @@ export function BusinessInfoStep() {
 
   const handleDescriptionChange = useCallback(
     (value: string) => {
-      businessActions.setBusinessInfo({ uniqueDescription: value });
+      // Nutze hier die passende Action aus deinem Store (entweder setBusinessInfo oder updateUniqueDescription)
+      // Ich habe es so gelassen wie in deinem Snippet:
+      if (businessActions.setBusinessInfo) {
+        businessActions.setBusinessInfo({ uniqueDescription: value });
+      } else if ((businessActions as any).updateUniqueDescription) {
+        (businessActions as any).updateUniqueDescription(value);
+      }
     },
     [businessActions],
   );
 
+  // FIX: Nutze jetzt die Prop 'prevStep' statt navigationActions
   const handlePrevStep = useCallback(() => {
-    navigationActions.prevStep();
-  }, [navigationActions]);
+    prevStep();
+  }, [prevStep]);
 
+  // FIX: Nutze jetzt die Prop 'nextStep' statt navigationActions
   const handleNextStep = useCallback(() => {
     if (isValid) {
-      navigationActions.nextStep();
+      nextStep();
     }
-  }, [isValid, navigationActions]);
+  }, [isValid, nextStep]);
 
   return (
     <div className="py-8 max-w-xl mx-auto">

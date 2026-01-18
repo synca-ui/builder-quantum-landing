@@ -18,7 +18,9 @@ interface ReservationsCardProps {
 }
 
 export function ReservationsCard({
-  settings = {},
+  settings = {
+    enabled: false,
+  },
   onChange,
 }: ReservationsCardProps) {
   const [reservations, setReservations] = useState<ReservationSettings>(

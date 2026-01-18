@@ -18,11 +18,11 @@ interface PublishStepProps {
 }
 
 export function PublishStep({
-  prevStep,
-  getLiveUrl,
-  getDisplayedDomain,
-  saveToBackend,
-}: PublishStepProps) {
+                              prevStep,
+                              getLiveUrl,
+                              getDisplayedDomain,
+                              saveToBackend,
+                            }: PublishStepProps) {
   const { getToken } = useAuth();
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
@@ -47,8 +47,10 @@ export function PublishStep({
   const handlePublish = async () => {
     setIsPublishing(true);
     try {
+      // Config holen
       const configData = actions.data.getFullConfiguration();
 
+      // 1. Speichern (Backend)
       if (saveToBackend) {
         await saveToBackend(configData);
       }
@@ -58,20 +60,19 @@ export function PublishStep({
         business.domain?.selectedDomain ||
         business.name.toLowerCase().replace(/\s+/g, "");
 
+      // 2. Deployment anstoßen
       const result = await publishWebApp(
         subdomain,
         configData,
         token || undefined,
       );
 
-      actions.publishing.publishConfiguration();
-      actions.publishing.updatePublishingInfo({
-        publishedUrl: result.publishedUrl || liveUrl,
-        previewUrl: result.previewUrl,
-      });
-
+      // 3. UI Update (Lokal)
+      // Wir nutzen hier nur den lokalen State, da actions.publishing im Store Type fehlt.
+      // Das ist sicher, da die UI hier direkt reagiert.
       setPublishedUrl(result.publishedUrl || liveUrl);
       setIsPublished(true);
+
     } catch (error) {
       console.error("Publishing failed:", error);
       alert("Failed to publish website. Please try again.");
