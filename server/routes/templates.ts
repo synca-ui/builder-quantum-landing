@@ -5,6 +5,8 @@
  * Routes:
  * - GET /api/templates - Get all templates (optionally filtered by business type)
  * - GET /api/templates/:id - Get a single template by ID
+ * - GET /api/templates/:id/ratings - Get template ratings and reviews
+ * - POST /api/templates/:id/rate - Submit a rating for a template
  * - POST /api/templates/validate - Validate template configuration
  *
  * Future: When Marketplace is ready, these endpoints will support:
@@ -15,6 +17,8 @@
 
 import { Router, Request, Response } from "express";
 import { templateEngine } from "../services/TemplateEngine";
+import { requireAuth } from "../middleware/auth";
+import prisma from "../db/prisma";
 import type {
   TemplateFilter,
   TemplateValidationResult,
