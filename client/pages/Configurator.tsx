@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 import {
-  Rocket, Menu, X, Settings, Smartphone, Share2, Home,
-  Save, Cloud, Check, Crown
+  Rocket, Menu, X, Settings, Smartphone, Share2,
+  Cloud, Check, Crown
 } from "lucide-react";
 
 import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -83,25 +82,21 @@ export default function Configurator() {
   const navigate = useNavigate();
   const actions = useConfiguratorActions();
 
-  // Zustand State Access
   const currentStep = useConfiguratorStore((s) => s.ui.currentStep);
   const nextStepStore = useConfiguratorStore((s) => s.nextStep);
   const prevStepStore = useConfiguratorStore((s) => s.prevStep);
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
 
-  // Local State
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(() => persistence.getConfigId() || null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(() => persistence.getPublishedUrl() || null);
   const [saveStatus, setSaveStatus] = useState<"idle"|"saving"|"saved">("idle");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
   const [pendingFeatureConfig, setPendingFeatureConfig] = useState<any>(null);
 
   const getLiveUrl = useCallback(() => publishedUrl || "https://site.maitr.de", [publishedUrl]);
   const getDisplayedDomain = useCallback(() => "site.maitr.de", []);
 
-  // Save Logic
   const saveToBackend = useCallback(async (data: Partial<Configuration>) => {
     if (!isSignedIn) return;
     setSaveStatus("saving");
@@ -123,7 +118,6 @@ export default function Configurator() {
     }
   }, [isSignedIn, getToken, currentConfigId, persistence]);
 
-  // Navigation
   const nextStep = useCallback(() => nextStepStore(), [nextStepStore]);
   const prevStep = useCallback(() => prevStepStore(), [prevStepStore]);
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
@@ -145,12 +139,7 @@ export default function Configurator() {
 
   // --- LIVE PREVIEW COMPONENT ---
   const LivePreview = () => (
-    // FIX STICKY:
-    // top-32 (128px) gibt genug Abstand zur Headbar (80px), damit nichts überlappt.
-    // h-[calc(100vh-8rem)] begrenzt die Höhe, damit das Scrolling innerhalb des Grids funktioniert.
-    <div className="lg:sticky lg:top-32 h-[calc(100vh-8rem)] flex flex-col items-center justify-start pt-2 overflow-visible">
-
-      {/* Header */}
+    <div className="flex flex-col items-center justify-start pt-2">
       <div className="w-[280px] xl:w-[320px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
@@ -159,11 +148,8 @@ export default function Configurator() {
         <ShareQRButton url={getLiveUrl()} />
       </div>
 
-      {/* HANDY CONTAINER + SCALING */}
-      <div className="relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-transform duration-300">
-        {/* Glow Effekt */}
+      <div className="relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-transform duration-300 pointer-events-auto">
         <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/10 to-purple-500/10 blur-3xl rounded-full opacity-30 -z-10" />
-
         <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
           <PhonePortal>
             <TemplatePreviewContent />
@@ -177,7 +163,6 @@ export default function Configurator() {
     </div>
   );
 
-  // --- NAVIGATION HEADER ---
   const NavigationHeader = () => (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200/80 h-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
@@ -197,48 +182,32 @@ export default function Configurator() {
                 </div>
               </div>
             )}
-            {currentPhase && (
-              <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-teal-500/10 to-purple-500/10 px-3 py-1 rounded-full border border-teal-500/20">
-                <Crown className="w-3 h-3 text-teal-600" />
-                <span className="text-xs font-bold text-teal-700">{currentPhase.phaseTitle}</span>
+          </div>
+          <div className="hidden md:flex items-center space-x-6">
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              {saveStatus === 'saving' && <Cloud className="w-3 h-3 animate-pulse text-orange-500" />}
+              {saveStatus === 'saved' && <Check className="w-3 h-3 text-green-500" />}
+              <span>Save progress</span>
+              <Switch checked={true} onCheckedChange={() => {}} />
+            </div>
+            {currentStep >= 0 && (
+              <div className="flex items-center space-x-2">
+                <Button size="sm" variant="outline" onClick={() => window.open(getLiveUrl(), "_blank")} className="border-gray-300">1:1 Preview</Button>
+                <Button size="sm" onClick={() => { saveToBackend(actions.data.getFullConfiguration()); }} className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white font-bold rounded-full shadow-lg ml-2">
+                  <Rocket className="w-4 h-4 mr-2" /> Publish Website
+                </Button>
               </div>
             )}
-          </div>
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-6">
-              <div className="hidden md:flex items-center gap-2 text-xs text-gray-600">
-                {saveStatus === 'saving' && <Cloud className="w-3 h-3 animate-pulse text-orange-500" />}
-                {saveStatus === 'saved' && <Check className="w-3 h-3 text-green-500" />}
-                <span>Save progress</span>
-                <Switch checked={true} onCheckedChange={() => {}} />
-              </div>
-              {currentStep >= 0 && (
-                <div className="flex items-center space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => window.open(getLiveUrl(), "_blank")} className="border-gray-300">1:1 Preview</Button>
-                  <Button size="sm" onClick={() => { saveToBackend(actions.data.getFullConfiguration()); }} className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white font-bold rounded-full shadow-lg ml-2">
-                    <Rocket className="w-4 h-4 mr-2" /> Publish Website
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="md:hidden">
-            <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </Button>
           </div>
         </div>
       </div>
     </nav>
   );
 
-  // --- CONTENT RENDERER ---
   const renderMainContent = () => {
     if (currentStep === -1) return <WelcomePage onStart={handleStart} currentConfigId={currentConfigId} publishedUrl={publishedUrl} />;
-
     const config = CONFIGURATOR_STEPS_CONFIG[currentStep];
     if (!config) return <div>Unknown Step</div>;
-
     switch (config.component) {
       case "template": return <TemplateStep nextStep={nextStep} prevStep={prevStep} previewTemplateId={previewTemplateId} setPreviewTemplateId={setPreviewTemplateId} />;
       case "business-info": return <BusinessInfoStep nextStep={nextStep} prevStep={prevStep} />;
@@ -260,62 +229,33 @@ export default function Configurator() {
   };
 
   return (
-    // FIX: overflow-x-hidden statt overflow-hidden, damit sticky in Grid-Systemen funktioniert
-    <div className="min-h-screen bg-gray-50/30 transition-opacity duration-700 overflow-x-hidden">
+    // FIX: Kein overflow-hidden hier, damit nur der Browser-Scrollbalken genutzt wird
+    <div className="min-h-screen bg-gray-50/30 transition-opacity duration-700">
       <NavigationHeader />
 
-      {currentStep === -1 ? (
-        <div className="pt-20">{renderMainContent()}</div>
-      ) : currentStep === 0 ? (
-        // Step 0: Layout ohne Karte links
-        <div className="pt-24 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-7 xl:col-span-8 order-2 lg:order-1">{renderMainContent()}</div>
-            {/* Sticky Preview */}
-            <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2 lg:sticky lg:top-32">
-              <LivePreview />
-            </div>
-          </div>
-        </div>
-      ) : (
-        // Step 1+: Standard Layout
-        <div className="pt-24 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* ITEMS-START sorgt dafür, dass die sticky Spalte nicht gestreckt wird und gleiten kann */}
-          <div className="grid lg:grid-cols-12 gap-8 items-start relative">
+      <div className="pt-24 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* items-start sorgt dafür, dass die sticky Spalte nicht gestreckt wird */}
+        <div className="grid lg:grid-cols-12 gap-8 items-start relative">
 
-            {/* Mobile Toggle */}
-            <div className="lg:hidden w-full mb-4 order-1 col-span-12">
-              <Button variant="outline" className="w-full" onClick={() => {
-                const el = document.getElementById("mobile-preview-area");
-                if(el) el.classList.toggle("hidden");
-              }}>
-                <Smartphone className="w-4 h-4 mr-2" /> Toggle Preview
-              </Button>
-              <div id="mobile-preview-area" className="hidden mt-4 bg-white p-4 rounded-xl border flex justify-center">
-                <div className="relative transform scale-[0.8] origin-top">
-                  <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
-                    <PhonePortal><TemplatePreviewContent /></PhonePortal>
-                  </LivePhoneFrame>
-                </div>
-              </div>
-            </div>
-
-            {/* LINKES PANEL */}
-            <div className={`${isFullWidthStep ? "lg:col-span-12" : "lg:col-span-7 xl:col-span-8"} order-2 lg:order-1`}>
+          {/* LINKES PANEL */}
+          <div className={`${isFullWidthStep ? "lg:col-span-12" : "lg:col-span-7 xl:col-span-8"} order-2 lg:order-1`}>
+            {currentStep === -1 ? (
+              renderMainContent()
+            ) : (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 min-h-[600px]">
                 {renderMainContent()}
               </div>
-            </div>
-
-            {/* RECHTES PANEL: Sticky Live Preview */}
-            {!isFullWidthStep && (
-              <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2">
-                <LivePreview />
-              </div>
             )}
           </div>
+
+          {/* RECHTES PANEL: Sticky Live Preview */}
+          {!isFullWidthStep && currentStep !== -1 && (
+            <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2 sticky top-28 self-start">
+              <LivePreview />
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

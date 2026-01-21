@@ -27,33 +27,25 @@ export function TemplatePreviewContent() {
   const features = useConfiguratorStore((s) => s.features);
   const pages = useConfiguratorStore((s) => s.pages);
 
-  // 2. ADAPTER (Daten & Defaults auf Deutsch)
+  // 2. ADAPTER
   const formData = useMemo(() => ({
     businessName: business.name || "Dein Geschäft",
     businessType: business.type || "restaurant",
     location: business.location,
     slogan: business.slogan,
     uniqueDescription: business.uniqueDescription,
-
-    // Design Configuration
     template: design.template || "minimalist",
     primaryColor: design.primaryColor || "#2563EB",
     secondaryColor: design.secondaryColor || "#7C3AED",
     fontFamily: design.fontFamily || "sans-serif",
     backgroundColor: design.backgroundColor || "#FFFFFF",
     fontColor: design.fontColor || "#000000",
-    // @ts-ignore
-    priceColor: design.priceColor || design.primaryColor || "#2563EB",
-    // @ts-ignore
-    fontSize: design.fontSize || "medium",
-
-    // Content Data
+    priceColor: (design as any).priceColor || design.primaryColor || "#2563EB",
+    fontSize: (design as any).fontSize || "medium",
     menuItems: content.menuItems || [],
     gallery: content.gallery || [],
     openingHours: content.openingHours || {},
     contactMethods: contact.contactMethods || [],
-
-    // Features
     onlineOrdering: features.onlineOrderingEnabled,
     selectedPages: pages.selectedPages || ["home"],
   }), [business, design, content, contact, features, pages]);
@@ -84,8 +76,8 @@ export function TemplatePreviewContent() {
     const base = {
       wrapper: { backgroundColor: formData.backgroundColor, color: formData.fontColor },
 
-      // FIX: pt-28 (112px) gibt genug Abstand für Header + Notch, damit die Headline frei steht
-      page: `px-5 pt-28 pb-24 min-h-full ${fontClass}`,
+      // FIX: pt-32 für Abstand unter der absoluten Nav
+      page: `px-5 pt-32 pb-24 min-h-full ${fontClass}`,
 
       titleClass: `${getFontSize('title')} font-bold mb-6 text-center leading-tight`,
       bodyClass: `${getFontSize('body')} opacity-90 leading-relaxed`,
@@ -93,8 +85,8 @@ export function TemplatePreviewContent() {
       itemDescClass: `${formData.fontSize === 'large' ? 'text-sm' : 'text-xs'} opacity-80 mt-1 leading-snug`,
       itemPriceClass: `${getFontSize('price')} font-bold`,
 
-      // Fixierter Header im Handy
-      nav: `fixed top-0 left-0 right-0 z-30 px-5 pt-12 pb-4 flex items-center justify-between backdrop-blur-md border-b border-black/5 transition-all`,
+      // FIX: absolute statt fixed für korrekte Position im skalierten Frame
+      nav: `absolute top-0 left-0 right-0 z-40 px-5 pt-12 pb-4 flex items-center justify-between backdrop-blur-md border-b border-black/5 transition-all`,
     };
 
     switch (formData.template) {
@@ -182,7 +174,6 @@ export function TemplatePreviewContent() {
   };
 
   const renderContent = () => {
-    // --- HOME ---
     if (previewState.activePage === 'home') {
       return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -216,7 +207,6 @@ export function TemplatePreviewContent() {
             </div>
 
             <div className="space-y-3">
-              {/* Fallback Items */}
               {(formData.menuItems.length > 0 ? formData.menuItems : [
                 {name: "Burger Klassik", description: "Rindfleisch, Salat, Tomate", price: "12.50"},
                 {name: "Pasta Pesto", description: "Frisches Basilikum, Pinienkerne", price: "14.00"},
@@ -251,25 +241,15 @@ export function TemplatePreviewContent() {
       );
     }
 
-    // --- KARTE (MENU) ---
     if (previewState.activePage === 'menu') {
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <h2 className={styles.titleClass}>Karte</h2>
-
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
             {['Alle', 'Speisen', 'Getränke', 'Desserts'].map((cat, i) => (
-              <span key={cat} className={`
-                    px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105
-                    ${i === 0 ? 'bg-current text-white/90 shadow-md' : 'border border-current/20 opacity-70'}
-                 `}
-                    style={i === 0 ? { backgroundColor: formData.fontColor, color: formData.backgroundColor } : {}}
-              >
-                   {cat}
-                 </span>
+              <span key={cat} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${i === 0 ? 'bg-current text-white/90 shadow-md' : 'border border-current/20 opacity-70'}`} style={i === 0 ? { backgroundColor: formData.fontColor, color: formData.backgroundColor } : {}}>{cat}</span>
             ))}
           </div>
-
           <div className="space-y-4 pb-8">
             {(formData.menuItems.length > 0 ? formData.menuItems : [1,2,3,4,5,6]).map((item: any, i: number) => (
               <div key={i} className={styles.itemCard}>
@@ -281,13 +261,7 @@ export function TemplatePreviewContent() {
                   <div className="flex flex-col items-end gap-2 pl-2">
                     <div className={styles.itemPriceClass} style={{color: formData.priceColor}}>{item.price || "9.50"}€</div>
                     {formData.onlineOrdering && (
-                      <button
-                        onClick={() => addToCart(item)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md"
-                        style={{ backgroundColor: formData.primaryColor, color: '#FFF' }}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
+                      <button onClick={() => addToCart(item)} className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md" style={{ backgroundColor: formData.primaryColor, color: '#FFF' }}><Plus className="w-4 h-4" /></button>
                     )}
                   </div>
                 </div>
@@ -298,12 +272,10 @@ export function TemplatePreviewContent() {
       );
     }
 
-    // --- KONTAKT ---
     if (previewState.activePage === 'contact') {
       return (
         <div className="space-y-8 animate-in fade-in duration-300">
           <h2 className={styles.titleClass}>Kontakt</h2>
-
           <div className={`p-6 rounded-2xl border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm`}>
             <div className="space-y-6">
               {formData.location && (
@@ -317,19 +289,14 @@ export function TemplatePreviewContent() {
               )}
               {formData.contactMethods.map((m: any, i: number) => (
                 <div key={i} className="flex items-center gap-4">
-                  <div className="p-2 bg-current/5 rounded-full">
-                    {m.type === 'phone' ? <Phone className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
-                  </div>
+                  <div className="p-2 bg-current/5 rounded-full">{m.type === 'phone' ? <Phone className="w-4 h-4" /> : <Mail className="w-4 h-4" />}</div>
                   <div className={styles.bodyClass}>{m.value}</div>
                 </div>
               ))}
             </div>
           </div>
-
           <div>
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 opacity-70" /> Öffnungszeiten
-            </h3>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Clock className="w-5 h-5 opacity-70" /> Öffnungszeiten</h3>
             <div className="space-y-2 opacity-90">
               {Object.keys(formData.openingHours).length > 0 ? (
                 Object.entries(formData.openingHours).map(([day, hours]: any) => (
@@ -343,7 +310,6 @@ export function TemplatePreviewContent() {
               )}
             </div>
           </div>
-
           <div className="flex justify-center gap-6 py-6 opacity-80">
             <Instagram className="w-6 h-6 cursor-pointer hover:opacity-100 transition-all" />
             <Facebook className="w-6 h-6 cursor-pointer hover:opacity-100 transition-all" />
@@ -352,7 +318,6 @@ export function TemplatePreviewContent() {
       );
     }
 
-    // --- GALERIE ---
     if (previewState.activePage === 'gallery') {
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
@@ -360,12 +325,8 @@ export function TemplatePreviewContent() {
           <div className="grid grid-cols-2 gap-3">
             {(formData.gallery.length > 0 ? formData.gallery : [1,2,3,4,5,6]).map((img: any, i: number) => (
               <div key={i} className="aspect-square rounded-xl overflow-hidden bg-black/5 relative shadow-sm group">
-                {img.url ? (
-                  <img src={normalizeImageSrc(img)} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-current/20">
-                    <Camera className="w-6 h-6" />
-                  </div>
+                {img.url ? <img src={normalizeImageSrc(img)} className="w-full h-full object-cover" /> : (
+                  <div className="w-full h-full flex items-center justify-center text-current/20"><Camera className="w-6 h-6" /></div>
                 )}
               </div>
             ))}
@@ -373,32 +334,34 @@ export function TemplatePreviewContent() {
         </div>
       );
     }
-
     return <div className="p-10 text-center opacity-50 pt-20">Seite nicht gefunden</div>;
   };
 
   // --- HAUPT RENDER ---
   return (
     <div
-      className={`h-full w-full relative flex flex-col transition-colors duration-300 overflow-hidden pointer-events-auto select-none`}
+      className="h-full w-full relative flex flex-col transition-colors duration-300 overflow-hidden pointer-events-auto select-none"
       style={styles.wrapper}
-      // WICHTIG: Stoppt das Scrollen zum Parent, wenn man im Handy scrollt
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* HEADER HINTERGRUND (Notch Area) */}
+      {/* FIX: Z-Index von 50 auf 0 gesenkt.
+          Damit bleibt der Hintergrund HINTER der Notch des Rahmens (z-20),
+          aber VOR dem scrollenden Content.
+      */}
       <div
-        className="absolute top-0 left-0 right-0 h-14 z-20 pointer-events-none transition-colors duration-300"
+        className="absolute top-0 left-0 right-0 h-14 z-0 pointer-events-none transition-colors duration-300"
         style={{ backgroundColor: formData.backgroundColor }}
       />
 
       {/* SCROLL CONTAINER */}
       <div
-        className="flex-1 overflow-y-auto no-scrollbar scroll-smooth relative z-0"
+        className="flex-1 overflow-y-auto no-scrollbar scroll-smooth relative z-10"
         style={{
           WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorY: 'contain' // FIX: Verhindert Scroll Chaining zum Body
+          overscrollBehaviorY: 'contain'
         }}
       >
+        {/* Navigation muss über dem Content, aber unter der Notch liegen */}
         {renderNav()}
         {renderMenuOverlay()}
 
