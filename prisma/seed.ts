@@ -54,7 +54,7 @@ const templates = [
     id: "modern",
     name: "Modern",
     description:
-      "A contemporary design with bold typography and dynamic layouts. Great for trending restaurants.",
+      "A contemporary design with bold typography and dynamic layouts. Great for trending restaurants. ",
     category: "GASTRONOMY",
     layout: {
       intent: "COMMERCIAL",
