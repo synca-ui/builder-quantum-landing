@@ -7,7 +7,7 @@ interface AuditContext {
 }
 
 /**
- * ✅ Create audit logger for a request
+ *  Create audit logger for a request
  * Usage:
  *   const audit = createAuditLogger(req);
  *   await audit("config_created", configId, true);
