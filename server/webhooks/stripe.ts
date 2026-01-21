@@ -6,7 +6,7 @@ import prisma from "../db/prisma";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 // ============================================
-// PLAN MAPPING
+// PLAN MAPPINGs
 // ============================================
 
 const PLAN_MAP: Record<
