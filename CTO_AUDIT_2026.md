@@ -21,6 +21,7 @@
 ### 1.1 Current Architecture Overview
 
 #### Strengths ✅
+
 - **Modularized Configurator.tsx:** Reduced from ~9,000 → ~900 lines. Clean orchestrator pattern.
 - **Zustand Store:** Centralized state with domain-driven slices (business, design, content, features, contact, publishing, pages, payments).
 - **Atomic Components:** 16 dedicated step components in `client/components/configurator/steps/`.
@@ -30,6 +31,7 @@
 #### Critical Issues ⚠️
 
 ##### Issue #1: Hardcoding Trap in Template System
+
 **File:** `client/components/template/TemplateRegistry.tsx` (lines 1-200)
 
 **Problem:** Templates are hardcoded in the frontend with static `defaultTemplates` array.
@@ -43,7 +45,8 @@ export const defaultTemplates: Template[] = [
 ];
 ```
 
-**Impact:** 
+**Impact:**
+
 - Cannot dynamically load templates from Template Marketplace (database).
 - Publishing platform cannot add premium templates without code deployment.
 - Theme Store vision (Section 4) blocked.
@@ -59,14 +62,14 @@ interface TemplateLoaderProps {
 
 export function TemplateRegistry() {
   const [templates, setTemplates] = useState<Template[]>([]);
-  
+
   useEffect(() => {
     // Load from /api/templates?businessType=cafe
     fetch(`/api/templates?businessType=${businessType}`)
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setTemplates);
   }, [businessType]);
-  
+
   // Render templates from state, not hardcoded
 }
 ```
@@ -74,34 +77,41 @@ export function TemplateRegistry() {
 ---
 
 ##### Issue #2: Legacy formData Bridge Not Production-Ready
+
 **File:** `client/pages/Configurator.tsx` (useMemo bridge, line ~250)
 
 **Problem:** Live Preview still uses a `useMemo` bridge projecting Zustand state to legacy `formData` format. Works for MVP, but creates technical debt.
 
 ```typescript
 // Current approach: Bridge from Zustand → formData
-const formDataBridge = useMemo(() => ({
-  businessName: store.business.name,
-  businessType: store.business.type,
-  template: store.design.template,
-  // ... 20+ manual mappings
-  menuItems: store.content.menuItems,
-}), [store]);
+const formDataBridge = useMemo(
+  () => ({
+    businessName: store.business.name,
+    businessType: store.business.type,
+    template: store.design.template,
+    // ... 20+ manual mappings
+    menuItems: store.content.menuItems,
+  }),
+  [store],
+);
 ```
 
 **Why It's a Problem:**
+
 - `Site.tsx` and `LivePhoneFrame` expect flat `Configuration` interface, not domain-driven structure.
 - Every Zustand change requires manual bridge maintenance.
 - New domain fields won't auto-sync without code changes.
 - **Scaling risk:** Adding 100 restaurant sites = 100 slow useMemo bridges re-computing.
 
 **Production Solution:**
+
 - Migrate `Site.tsx` and `LivePhoneFrame` to consume domain-driven store directly.
 - **Timeline:** Week 2 (parallel with template API).
 
 ---
 
 ##### Issue #3: No Pluggable Add-On Architecture
+
 **File:** `client/pages/Configurator.tsx` (lines 40-68, CONFIGURATOR_STEPS_CONFIG)
 
 **Problem:** Steps are hardcoded in a switch statement.
@@ -122,6 +132,7 @@ switch (config.component) {
 ```
 
 **Why Critical for SaaS:**
+
 - Cannot add "POS Setup" or "Reservations API" steps without code deployment.
 - Third-party developers cannot extend the configurator.
 - Creative Studio custom steps will require rebuilds.
@@ -140,7 +151,8 @@ switch (config.component) {
 - **Live Preview:** ~120ms (Site.tsx with 15+ sections, not memoized)
 - **Issue:** `Site.tsx` rerenders entire component tree on every store update
 
-**Bottleneck:** 
+**Bottleneck:**
+
 ```typescript
 // ❌ PROBLEM: No memoization in Site.tsx
 export default function Site({ config }: Props) {
@@ -165,12 +177,13 @@ const HomeSection = memo(({ menuItems, primaryColor }) => {
 export default function Site() {
   const menuItems = useConfiguratorStore(s => s.content.menuItems);
   const primaryColor = useConfiguratorStore(s => s.design.primaryColor);
-  
+
   return <HomeSection menuItems={menuItems} primaryColor={primaryColor} />;
 }
 ```
 
 **Performance Target for 10K Users:**
+
 - Configurator step: <10ms per interaction
 - Live preview: <50ms per change
 - Use React DevTools Profiler to monitor.
@@ -180,6 +193,7 @@ export default function Site() {
 ### 1.3 State Management: Zustand Store Assessment
 
 #### What's Working ✅
+
 - Domain slicing (Business, Design, Content, Features, Contact, Publishing, Pages, Payments)
 - Throttle guard prevents infinite loops (checkThrottleGuard)
 - Persistence middleware to localStorage/sessionStorage
@@ -188,6 +202,7 @@ export default function Site() {
 #### What Needs Attention ⚠️
 
 **1. API Sync Logic Not Integrated**
+
 - Store updates don't automatically sync to backend.
 - `configurationApi.save()` called manually in `PublishStep.tsx`.
 - Should be middleware-based (auto-save on config change).
@@ -210,12 +225,13 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           await configurationApi.save(config);
         }
       },
-    }
-  )
+    },
+  ),
 );
 ```
 
 **2. No Validation Middleware**
+
 - Store accepts any value without runtime validation.
 - Risk: Invalid data synced to database.
 
@@ -237,25 +253,27 @@ const validatedUpdate = (updates: Partial<BusinessInfo>) => {
 **Gaps Found:**
 
 1. **Legacy `Configuration` interface in `api.ts`** has duplicated fields (missing domain-driven structure).
+
    ```typescript
    // ❌ PROBLEM: Old flat interface
    export interface Configuration {
-     businessName: string;       // Should be business.name
-     businessType: string;       // Should be business.type
-     template: string;           // Should be design.template
-     primaryColor: string;       // Should be design.primaryColor
+     businessName: string; // Should be business.name
+     businessType: string; // Should be business.type
+     template: string; // Should be design.template
+     primaryColor: string; // Should be design.primaryColor
    }
    ```
-   
+
    **Fix:** Migrate `api.ts` to use domain types by Week 1.
 
 2. **Missing discriminated unions for status states**
+
    ```typescript
    // ❌ PROBLEM: String enum
    status: "draft" | "published" | "archived"
-   
+
    // ✅ BETTER: Discriminated union
-   publishing: 
+   publishing:
      | { status: "draft"; publishedUrl?: never }
      | { status: "published"; publishedUrl: string }
      | { status: "archived"; archivedAt: Date }
@@ -266,26 +284,31 @@ const validatedUpdate = (updates: Partial<BusinessInfo>) => {
 ### 1.5 Critical File Assessment
 
 #### ✅ `client/pages/Configurator.tsx` (Orchestrator)
+
 - **Quality:** A (Refactored well)
 - **Issues:** None critical
 - **Action:** Monitor Live Preview sync
 
 #### ✅ `client/store/configuratorStore.ts` (State Management)
+
 - **Quality:** B+ (Good structure, needs validation & API sync)
 - **Issues:** Missing middleware for backend persistence
 - **Action:** Add auto-save middleware by Week 1
 
 #### ⚠️ `client/components/template/TemplateRegistry.tsx` (Template Engine)
+
 - **Quality:** D (Hardcoded, not scalable)
 - **Issues:** Blocks Template Marketplace MVP
 - **Action:** Replace with API-driven loader by Week 2
 
 #### ⚠️ `client/pages/Site.tsx` (Live Renderer)
+
 - **Quality:** C (Works but not optimized)
 - **Issues:** No component memoization, full re-renders on store change
 - **Action:** Add React.memo for sections, selective hooks by Week 1.5
 
 #### ⚠️ `client/lib/api.ts` (API Layer)
+
 - **Quality:** C+ (Works but duplicated types)
 - **Issues:** Legacy interface, no proper error handling for 10K users
 - **Action:** Migrate types, add retry logic by Week 1
@@ -296,23 +319,24 @@ const validatedUpdate = (updates: Partial<BusinessInfo>) => {
 
 ### 2.1 Current Tech Stack Assessment
 
-| Component | Current | Rating | Issue |
-|-----------|---------|--------|-------|
-| Frontend | React 18 + Vite | A | None |
-| State | Zustand | A- | Needs API sync middleware |
-| Database | NeonDB (PostgreSQL) | A | Schema incomplete for Marketplace |
-| Auth | Clerk | A | Good, not fully integrated in API |
-| Hosting | Netlify | A | Good for static, dynamic routes tested |
-| Backend | Node.js/Express | B | Needs microservice boundaries |
-| Task Queue | None | ⚠️ | **CRITICAL GAP** for n8n workflows |
-| File Storage | Inline/URLs | C | No CDN or blob storage yet |
-| Search | None | ⚠️ | **CRITICAL GAP** for restaurant discovery |
+| Component    | Current             | Rating | Issue                                     |
+| ------------ | ------------------- | ------ | ----------------------------------------- |
+| Frontend     | React 18 + Vite     | A      | None                                      |
+| State        | Zustand             | A-     | Needs API sync middleware                 |
+| Database     | NeonDB (PostgreSQL) | A      | Schema incomplete for Marketplace         |
+| Auth         | Clerk               | A      | Good, not fully integrated in API         |
+| Hosting      | Netlify             | A      | Good for static, dynamic routes tested    |
+| Backend      | Node.js/Express     | B      | Needs microservice boundaries             |
+| Task Queue   | None                | ⚠️     | **CRITICAL GAP** for n8n workflows        |
+| File Storage | Inline/URLs         | C      | No CDN or blob storage yet                |
+| Search       | None                | ⚠️     | **CRITICAL GAP** for restaurant discovery |
 
 ---
 
 ### 2.2 Database Schema (NeonDB) - CRITICAL MIGRATION PATH
 
 #### Current Schema Issues
+
 ```prisma
 // ❌ CURRENT: Incomplete
 model Configuration {
@@ -335,24 +359,24 @@ model Template {
   description     String
   category        String     // "cafe", "restaurant", "bar", etc.
   isPremium       Boolean    @default(false)
-  
+
   // Design tokens (JSON for flexibility)
   designTokens    Json       // { colors: {}, typography: {}, spacing: {} }
   layout          Json       // { intent: "narrative" | "commercial" | "visual" }
   preview         Json       // { thumbnail: URL, features: [] }
-  
+
   // Marketplace metadata
   creator         String     // User ID or "maitr"
   downloads       Int        @default(0)
   rating          Float      @default(0)
   version         String     @default("1.0.0")
-  
+
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
-  
+
   // Relations
   configurations  Configuration[]
-  
+
   @@index([category])
   @@index([isPremium])
 }
@@ -361,44 +385,44 @@ model Template {
 model Configuration {
   id              String     @id @default(uuid())
   userId          String
-  
+
   // Business domain
   businessName    String
   businessType    String
   location        String?
   slogan          String?
-  
+
   // Design domain
   selectedTemplate String   // Foreign key to Template.id
   template        Template   @relation(fields: [selectedTemplate], references: [id])
   designTokens    Json       // User customizations: { primaryColor, secondaryColor, etc. }
-  
+
   // Content domain
   menuItems       Json       // Array<MenuItem>
   gallery         Json       // Array<GalleryImage>
   openingHours    Json       // OpeningHours object
-  
+
   // Features domain
   enabledFeatures  String[]   // ["reservations", "onlineOrdering", "socialProof"]
   featureConfig   Json       // Add-on specific config
-  
+
   // Contact domain
   contactMethods  Json
   socialMedia     Json
-  
+
   // Publishing domain
   status          String     @default("draft")
   publishedUrl    String?    @unique
   publishedAt     DateTime?
-  
+
   // Add-on configuration (extensible)
   addOns          AddOnInstance[]
-  
+
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
-  
+
   user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([status])
   @@index([businessType])
@@ -409,13 +433,13 @@ model AddOnInstance {
   id              String     @id @default(uuid())
   configId        String
   addOnId         String     // References AddOnRegistry.id
-  
+
   // Configuration specific to this add-on
   config          Json       // { reservationProvider: "calendly", ... }
   status          String     @default("active")  // "active", "inactive", "error"
-  
+
   configuration   Configuration @relation(fields: [configId], references: [id], onDelete: Cascade)
-  
+
   @@unique([configId, addOnId])
 }
 
@@ -425,18 +449,18 @@ model AddOnRegistry {
   name            String
   description     String
   category        String     // "reservations", "pos", "staff", etc.
-  
+
   // Plugin manifest
   manifest        Json       // { entrypoint, slots: [], config: {} }
   version         String
   creator         String     // "maitr" or vendor ID
-  
+
   isPublished     Boolean    @default(false)
   isPremium       Boolean    @default(false)
-  
+
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
-  
+
   @@index([category])
   @@index([isPublished])
 }
@@ -447,24 +471,24 @@ model ScraperJob {
   businessName    String
   businessType    String
   websiteUrl      String     @unique
-  
+
   // n8n execution result
   n8nExecutionId  String?
   status          String     @default("pending")  // pending, completed, failed
-  
+
   // Extracted data (raw from n8n)
   extractedData   Json       // Raw HTML/metadata
-  
+
   // Pre-configuration (before user customization)
   suggestedConfig Json       // Auto-filled Configuration
-  
+
   // User linking (optional)
   userId          String?
   linkedConfig    String?    // Configuration.id (one-to-one mapping)
-  
+
   createdAt       DateTime   @default(now())
   completedAt     DateTime?
-  
+
   @@index([status])
   @@index([userId])
 }
@@ -473,17 +497,17 @@ model ScraperJob {
 model WebApp {
   id              String     @id @default(uuid())
   configId        String     @unique
-  
+
   // Routing
   subdomain       String     @unique
   customDomain    String?    @unique
-  
+
   // Performance
   lastDeployed    DateTime?
   deploymentUrl   String?
-  
+
   configuration   Configuration @relation(fields: [configId], references: [id], onDelete: Cascade)
-  
+
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 }
@@ -496,9 +520,9 @@ model AuditLog {
   resourceType    String     // "configuration", "addon"
   resourceId      String
   changes         Json?      // { before: {}, after: {} }
-  
+
   createdAt       DateTime   @default(now())
-  
+
   @@index([userId, createdAt])
 }
 ```
@@ -551,18 +575,19 @@ model AuditLog {
 
 #### Implementation Timeline:
 
-| Week | Task | Notes |
-|------|------|-------|
-| 1 | Implement ScraperJob model + API endpoints | Database migration |
-| 1 | n8n webhook receiver (`POST /api/webhooks/n8n/scraper`) | Handle results |
-| 2 | Frontend: Scrape URL input + polling UI | Loading states |
-| 2 | Auto-configuration logic (JavaScript) | Map n8n output → Configuration |
+| Week | Task                                                    | Notes                          |
+| ---- | ------------------------------------------------------- | ------------------------------ |
+| 1    | Implement ScraperJob model + API endpoints              | Database migration             |
+| 1    | n8n webhook receiver (`POST /api/webhooks/n8n/scraper`) | Handle results                 |
+| 2    | Frontend: Scrape URL input + polling UI                 | Loading states                 |
+| 2    | Auto-configuration logic (JavaScript)                   | Map n8n output → Configuration |
 
 ---
 
 ### 2.4 Deployment Pipeline: Railway + Netlify
 
 #### Current Flow ✅ (Working)
+
 ```
 Git Push → Netlify Deploy → Live
 ```
@@ -602,6 +627,7 @@ Git Push → Netlify Deploy → Live
 #### Key Configs:
 
 **Netlify Functions (Serverless):**
+
 ```javascript
 // netlify/functions/publish.js
 exports.handler = async (event) => {
@@ -612,6 +638,7 @@ exports.handler = async (event) => {
 ```
 
 **Railway.app Environment:**
+
 ```bash
 # DATABASE_URL: neondb connection (already set)
 # JWT_SECRET: Sign refresh tokens (needs generation)
@@ -627,12 +654,14 @@ exports.handler = async (event) => {
 ### 3.1 The Problem: Client-Side Rendering Ruins SEO
 
 **Google Ranking Issue:**
+
 - Maitr generates 10,000 restaurant sites (subdomains or `/user-id/name`)
 - All sites are Client-Side Rendered (CSR) with Vite
 - Google crawler sees blank `<div id="root"></div>`
 - Restaurants don't appear in Google Search or Maps
 
 #### Current Site.tsx Flow:
+
 ```
 1. Browser requests: https://juju-cafe.maitr.de/
 2. Server responds with HTML (nearly empty):
@@ -655,6 +684,7 @@ exports.handler = async (event) => {
 #### Option A: Pre-rendering at Publish Time (Fastest to Implement)
 
 **How it works:**
+
 ```javascript
 // When user clicks "Publish", generate static HTML
 POST /api/configurations/:id/publish
@@ -665,7 +695,7 @@ POST /api/configurations/:id/publish
 └─ Return publishedUrl
 
 Example output:
-https://juju-cafe.maitr.de/ 
+https://juju-cafe.maitr.de/
 → Returns pre-rendered HTML with:
    - <title>JuJu Café - Coffee & Community</title>
    - <meta name="description" content="...">
@@ -674,17 +704,20 @@ https://juju-cafe.maitr.de/
 ```
 
 **Pros:**
+
 - Fast (immediate SEO indexing)
 - Works with Netlify static hosting
 - No extra infrastructure
 
 **Cons:**
+
 - Updates require re-publish (not dynamic)
 - Limits real-time features
 
 #### Option B: Edge Functions + Dynamic Meta Tags (Better UX)
 
 **How it works:**
+
 ```
 1. User publishes configuration
 2. Deploy to: https://juju-cafe.maitr.de (Netlify Edge Function)
@@ -704,12 +737,13 @@ Example:
 ```
 
 **Implementation (Netlify Functions):**
+
 ```javascript
 // netlify/functions/render-site.js
 exports.handler = async (event) => {
   const { subdomain } = event;
-  const config = await fetch(`/api/sites/${subdomain}`).then(r => r.json());
-  
+  const config = await fetch(`/api/sites/${subdomain}`).then((r) => r.json());
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -724,34 +758,39 @@ exports.handler = async (event) => {
       <body><div id="root"></div></body>
     </html>
   `;
-  
+
   return { statusCode: 200, body: html };
 };
 ```
 
 **Pros:**
+
 - SEO-friendly
 - Dynamic updates (real-time)
 - Can serve different HTML based on query params
 
 **Cons:**
+
 - Requires Edge Function changes
 - Slightly higher latency
 
 #### Option C: Full Static Site Generation (SSG) with Incremental Builds
 
 **How it works:**
+
 - When configuration published, trigger build service
 - Generate static `/dist/juju-cafe/index.html`
 - Deploy to CDN
 - Auto-regenerate on configuration change
 
 **Pros:**
+
 - Best performance (pure CDN)
 - Best SEO (pre-rendered HTML)
 - Scales to 100K sites
 
 **Cons:**
+
 - Requires build queue infrastructure
 - Cold starts on first publish (30-60s)
 
@@ -766,10 +805,10 @@ exports.handler = async (event) => {
 
 export async function publishConfiguration(configId: string) {
   const config = await db.configuration.findUnique({ where: { id: configId } });
-  
+
   // 1. Render React component to HTML
   const html = renderToString(<Site config={config} />);
-  
+
   // 2. Inject meta tags
   const seoHtml = injectMetaTags(html, {
     title: `${config.businessName} - ${config.businessType}`,
@@ -777,13 +816,13 @@ export async function publishConfiguration(configId: string) {
     ogImage: config.gallery?.[0]?.url || "/og-default.png",
     ogUrl: `https://${config.selectedDomain || "maitr.de"}`,
   });
-  
+
   // 3. Deploy to Netlify
   const published = await netlifyClient.deploy({
     subdomain: config.selectedDomain,
     files: { "index.html": seoHtml },
   });
-  
+
   return published;
 }
 ```
@@ -796,7 +835,7 @@ exports.handler = async (event) => {
   const config = await getConfiguration(event.subdomain);
   const metaTags = generateMetaTags(config);
   const html = renderSite(config, metaTags);
-  
+
   return {
     statusCode: 200,
     headers: {
@@ -861,10 +900,12 @@ exports.handler = async (event) => {
 ### 4.1 Vision: From Configurator to Visual Editor
 
 **Current State (MVP):**
+
 - Users fill forms (text inputs, color pickers)
 - Live preview on right side
 
 **Target State (SaaS 2026):**
+
 - Users drag-and-drop sections
 - Visual theme editor
 - Theme marketplace
@@ -886,7 +927,7 @@ exports.handler = async (event) => {
       "creator": "maitr",
       "version": "1.0.0"
     },
-    
+
     "designTokens": {
       "colors": {
         "primary": "#EA580C",
@@ -911,7 +952,7 @@ exports.handler = async (event) => {
         "buttonRadius": "24px"
       }
     },
-    
+
     "components": {
       "header": {
         "backgroundColor": "$colors.background",
@@ -932,11 +973,16 @@ exports.handler = async (event) => {
         "hoverEffect": "scale(1.05)"
       }
     },
-    
+
     "sections": [
       { "id": "hero", "type": "hero", "enabled": true },
       { "id": "menu", "type": "menu-grid", "enabled": true, "columns": 3 },
-      { "id": "gallery", "type": "gallery", "enabled": true, "layout": "masonry" },
+      {
+        "id": "gallery",
+        "type": "gallery",
+        "enabled": true,
+        "layout": "masonry"
+      },
       { "id": "contact", "type": "contact-form", "enabled": true }
     ]
   }
@@ -959,7 +1005,7 @@ interface DesignConfiguration {
 // At runtime, inject into Site.tsx
 function Site({ config }) {
   const theme = config.designTokens;
-  
+
   return (
     <div style={{
       backgroundColor: theme.colors.background,
@@ -990,22 +1036,22 @@ interface CreativeStudioProps {
 export function CreativeStudio({ configId }: CreativeStudioProps) {
   const config = useConfiguratorStore();
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  
+
   return (
     <div className="grid grid-cols-12 gap-4 h-screen">
       {/* Left: Canvas */}
       <div className="col-span-7 border-r">
-        <CreativeCanvas 
+        <CreativeCanvas
           config={config}
           selectedSection={selectedSection}
           onSelectSection={setSelectedSection}
         />
       </div>
-      
+
       {/* Right: Property Panel */}
       <div className="col-span-5 overflow-y-auto">
         {selectedSection && (
-          <SectionPropertiesPanel 
+          <SectionPropertiesPanel
             section={selectedSection}
             theme={config.design}
             onUpdate={(updates) => {
@@ -1032,7 +1078,7 @@ function CreativeCanvas({ config, onSelectSection }) {
             <SectionPreview section={section} theme={config.design} />
           </div>
         ))}
-        
+
         <button onClick={() => addNewSection()}>
           + Add Section
         </button>
@@ -1070,19 +1116,19 @@ model Template {
 export function ThemeStore() {
   const [themes, setThemes] = useState<Template[]>([]);
   const [filter, setFilter] = useState("all"); // "all", "cafe", "restaurant", "bar"
-  
+
   useEffect(() => {
     fetch(`/api/templates?category=${filter}&sort=rating`)
       .then(r => r.json())
       .then(setThemes);
   }, [filter]);
-  
+
   return (
     <div>
       <h1>Theme Store</h1>
       <div className="grid grid-cols-3 gap-4">
         {themes.map(theme => (
-          <ThemeCard 
+          <ThemeCard
             key={theme.id}
             theme={theme}
             onApply={() => applyThemeToConfig(theme.id)}
@@ -1097,13 +1143,13 @@ export function ThemeStore() {
 
 #### Implementation Timeline:
 
-| Week | Task |
-|------|------|
-| 2 | Export 4 default templates as Liquid UI JSON |
-| 2 | Build /api/templates endpoint |
-| 3 | Create ThemeStore.tsx component |
-| 3 | Implement theme application logic |
-| 4 | Premium template support (Stripe integration) |
+| Week | Task                                          |
+| ---- | --------------------------------------------- |
+| 2    | Export 4 default templates as Liquid UI JSON  |
+| 2    | Build /api/templates endpoint                 |
+| 3    | Create ThemeStore.tsx component               |
+| 3    | Implement theme application logic             |
+| 4    | Premium template support (Stripe integration) |
 
 ---
 
@@ -1112,6 +1158,7 @@ export function ThemeStore() {
 ### 5.1 Problem: Monolithic Feature Set
 
 **Current Issue:**
+
 - All features (Reservations, Online Ordering, Team Area) hardcoded in code
 - Cannot ship "Reservations via Calendly" without code deployment
 - Third-party developers cannot extend the platform
@@ -1129,25 +1176,25 @@ export function ThemeStore() {
 // Plugin: "What" gets injected
 
 // 1. CONFIGURATOR SLOTS (Where users configure add-ons)
-type ConfiguratorSlot = 
-  | "business-info-after"          // Additional fields after business info
-  | "design-customization-after"   // Additional design options
-  | "features-toggle"              // Additional feature toggles
-  | "publishing-pre"               // Pre-publish validation
-  | "site-section";               // Additional page sections
+type ConfiguratorSlot =
+  | "business-info-after" // Additional fields after business info
+  | "design-customization-after" // Additional design options
+  | "features-toggle" // Additional feature toggles
+  | "publishing-pre" // Pre-publish validation
+  | "site-section"; // Additional page sections
 
 // 2. SITE-RENDER SLOTS (Where components render on published site)
-type SiteSlot = 
-  | "header-nav-after"             // Navigation items
-  | "hero-after"                   // After hero section
-  | "footer-before"                // Footer items
-  | "modal-checkout";              // Replace checkout
+type SiteSlot =
+  | "header-nav-after" // Navigation items
+  | "hero-after" // After hero section
+  | "footer-before" // Footer items
+  | "modal-checkout"; // Replace checkout
 
 // 3. API SLOTS (Backend hooks)
-type ApiSlot = 
-  | "configuration-validate"       // Validate config before publish
-  | "configuration-publish"        // On publish event
-  | "order-created";              // On new order
+type ApiSlot =
+  | "configuration-validate" // Validate config before publish
+  | "configuration-publish" // On publish event
+  | "order-created"; // On new order
 ```
 
 ---
@@ -1164,7 +1211,7 @@ type ApiSlot =
   "description": "Connect Calendly for bookings",
   "author": "Maitr Team",
   "license": "MIT",
-  
+
   "slots": [
     {
       "type": "configurator",
@@ -1190,12 +1237,12 @@ type ApiSlot =
       "entrypoint": "./api/sync-calendly.ts"
     }
   ],
-  
+
   "config": {
     "calendlyApiKey": { "type": "string", "required": true },
     "embedUrl": { "type": "string", "required": true }
   },
-  
+
   "permissions": ["read:configuration", "write:configuration"],
   "pricing": { "free": true, "premium": false }
 }
@@ -1226,14 +1273,15 @@ interface PluginSlot {
 
 class PluginRegistry {
   private plugins = new Map<string, PluginManifest>();
-  
+
   async register(manifest: PluginManifest) {
     this.plugins.set(manifest.id, manifest);
   }
-  
+
   getSlotPlugins(slotType: string, slotName: string): PluginManifest[] {
-    return Array.from(this.plugins.values())
-      .filter(p => p.slots.some(s => s.type === slotType && s.name === slotName));
+    return Array.from(this.plugins.values()).filter((p) =>
+      p.slots.some((s) => s.type === slotType && s.name === slotName),
+    );
   }
 }
 ```
@@ -1245,20 +1293,20 @@ class PluginRegistry {
 
 export function FeaturesStep() {
   const [plugins, setPlugins] = useState<PluginManifest[]>([]);
-  
+
   useEffect(() => {
     // Load plugins from registry
     fetch("/api/plugins?slot=features-toggle")
       .then(r => r.json())
       .then(setPlugins);
   }, []);
-  
+
   return (
     <div>
       {/* Built-in features */}
       <FeatureToggle name="Reservations" {...} />
       <FeatureToggle name="Online Ordering" {...} />
-      
+
       {/* Plugin slots */}
       {plugins.map(plugin => (
         <LazyLoadedComponent
@@ -1284,7 +1332,7 @@ export function FeaturesStep() {
 export default function CalendlyToggle() {
   const actions = useConfiguratorActions();
   const isEnabled = useConfiguratorStore(s => s.features.reservationsEnabled);
-  
+
   return (
     <div className="p-4 border rounded">
       <h3>Calendly Reservations</h3>
@@ -1348,6 +1396,7 @@ Goal: Production-ready SaaS with:
 #### Monday-Tuesday: Database Migration
 
 **Task 1.1: Prisma Schema Update**
+
 - File: `prisma/schema.prisma`
 - Migration: Add Template, AddOnRegistry, AddOnInstance, ScraperJob models
 - Command: `pnpm prisma migrate dev --name add_marketplace_models`
@@ -1355,6 +1404,7 @@ Goal: Production-ready SaaS with:
 - Risk: Schema conflicts with existing data (mitigation: backup NeonDB first)
 
 **Task 1.2: Data Migration Script**
+
 ```bash
 # Create migration runner
 pnpm exec prisma migrate deploy
@@ -1365,12 +1415,14 @@ pnpm exec prisma migrate deploy
 #### Wednesday: API Endpoints
 
 **Task 1.3: Core Configuration API**
+
 - Update `server/routes/configurations.ts` to use new domain-driven structure
 - Add response mapper: `Configuration` → `DomainConfiguration`
 - Add request validator with Zod
 - Test: POST /api/configurations, GET /api/configurations/:id
 
 **Task 1.4: Template API**
+
 - New file: `server/routes/templates.ts`
 - Endpoints:
   - `GET /api/templates` (list with filters)
@@ -1383,12 +1435,14 @@ pnpm exec prisma migrate deploy
 #### Thursday-Friday: Frontend Integration
 
 **Task 1.5: Migrate api.ts to Domain Types**
+
 - File: `client/lib/api.ts`
 - Remove legacy flat `Configuration` interface
 - Import domain types from `types/domain.ts`
 - Update response mappers
 
 **Task 1.6: Zustand Auto-Sync Middleware**
+
 - File: `client/store/configuratorStore.ts`
 - Add: Auto-persist to backend on config change
 - Add: Validation middleware
@@ -1397,6 +1451,7 @@ pnpm exec prisma migrate deploy
 **Deliverable:** ✅ All tests passing, configurations persisting to database
 
 **Testing Checklist (Day 5 EOD):**
+
 - [ ] Create new configuration via frontend
 - [ ] Verify data in NeonDB
 - [ ] Load configuration on page reload
@@ -1409,6 +1464,7 @@ pnpm exec prisma migrate deploy
 #### Monday-Tuesday: Template API Implementation
 
 **Task 2.1: Export Hardcoded Templates as JSON**
+
 ```typescript
 // src/templates/minimalist.json
 {
@@ -1423,6 +1479,7 @@ pnpm exec prisma migrate deploy
 - Duration: 3 hours
 
 **Task 2.2: Template Loader Component**
+
 - File: `client/components/template/TemplateLoader.tsx`
 - Replace hardcoded `defaultTemplates` with API call
 - Add caching to reduce API calls
@@ -1433,12 +1490,14 @@ pnpm exec prisma migrate deploy
 #### Wednesday-Thursday: Site.tsx Refactoring
 
 **Task 2.3: Remove formData Bridge**
+
 - File: `client/pages/Site.tsx`
 - Refactor to consume domain-driven store directly
 - Split into smaller memoized components
 - Add React.memo to prevent unnecessary re-renders
 
 **Task 2.4: Live Preview Optimization**
+
 - File: `client/components/preview/LivePhoneFrame.tsx`
 - Implement selective re-rendering (only changed sections)
 - Test performance: 1000 menu items should render <100ms
@@ -1449,6 +1508,7 @@ pnpm exec prisma migrate deploy
 #### Friday: QA & Stabilization
 
 **Task 2.5: Integration Testing**
+
 - Test: Template selection → Live preview updates immediately
 - Test: Change color → Live preview updates instantly
 - Test: Reload page → Configuration persists
@@ -1463,6 +1523,7 @@ pnpm exec prisma migrate deploy
 #### Monday-Tuesday: n8n Webhook Setup
 
 **Task 3.1: ScraperJob API**
+
 - File: `server/routes/scraper.ts`
 - Endpoints:
   - `POST /api/scraper/jobs` (create job, call n8n)
@@ -1471,6 +1532,7 @@ pnpm exec prisma migrate deploy
 - Duration: 4 hours
 
 **Task 3.2: n8n Webhook Receiver**
+
 - File: `server/webhooks/n8n.ts`
 - Handle: n8n execution complete → Save to ScraperJob
 - Duration: 2 hours
@@ -1480,6 +1542,7 @@ pnpm exec prisma migrate deploy
 #### Wednesday: Frontend Scraper UI
 
 **Task 3.3: Scraper Input Component**
+
 - File: `client/pages/ScrapeWizard.tsx`
 - Features:
   - URL input
@@ -1493,6 +1556,7 @@ pnpm exec prisma migrate deploy
 #### Thursday-Friday: SEO Pre-rendering
 
 **Task 3.4: Publishing Service**
+
 - File: `server/services/PublishingService.ts`
 - Add: Render React Site.tsx to HTML
 - Add: Inject meta tags
@@ -1500,6 +1564,7 @@ pnpm exec prisma migrate deploy
 - Duration: 4 hours
 
 **Task 3.5: Meta Tag Injection**
+
 ```typescript
 function injectMetaTags(html: string, config: Configuration): string {
   const metas = `
@@ -1507,7 +1572,7 @@ function injectMetaTags(html: string, config: Configuration): string {
     <meta property="og:title" content="${config.businessName}">
     <meta property="og:image" content="${config.gallery?.[0]?.url}">
   `;
-  return html.replace('</head>', metas + '</head>');
+  return html.replace("</head>", metas + "</head>");
 }
 ```
 
@@ -1520,6 +1585,7 @@ function injectMetaTags(html: string, config: Configuration): string {
 #### Monday-Tuesday: Plugin Infrastructure
 
 **Task 4.1: Plugin Registry API**
+
 - File: `server/routes/plugins.ts`
 - Endpoints:
   - `GET /api/plugins?slot=features-toggle` (list by slot)
@@ -1528,6 +1594,7 @@ function injectMetaTags(html: string, config: Configuration): string {
 - Duration: 3 hours
 
 **Task 4.2: Plugin Loader Frontend**
+
 - File: `client/components/PluginSlot.tsx`
 - Dynamically load plugin components
 - Handle errors gracefully
@@ -1538,6 +1605,7 @@ function injectMetaTags(html: string, config: Configuration): string {
 #### Wednesday: Calendly Add-On
 
 **Task 4.3: Calendly Plugin Package**
+
 - Directory: `client/plugins/calendly-reservations/`
 - Files:
   - `manifest.json` (plugin definition)
@@ -1551,6 +1619,7 @@ function injectMetaTags(html: string, config: Configuration): string {
 #### Thursday-Friday: QA, Monitoring & Deployment
 
 **Task 4.4: End-to-End Testing**
+
 - [ ] Create restaurant site from scratch
 - [ ] Publish with custom domain
 - [ ] Install Calendly add-on
@@ -1559,12 +1628,14 @@ function injectMetaTags(html: string, config: Configuration): string {
 - Duration: 2 hours
 
 **Task 4.5: Monitoring Setup**
+
 - Datadog/New Relic: Monitor API response times
 - Sentry: Error tracking
 - Google Search Console: SEO monitoring
 - Duration: 1 hour
 
 **Task 4.6: Documentation**
+
 - Write: "How to Create Add-Ons" guide
 - Write: "Plugin API Reference"
 - Duration: 2 hours
@@ -1575,29 +1646,32 @@ function injectMetaTags(html: string, config: Configuration): string {
 
 ### Risk Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| NeonDB migration fails | Critical | Pre-production test migration; backup before start |
-| n8n API down | High | Fallback UI for manual entry; queue jobs locally |
-| Netlify deploy limits | Medium | Pre-generate 100 sites for demo; upgrade if needed |
-| Template rendering slow | Medium | Cache templates; implement lazy loading |
-| Plugin security | Medium | Sandbox iframes; limit permissions; code review |
+| Risk                    | Impact   | Mitigation                                         |
+| ----------------------- | -------- | -------------------------------------------------- |
+| NeonDB migration fails  | Critical | Pre-production test migration; backup before start |
+| n8n API down            | High     | Fallback UI for manual entry; queue jobs locally   |
+| Netlify deploy limits   | Medium   | Pre-generate 100 sites for demo; upgrade if needed |
+| Template rendering slow | Medium   | Cache templates; implement lazy loading            |
+| Plugin security         | Medium   | Sandbox iframes; limit permissions; code review    |
 
 ---
 
 ### Post-Launch (Week 5+)
 
 **Immediate:**
+
 - Monitor error rates (target: <0.1%)
 - Monitor Core Web Vitals (target: CLS < 0.1)
 - Gather user feedback
 
 **Week 5-6:**
+
 - Premium templates
 - Stripe integration for paid add-ons
 - Analytics dashboard
 
 **Week 7-8:**
+
 - Creative Studio MVP
 - Team member portal
 - Advanced analytics
@@ -1606,14 +1680,14 @@ function injectMetaTags(html: string, config: Configuration): string {
 
 ## SUMMARY TABLE
 
-| Audit Section | Current Grade | Blocker | Action | Timeline |
-|---|---|---|---|---|
-| Code | B+ | Hardcoded templates | Migrate to API | Week 2 |
-| Infrastructure | B | n8n not integrated | Implement scraper API | Week 3 |
-| SEO | D | Client-side rendering | Pre-render at publish | Week 3-4 |
-| Creative | Not started | N/A | Design system phase | Week 3+ |
-| Add-ons | Not started | Feature flags hardcoded | Plugin system | Week 4 |
-| **Overall** | **C+** | **3 critical** | **Week 1-4 sprint** | **30 days** |
+| Audit Section  | Current Grade | Blocker                 | Action                | Timeline    |
+| -------------- | ------------- | ----------------------- | --------------------- | ----------- |
+| Code           | B+            | Hardcoded templates     | Migrate to API        | Week 2      |
+| Infrastructure | B             | n8n not integrated      | Implement scraper API | Week 3      |
+| SEO            | D             | Client-side rendering   | Pre-render at publish | Week 3-4    |
+| Creative       | Not started   | N/A                     | Design system phase   | Week 3+     |
+| Add-ons        | Not started   | Feature flags hardcoded | Plugin system         | Week 4      |
+| **Overall**    | **C+**        | **3 critical**          | **Week 1-4 sprint**   | **30 days** |
 
 ---
 
@@ -1629,24 +1703,28 @@ function injectMetaTags(html: string, config: Configuration): string {
 ## APPENDIX: Technology Decisions
 
 ### Why Zustand over Redux/Jotai?
+
 - ✅ Simpler API, less boilerplate
 - ✅ Smaller bundle size (~2KB)
 - ✅ Better for domain-driven state slicing
 - ❌ Fewer debugging tools (but Devtools available)
 
 ### Why NeonDB over MongoDB?
+
 - ✅ ACID transactions (critical for payments)
 - ✅ Full-text search support (future restaurant discovery)
 - ✅ Better for relational data (templates, users, configurations)
 - ❌ Slightly less flexible for JSON fields
 
 ### Why Pre-rendering over Full SSR?
+
 - ✅ Simpler to maintain (static files)
 - ✅ Better performance (pure CDN)
 - ✅ Scales to 100K sites
 - ❌ Updates require re-publish (acceptable for MVP)
 
 ### Why Slot-based Plugins over Module Federation?
+
 - ✅ Simpler permission model
 - ✅ Better error isolation
 - ✅ Easier to review/audit

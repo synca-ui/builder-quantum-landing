@@ -1,9 +1,7 @@
 import { Request, Response, Router } from "express";
 import prisma from "../db/prisma";
 import { requireAuth } from "../middleware/auth";
-import { 
-  LegacyConfigurationSchema,
-} from "../schemas/configuration";
+import { LegacyConfigurationSchema } from "../schemas/configuration";
 import type { Configuration } from "../schemas/configuration";
 import { createAuditLogger } from "../utils/audit";
 
@@ -18,7 +16,7 @@ const router = Router();
  */
 async function authorizeUserBusiness(
   userId: string,
-  businessId: string | undefined | null
+  businessId: string | undefined | null,
 ): Promise<boolean> {
   if (!businessId) {
     return true;
@@ -42,7 +40,7 @@ async function getUserBusinessAccess(userId: string): Promise<string[]> {
     where: { userId },
     select: { businessId: true },
   });
-  return memberships.map(m => m.businessId);
+  return memberships.map((m) => m.businessId);
 }
 
 /**
@@ -63,7 +61,8 @@ function generateSubdomain(businessName: string): string {
       .replace(/[^a-z0-9]/g, "-")
       .replace(/-+/g, "-")
       .substring(0, 30)
-      .replace(/^-|-$/g, "") || `restaurant-${Math.random().toString(36).slice(2, 7)}`
+      .replace(/^-|-$/g, "") ||
+    `restaurant-${Math.random().toString(36).slice(2, 7)}`
   );
 }
 
@@ -85,7 +84,7 @@ export async function saveConfiguration(req: Request, res: Response) {
         "config_update_failed",
         req.body.id || "unknown",
         false,
-        "Validation failed"
+        "Validation failed",
       );
 
       return res.status(400).json({
@@ -98,13 +97,16 @@ export async function saveConfiguration(req: Request, res: Response) {
 
     // ✅ RLS CHECK 1: Verify businessId ownership
     if (configData.businessId) {
-      const authorized = await authorizeUserBusiness(userId, configData.businessId);
+      const authorized = await authorizeUserBusiness(
+        userId,
+        configData.businessId,
+      );
       if (!authorized) {
         await audit(
           "config_update_failed",
           configData.id || "unknown",
           false,
-          "Unauthorized business access"
+          "Unauthorized business access",
         );
 
         return res.status(403).json({
@@ -129,7 +131,7 @@ export async function saveConfiguration(req: Request, res: Response) {
           "config_update_failed",
           configData.id,
           false,
-          "Configuration not found"
+          "Configuration not found",
         );
 
         return res.status(404).json({ error: "Configuration not found" });
@@ -250,7 +252,7 @@ export async function saveConfiguration(req: Request, res: Response) {
       "config_save_error",
       req.body.id || "unknown",
       false,
-      error instanceof Error ? error.message : "Unknown error"
+      error instanceof Error ? error.message : "Unknown error",
     );
 
     return res.status(500).json({
@@ -271,10 +273,7 @@ export async function getConfigurations(req: Request, res: Response) {
 
     const configurations = await prisma.configuration.findMany({
       where: {
-        OR: [
-          { userId },
-          { businessId: { in: businessIds } },
-        ],
+        OR: [{ userId }, { businessId: { in: businessIds } }],
       },
       orderBy: { updatedAt: "desc" },
     });
@@ -360,11 +359,17 @@ export async function deleteConfiguration(req: Request, res: Response) {
     });
 
     if (!existing) {
-      await audit("config_delete_failed", id, false, "Not found or unauthorized");
+      await audit(
+        "config_delete_failed",
+        id,
+        false,
+        "Not found or unauthorized",
+      );
 
       return res.status(403).json({
         error: "Forbidden",
-        message: "Configuration not found or you do not have permission to delete it",
+        message:
+          "Configuration not found or you do not have permission to delete it",
       });
     }
 
@@ -384,7 +389,12 @@ export async function deleteConfiguration(req: Request, res: Response) {
     });
   } catch (error) {
     console.error("[Configurations] Delete error:", error);
-    await audit("config_delete_error", id, false, error instanceof Error ? error.message : "Unknown");
+    await audit(
+      "config_delete_error",
+      id,
+      false,
+      error instanceof Error ? error.message : "Unknown",
+    );
 
     return res.status(500).json({
       error: "Failed to delete configuration",
@@ -409,11 +419,17 @@ export async function publishConfiguration(req: Request, res: Response) {
     });
 
     if (!configuration) {
-      await audit("config_publish_failed", id, false, "Not found or unauthorized");
+      await audit(
+        "config_publish_failed",
+        id,
+        false,
+        "Not found or unauthorized",
+      );
 
       return res.status(403).json({
         error: "Forbidden",
-        message: "Configuration not found or you do not have permission to publish it",
+        message:
+          "Configuration not found or you do not have permission to publish it",
       });
     }
 
@@ -491,7 +507,7 @@ export async function publishConfiguration(req: Request, res: Response) {
       "config_publish_error",
       id,
       false,
-      error instanceof Error ? error.message : "Unknown"
+      error instanceof Error ? error.message : "Unknown",
     );
 
     return res.status(500).json({

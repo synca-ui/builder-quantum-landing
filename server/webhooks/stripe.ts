@@ -30,7 +30,7 @@ const PLAN_MAP: Record<
 function verifyStripeSignature(
   rawBody: string,
   signature: string | undefined,
-  secret: string
+  secret: string,
 ): boolean {
   if (!signature) {
     console.error("[Stripe] Missing signature header");
@@ -72,13 +72,10 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   try {
     // Retrieve customer to get userId from metadata
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer.metadata?.userId) as string;
+    const userId = customer.metadata?.userId as string;
 
     if (!userId) {
-      console.warn(
-        "[Stripe] No userId in customer metadata for",
-        customerId
-      );
+      console.warn("[Stripe] No userId in customer metadata for", customerId);
       return;
     }
 
@@ -146,7 +143,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   try {
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer.metadata?.userId) as string;
+    const userId = customer.metadata?.userId as string;
 
     if (!userId) return;
 
@@ -198,7 +195,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   try {
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer.metadata?.userId) as string;
+    const userId = customer.metadata?.userId as string;
 
     if (!userId) return;
 
@@ -237,7 +234,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  * When one-time payment succeeds
  */
 async function handlePaymentIntentSucceeded(
-  paymentIntent: Stripe.PaymentIntent
+  paymentIntent: Stripe.PaymentIntent,
 ) {
   const customerId = paymentIntent.customer as string;
 
@@ -248,7 +245,7 @@ async function handlePaymentIntentSucceeded(
 
   try {
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer.metadata?.userId) as string;
+    const userId = customer.metadata?.userId as string;
 
     if (!userId) return;
 
@@ -291,7 +288,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   try {
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer.metadata?.userId) as string;
+    const userId = customer.metadata?.userId as string;
 
     if (!userId) return;
 
@@ -333,7 +330,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
   try {
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer.metadata?.userId) as string;
+    const userId = customer.metadata?.userId as string;
 
     if (!userId) return;
 
@@ -356,7 +353,9 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
         metadata: {
           invoiceId: invoice.id,
           customerId,
-          reason: invoice.attempt_count ? `Attempt ${invoice.attempt_count}` : "Initial attempt",
+          reason: invoice.attempt_count
+            ? `Attempt ${invoice.attempt_count}`
+            : "Initial attempt",
         },
       },
     });
@@ -388,7 +387,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
   try {
     const customer = await stripe.customers.retrieve(customerId);
-    const userId = (customer.metadata?.userId) as string;
+    const userId = customer.metadata?.userId as string;
 
     if (!userId) return;
 
@@ -430,7 +429,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
  * When customer is first created (optional, for cleanup)
  */
 async function handleCustomerCreated(customer: Stripe.Customer) {
-  const userId = (customer.metadata?.userId) as string;
+  const userId = customer.metadata?.userId as string;
 
   if (!userId) {
     console.warn("[Stripe] No userId in customer.created metadata");
@@ -475,7 +474,7 @@ async function handleCustomerCreated(customer: Stripe.Customer) {
  */
 export async function handleStripeWebhook(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> {
   const signature = req.headers["stripe-signature"] as string | undefined;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -499,7 +498,9 @@ export async function handleStripeWebhook(
     res.status(400).json({
       error: "Invalid signature",
       message:
-        error instanceof Error ? error.message : "Signature verification failed",
+        error instanceof Error
+          ? error.message
+          : "Signature verification failed",
     });
     return;
   }
@@ -566,8 +567,7 @@ export async function handleStripeWebhook(
     console.error("[Stripe] Webhook processing error:", error);
     res.status(500).json({
       error: "Webhook processing failed",
-      message:
-        error instanceof Error ? error.message : "Internal server error",
+      message: error instanceof Error ? error.message : "Internal server error",
     });
   }
 }
@@ -575,7 +575,10 @@ export async function handleStripeWebhook(
 /**
  * ✅ POST /api/webhooks/stripe/test - Test webhook (for development)
  */
-export async function handleWebhookTest(req: Request, res: Response): Promise<void> {
+export async function handleWebhookTest(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
     console.log("[Stripe] Test webhook received");
     res.json({ success: true, message: "Test webhook received" });

@@ -18,7 +18,7 @@ export function createAuditLogger(context: AuditContext) {
     resourceId: string,
     success: boolean = true,
     errorMessage?: string,
-    changes?: { before?: any; after?: any }
+    changes?: { before?: any; after?: any },
   ) => {
     try {
       await prisma.auditLog.create({
@@ -28,7 +28,7 @@ export function createAuditLogger(context: AuditContext) {
           resource: "configuration",
           resourceId,
           ipAddress: context.ipAddress,
-          userAgent: context.userAgent?.substring(0, 500),  // Limit length
+          userAgent: context.userAgent?.substring(0, 500), // Limit length
           success,
           errorMessage: errorMessage?.substring(0, 255),
           changes: changes || null,
@@ -47,7 +47,7 @@ export function createAuditLogger(context: AuditContext) {
 export async function getUserAuditLogs(
   userId: string,
   limit: number = 100,
-  offset: number = 0
+  offset: number = 0,
 ) {
   return prisma.auditLog.findMany({
     where: { userId },
@@ -62,7 +62,7 @@ export async function getUserAuditLogs(
  */
 export async function getResourceAuditLogs(
   resourceId: string,
-  limit: number = 50
+  limit: number = 50,
 ) {
   return prisma.auditLog.findMany({
     where: { resourceId },
@@ -77,7 +77,7 @@ export async function getResourceAuditLogs(
 export async function generateComplianceReport(
   userId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) {
   const logs = await prisma.auditLog.findMany({
     where: {
@@ -92,14 +92,15 @@ export async function generateComplianceReport(
 
   const summary = {
     totalActions: logs.length,
-    successfulActions: logs.filter(l => l.success).length,
-    failedActions: logs.filter(l => !l.success).length,
+    successfulActions: logs.filter((l) => l.success).length,
+    failedActions: logs.filter((l) => !l.success).length,
     actionBreakdown: {} as Record<string, number>,
     ipAddresses: new Set<string>(),
   };
 
-  logs.forEach(log => {
-    summary.actionBreakdown[log.action] = (summary.actionBreakdown[log.action] || 0) + 1;
+  logs.forEach((log) => {
+    summary.actionBreakdown[log.action] =
+      (summary.actionBreakdown[log.action] || 0) + 1;
     if (log.ipAddress) {
       summary.ipAddresses.add(log.ipAddress);
     }

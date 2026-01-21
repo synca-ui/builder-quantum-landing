@@ -6,7 +6,8 @@ const TEMPLATES = [
   {
     id: "minimalist",
     name: "Minimalist",
-    description: "Narrative, minimal design guiding users through full-screen sections.",
+    description:
+      "Narrative, minimal design guiding users through full-screen sections.",
     category: "restaurant",
     isPremium: false,
     creator: "maitr",
@@ -73,7 +74,8 @@ const TEMPLATES = [
   {
     id: "stylish",
     name: "Stylish",
-    description: "Visual-first design with overlays, mixed sections, and motion.",
+    description:
+      "Visual-first design with overlays, mixed sections, and motion.",
     category: "restaurant",
     isPremium: false,
     creator: "maitr",
@@ -104,7 +106,8 @@ const TEMPLATES = [
   {
     id: "cozy",
     name: "Cozy",
-    description: "Warm, friendly aesthetic with rounded elements and authentic photography.",
+    description:
+      "Warm, friendly aesthetic with rounded elements and authentic photography.",
     category: "restaurant",
     isPremium: false,
     creator: "maitr",

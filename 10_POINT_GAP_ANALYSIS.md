@@ -3,6 +3,7 @@
 **Context:** 30ss days to Maitr SaaS launch. This document provides exact code locations, specific gaps, and refactoring instructions for production readiness.
 
 **Severity Legend:**
+
 - 🔴 **CRITICAL** = Blocks launch, requires immediate fix
 - 🟠 **HIGH** = Affects users, needs attention in Week 1
 - 🟡 **MEDIUM** = Technical debt, should fix before Week 2
@@ -17,6 +18,7 @@
 **Location:** `prisma/schema.prisma`
 
 **✅ What's Good:**
+
 - Clerk auth integration (User model with `clerkId`)
 - Basic Configuration model exists
 - WebApp model for published sites
@@ -25,9 +27,11 @@
 **❌ Critical Gaps:**
 
 #### Gap 1.1: No Tenant Isolation in Configuration
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```prisma
 model Configuration {
   id            String    @id @default(uuid())
@@ -40,29 +44,31 @@ model Configuration {
 **Impact:** **Multi-tenant data leak risk**. A restaurant owner can access another restaurant's config via API manipulation.
 
 **Fix:**
+
 ```prisma
 // ADDED: Explicit workspace/business association
 model Configuration {
   id              String    @id @default(uuid())
   userId          String    // Primary owner
-  
+
   // ✅ FIX: Add businessId for workspace isolation
   businessId      String?   // Owner's primary business
   business        Business? @relation(fields: [businessId], references: [id])
-  
+
   // Ensures: userId + businessId = unique pair (one config per business)
-  
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
+
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, businessId])  // ✅ ADD THIS
   @@index([userId, businessId])   // ✅ ADD THIS
 }
 ```
 
 **Implementation Steps:**
+
 1. Add `businessId` field to `Configuration`
 2. Create migration: `pnpm prisma migrate dev --name add_business_isolation`
 3. Update API query (see Section 2)
@@ -71,12 +77,14 @@ model Configuration {
 ---
 
 #### Gap 1.2: Template Marketplace Not Linked to Configuration
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 ```prisma
 model Template {
-  id              String    @id  
+  id              String    @id
   name            String
   // ❌ NO RELATION TO CONFIGURATION
   // ❌ Cannot track which templates are used
@@ -92,6 +100,7 @@ model Configuration {
 **Impact:** Cannot build marketplace analytics. Cannot enforce premium templates.
 
 **Fix:**
+
 ```prisma
 model Template {
   id              String    @id
@@ -102,19 +111,19 @@ model Template {
   designTokens    Json
   layout          Json
   preview         Json
-  
+
   creator         String    @default("maitr")
   downloads       Int       @default(0)
   avgRating       Float     @default(0)
   version         String    @default("1.0.0")
-  
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
+
   // ✅ ADD RELATIONS
   configurations  Configuration[]  // Configurations using this template
   ratings         TemplateRating[]  // User ratings
-  
+
   @@index([isPremium])
   @@index([category])
   @@index([downloads])
@@ -122,13 +131,13 @@ model Template {
 
 model Configuration {
   // ... existing fields ...
-  
+
   template        String    @default("")  // Keep for now (legacy)
-  
+
   // ✅ ADD THIS: Explicit template relation
   selectedTemplate String?
   templateData    Template? @relation(fields: [selectedTemplate], references: [id])
-  
+
   // ... rest of fields ...
 }
 
@@ -139,15 +148,16 @@ model TemplateRating {
   userId          String
   rating          Int       // 1-5 stars
   comment         String?
-  
+
   template        Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([templateId, userId])  // One rating per user per template
 }
 ```
 
 **Implementation:**
+
 1. Add `selectedTemplate` to Configuration
 2. Add `Template`, `TemplateRating` models
 3. Seed 4 default templates into `Template` table
@@ -156,45 +166,48 @@ model TemplateRating {
 ---
 
 #### Gap 1.3: n8n Scraper Results Not Properly Stored
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 - No database table for scraper jobs
 - Cannot track job status
 - Cannot link scraped data to configuration
 
 **Fix:**
+
 ```prisma
 // ✅ NEW: n8n Scraper Pipeline
 model ScraperJob {
   id              String    @id @default(uuid())
-  
+
   // Input
   businessName    String
   businessType    String
   websiteUrl      String    @unique
-  
+
   // Execution
   n8nExecutionId  String?   // Link to n8n execution
   status          String    @default("pending")  // pending, processing, completed, failed
-  
+
   // Results (raw from n8n)
   extractedData   Json?     // Raw HTML/text from scraping
   suggestedConfig Json?     // Pre-populated Configuration (AI-extracted)
-  
+
   // Linking to user
   userId          String?   // User who initiated scrape
   linkedConfigId  String?   // Configuration created from this scrape
-  
+
   // Timestamps
   createdAt       DateTime  @default(now())
   startedAt       DateTime?
   completedAt     DateTime?
   failureReason   String?
-  
+
   user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   linkedConfig    Configuration? @relation(fields: [linkedConfigId], references: [id], onDelete: SetNull)
-  
+
   @@index([status])
   @@index([userId])
   @@index([createdAt])
@@ -204,43 +217,46 @@ model ScraperJob {
 ---
 
 #### Gap 1.4: Payment/Subscription Status Missing
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 - No way to track Stripe subscription status
 - Cannot enforce premium features
 - No audit trail for billing events
 
 **Fix:**
+
 ```prisma
 // ✅ NEW: Subscription Management
 model Subscription {
   id              String    @id @default(uuid())
   userId          String    @unique
-  
+
   // Stripe references
   stripeCustomerId String? @unique
   stripeSubscriptionId String? @unique
-  
+
   // Plan info
   plan            String    @default("free")  // "free", "basic", "pro", "enterprise"
   status          String    @default("active")  // "active", "paused", "canceled", "past_due"
-  
+
   // Features
   maxSites        Int       @default(1)        // Number of published websites allowed
   maxUsers        Int       @default(1)        // Team members allowed
-  
+
   // Billing
   currentPeriodStart DateTime?
   currentPeriodEnd DateTime?
   canceledAt      DateTime?
-  
+
   // Metadata
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
+
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([status])
   @@index([stripeCustomerId])
 }
@@ -250,18 +266,18 @@ model BillingEvent {
   id              String    @id @default(uuid())
   userId          String
   subscriptionId  String?
-  
+
   eventType       String    // "subscription_created", "payment_succeeded", "refund_issued"
   amount          Int?      // Cents
   currency        String    @default("EUR")
-  
+
   stripeEventId   String?   @unique
   metadata        Json?
-  
+
   createdAt       DateTime  @default(now())
-  
+
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, createdAt])
 }
 ```
@@ -271,6 +287,7 @@ model BillingEvent {
 ### Summary: NeonDB Schema Fixes
 
 **Required Migrations (in order):**
+
 ```bash
 # 1. Add business isolation
 pnpm prisma migrate dev --name add_business_isolation_to_configuration
@@ -289,6 +306,7 @@ pnpm prisma migrate deploy
 ```
 
 **Data Seeding (after migrations):**
+
 ```typescript
 // Create file: prisma/seed-templates.ts
 import { PrismaClient } from "@prisma/client";
@@ -322,11 +340,13 @@ main().catch(console.error);
 
 ### Current State Assessment
 
-**Locations:** 
+**Locations:**
+
 - `server/middleware/auth.ts` (token verification)
 - `server/utils/clerk.ts` (user sync)
 
 **✅ What's Good:**
+
 - Clerk token verification working
 - Lazy sync creating users in Prisma
 - Basic requireAuth middleware
@@ -334,9 +354,11 @@ main().catch(console.error);
 **❌ Critical Gaps:**
 
 #### Gap 2.1: No Row-Level Security (RLS) on Configuration Access
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```typescript
 // File: server/routes/configurations.ts (line 76+)
 export async function saveConfiguration(req: Request, res: Response) {
@@ -347,7 +369,7 @@ export async function saveConfiguration(req: Request, res: Response) {
   const userId = req.user.id;
   const configData = {
     ...req.body,
-    userId,  // ✅ Good: userId is set from token
+    userId, // ✅ Good: userId is set from token
     updatedAt: new Date().toISOString(),
   };
 
@@ -357,6 +379,7 @@ export async function saveConfiguration(req: Request, res: Response) {
 ```
 
 **Attack Scenario:**
+
 ```javascript
 // Attacker:
 POST /api/configurations
@@ -376,7 +399,7 @@ POST /api/configurations
 // ✅ NEW: RLS helper function
 async function authorizeUserBusiness(
   userId: string,
-  businessId: string | undefined
+  businessId: string | undefined,
 ): Promise<boolean> {
   if (!businessId) {
     // User can create configs without explicit businessId
@@ -438,7 +461,7 @@ export async function getConfiguration(req: Request, res: Response) {
   const config = await prisma.configuration.findFirst({
     where: {
       id,
-      userId,  // ← User can only see their own configs
+      userId, // ← User can only see their own configs
     },
   });
 
@@ -459,7 +482,7 @@ export async function getConfigurations(req: Request, res: Response) {
 
   // ✅ CRITICAL: Filter by userId
   const configs = await prisma.configuration.findMany({
-    where: { userId },  // ← Only user's own configs
+    where: { userId }, // ← Only user's own configs
     orderBy: { updatedAt: "desc" },
   });
 
@@ -495,14 +518,17 @@ export async function deleteConfiguration(req: Request, res: Response) {
 ---
 
 #### Gap 2.2: Team Members Cannot Access Shared Configurations
+
 **Severity:** 🟡 MEDIUM
 
 **Current Problem:**
+
 - Only configuration owner can access
 - Team members cannot view/edit shared configs
 - No role-based permissions
 
 **Fix:**
+
 ```typescript
 // ✅ NEW: Helper for team access
 async function getUserBusinessAccess(userId: string): Promise<string[]> {
@@ -510,7 +536,7 @@ async function getUserBusinessAccess(userId: string): Promise<string[]> {
     where: { userId },
     select: { businessId: true },
   });
-  return memberships.map(m => m.businessId);
+  return memberships.map((m) => m.businessId);
 }
 
 // ✅ UPDATED: getConfigurations with team support
@@ -520,7 +546,7 @@ export async function getConfigurations(req: Request, res: Response) {
   }
 
   const userId = req.user.id;
-  
+
   // Get all businesses user has access to
   const businessIds = await getUserBusinessAccess(userId);
 
@@ -528,8 +554,8 @@ export async function getConfigurations(req: Request, res: Response) {
   const configs = await prisma.configuration.findMany({
     where: {
       OR: [
-        { userId },  // User's own configs
-        { businessId: { in: businessIds } },  // Team business configs
+        { userId }, // User's own configs
+        { businessId: { in: businessIds } }, // Team business configs
       ],
     },
     orderBy: { updatedAt: "desc" },
@@ -542,14 +568,17 @@ export async function getConfigurations(req: Request, res: Response) {
 ---
 
 #### Gap 2.3: No Audit Trail for Access
+
 **Severity:** 🟡 MEDIUM
 
 **Current Problem:**
+
 - No logging of who accessed what
 - Cannot detect unauthorized access attempts
 - Cannot comply with GDPR audit requirements
 
 **Fix:**
+
 ```prisma
 // ✅ NEW: Audit log model
 model AuditLog {
@@ -558,17 +587,17 @@ model AuditLog {
   action          String    // "config_accessed", "config_modified", "config_deleted"
   resource        String    // "configuration"
   resourceId      String
-  
+
   ipAddress       String?
   userAgent       String?
-  
+
   success         Boolean   @default(true)
   errorMessage    String?
-  
+
   createdAt       DateTime  @default(now())
-  
+
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, createdAt])
   @@index([action, createdAt])
 }
@@ -581,7 +610,7 @@ export function createAuditLogger(req: Request) {
     action: string,
     resourceId: string,
     success: boolean = true,
-    errorMessage?: string
+    errorMessage?: string,
   ) => {
     if (!req.user) return;
 
@@ -603,7 +632,7 @@ export function createAuditLogger(req: Request) {
 // Usage in routes:
 export async function getConfiguration(req: Request, res: Response) {
   const audit = createAuditLogger(req);
-  
+
   try {
     // ... get config ...
     await audit("config_accessed", id, true);
@@ -620,11 +649,13 @@ export async function getConfiguration(req: Request, res: Response) {
 ### Summary: Clerk Auth Fixes
 
 **Implementation Order:**
+
 1. **Week 1, Day 1:** Add RLS checks to all configuration endpoints
 2. **Week 1, Day 2:** Add team member access (businessId filtering)
 3. **Week 1, Day 3:** Add audit logging
 
 **Checklist:**
+
 - [ ] Update `getConfigurations()` with userId filter
 - [ ] Update `getConfiguration()` with RLS check
 - [ ] Update `saveConfiguration()` with businessId authorization
@@ -645,15 +676,18 @@ export async function getConfiguration(req: Request, res: Response) {
 **Location:** `server/webhooks/stripe.ts` (webhook pattern exists, but not for n8n)
 
 **✅ What's Good:**
+
 - Webhook infrastructure exists (Stripe handler shows pattern)
 - Netlify Functions can handle POST requests
 
 **❌ Critical Gaps:**
 
 #### Gap 3.1: No n8n Integration Entry Points
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```
 n8n workflow (Railway) ----? ---- Maitr Backend
                               (NO CONNECTION)
@@ -675,7 +709,7 @@ interface N8nScraperPayload {
   websiteUrl: string;
   status: "completed" | "failed";
   error?: string;
-  
+
   // Scraped data (if successful)
   extractedData?: {
     menuItems: Array<{ name: string; price?: number }>;
@@ -721,12 +755,12 @@ export async function handleN8nWebhook(req: Request, res: Response) {
           status: "completed",
           completedAt: new Date(),
           extractedData: payload.extractedData,
-          
+
           // Pre-populate configuration suggestion
           suggestedConfig: generateConfigFromExtract(
             scraperJob.businessName,
             scraperJob.businessType,
-            payload.extractedData
+            payload.extractedData,
           ),
         },
       });
@@ -762,7 +796,7 @@ export async function handleN8nWebhook(req: Request, res: Response) {
       "scraper_job_error",
       payload.jobId,
       false,
-      error instanceof Error ? error.message : "Unknown"
+      error instanceof Error ? error.message : "Unknown",
     );
 
     return res.status(500).json({
@@ -775,7 +809,7 @@ export async function handleN8nWebhook(req: Request, res: Response) {
 function generateConfigFromExtract(
   businessName: string,
   businessType: string,
-  extracted: N8nScraperPayload["extractedData"]
+  extracted: N8nScraperPayload["extractedData"],
 ) {
   if (!extracted) return null;
 
@@ -786,7 +820,7 @@ function generateConfigFromExtract(
       location: extracted.contact?.email ? extracted.contact.email : undefined,
     },
     design: {
-      template: "modern",  // Default template for auto-scraped
+      template: "modern", // Default template for auto-scraped
       primaryColor: "#4F46E5",
       secondaryColor: "#7C3AED",
       fontFamily: "sans-serif",
@@ -814,6 +848,7 @@ function generateConfigFromExtract(
 ```
 
 **Register webhook in server:**
+
 ```typescript
 // File: server/index.ts
 import { handleN8nWebhook } from "./webhooks/n8n";
@@ -825,7 +860,7 @@ export function createServer() {
   app.post(
     "/api/webhooks/n8n/scraper",
     express.raw({ type: "application/json" }),
-    handleN8nWebhook
+    handleN8nWebhook,
   );
 
   // ... rest of routes ...
@@ -835,9 +870,11 @@ export function createServer() {
 ---
 
 #### Gap 3.2: No Scraper Job API Endpoints
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 - Frontend cannot create scraper jobs
 - Frontend cannot poll job status
 - No way to accept scraped data
@@ -899,7 +936,7 @@ router.post("/jobs", requireAuth, async (req: Request, res: Response) => {
           websiteUrl,
           callbackUrl: `${process.env.API_URL}/api/webhooks/n8n/scraper`,
         }),
-      }).catch(err => console.error("[n8n] Trigger failed:", err));
+      }).catch((err) => console.error("[n8n] Trigger failed:", err));
     }
 
     res.json({
@@ -996,13 +1033,14 @@ router.post(
       console.error("Error accepting scraped data:", error);
       res.status(500).json({ error: "Failed to create configuration" });
     }
-  }
+  },
 );
 
 export default router;
 ```
 
 Register routes:
+
 ```typescript
 // File: server/index.ts
 import scraperRouter from "./routes/scraper";
@@ -1013,9 +1051,11 @@ app.use("/api/scraper", scraper Router);
 ---
 
 #### Gap 3.3: Frontend Scraper UI Missing
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 - No UI for users to input website URL
 - No polling logic
 - No feedback during scraping
@@ -1222,6 +1262,7 @@ export function ScrapeWizard() {
 ### Summary: n8n Pipeline Fixes
 
 **Implementation Order:**
+
 1. Add `ScraperJob` model to Prisma schema
 2. Create n8n webhook receiver (`server/webhooks/n8n.ts`)
 3. Create scraper routes (`server/routes/scraper.ts`)
@@ -1229,6 +1270,7 @@ export function ScrapeWizard() {
 5. Setup n8n workflow on Railway
 
 **Environment Variables Needed:**
+
 ```bash
 N8N_WEBHOOK_SECRET=your-secret-key
 N8N_WEBHOOK_URL=https://n8n.railway.app/webhook/scraper-trigger
@@ -1246,15 +1288,18 @@ API_URL=https://maitr-api.railway.app  # Backend URL for callbacks
 **Location:** `client/components/template/TemplateRegistry.tsx` (lines 1-200)
 
 **✅ What's Good:**
+
 - Zod schemas for validation
 - TypeScript interfaces
 
 **❌ Critical Gap:**
 
 #### Gap 4.1: Templates Are Hardcoded Frontend Arrays
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```typescript
 // File: client/components/template/TemplateRegistry.tsx
 export const defaultTemplates: Template[] = [
@@ -1272,6 +1317,7 @@ export const defaultTemplates: Template[] = [
 ```
 
 **Impact:**
+
 - Template Marketplace vision blocked
 - Users cannot upload custom themes
 - Cannot A/B test templates
@@ -1280,6 +1326,7 @@ export const defaultTemplates: Template[] = [
 **Fix: Migrate to API-Driven Templates**
 
 **Step 1: Seed Database**
+
 ```typescript
 // File: prisma/seed-templates.ts
 
@@ -1291,7 +1338,8 @@ const TEMPLATES = [
   {
     id: "minimalist",
     name: "Minimalist",
-    description: "Narrative, minimal design guiding users through full-screen sections.",
+    description:
+      "Narrative, minimal design guiding users through full-screen sections.",
     category: "restaurant",
     isPremium: false,
     creator: "maitr",
@@ -1339,6 +1387,7 @@ main()
 ```
 
 **Step 2: Create Template API**
+
 ```typescript
 // File: server/routes/templates.ts (NEW)
 
@@ -1415,6 +1464,7 @@ export default router;
 ```
 
 Register template routes:
+
 ```typescript
 // File: server/index.ts
 import templatesRouter from "./routes/templates";
@@ -1423,6 +1473,7 @@ app.use("/api/templates", templatesRouter);
 ```
 
 **Step 3: Update Frontend Template Loader**
+
 ```typescript
 // File: client/components/template/TemplateLoader.tsx (NEW - replaces TemplateRegistry)
 
@@ -1519,6 +1570,7 @@ export function TemplateLoader({
 ```
 
 **Step 4: Update TemplateStep Component**
+
 ```typescript
 // File: client/components/configurator/steps/TemplateStep.tsx
 
@@ -1562,6 +1614,7 @@ export function TemplateStep({
 ### Summary: Theme Store Fixes
 
 **Implementation:**
+
 1. Add `Template` model to Prisma (already in Gap 1.2)
 2. Seed 4 default templates to database
 3. Create `/api/templates` endpoint
@@ -1580,20 +1633,24 @@ export function TemplateStep({
 **Location:** `client/pages/Site.tsx`, `client/components/seo/RestaurantJsonLd.tsx`
 
 **✅ What's Good:**
+
 - RestaurantJsonLd component exists (structured data)
 - Site component has all data
 
 **❌ Critical Gap:**
 
 #### Gap 5.1: Meta Tags Not Injected into Head
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```html
 <!-- What Google sees (SSR would provide this) -->
 <html>
   <head>
-    <title>Document</title>  <!-- ❌ Generic, not restaurant-specific -->
+    <title>Document</title>
+    <!-- ❌ Generic, not restaurant-specific -->
     <!-- ❌ No og:image, og:title, description -->
   </head>
   <body>
@@ -1608,6 +1665,7 @@ export function TemplateStep({
 ```
 
 **Impact:**
+
 - Google sees blank page
 - Restaurants invisible in search
 - No social media preview
@@ -1616,6 +1674,7 @@ export function TemplateStep({
 **Solution: Hybrid Approach (Pre-rendering + Meta Injection)**
 
 **Step 1: Server-Side Pre-rendering at Publish Time**
+
 ```typescript
 // File: server/services/PublishingService.ts (NEW)
 
@@ -1639,42 +1698,42 @@ export async function prerenderSite(config: Configuration): Promise<string> {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        
+
         <!-- ✅ Dynamic Meta Tags -->
         <title>${config.businessName} - ${config.businessType}</title>
         <meta name="description" content="${config.slogan || config.uniqueDescription}">
         <meta name="theme-color" content="${config.primaryColor}">
-        
+
         <!-- ✅ Open Graph (Social Media) -->
         <meta property="og:type" content="business.business">
         <meta property="og:title" content="${config.businessName}">
         <meta property="og:description" content="${config.slogan}">
         <meta property="og:image" content="${config.gallery?.[0]?.url || '/og-default.png'}">
         <meta property="og:url" content="${config.publishedUrl}">
-        
+
         <!-- ✅ Twitter Card -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="${config.businessName}">
         <meta name="twitter:description" content="${config.slogan}">
         <meta name="twitter:image" content="${config.gallery?.[0]?.url}">
-        
+
         <!-- ✅ Structured Data (JSON-LD) -->
         ${generateJsonLd(config)}
-        
+
         <!-- Critical CSS inline -->
         <style>${criticalCSS}</style>
-        
+
         <!-- Preload fonts -->
         <link rel="preload" as="font" href="/fonts/inter.woff2" crossorigin>
       </head>
       <body>
         <div id="root">${content}</div>
-        
+
         <!-- ✅ Pass config as initial state (no extra API call) -->
         <script>
           window.__INITIAL_CONFIG__ = ${JSON.stringify(config)};
         </script>
-        
+
         <script src="/main.js"></script>
       </body>
     </html>
@@ -1718,6 +1777,7 @@ function extractCriticalCSS(html: string): Promise<string> {
 ```
 
 **Step 2: Deploy Pre-rendered HTML to Netlify**
+
 ```typescript
 // File: server/routes/configurations.ts
 
@@ -1774,6 +1834,7 @@ export async function publishConfiguration(req: Request, res: Response) {
 ```
 
 **Step 3: Netlify Service for Deployment**
+
 ```typescript
 // File: server/services/NetlifyService.ts (NEW)
 
@@ -1807,14 +1868,14 @@ export async function deployToNetlify(options: DeployOptions): Promise<{
         Authorization: `Bearer ${netlifyToken}`,
       },
       body: form,
-    }
+    },
   );
 
   if (!response.ok) {
     throw new Error("Netlify deploy failed");
   }
 
-  const deploy = await response.json() as any;
+  const deploy = (await response.json()) as any;
 
   return {
     url: deploy.deploy_url || deploy.subdomain,
@@ -1828,6 +1889,7 @@ export async function deployToNetlify(options: DeployOptions): Promise<{
 ### Summary: SEO Fixes
 
 **Implementation:**
+
 1. Create `PublishingService.ts` with pre-rendering
 2. Create `NetlifyService.ts` for deployment
 3. Update publish endpoint to use pre-rendering
@@ -1835,6 +1897,7 @@ export async function deployToNetlify(options: DeployOptions): Promise<{
 5. Setup Google Search Console verification
 
 **Environment Variables:**
+
 ```bash
 NETLIFY_AUTH_TOKEN=your-token
 NETLIFY_SITE_ID=your-site-id
@@ -1851,6 +1914,7 @@ NETLIFY_SITE_ID=your-site-id
 **Location:** `client/store/configuratorStore.ts`
 
 **✅ What's Good:**
+
 - Domain-driven state structure
 - Persistence middleware to localStorage
 - Throttle guard prevents infinite loops
@@ -1858,9 +1922,11 @@ NETLIFY_SITE_ID=your-site-id
 **❌ Critical Gaps:**
 
 #### Gap 6.1: No Auto-Sync to Backend
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```typescript
 // File: client/store/configuratorStore.ts (current)
 
@@ -1881,12 +1947,13 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
       name: "configurator-store",
       storage: createJSONStorage(() => sessionStorage),
       // ❌ MISSING: Backend persistence middleware
-    }
+    },
   ),
 );
 ```
 
 **Impact:**
+
 - User makes changes on device A
 - Switches to device B
 - Sees old data
@@ -1908,9 +1975,7 @@ function createBackendSyncMiddleware(options: BackendSyncOptions = {}) {
   let syncTimeout: NodeJS.Timeout | null = null;
   let lastSyncedState: string | null = null;
 
-  return (
-    config: StateCreator<ConfiguratorState>,
-  ) => {
+  return (config: StateCreator<ConfiguratorState>) => {
     return (set: any, get: any, api: any) => {
       const originalSet = set;
 
@@ -2014,6 +2079,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
 ```
 
 **Helper Function:**
+
 ```typescript
 // File: client/lib/api.ts
 
@@ -2026,9 +2092,11 @@ async function getClerkToken(): Promise<string> {
 ---
 
 #### Gap 6.2: No Conflict Resolution for Multi-Device Edits
+
 **Severity:** 🟡 MEDIUM
 
 **Current Problem:**
+
 - User edits on device A (adds menu item)
 - User edits on device B (adds different menu item)
 - Last update wins, first update lost
@@ -2040,12 +2108,12 @@ async function getClerkToken(): Promise<string> {
 
 interface ConfiguratorState {
   // ... existing fields ...
-  
+
   // ✅ NEW: Track last modification time
   _syncMetadata: {
-    lastModified: number;  // timestamp
-    syncedAt: number;      // when last synced
-    isDirty: boolean;      // has unsaved changes
+    lastModified: number; // timestamp
+    syncedAt: number; // when last synced
+    isDirty: boolean; // has unsaved changes
   };
 }
 
@@ -2055,17 +2123,19 @@ async function checkForConflicts(
   remoteVersion: ConfiguratorState,
 ): Promise<"local" | "remote" | "merge"> {
   const timeDiff = Math.abs(
-    localVersion._syncMetadata.lastModified - remoteVersion._syncMetadata.lastModified
+    localVersion._syncMetadata.lastModified -
+      remoteVersion._syncMetadata.lastModified,
   );
 
   // If modified within 5 seconds, likely a conflict
   if (timeDiff < 5000) {
     // Ask user which version to keep
-    return "merge";  // or implement 3-way merge
+    return "merge"; // or implement 3-way merge
   }
 
   // Otherwise, last-write-wins
-  return localVersion._syncMetadata.lastModified > remoteVersion._syncMetadata.lastModified
+  return localVersion._syncMetadata.lastModified >
+    remoteVersion._syncMetadata.lastModified
     ? "local"
     : "remote";
 }
@@ -2074,13 +2144,15 @@ async function checkForConflicts(
 ---
 
 #### Gap 6.3: Validation Not Enforced on State Changes
+
 **Severity:** 🟡 MEDIUM
 
 **Current Problem:**
+
 ```typescript
 // User can set invalid data
-store.updatePrimaryColor("not-a-hex-color");  // ❌ No validation
-store.setBusinessType("restaurant123");       // ❌ Should be enum
+store.updatePrimaryColor("not-a-hex-color"); // ❌ No validation
+store.setBusinessType("restaurant123"); // ❌ Should be enum
 ```
 
 **Fix: Add Zod Validation**
@@ -2107,7 +2179,7 @@ const updatePrimaryColor = (color: string) => {
   if (!/^#[0-9A-F]{6}$/i.test(color)) {
     throw new Error("Invalid color format. Use hex: #RRGGBB");
   }
-  
+
   checkThrottleGuard("updatePrimaryColor");
   set((state) => ({
     design: { ...state.design, primaryColor: color },
@@ -2120,6 +2192,7 @@ const updatePrimaryColor = (color: string) => {
 ### Summary: Zustand Fixes
 
 **Implementation:**
+
 1. Add backend sync middleware
 2. Add conflict detection logic
 3. Add Zod validation to all actions
@@ -2127,6 +2200,7 @@ const updatePrimaryColor = (color: string) => {
 5. Add save status UI feedback
 
 **Checklist:**
+
 - [ ] Implement `createBackendSyncMiddleware`
 - [ ] Update all actions with Zod validation
 - [ ] Add `_syncMetadata` to state
@@ -2144,6 +2218,7 @@ const updatePrimaryColor = (color: string) => {
 **Location:** `server/webhooks/stripe.ts`, `server/routes/orders.ts`
 
 **✅ What's Good:**
+
 - Webhook handler exists
 - OrderEvent tracking for social proof
 - Stripe signature verification
@@ -2151,9 +2226,11 @@ const updatePrimaryColor = (color: string) => {
 **❌ Critical Gaps:**
 
 #### Gap 7.1: No Subscription Lifecycle Handling
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```typescript
 // File: server/webhooks/stripe.ts (current)
 
@@ -2167,6 +2244,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
 ```
 
 **Impact:**
+
 - User upgrades to Pro but system doesn't know
 - User's subscription cancels but still has access
 - No failed payment handling
@@ -2182,11 +2260,14 @@ import { createAuditLogger } from "../middleware/audit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
-const PLAN_MAP: Record<string, { name: string; maxSites: number; maxUsers: number }> = {
-  "price_free": { name: "free", maxSites: 1, maxUsers: 1 },
-  "price_basic": { name: "basic", maxSites: 3, maxUsers: 2 },
-  "price_pro": { name: "pro", maxSites: 10, maxUsers: 5 },
-  "price_enterprise": { name: "enterprise", maxSites: -1, maxUsers: -1 },
+const PLAN_MAP: Record<
+  string,
+  { name: string; maxSites: number; maxUsers: number }
+> = {
+  price_free: { name: "free", maxSites: 1, maxUsers: 1 },
+  price_basic: { name: "basic", maxSites: 3, maxUsers: 2 },
+  price_pro: { name: "pro", maxSites: 10, maxUsers: 5 },
+  price_enterprise: { name: "enterprise", maxSites: -1, maxUsers: -1 },
 };
 
 export async function handleStripeWebhook(req: Request, res: Response) {
@@ -2266,14 +2347,14 @@ export async function handleStripeWebhook(req: Request, res: Response) {
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer.metadata?.userId) as string;
+  const userId = customer.metadata?.userId as string;
 
   if (!userId) {
     console.error("[Stripe] No userId in customer metadata");
     return;
   }
 
-  const planId = (subscription.items.data[0]?.price.id) as string;
+  const planId = subscription.items.data[0]?.price.id as string;
   const plan = PLAN_MAP[planId] || PLAN_MAP["price_free"];
 
   // Create subscription record
@@ -2319,11 +2400,11 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer.metadata?.userId) as string;
+  const userId = customer.metadata?.userId as string;
 
   if (!userId) return;
 
-  const planId = (subscription.items.data[0]?.price.id) as string;
+  const planId = subscription.items.data[0]?.price.id as string;
   const plan = PLAN_MAP[planId] || PLAN_MAP["price_free"];
 
   await prisma.subscription.update({
@@ -2342,7 +2423,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer.metadata?.userId) as string;
+  const userId = customer.metadata?.userId as string;
 
   if (!userId) return;
 
@@ -2366,7 +2447,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   if (!customerId) return;
 
   const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer.metadata?.userId) as string;
+  const userId = customer.metadata?.userId as string;
 
   if (!userId) return;
 
@@ -2387,7 +2468,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   if (!customerId) return;
 
   const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer.metadata?.userId) as string;
+  const userId = customer.metadata?.userId as string;
 
   if (!userId) return;
 
@@ -2417,7 +2498,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   if (!customerId) return;
 
   const customer = await stripe.customers.retrieve(customerId);
-  const userId = (customer.metadata?.userId) as string;
+  const userId = customer.metadata?.userId as string;
 
   if (!userId) return;
 
@@ -2443,9 +2524,11 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 ---
 
 #### Gap 7.2: No Feature Gating Based on Subscription
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 - No check if user can create > 1 site (free plan limit)
 - No check if user can add team members (plan limit)
 - No enforcement of premium templates
@@ -2472,8 +2555,7 @@ export async function requireSubscriptionTier(tier: "free" | "basic" | "pro") {
     const userTier = subscription?.plan || "free";
     const tierRanking = { free: 0, basic: 1, pro: 2, enterprise: 3 };
 
-    if (tierRanking[userTier as keyof typeof tierRanking] <
-        tierRanking[tier]) {
+    if (tierRanking[userTier as keyof typeof tierRanking] < tierRanking[tier]) {
       return res.status(403).json({
         error: "Upgrade required",
         requiredPlan: tier,
@@ -2489,7 +2571,7 @@ export async function requireSubscriptionTier(tier: "free" | "basic" | "pro") {
 router.post(
   "/configurations",
   requireAuth,
-  requireSubscriptionTier("basic"),  // Only basic+ can create sites
+  requireSubscriptionTier("basic"), // Only basic+ can create sites
   saveConfiguration,
 );
 ```
@@ -2497,9 +2579,11 @@ router.post(
 ---
 
 #### Gap 7.3: No Payment Portal Link
+
 **Severity:** 🟡 MEDIUM
 
 **Current Problem:**
+
 - User cannot manage subscription
 - User cannot update payment method
 - User cannot download invoices
@@ -2552,6 +2636,7 @@ export default router;
 ### Summary: Stripe Fixes
 
 **Implementation:**
+
 1. Expand `handleStripeWebhook` with all event types
 2. Create `Subscription` and `BillingEvent` models
 3. Add subscription middleware for feature gating
@@ -2559,6 +2644,7 @@ export default router;
 5. Update frontend to link to billing portal
 
 **Stripe Configuration (Dashboard):**
+
 - [ ] Set webhook endpoint: `https://api.railway.app/api/webhooks/stripe`
 - [ ] Enable events: `customer.subscription.*`, `payment_intent.succeeded`, `invoice.*`
 - [ ] Copy webhook secret to env: `STRIPE_WEBHOOK_SECRET`
@@ -2574,19 +2660,22 @@ export default router;
 **Location:** `client/pages/Site.tsx` (monolithic, ~700 lines)
 
 **✅ What's Good:**
+
 - Renders all sections (home, menu, gallery, etc.)
 
 **❌ Critical Gaps:**
 
 #### Gap 8.1: No Plugin Slot Anchors in Site Renderer
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```typescript
 // File: client/pages/Site.tsx (current)
 export default function SiteRenderer({ config }) {
   // ... 700 lines of hardcoded sections ...
-  
+
   return (
     <div>
       <header>...</header>
@@ -2601,6 +2690,7 @@ export default function SiteRenderer({ config }) {
 ```
 
 **Impact:**
+
 - Cannot add Calendly button
 - Cannot add POS embed
 - Cannot add chat widget
@@ -2709,9 +2799,11 @@ function SiteRenderer({ config }) {
 ---
 
 #### Gap 8.2: No Plugin Registry Endpoint
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 - Frontend cannot discover plugins
 - No way to list plugins by slot
 
@@ -2813,7 +2905,7 @@ router.post(
       console.error("Error installing plugin:", error);
       res.status(500).json({ error: "Failed to install plugin" });
     }
-  }
+  },
 );
 
 export default router;
@@ -2824,12 +2916,14 @@ export default router;
 ### Summary: Plugin Slots Fixes
 
 **Implementation:**
+
 1. Create `PluginSlot` component
 2. Add slots to `Site.tsx` at key locations
 3. Create `/api/plugins` endpoint
 4. Define plugin manifest format
 
 **Key Slots:**
+
 ```
 header-nav-after      // Add nav items
 footer-before         // Before footer
@@ -2851,9 +2945,11 @@ menu-after-items     // Below menu section
 **❌ Critical Gap:**
 
 #### Gap 9.1: No User Dashboard to View Site Stats
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 - User publishes site, has no visibility into performance
 - No visitor stats
 - No popular menu items
@@ -2871,59 +2967,63 @@ import prisma from "../db/prisma";
 const router = Router();
 
 // ✅ GET: Site statistics
-router.get("/sites/:configId", requireAuth, async (req: Request, res: Response) => {
-  const { configId } = req.params;
-  const userId = req.user!.id;
+router.get(
+  "/sites/:configId",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const { configId } = req.params;
+    const userId = req.user!.id;
 
-  try {
-    // Verify user owns site
-    const config = await prisma.configuration.findFirst({
-      where: { id: configId, userId },
-    });
+    try {
+      // Verify user owns site
+      const config = await prisma.configuration.findFirst({
+        where: { id: configId, userId },
+      });
 
-    if (!config) {
-      return res.status(404).json({ error: "Site not found" });
-    }
+      if (!config) {
+        return res.status(404).json({ error: "Site not found" });
+      }
 
-    // Get site metrics
-    const webApp = await prisma.webApp.findUnique({
-      where: { configId },
-      include: {
-        orders: {
-          orderBy: { orderedAt: "desc" },
-          take: 100,
+      // Get site metrics
+      const webApp = await prisma.webApp.findUnique({
+        where: { configId },
+        include: {
+          orders: {
+            orderBy: { orderedAt: "desc" },
+            take: 100,
+          },
         },
-      },
-    });
+      });
 
-    // Aggregate menu item stats
-    const menuStats = aggregateMenuStats(webApp?.orders || []);
+      // Aggregate menu item stats
+      const menuStats = aggregateMenuStats(webApp?.orders || []);
 
-    res.json({
-      site: {
-        id: config.id,
-        name: config.businessName,
-        status: config.status,
-        publishedUrl: config.publishedUrl,
-      },
-      stats: {
-        totalOrders: webApp?.orders.length || 0,
-        lastOrder: webApp?.orders[0]?.orderedAt,
-        topItems: menuStats.topItems,
-        orderTrend: calculateTrend(webApp?.orders || []),
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching analytics:", error);
-    res.status(500).json({ error: "Failed to fetch analytics" });
-  }
-});
+      res.json({
+        site: {
+          id: config.id,
+          name: config.businessName,
+          status: config.status,
+          publishedUrl: config.publishedUrl,
+        },
+        stats: {
+          totalOrders: webApp?.orders.length || 0,
+          lastOrder: webApp?.orders[0]?.orderedAt,
+          topItems: menuStats.topItems,
+          orderTrend: calculateTrend(webApp?.orders || []),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  },
+);
 
 // ✅ Helper: Aggregate menu item popularity
 function aggregateMenuStats(orders: any[]) {
   const itemCounts = new Map<string, number>();
 
-  orders.forEach(order => {
+  orders.forEach((order) => {
     const current = itemCounts.get(order.menuItemName) || 0;
     itemCounts.set(order.menuItemName, current + 1);
   });
@@ -2946,7 +3046,7 @@ function calculateTrend(orders: any[]) {
     date.setDate(date.getDate() - i);
     date.setHours(0, 0, 0, 0);
 
-    const count = orders.filter(o => {
+    const count = orders.filter((o) => {
       const orderDate = new Date(o.orderedAt);
       return orderDate.toDateString() === date.toDateString();
     }).length;
@@ -2964,6 +3064,7 @@ export default router;
 ```
 
 **Register analytics routes:**
+
 ```typescript
 // File: server/index.ts
 import analyticsRouter from "./routes/analytics";
@@ -2974,6 +3075,7 @@ app.use("/api/analytics", analyticsRouter);
 ---
 
 #### Gap 9.2: No Frontend Dashboard Component
+
 **Severity:** 🔴 CRITICAL
 
 **Fix: Create Dashboard Page**
@@ -3136,6 +3238,7 @@ export function Dashboard() {
 ### Summary: Dashboard Fixes
 
 **Implementation:**
+
 1. Create `/api/analytics/sites/:configId` endpoint
 2. Create aggregation helpers (menu stats, trends)
 3. Create `Dashboard.tsx` page with charts
@@ -3149,25 +3252,29 @@ export function Dashboard() {
 
 ### Current State Assessment
 
-**Locations:** 
+**Locations:**
+
 - Frontend: Netlify
 - Backend: Railway (Node.js)
 - Database: Neon
 
 **✅ What's Good:**
+
 - Clear separation (Vite on Netlify, Express on Railway)
 - Database isolated on NeonDB
 
 **❌ Critical Gaps:**
 
 #### Gap 10.1: CORS Not Configured for Production
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 ```typescript
 // File: server/index.ts (current)
 
-app.use(cors());  // ❌ OPEN TO ALL ORIGINS
+app.use(cors()); // ❌ OPEN TO ALL ORIGINS
 
 // Result: Any website can call your API
 // Risk: Credential leaks, abuse, data theft
@@ -3182,8 +3289,8 @@ import cors from "cors";
 
 const allowedOrigins = [
   process.env.APP_URL || "http://localhost:5173",
-  "https://maitr.de",  // Main app
-  "https://*.maitr.de",  // Published sites
+  "https://maitr.de", // Main app
+  "https://*.maitr.de", // Published sites
 ];
 
 const corsOptions: cors.CorsOptions = {
@@ -3192,17 +3299,19 @@ const corsOptions: cors.CorsOptions = {
     if (!origin) return callback(null, true);
 
     // Check if origin is in whitelist
-    if (allowedOrigins.includes(origin) ||
-        /https:\/\/[\w-]+\.maitr\.de/.test(origin)) {
+    if (
+      allowedOrigins.includes(origin) ||
+      /https:\/\/[\w-]+\.maitr\.de/.test(origin)
+    ) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true,  // Allow cookies
+  credentials: true, // Allow cookies
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  maxAge: 86400,  // 24 hours
+  maxAge: 86400, // 24 hours
 };
 
 app.use(cors(corsOptions));
@@ -3211,9 +3320,11 @@ app.use(cors(corsOptions));
 ---
 
 #### Gap 10.2: No Rate Limiting
+
 **Severity:** 🔴 CRITICAL
 
 **Current Problem:**
+
 - Attackers can spam your API
 - No protection against brute force
 - No quota enforcement
@@ -3227,8 +3338,8 @@ import rateLimit from "express-rate-limit";
 
 // ✅ Auth endpoint: strict limit (prevent brute force)
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 5,  // 5 requests per window
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window
   message: "Too many login attempts, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
@@ -3236,15 +3347,15 @@ export const authLimiter = rateLimit({
 
 // ✅ API endpoint: moderate limit
 export const apiLimiter = rateLimit({
-  windowMs: 60 * 1000,  // 1 minute
-  max: 100,  // 100 requests per minute
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 // ✅ Public endpoint: permissive
 export const publicLimiter = rateLimit({
-  windowMs: 60 * 1000,  // 1 minute
+  windowMs: 60 * 1000, // 1 minute
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
@@ -3252,6 +3363,7 @@ export const publicLimiter = rateLimit({
 ```
 
 **Apply middleware:**
+
 ```typescript
 // File: server/index.ts
 
@@ -3272,9 +3384,11 @@ app.get("/api/sites/:subdomain", publicLimiter, ...);
 ---
 
 #### Gap 10.3: No Security Headers
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 - No CSP (Content Security Policy)
 - No X-Frame-Options (clickjacking)
 - Browsers can cache sensitive data
@@ -3291,27 +3405,29 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],  // For error tracking
+        scriptSrc: ["'self'", "'unsafe-inline'"], // For error tracking
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'", "https://api.clerk.dev"],
       },
     },
     hsts: {
-      maxAge: 31536000,  // 1 year
+      maxAge: 31536000, // 1 year
       includeSubDomains: true,
       preload: true,
     },
-  })
+  }),
 );
 ```
 
 ---
 
 #### Gap 10.4: No Input Validation Across All Endpoints
+
 **Severity:** 🟠 HIGH
 
 **Current Problem:**
+
 - SQL injection risk
 - XSS attack vectors
 - Type confusion bugs
@@ -3347,20 +3463,23 @@ router.post(
   "/configurations",
   requireAuth,
   validateBody(ConfigurationSchema),
-  saveConfiguration
+  saveConfiguration,
 );
 ```
 
 ---
 
 #### Gap 10.5: No Health Check Endpoint (for Monitoring)
+
 **Severity:** 🟡 MEDIUM
 
 **Current Problem:**
+
 - Cannot monitor backend health
 - Railway cannot auto-restart failed services
 
 **Fix:**
+
 ```typescript
 // File: server/index.ts
 
@@ -3397,9 +3516,11 @@ async function checkStripeConnection(): Promise<string> {
 ---
 
 #### Gap 10.6: Environments Not Properly Separated
+
 **Severity:** 🟡 MEDIUM
 
 **Current Problem:**
+
 ```bash
 # Only one DATABASE_URL
 DATABASE_URL=postgresql://...prod...
@@ -3433,6 +3554,7 @@ LOG_LEVEL=debug
 ```
 
 Register in Railway:
+
 ```bash
 # In Railway Dashboard → Project → Variables
 # Set NODE_ENV=production for main branch
@@ -3444,6 +3566,7 @@ Register in Railway:
 ### Summary: Deployment Readiness Fixes
 
 **Implementation:**
+
 1. Configure CORS for production domains
 2. Add rate limiting middleware
 3. Add Helmet security headers
@@ -3452,6 +3575,7 @@ Register in Railway:
 6. Setup environment separation
 
 **Pre-Launch Checklist:**
+
 - [ ] CORS restricted to maitr.de
 - [ ] Rate limiting enabled on all endpoints
 - [ ] Security headers set
@@ -3468,42 +3592,37 @@ Register in Railway:
 
 ## MASTER SUMMARY TABLE
 
-| # | Gap | Severity | Issue | Fix Time | Impact |
-|---|-----|----------|-------|----------|--------|
-| 1 | NeonDB Schema | 🔴 | Missing tables for marketplace/multi-tenancy | 4h | Cannot scale |
-| 2 | Clerk Auth | 🔴 | No RLS on configurations | 6h | **Data leak risk** |
-| 3 | n8n Pipeline | 🔴 | No webhook receiver or scraper UI | 8h | Cannot onboard users |
-| 4 | Theme Store | 🔴 | Hardcoded templates block marketplace | 4h | Cannot add new themes |
-| 5 | SEO Strategy | 🔴 | Client-side rendering kills rankings | 6h | **Cannot be discovered** |
-| 6 | Zustand State | 🔴 | No backend sync, no validation | 4h | Data loss on reload |
-| 7 | Stripe Integration | 🔴 | Only payment tracking, no subscription | 5h | Cannot charge users |
-| 8 | Plugin Slots | 🔴 | No anchors for add-ons in Site.tsx | 4h | Plugin system blocked |
-| 9 | Dashboard | 🔴 | No visibility into site performance | 4h | Poor UX |
-| 10 | Deployment | 🔴 | No CORS/rate limit/security headers | 5h | **Security vulnerabilities** |
+| #   | Gap                | Severity | Issue                                        | Fix Time | Impact                       |
+| --- | ------------------ | -------- | -------------------------------------------- | -------- | ---------------------------- |
+| 1   | NeonDB Schema      | 🔴       | Missing tables for marketplace/multi-tenancy | 4h       | Cannot scale                 |
+| 2   | Clerk Auth         | 🔴       | No RLS on configurations                     | 6h       | **Data leak risk**           |
+| 3   | n8n Pipeline       | 🔴       | No webhook receiver or scraper UI            | 8h       | Cannot onboard users         |
+| 4   | Theme Store        | 🔴       | Hardcoded templates block marketplace        | 4h       | Cannot add new themes        |
+| 5   | SEO Strategy       | 🔴       | Client-side rendering kills rankings         | 6h       | **Cannot be discovered**     |
+| 6   | Zustand State      | 🔴       | No backend sync, no validation               | 4h       | Data loss on reload          |
+| 7   | Stripe Integration | 🔴       | Only payment tracking, no subscription       | 5h       | Cannot charge users          |
+| 8   | Plugin Slots       | 🔴       | No anchors for add-ons in Site.tsx           | 4h       | Plugin system blocked        |
+| 9   | Dashboard          | 🔴       | No visibility into site performance          | 4h       | Poor UX                      |
+| 10  | Deployment         | 🔴       | No CORS/rate limit/security headers          | 5h       | **Security vulnerabilities** |
 
 ---
 
 ## IMPLEMENTATION PRIORITY
 
 **CRITICAL PATH (Must finish before launch):**
+
 1. Gap 2 (RLS) - Security
 2. Gap 1 (Schema) - Foundation
 3. Gap 5 (SEO) - Business requirement
 4. Gap 7 (Stripe) - Revenue
 5. Gap 3 (n8n) - User onboarding
 
-**HIGH PRIORITY (Before Week 1):**
-6. Gap 4 (Theme Store)
-7. Gap 10 (Deployment)
-8. Gap 6 (Zustand)
+**HIGH PRIORITY (Before Week 1):** 6. Gap 4 (Theme Store) 7. Gap 10 (Deployment) 8. Gap 6 (Zustand)
 
-**MEDIUM PRIORITY (Can do Week 2):**
-9. Gap 8 (Plugins)
-10. Gap 9 (Dashboard)
+**MEDIUM PRIORITY (Can do Week 2):** 9. Gap 8 (Plugins) 10. Gap 9 (Dashboard)
 
 ---
 
 **Total Implementation Time:** ~55 hours = ~7 days at 8h/day
 
 **Recommended Timeline:** Start Monday, complete by next Friday (before launch)
-
