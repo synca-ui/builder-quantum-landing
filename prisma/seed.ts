@@ -102,7 +102,7 @@ const templates = [
     name: "Stylish",
     description:
       "An artistic and creative design with visual storytelling. Ideal for trendy and creative restaurants.",
-    category: ["GASTRONOMY", "CREATIVE"],
+    category: "GASTRONOMY",
     layout: {
       intent: "VISUAL",
       navigation: "floating",
