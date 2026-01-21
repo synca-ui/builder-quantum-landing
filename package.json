@@ -9,6 +9,7 @@
     "scripts": [
       "dist/server/**/*.js"
     ]
+    
   },
   "scripts": {
     "dev": "vite",
