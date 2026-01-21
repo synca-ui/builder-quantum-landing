@@ -8,7 +8,7 @@ const templates = [
     name: "Minimalist",
     description:
       "A clean, modern design with minimal visual elements. Perfect for upscale dining experiences.",
-    category: ["GASTRONOMY", "SERVICE"],
+    category: "GASTRONOMY",
     layout: {
       intent: "NARRATIVE",
       navigation: "top-horizontal",
