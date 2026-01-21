@@ -9,7 +9,7 @@ datasource db {
 }
 
 // ============================================
-// 1. USER & AUTH (Clerk Integrationn)
+// 1. USER & AUTH (Clerk Integration)
 // ============================================
 
 model User {
