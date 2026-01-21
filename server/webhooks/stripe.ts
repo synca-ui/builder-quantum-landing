@@ -479,6 +479,13 @@ export async function handleStripeWebhook(
   req: Request,
   res: Response,
 ): Promise<void> {
+  // Check if Stripe is configured
+  if (!stripe) {
+    console.warn("[Stripe] Stripe is not configured (missing STRIPE_SECRET_KEY)");
+    res.status(501).json({ error: "Stripe not configured" });
+    return;
+  }
+
   const signature = req.headers["stripe-signature"] as string | undefined;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
