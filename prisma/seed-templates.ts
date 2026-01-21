@@ -138,7 +138,7 @@ const TEMPLATES = [
 ];
 
 async function main() {
-  console.log(`🌱 Seeding ${TEMPLATES.length} templates...`);
+  console.log(` Seeding ${TEMPLATES.length} templates...`);
 
   for (const template of TEMPLATES) {
     const result = await prisma.template.upsert({
