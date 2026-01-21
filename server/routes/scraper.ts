@@ -326,8 +326,7 @@ export async function applyScrapedData(req: Request, res: Response) {
           contactMethods:
             suggestedConfig.contactMethods || existing.contactMethods,
           socialMedia: suggestedConfig.socialMedia || existing.socialMedia,
-          openingHours:
-            suggestedConfig.openingHours || existing.openingHours,
+          openingHours: suggestedConfig.openingHours || existing.openingHours,
         },
       });
 

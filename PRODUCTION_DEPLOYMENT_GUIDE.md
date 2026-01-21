@@ -3,6 +3,7 @@
 ## Overview
 
 This guide walks through deploying the Gastronomy OS to production. The system is built on:
+
 - **Frontend:** React + Vite (deployed to Netlify/Vercel)
 - **Backend:** Express.js with Prisma ORM
 - **Database:** PostgreSQL (NeonDB)
@@ -13,6 +14,7 @@ This guide walks through deploying the Gastronomy OS to production. The system i
 ## Pre-Deployment Checklist
 
 ### 1. Code Review & Testing
+
 - [ ] All feature branches merged to `staging`
 - [ ] Unit tests pass: `pnpm test`
 - [ ] Build succeeds: `pnpm run build:server` and `pnpm run build`
@@ -21,6 +23,7 @@ This guide walks through deploying the Gastronomy OS to production. The system i
 - [ ] Documentation updated
 
 ### 2. Environment Variables
+
 - [ ] Copy all secrets from staging environment
 - [ ] Verify all required env vars are set:
   ```
@@ -34,6 +37,7 @@ This guide walks through deploying the Gastronomy OS to production. The system i
   ```
 
 ### 3. Database
+
 - [ ] Production database created (NeonDB or PostgreSQL)
 - [ ] Database URL configured in .env
 - [ ] Prisma migrations ready: `npx prisma migrate status`
@@ -41,6 +45,7 @@ This guide walks through deploying the Gastronomy OS to production. The system i
 - [ ] Database scaling plan reviewed
 
 ### 4. Security
+
 - [ ] All secrets are in environment variables (never committed)
 - [ ] Webhook secrets verified (Clerk, Stripe)
 - [ ] CORS origin configured for production domain
@@ -49,6 +54,7 @@ This guide walks through deploying the Gastronomy OS to production. The system i
 - [ ] SQL injection protections verified
 
 ### 5. Infrastructure
+
 - [ ] Hosting provider account set up (Netlify/Vercel)
 - [ ] CDN configured (optional, Netlify/Vercel provide this)
 - [ ] Monitoring/alerting configured
@@ -60,6 +66,7 @@ This guide walks through deploying the Gastronomy OS to production. The system i
 ### Option A: Deploy to Netlify
 
 #### Step 1: Connect Repository
+
 ```bash
 # Install Netlify CLI
 npm install -g netlify-cli
@@ -72,12 +79,14 @@ netlify init
 ```
 
 #### Step 2: Configure Build Settings
+
 ```
 Build command: pnpm run build
 Publish directory: dist
 ```
 
 #### Step 3: Set Environment Variables
+
 ```
 Netlify Dashboard → Settings → Build & Deploy → Environment
 
@@ -85,6 +94,7 @@ Add all production environment variables
 ```
 
 #### Step 4: Deploy
+
 ```bash
 netlify deploy --prod
 ```
@@ -92,6 +102,7 @@ netlify deploy --prod
 ### Option B: Deploy to Vercel
 
 #### Step 1: Connect Repository
+
 ```bash
 # Install Vercel CLI
 npm install -g vercel
@@ -104,6 +115,7 @@ vercel
 ```
 
 #### Step 2: Configure Project
+
 ```
 Framework: Vite
 Build command: pnpm run build
@@ -111,6 +123,7 @@ Output directory: dist
 ```
 
 #### Step 3: Set Environment Variables
+
 ```
 Vercel Dashboard → Project Settings → Environment Variables
 
@@ -118,6 +131,7 @@ Add all production environment variables
 ```
 
 #### Step 4: Deploy
+
 ```bash
 vercel deploy --prod
 ```
@@ -125,20 +139,23 @@ vercel deploy --prod
 ### Option C: Deploy to Railway
 
 #### Step 1: Create Railway Project
+
 - Go to [railway.app](https://railway.app)
 - Create new project
 - Connect GitHub repository
 
 #### Step 2: Configure Services
+
 ```
 1. Node.js Service
    Start command: node dist/server/node-build.mjs
-   
+
 2. PostgreSQL Service
    (or use external NeonDB)
 ```
 
 #### Step 3: Set Environment Variables
+
 ```
 Railway Dashboard → Project → Variables
 
@@ -146,6 +163,7 @@ Add all production environment variables
 ```
 
 #### Step 4: Deploy
+
 ```bash
 # Push to main/production branch
 git push origin main
@@ -265,6 +283,7 @@ curl -H "Authorization: Bearer {TOKEN}" https://your-domain.com/api/configuratio
 If critical issues are discovered post-deployment:
 
 ### Immediate Action
+
 ```bash
 # Option 1: Redeploy previous version (Netlify/Vercel)
 # Go to Dashboard → Deployments → Select previous deployment → Redeploy
@@ -275,6 +294,7 @@ git push origin main
 ```
 
 ### Database Rollback
+
 ```bash
 # If migrations caused issues, rollback last migration
 npx prisma migrate resolve --rolled-back migration_name
@@ -286,12 +306,14 @@ npx prisma migrate resolve --rolled-back migration_name
 ## Scaling Considerations
 
 ### Phase 1: MVP (0-100 users)
+
 - Single PostgreSQL instance (NeonDB free tier)
 - Single application instance
 - Netlify/Vercel default CDN
 - Cost: ~$0 (free tiers)
 
 ### Phase 2: Growth (100-1,000 users)
+
 - Upgrade PostgreSQL (NeonDB paid tier)
 - Scale to 2-3 application instances
 - Enable database connection pooling
@@ -299,6 +321,7 @@ npx prisma migrate resolve --rolled-back migration_name
 - Cost: ~$100-200/month
 
 ### Phase 3: Scale (1,000-10,000 users)
+
 - PostgreSQL with read replicas
 - Kubernetes cluster (ECS/GKE)
 - Redis cache layer
@@ -307,6 +330,7 @@ npx prisma migrate resolve --rolled-back migration_name
 - Cost: ~$500-1,000/month
 
 ### Phase 4: Enterprise (10,000+ users)
+
 - Dedicated database infrastructure
 - Multi-region deployment
 - Advanced caching strategies
@@ -317,6 +341,7 @@ npx prisma migrate resolve --rolled-back migration_name
 ## Maintenance & Updates
 
 ### Regular Tasks
+
 - [ ] Monitor error logs daily
 - [ ] Review performance metrics weekly
 - [ ] Update dependencies monthly
@@ -324,6 +349,7 @@ npx prisma migrate resolve --rolled-back migration_name
 - [ ] Backup database weekly
 
 ### Update Procedure
+
 ```bash
 # 1. Update dependencies
 pnpm update
@@ -349,16 +375,19 @@ git push origin main
 ## Disaster Recovery
 
 ### Database Backup Strategy
+
 - Automated nightly backups (NeonDB handles this)
 - Weekly manual backups to S3
 - Test restore procedure monthly
 
 ### Code Backup Strategy
+
 - Git repository with multiple remotes
 - Daily backup of git history
 - Release tags for all production deployments
 
 ### Recovery Time Objective (RTO)
+
 - Critical bugs: 15 minutes (rollback)
 - Database corruption: 1 hour (restore from backup)
 - Infrastructure failure: 4 hours (migrate to new provider)
@@ -366,11 +395,13 @@ git push origin main
 ## Cost Optimization
 
 ### Development
+
 - Use free tiers for all services during development
 - NeonDB free tier for development database
 - Netlify free tier for staging deployment
 
 ### Production
+
 - NeonDB Pro: $15/month (scales to your usage)
 - Netlify Pro: $19/month (or Vercel equivalent)
 - Stripe: 2.9% + $0.30 per transaction
@@ -380,6 +411,7 @@ git push origin main
 ## Security Hardening
 
 ### Before Launch
+
 - [ ] Enable HTTPS everywhere
 - [ ] Configure CORS headers
 - [ ] Enable CSRF protection
@@ -391,6 +423,7 @@ git push origin main
 - [ ] Configure WAF (Web Application Firewall)
 
 ### Ongoing
+
 - [ ] Weekly dependency vulnerability scans
 - [ ] Monthly penetration testing
 - [ ] Quarterly security audit
@@ -399,6 +432,7 @@ git push origin main
 ## Support & Resources
 
 ### Documentation
+
 - [Clerk Documentation](https://clerk.com/docs)
 - [Stripe Documentation](https://stripe.com/docs)
 - [Prisma Documentation](https://www.prisma.io/docs/)
@@ -406,6 +440,7 @@ git push origin main
 - [Vercel Deployment Guide](https://vercel.com/docs)
 
 ### Community
+
 - GitHub Issues for bug reports
 - GitHub Discussions for feature requests
 - Community Slack/Discord (optional)
@@ -444,6 +479,7 @@ Monitor these metrics after deployment:
 ## Launch Checklist
 
 ### Before Going Live
+
 - [ ] All tests passing
 - [ ] Documentation complete
 - [ ] Monitoring configured
@@ -452,6 +488,7 @@ Monitor these metrics after deployment:
 - [ ] Incident response plan in place
 
 ### Launch Day
+
 - [ ] Deploy to production during low-traffic time
 - [ ] Monitor metrics closely (first 2 hours)
 - [ ] Have team available for quick response
@@ -459,6 +496,7 @@ Monitor these metrics after deployment:
 - [ ] Document any issues encountered
 
 ### Post-Launch
+
 - [ ] Send launch announcement
 - [ ] Start customer onboarding
 - [ ] Gather feedback

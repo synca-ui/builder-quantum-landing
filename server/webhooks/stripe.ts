@@ -481,7 +481,9 @@ export async function handleStripeWebhook(
 ): Promise<void> {
   // Check if Stripe is configured
   if (!stripe) {
-    console.warn("[Stripe] Stripe is not configured (missing STRIPE_SECRET_KEY)");
+    console.warn(
+      "[Stripe] Stripe is not configured (missing STRIPE_SECRET_KEY)",
+    );
     res.status(501).json({ error: "Stripe not configured" });
     return;
   }

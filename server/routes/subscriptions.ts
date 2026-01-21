@@ -32,11 +32,7 @@ const SUBSCRIPTION_PLANS = [
     interval: null,
     maxSites: 1,
     maxUsers: 1,
-    features: [
-      "1 website",
-      "Basic templates",
-      "Community support",
-    ],
+    features: ["1 website", "Basic templates", "Community support"],
   },
   {
     id: "basic",
@@ -226,12 +222,7 @@ export async function createCheckoutSession(req: Request, res: Response) {
 
     // Check if Stripe is configured
     if (!process.env.STRIPE_SECRET_KEY) {
-      await audit(
-        "checkout_failed",
-        planId,
-        false,
-        "Stripe not configured",
-      );
+      await audit("checkout_failed", planId, false, "Stripe not configured");
 
       return res.status(501).json({
         success: false,

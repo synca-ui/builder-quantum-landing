@@ -7,6 +7,7 @@ The Gastronomy OS integrates Clerk for authentication with Stripe for subscripti
 ## Architecture
 
 ### Components
+
 1. **Clerk** - User authentication and management
 2. **Stripe** - Payment processing and subscription billing
 3. **Database (Prisma)** - Subscription and billing event storage
@@ -15,6 +16,7 @@ The Gastronomy OS integrates Clerk for authentication with Stripe for subscripti
 ### Data Models
 
 #### User (Clerk + Database)
+
 ```typescript
 // Clerk User (external)
 {
@@ -34,23 +36,24 @@ The Gastronomy OS integrates Clerk for authentication with Stripe for subscripti
 ```
 
 #### Subscription
+
 ```typescript
 {
   id: "uuid"
   userId: "uuid" (FK to User)
-  
+
   // Stripe References
   stripeCustomerId: "cus_xxx"
   stripeSubscriptionId: "sub_xxx"
-  
+
   // Plan Info
   plan: "free" | "basic" | "pro" | "enterprise"
   status: "active" | "paused" | "canceled" | "past_due"
-  
+
   // Feature Limits
   maxSites: 1 | 3 | 10 | unlimited
   maxUsers: 1 | 2 | 5 | unlimited
-  
+
   // Billing Period
   currentPeriodStart: Date
   currentPeriodEnd: Date
@@ -59,6 +62,7 @@ The Gastronomy OS integrates Clerk for authentication with Stripe for subscripti
 ```
 
 #### BillingEvent (Audit Trail)
+
 ```typescript
 {
   id: "uuid"
@@ -76,26 +80,29 @@ The Gastronomy OS integrates Clerk for authentication with Stripe for subscripti
 ### 1. Configure Stripe
 
 #### Create Stripe Account
+
 1. Go to [stripe.com](https://stripe.com)
 2. Sign up and create a project
 3. Enable Stripe Billing/Subscriptions
 
 #### Create Products & Prices
+
 ```
 Product: "Maitr Free"
   Price: FREE (no recurring charge)
-  
+
 Product: "Maitr Basic"
   Price: €9.99/month (recurring)
-  
+
 Product: "Maitr Pro"
   Price: €29.99/month (recurring)
-  
+
 Product: "Maitr Enterprise"
   Price: custom (contact sales)
 ```
 
 #### Get Credentials
+
 ```
 STRIPE_SECRET_KEY=sk_live_xxx (secret, never expose in frontend)
 STRIPE_PUBLISHABLE_KEY=pk_live_xxx (public, safe for browser)
@@ -105,6 +112,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx (webhook signing secret)
 ### 2. Configure Webhooks
 
 #### Create Webhook Endpoint
+
 1. Go to Stripe Dashboard → Developers → Webhooks
 2. Create a webhook endpoint pointing to: `https://your-domain.com/api/webhooks/stripe`
 3. Select events:
@@ -133,11 +141,14 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 In `server/webhooks/stripe.ts`, update the `PLAN_MAP` with your actual Stripe price IDs:
 
 ```typescript
-const PLAN_MAP: Record<string, { name: string; maxSites: number; maxUsers: number }> = {
-  "price_xxx_free": { name: "free", maxSites: 1, maxUsers: 1 },
-  "price_xxx_basic": { name: "basic", maxSites: 3, maxUsers: 2 },
-  "price_xxx_pro": { name: "pro", maxSites: 10, maxUsers: 5 },
-  "price_xxx_enterprise": { name: "enterprise", maxSites: -1, maxUsers: -1 },
+const PLAN_MAP: Record<
+  string,
+  { name: string; maxSites: number; maxUsers: number }
+> = {
+  price_xxx_free: { name: "free", maxSites: 1, maxUsers: 1 },
+  price_xxx_basic: { name: "basic", maxSites: 3, maxUsers: 2 },
+  price_xxx_pro: { name: "pro", maxSites: 10, maxUsers: 5 },
+  price_xxx_enterprise: { name: "enterprise", maxSites: -1, maxUsers: -1 },
 };
 ```
 
@@ -234,6 +245,7 @@ const PLAN_MAP: Record<string, { name: string; maxSites: number; maxUsers: numbe
 ## API Endpoints
 
 ### Authentication (Clerk)
+
 ```
 POST /api/auth/login - Via Clerk widget
 POST /api/auth/logout - Via Clerk widget
@@ -241,6 +253,7 @@ GET /api/auth/user - Get current user info
 ```
 
 ### Subscriptions (Stripe)
+
 ```
 GET /api/subscriptions/current
   Returns: { plan, status, maxSites, maxUsers, currentPeriodEnd, ... }
@@ -258,6 +271,7 @@ GET /api/billing/events
 ```
 
 ### Configurations (with Subscription Limits)
+
 ```
 POST /api/configurations/:id/publish
   Checks: count(published) < subscription.maxSites
@@ -267,21 +281,25 @@ POST /api/configurations/:id/publish
 ## Security Considerations
 
 ### 1. Row-Level Security (RLS)
+
 - Every query filters by `userId`
 - Users can only see their own subscriptions
 - Enforced in middleware: `requireAuth`
 
 ### 2. Webhook Verification
+
 - All Stripe webhooks are signed with a secret
 - We verify signature before processing event
 - Prevents malicious webhook injection
 
 ### 3. Idempotency
+
 - Each Stripe event has unique `event.id`
 - We store `BillingEvent.stripeEventId` to prevent duplicates
 - If same event received twice, we skip processing
 
 ### 4. PCI Compliance
+
 - We NEVER store credit card data
 - We use Stripe Hosted Checkout (SAQ A compliant)
 - We use Stripe.js (PCI compliant)
@@ -289,6 +307,7 @@ POST /api/configurations/:id/publish
 ## Testing
 
 ### Test Mode Credentials
+
 ```
 Stripe provides test mode keys:
 STRIPE_SECRET_KEY=sk_test_xxx
@@ -301,6 +320,7 @@ Use Stripe test cards:
 ```
 
 ### Test Webhook
+
 ```bash
 curl -X POST http://localhost:3000/api/webhooks/stripe/test \
   -H "Content-Type: application/json" \
@@ -308,6 +328,7 @@ curl -X POST http://localhost:3000/api/webhooks/stripe/test \
 ```
 
 ### Manual Webhook Testing
+
 1. Go to Stripe Dashboard → Developers → Webhooks
 2. Click on your endpoint
 3. Click "Send test event"
@@ -317,20 +338,24 @@ curl -X POST http://localhost:3000/api/webhooks/stripe/test \
 ## Troubleshooting
 
 ### "Neither apiKey nor config.authenticator provided"
+
 - Solution: Set `STRIPE_SECRET_KEY` environment variable
 - The app gracefully handles missing key (returns 501 on webhook)
 
 ### Webhook signature verification failed
+
 - Check: `STRIPE_WEBHOOK_SECRET` is set correctly
 - Check: Webhook request includes `stripe-signature` header
 - Check: Raw body is passed to verification (not stringified)
 
 ### Duplicate charges
+
 - Check: BillingEvent table for duplicate `stripeEventId`
 - Stripe retries webhooks up to 3 days
 - We prevent duplicates by checking stripeEventId first
 
 ### Subscription not updating
+
 - Check: User's `clerkId` matches Stripe customer metadata
 - Check: Price ID is in `PLAN_MAP`
 - Check: Webhook endpoint is receiving events
