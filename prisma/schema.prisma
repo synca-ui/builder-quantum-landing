@@ -8,10 +8,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- 1. USER & AUTH ---
+// ============================================
+// 1. USER & AUTH (Clerk Integration)
+// ============================================
+
 model User {
   id            String    @id @default(uuid())
-  clerkId       String    @unique @map("clerk_id")  // Clerk user ID for authentication
+  clerkId       String    @unique @map("clerk_id")
   email         String    @unique
   fullName      String?
   role          UserRole  @default(OWNER)
@@ -19,10 +22,15 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Relations
   businesses    BusinessMember[]
   webApps       WebApp[]
   configurations Configuration[]
   tenants       Tenant[]
+  scraperJobs   ScraperJob[]
+  subscription  Subscription?
+  billingEvents BillingEvent[]
+  auditLogs     AuditLog[]
 }
 
 enum UserRole {
@@ -31,23 +39,10 @@ enum UserRole {
   STAFF
 }
 
-// --- TEMPLATE ENGINE ENUMS ---
-enum BusinessType {
-  GASTRONOMY
-  RETAIL
-  SERVICE
-  CREATIVE
-  OTHER
-}
+// ============================================
+// 2. BUSINESS MANAGEMENT
+// ============================================
 
-enum LayoutIntent {
-  NARRATIVE
-  COMMERCIAL
-  VISUAL
-  FUNCTIONAL
-}
-
-// --- 2. BUSINESS (Hybrid Model) ---
 model Business {
   id              String   @id @default(uuid())
   slug            String   @unique
@@ -64,29 +59,31 @@ model Business {
   secondaryColor  String   @default("#ffffff")
   fontFamily      String   @default("sans")
 
-  /// @deprecated Use activeTemplate relation and templateId field instead
-  template        String   @default("minimalist")
-
-  // Template Reference (NEW: Links to Template Engine)
+  // Template Reference (✅ NEW: Proper foreign key)
   templateId      String?
-  activeTemplate  Template? @relation(fields: [templateId], references: [id])
+  template        Template? @relation(fields: [templateId], references: [id])
 
-  // Operational Data (JSON for flexibility)
+  // Operational Data
   openingHours    Json?
   socialLinks     Json?
   contactInfo     Json?
 
-  // Scraper Meta
+  // Status
   maitrScore      Int      @default(0)
   originalPdfUrl  String?
   status          BusinessStatus @default(DRAFT)
 
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   // Relations
   members         BusinessMember[]
   categories      MenuCategory[]
+  configurations  Configuration[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  @@index([slug])
+  @@index([status])
 }
 
 enum BusinessStatus {
@@ -95,28 +92,47 @@ enum BusinessStatus {
   ARCHIVED
 }
 
-// --- TEMPLATE ENGINE (Template Marketplace) ---
+model BusinessMember {
+  id          String   @id @default(uuid())
+  userId      String
+  businessId  String
+  role        UserRole @default(STAFF)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId])
+  @@index([businessId])
+}
+
+// ============================================
+// 3. TEMPLATE MARKETPLACE (✅ NEW)
+// ============================================
+
 model Template {
-  id              String    @id  // Manually controlled IDs (e.g., "modern", "minimalist", "stylish", "cozy")
+  id              String    @id  // e.g., "minimalist", "modern", "stylish", "cozy"
 
   // Metadata
   name            String
   description     String    @db.Text
-  version         String    @default("1.0.0")  // Semantic versioning for template updates
+  version         String    @default("1.0.0")
   isPremium       Boolean   @default(false)
 
   // Categorization
-  category        BusinessType[]  // PostgreSQL native array for supported business types
+  category        String    // "restaurant", "cafe", "bar", "retail", "service"
 
-  // Design System (JSON-based for flexibility)
-  /// Layout configuration: { intent, navigation, typography }
-  layout          Json      @default("{}")
+  // Design System
+  layout          Json      @default("{}")    // { intent, navigation, typography }
+  tokens          Json      @default("{}")    // { colors, typography, spacing, shapes }
+  preview         Json      @default("{}")    // { thumbnail, features }
 
-  /// Design tokens: { colors, typography, spacing, shapes }
-  tokens          Json      @default("{}")
-
-  /// Preview information: { thumbnail, features }
-  preview         Json      @default("{}")
+  // Marketplace Metrics
+  creator         String    @default("maitr")
+  downloads       Int       @default(0)
+  avgRating       Float     @default(0)
 
   // Timestamps
   createdAt       DateTime  @default(now())
@@ -124,31 +140,118 @@ model Template {
 
   // Relations
   businesses      Business[]
+  configurations  Configuration[]
+  ratings         TemplateRating[]
 
   @@index([isPremium])
   @@index([category])
+  @@index([downloads])
 }
 
-model BusinessMember {
-  id          String   @id @default(uuid())
-  userId      String
-  businessId  String
-  role        UserRole @default(STAFF)
-  
-  user        User     @relation(fields: [userId], references: [id])
-  business    Business @relation(fields: [businessId], references: [id])
+model TemplateRating {
+  id              String    @id @default(uuid())
+  templateId      String
+  userId          String
+  rating          Int       // 1-5 stars
+  comment         String?   @db.Text
 
+  createdAt       DateTime  @default(now())
+
+  template        Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, userId])
+  @@index([templateId])
+}
+
+// ============================================
+// 4. CONFIGURATIONS (✅ WITH RLS SUPPORT)
+// ============================================
+
+model Configuration {
+  id              String    @id @default(uuid())
+  userId          String    // ✅ RLS: User ownership
+  businessId      String?   // ✅ RLS: Business ownership
+
+  // Business Info
+  businessName    String    @default("")
+  businessType    String    @default("")
+  location        String?
+  slogan          String?
+  uniqueDescription String?
+
+  // Design
+  template        String    @default("")  // Legacy field
+  selectedTemplate String?  // ✅ NEW: FK to Template
+  primaryColor    String    @default("#111827")
+  secondaryColor  String    @default("#6B7280")
+  fontFamily      String    @default("sans-serif")
+
+  // Content
+  menuItems       Json      @default("[]")
+  gallery         Json      @default("[]")
+  openingHours    Json      @default("{}")
+
+  // Features
+  reservationsEnabled Boolean @default(false)
+  maxGuests       Int       @default(10)
+  onlineOrdering  Boolean   @default(false)
+  onlineStore     Boolean   @default(false)
+  teamArea        Boolean   @default(false)
+
+  // Contact & Social
+  contactMethods  Json      @default("[]")
+  socialMedia     Json      @default("{}")
+
+  // Pages
+  selectedPages   Json      @default("[\"home\"]")
+  customPages     Json      @default("[]")
+
+  // Publishing
+  status          String    @default("draft")  // draft | published | archived
+  publishedUrl    String?   @unique
+  previewUrl      String?
+
+  // Extra
+  domainName      String?
+  selectedDomain  String?
+  paymentOptions  Json      @default("[]")
+  offers          Json      @default("[]")
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business        Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  templateData    Template? @relation(fields: [selectedTemplate], references: [id], onDelete: SetNull)
+  addOns          AddOnInstance[]
+
+  // ✅ RLS Indexes
   @@unique([userId, businessId])
+  @@index([userId])
+  @@index([businessId])
+  @@index([status])
 }
 
-// --- 3. MENU ---
+// ============================================
+// 5. MENU MANAGEMENT
+// ============================================
+
 model MenuCategory {
   id          String     @id @default(uuid())
   name        String
   sortOrder   Int        @default(0)
   businessId  String
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
   business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   items       MenuItem[]
+
+  @@index([businessId])
 }
 
 model MenuItem {
@@ -159,84 +262,41 @@ model MenuItem {
   imageUrl    String?
 
   categoryId  String
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
 }
 
-// --- 4. CONFIGURATIONS (User Site Drafts & Published Configs) ---
-model Configuration {
-  id            String    @id @default(uuid())
-  userId        String
+// ============================================
+// 6. WEB APPS (Published Websites)
+// ============================================
 
-  // Business Info
-  businessName  String    @default("")
-  businessType  String    @default("")
-  location      String?
-  slogan        String?
-  uniqueDescription String?
-
-  // Design
-  template      String    @default("")
-  primaryColor  String    @default("#111827")
-  secondaryColor String   @default("#6B7280")
-  fontFamily    String    @default("sans-serif")
-
-  // Content
-  menuItems     Json      @default("[]") // Array<MenuItem>
-  gallery       Json      @default("[]") // Array<GalleryImage>
-  openingHours  Json      @default("{}") // OpeningHours object
-
-  // Features
-  reservationsEnabled Boolean @default(false)
-  maxGuests     Int       @default(10)
-  onlineOrdering Boolean  @default(false)
-  onlineStore   Boolean   @default(false)
-  teamArea      Boolean   @default(false)
-
-  // Contact & Social
-  contactMethods Json     @default("[]") // Array<string>
-  socialMedia   Json      @default("{}") // Record<string, string>
-
-  // Pages
-  selectedPages Json      @default("[\"home\"]") // Array<string>
-  customPages   Json      @default("[]") // Array<string>
-
-  // Publishing
-  status        String    @default("draft") // "draft" | "published" | "archived"
-  publishedUrl  String?
-  previewUrl    String?
-
-  // Extra
-  domainName    String?
-  selectedDomain String?
-  paymentOptions Json     @default("[]")
-  offers        Json      @default("[]")
-
-  // Timestamps
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-}
-
-// --- 5. WEB APPS (Published Websites) ---
 model WebApp {
   id            String    @id @default(uuid())
   userId        String
+  configId      String    @unique  // ✅ NEW: Link to Configuration
   subdomain     String    @unique
   configData    Json
   publishedAt   DateTime?
   updatedAt     DateTime  @updatedAt
 
+  createdAt     DateTime  @default(now())
+
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders        OrderEvent[]
 
-  createdAt     DateTime  @default(now())
+  @@index([userId])
+  @@index([subdomain])
 }
 
-// --- 6. ORDER EVENTS (Social Proof) ---
+// ============================================
+// 7. ORDER EVENTS (Social Proof & Analytics)
+// ============================================
+
 model OrderEvent {
   id              String    @id @default(uuid())
   webAppId        String
@@ -253,7 +313,186 @@ model OrderEvent {
   @@index([orderedAt])
 }
 
-// --- 7. TENANTS (Multi-tenant Support) ---
+// ============================================
+// 8. SUBSCRIPTION & BILLING (✅ NEW - Stripe Integration)
+// ============================================
+
+model Subscription {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  
+  // Stripe References
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  
+  // Plan Info
+  plan            String    @default("free")  // free | basic | pro | enterprise
+  status          String    @default("active")  // active | paused | canceled | past_due
+  
+  // Features
+  maxSites        Int       @default(1)
+  maxUsers        Int       @default(1)
+  
+  // Billing Period
+  currentPeriodStart DateTime?
+  currentPeriodEnd DateTime?
+  canceledAt      DateTime?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([status])
+  @@index([stripeCustomerId])
+}
+
+model BillingEvent {
+  id              String    @id @default(uuid())
+  userId          String
+  subscriptionId  String?
+  
+  eventType       String    // subscription_created | payment_succeeded | invoice_paid | payment_failed
+  amount          Int?      // Cents
+  currency        String    @default("EUR")
+  
+  stripeEventId   String?   @unique
+  metadata        Json?
+  
+  createdAt       DateTime  @default(now())
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([eventType])
+}
+
+// ============================================
+// 9. n8n SCRAPER PIPELINE (✅ NEW)
+// ============================================
+
+model ScraperJob {
+  id              String    @id @default(uuid())
+  
+  // Input
+  businessName    String
+  businessType    String    @default("restaurant")
+  websiteUrl      String    @unique
+  
+  // Execution
+  n8nExecutionId  String?
+  status          String    @default("pending")  // pending | processing | completed | failed
+  
+  // Results
+  extractedData   Json?     // Raw data from n8n
+  suggestedConfig Json?     // Pre-populated Configuration
+  
+  // Linking
+  userId          String?
+  linkedConfigId  String?   @unique
+  
+  // Error Handling
+  failureReason   String?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ============================================
+// 10. PLUGIN/ADD-ON SYSTEM (✅ NEW)
+// ============================================
+
+model AddOnRegistry {
+  id              String    @id  // e.g., "calendly-reservations"
+  name            String
+  description     String    @db.Text
+  category        String    // "reservations" | "pos" | "staff" | "marketing"
+  
+  // Plugin Manifest
+  manifest        Json      // { entrypoint, slots: [], config: {} }
+  version         String    @default("1.0.0")
+  creator         String    @default("maitr")
+  
+  // Marketplace
+  isPublished     Boolean   @default(false)
+  isPremium       Boolean   @default(false)
+  
+  // Metrics
+  installations   Int       @default(0)
+  avgRating       Float     @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  instances       AddOnInstance[]
+  
+  @@index([category])
+  @@index([isPublished])
+}
+
+model AddOnInstance {
+  id              String    @id @default(uuid())
+  configId        String
+  addOnId         String
+  
+  // Configuration
+  config          Json      @default("{}")  // Add-on specific config
+  status          String    @default("active")  // active | inactive | error
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  configuration   Configuration @relation(fields: [configId], references: [id], onDelete: Cascade)
+  addOn           AddOnRegistry @relation(fields: [addOnId], references: [id], onDelete: Cascade)
+  
+  @@unique([configId, addOnId])
+  @@index([configId])
+}
+
+// ============================================
+// 11. AUDIT LOG (✅ NEW - Compliance & Security)
+// ============================================
+
+model AuditLog {
+  id              String    @id @default(uuid())
+  userId          String
+  action          String    // config_created | config_modified | config_deleted | config_published
+  resource        String    // "configuration" | "subscription" | "addon"
+  resourceId      String
+  
+  // Request Context
+  ipAddress       String?
+  userAgent       String?
+  
+  // Result
+  success         Boolean   @default(true)
+  errorMessage    String?
+  
+  // Changes
+  changes         Json?     // { before: {}, after: {} }
+  
+  createdAt       DateTime  @default(now())
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@index([resource, resourceId])
+}
+
+// ============================================
+// 12. MULTI-TENANT SUPPORT (Legacy)
+// ============================================
+
 model Tenant {
   id              String    @id @default(uuid())
   slug            String    @unique
@@ -261,22 +500,21 @@ model Tenant {
   schemaName      String    @unique
   restaurantId    String
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  restaurants     Restaurant[]
-
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurants     Restaurant[]
 }
 
-// --- 8. RESTAURANT (Tenant-local config) ---
 model Restaurant {
   id              String    @id @default(uuid())
   tenantId        String
   name            String
   configJson      Json?
 
-  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
