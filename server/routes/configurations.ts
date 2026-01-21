@@ -11,7 +11,7 @@ import { createAuditLogger } from "../utils/audit";
 const router = Router();
 
 // ============================================
-// HELPER FUNCTIONS
+// HELPERs FUNCTIONS
 // ============================================
 
 /**
