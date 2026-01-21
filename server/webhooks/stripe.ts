@@ -3,7 +3,10 @@ import crypto from "crypto";
 import Stripe from "stripe";
 import prisma from "../db/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+// ✅ Initialize Stripe only if API key is available
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 // ============================================
 // PLAN MAPPINGs
