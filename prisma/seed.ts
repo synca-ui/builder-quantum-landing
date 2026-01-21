@@ -149,7 +149,7 @@ const templates = [
     name: "Cozy",
     description:
       "A warm and inviting design with earthy tones. Perfect for casual and neighborhood restaurants.",
-    category: ["GASTRONOMY"],
+    category: "GASTRONOMY",
     layout: {
       intent: "NARRATIVE",
       navigation: "top-horizontal",
