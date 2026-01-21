@@ -228,4 +228,179 @@ router.get("/business-types", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/templates/:id/ratings
+ * Get ratings and reviews for a template
+ *
+ * Parameters:
+ * - id: string (template ID)
+ *
+ * Response: { success: boolean; avgRating: number; count: number; ratings: TemplateRating[] }
+ *
+ * Example:
+ * GET /api/templates/modern/ratings
+ */
+router.get("/:id/ratings", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const template = await prisma.template.findUnique({
+      where: { id },
+      include: {
+        ratings: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 50,
+        },
+      },
+    });
+
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        error: "Template not found",
+      });
+    }
+
+    const avgRating =
+      template.ratings.length > 0
+        ? template.ratings.reduce((sum, r) => sum + r.rating, 0) /
+          template.ratings.length
+        : 0;
+
+    res.json({
+      success: true,
+      data: {
+        templateId: id,
+        avgRating: Math.round(avgRating * 10) / 10,
+        totalRatings: template.ratings.length,
+        ratings: template.ratings,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching template ratings:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch ratings",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
+    });
+  }
+});
+
+/**
+ * POST /api/templates/:id/rate
+ * Submit a rating for a template (requires auth)
+ *
+ * Parameters:
+ * - id: string (template ID)
+ *
+ * Request Body:
+ * {
+ *   rating: number (1-5),
+ *   comment?: string (optional review text)
+ * }
+ *
+ * Response: { success: boolean; data: TemplateRating }
+ *
+ * Example:
+ * POST /api/templates/modern/rate
+ * { "rating": 5, "comment": "Great template!" }
+ */
+router.post("/:id/rate", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+    const { rating, comment } = req.body;
+
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid rating",
+        message: "Rating must be an integer between 1 and 5",
+      });
+    }
+
+    // Verify template exists
+    const template = await prisma.template.findUnique({
+      where: { id },
+    });
+
+    if (!template) {
+      return res.status(404).json({
+        success: false,
+        error: "Template not found",
+      });
+    }
+
+    // Create or update rating
+    const templateRating = await prisma.templateRating.upsert({
+      where: {
+        templateId_userId: {
+          templateId: id,
+          userId,
+        },
+      },
+      update: {
+        rating,
+        comment: comment || null,
+      },
+      create: {
+        templateId: id,
+        userId,
+        rating,
+        comment: comment || null,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    // Update template's avgRating
+    const allRatings = await prisma.templateRating.findMany({
+      where: { templateId: id },
+      select: { rating: true },
+    });
+
+    const avgRating =
+      allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+
+    await prisma.template.update({
+      where: { id },
+      data: { avgRating: Math.round(avgRating * 10) / 10 },
+    });
+
+    res.json({
+      success: true,
+      message: "Rating submitted successfully",
+      data: templateRating,
+    });
+  } catch (error) {
+    console.error("Error submitting template rating:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to submit rating",
+      message:
+        error instanceof Error ? error.message : "Unknown error occurred",
+    });
+  }
+});
+
 export default router;
