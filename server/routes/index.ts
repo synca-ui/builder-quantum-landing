@@ -5,6 +5,7 @@ import { getConfigBySlug } from "./config";
 import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
+import scraperRouter from "./scraper";
 
 // Erstellen Sie einen Haupt-API-Router, um alle Teil-Routen zu bündeln
 export const apiRouter = Router();
@@ -14,6 +15,7 @@ apiRouter.use("/configurations", configurationsRouter);
 apiRouter.use("/webapps", webAppsRouter);
 apiRouter.use("/webapps", publicAppsRouter);
 apiRouter.use("/templates", templatesRouter);
+apiRouter.use("/scraper/jobs", scraperRouter);
 
 // Standalone configuration routes (for backward compatibility)
 apiRouter.get("/config/:slug", getConfigBySlug);
