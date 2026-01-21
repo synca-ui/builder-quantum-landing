@@ -3,7 +3,6 @@ import prisma from "../db/prisma";
 import { requireAuth } from "../middleware/auth";
 import { 
   LegacyConfigurationSchema,
-  validateConfiguration,
 } from "../schemas/configuration";
 import type { Configuration } from "../schemas/configuration";
 import { createAuditLogger } from "../utils/audit";
@@ -11,23 +10,20 @@ import { createAuditLogger } from "../utils/audit";
 const router = Router();
 
 // ============================================
-// HELPERs FUNCTIONS
+// HELPER FUNCTIONS
 // ============================================
 
 /**
  * ✅ RLS Check: Verify user owns or has access to business
- * This is the CRITICAL security function that prevents data leaks
  */
 async function authorizeUserBusiness(
   userId: string,
   businessId: string | undefined | null
 ): Promise<boolean> {
   if (!businessId) {
-    // User can create configs without explicit businessId
     return true;
   }
 
-  // Check if user owns or is member of this business
   const membership = await prisma.businessMember.findFirst({
     where: {
       userId,
@@ -36,23 +32,6 @@ async function authorizeUserBusiness(
   });
 
   return !!membership;
-}
-
-/**
- * ✅ RLS Check: Verify user owns configuration
- */
-async function authorizeConfiguration(
-  userId: string,
-  configId: string
-): Promise<boolean> {
-  const config = await prisma.configuration.findFirst({
-    where: {
-      id: configId,
-      userId, // ✅ CRITICAL: Filter by userId
-    },
-  });
-
-  return !!config;
 }
 
 /**
@@ -77,20 +56,29 @@ function getAuditLogger(req: Request) {
   });
 }
 
+function generateSubdomain(businessName: string): string {
+  return (
+    businessName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .substring(0, 30)
+      .replace(/^-|-$/g, "") || `restaurant-${Math.random().toString(36).slice(2, 7)}`
+  );
+}
+
 // ============================================
-// ENDPOINTS
+// HANDLER FUNCTIONS (Exported individually)
 // ============================================
 
 /**
  * ✅ POST /api/configurations - Create or Update
- * WITH RLS: Only saves for authenticated user
  */
-router.post("/", requireAuth, async (req: Request, res: Response) => {
+export async function saveConfiguration(req: Request, res: Response) {
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
 
   try {
-    // Validate request body
     const parsed = LegacyConfigurationSchema.safeParse(req.body);
     if (!parsed.success) {
       await audit(
@@ -132,7 +120,7 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
       const existing = await prisma.configuration.findFirst({
         where: {
           id: configData.id,
-          userId, // ✅ CRITICAL
+          userId,
         },
       });
 
@@ -160,7 +148,7 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
           });
         }
 
-        // Check if premium template and user has access
+        // Check if premium template
         if (template.isPremium) {
           const subscription = await prisma.subscription.findUnique({
             where: { userId },
@@ -218,7 +206,7 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
       // Create new configuration
       const newConfig = await prisma.configuration.create({
         data: {
-          userId, // ✅ CRITICAL: Always set from req.user, never from req.body
+          userId,
           businessId: configData.businessId,
           businessName: configData.businessName || "",
           businessType: configData.businessType || "",
@@ -270,31 +258,23 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
       message: error instanceof Error ? error.message : undefined,
     });
   }
-});
+}
 
 /**
  * ✅ GET /api/configurations - List all user's configurations
- * WITH RLS: Only returns user's own configs and team configs
  */
-router.get("/", requireAuth, async (req: Request, res: Response) => {
+export async function getConfigurations(req: Request, res: Response) {
   const userId = req.user!.id;
 
   try {
-    // Get all businesses user has access to
     const businessIds = await getUserBusinessAccess(userId);
 
-    // ✅ RLS QUERY: Only user's own configs + team business configs
     const configurations = await prisma.configuration.findMany({
       where: {
         OR: [
-          { userId }, // User's own configs
-          { businessId: { in: businessIds } }, // Team business configs
+          { userId },
+          { businessId: { in: businessIds } },
         ],
-      },
-      include: {
-        business: {
-          select: { id: true, name: true, slug: true },
-        },
       },
       orderBy: { updatedAt: "desc" },
     });
@@ -310,22 +290,20 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
       error: "Failed to fetch configurations",
     });
   }
-});
+}
 
 /**
  * ✅ GET /api/configurations/:id - Get single configuration
- * WITH RLS: Only if user owns or is team member
  */
-router.get("/:id", requireAuth, async (req: Request, res: Response) => {
+export async function getConfiguration(req: Request, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
 
   try {
-    // ✅ RLS QUERY: Filter by userId
     const configuration = await prisma.configuration.findFirst({
       where: {
         id,
-        userId, // ✅ CRITICAL: Only own configs
+        userId,
       },
       include: {
         business: {
@@ -363,23 +341,21 @@ router.get("/:id", requireAuth, async (req: Request, res: Response) => {
       error: "Failed to fetch configuration",
     });
   }
-});
+}
 
 /**
- * ✅ DELETE /api/configurations/:id - Delete configuration
- * WITH RLS: Only if user owns it
+ * ✅ DELETE /api/configurations/:id
  */
-router.delete("/:id", requireAuth, async (req: Request, res: Response) => {
+export async function deleteConfiguration(req: Request, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
 
   try {
-    // ✅ RLS CHECK: Verify user owns config
     const existing = await prisma.configuration.findFirst({
       where: {
         id,
-        userId, // ✅ CRITICAL
+        userId,
       },
     });
 
@@ -392,12 +368,10 @@ router.delete("/:id", requireAuth, async (req: Request, res: Response) => {
       });
     }
 
-    // Delete all add-ons first (cascade won't work if we delete config directly)
     await prisma.addOnInstance.deleteMany({
       where: { configId: id },
     });
 
-    // Delete configuration
     await prisma.configuration.delete({
       where: { id },
     });
@@ -416,23 +390,21 @@ router.delete("/:id", requireAuth, async (req: Request, res: Response) => {
       error: "Failed to delete configuration",
     });
   }
-});
+}
 
 /**
- * ✅ POST /api/configurations/:id/publish - Publish configuration
- * WITH RLS: Only if user owns it
+ * ✅ POST /api/configurations/:id/publish
  */
-router.post("/:id/publish", requireAuth, async (req: Request, res: Response) => {
+export async function publishConfiguration(req: Request, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
 
   try {
-    // ✅ RLS CHECK: Verify user owns config
     const configuration = await prisma.configuration.findFirst({
       where: {
         id,
-        userId, // ✅ CRITICAL
+        userId,
       },
     });
 
@@ -467,22 +439,19 @@ router.post("/:id/publish", requireAuth, async (req: Request, res: Response) => 
       });
     }
 
-    // Generate subdomain
     const subdomain = generateSubdomain(configuration.businessName);
 
-    // Check if subdomain already taken
     const existing = await prisma.webApp.findUnique({
       where: { subdomain },
     });
 
-    if (existing && existing.id !== configuration.id) {
+    if (existing && existing.configId !== configuration.id) {
       return res.status(400).json({
         error: "Subdomain already taken",
         message: "Choose a different business name or contact support",
       });
     }
 
-    // Update configuration status
     const published = await prisma.configuration.update({
       where: { id },
       data: {
@@ -492,7 +461,6 @@ router.post("/:id/publish", requireAuth, async (req: Request, res: Response) => 
       },
     });
 
-    // Create or update WebApp record
     await prisma.webApp.upsert({
       where: { configId: id },
       update: {
@@ -531,62 +499,91 @@ router.post("/:id/publish", requireAuth, async (req: Request, res: Response) => 
       message: error instanceof Error ? error.message : undefined,
     });
   }
-});
+}
 
 /**
- * ✅ GET /api/configurations/:id/access-check - Check if user can access
- * Used for debugging RLS issues
+ * ✅ GET /api/sites/:subdomain - Get published site (PUBLIC)
  */
-router.get("/:id/access-check", requireAuth, async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const userId = req.user!.id;
+export async function getPublishedSite(req: Request, res: Response) {
+  const { subdomain } = req.params;
 
   try {
-    const config = await prisma.configuration.findFirst({
-      where: {
-        id,
-        userId,
-      },
-      select: {
-        id: true,
-        businessName: true,
-        userId: true,
-        status: true,
-      },
+    const webApp = await prisma.webApp.findUnique({
+      where: { subdomain },
+    });
+
+    if (!webApp) {
+      return res.status(404).json({ error: "Site not found" });
+    }
+
+    const config = await prisma.configuration.findUnique({
+      where: { id: webApp.configId },
     });
 
     if (!config) {
-      return res.json({
-        access: false,
-        message: "Configuration not found or you do not have access",
-      });
+      return res.status(404).json({ error: "Configuration not found" });
     }
 
     return res.json({
-      access: true,
-      config,
-      message: "You have access to this configuration",
+      success: true,
+      data: config,
     });
   } catch (error) {
+    console.error("[Configurations] Get published site error:", error);
     return res.status(500).json({
-      error: "Check failed",
+      error: "Failed to fetch published site",
     });
   }
-});
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-function generateSubdomain(businessName: string): string {
-  return (
-    businessName
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .substring(0, 30)
-      .replace(/^-|-$/g, "") || `restaurant-${Math.random().toString(36).slice(2, 7)}`
-  );
 }
+
+/**
+ * ✅ POST /api/configurations/:id/preview - Set preview config
+ */
+export async function setPreviewConfig(req: Request, res: Response) {
+  const { id } = req.params;
+  const userId = req.user?.id;
+
+  try {
+    const configuration = await prisma.configuration.findFirst({
+      where: {
+        id,
+        ...(userId ? { userId } : {}),
+      },
+    });
+
+    if (!configuration) {
+      return res.status(404).json({ error: "Configuration not found" });
+    }
+
+    return res.json({
+      success: true,
+      data: configuration,
+      message: "Preview config set",
+    });
+  } catch (error) {
+    console.error("[Configurations] Set preview error:", error);
+    return res.status(500).json({
+      error: "Failed to set preview config",
+    });
+  }
+}
+
+// ============================================
+// ROUTER (For /api/configurations routes)
+// ============================================
+
+router.post("/", requireAuth, saveConfiguration);
+router.get("/", requireAuth, getConfigurations);
+router.get("/:id", requireAuth, getConfiguration);
+router.delete("/:id", requireAuth, deleteConfiguration);
+router.post("/:id/publish", requireAuth, publishConfiguration);
+router.post("/:id/preview", setPreviewConfig);
+
+// ============================================
+// EXPORTS
+// ============================================
+
+// Export both router (for server/routes/index.ts) and functions (for server/index.ts)
+export const configurationsRouter = router;
 
 export default router;
