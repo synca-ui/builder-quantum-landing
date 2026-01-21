@@ -3,7 +3,7 @@ import crypto from "crypto";
 import Stripe from "stripe";
 import prisma from "../db/prisma";
 
-// ✅ Initialize Stripe only if API key is available
+// Initialize Stripe only if API key is available
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
