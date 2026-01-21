@@ -572,4 +572,17 @@ export async function handleStripeWebhook(
   }
 }
 
+/**
+ * ✅ POST /api/webhooks/stripe/test - Test webhook (for development)
+ */
+export async function handleWebhookTest(req: Request, res: Response): Promise<void> {
+  try {
+    console.log("[Stripe] Test webhook received");
+    res.json({ success: true, message: "Test webhook received" });
+  } catch (error) {
+    console.error("[Stripe] Test webhook error:", error);
+    res.status(500).json({ error: "Test webhook failed" });
+  }
+}
+
 export default handleStripeWebhook;
