@@ -114,7 +114,7 @@
   },
   "business": {
     "name": "Business Name",
-    "namePlaceholder": "e.g. Ristorante Milano",
+    "namePlaceholder": "e.g. Bella's Café",
     "type": "Business Type",
     "types": {
       "restaurant": "Restaurant",
@@ -124,18 +124,47 @@
       "other": "Other"
     },
     "location": "Location",
-    "locationPlaceholder": "e.g. Downtown",
-    "slogan": "Slogan",
-    "sloganPlaceholder": "e.g. Authentic Italian cuisine",
+    "locationPlaceholder": "City, State",
+    "slogan": "Tagline",
+    "sloganPlaceholder": "e.g. The best coffee in town",
     "description": "Description",
-    "descriptionPlaceholder": "Tell your customers what makes you special..."
+    "descriptionPlaceholder": "Tell us what sets you apart...",
+    "addOptional": "Add tagline and description (optional)",
+    "whatMakesYouSpecial": "What makes you special?",
+    "hideOptional": "Hide optional fields"
   },
   "design": {
+    "title": "Design Customization",
+    "subtitle": "Choose colors and fonts that perfectly represent your brand.",
+    "colorThemes": "Color Themes",
+    "customColors": "Custom Colors",
     "primaryColor": "Primary Color",
     "secondaryColor": "Secondary Color",
     "backgroundColor": "Background Color",
+    "priceColor": "Price Color",
     "fontColor": "Font Color",
-    "fontFamily": "Font Family"
+    "typography": "Typography",
+    "fontFamily": "Font Family",
+    "fontSize": "Font Size",
+    "fonts": {
+      "sansSerif": "Sans Serif",
+      "sansSerifPreview": "Modern & Clean",
+      "sansSerifDesc": "Perfect for digital readability",
+      "serif": "Serif",
+      "serifPreview": "Classic & Elegant",
+      "serifDesc": "Traditional and sophisticated",
+      "display": "Display",
+      "displayPreview": "Bold & Creative",
+      "displayDesc": "Eye-catching and unique"
+    },
+    "sizes": {
+      "small": "Small",
+      "smallDesc": "Compact and minimal",
+      "medium": "Medium",
+      "mediumDesc": "Standard readability",
+      "large": "Large",
+      "largeDesc": "Loud and clear"
+    }
   },
   "menu": {
     "title": "Menu",
