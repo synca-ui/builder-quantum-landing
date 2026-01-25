@@ -20,7 +20,8 @@
     "confirm": "Bestätigen",
     "yes": "Ja",
     "no": "Nein",
-    "required": "Pflicht"
+    "required": "Pflicht",
+    "tip": "Tipp"
   },
   "nav": {
     "step": "Schritt {{current}} von {{total}}",
@@ -193,10 +194,15 @@
     "friday": "Freitag",
     "saturday": "Samstag",
     "sunday": "Sonntag",
-    "open": "Öffnet",
+    "mondayFriday": "Montag - Freitag",
+    "weekendHolidays": "Wochenende & Feiertage",
+    "sameForAllWeekdays": "Gleiche Zeiten für alle Wochentage",
+    "open": "Geöffnet",
     "close": "Schließt",
     "closed": "Geschlossen",
-    "today": "Heute"
+    "to": "bis",
+    "today": "Heute",
+    "holidayTip": "Feiertage werden automatisch wie Sonntag behandelt. Sie können diese später in den Einstellungen anpassen."
   },
   "contact": {
     "phone": "Telefon",

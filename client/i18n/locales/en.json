@@ -20,7 +20,8 @@
     "confirm": "Confirm",
     "yes": "Yes",
     "no": "No",
-    "required": "Required"
+    "required": "Required",
+    "tip": "Tip"
   },
   "nav": {
     "step": "Step {{current}} of {{total}}",
@@ -193,10 +194,15 @@
     "friday": "Friday",
     "saturday": "Saturday",
     "sunday": "Sunday",
-    "open": "Opens",
+    "mondayFriday": "Monday - Friday",
+    "weekendHolidays": "Weekend & Holidays",
+    "sameForAllWeekdays": "Same schedule for all weekdays",
+    "open": "Open",
     "close": "Closes",
     "closed": "Closed",
-    "today": "Today"
+    "to": "to",
+    "today": "Today",
+    "holidayTip": "Holidays are automatically treated like Sunday. You can adjust these later in settings."
   },
   "contact": {
     "phone": "Phone",
