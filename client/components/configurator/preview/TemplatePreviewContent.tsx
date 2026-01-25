@@ -50,6 +50,7 @@ export function TemplatePreviewContent() {
 
   // Content fields
   const menuItems = useConfiguratorStore((s) => s.content.menuItems);
+  const categories = useConfiguratorStore((s) => s.content.categories);
   const gallery = useConfiguratorStore((s) => s.content.gallery);
   const openingHours = useConfiguratorStore((s) => s.content.openingHours);
 
