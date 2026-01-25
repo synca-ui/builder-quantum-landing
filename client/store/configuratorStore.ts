@@ -841,6 +841,13 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }));
       },
 
+      setCloudSyncEnabled: (enabled) => {
+        checkThrottleGuard("setCloudSyncEnabled");
+        set((state) => ({
+          ui: { ...state.ui, cloudSyncEnabled: enabled },
+        }));
+      },
+
       // ============================================
       // Data Management Actions
       // ============================================
