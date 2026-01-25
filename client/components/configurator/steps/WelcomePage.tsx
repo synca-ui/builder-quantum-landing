@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useConfiguratorStore } from "@/store/configuratorStore";
 import { usePersistence } from "@/lib/stepPersistence";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export function WelcomePage({
   currentConfigId,
   publishedUrl,
 }: WelcomePageProps) {
+  const { t } = useTranslation();
   const [showDebug, setShowDebug] = useState(false);
 
   // Read from Zustand store
@@ -183,31 +185,26 @@ export function WelcomePage({
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
-              Build Your Perfect{" "}
+              {t("welcome.buildYour")}{" "}
               <span className="bg-gradient-to-r from-teal-500 to-purple-600 bg-clip-text text-transparent">
-                Web App
+                {t("welcome.webApp")}
               </span>
             </h1>
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              Create a professional web app for your business in minutes. Choose
-              a template, preview it live, customize, and publish.
+              {t("welcome.subtitle")}
             </p>
             <ul className="space-y-2 text-gray-700 mb-8">
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> Live app-like
-                template previews
+                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature1")}
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> Minimal, fast,
-                and clean flow
+                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature2")}
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> Auto-save every
-                step
+                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature3")}
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> One-click
-                publish
+                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature4")}
               </li>
             </ul>
 
@@ -219,7 +216,7 @@ export function WelcomePage({
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-8 py-6 text-lg font-bold rounded-full shadow-xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
               >
                 <Sparkles className="w-5 h-5" />
-                {hasSaved ? "Continue Configuration" : "Let's Get Started"}
+                {hasSaved ? t("welcome.continueProject") : t("welcome.getStarted")}
                 <ChevronRight className="w-5 h-5" />
               </Button>
 
@@ -231,7 +228,7 @@ export function WelcomePage({
                     className="w-full sm:w-auto"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    View Published Site
+                    {t("welcome.viewPublished")}
                   </Button>
                 </div>
               )}
@@ -256,7 +253,7 @@ export function WelcomePage({
                   <>
                     <Palette className="w-10 h-10 text-teal-500 mx-auto mb-3" />
                     <p className="text-gray-600">
-                      Start by choosing a template on the next step
+                      {t("welcome.startHint")}
                     </p>
                   </>
                 )}
