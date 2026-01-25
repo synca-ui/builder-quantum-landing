@@ -80,6 +80,8 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   const handleBusinessTypeChange = useCallback(
     (type: string) => {
       businessActions.updateBusinessType(type);
+      // Apply smart defaults based on business type
+      businessActions.applyBusinessTypeDefaults(type);
     },
     [businessActions],
   );
