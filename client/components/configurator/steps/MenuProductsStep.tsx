@@ -363,6 +363,115 @@ export function MenuProductsStep({
         </div>
       </div>
 
+      {/* CATEGORY MANAGEMENT */}
+      <Card className="p-6 mb-6 bg-gradient-to-r from-purple-50 to-teal-50 border-purple-100">
+        <div className="flex items-center gap-2 mb-4">
+          <Tag className="w-5 h-5 text-purple-600" />
+          <h3 className="text-lg font-bold text-gray-900">Kategorien verwalten</h3>
+        </div>
+
+        {/* Add new category */}
+        <div className="flex gap-2 mb-4">
+          <Input
+            type="text"
+            placeholder="Neue Kategorie (z.B. Heißgetränke)..."
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addCategory()}
+            className="flex-1 bg-white"
+          />
+          <Button
+            onClick={addCategory}
+            disabled={!newCategory.trim()}
+            className="bg-purple-500 hover:bg-purple-600"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Category chips */}
+        {categories.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant={activeCategory === null ? "default" : "outline"}
+              className={`cursor-pointer px-3 py-1.5 text-sm transition-all ${
+                activeCategory === null
+                  ? "bg-gray-800 text-white"
+                  : "hover:bg-gray-100"
+              }`}
+              onClick={() => setActiveCategory(null)}
+            >
+              Alle ({menuItems.length})
+            </Badge>
+            {categories.map((cat) => {
+              const itemCount = menuItems.filter(item => (item as any).category === cat).length;
+              const isEditing = editingCategory === cat;
+
+              return (
+                <div key={cat} className="group relative">
+                  {isEditing ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="text"
+                        value={editCategoryValue}
+                        onChange={(e) => setEditCategoryValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') updateCategory(cat, editCategoryValue);
+                          if (e.key === 'Escape') setEditingCategory(null);
+                        }}
+                        className="h-7 w-32 text-sm"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => updateCategory(cat, editCategoryValue)}
+                        className="p-1 text-green-600 hover:bg-green-100 rounded"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Badge
+                      variant={activeCategory === cat ? "default" : "outline"}
+                      className={`cursor-pointer px-3 py-1.5 text-sm transition-all ${
+                        activeCategory === cat
+                          ? "bg-purple-600 text-white"
+                          : "hover:bg-purple-50 hover:border-purple-300"
+                      }`}
+                      onClick={() => setActiveCategory(cat)}
+                    >
+                      {cat} ({itemCount})
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingCategory(cat);
+                          setEditCategoryValue(cat);
+                        }}
+                        className="ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:text-blue-600"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeCategory(cat);
+                        }}
+                        className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 italic">
+            Noch keine Kategorien. Füge z.B. "Vorspeisen", "Hauptgerichte", "Getränke" hinzu.
+          </p>
+        )}
+      </Card>
+
       <Card className="p-6 mb-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">{t("menu.addNewItem")}</h3>
         <div className="grid md:grid-cols-3 gap-4">
