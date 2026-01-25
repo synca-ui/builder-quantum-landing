@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronRight, Zap, Globe, Check } from "lucide-react";
+import { ArrowLeft, ChevronRight, Zap, Globe, Check, X, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,57 @@ interface DomainHostingStepProps {
   getBaseHost?: () => string;
   getDisplayedDomain?: () => string;
 }
+
+// Simulated list of taken subdomains (in production this would be an API call)
+const TAKEN_SUBDOMAINS = [
+  "demo", "test", "admin", "api", "app", "www", "mail", "ftp", 
+  "blog", "shop", "store", "help", "support", "info", "news",
+  "restaurant", "cafe", "bar", "pizza", "burger", "sushi"
+];
+
+// Validation helper
+function validateSubdomain(subdomain: string): { valid: boolean; error?: string } {
+  if (!subdomain) {
+    return { valid: false, error: "Bitte gib einen Namen ein" };
+  }
+  
+  if (subdomain.length < 3) {
+    return { valid: false, error: "Mindestens 3 Zeichen" };
+  }
+  
+  if (subdomain.length > 63) {
+    return { valid: false, error: "Maximal 63 Zeichen" };
+  }
+  
+  if (!/^[a-z0-9]/.test(subdomain)) {
+    return { valid: false, error: "Muss mit Buchstabe oder Zahl beginnen" };
+  }
+  
+  if (!/[a-z0-9]$/.test(subdomain)) {
+    return { valid: false, error: "Muss mit Buchstabe oder Zahl enden" };
+  }
+  
+  if (!/^[a-z0-9-]+$/.test(subdomain)) {
+    return { valid: false, error: "Nur Kleinbuchstaben, Zahlen und Bindestriche" };
+  }
+  
+  if (/--/.test(subdomain)) {
+    return { valid: false, error: "Keine doppelten Bindestriche" };
+  }
+  
+  return { valid: true };
+}
+
+// Simulated availability check (would be API in production)
+async function checkSubdomainAvailability(subdomain: string): Promise<boolean> {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
+  
+  // Check against taken list
+  return !TAKEN_SUBDOMAINS.includes(subdomain.toLowerCase());
+}
+
+type ValidationStatus = "idle" | "checking" | "available" | "taken" | "invalid";
 
 export function DomainHostingStep({
   nextStep,
@@ -33,13 +84,115 @@ export function DomainHostingStep({
     { domain: "yourbusiness.org", available: false, price: "Taken" },
   ]);
 
+  // Subdomain validation state
+  const [validationStatus, setValidationStatus] = useState<ValidationStatus>("idle");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [lastCheckedSubdomain, setLastCheckedSubdomain] = useState<string>("");
+
   const hasDomain = business.domain?.hasDomain || false;
   const domainName = business.domain?.domainName || "";
   const selectedDomain = business.domain?.selectedDomain || "";
   const baseHost = getBaseHost ? getBaseHost() : "maitr.de";
-  const displayDomain = getDisplayedDomain
-    ? getDisplayedDomain()
-    : `${selectedDomain || business.name.toLowerCase().replace(/\s+/g, "")}.${baseHost}`;
+  
+  // Generate subdomain from business name if not set
+  const currentSubdomain = selectedDomain || business.name.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/--+/g, "-");
+  
+  const displayDomain = `${currentSubdomain}.${baseHost}`;
+
+  // Debounced subdomain validation
+  const validateAndCheckSubdomain = useCallback(async (subdomain: string) => {
+    if (!subdomain) {
+      setValidationStatus("idle");
+      setValidationError(null);
+      return;
+    }
+
+    // Format validation first
+    const formatValidation = validateSubdomain(subdomain);
+    if (!formatValidation.valid) {
+      setValidationStatus("invalid");
+      setValidationError(formatValidation.error || "Ungültiges Format");
+      return;
+    }
+
+    // Check availability
+    setValidationStatus("checking");
+    setValidationError(null);
+
+    try {
+      const isAvailable = await checkSubdomainAvailability(subdomain);
+      
+      // Only update if this is still the current subdomain
+      if (subdomain === currentSubdomain) {
+        setValidationStatus(isAvailable ? "available" : "taken");
+        setValidationError(isAvailable ? null : "Diese Subdomain ist bereits vergeben");
+        setLastCheckedSubdomain(subdomain);
+      }
+    } catch (error) {
+      setValidationStatus("invalid");
+      setValidationError("Fehler bei der Überprüfung");
+    }
+  }, [currentSubdomain]);
+
+  // Debounce effect
+  useEffect(() => {
+    if (!hasDomain && currentSubdomain) {
+      const timer = setTimeout(() => {
+        if (currentSubdomain !== lastCheckedSubdomain) {
+          validateAndCheckSubdomain(currentSubdomain);
+        }
+      }, 600);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentSubdomain, hasDomain, lastCheckedSubdomain, validateAndCheckSubdomain]);
+
+  // Handle subdomain input change
+  const handleSubdomainChange = (value: string) => {
+    // Normalize: lowercase, remove invalid chars
+    const normalized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    
+    actions.business.setBusinessInfo({
+      domain: {
+        ...business.domain,
+        selectedDomain: normalized,
+      },
+    });
+    
+    // Reset validation when typing
+    if (normalized !== lastCheckedSubdomain) {
+      setValidationStatus("idle");
+    }
+  };
+
+  // Render validation status icon
+  const renderValidationIcon = () => {
+    switch (validationStatus) {
+      case "checking":
+        return <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />;
+      case "available":
+        return <Check className="w-5 h-5 text-green-500" />;
+      case "taken":
+        return <X className="w-5 h-5 text-red-500" />;
+      case "invalid":
+        return <AlertCircle className="w-5 h-5 text-orange-500" />;
+      default:
+        return null;
+    }
+  };
+
+  // Get input border color based on status
+  const getInputBorderClass = () => {
+    switch (validationStatus) {
+      case "available":
+        return "border-green-500 focus:border-green-500 focus:ring-green-500";
+      case "taken":
+      case "invalid":
+        return "border-red-500 focus:border-red-500 focus:ring-red-500";
+      default:
+        return "";
+    }
+  };
 
   return (
     <div className="py-8 max-w-4xl mx-auto">
@@ -121,52 +274,111 @@ export function DomainHostingStep({
           </Card>
         </div>
 
+        {/* FREE SUBDOMAIN SECTION */}
         {!hasDomain && (
           <Card className="p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Your Free Website URL
+              Deine kostenlose Website-URL
             </h3>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="text"
-                placeholder="yourbusiness"
-                value={
-                  selectedDomain ||
-                  business.name.toLowerCase().replace(/\s+/g, "")
-                }
-                onChange={(e) =>
-                  actions.business.setBusinessInfo({
-                    domain: {
-                      ...business.domain,
-                      selectedDomain: e.target.value,
-                    },
-                  })
-                }
-                className="flex-1"
-              />
-              <span className="text-gray-500 font-mono">.{baseHost}</span>
+            
+            {/* Subdomain Input with Validation */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="relative flex-1">
+                  <Input
+                    type="text"
+                    placeholder="dein-geschaeft"
+                    value={currentSubdomain}
+                    onChange={(e) => handleSubdomainChange(e.target.value)}
+                    className={`pr-10 font-mono ${getInputBorderClass()}`}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {renderValidationIcon()}
+                  </div>
+                </div>
+                <span className="text-gray-500 font-mono text-sm shrink-0">.{baseHost}</span>
+              </div>
+
+              {/* Validation Message */}
+              {validationError && (
+                <div className={`flex items-center gap-2 text-sm ${
+                  validationStatus === "taken" ? "text-red-600" : "text-orange-600"
+                }`}>
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{validationError}</span>
+                </div>
+              )}
+
+              {validationStatus === "available" && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span>Diese Subdomain ist verfügbar!</span>
+                </div>
+              )}
+
+              {validationStatus === "checking" && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                  <span>Verfügbarkeit wird geprüft...</span>
+                </div>
+              )}
+
+              {/* Preview URL */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <p className="text-xs text-gray-500 mb-1">Deine Website wird verfügbar sein unter:</p>
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-teal-500" />
+                  <span className={`font-mono text-sm font-medium ${
+                    validationStatus === "available" ? "text-green-700" :
+                    validationStatus === "taken" || validationStatus === "invalid" ? "text-red-700" :
+                    "text-gray-700"
+                  }`}>
+                    https://{displayDomain}
+                  </span>
+                </div>
+              </div>
+
+              {/* Suggestions if taken */}
+              {validationStatus === "taken" && (
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                  <p className="text-sm font-medium text-blue-900 mb-2">Alternativen:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      `${currentSubdomain}-${new Date().getFullYear()}`,
+                      `mein-${currentSubdomain}`,
+                      `${currentSubdomain}-gastro`,
+                    ].map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        onClick={() => handleSubdomainChange(suggestion)}
+                        className="px-3 py-1.5 text-xs font-mono bg-white border border-blue-200 rounded-full hover:bg-blue-100 transition-colors"
+                      >
+                        {suggestion}.{baseHost}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Your website will be available at: {displayDomain}
-            </p>
           </Card>
         )}
 
+        {/* CUSTOM DOMAIN SECTION */}
         {hasDomain && (
           <div className="space-y-6">
             <Card className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Connect Your Custom Domain
+                Eigene Domain verbinden
               </h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Enter Your Domain
+                    Deine Domain eingeben
                   </label>
                   <div className="flex space-x-2">
                     <Input
                       type="text"
-                      placeholder="e.g. yourbusiness.com"
+                      placeholder="z.B. mein-restaurant.de"
                       value={domainName}
                       onChange={(e) =>
                         actions.business.setBusinessInfo({
@@ -182,25 +394,25 @@ export function DomainHostingStep({
                       variant="outline"
                       onClick={() => {
                         if (domainName) {
-                          alert(`Domain ${domainName} is ready to connect!`);
+                          alert(`Domain ${domainName} ist bereit zur Verbindung!`);
                         }
                       }}
                     >
-                      Validate
+                      Prüfen
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    Enter a domain you already own or plan to purchase
+                    Gib eine Domain ein, die du bereits besitzt
                   </p>
                 </div>
 
                 {domainName && (
                   <div className="bg-blue-50 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-900 mb-2">
-                      DNS Configuration Required
+                      DNS-Konfiguration erforderlich
                     </h4>
                     <p className="text-sm text-blue-800 mb-3">
-                      To connect your domain, add these DNS records:
+                      Um deine Domain zu verbinden, füge diese DNS-Einträge hinzu:
                     </p>
                     <div className="bg-white rounded border font-mono text-xs p-3 space-y-1">
                       <div>
@@ -217,17 +429,17 @@ export function DomainHostingStep({
 
             <Card className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Or Search New Domains
+                Oder neue Domain suchen
               </h3>
               <div className="flex space-x-2 mb-4">
                 <Input
                   type="text"
-                  placeholder="Enter domain name to search"
+                  placeholder="Domain-Name eingeben"
                   value={domainSearch}
                   onChange={(e) => setDomainSearch(e.target.value)}
                   className="flex-1"
                 />
-                <Button variant="outline">Search</Button>
+                <Button variant="outline">Suchen</Button>
               </div>
 
               <div className="space-y-3">
@@ -275,11 +487,10 @@ export function DomainHostingStep({
             <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <Globe className="w-5 h-5 mr-2 text-purple-600" />
-                Automated Domain Management
+                Automatische Domain-Verwaltung
               </h3>
               <p className="text-sm text-gray-700 mb-4">
-                We integrate with leading domain and hosting providers for
-                seamless setup:
+                Wir integrieren mit führenden Domain- und Hosting-Anbietern:
               </p>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg p-3 border border-purple-100">
@@ -287,7 +498,7 @@ export function DomainHostingStep({
                     Vercel
                   </h4>
                   <p className="text-xs text-gray-600">
-                    Auto-deploy & custom domains
+                    Auto-Deploy & Custom Domains
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-purple-100">
@@ -295,14 +506,14 @@ export function DomainHostingStep({
                     Netlify
                   </h4>
                   <p className="text-xs text-gray-600">
-                    Edge functions & DNS management
+                    Edge Functions & DNS
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-purple-100">
                   <h4 className="font-semibold text-purple-900 text-sm mb-1">
                     CloudFlare
                   </h4>
-                  <p className="text-xs text-gray-600">CDN & security</p>
+                  <p className="text-xs text-gray-600">CDN & Sicherheit</p>
                 </div>
               </div>
             </Card>
@@ -326,6 +537,7 @@ export function DomainHostingStep({
         </Button>
         <Button
           onClick={nextStep}
+          disabled={!hasDomain && validationStatus !== "available" && currentSubdomain.length > 0}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
