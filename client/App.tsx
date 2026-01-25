@@ -1,5 +1,4 @@
 import "./global.css";
-import "./i18n"; // Initialize i18next
 
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
