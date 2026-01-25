@@ -185,8 +185,10 @@ export function DomainHostingStep({
       case "checking":
         return <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />;
       case "available":
+      case "owned":
         return <Check className="w-5 h-5 text-green-500" />;
       case "taken":
+      case "reserved":
         return <X className="w-5 h-5 text-red-500" />;
       case "invalid":
         return <AlertCircle className="w-5 h-5 text-orange-500" />;
@@ -199,8 +201,10 @@ export function DomainHostingStep({
   const getInputBorderClass = () => {
     switch (validationStatus) {
       case "available":
+      case "owned":
         return "border-green-500 focus:border-green-500 focus:ring-green-500";
       case "taken":
+      case "reserved":
       case "invalid":
         return "border-red-500 focus:border-red-500 focus:ring-red-500";
       default:
