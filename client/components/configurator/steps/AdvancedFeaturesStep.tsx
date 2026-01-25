@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ChevronRight,
@@ -32,50 +33,50 @@ export function AdvancedFeaturesStep({
   setCurrentStep,
   configuratorSteps,
 }: AdvancedFeaturesStepProps) {
+  const { t } = useTranslation();
   const features = useConfiguratorStore((s) => s.features);
   const actions = useConfiguratorActions();
 
   const featureList = [
     {
       id: "onlineOrderingEnabled",
-      title: "Online Ordering",
-      description: "Allow customers to place orders directly from your website",
+      titleKey: "features.onlineOrdering.title",
+      descriptionKey: "features.onlineOrdering.description",
       icon: <ShoppingBag className="w-8 h-8" />,
       premium: false,
     },
     {
       id: "onlineStoreEnabled",
-      title: "Online Store",
-      description:
-        "Sell products and merchandise online with payment processing",
+      titleKey: "features.onlineStore.title",
+      descriptionKey: "features.onlineStore.description",
       icon: <Store className="w-8 h-8" />,
       premium: true,
     },
     {
       id: "teamAreaEnabled",
-      title: "Team Section",
-      description: "Showcase your team members and their roles",
+      titleKey: "features.teamSection.title",
+      descriptionKey: "features.teamSection.description",
       icon: <Users className="w-8 h-8" />,
       premium: false,
     },
     {
       id: "loyaltyEnabled",
-      title: "Stamp Card / Loyalty",
-      description: "Reward returning customers with digital stamps",
+      titleKey: "features.loyalty.title",
+      descriptionKey: "features.loyalty.description",
       icon: <Star className="w-8 h-8" />,
       premium: false,
     },
     {
       id: "couponsEnabled",
-      title: "Coupons / Vouchers",
-      description: "Create and manage digital coupon campaigns",
+      titleKey: "features.coupons.title",
+      descriptionKey: "features.coupons.description",
       icon: <Crown className="w-8 h-8" />,
       premium: false,
     },
     {
       id: "offersEnabled",
-      title: "Current Offers / Specials",
-      description: "Highlight time-limited deals and bundles",
+      titleKey: "features.offers.title",
+      descriptionKey: "features.offers.description",
       icon: <Zap className="w-8 h-8" />,
       premium: false,
     },
@@ -102,11 +103,10 @@ export function AdvancedFeaturesStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Optional features
+          {t("steps.advancedFeatures.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Enable advanced functionality to enhance your website and provide
-          better customer experience.
+          {t("steps.advancedFeatures.subtitle")}
         </p>
       </div>
 
@@ -134,7 +134,7 @@ export function AdvancedFeaturesStep({
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </h3>
                 {feature.premium && (
                   <div className="mb-2">
@@ -144,7 +144,7 @@ export function AdvancedFeaturesStep({
                   </div>
                 )}
                 <p className="text-gray-600 text-sm mb-4">
-                  {feature.description}
+                  {t(feature.descriptionKey)}
                 </p>
                 {isEnabled && (
                   <div className="mt-2">
@@ -171,14 +171,14 @@ export function AdvancedFeaturesStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
