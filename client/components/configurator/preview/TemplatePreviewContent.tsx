@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, memo } from "react";
 import { useConfiguratorStore } from "@/store/configuratorStore";
-import { useShallow } from "zustand/react/shallow";
+import { shallow } from "zustand/shallow";
 import {
   MapPin, Phone, Mail, Clock, Instagram, Facebook,
   Coffee, Utensils, ShoppingBag, Menu, X,
