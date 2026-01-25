@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,6 +28,7 @@ export function FeatureConfigStep({
   setCurrentStep,
   configuratorSteps,
 }: FeatureConfigStepProps) {
+  const { t } = useTranslation();
   const storeState = useConfiguratorStore((s) => s);
   const actions = useConfiguratorActions();
 
@@ -476,21 +478,21 @@ export function FeatureConfigStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-          Feature configuration
+          {t("steps.featureConfig.title")}
         </h2>
       </div>
       {render()}
       <div className="flex justify-between mt-8">
         <Button onClick={goBack} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={finish}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Save & Continue
+          {t("common.saveAndContinue")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
