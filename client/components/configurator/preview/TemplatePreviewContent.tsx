@@ -119,6 +119,7 @@ export function TemplatePreviewContent() {
 
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [hoursExpanded, setHoursExpanded] = useState(false);
+  const [activeMenuCategory, setActiveMenuCategory] = useState<string | null>(null);
 
   // Dish modal state
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
