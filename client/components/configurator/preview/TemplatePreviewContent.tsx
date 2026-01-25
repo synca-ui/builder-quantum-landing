@@ -7,6 +7,7 @@ import {
   Calendar, Users, CalendarCheck
 } from "lucide-react";
 import { ReservationButton } from "@/components/ui/ReservationButton";
+import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
 
 // --- HELPER: Bild-URLs normalisieren ---
 function normalizeImageSrc(img: any): string {
