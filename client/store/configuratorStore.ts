@@ -308,6 +308,52 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         return state.isComplete();
       },
 
+      canUndo: () => {
+        return historyStack.length > 0;
+      },
+
+      // ============================================
+      // History Actions
+      // ============================================
+      pushHistory: () => {
+        const state = get();
+        const snapshot: HistorySnapshot = {
+          business: JSON.parse(JSON.stringify(state.business)),
+          design: JSON.parse(JSON.stringify(state.design)),
+          content: JSON.parse(JSON.stringify(state.content)),
+          features: JSON.parse(JSON.stringify(state.features)),
+          contact: JSON.parse(JSON.stringify(state.contact)),
+          pages: JSON.parse(JSON.stringify(state.pages)),
+          payments: JSON.parse(JSON.stringify(state.payments)),
+          timestamp: Date.now(),
+        };
+        historyStack.push(snapshot);
+        // Limit history size
+        if (historyStack.length > MAX_HISTORY) {
+          historyStack.shift();
+        }
+        console.log("[History] Snapshot pushed, stack size:", historyStack.length);
+      },
+
+      undo: () => {
+        checkThrottleGuard("undo");
+        if (historyStack.length === 0) {
+          console.log("[History] Nothing to undo");
+          return;
+        }
+        const snapshot = historyStack.pop()!;
+        console.log("[History] Restoring snapshot from", new Date(snapshot.timestamp).toLocaleTimeString());
+        set({
+          business: snapshot.business,
+          design: snapshot.design,
+          content: snapshot.content,
+          features: snapshot.features,
+          contact: snapshot.contact,
+          pages: snapshot.pages,
+          payments: snapshot.payments,
+        });
+      },
+
       // ============================================
       // Business Domain Actions
       // ============================================
