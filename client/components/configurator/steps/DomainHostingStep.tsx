@@ -22,6 +22,7 @@ export function DomainHostingStep({
   getBaseHost,
   getDisplayedDomain,
 }: DomainHostingStepProps) {
+  const { t } = useTranslation();
   const business = useConfiguratorStore((s) => s.business);
   const actions = useConfiguratorActions();
 
@@ -44,11 +45,10 @@ export function DomainHostingStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Choose your domain
+          {t("steps.domainHosting.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Select how customers will find your website. You can use your own
-          domain or get a free subdomain.
+          {t("steps.domainHosting.subtitle")}
         </p>
       </div>
 
@@ -71,12 +71,12 @@ export function DomainHostingStep({
                 <Zap className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Free Subdomain
+                {t("domain.freeSubdomain")}
               </h3>
               <p className="text-gray-600 text-sm mb-4">
-                Get started quickly with a free subdomain
+                {t("domain.freeSubdomainDesc")}
               </p>
-              <div className="text-green-600 font-bold">FREE</div>
+              <div className="text-green-600 font-bold">{t("domain.free")}</div>
               {!hasDomain && (
                 <div className="mt-2">
                   <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
@@ -104,12 +104,12 @@ export function DomainHostingStep({
                 <Globe className="w-8 h-8 text-blue-600" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Custom Domain
+                {t("domain.customDomain")}
               </h3>
               <p className="text-gray-600 text-sm mb-4">
-                Professional domain for your business
+                {t("domain.customDomainDesc")}
               </p>
-              <div className="text-blue-600 font-bold">From $12.99/year</div>
+              <div className="text-blue-600 font-bold">{t("domain.fromPrice")}</div>
               {hasDomain && (
                 <div className="mt-2">
                   <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
@@ -263,7 +263,7 @@ export function DomainHostingStep({
                             })
                           }
                         >
-                          Select
+                          {t("domain.select")}
                         </Button>
                       )}
                     </div>
@@ -322,14 +322,14 @@ export function DomainHostingStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
