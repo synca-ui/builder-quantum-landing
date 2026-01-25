@@ -1048,6 +1048,12 @@ export const useConfiguratorActions = () => {
         toggleSectionExpand: store.toggleSectionExpand,
         setSaveLoading: store.setSaveLoading,
         setSaveError: store.setSaveError,
+        setCloudSyncEnabled: store.setCloudSyncEnabled,
+      },
+      history: {
+        pushHistory: store.pushHistory,
+        undo: store.undo,
+        canUndo: store.canUndo,
       },
       data: {
         resetConfig: store.resetConfig,
