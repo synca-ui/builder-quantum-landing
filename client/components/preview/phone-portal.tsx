@@ -20,8 +20,15 @@ export function PhonePortalProvider({ children }: PropsWithChildren<{}>) {
 
   return (
     <PhonePortalContext.Provider value={node}>
-      {/* portal mount point */}
-      <div ref={rootRef} className="phone-portal-root" />
+      {/* portal mount point - must have explicit height and allow scrolling */}
+      <div
+        ref={rootRef}
+        className="phone-portal-root h-full w-full overflow-y-auto overflow-x-hidden"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'contain'
+        }}
+      />
       {children}
     </PhonePortalContext.Provider>
   );
