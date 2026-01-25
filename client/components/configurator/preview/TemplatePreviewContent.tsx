@@ -279,7 +279,6 @@ export function TemplatePreviewContent() {
                 className="w-full shadow-lg"
                 onClick={() => navigateToPage('reservations')}
               >
-                <Calendar className="w-4 h-4 mr-2" />
                 Tisch reservieren
               </ReservationButton>
             </div>
@@ -484,7 +483,6 @@ export function TemplatePreviewContent() {
               shape={formData.reservationButtonShape as "rounded" | "pill" | "square"}
               className="w-full shadow-lg"
             >
-              <CalendarCheck className="w-4 h-4 mr-2" />
               Reservierung anfragen
             </ReservationButton>
           )}
