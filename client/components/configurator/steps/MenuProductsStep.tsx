@@ -474,7 +474,7 @@ export function MenuProductsStep({
 
       <Card className="p-6 mb-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">{t("menu.addNewItem")}</h3>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
               {t("menu.itemName")}
@@ -502,6 +502,21 @@ export function MenuProductsStep({
               }
               className="w-full"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Kategorie
+            </label>
+            <select
+              value={newItem.category}
+              onChange={(e) => setNewItem((prev) => ({ ...prev, category: e.target.value }))}
+              className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="">Keine Kategorie</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
