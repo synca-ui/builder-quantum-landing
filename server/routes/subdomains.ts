@@ -6,6 +6,12 @@ export const subdomainsRouter = Router();
 /**
  * Middleware to detect subdomain requests and serve the appropriate site
  * This runs LAST after all API routes
+ *
+ * Flow:
+ * 1. User visits bella.maitr.de
+ * 2. This middleware detects the subdomain
+ * 3. Attaches config to request (for potential SSR)
+ * 4. Passes to frontend SPA which renders the site
  */
 export async function handleSubdomainRequest(
   req: Request,
@@ -15,7 +21,7 @@ export async function handleSubdomainRequest(
   try {
     const host = req.hostname || req.headers.host?.split(":")[0] || "";
 
-    // Skip if not a subdomain request
+    // Skip if not a subdomain request - main domains serve the dashboard
     const mainDomains = [
       "maitr.de",
       "www.maitr.de",
@@ -37,31 +43,127 @@ export async function handleSubdomainRequest(
     const baseDomain = process.env.PUBLIC_BASE_DOMAIN || "maitr.de";
     const subdomain = host.replace(`.${baseDomain}`, "").split(".")[0];
 
-    if (!subdomain || subdomain === baseDomain) {
+    if (!subdomain || subdomain === baseDomain || subdomain === "www") {
       return next();
     }
 
     // Look up the WebApp for this subdomain
     const webApp = await prisma.webApp.findUnique({
       where: { subdomain },
-      select: { configData: true },
+      select: {
+        id: true,
+        subdomain: true,
+        configData: true,
+        publishedAt: true
+      },
     });
 
     if (!webApp) {
       // Subdomain not found - let the frontend handle 404
+      console.log(`[Subdomains] No WebApp found for subdomain: ${subdomain}`);
       return next();
     }
 
-    // Attach the config to the request for server-side rendering
+    // Log successful subdomain resolution
+    console.log(`[Subdomains] Resolved ${subdomain} -> WebApp ${webApp.id}`);
+
+    // Attach the config to the request for potential SSR or API use
     (req as any).subdomainConfig = webApp.configData;
     (req as any).subdomain = subdomain;
+    (req as any).webAppId = webApp.id;
 
+    // The frontend SPA will take over and render the site
+    // It will call /api/sites/:subdomain to get the config
     return next();
   } catch (error) {
     console.error("[Subdomains] Middleware error:", error);
     return next();
   }
 }
+
+/**
+ * API endpoint to get site config by subdomain
+ * Called by the frontend Site.tsx component
+ * GET /api/subdomains/:subdomain/config
+ */
+subdomainsRouter.get("/:subdomain/config", async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+
+    if (!subdomain) {
+      return res.status(400).json({ error: "Subdomain required" });
+    }
+
+    const webApp = await prisma.webApp.findUnique({
+      where: { subdomain: subdomain.toLowerCase() },
+      select: {
+        id: true,
+        subdomain: true,
+        configData: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!webApp) {
+      return res.status(404).json({
+        success: false,
+        error: "Site not found"
+      });
+    }
+
+    // Return config in format expected by Site.tsx
+    const config = webApp.configData as any;
+
+    return res.json({
+      success: true,
+      data: {
+        // Flatten nested structure for compatibility
+        id: webApp.id,
+        userId: config.userId || "published",
+        businessName: config.business?.name || config.businessName || "",
+        businessType: config.business?.type || config.businessType || "",
+        location: config.business?.location || config.location || "",
+        slogan: config.business?.slogan || config.slogan || "",
+        uniqueDescription: config.business?.uniqueDescription || config.uniqueDescription || "",
+        template: config.design?.template || config.template || "modern",
+        primaryColor: config.design?.primaryColor || config.primaryColor || "#111827",
+        secondaryColor: config.design?.secondaryColor || config.secondaryColor || "#6B7280",
+        fontFamily: config.design?.fontFamily || config.fontFamily || "sans-serif",
+        backgroundColor: config.design?.backgroundColor || config.backgroundColor,
+        fontColor: config.design?.fontColor || config.fontColor,
+        headerFontSize: config.design?.headerFontSize || config.headerFontSize || 24,
+        logo: config.design?.logo || config.logo,
+        selectedPages: config.pages?.selected || config.selectedPages || ["home"],
+        customPages: config.pages?.custom || config.customPages || [],
+        openingHours: config.content?.openingHours || config.openingHours || {},
+        menuItems: config.content?.menuItems || config.menuItems || [],
+        gallery: config.content?.gallery || config.gallery || [],
+        reservationsEnabled: config.features?.reservationsEnabled ?? config.reservationsEnabled ?? false,
+        maxGuests: config.features?.maxGuests || config.maxGuests || 10,
+        onlineOrdering: config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
+        onlineStore: config.features?.onlineStore ?? config.onlineStore ?? false,
+        teamArea: config.features?.teamArea ?? config.teamArea ?? false,
+        contactMethods: config.contact?.methods || config.contactMethods || [],
+        socialMedia: config.contact?.social || config.socialMedia || {},
+        offers: config.offers || [],
+        offerBanner: config.offerBanner,
+        reservationButtonColor: config.reservationButtonColor,
+        reservationButtonTextColor: config.reservationButtonTextColor,
+        reservationButtonShape: config.reservationButtonShape,
+        homepageDishImageVisibility: config.homepageDishImageVisibility,
+        publishedAt: webApp.publishedAt,
+        updatedAt: webApp.updatedAt,
+      }
+    });
+  } catch (error) {
+    console.error("[Subdomains] Get config error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to load site"
+    });
+  }
+});
 
 // Reserved subdomains that can never be used
 const RESERVED_SUBDOMAINS = [
