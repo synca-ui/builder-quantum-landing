@@ -164,12 +164,20 @@ const defaultBusinessInfo: BusinessInfo = {
 
 const defaultDesignConfig: DesignConfig = {
   template: "modern",
-  primaryColor: "#4F46E5",
-  secondaryColor: "#7C3AED",
+  // Hauptfarben
+  primaryColor: "#4F46E5",    // Buttons, CTAs, Links
+  secondaryColor: "#7C3AED",  // Gradients, Akzente
+  backgroundColor: "#FFFFFF", // Seitenhintergrund
+  fontColor: "#000000",       // Haupttextfarbe
+  priceColor: "#059669",      // Preisfarbe (grün - unabhängig!)
+  // Typografie
   fontFamily: "sans-serif",
-  fontColor: "#000000",
   fontSize: "medium",
-  backgroundColor: "#FFFFFF",
+  // Header/Navigation
+  headerFontColor: "#000000",
+  headerFontSize: "medium",
+  headerBackgroundColor: "#FFFFFF",
+  // Hintergrund
   backgroundImage: null,
   backgroundType: "color",
 };
