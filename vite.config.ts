@@ -11,10 +11,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::", // Expose the server to all addresses (IPv6)
     port: 8081, // Set the port for the dev server
-    hmr: {
-      // Increase timeout to prevent "send before connect" errors
-      timeout: 5000,
-    },
+    // Removed hmr config - let Vite use sensible defaults
+    // The HMR race condition is better handled by removing custom invalidate logic
     fs: {
       // Allow Vite to access specific directories
       allow: [
