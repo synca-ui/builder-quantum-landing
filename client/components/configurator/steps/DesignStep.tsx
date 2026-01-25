@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ArrowLeft, ChevronRight, Palette, Type, PaintBucket } from "lucide-react";
+import { Check, ArrowLeft, ChevronRight, Palette, Type, PaintBucket, Navigation, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -224,17 +224,33 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
           <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <PaintBucket className="w-5 h-5 text-teal-600" /> {t("design.customColors")}
           </h3>
+
+          {/* Color Explanation */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-semibold mb-1">Was machen die Farben?</p>
+                <ul className="space-y-1 text-blue-700">
+                  <li><strong>Primärfarbe:</strong> Buttons, Links, CTAs, Akzente</li>
+                  <li><strong>Sekundärfarbe:</strong> Gradients, Hover-Effekte, sekundäre Elemente</li>
+                  <li><strong>Preisfarbe:</strong> Nur für Preisanzeigen (unabhängig)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-6 lg:gap-8">
 
             <ColorInput
-              label={t("design.primaryColor")}
-              value={design.primaryColor || "#000000"}
+              label={`${t("design.primaryColor")} (Buttons, CTAs)`}
+              value={design.primaryColor || "#4F46E5"}
               onChange={designActions.updatePrimaryColor}
             />
 
             <ColorInput
-              label={t("design.secondaryColor")}
-              value={design.secondaryColor || "#000000"}
+              label={`${t("design.secondaryColor")} (Gradients, Akzente)`}
+              value={design.secondaryColor || "#7C3AED"}
               onChange={designActions.updateSecondaryColor}
             />
 
@@ -245,18 +261,72 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
             />
 
             <ColorInput
-              label={t("design.priceColor")}
-              // @ts-ignore
-              value={design.priceColor || design.primaryColor || "#000000"}
+              label={`${t("design.priceColor")} (€-Preise)`}
+              value={(design as any).priceColor || "#059669"}
               onChange={(v) => updateAny('priceColor', v)}
             />
 
             <ColorInput
-              label={t("design.fontColor")}
+              label={`${t("design.fontColor")} (Haupttext)`}
               value={design.fontColor || "#000000"}
               onChange={(v) => designActions.updateDesign({ fontColor: v })}
             />
 
+          </div>
+        </div>
+
+        {/* --- HEADER/NAVIGATION CUSTOMIZATION --- */}
+        <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Navigation className="w-5 h-5 text-teal-600" /> Navigation (Headbar)
+          </h3>
+
+          <div className="grid sm:grid-cols-2 gap-6 lg:gap-8">
+            <ColorInput
+              label="Header Schriftfarbe"
+              value={(design as any).headerFontColor || "#000000"}
+              onChange={(v) => updateAny('headerFontColor', v)}
+            />
+
+            <ColorInput
+              label="Header Hintergrund"
+              value={(design as any).headerBackgroundColor || "#FFFFFF"}
+              onChange={(v) => updateAny('headerBackgroundColor', v)}
+            />
+          </div>
+
+          {/* Header Font Size */}
+          <div className="mt-6">
+            <label className="block text-sm font-bold text-gray-700 mb-4">Header Schriftgröße</label>
+            <div className="grid grid-cols-3 gap-4">
+              {FONT_SIZES.map((size) => {
+                const isSelected = ((design as any).headerFontSize || 'medium') === size.id;
+                return (
+                  <Card
+                    key={`header-${size.id}`}
+                    className={`cursor-pointer transition-all duration-300 border-2 ${
+                      isSelected
+                        ? "border-teal-500 bg-teal-50 shadow-md"
+                        : "border-gray-200 hover:border-teal-300"
+                    }`}
+                    onClick={() => updateAny('headerFontSize', size.id)}
+                  >
+                    <CardContent className="p-3 text-center">
+                      <div className={`font-bold ${size.id === "small" ? "text-xs" : size.id === "medium" ? "text-sm" : "text-base"}`}>
+                        {size.name}
+                      </div>
+                      {isSelected && (
+                        <div className="mt-2 flex justify-center">
+                          <div className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         </div>
 
