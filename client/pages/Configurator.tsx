@@ -87,6 +87,7 @@ export default function Configurator() {
 
   const currentStep = useConfiguratorStore((s) => s.ui.currentStep);
   const cloudSyncEnabled = useConfiguratorStore((s) => s.ui.cloudSyncEnabled);
+  const historyCount = useConfiguratorStore((s) => s.ui.historyCount);
   const nextStepStore = useConfiguratorStore((s) => s.nextStep);
   const prevStepStore = useConfiguratorStore((s) => s.prevStep);
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
@@ -199,9 +200,9 @@ export default function Configurator() {
                 onClick={() => {
                   actions.history.undo();
                 }}
-                disabled={!actions.history.canUndo()}
-                className="text-gray-500 hover:text-gray-900 gap-1.5"
-                title="Rückgängig"
+                disabled={historyCount === 0}
+                className="text-gray-500 hover:text-gray-900 gap-1.5 disabled:opacity-40"
+                title={historyCount > 0 ? `Rückgängig (${historyCount})` : "Keine Änderungen zum Rückgängigmachen"}
               >
                 <Undo2 className="w-4 h-4" />
                 <span className="hidden lg:inline text-xs">Zurück</span>
