@@ -1,7 +1,67 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { prisma } from "../db/prisma";
 
 export const subdomainsRouter = Router();
+
+/**
+ * Middleware to detect subdomain requests and serve the appropriate site
+ * This runs LAST after all API routes
+ */
+export async function handleSubdomainRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const host = req.hostname || req.headers.host?.split(":")[0] || "";
+
+    // Skip if not a subdomain request
+    const mainDomains = [
+      "maitr.de",
+      "www.maitr.de",
+      "staging.maitr.de",
+      "localhost",
+      "127.0.0.1",
+    ];
+
+    if (mainDomains.includes(host)) {
+      return next();
+    }
+
+    // Skip Netlify preview URLs
+    if (host.endsWith(".netlify.app")) {
+      return next();
+    }
+
+    // Extract subdomain from host (e.g., "cafe.maitr.de" -> "cafe")
+    const baseDomain = process.env.PUBLIC_BASE_DOMAIN || "maitr.de";
+    const subdomain = host.replace(`.${baseDomain}`, "").split(".")[0];
+
+    if (!subdomain || subdomain === baseDomain) {
+      return next();
+    }
+
+    // Look up the WebApp for this subdomain
+    const webApp = await prisma.webApp.findUnique({
+      where: { subdomain },
+      select: { configData: true },
+    });
+
+    if (!webApp) {
+      // Subdomain not found - let the frontend handle 404
+      return next();
+    }
+
+    // Attach the config to the request for server-side rendering
+    (req as any).subdomainConfig = webApp.configData;
+    (req as any).subdomain = subdomain;
+
+    return next();
+  } catch (error) {
+    console.error("[Subdomains] Middleware error:", error);
+    return next();
+  }
+}
 
 // Reserved subdomains that can never be used
 const RESERVED_SUBDOMAINS = [
