@@ -223,7 +223,17 @@
     "phone": "Telefon",
     "email": "E-Mail",
     "address": "Adresse",
-    "socialMedia": "Social Media"
+    "socialMedia": "Social Media",
+    "information": "Kontaktinformationen",
+    "instagramIntegration": "Instagram Integration",
+    "instagramIntegrationDesc": "Synchronisiere automatisch deine Instagram-Posts auf deiner Website"
+  },
+  "gallery": {
+    "uploadPhotos": "Fotos hochladen",
+    "dragAndDrop": "Ziehe Bilder hierher oder klicke zum Durchsuchen",
+    "chooseImages": "Bilder auswählen",
+    "sizeLimit": "JPG, PNG bis zu 5MB pro Bild \u2022 Maximal 20 Bilder",
+    "yourGallery": "Deine Galerie"
   },
   "reservations": {
     "title": "Reservierung",
