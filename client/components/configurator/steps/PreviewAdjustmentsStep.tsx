@@ -8,6 +8,7 @@ import {
   useConfiguratorActions,
 } from "@/store/configuratorStore";
 import { LivePhoneFrame } from "@/components/preview/LivePhoneFrame";
+import PhonePortal from "@/components/preview/phone-portal";
 
 interface PreviewAdjustmentsStepProps {
   nextStep: () => void;
@@ -164,12 +165,14 @@ export function PreviewAdjustmentsStep({
 
             <div className="flex justify-center">
               {previewMode === "mobile" ? (
-                <LivePhoneFrame widthClass="w-64" heightClass="h-[480px]">
-                  {TemplatePreviewContent ? (
-                    <TemplatePreviewContent />
-                  ) : (
-                    <div>Preview</div>
-                  )}
+                <LivePhoneFrame widthClass="w-[320px]" heightClass="h-[600px]">
+                  <PhonePortal>
+                    {TemplatePreviewContent ? (
+                      <TemplatePreviewContent />
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">Preview</div>
+                    )}
+                  </PhonePortal>
                 </LivePhoneFrame>
               ) : (
                 <div className="w-full max-w-4xl h-96 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
