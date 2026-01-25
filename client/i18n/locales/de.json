@@ -94,9 +94,17 @@
   },
   "welcome": {
     "title": "Willkommen bei Maitr",
-    "subtitle": "Erstelle in Minuten eine professionelle Website für dein Gastronomiebetrieb",
+    "buildYour": "Erstelle deine perfekte",
+    "webApp": "Web App",
+    "subtitle": "Erstelle in Minuten eine professionelle Website für dein Geschäft. Wähle ein Template, sieh die Vorschau, passe an und veröffentliche.",
     "getStarted": "Jetzt starten",
-    "continueProject": "Projekt fortsetzen"
+    "continueProject": "Konfiguration fortsetzen",
+    "feature1": "Live-Vorschau wie eine echte App",
+    "feature2": "Minimal, schnell und übersichtlich",
+    "feature3": "Automatisches Speichern bei jedem Schritt",
+    "feature4": "Ein-Klick Veröffentlichung",
+    "viewPublished": "Veröffentlichte Seite ansehen",
+    "startHint": "Wähle im nächsten Schritt dein Template aus"
   },
   "templates": {
     "available": "Verfügbare Templates",

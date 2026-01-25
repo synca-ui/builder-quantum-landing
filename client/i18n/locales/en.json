@@ -94,9 +94,17 @@
   },
   "welcome": {
     "title": "Welcome to Maitr",
-    "subtitle": "Create a professional website for your hospitality business in minutes",
-    "getStarted": "Get Started",
-    "continueProject": "Continue Project"
+    "buildYour": "Build Your Perfect",
+    "webApp": "Web App",
+    "subtitle": "Create a professional web app for your business in minutes. Choose a template, preview it live, customize, and publish.",
+    "getStarted": "Let's Get Started",
+    "continueProject": "Continue Configuration",
+    "feature1": "Live app-like template previews",
+    "feature2": "Minimal, fast, and clean flow",
+    "feature3": "Auto-save every step",
+    "feature4": "One-click publish",
+    "viewPublished": "View Published Site",
+    "startHint": "Start by choosing a template on the next step"
   },
   "templates": {
     "available": "Available Templates",
