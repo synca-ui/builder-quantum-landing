@@ -13,6 +13,10 @@ export interface BusinessInfo {
   location?: string;
   slogan?: string;
   uniqueDescription?: string;
+  logo?: {
+    url: string;
+    file?: File;
+  };
   domain?: {
     hasDomain: boolean;
     domainName?: string;
@@ -26,12 +30,24 @@ export interface BusinessInfo {
  */
 export interface DesignConfig {
   template: string; // template id from TemplateRegistry
-  primaryColor: string; // hex color
-  secondaryColor: string; // hex color
+
+  // Main Colors
+  primaryColor: string; // hex - Buttons, CTAs, Links, Akzente
+  secondaryColor: string; // hex - Gradients, Hover-States, sekundäre Elemente
+  backgroundColor?: string; // hex - Seitenhintergrund
+  fontColor?: string; // hex - Haupttextfarbe
+  priceColor?: string; // hex - Preisanzeige (unabhängig von Primärfarbe)
+
+  // Typography
   fontFamily: string; // "sans-serif", "serif", "monospace"
-  fontColor?: string;
   fontSize?: string; // "small", "medium", "large"
-  backgroundColor?: string;
+
+  // Header/Navigation Bar Customization
+  headerFontColor?: string; // hex - Schriftfarbe der Navigation
+  headerFontSize?: string; // "small", "medium", "large"
+  headerBackgroundColor?: string; // hex - Hintergrund der Navigation
+
+  // Background
   backgroundImage?: string | null;
   backgroundType?: "color" | "image";
 }
