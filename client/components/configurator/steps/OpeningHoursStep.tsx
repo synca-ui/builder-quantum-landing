@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,8 +19,9 @@ export function OpeningHoursStep({
   nextStep,
   prevStep,
 }: OpeningHoursStepProps) {
-  const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-  const weekends = ["Saturday", "Sunday"];
+  const { t } = useTranslation();
+  const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+  const weekends = ["saturday", "sunday"];
 
   const openingHours = useConfiguratorStore((s) => s.content.openingHours);
   const openingHoursTextColor = useConfiguratorStore(
@@ -91,11 +93,10 @@ export function OpeningHoursStep({
     <div className="py-8 max-w-3xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-          Öffnungszeiten festlegen
+          {t("steps.openingHours.title")}
         </h2>
         <p className="text-gray-600">
-          Wann haben Sie geöffnet? Das hilft Kunden zu wissen, wann sie Sie
-          besuchen können.
+          {t("steps.openingHours.subtitle")}
         </p>
       </div>
 
@@ -121,7 +122,7 @@ export function OpeningHoursStep({
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900">
-              Montag - Freitag
+              {t("hours.mondayFriday")}
             </h3>
             <div className="flex items-center space-x-2">
               <input
@@ -135,7 +136,7 @@ export function OpeningHoursStep({
                 htmlFor="weekday-schedule"
                 className="text-sm text-gray-600"
               >
-                Gleiche Zeiten für alle Wochentage
+                {t("hours.sameForAllWeekdays")}
               </label>
             </div>
           </div>
@@ -154,7 +155,7 @@ export function OpeningHoursStep({
                   applyWeekdaySchedule();
                 }}
               >
-                {weekdayHours.closed ? "Geschlossen" : "Geöffnet"}
+                {weekdayHours.closed ? t("hours.closed") : t("hours.open")}
               </Button>
 
               {!weekdayHours.closed && (
@@ -172,7 +173,7 @@ export function OpeningHoursStep({
                     }}
                     className="w-32"
                   />
-                  <span className="text-gray-500">bis</span>
+                  <span className="text-gray-500">{t("hours.to")}</span>
                   <Input
                     type="time"
                     value={weekdayHours.close}
@@ -202,7 +203,7 @@ export function OpeningHoursStep({
                   <div key={day} className="flex items-center justify-between">
                     <div className="w-24">
                       <span className="text-sm font-medium text-gray-700">
-                        {day.slice(0, 3)}
+                        {t(`hours.${day}`).slice(0, 3)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -213,7 +214,7 @@ export function OpeningHoursStep({
                           updateDayHours(day, { closed: !hours.closed })
                         }
                       >
-                        {hours.closed ? "Zu" : "Auf"}
+                        {hours.closed ? t("hours.closed").slice(0, 2) : t("hours.open").slice(0, 3)}
                       </Button>
                       {!hours.closed && (
                         <>
@@ -246,7 +247,7 @@ export function OpeningHoursStep({
 
         <Card className="p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
-            Wochenende & Feiertage
+            {t("hours.weekendHolidays")}
           </h3>
           <div className="space-y-3">
             {weekends.map((day) => {
@@ -260,7 +261,7 @@ export function OpeningHoursStep({
                 <div key={day} className="flex items-center justify-between">
                   <div className="w-24">
                     <span className="text-sm font-medium text-gray-700">
-                      {day === "Saturday" ? "Samstag" : "Sonntag"}
+                      {t(`hours.${day}`)}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -271,7 +272,7 @@ export function OpeningHoursStep({
                         updateDayHours(day, { closed: !hours.closed })
                       }
                     >
-                      {hours.closed ? "Geschlossen" : "Geöffnet"}
+                      {hours.closed ? t("hours.closed") : t("hours.open")}
                     </Button>
                     {!hours.closed && (
                       <>
@@ -302,8 +303,7 @@ export function OpeningHoursStep({
 
           <div className="mt-4 p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-700">
-              💡 <strong>Tipp:</strong> Feiertage werden automatisch wie Sonntag
-              behandelt. Sie können diese später in den Einstellungen anpassen.
+              💡 <strong>{t("common.tip")}:</strong> {t("hours.holidayTip")}
             </p>
           </div>
         </Card>
@@ -321,14 +321,14 @@ export function OpeningHoursStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Zurück
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Weiter
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
