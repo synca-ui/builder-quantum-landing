@@ -36,6 +36,7 @@ import LivePhoneFrame from "@/components/preview/LivePhoneFrame";
 import PhonePortal from "@/components/preview/phone-portal";
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
 import QRCode from "@/components/qr/QRCode";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 import { configurationApi, type Configuration } from "@/lib/api";
 import { usePersistence } from "@/lib/stepPersistence";
