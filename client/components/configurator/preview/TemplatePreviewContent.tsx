@@ -332,7 +332,11 @@ export function TemplatePreviewContent() {
                 ? formData.menuItems
                 : getBusinessTypeDefaults(formData.businessType).menuItems
               ).slice(0, 3).map((item: any, i: number) => (
-                <div key={i} className={styles.itemCard}>
+                <div
+                  key={i}
+                  className={`${styles.itemCard} cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]`}
+                  onClick={() => openDishModal(item)}
+                >
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className={styles.itemNameClass} style={{ color: formData.fontColor }}>{item.name}</div>
