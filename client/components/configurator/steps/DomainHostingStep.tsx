@@ -537,7 +537,12 @@ export function DomainHostingStep({
         </Button>
         <Button
           onClick={nextStep}
-          disabled={!hasDomain && validationStatus !== "available" && currentSubdomain.length > 0}
+          disabled={
+            // Only disable if using free subdomain AND subdomain is invalid/taken
+            !hasDomain &&
+            currentSubdomain.length > 0 &&
+            (validationStatus === "taken" || validationStatus === "invalid")
+          }
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
