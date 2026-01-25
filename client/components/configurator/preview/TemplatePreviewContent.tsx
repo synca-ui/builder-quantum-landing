@@ -3,7 +3,8 @@ import { useConfiguratorStore } from "@/store/configuratorStore";
 import {
   MapPin, Phone, Mail, Clock, Instagram, Facebook,
   Coffee, Utensils, ShoppingBag, Menu, X,
-  Plus, ChevronRight, ChevronDown, Camera, ArrowRight
+  Plus, ChevronRight, ChevronDown, Camera, ArrowRight,
+  Calendar, Users, CalendarCheck
 } from "lucide-react";
 import { ReservationButton } from "@/components/ui/ReservationButton";
 
@@ -268,6 +269,22 @@ export function TemplatePreviewContent() {
             </div>
           </div>
 
+          {/* Reservation Button - Between Highlights and Opening Hours */}
+          {formData.reservationsEnabled && (
+            <div className="mt-8 mb-6">
+              <ReservationButton
+                color={formData.reservationButtonColor}
+                textColor={formData.reservationButtonTextColor}
+                shape={formData.reservationButtonShape as "rounded" | "pill" | "square"}
+                className="w-full shadow-lg"
+                onClick={() => navigateToPage('reservations')}
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Tisch reservieren
+              </ReservationButton>
+            </div>
+          )}
+
           {/* Interactive Opening Hours & Location Section */}
           <div
             className="text-center py-6 border-t border-current/10 mt-6 space-y-3 cursor-pointer group"
@@ -405,6 +422,85 @@ export function TemplatePreviewContent() {
         </div>
       );
     }
+
+    // Reservations Page
+    if (previewState.activePage === 'reservations') {
+      return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${formData.primaryColor}20` }}>
+              <CalendarCheck className="w-8 h-8" style={{ color: formData.primaryColor }} />
+            </div>
+            <h2 className={styles.titleClass}>Reservierung</h2>
+            <p className={`${styles.bodyClass} opacity-70`}>Buchen Sie Ihren Tisch online</p>
+          </div>
+
+          {/* Reservation Form */}
+          <div className="space-y-4 p-4 rounded-2xl border border-current/10 bg-white/5">
+            <div>
+              <label className="block text-xs font-bold mb-2 opacity-70">Datum</label>
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-current/10 bg-white/50">
+                <Calendar className="w-4 h-4 opacity-50" />
+                <span className="text-sm">Datum wählen...</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold mb-2 opacity-70">Uhrzeit</label>
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-current/10 bg-white/50">
+                <Clock className="w-4 h-4 opacity-50" />
+                <span className="text-sm">Zeit wählen...</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold mb-2 opacity-70">Anzahl Gäste</label>
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-current/10 bg-white/50">
+                <Users className="w-4 h-4 opacity-50" />
+                <span className="text-sm">2 Personen</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold mb-2 opacity-70">Name</label>
+              <div className="p-3 rounded-xl border border-current/10 bg-white/50">
+                <span className="text-sm opacity-50">Ihr Name...</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold mb-2 opacity-70">Telefon / E-Mail</label>
+              <div className="p-3 rounded-xl border border-current/10 bg-white/50">
+                <span className="text-sm opacity-50">Kontakt für Bestätigung...</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          {formData.reservationsEnabled && (
+            <ReservationButton
+              color={formData.reservationButtonColor}
+              textColor={formData.reservationButtonTextColor}
+              shape={formData.reservationButtonShape as "rounded" | "pill" | "square"}
+              className="w-full shadow-lg"
+            >
+              <CalendarCheck className="w-4 h-4 mr-2" />
+              Reservierung anfragen
+            </ReservationButton>
+          )}
+
+          {/* Info */}
+          <div className="text-center opacity-60 text-xs space-y-1">
+            <p>Sie erhalten eine Bestätigung per E-Mail</p>
+            <p className="flex items-center justify-center gap-1">
+              <Phone className="w-3 h-3" />
+              Oder rufen Sie uns an
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return <div className="p-10 text-center opacity-50 pt-20">Seite nicht gefunden</div>;
   };
 
@@ -439,23 +535,9 @@ export function TemplatePreviewContent() {
         <div className={styles.page}>
           {renderContent()}
         </div>
-        {/* Footer Spacer - extra space for reservation button */}
-        <div className="h-24 w-full" />
+        {/* Footer Spacer */}
+        <div className="h-20 w-full" />
       </div>
-
-      {/* Reservation Button - Fixed at bottom when enabled */}
-      {formData.reservationsEnabled && (
-        <div className="absolute bottom-4 left-4 right-4 z-30 flex justify-center">
-          <ReservationButton
-            color={formData.reservationButtonColor}
-            textColor={formData.reservationButtonTextColor}
-            shape={formData.reservationButtonShape as "rounded" | "pill" | "square"}
-            className="w-full max-w-[280px] shadow-xl"
-          >
-            Reservieren
-          </ReservationButton>
-        </div>
-      )}
     </div>
   );
 }
