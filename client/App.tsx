@@ -130,7 +130,7 @@ if (rootElement) {
 // HMR handling with proper connection guards
 if (import.meta.hot) {
   // Mark HMR as ready after a small delay to ensure WebSocket is connected
-  import.meta.hot.on('vite:beforeFullReload', () => {
+  import.meta.hot.on("vite:beforeFullReload", () => {
     // Allow full reload
   });
 
