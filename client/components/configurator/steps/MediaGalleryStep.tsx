@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronRight, Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,6 +19,7 @@ export function MediaGalleryStep({
   nextStep,
   prevStep,
 }: MediaGalleryStepProps) {
+  const { t } = useTranslation();
   const gallery = useConfiguratorStore((s) => s.content.gallery);
   const actions = useConfiguratorActions();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -47,11 +49,10 @@ export function MediaGalleryStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Upload your photos
+          {t("steps.mediaGallery.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Show off your space, food, and atmosphere. High-quality images help
-          attract customers and showcase your business personality.
+          {t("steps.mediaGallery.subtitle")}
         </p>
       </div>
 
@@ -59,10 +60,10 @@ export function MediaGalleryStep({
         <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-teal-400 transition-colors">
           <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-gray-900 mb-2">
-            Upload Photos
+            {t("gallery.uploadPhotos")}
           </h3>
           <p className="text-gray-600 mb-4">
-            Drag and drop your images or click to browse
+            {t("gallery.dragAndDrop")}
           </p>
           <Button
             variant="outline"
@@ -71,7 +72,7 @@ export function MediaGalleryStep({
             className="border-2 border-teal-300 hover:border-teal-400 hover:bg-teal-50 text-teal-700"
           >
             <Upload className="w-5 h-5 mr-2" />
-            Choose Images
+            {t("gallery.chooseImages")}
           </Button>
           <input
             id="gallery-upload"
@@ -82,14 +83,14 @@ export function MediaGalleryStep({
             onChange={(e) => handleFileUpload(e.target.files)}
           />
           <p className="text-xs text-gray-500 mt-4">
-            JPG, PNG up to 5MB each • Maximum 20 images
+            {t("gallery.sizeLimit")}
           </p>
         </div>
       </Card>
 
       {gallery.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Your Gallery</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-6">{t("gallery.yourGallery")}</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {gallery.map((image) => (
               <div key={image.id} className="relative group">
@@ -128,14 +129,14 @@ export function MediaGalleryStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>

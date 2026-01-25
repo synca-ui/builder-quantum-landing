@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ChevronRight,
@@ -24,6 +25,7 @@ export function ContactSocialStep({
   nextStep,
   prevStep,
 }: ContactSocialStepProps) {
+  const { t } = useTranslation();
   const contact = useConfiguratorStore((s) => s.contact);
   const actions = useConfiguratorActions();
 
@@ -31,19 +33,19 @@ export function ContactSocialStep({
     {
       id: "phone",
       icon: <Phone className="w-5 h-5" />,
-      label: "Phone",
+      labelKey: "contact.phone",
       placeholder: "+1 (555) 123-4567",
     },
     {
       id: "email",
       icon: <Mail className="w-5 h-5" />,
-      label: "Email",
+      labelKey: "contact.email",
       placeholder: "hello@yourbusiness.com",
     },
     {
       id: "address",
       icon: <MapPin className="w-5 h-5" />,
-      label: "Address",
+      labelKey: "contact.address",
       placeholder: "123 Main St, City, State",
     },
   ];
@@ -116,24 +118,23 @@ export function ContactSocialStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Contact & social media
+          {t("steps.contactSocial.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          How can customers reach you? Add your contact information and social
-          media links.
+          {t("steps.contactSocial.subtitle")}
         </p>
       </div>
 
       <div className="space-y-8">
         <Card className="p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-6">
-            Contact Information
+            {t("contact.information")}
           </h3>
           <div className="space-y-4">
             {contactMethods.map((method) => (
               <div key={method.id}>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  {method.label}
+                  {t(method.labelKey)}
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-3 text-gray-400">
@@ -155,7 +156,7 @@ export function ContactSocialStep({
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Social Media</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-6">{t("contact.socialMedia")}</h3>
           <div className="space-y-4">
             {socialPlatforms.map((platform) => (
               <div key={platform.id}>
@@ -187,10 +188,10 @@ export function ContactSocialStep({
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-md font-bold text-gray-900">
-                  Instagram Integration
+                  {t("contact.instagramIntegration")}
                 </h4>
                 <p className="text-sm text-gray-600">
-                  Automatically sync your Instagram posts to your website
+                  {t("contact.instagramIntegrationDesc")}
                 </p>
               </div>
               <Button
@@ -198,7 +199,7 @@ export function ContactSocialStep({
                 onClick={toggleInstagramSync}
                 className={instagramSync ? "bg-teal-500 hover:bg-teal-600" : ""}
               >
-                {instagramSync ? "Enabled" : "Disabled"}
+                {instagramSync ? t("features.enable") : t("features.disable")}
               </Button>
             </div>
           </div>
@@ -217,14 +218,14 @@ export function ContactSocialStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
