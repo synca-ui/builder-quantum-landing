@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   Rocket, Menu, X, Settings, Smartphone, Share2,
