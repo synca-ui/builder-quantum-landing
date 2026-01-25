@@ -134,9 +134,15 @@ export function DomainHostingStep({
     }
   }, [currentSubdomain]);
 
-  // Debounce effect
+  // Debounce effect - also validates on mount if subdomain exists
   useEffect(() => {
     if (!hasDomain && currentSubdomain) {
+      // Immediately validate if this is the first load and subdomain exists
+      if (lastCheckedSubdomain === "" && validationStatus === "idle") {
+        validateAndCheckSubdomain(currentSubdomain);
+        return;
+      }
+
       const timer = setTimeout(() => {
         if (currentSubdomain !== lastCheckedSubdomain) {
           validateAndCheckSubdomain(currentSubdomain);
@@ -145,7 +151,15 @@ export function DomainHostingStep({
 
       return () => clearTimeout(timer);
     }
-  }, [currentSubdomain, hasDomain, lastCheckedSubdomain, validateAndCheckSubdomain]);
+  }, [currentSubdomain, hasDomain, lastCheckedSubdomain, validateAndCheckSubdomain, validationStatus]);
+
+  // Reset validation when switching to custom domain
+  useEffect(() => {
+    if (hasDomain) {
+      setValidationStatus("idle");
+      setValidationError(null);
+    }
+  }, [hasDomain]);
 
   // Handle subdomain input change
   const handleSubdomainChange = (value: string) => {
