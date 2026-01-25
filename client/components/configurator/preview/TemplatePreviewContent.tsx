@@ -620,6 +620,104 @@ export function TemplatePreviewContent() {
         {/* Footer Spacer */}
         <div className="h-20 w-full" />
       </div>
+
+      {/* DISH MODAL */}
+      {selectedDish && (
+        <div
+          className="absolute inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-end animate-in fade-in duration-200"
+          onClick={closeDishModal}
+        >
+          <div
+            className="w-full bg-white rounded-t-3xl max-h-[85%] overflow-hidden animate-in slide-in-from-bottom duration-300"
+            style={{ backgroundColor: formData.backgroundColor, color: formData.fontColor }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Image Carousel */}
+            {selectedDish.images && selectedDish.images.length > 0 ? (
+              <div className="relative aspect-[4/3] bg-gray-100">
+                <img
+                  src={normalizeImageSrc(selectedDish.images[currentImageIndex])}
+                  alt={selectedDish.name}
+                  className="w-full h-full object-cover"
+                />
+                {/* Image Navigation */}
+                {selectedDish.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                    {/* Image Dots */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {selectedDish.images.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={`w-2 h-2 rounded-full transition-all ${
+                            idx === currentImageIndex
+                              ? 'bg-white w-4'
+                              : 'bg-white/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+                {/* Close Button */}
+                <button
+                  onClick={closeDishModal}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                <Camera className="w-12 h-12 text-gray-300" />
+                <button
+                  onClick={closeDishModal}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+
+            {/* Dish Details */}
+            <div className="p-5 space-y-3">
+              <div className="flex justify-between items-start gap-3">
+                <h3 className="text-xl font-bold">{selectedDish.name}</h3>
+                <span className="text-xl font-bold shrink-0" style={{ color: formData.priceColor }}>
+                  {selectedDish.price}€
+                </span>
+              </div>
+              {selectedDish.description && (
+                <p className="text-sm opacity-80 leading-relaxed">{selectedDish.description}</p>
+              )}
+
+              {/* Add to Cart Button */}
+              {formData.onlineOrdering && (
+                <button
+                  onClick={() => { addToCart(selectedDish); closeDishModal(); }}
+                  className="w-full py-3 rounded-xl font-bold text-white shadow-lg mt-4 transition-transform active:scale-[0.98]"
+                  style={{ backgroundColor: formData.primaryColor }}
+                >
+                  <Plus className="w-4 h-4 inline mr-2" />
+                  Zum Warenkorb
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
