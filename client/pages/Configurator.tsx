@@ -59,16 +59,16 @@ const CONFIGURATOR_STEPS_CONFIG = [
   { id: "publish", title: "Publish your website", phase: 6, phaseTitle: "Publishing", component: "publish" },
 ];
 
-function ShareQRButton({ url }: { url: string }) {
+function ShareQRButton({ url, t }: { url: string; t: (key: string) => string }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button size="sm" variant="ghost" className="h-8 text-xs text-gray-500 hover:text-gray-900 hover:bg-white/50">
-          <Share2 className="w-3 h-3 mr-2" /> Share QR
+          <Share2 className="w-3 h-3 mr-2" /> {t("nav.shareQr")}
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Scan to open</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t("nav.scanToOpen")}</DialogTitle></DialogHeader>
         <div className="flex flex-col items-center gap-4 py-2">
           <QRCode value={url} size={220} />
           <div className="text-xs text-gray-600 break-all text-center">{url}</div>
