@@ -79,6 +79,7 @@ function ShareQRButton({ url, t }: { url: string; t: (key: string) => string }) 
 }
 
 export default function Configurator() {
+  const { t } = useTranslation();
   const { isSignedIn, getToken } = useAuth();
   const persistence = usePersistence();
   const navigate = useNavigate();
