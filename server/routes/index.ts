@@ -7,6 +7,7 @@ import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
 import scraperRouter from "./scraper";
 import subscriptionsRouter from "./subscriptions";
+import { subdomainsRouter } from "./subdomains";
 
 // Erstellen Sie einen Haupt-API-Router, um alle Teil-Routen zu bündeln
 export const apiRouter = Router();
@@ -18,6 +19,7 @@ apiRouter.use("/webapps", publicAppsRouter);
 apiRouter.use("/templates", templatesRouter);
 apiRouter.use("/scraper/jobs", scraperRouter);
 apiRouter.use("/subscriptions", subscriptionsRouter);
+apiRouter.use("/subdomains", subdomainsRouter);
 
 // Standalone configuration routes (for backward compatibility)
 apiRouter.get("/config/:slug", getConfigBySlug);
