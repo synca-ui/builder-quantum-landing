@@ -356,16 +356,12 @@ export function DomainHostingStep({
                 </div>
               </div>
 
-              {/* Suggestions if taken */}
-              {validationStatus === "taken" && (
+              {/* Suggestions if taken/reserved (from API) */}
+              {(validationStatus === "taken" || validationStatus === "reserved") && validationSuggestions.length > 0 && (
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                   <p className="text-sm font-medium text-blue-900 mb-2">Alternativen:</p>
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      `${currentSubdomain}-${new Date().getFullYear()}`,
-                      `mein-${currentSubdomain}`,
-                      `${currentSubdomain}-gastro`,
-                    ].map((suggestion) => (
+                    {validationSuggestions.map((suggestion) => (
                       <button
                         key={suggestion}
                         onClick={() => handleSubdomainChange(suggestion)}
