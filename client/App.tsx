@@ -55,53 +55,47 @@ const App = () => (
   <ErrorBoundary>
     <I18nextProvider i18n={i18n}>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-              <Routes>
-                <Route path="/" element={<HostAwareRoot />} />
-                <Route path="/mode-selection" element={<ModeSelection />} />
-                <Route path="/configurator" element={<Configurator />} />
-                <Route path="/configurator/manual" element={<Configurator />} />
-                <Route
-                  path="/configurator/auto"
-                  element={<AutoConfigurator />}
-                />
-                <Route
-                  path="/configurator/advanced"
-                  element={<AdvancedConfigurator />}
-                />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route
-                  path="/profile"
-                  element={
-                    <RequireAuth>
-                      <Profile />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <RequireAuth>
-                      <Dashboard />
-                    </RequireAuth>
-                  }
-                />
-                <Route path="/site/:subdomain/*" element={<Site />} />
-                <Route path="/:id/:name/*" element={<Site />} />
-                <Route path="/test-site" element={<TestSite />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </HelmetProvider>
-      </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          <HelmetProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+                <Routes>
+                  <Route path="/" element={<HostAwareRoot />} />
+                  <Route path="/mode-selection" element={<ModeSelection />} />
+                  <Route path="/configurator" element={<Configurator />} />
+                  <Route path="/configurator/manual" element={<Configurator />} />
+                  <Route path="/configurator/auto" element={<AutoConfigurator />} />
+                  <Route path="/configurator/advanced" element={<AdvancedConfigurator />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route
+                    path="/profile"
+                    element={
+                      <RequireAuth>
+                        <Profile />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <RequireAuth>
+                        <Dashboard />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route path="/site/:subdomain/*" element={<Site />} />
+                  <Route path="/:id/:name/*" element={<Site />} />
+                  <Route path="/test-site" element={<TestSite />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </HelmetProvider>
+        </QueryClientProvider>
       </ClerkProvider>
     </I18nextProvider>
   </ErrorBoundary>
