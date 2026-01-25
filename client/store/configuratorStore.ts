@@ -50,6 +50,20 @@ function checkThrottleGuard(actionName?: string) {
 }
 
 /**
+ * Snapshot for undo history
+ */
+interface HistorySnapshot {
+  business: BusinessInfo;
+  design: DesignConfig;
+  content: ContentData;
+  features: FeatureFlags;
+  contact: ContactInfo;
+  pages: PageManagement;
+  payments: PaymentAndOffers;
+  timestamp: number;
+}
+
+/**
  * UI-specific state (not persisted across full config)
  */
 interface UIState {
@@ -58,7 +72,12 @@ interface UIState {
   expandedSections: Record<string, boolean>;
   saveLoading: boolean;
   saveError: string | null;
+  cloudSyncEnabled: boolean;
 }
+
+// History stack (kept outside store to avoid persisting)
+let historyStack: HistorySnapshot[] = [];
+const MAX_HISTORY = 20;
 
 /**
  * Complete store state interface
@@ -80,6 +99,7 @@ interface ConfiguratorState {
   // Selectors/computed state
   isComplete: () => boolean;
   canPublish: () => boolean;
+  canUndo: () => boolean;
 
   // Actions: Business Domain
   setBusinessInfo: (info: Partial<BusinessInfo>) => void;
@@ -138,6 +158,11 @@ interface ConfiguratorState {
   toggleSectionExpand: (sectionId: string) => void;
   setSaveLoading: (loading: boolean) => void;
   setSaveError: (error: string | null) => void;
+  setCloudSyncEnabled: (enabled: boolean) => void;
+
+  // Actions: History
+  pushHistory: () => void;
+  undo: () => void;
 
   // Actions: Data Management
   resetConfig: () => void;
@@ -247,6 +272,7 @@ const defaultUIState: UIState = {
   expandedSections: {},
   saveLoading: false,
   saveError: null,
+  cloudSyncEnabled: true,
 };
 
 /**
