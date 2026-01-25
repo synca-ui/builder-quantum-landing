@@ -9,7 +9,7 @@ import {
   useConfiguratorStore,
   useConfiguratorActions,
 } from "@/store/configuratorStore";
-import { deploy, isNetlifyMCPAvailable, isVercelMCPAvailable } from "@/lib/deployment";
+import { deploy } from "@/lib/deployment";
 import type { Configuration } from "@/types/domain";
 
 interface PublishStepProps {
