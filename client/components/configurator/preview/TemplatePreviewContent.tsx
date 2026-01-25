@@ -253,11 +253,10 @@ export function TemplatePreviewContent() {
             </div>
 
             <div className="space-y-3">
-              {(formData.menuItems.length > 0 ? formData.menuItems : [
-                {name: "Burger Klassik", description: "Rindfleisch, Salat, Tomate", price: "12.50"},
-                {name: "Pasta Pesto", description: "Frisches Basilikum, Pinienkerne", price: "14.00"},
-                {name: "Hauslimo", description: "Zitrone & Minze", price: "4.50"}
-              ]).slice(0, 3).map((item: any, i: number) => (
+              {(formData.menuItems.length > 0
+                ? formData.menuItems
+                : getBusinessTypeDefaults(formData.businessType).menuItems
+              ).slice(0, 3).map((item: any, i: number) => (
                 <div key={i} className={styles.itemCard}>
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
