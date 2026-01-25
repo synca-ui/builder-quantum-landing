@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Cloud, Rocket, Check, Eye, Home, AlertCircle, ChevronRight, ExternalLink, Copy, Share2, Server, Globe2 } from "lucide-react";
+import { ArrowLeft, Cloud, Rocket, Check, Eye, Home, AlertCircle, ExternalLink, Copy, Share2 } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
