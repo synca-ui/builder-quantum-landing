@@ -519,6 +519,7 @@ export async function publishConfiguration(req: Request, res: Response) {
 
 /**
  * ✅ GET /api/sites/:subdomain - Get published site (PUBLIC)
+ * Returns the config stored in WebApp.configData for instant serving
  */
 export async function getPublishedSite(req: Request, res: Response) {
   const { subdomain } = req.params;
@@ -526,27 +527,82 @@ export async function getPublishedSite(req: Request, res: Response) {
   try {
     const webApp = await prisma.webApp.findUnique({
       where: { subdomain },
+      select: {
+        id: true,
+        subdomain: true,
+        configData: true,
+        publishedAt: true,
+        updatedAt: true,
+      }
     });
 
     if (!webApp) {
-      return res.status(404).json({ error: "Site not found" });
+      return res.status(404).json({
+        success: false,
+        error: "Site not found"
+      });
     }
 
-    const config = await prisma.configuration.findUnique({
-      where: { id: webApp.configId },
-    });
+    // Use configData directly from WebApp for fastest response
+    const config = webApp.configData as any;
 
     if (!config) {
-      return res.status(404).json({ error: "Configuration not found" });
+      return res.status(404).json({
+        success: false,
+        error: "Configuration not found"
+      });
     }
+
+    // Flatten nested structure for frontend compatibility
+    const flatConfig = {
+      id: webApp.id,
+      userId: config.userId || "published",
+      businessName: config.business?.name || config.businessName || "",
+      businessType: config.business?.type || config.businessType || "",
+      location: config.business?.location || config.location || "",
+      slogan: config.business?.slogan || config.slogan || "",
+      uniqueDescription: config.business?.uniqueDescription || config.uniqueDescription || "",
+      template: config.design?.template || config.template || "modern",
+      primaryColor: config.design?.primaryColor || config.primaryColor || "#111827",
+      secondaryColor: config.design?.secondaryColor || config.secondaryColor || "#6B7280",
+      fontFamily: config.design?.fontFamily || config.fontFamily || "sans-serif",
+      backgroundColor: config.design?.backgroundColor || config.backgroundColor,
+      fontColor: config.design?.fontColor || config.fontColor,
+      headerFontSize: config.design?.headerFontSize || config.headerFontSize || 24,
+      logo: config.design?.logo || config.logo,
+      selectedPages: config.pages?.selected || config.selectedPages || ["home"],
+      customPages: config.pages?.custom || config.customPages || [],
+      openingHours: config.content?.openingHours || config.openingHours || {},
+      menuItems: config.content?.menuItems || config.menuItems || [],
+      gallery: config.content?.gallery || config.gallery || [],
+      reservationsEnabled: config.features?.reservationsEnabled ?? config.reservationsEnabled ?? false,
+      maxGuests: config.features?.maxGuests || config.maxGuests || 10,
+      onlineOrdering: config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
+      onlineStore: config.features?.onlineStore ?? config.onlineStore ?? false,
+      teamArea: config.features?.teamArea ?? config.teamArea ?? false,
+      contactMethods: config.contact?.methods || config.contactMethods || [],
+      socialMedia: config.contact?.social || config.socialMedia || {},
+      offers: config.offers || [],
+      offerBanner: config.offerBanner,
+      reservationButtonColor: config.reservationButtonColor,
+      reservationButtonTextColor: config.reservationButtonTextColor,
+      reservationButtonShape: config.reservationButtonShape,
+      homepageDishImageVisibility: config.homepageDishImageVisibility,
+      themeMode: config.themeMode,
+      templateThemes: config.templateThemes,
+      publishedAt: webApp.publishedAt,
+      updatedAt: webApp.updatedAt,
+      status: "published",
+    };
 
     return res.json({
       success: true,
-      data: config,
+      data: flatConfig,
     });
   } catch (error) {
     console.error("[Configurations] Get published site error:", error);
     return res.status(500).json({
+      success: false,
       error: "Failed to fetch published site",
     });
   }
