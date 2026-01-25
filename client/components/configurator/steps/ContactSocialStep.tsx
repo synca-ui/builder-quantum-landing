@@ -156,7 +156,9 @@ export function ContactSocialStep({
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">{t("contact.socialMedia")}</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-6">
+            {t("contact.socialMedia")}
+          </h3>
           <div className="space-y-4">
             {socialPlatforms.map((platform) => (
               <div key={platform.id}>

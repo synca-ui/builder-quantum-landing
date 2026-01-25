@@ -17,9 +17,9 @@ interface ReservationsStepProps {
 const DEFAULT_SLOTS = ["12:00", "13:00", "18:00", "19:00"];
 
 export function ReservationsStep({
-                                   nextStep,
-                                   prevStep,
-                                 }: ReservationsStepProps) {
+  nextStep,
+  prevStep,
+}: ReservationsStepProps) {
   const { t } = useTranslation();
 
   // Store Selectors (einzeln selektiert für Performance)
@@ -52,7 +52,7 @@ export function ReservationsStep({
 
   // FIX: Sichere Selektion der Button Shape
   const reservationButtonShape = useConfiguratorStore(
-    (s) => (s.features as any).reservationButtonShape || "rounded"
+    (s) => (s.features as any).reservationButtonShape || "rounded",
   );
 
   const updateTimeSlots = (slots: string[]) => {
@@ -81,9 +81,7 @@ export function ReservationsStep({
               <h3 className="text-lg font-bold text-gray-900 mb-2">
                 {t("reservations.enableReservations")}
               </h3>
-              <p className="text-gray-600">
-                {t("reservations.allowBooking")}
-              </p>
+              <p className="text-gray-600">{t("reservations.allowBooking")}</p>
             </div>
             <Button
               variant={reservationsEnabled ? "default" : "outline"}
@@ -94,7 +92,9 @@ export function ReservationsStep({
                 reservationsEnabled ? "bg-teal-500 hover:bg-teal-600" : ""
               }
             >
-              {reservationsEnabled ? t("reservations.enabled") : t("reservations.disabled")}
+              {reservationsEnabled
+                ? t("reservations.enabled")
+                : t("reservations.disabled")}
             </Button>
           </div>
         </Card>
@@ -207,9 +207,21 @@ export function ReservationsStep({
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "rounded", nameKey: "reservations.rounded", class: "rounded-lg" },
-                      { id: "pill", nameKey: "reservations.pill", class: "rounded-full" },
-                      { id: "square", nameKey: "reservations.square", class: "rounded-none" },
+                      {
+                        id: "rounded",
+                        nameKey: "reservations.rounded",
+                        class: "rounded-lg",
+                      },
+                      {
+                        id: "pill",
+                        nameKey: "reservations.pill",
+                        class: "rounded-full",
+                      },
+                      {
+                        id: "square",
+                        nameKey: "reservations.square",
+                        class: "rounded-none",
+                      },
                     ].map((shape) => (
                       <Button
                         key={shape.id}
@@ -271,7 +283,9 @@ export function ReservationsStep({
                       size="sm"
                       onClick={() => {
                         const newSlots = isSelected
-                          ? selectedTimeSlots.filter((slot: string) => slot !== time)
+                          ? selectedTimeSlots.filter(
+                              (slot: string) => slot !== time,
+                            )
                           : [...selectedTimeSlots, time];
                         updateTimeSlots(newSlots);
                       }}

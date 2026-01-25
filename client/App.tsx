@@ -65,9 +65,18 @@ const App = () => (
                   <Route path="/" element={<HostAwareRoot />} />
                   <Route path="/mode-selection" element={<ModeSelection />} />
                   <Route path="/configurator" element={<Configurator />} />
-                  <Route path="/configurator/manual" element={<Configurator />} />
-                  <Route path="/configurator/auto" element={<AutoConfigurator />} />
-                  <Route path="/configurator/advanced" element={<AdvancedConfigurator />} />
+                  <Route
+                    path="/configurator/manual"
+                    element={<Configurator />}
+                  />
+                  <Route
+                    path="/configurator/auto"
+                    element={<AutoConfigurator />}
+                  />
+                  <Route
+                    path="/configurator/advanced"
+                    element={<AdvancedConfigurator />}
+                  />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route

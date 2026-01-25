@@ -533,13 +533,13 @@ export async function getPublishedSite(req: Request, res: Response) {
         configData: true,
         publishedAt: true,
         updatedAt: true,
-      }
+      },
     });
 
     if (!webApp) {
       return res.status(404).json({
         success: false,
-        error: "Site not found"
+        error: "Site not found",
       });
     }
 
@@ -549,7 +549,7 @@ export async function getPublishedSite(req: Request, res: Response) {
     if (!config) {
       return res.status(404).json({
         success: false,
-        error: "Configuration not found"
+        error: "Configuration not found",
       });
     }
 
@@ -561,23 +561,32 @@ export async function getPublishedSite(req: Request, res: Response) {
       businessType: config.business?.type || config.businessType || "",
       location: config.business?.location || config.location || "",
       slogan: config.business?.slogan || config.slogan || "",
-      uniqueDescription: config.business?.uniqueDescription || config.uniqueDescription || "",
+      uniqueDescription:
+        config.business?.uniqueDescription || config.uniqueDescription || "",
       template: config.design?.template || config.template || "modern",
-      primaryColor: config.design?.primaryColor || config.primaryColor || "#111827",
-      secondaryColor: config.design?.secondaryColor || config.secondaryColor || "#6B7280",
-      fontFamily: config.design?.fontFamily || config.fontFamily || "sans-serif",
+      primaryColor:
+        config.design?.primaryColor || config.primaryColor || "#111827",
+      secondaryColor:
+        config.design?.secondaryColor || config.secondaryColor || "#6B7280",
+      fontFamily:
+        config.design?.fontFamily || config.fontFamily || "sans-serif",
       backgroundColor: config.design?.backgroundColor || config.backgroundColor,
       fontColor: config.design?.fontColor || config.fontColor,
-      headerFontSize: config.design?.headerFontSize || config.headerFontSize || 24,
+      headerFontSize:
+        config.design?.headerFontSize || config.headerFontSize || 24,
       logo: config.design?.logo || config.logo,
       selectedPages: config.pages?.selected || config.selectedPages || ["home"],
       customPages: config.pages?.custom || config.customPages || [],
       openingHours: config.content?.openingHours || config.openingHours || {},
       menuItems: config.content?.menuItems || config.menuItems || [],
       gallery: config.content?.gallery || config.gallery || [],
-      reservationsEnabled: config.features?.reservationsEnabled ?? config.reservationsEnabled ?? false,
+      reservationsEnabled:
+        config.features?.reservationsEnabled ??
+        config.reservationsEnabled ??
+        false,
       maxGuests: config.features?.maxGuests || config.maxGuests || 10,
-      onlineOrdering: config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
+      onlineOrdering:
+        config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
       onlineStore: config.features?.onlineStore ?? config.onlineStore ?? false,
       teamArea: config.features?.teamArea ?? config.teamArea ?? false,
       contactMethods: config.contact?.methods || config.contactMethods || [],

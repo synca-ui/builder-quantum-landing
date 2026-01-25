@@ -62,9 +62,7 @@ export function MediaGalleryStep({
           <h3 className="text-lg font-bold text-gray-900 mb-2">
             {t("gallery.uploadPhotos")}
           </h3>
-          <p className="text-gray-600 mb-4">
-            {t("gallery.dragAndDrop")}
-          </p>
+          <p className="text-gray-600 mb-4">{t("gallery.dragAndDrop")}</p>
           <Button
             variant="outline"
             size="lg"
@@ -82,15 +80,15 @@ export function MediaGalleryStep({
             className="hidden"
             onChange={(e) => handleFileUpload(e.target.files)}
           />
-          <p className="text-xs text-gray-500 mt-4">
-            {t("gallery.sizeLimit")}
-          </p>
+          <p className="text-xs text-gray-500 mt-4">{t("gallery.sizeLimit")}</p>
         </div>
       </Card>
 
       {gallery.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">{t("gallery.yourGallery")}</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-6">
+            {t("gallery.yourGallery")}
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {gallery.map((image) => (
               <div key={image.id} className="relative group">

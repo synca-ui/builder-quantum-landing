@@ -16,7 +16,7 @@ export const subdomainsRouter = Router();
 export async function handleSubdomainRequest(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     const host = req.hostname || req.headers.host?.split(":")[0] || "";
@@ -54,7 +54,7 @@ export async function handleSubdomainRequest(
         id: true,
         subdomain: true,
         configData: true,
-        publishedAt: true
+        publishedAt: true,
       },
     });
 
@@ -108,7 +108,7 @@ subdomainsRouter.get("/:subdomain/config", async (req, res) => {
     if (!webApp) {
       return res.status(404).json({
         success: false,
-        error: "Site not found"
+        error: "Site not found",
       });
     }
 
@@ -125,24 +125,36 @@ subdomainsRouter.get("/:subdomain/config", async (req, res) => {
         businessType: config.business?.type || config.businessType || "",
         location: config.business?.location || config.location || "",
         slogan: config.business?.slogan || config.slogan || "",
-        uniqueDescription: config.business?.uniqueDescription || config.uniqueDescription || "",
+        uniqueDescription:
+          config.business?.uniqueDescription || config.uniqueDescription || "",
         template: config.design?.template || config.template || "modern",
-        primaryColor: config.design?.primaryColor || config.primaryColor || "#111827",
-        secondaryColor: config.design?.secondaryColor || config.secondaryColor || "#6B7280",
-        fontFamily: config.design?.fontFamily || config.fontFamily || "sans-serif",
-        backgroundColor: config.design?.backgroundColor || config.backgroundColor,
+        primaryColor:
+          config.design?.primaryColor || config.primaryColor || "#111827",
+        secondaryColor:
+          config.design?.secondaryColor || config.secondaryColor || "#6B7280",
+        fontFamily:
+          config.design?.fontFamily || config.fontFamily || "sans-serif",
+        backgroundColor:
+          config.design?.backgroundColor || config.backgroundColor,
         fontColor: config.design?.fontColor || config.fontColor,
-        headerFontSize: config.design?.headerFontSize || config.headerFontSize || 24,
+        headerFontSize:
+          config.design?.headerFontSize || config.headerFontSize || 24,
         logo: config.design?.logo || config.logo,
-        selectedPages: config.pages?.selected || config.selectedPages || ["home"],
+        selectedPages: config.pages?.selected ||
+          config.selectedPages || ["home"],
         customPages: config.pages?.custom || config.customPages || [],
         openingHours: config.content?.openingHours || config.openingHours || {},
         menuItems: config.content?.menuItems || config.menuItems || [],
         gallery: config.content?.gallery || config.gallery || [],
-        reservationsEnabled: config.features?.reservationsEnabled ?? config.reservationsEnabled ?? false,
+        reservationsEnabled:
+          config.features?.reservationsEnabled ??
+          config.reservationsEnabled ??
+          false,
         maxGuests: config.features?.maxGuests || config.maxGuests || 10,
-        onlineOrdering: config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
-        onlineStore: config.features?.onlineStore ?? config.onlineStore ?? false,
+        onlineOrdering:
+          config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
+        onlineStore:
+          config.features?.onlineStore ?? config.onlineStore ?? false,
         teamArea: config.features?.teamArea ?? config.teamArea ?? false,
         contactMethods: config.contact?.methods || config.contactMethods || [],
         socialMedia: config.contact?.social || config.socialMedia || {},
@@ -154,58 +166,116 @@ subdomainsRouter.get("/:subdomain/config", async (req, res) => {
         homepageDishImageVisibility: config.homepageDishImageVisibility,
         publishedAt: webApp.publishedAt,
         updatedAt: webApp.updatedAt,
-      }
+      },
     });
   } catch (error) {
     console.error("[Subdomains] Get config error:", error);
     return res.status(500).json({
       success: false,
-      error: "Failed to load site"
+      error: "Failed to load site",
     });
   }
 });
 
 // Reserved subdomains that can never be used
 const RESERVED_SUBDOMAINS = [
-  "www", "admin", "api", "app", "mail", "ftp", "blog", "shop", "store",
-  "help", "support", "info", "news", "test", "demo", "staging", "dev",
-  "dashboard", "portal", "account", "accounts", "login", "signin", "signup",
-  "auth", "oauth", "static", "assets", "cdn", "media", "images", "img",
-  "files", "download", "downloads", "docs", "documentation", "status",
-  "health", "ping", "metrics", "analytics", "tracking", "webhook", "webhooks",
-  "graphql", "rest", "socket", "ws", "wss", "ssl", "secure", "maitr"
+  "www",
+  "admin",
+  "api",
+  "app",
+  "mail",
+  "ftp",
+  "blog",
+  "shop",
+  "store",
+  "help",
+  "support",
+  "info",
+  "news",
+  "test",
+  "demo",
+  "staging",
+  "dev",
+  "dashboard",
+  "portal",
+  "account",
+  "accounts",
+  "login",
+  "signin",
+  "signup",
+  "auth",
+  "oauth",
+  "static",
+  "assets",
+  "cdn",
+  "media",
+  "images",
+  "img",
+  "files",
+  "download",
+  "downloads",
+  "docs",
+  "documentation",
+  "status",
+  "health",
+  "ping",
+  "metrics",
+  "analytics",
+  "tracking",
+  "webhook",
+  "webhooks",
+  "graphql",
+  "rest",
+  "socket",
+  "ws",
+  "wss",
+  "ssl",
+  "secure",
+  "maitr",
 ];
 
 // Validate subdomain format
-function validateSubdomainFormat(subdomain: string): { valid: boolean; error?: string } {
+function validateSubdomainFormat(subdomain: string): {
+  valid: boolean;
+  error?: string;
+} {
   if (!subdomain) {
     return { valid: false, error: "Subdomain ist erforderlich" };
   }
-  
+
   if (subdomain.length < 3) {
     return { valid: false, error: "Mindestens 3 Zeichen erforderlich" };
   }
-  
+
   if (subdomain.length > 63) {
     return { valid: false, error: "Maximal 63 Zeichen erlaubt" };
   }
-  
+
   if (!/^[a-z0-9]/.test(subdomain)) {
-    return { valid: false, error: "Muss mit einem Buchstaben oder einer Zahl beginnen" };
+    return {
+      valid: false,
+      error: "Muss mit einem Buchstaben oder einer Zahl beginnen",
+    };
   }
-  
+
   if (!/[a-z0-9]$/.test(subdomain)) {
-    return { valid: false, error: "Muss mit einem Buchstaben oder einer Zahl enden" };
+    return {
+      valid: false,
+      error: "Muss mit einem Buchstaben oder einer Zahl enden",
+    };
   }
-  
+
   if (!/^[a-z0-9-]+$/.test(subdomain)) {
-    return { valid: false, error: "Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt" };
+    return {
+      valid: false,
+      error: "Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt",
+    };
   }
-  
+
   if (/--/.test(subdomain)) {
     return { valid: false, error: "Keine doppelten Bindestriche erlaubt" };
   }
-  
+
   return { valid: true };
 }
 
@@ -216,17 +286,17 @@ function validateSubdomainFormat(subdomain: string): { valid: boolean; error?: s
 subdomainsRouter.post("/validate", async (req, res) => {
   try {
     const { subdomain, userId } = req.body;
-    
+
     if (!subdomain) {
       return res.status(400).json({
         available: false,
         error: "Subdomain ist erforderlich",
       });
     }
-    
+
     // Normalize to lowercase
     const normalizedSubdomain = subdomain.toLowerCase().trim();
-    
+
     // 1. Format validation
     const formatValidation = validateSubdomainFormat(normalizedSubdomain);
     if (!formatValidation.valid) {
@@ -236,7 +306,7 @@ subdomainsRouter.post("/validate", async (req, res) => {
         error: formatValidation.error,
       });
     }
-    
+
     // 2. Check reserved list
     if (RESERVED_SUBDOMAINS.includes(normalizedSubdomain)) {
       return res.json({
@@ -246,13 +316,13 @@ subdomainsRouter.post("/validate", async (req, res) => {
         suggestions: generateSuggestions(normalizedSubdomain),
       });
     }
-    
+
     // 3. Check database for existing WebApp
     const existingWebApp = await prisma.webApp.findUnique({
       where: { subdomain: normalizedSubdomain },
       select: { id: true, userId: true },
     });
-    
+
     if (existingWebApp) {
       // If user owns this subdomain, it's available for them
       if (userId && existingWebApp.userId === userId) {
@@ -262,7 +332,7 @@ subdomainsRouter.post("/validate", async (req, res) => {
           message: "Diese Subdomain gehört Ihnen",
         });
       }
-      
+
       return res.json({
         available: false,
         reason: "taken",
@@ -270,17 +340,17 @@ subdomainsRouter.post("/validate", async (req, res) => {
         suggestions: generateSuggestions(normalizedSubdomain),
       });
     }
-    
+
     // 4. Check Configuration.selectedDomain for pending reservations
     const pendingConfig = await prisma.configuration.findFirst({
-      where: { 
+      where: {
         selectedDomain: normalizedSubdomain,
         status: { not: "archived" },
         ...(userId ? { userId: { not: userId } } : {}),
       },
       select: { id: true },
     });
-    
+
     if (pendingConfig) {
       return res.json({
         available: false,
@@ -289,14 +359,13 @@ subdomainsRouter.post("/validate", async (req, res) => {
         suggestions: generateSuggestions(normalizedSubdomain),
       });
     }
-    
+
     // 5. Subdomain is available!
     return res.json({
       available: true,
       subdomain: normalizedSubdomain,
       fullDomain: `${normalizedSubdomain}.maitr.de`,
     });
-    
   } catch (error) {
     console.error("[Subdomains] Validation error:", error);
     return res.status(500).json({
@@ -313,16 +382,16 @@ subdomainsRouter.post("/validate", async (req, res) => {
 subdomainsRouter.post("/reserve", async (req, res) => {
   try {
     const { subdomain, userId, configId } = req.body;
-    
+
     if (!subdomain || !userId || !configId) {
       return res.status(400).json({
         success: false,
         error: "subdomain, userId und configId sind erforderlich",
       });
     }
-    
+
     const normalizedSubdomain = subdomain.toLowerCase().trim();
-    
+
     // Validate format
     const formatValidation = validateSubdomainFormat(normalizedSubdomain);
     if (!formatValidation.valid) {
@@ -331,7 +400,7 @@ subdomainsRouter.post("/reserve", async (req, res) => {
         error: formatValidation.error,
       });
     }
-    
+
     // Check if reserved
     if (RESERVED_SUBDOMAINS.includes(normalizedSubdomain)) {
       return res.status(400).json({
@@ -339,31 +408,30 @@ subdomainsRouter.post("/reserve", async (req, res) => {
         error: "Diese Subdomain ist reserviert",
       });
     }
-    
+
     // Check if already taken by someone else
     const existingWebApp = await prisma.webApp.findUnique({
       where: { subdomain: normalizedSubdomain },
     });
-    
+
     if (existingWebApp && existingWebApp.userId !== userId) {
       return res.status(400).json({
         success: false,
         error: "Diese Subdomain ist bereits vergeben",
       });
     }
-    
+
     // Update configuration with reserved subdomain
     await prisma.configuration.update({
       where: { id: configId },
       data: { selectedDomain: normalizedSubdomain },
     });
-    
+
     return res.json({
       success: true,
       subdomain: normalizedSubdomain,
       fullDomain: `${normalizedSubdomain}.maitr.de`,
     });
-    
   } catch (error) {
     console.error("[Subdomains] Reservation error:", error);
     return res.status(500).json({
@@ -379,7 +447,7 @@ subdomainsRouter.post("/reserve", async (req, res) => {
 function generateSuggestions(subdomain: string): string[] {
   const year = new Date().getFullYear();
   const suggestions: string[] = [];
-  
+
   // Add common variations
   const variations = [
     `${subdomain}-${year}`,
@@ -388,13 +456,13 @@ function generateSuggestions(subdomain: string): string[] {
     `${subdomain}-online`,
     `${subdomain}-de`,
   ];
-  
+
   for (const variation of variations) {
     if (validateSubdomainFormat(variation).valid) {
       suggestions.push(variation);
     }
     if (suggestions.length >= 3) break;
   }
-  
+
   return suggestions;
 }

@@ -25,8 +25,8 @@ export function PhonePortalProvider({ children }: PropsWithChildren<{}>) {
         ref={rootRef}
         className="phone-portal-root h-full w-full overflow-y-auto overflow-x-hidden"
         style={{
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorY: 'contain'
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorY: "contain",
         }}
       />
       {children}

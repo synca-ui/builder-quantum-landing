@@ -1,10 +1,26 @@
 import React, { useState, useMemo, useCallback, memo } from "react";
 import { useConfiguratorStore } from "@/store/configuratorStore";
 import {
-  MapPin, Phone, Mail, Clock, Instagram, Facebook,
-  Coffee, Utensils, ShoppingBag, Menu, X,
-  Plus, ChevronRight, ChevronDown, Camera, ArrowRight,
-  Calendar, Users, CalendarCheck, ChevronLeft
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Instagram,
+  Facebook,
+  Coffee,
+  Utensils,
+  ShoppingBag,
+  Menu,
+  X,
+  Plus,
+  ChevronRight,
+  ChevronDown,
+  Camera,
+  ArrowRight,
+  Calendar,
+  Users,
+  CalendarCheck,
+  ChevronLeft,
 } from "lucide-react";
 import { ReservationButton } from "@/components/ui/ReservationButton";
 import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
@@ -25,16 +41,26 @@ function normalizeImageSrc(img: any): string {
 // --- HELPER: Header font size to tailwind class ---
 function getHeaderFontClass(size: string): string {
   switch (size) {
-    case 'xs': return 'text-[10px]';
-    case 'small': return 'text-xs';
-    case 'medium': return 'text-sm';
-    case 'large': return 'text-base';
-    case 'xl': return 'text-lg';
-    case '2xl': return 'text-xl';
-    case '3xl': return 'text-2xl';
-    case '4xl': return 'text-[28px]';
-    case '5xl': return 'text-[32px]';
-    default: return 'text-sm';
+    case "xs":
+      return "text-[10px]";
+    case "small":
+      return "text-xs";
+    case "medium":
+      return "text-sm";
+    case "large":
+      return "text-base";
+    case "xl":
+      return "text-lg";
+    case "2xl":
+      return "text-xl";
+    case "3xl":
+      return "text-2xl";
+    case "4xl":
+      return "text-[28px]";
+    case "5xl":
+      return "text-[32px]";
+    default:
+      return "text-sm";
   }
 }
 
@@ -72,13 +98,13 @@ const PreviewNav = memo(function PreviewNav({
   navClassName,
 }: PreviewNavProps) {
   const fontClass = getHeaderFontClass(headerFontSize);
-  
+
   return (
     <div
       className={navClassName}
       style={{
         backgroundColor: headerBackgroundColor,
-        color: headerFontColor
+        color: headerFontColor,
       }}
     >
       <div className="flex items-center gap-2 overflow-hidden">
@@ -93,7 +119,11 @@ const PreviewNav = memo(function PreviewNav({
             className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: `${headerFontColor}15` }}
           >
-            {businessType === 'cafe' ? <Coffee className="w-4 h-4" /> : <Utensils className="w-4 h-4" />}
+            {businessType === "cafe" ? (
+              <Coffee className="w-4 h-4" />
+            ) : (
+              <Utensils className="w-4 h-4" />
+            )}
           </div>
         )}
         <span
@@ -105,7 +135,10 @@ const PreviewNav = memo(function PreviewNav({
         </span>
       </div>
 
-      <div className="flex items-center gap-3 shrink-0" style={{ color: headerFontColor }}>
+      <div
+        className="flex items-center gap-3 shrink-0"
+        style={{ color: headerFontColor }}
+      >
         {onlineOrdering && (
           <div className="relative cursor-pointer">
             <ShoppingBag className="w-5 h-5 opacity-90" />
@@ -116,7 +149,10 @@ const PreviewNav = memo(function PreviewNav({
             )}
           </div>
         )}
-        <button onClick={onToggleMenu} className="p-1 active:scale-90 transition-transform">
+        <button
+          onClick={onToggleMenu}
+          className="p-1 active:scale-90 transition-transform"
+        >
           {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
@@ -142,9 +178,12 @@ const MenuOverlay = memo(function MenuOverlay({
   onNavigate,
 }: MenuOverlayProps) {
   if (!isOpen) return null;
-  
+
   return (
-    <div className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-md transition-opacity" onClick={onClose}>
+    <div
+      className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-md transition-opacity"
+      onClick={onClose}
+    >
       <div
         className="absolute right-0 top-0 bottom-0 w-3/4 bg-white p-6 pt-20 shadow-2xl h-full flex flex-col transform transition-transform duration-300"
         style={{ backgroundColor, color: fontColor }}
@@ -152,13 +191,15 @@ const MenuOverlay = memo(function MenuOverlay({
       >
         <h3 className="font-bold text-2xl mb-8 opacity-90">Menü</h3>
         <div className="space-y-4 flex-1 overflow-y-auto">
-          {['home', ...selectedPages].map(item => (
+          {["home", ...selectedPages].map((item) => (
             <div
               key={item}
               className="text-lg font-medium cursor-pointer flex justify-between items-center group pb-3 border-b border-current/10"
               onClick={() => onNavigate(item)}
             >
-              <span className="capitalize">{item === 'home' ? 'Startseite' : item}</span>
+              <span className="capitalize">
+                {item === "home" ? "Startseite" : item}
+              </span>
               <ChevronRight className="w-4 h-4 opacity-50" />
             </div>
           ))}
@@ -237,7 +278,9 @@ const DishModal = memo(function DishModal({
                       key={idx}
                       onClick={() => onSetImageIndex(idx)}
                       className={`w-2 h-2 rounded-full transition-all ${
-                        idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'
+                        idx === currentImageIndex
+                          ? "bg-white w-4"
+                          : "bg-white/50"
                       }`}
                     />
                   ))}
@@ -267,17 +310,25 @@ const DishModal = memo(function DishModal({
         <div className="p-5 space-y-3">
           <div className="flex justify-between items-start gap-3">
             <h3 className="text-xl font-bold">{dish.name}</h3>
-            <span className="text-xl font-bold shrink-0" style={{ color: priceColor }}>
+            <span
+              className="text-xl font-bold shrink-0"
+              style={{ color: priceColor }}
+            >
               {dish.price}€
             </span>
           </div>
           {dish.description && (
-            <p className="text-sm opacity-80 leading-relaxed">{dish.description}</p>
+            <p className="text-sm opacity-80 leading-relaxed">
+              {dish.description}
+            </p>
           )}
 
           {onlineOrdering && (
             <button
-              onClick={() => { onAddToCart(dish); onClose(); }}
+              onClick={() => {
+                onAddToCart(dish);
+                onClose();
+              }}
               className="w-full py-3 rounded-xl font-bold text-white shadow-lg mt-4 transition-transform active:scale-[0.98]"
               style={{ backgroundColor: primaryColor }}
             >
@@ -298,43 +349,70 @@ const DishModal = memo(function DishModal({
 export function TemplatePreviewContent() {
   // GRANULAR SELECTORS - select individual primitives to avoid reference issues
   // Business fields
-  const businessName = useConfiguratorStore((s) => s.business.name) || "Dein Geschäft";
-  const businessType = useConfiguratorStore((s) => s.business.type) || "restaurant";
+  const businessName =
+    useConfiguratorStore((s) => s.business.name) || "Dein Geschäft";
+  const businessType =
+    useConfiguratorStore((s) => s.business.type) || "restaurant";
   const location = useConfiguratorStore((s) => s.business.location);
   const slogan = useConfiguratorStore((s) => s.business.slogan);
-  const uniqueDescription = useConfiguratorStore((s) => s.business.uniqueDescription);
+  const uniqueDescription = useConfiguratorStore(
+    (s) => s.business.uniqueDescription,
+  );
   const logo = useConfiguratorStore((s) => s.business.logo);
 
   // Design fields
-  const template = useConfiguratorStore((s) => s.design.template) || "minimalist";
-  const primaryColor = useConfiguratorStore((s) => s.design.primaryColor) || "#2563EB";
-  const secondaryColor = useConfiguratorStore((s) => s.design.secondaryColor) || "#7C3AED";
-  const fontFamily = useConfiguratorStore((s) => s.design.fontFamily) || "sans-serif";
-  const backgroundColor = useConfiguratorStore((s) => s.design.backgroundColor) || "#FFFFFF";
-  const fontColor = useConfiguratorStore((s) => s.design.fontColor) || "#000000";
-  const priceColor = useConfiguratorStore((s) => (s.design as any).priceColor) || "#059669";
-  const headerFontColor = useConfiguratorStore((s) => (s.design as any).headerFontColor) || fontColor;
-  const headerFontSize = useConfiguratorStore((s) => (s.design as any).headerFontSize) || "medium";
-  const headerBackgroundColor = useConfiguratorStore((s) => (s.design as any).headerBackgroundColor) || backgroundColor;
+  const template =
+    useConfiguratorStore((s) => s.design.template) || "minimalist";
+  const primaryColor =
+    useConfiguratorStore((s) => s.design.primaryColor) || "#2563EB";
+  const secondaryColor =
+    useConfiguratorStore((s) => s.design.secondaryColor) || "#7C3AED";
+  const fontFamily =
+    useConfiguratorStore((s) => s.design.fontFamily) || "sans-serif";
+  const backgroundColor =
+    useConfiguratorStore((s) => s.design.backgroundColor) || "#FFFFFF";
+  const fontColor =
+    useConfiguratorStore((s) => s.design.fontColor) || "#000000";
+  const priceColor =
+    useConfiguratorStore((s) => (s.design as any).priceColor) || "#059669";
+  const headerFontColor =
+    useConfiguratorStore((s) => (s.design as any).headerFontColor) || fontColor;
+  const headerFontSize =
+    useConfiguratorStore((s) => (s.design as any).headerFontSize) || "medium";
+  const headerBackgroundColor =
+    useConfiguratorStore((s) => (s.design as any).headerBackgroundColor) ||
+    backgroundColor;
 
   // Content fields
   const menuItems = useConfiguratorStore((s) => s.content.menuItems) || [];
   const categories = useConfiguratorStore((s) => s.content.categories) || [];
   const gallery = useConfiguratorStore((s) => s.content.gallery) || [];
-  const openingHours = useConfiguratorStore((s) => s.content.openingHours) || {};
+  const openingHours =
+    useConfiguratorStore((s) => s.content.openingHours) || {};
 
   // Contact fields
-  const contactMethods = useConfiguratorStore((s) => s.contact.contactMethods) || [];
+  const contactMethods =
+    useConfiguratorStore((s) => s.contact.contactMethods) || [];
 
   // Feature fields
-  const onlineOrdering = useConfiguratorStore((s) => s.features.onlineOrderingEnabled);
-  const reservationsEnabled = useConfiguratorStore((s) => s.features.reservationsEnabled);
-  const reservationButtonColor = useConfiguratorStore((s) => s.features.reservationButtonColor) || primaryColor;
-  const reservationButtonTextColor = useConfiguratorStore((s) => s.features.reservationButtonTextColor) || "#FFFFFF";
-  const reservationButtonShape = useConfiguratorStore((s) => s.features.reservationButtonShape) || "rounded";
+  const onlineOrdering = useConfiguratorStore(
+    (s) => s.features.onlineOrderingEnabled,
+  );
+  const reservationsEnabled = useConfiguratorStore(
+    (s) => s.features.reservationsEnabled,
+  );
+  const reservationButtonColor =
+    useConfiguratorStore((s) => s.features.reservationButtonColor) ||
+    primaryColor;
+  const reservationButtonTextColor =
+    useConfiguratorStore((s) => s.features.reservationButtonTextColor) ||
+    "#FFFFFF";
+  const reservationButtonShape =
+    useConfiguratorStore((s) => s.features.reservationButtonShape) || "rounded";
 
   // Pages fields
-  const selectedPages = useConfiguratorStore((s) => s.pages.selectedPages) || [];
+  const selectedPages =
+    useConfiguratorStore((s) => s.pages.selectedPages) || [];
 
   // Local state
   const [previewState, setPreviewState] = useState({
@@ -343,7 +421,9 @@ export function TemplatePreviewContent() {
   });
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [hoursExpanded, setHoursExpanded] = useState(false);
-  const [activeMenuCategory, setActiveMenuCategory] = useState<string | null>(null);
+  const [activeMenuCategory, setActiveMenuCategory] = useState<string | null>(
+    null,
+  );
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -361,36 +441,40 @@ export function TemplatePreviewContent() {
   const nextImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex((prev) =>
-      prev < selectedDish.images!.length - 1 ? prev + 1 : 0
+      prev < selectedDish.images!.length - 1 ? prev + 1 : 0,
     );
   }, [selectedDish]);
 
   const prevImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex((prev) =>
-      prev > 0 ? prev - 1 : selectedDish.images!.length - 1
+      prev > 0 ? prev - 1 : selectedDish.images!.length - 1,
     );
   }, [selectedDish]);
 
   const toggleMenu = useCallback(() => {
-    setPreviewState(p => ({ ...p, menuOpen: !p.menuOpen }));
+    setPreviewState((p) => ({ ...p, menuOpen: !p.menuOpen }));
   }, []);
 
   const closeMenu = useCallback(() => {
-    setPreviewState(p => ({ ...p, menuOpen: false }));
+    setPreviewState((p) => ({ ...p, menuOpen: false }));
   }, []);
 
   const navigateToPage = useCallback((page: string) => {
-    setPreviewState(p => ({ ...p, activePage: page, menuOpen: false }));
+    setPreviewState((p) => ({ ...p, activePage: page, menuOpen: false }));
   }, []);
 
   const addToCart = useCallback((item: any) => {
-    setCartItems(prev => [...prev, item]);
+    setCartItems((prev) => [...prev, item]);
   }, []);
 
   // Style helpers
-  const fontClass = fontFamily === 'serif' ? 'font-serif' :
-    fontFamily === 'mono' ? 'font-mono' : 'font-sans';
+  const fontClass =
+    fontFamily === "serif"
+      ? "font-serif"
+      : fontFamily === "mono"
+        ? "font-mono"
+        : "font-sans";
 
   // Memoized styles
   const styles = useMemo(() => {
@@ -407,23 +491,29 @@ export function TemplatePreviewContent() {
 
     switch (template) {
       case "modern":
-        return { 
+        return {
           ...base,
-          wrapper: { background: `linear-gradient(135deg, ${backgroundColor} 0%, ${secondaryColor} 100%)`, color: fontColor },
-          itemCard: "bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-lg mb-4",
+          wrapper: {
+            background: `linear-gradient(135deg, ${backgroundColor} 0%, ${secondaryColor} 100%)`,
+            color: fontColor,
+          },
+          itemCard:
+            "bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-lg mb-4",
         };
       case "stylish":
-        return { 
+        return {
           ...base,
-          itemCard: "bg-white rounded-xl p-4 shadow-lg border border-gray-100 mb-4 transform hover:scale-[1.01] transition-transform",
+          itemCard:
+            "bg-white rounded-xl p-4 shadow-lg border border-gray-100 mb-4 transform hover:scale-[1.01] transition-transform",
         };
       case "cozy":
-        return { 
+        return {
           ...base,
-          itemCard: "bg-white/90 rounded-[2rem] p-5 border border-amber-100/50 shadow-md mb-5",
+          itemCard:
+            "bg-white/90 rounded-[2rem] p-5 border border-amber-100/50 shadow-md mb-5",
         };
-      default: 
-        return { 
+      default:
+        return {
           ...base,
           itemCard: "py-5 border-b border-current/10 last:border-0",
         };
@@ -432,10 +522,11 @@ export function TemplatePreviewContent() {
 
   // Content renderers
   const renderContent = () => {
-    if (previewState.activePage === 'home') {
-      const displayItems = menuItems.length > 0
-        ? menuItems
-        : getBusinessTypeDefaults(businessType).menuItems;
+    if (previewState.activePage === "home") {
+      const displayItems =
+        menuItems.length > 0
+          ? menuItems
+          : getBusinessTypeDefaults(businessType).menuItems;
 
       return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -443,8 +534,12 @@ export function TemplatePreviewContent() {
             <h1 className={styles.titleClass} style={{ color: fontColor }}>
               {slogan || "Willkommen"}
             </h1>
-            <p className={`${styles.bodyClass} max-w-[90%] text-center`} style={{ color: fontColor }}>
-              {uniqueDescription || "Wir bieten beste Qualität und eine tolle Atmosphäre."}
+            <p
+              className={`${styles.bodyClass} max-w-[90%] text-center`}
+              style={{ color: fontColor }}
+            >
+              {uniqueDescription ||
+                "Wir bieten beste Qualität und eine tolle Atmosphäre."}
             </p>
 
             {onlineOrdering && (
@@ -452,7 +547,7 @@ export function TemplatePreviewContent() {
                 <button
                   className="w-full py-3 px-6 font-bold text-base rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all bg-black text-white"
                   style={{ backgroundColor: primaryColor }}
-                  onClick={() => navigateToPage('menu')}
+                  onClick={() => navigateToPage("menu")}
                 >
                   Bestellen
                 </button>
@@ -462,8 +557,16 @@ export function TemplatePreviewContent() {
 
           <div>
             <div className="flex items-center justify-between mb-4 px-1">
-              <h3 className="uppercase tracking-widest font-bold opacity-60 text-[10px]" style={{ color: fontColor }}>Highlights</h3>
-              <span className="text-[10px] font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1" onClick={() => navigateToPage('menu')}>
+              <h3
+                className="uppercase tracking-widest font-bold opacity-60 text-[10px]"
+                style={{ color: fontColor }}
+              >
+                Highlights
+              </h3>
+              <span
+                className="text-[10px] font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1"
+                onClick={() => navigateToPage("menu")}
+              >
                 Alle <ArrowRight className="w-3 h-3" />
               </span>
             </div>
@@ -477,10 +580,25 @@ export function TemplatePreviewContent() {
                 >
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className={styles.itemNameClass} style={{ color: fontColor }}>{item.name}</div>
-                      <div className={styles.itemDescClass} style={{ color: fontColor }}>{item.description}</div>
+                      <div
+                        className={styles.itemNameClass}
+                        style={{ color: fontColor }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        className={styles.itemDescClass}
+                        style={{ color: fontColor }}
+                      >
+                        {item.description}
+                      </div>
                     </div>
-                    <div className={styles.itemPriceClass} style={{ color: priceColor }}>{item.price}€</div>
+                    <div
+                      className={styles.itemPriceClass}
+                      style={{ color: priceColor }}
+                    >
+                      {item.price}€
+                    </div>
                   </div>
                 </div>
               ))}
@@ -494,7 +612,7 @@ export function TemplatePreviewContent() {
                 textColor={reservationButtonTextColor}
                 shape={reservationButtonShape as "rounded" | "pill" | "square"}
                 className="w-full shadow-lg"
-                onClick={() => navigateToPage('reservations')}
+                onClick={() => navigateToPage("reservations")}
               >
                 Tisch reservieren
               </ReservationButton>
@@ -510,22 +628,31 @@ export function TemplatePreviewContent() {
               <span className="text-xs font-medium">
                 {hoursExpanded ? "Öffnungszeiten" : "Heute: 09:00 - 22:00"}
               </span>
-              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${hoursExpanded ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-3 h-3 transition-transform duration-200 ${hoursExpanded ? "rotate-180" : ""}`}
+              />
             </div>
 
             {hoursExpanded && (
               <div className="mt-3 space-y-1.5 text-left max-w-[200px] mx-auto animate-in fade-in slide-in-from-top-2 duration-200">
                 {Object.keys(openingHours).length > 0 ? (
                   Object.entries(openingHours).map(([day, hours]: any) => (
-                    <div key={day} className="flex justify-between text-xs opacity-80">
+                    <div
+                      key={day}
+                      className="flex justify-between text-xs opacity-80"
+                    >
                       <span className="capitalize">{day}</span>
                       <span className="font-medium">
-                        {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
+                        {hours.closed
+                          ? "Geschlossen"
+                          : `${hours.open} - ${hours.close}`}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs italic opacity-50 text-center">Keine Zeiten hinterlegt</p>
+                  <p className="text-xs italic opacity-50 text-center">
+                    Keine Zeiten hinterlegt
+                  </p>
                 )}
               </div>
             )}
@@ -541,14 +668,16 @@ export function TemplatePreviewContent() {
       );
     }
 
-    if (previewState.activePage === 'menu') {
-      const displayCategories = (categories.length > 0)
-        ? categories
-        : getBusinessTypeDefaults(businessType).categories;
+    if (previewState.activePage === "menu") {
+      const displayCategories =
+        categories.length > 0
+          ? categories
+          : getBusinessTypeDefaults(businessType).categories;
 
-      const allItems = menuItems.length > 0
-        ? menuItems
-        : getBusinessTypeDefaults(businessType).menuItems;
+      const allItems =
+        menuItems.length > 0
+          ? menuItems
+          : getBusinessTypeDefaults(businessType).menuItems;
 
       const filteredMenuItems = activeMenuCategory
         ? allItems.filter((item: any) => item.category === activeMenuCategory)
@@ -561,9 +690,15 @@ export function TemplatePreviewContent() {
             <button
               onClick={() => setActiveMenuCategory(null)}
               className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${
-                activeMenuCategory === null ? 'shadow-md' : 'border border-current/20 opacity-70'
+                activeMenuCategory === null
+                  ? "shadow-md"
+                  : "border border-current/20 opacity-70"
               }`}
-              style={activeMenuCategory === null ? { backgroundColor: fontColor, color: backgroundColor } : {}}
+              style={
+                activeMenuCategory === null
+                  ? { backgroundColor: fontColor, color: backgroundColor }
+                  : {}
+              }
             >
               Alle
             </button>
@@ -572,9 +707,15 @@ export function TemplatePreviewContent() {
                 key={cat}
                 onClick={() => setActiveMenuCategory(cat)}
                 className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${
-                  activeMenuCategory === cat ? 'shadow-md' : 'border border-current/20 opacity-70'
+                  activeMenuCategory === cat
+                    ? "shadow-md"
+                    : "border border-current/20 opacity-70"
                 }`}
-                style={activeMenuCategory === cat ? { backgroundColor: fontColor, color: backgroundColor } : {}}
+                style={
+                  activeMenuCategory === cat
+                    ? { backgroundColor: fontColor, color: backgroundColor }
+                    : {}
+                }
               >
                 {cat}
               </button>
@@ -590,16 +731,37 @@ export function TemplatePreviewContent() {
                 >
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className={styles.itemNameClass} style={{ color: fontColor }}>{item.name}</div>
-                      <div className={styles.itemDescClass} style={{ color: fontColor }}>{item.description}</div>
+                      <div
+                        className={styles.itemNameClass}
+                        style={{ color: fontColor }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        className={styles.itemDescClass}
+                        style={{ color: fontColor }}
+                      >
+                        {item.description}
+                      </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 pl-2">
-                      <div className={styles.itemPriceClass} style={{ color: priceColor }}>{item.price || "9.50"}€</div>
+                      <div
+                        className={styles.itemPriceClass}
+                        style={{ color: priceColor }}
+                      >
+                        {item.price || "9.50"}€
+                      </div>
                       {onlineOrdering && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(item);
+                          }}
                           className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md"
-                          style={{ backgroundColor: primaryColor, color: '#FFF' }}
+                          style={{
+                            backgroundColor: primaryColor,
+                            color: "#FFF",
+                          }}
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -618,7 +780,7 @@ export function TemplatePreviewContent() {
       );
     }
 
-    if (previewState.activePage === 'contact') {
+    if (previewState.activePage === "contact") {
       return (
         <div className="space-y-8 animate-in fade-in duration-300">
           <h2 className={styles.titleClass}>Kontakt</h2>
@@ -626,33 +788,56 @@ export function TemplatePreviewContent() {
             <div className="space-y-6">
               {location && (
                 <div className="flex items-start gap-4">
-                  <div className="mt-1 p-2 bg-current/5 rounded-full"><MapPin className="w-4 h-4" /></div>
+                  <div className="mt-1 p-2 bg-current/5 rounded-full">
+                    <MapPin className="w-4 h-4" />
+                  </div>
                   <div>
-                    <div className="font-bold text-sm mb-1 opacity-90">Adresse</div>
+                    <div className="font-bold text-sm mb-1 opacity-90">
+                      Adresse
+                    </div>
                     <div className={styles.bodyClass}>{location}</div>
                   </div>
                 </div>
               )}
               {contactMethods.map((m: any, i: number) => (
                 <div key={i} className="flex items-center gap-4">
-                  <div className="p-2 bg-current/5 rounded-full">{m.type === 'phone' ? <Phone className="w-4 h-4" /> : <Mail className="w-4 h-4" />}</div>
+                  <div className="p-2 bg-current/5 rounded-full">
+                    {m.type === "phone" ? (
+                      <Phone className="w-4 h-4" />
+                    ) : (
+                      <Mail className="w-4 h-4" />
+                    )}
+                  </div>
                   <div className={styles.bodyClass}>{m.value}</div>
                 </div>
               ))}
             </div>
           </div>
           <div>
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Clock className="w-5 h-5 opacity-70" /> Öffnungszeiten</h3>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 opacity-70" /> Öffnungszeiten
+            </h3>
             <div className="space-y-2 opacity-90">
               {Object.keys(openingHours).length > 0 ? (
                 Object.entries(openingHours).map(([day, hours]: any) => (
-                  <div key={day} className="flex justify-between text-xs py-2 border-b border-current/5 last:border-0">
-                    <span className="capitalize opacity-80 font-medium">{day}</span>
-                    <span className="font-bold">{hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}</span>
+                  <div
+                    key={day}
+                    className="flex justify-between text-xs py-2 border-b border-current/5 last:border-0"
+                  >
+                    <span className="capitalize opacity-80 font-medium">
+                      {day}
+                    </span>
+                    <span className="font-bold">
+                      {hours.closed
+                        ? "Geschlossen"
+                        : `${hours.open} - ${hours.close}`}
+                    </span>
                   </div>
                 ))
               ) : (
-                <div className="text-xs opacity-60 italic">Keine Zeiten hinterlegt.</div>
+                <div className="text-xs opacity-60 italic">
+                  Keine Zeiten hinterlegt.
+                </div>
               )}
             </div>
           </div>
@@ -664,37 +849,60 @@ export function TemplatePreviewContent() {
       );
     }
 
-    if (previewState.activePage === 'gallery') {
+    if (previewState.activePage === "gallery") {
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <h2 className={styles.titleClass}>Galerie</h2>
           <div className="grid grid-cols-2 gap-3">
-            {(gallery.length > 0 ? gallery : [1,2,3,4,5,6]).map((img: any, i: number) => (
-              <div key={i} className="aspect-square rounded-xl overflow-hidden bg-black/5 relative shadow-sm group">
-                {img.url ? <img src={normalizeImageSrc(img)} className="w-full h-full object-cover" alt="" /> : (
-                  <div className="w-full h-full flex items-center justify-center text-current/20"><Camera className="w-6 h-6" /></div>
-                )}
-              </div>
-            ))}
+            {(gallery.length > 0 ? gallery : [1, 2, 3, 4, 5, 6]).map(
+              (img: any, i: number) => (
+                <div
+                  key={i}
+                  className="aspect-square rounded-xl overflow-hidden bg-black/5 relative shadow-sm group"
+                >
+                  {img.url ? (
+                    <img
+                      src={normalizeImageSrc(img)}
+                      className="w-full h-full object-cover"
+                      alt=""
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-current/20">
+                      <Camera className="w-6 h-6" />
+                    </div>
+                  )}
+                </div>
+              ),
+            )}
           </div>
         </div>
       );
     }
 
-    if (previewState.activePage === 'reservations') {
+    if (previewState.activePage === "reservations") {
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primaryColor}20` }}>
-              <CalendarCheck className="w-8 h-8" style={{ color: primaryColor }} />
+            <div
+              className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: `${primaryColor}20` }}
+            >
+              <CalendarCheck
+                className="w-8 h-8"
+                style={{ color: primaryColor }}
+              />
             </div>
             <h2 className={styles.titleClass}>Reservierung</h2>
-            <p className={`${styles.bodyClass} opacity-70`}>Buchen Sie Ihren Tisch online</p>
+            <p className={`${styles.bodyClass} opacity-70`}>
+              Buchen Sie Ihren Tisch online
+            </p>
           </div>
 
           <div className="space-y-4 p-4 rounded-2xl border border-current/10 bg-white/5">
             <div>
-              <label className="block text-xs font-bold mb-2 opacity-70">Datum</label>
+              <label className="block text-xs font-bold mb-2 opacity-70">
+                Datum
+              </label>
               <div className="flex items-center gap-2 p-3 rounded-xl border border-current/10 bg-white/50">
                 <Calendar className="w-4 h-4 opacity-50" />
                 <span className="text-sm">Datum wählen...</span>
@@ -702,7 +910,9 @@ export function TemplatePreviewContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-2 opacity-70">Uhrzeit</label>
+              <label className="block text-xs font-bold mb-2 opacity-70">
+                Uhrzeit
+              </label>
               <div className="flex items-center gap-2 p-3 rounded-xl border border-current/10 bg-white/50">
                 <Clock className="w-4 h-4 opacity-50" />
                 <span className="text-sm">Zeit wählen...</span>
@@ -710,7 +920,9 @@ export function TemplatePreviewContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-2 opacity-70">Anzahl Gäste</label>
+              <label className="block text-xs font-bold mb-2 opacity-70">
+                Anzahl Gäste
+              </label>
               <div className="flex items-center gap-2 p-3 rounded-xl border border-current/10 bg-white/50">
                 <Users className="w-4 h-4 opacity-50" />
                 <span className="text-sm">2 Personen</span>
@@ -718,16 +930,22 @@ export function TemplatePreviewContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-2 opacity-70">Name</label>
+              <label className="block text-xs font-bold mb-2 opacity-70">
+                Name
+              </label>
               <div className="p-3 rounded-xl border border-current/10 bg-white/50">
                 <span className="text-sm opacity-50">Ihr Name...</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold mb-2 opacity-70">Telefon / E-Mail</label>
+              <label className="block text-xs font-bold mb-2 opacity-70">
+                Telefon / E-Mail
+              </label>
               <div className="p-3 rounded-xl border border-current/10 bg-white/50">
-                <span className="text-sm opacity-50">Kontakt für Bestätigung...</span>
+                <span className="text-sm opacity-50">
+                  Kontakt für Bestätigung...
+                </span>
               </div>
             </div>
           </div>
@@ -754,7 +972,11 @@ export function TemplatePreviewContent() {
       );
     }
 
-    return <div className="p-10 text-center opacity-50 pt-20">Seite nicht gefunden</div>;
+    return (
+      <div className="p-10 text-center opacity-50 pt-20">
+        Seite nicht gefunden
+      </div>
+    );
   };
 
   return (
@@ -775,7 +997,7 @@ export function TemplatePreviewContent() {
         cartCount={cartItems.length}
         menuOpen={previewState.menuOpen}
         onToggleMenu={toggleMenu}
-        onNavigateHome={() => navigateToPage('home')}
+        onNavigateHome={() => navigateToPage("home")}
         navClassName={styles.nav}
       />
 
@@ -793,13 +1015,11 @@ export function TemplatePreviewContent() {
       <div
         className="flex-1 overflow-y-auto no-scrollbar scroll-smooth relative z-10"
         style={{
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorY: 'contain'
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorY: "contain",
         }}
       >
-        <div className={styles.page}>
-          {renderContent()}
-        </div>
+        <div className={styles.page}>{renderContent()}</div>
         <div className="h-20 w-full" />
       </div>
 

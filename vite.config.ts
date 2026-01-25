@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./client"), // Alias for 'client' directory
       "@shared": path.resolve(__dirname, "./shared"), // Alias for 'shared' directory
       // Force single React instance to prevent duplicate React issues
-      "react": path.resolve(__dirname, "./node_modules/react"),
+      react: path.resolve(__dirname, "./node_modules/react"),
       "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
     dedupe: ["react", "react-dom"],
@@ -58,7 +58,7 @@ function expressPlugin(): Plugin {
 
         // Add the Express app as middleware to Vite dev server
         server.middlewares.use(app);
-      }
-    }
+      };
+    },
   };
 }

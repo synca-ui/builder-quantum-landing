@@ -146,7 +146,9 @@ export function PreviewAdjustmentsStep({
         <div className="lg:col-span-2">
           <div className="bg-gray-100 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">{t("nav.livePreview")}</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                {t("nav.livePreview")}
+              </h3>
               <div className="flex space-x-2">
                 <Button
                   variant={previewMode === "mobile" ? "default" : "outline"}
@@ -172,7 +174,9 @@ export function PreviewAdjustmentsStep({
                     {TemplatePreviewContent ? (
                       <TemplatePreviewContent />
                     ) : (
-                      <div className="p-4 text-center text-gray-500">Preview</div>
+                      <div className="p-4 text-center text-gray-500">
+                        Preview
+                      </div>
                     )}
                   </PhonePortal>
                 </LivePhoneFrame>

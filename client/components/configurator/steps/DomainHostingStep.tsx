@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@clerk/clerk-react";
-import { ArrowLeft, ChevronRight, Zap, Globe, Check, X, Loader2, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Zap,
+  Globe,
+  Check,
+  X,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,7 +38,7 @@ interface SubdomainValidationResult {
 // Check subdomain availability via API
 async function checkSubdomainAvailability(
   subdomain: string,
-  userId?: string | null
+  userId?: string | null,
 ): Promise<SubdomainValidationResult> {
   try {
     const response = await fetch("/api/subdomains/validate", {
@@ -53,7 +62,14 @@ async function checkSubdomainAvailability(
   }
 }
 
-type ValidationStatus = "idle" | "checking" | "available" | "taken" | "invalid" | "reserved" | "owned";
+type ValidationStatus =
+  | "idle"
+  | "checking"
+  | "available"
+  | "taken"
+  | "invalid"
+  | "reserved"
+  | "owned";
 
 export function DomainHostingStep({
   nextStep,
@@ -74,9 +90,12 @@ export function DomainHostingStep({
   ]);
 
   // Subdomain validation state
-  const [validationStatus, setValidationStatus] = useState<ValidationStatus>("idle");
+  const [validationStatus, setValidationStatus] =
+    useState<ValidationStatus>("idle");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [validationSuggestions, setValidationSuggestions] = useState<string[]>([]);
+  const [validationSuggestions, setValidationSuggestions] = useState<string[]>(
+    [],
+  );
   const [lastCheckedSubdomain, setLastCheckedSubdomain] = useState<string>("");
 
   const hasDomain = business.domain?.hasDomain || false;
@@ -85,54 +104,68 @@ export function DomainHostingStep({
   const baseHost = getBaseHost ? getBaseHost() : "maitr.de";
 
   // Generate subdomain from business name if not set
-  const currentSubdomain = selectedDomain || business.name.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/--+/g, "-");
+  const currentSubdomain =
+    selectedDomain ||
+    business.name
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/--+/g, "-");
 
   const displayDomain = `${currentSubdomain}.${baseHost}`;
 
   // Debounced subdomain validation using real API
-  const validateAndCheckSubdomain = useCallback(async (subdomain: string) => {
-    if (!subdomain) {
-      setValidationStatus("idle");
+  const validateAndCheckSubdomain = useCallback(
+    async (subdomain: string) => {
+      if (!subdomain) {
+        setValidationStatus("idle");
+        setValidationError(null);
+        setValidationSuggestions([]);
+        return;
+      }
+
+      // Basic format check before API call
+      if (subdomain.length < 3) {
+        setValidationStatus("invalid");
+        setValidationError("Mindestens 3 Zeichen erforderlich");
+        setValidationSuggestions([]);
+        return;
+      }
+
+      // Check availability via API
+      setValidationStatus("checking");
       setValidationError(null);
       setValidationSuggestions([]);
-      return;
-    }
 
-    // Basic format check before API call
-    if (subdomain.length < 3) {
-      setValidationStatus("invalid");
-      setValidationError("Mindestens 3 Zeichen erforderlich");
-      setValidationSuggestions([]);
-      return;
-    }
+      const result = await checkSubdomainAvailability(subdomain, userId);
 
-    // Check availability via API
-    setValidationStatus("checking");
-    setValidationError(null);
-    setValidationSuggestions([]);
-
-    const result = await checkSubdomainAvailability(subdomain, userId);
-
-    // Only update if this is still the current subdomain
-    if (subdomain === currentSubdomain) {
-      if (result.available) {
-        setValidationStatus(result.reason === "owned" ? "owned" : "available");
-        setValidationError(null);
-      } else {
-        // Map API reason to status
-        const statusMap: Record<string, ValidationStatus> = {
-          invalid: "invalid",
-          reserved: "reserved",
-          taken: "taken",
-          pending: "taken",
-        };
-        setValidationStatus(statusMap[result.reason || "invalid"] || "invalid");
-        setValidationError(result.error || "Diese Subdomain ist nicht verfügbar");
-        setValidationSuggestions(result.suggestions || []);
+      // Only update if this is still the current subdomain
+      if (subdomain === currentSubdomain) {
+        if (result.available) {
+          setValidationStatus(
+            result.reason === "owned" ? "owned" : "available",
+          );
+          setValidationError(null);
+        } else {
+          // Map API reason to status
+          const statusMap: Record<string, ValidationStatus> = {
+            invalid: "invalid",
+            reserved: "reserved",
+            taken: "taken",
+            pending: "taken",
+          };
+          setValidationStatus(
+            statusMap[result.reason || "invalid"] || "invalid",
+          );
+          setValidationError(
+            result.error || "Diese Subdomain ist nicht verfügbar",
+          );
+          setValidationSuggestions(result.suggestions || []);
+        }
+        setLastCheckedSubdomain(subdomain);
       }
-      setLastCheckedSubdomain(subdomain);
-    }
-  }, [currentSubdomain, userId]);
+    },
+    [currentSubdomain, userId],
+  );
 
   // Debounce effect - also validates on mount if subdomain exists
   useEffect(() => {
@@ -151,7 +184,13 @@ export function DomainHostingStep({
 
       return () => clearTimeout(timer);
     }
-  }, [currentSubdomain, hasDomain, lastCheckedSubdomain, validateAndCheckSubdomain, validationStatus]);
+  }, [
+    currentSubdomain,
+    hasDomain,
+    lastCheckedSubdomain,
+    validateAndCheckSubdomain,
+    validationStatus,
+  ]);
 
   // Reset validation when switching to custom domain
   useEffect(() => {
@@ -165,14 +204,14 @@ export function DomainHostingStep({
   const handleSubdomainChange = (value: string) => {
     // Normalize: lowercase, remove invalid chars
     const normalized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
-    
+
     actions.business.setBusinessInfo({
       domain: {
         ...business.domain,
         selectedDomain: normalized,
       },
     });
-    
+
     // Reset validation when typing
     if (normalized !== lastCheckedSubdomain) {
       setValidationStatus("idle");
@@ -280,7 +319,9 @@ export function DomainHostingStep({
               <p className="text-gray-600 text-sm mb-4">
                 {t("domain.customDomainDesc")}
               </p>
-              <div className="text-blue-600 font-bold">{t("domain.fromPrice")}</div>
+              <div className="text-blue-600 font-bold">
+                {t("domain.fromPrice")}
+              </div>
               {hasDomain && (
                 <div className="mt-2">
                   <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center mx-auto">
@@ -298,7 +339,7 @@ export function DomainHostingStep({
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               Deine kostenlose Website-URL
             </h3>
-            
+
             {/* Subdomain Input with Validation */}
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
@@ -314,14 +355,21 @@ export function DomainHostingStep({
                     {renderValidationIcon()}
                   </div>
                 </div>
-                <span className="text-gray-500 font-mono text-sm shrink-0">.{baseHost}</span>
+                <span className="text-gray-500 font-mono text-sm shrink-0">
+                  .{baseHost}
+                </span>
               </div>
 
               {/* Validation Message */}
               {validationError && (
-                <div className={`flex items-center gap-2 text-sm ${
-                  validationStatus === "taken" || validationStatus === "reserved" ? "text-red-600" : "text-orange-600"
-                }`}>
+                <div
+                  className={`flex items-center gap-2 text-sm ${
+                    validationStatus === "taken" ||
+                    validationStatus === "reserved"
+                      ? "text-red-600"
+                      : "text-orange-600"
+                  }`}
+                >
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{validationError}</span>
                 </div>
@@ -350,36 +398,49 @@ export function DomainHostingStep({
 
               {/* Preview URL */}
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                <p className="text-xs text-gray-500 mb-1">Deine Website wird verfügbar sein unter:</p>
+                <p className="text-xs text-gray-500 mb-1">
+                  Deine Website wird verfügbar sein unter:
+                </p>
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-teal-500" />
-                  <span className={`font-mono text-sm font-medium ${
-                    validationStatus === "available" || validationStatus === "owned" ? "text-green-700" :
-                    validationStatus === "taken" || validationStatus === "reserved" || validationStatus === "invalid" ? "text-red-700" :
-                    "text-gray-700"
-                  }`}>
+                  <span
+                    className={`font-mono text-sm font-medium ${
+                      validationStatus === "available" ||
+                      validationStatus === "owned"
+                        ? "text-green-700"
+                        : validationStatus === "taken" ||
+                            validationStatus === "reserved" ||
+                            validationStatus === "invalid"
+                          ? "text-red-700"
+                          : "text-gray-700"
+                    }`}
+                  >
                     https://{displayDomain}
                   </span>
                 </div>
               </div>
 
               {/* Suggestions if taken/reserved (from API) */}
-              {(validationStatus === "taken" || validationStatus === "reserved") && validationSuggestions.length > 0 && (
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                  <p className="text-sm font-medium text-blue-900 mb-2">Alternativen:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {validationSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => handleSubdomainChange(suggestion)}
-                        className="px-3 py-1.5 text-xs font-mono bg-white border border-blue-200 rounded-full hover:bg-blue-100 transition-colors"
-                      >
-                        {suggestion}.{baseHost}
-                      </button>
-                    ))}
+              {(validationStatus === "taken" ||
+                validationStatus === "reserved") &&
+                validationSuggestions.length > 0 && (
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                    <p className="text-sm font-medium text-blue-900 mb-2">
+                      Alternativen:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {validationSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          onClick={() => handleSubdomainChange(suggestion)}
+                          className="px-3 py-1.5 text-xs font-mono bg-white border border-blue-200 rounded-full hover:bg-blue-100 transition-colors"
+                        >
+                          {suggestion}.{baseHost}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </Card>
         )}
@@ -415,7 +476,9 @@ export function DomainHostingStep({
                       variant="outline"
                       onClick={() => {
                         if (domainName) {
-                          alert(`Domain ${domainName} ist bereit zur Verbindung!`);
+                          alert(
+                            `Domain ${domainName} ist bereit zur Verbindung!`,
+                          );
                         }
                       }}
                     >
@@ -433,7 +496,8 @@ export function DomainHostingStep({
                       DNS-Konfiguration erforderlich
                     </h4>
                     <p className="text-sm text-blue-800 mb-3">
-                      Um deine Domain zu verbinden, füge diese DNS-Einträge hinzu:
+                      Um deine Domain zu verbinden, füge diese DNS-Einträge
+                      hinzu:
                     </p>
                     <div className="bg-white rounded border font-mono text-xs p-3 space-y-1">
                       <div>
@@ -526,9 +590,7 @@ export function DomainHostingStep({
                   <h4 className="font-semibold text-purple-900 text-sm mb-1">
                     Netlify
                   </h4>
-                  <p className="text-xs text-gray-600">
-                    Edge Functions & DNS
-                  </p>
+                  <p className="text-xs text-gray-600">Edge Functions & DNS</p>
                 </div>
                 <div className="bg-white rounded-lg p-3 border border-purple-100">
                   <h4 className="font-semibold text-purple-900 text-sm mb-1">

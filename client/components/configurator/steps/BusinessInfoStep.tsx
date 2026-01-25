@@ -154,7 +154,9 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                     className="w-full h-full object-cover"
                   />
                   <button
-                    onClick={() => businessActions.setBusinessInfo({ logo: undefined })}
+                    onClick={() =>
+                      businessActions.setBusinessInfo({ logo: undefined })
+                    }
                     className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
                   >
                     <X className="w-3 h-3" />
@@ -177,7 +179,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                     if (file) {
                       const url = URL.createObjectURL(file);
                       businessActions.setBusinessInfo({
-                        logo: { url, file }
+                        logo: { url, file },
                       });
                     }
                   }}
@@ -185,7 +187,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                 <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition-all cursor-pointer">
                   <Upload className="w-4 h-4 text-gray-500" />
                   <span className="text-sm text-gray-600">
-                    {business.logo?.url ? 'Logo ändern' : 'Logo hochladen'}
+                    {business.logo?.url ? "Logo ändern" : "Logo hochladen"}
                   </span>
                 </div>
               </label>

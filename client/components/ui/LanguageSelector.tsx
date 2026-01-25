@@ -8,17 +8,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LANGUAGES, type LanguageCode, changeLanguage, getCurrentLanguage } from "@/i18n";
+import {
+  LANGUAGES,
+  type LanguageCode,
+  changeLanguage,
+  getCurrentLanguage,
+} from "@/i18n";
 
 interface LanguageSelectorProps {
   variant?: "default" | "compact";
   className?: string;
 }
 
-export function LanguageSelector({ variant = "default", className = "" }: LanguageSelectorProps) {
+export function LanguageSelector({
+  variant = "default",
+  className = "",
+}: LanguageSelectorProps) {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const currentLang = getCurrentLanguage();
   const currentLangInfo = LANGUAGES[currentLang];
 
@@ -48,7 +56,9 @@ export function LanguageSelector({ variant = "default", className = "" }: Langua
               onClick={() => handleLanguageChange(code as LanguageCode)}
               className="flex items-center gap-2 cursor-pointer"
             >
-              <span className="text-sm font-semibold uppercase w-6">{code}</span>
+              <span className="text-sm font-semibold uppercase w-6">
+                {code}
+              </span>
               <span className="flex-1 text-gray-600">{lang.name}</span>
               {code === currentLang && (
                 <Check className="w-4 h-4 text-teal-500" />

@@ -195,16 +195,20 @@ export function WelcomePage({
             </p>
             <ul className="space-y-2 text-gray-700 mb-8">
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature1")}
+                <Check className="w-4 h-4 text-teal-600 mr-2" />{" "}
+                {t("welcome.feature1")}
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature2")}
+                <Check className="w-4 h-4 text-teal-600 mr-2" />{" "}
+                {t("welcome.feature2")}
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature3")}
+                <Check className="w-4 h-4 text-teal-600 mr-2" />{" "}
+                {t("welcome.feature3")}
               </li>
               <li className="flex items-center">
-                <Check className="w-4 h-4 text-teal-600 mr-2" /> {t("welcome.feature4")}
+                <Check className="w-4 h-4 text-teal-600 mr-2" />{" "}
+                {t("welcome.feature4")}
               </li>
             </ul>
 
@@ -216,7 +220,9 @@ export function WelcomePage({
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 text-white px-8 py-6 text-lg font-bold rounded-full shadow-xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
               >
                 <Sparkles className="w-5 h-5" />
-                {hasSaved ? t("welcome.continueProject") : t("welcome.getStarted")}
+                {hasSaved
+                  ? t("welcome.continueProject")
+                  : t("welcome.getStarted")}
                 <ChevronRight className="w-5 h-5" />
               </Button>
 
@@ -252,9 +258,7 @@ export function WelcomePage({
                 ) : (
                   <>
                     <Palette className="w-10 h-10 text-teal-500 mx-auto mb-3" />
-                    <p className="text-gray-600">
-                      {t("welcome.startHint")}
-                    </p>
+                    <p className="text-gray-600">{t("welcome.startHint")}</p>
                   </>
                 )}
               </div>

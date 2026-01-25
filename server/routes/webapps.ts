@@ -15,13 +15,59 @@ interface ValidationResult {
 }
 
 const RESERVED_SUBDOMAINS = [
-  "www", "admin", "api", "app", "mail", "ftp", "blog", "shop", "store",
-  "help", "support", "info", "news", "test", "demo", "staging", "dev",
-  "dashboard", "portal", "account", "accounts", "login", "signin", "signup",
-  "auth", "oauth", "static", "assets", "cdn", "media", "images", "img",
-  "files", "download", "downloads", "docs", "documentation", "status",
-  "health", "ping", "metrics", "analytics", "tracking", "webhook", "webhooks",
-  "graphql", "rest", "socket", "ws", "wss", "ssl", "secure", "maitr"
+  "www",
+  "admin",
+  "api",
+  "app",
+  "mail",
+  "ftp",
+  "blog",
+  "shop",
+  "store",
+  "help",
+  "support",
+  "info",
+  "news",
+  "test",
+  "demo",
+  "staging",
+  "dev",
+  "dashboard",
+  "portal",
+  "account",
+  "accounts",
+  "login",
+  "signin",
+  "signup",
+  "auth",
+  "oauth",
+  "static",
+  "assets",
+  "cdn",
+  "media",
+  "images",
+  "img",
+  "files",
+  "download",
+  "downloads",
+  "docs",
+  "documentation",
+  "status",
+  "health",
+  "ping",
+  "metrics",
+  "analytics",
+  "tracking",
+  "webhook",
+  "webhooks",
+  "graphql",
+  "rest",
+  "socket",
+  "ws",
+  "wss",
+  "ssl",
+  "secure",
+  "maitr",
 ];
 
 function validatePublishData(config: any, subdomain: string): ValidationResult {
@@ -46,8 +92,13 @@ function validatePublishData(config: any, subdomain: string): ValidationResult {
   // Required: Valid subdomain
   if (!subdomain || subdomain.length < 3) {
     errors.push("Subdomain muss mindestens 3 Zeichen haben");
-  } else if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(subdomain) && subdomain.length > 2) {
-    errors.push("Subdomain darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten");
+  } else if (
+    !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(subdomain) &&
+    subdomain.length > 2
+  ) {
+    errors.push(
+      "Subdomain darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten",
+    );
   } else if (RESERVED_SUBDOMAINS.includes(subdomain)) {
     errors.push("Diese Subdomain ist reserviert");
   }
@@ -64,7 +115,7 @@ function validatePublishData(config: any, subdomain: string): ValidationResult {
   return {
     valid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 }
 
@@ -151,7 +202,7 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         error: "subdomain und config sind erforderlich",
-        stage: "validation"
+        stage: "validation",
       });
     }
 
@@ -167,7 +218,7 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
         error: "Validierung fehlgeschlagen",
         errors: validation.errors,
         warnings: validation.warnings,
-        stage: "validation"
+        stage: "validation",
       });
     }
 
@@ -176,7 +227,7 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
 
     const existingWebApp = await prisma.webApp.findUnique({
       where: { subdomain },
-      select: { id: true, userId: true, configId: true }
+      select: { id: true, userId: true, configId: true },
     });
 
     // Allow update if user owns the subdomain
@@ -184,7 +235,7 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       return res.status(409).json({
         success: false,
         error: "Diese Subdomain ist bereits vergeben",
-        stage: "subdomain_check"
+        stage: "subdomain_check",
       });
     }
 
@@ -193,15 +244,21 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
 
     let businessId: string | undefined;
     try {
-      const businessName = config?.business?.name || config?.businessName || "Unnamed Business";
+      const businessName =
+        config?.business?.name || config?.businessName || "Unnamed Business";
       const businessSetup = await ensureUserBusiness(
         userId,
         businessName,
         undefined,
         {
-          primaryColor: config?.design?.primaryColor || config?.primaryColor || "#000000",
-          secondaryColor: config?.design?.secondaryColor || config?.secondaryColor || "#ffffff",
-          fontFamily: config?.design?.fontFamily || config?.fontFamily || "sans",
+          primaryColor:
+            config?.design?.primaryColor || config?.primaryColor || "#000000",
+          secondaryColor:
+            config?.design?.secondaryColor ||
+            config?.secondaryColor ||
+            "#ffffff",
+          fontFamily:
+            config?.design?.fontFamily || config?.fontFamily || "sans",
         },
       );
       businessId = businessSetup.businessId;
@@ -225,13 +282,17 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       businessType: config?.business?.type || config?.businessType || "",
       location: config?.business?.location || config?.location || "",
       slogan: config?.business?.slogan || config?.slogan || "",
-      uniqueDescription: config?.business?.uniqueDescription || config?.uniqueDescription || "",
+      uniqueDescription:
+        config?.business?.uniqueDescription || config?.uniqueDescription || "",
 
       // Design
       template: config?.design?.template || config?.template || "",
-      primaryColor: config?.design?.primaryColor || config?.primaryColor || "#111827",
-      secondaryColor: config?.design?.secondaryColor || config?.secondaryColor || "#6B7280",
-      fontFamily: config?.design?.fontFamily || config?.fontFamily || "sans-serif",
+      primaryColor:
+        config?.design?.primaryColor || config?.primaryColor || "#111827",
+      secondaryColor:
+        config?.design?.secondaryColor || config?.secondaryColor || "#6B7280",
+      fontFamily:
+        config?.design?.fontFamily || config?.fontFamily || "sans-serif",
       headerFontSize: config?.design?.headerFontSize || 24,
 
       // Content
@@ -240,10 +301,15 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       openingHours: config?.content?.openingHours || config?.openingHours || {},
 
       // Features
-      reservationsEnabled: config?.features?.reservationsEnabled ?? config?.reservationsEnabled ?? false,
+      reservationsEnabled:
+        config?.features?.reservationsEnabled ??
+        config?.reservationsEnabled ??
+        false,
       maxGuests: config?.features?.maxGuests || config?.maxGuests || 10,
-      onlineOrdering: config?.features?.onlineOrdering ?? config?.onlineOrdering ?? false,
-      onlineStore: config?.features?.onlineStore ?? config?.onlineStore ?? false,
+      onlineOrdering:
+        config?.features?.onlineOrdering ?? config?.onlineOrdering ?? false,
+      onlineStore:
+        config?.features?.onlineStore ?? config?.onlineStore ?? false,
       teamArea: config?.features?.teamArea ?? config?.teamArea ?? false,
 
       // Contact
@@ -253,7 +319,8 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       socialMedia: config?.contact?.social || config?.socialMedia || {},
 
       // Pages
-      selectedPages: config?.pages?.selected || config?.selectedPages || ["home"],
+      selectedPages: config?.pages?.selected ||
+        config?.selectedPages || ["home"],
       customPages: config?.pages?.custom || config?.customPages || [],
 
       // SEO
@@ -309,11 +376,19 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
           userId,
           configId: configId || `temp-${Date.now()}`,
           subdomain,
-          configData: { ...config, ...flatConfig, _publishedAt: now.toISOString() },
+          configData: {
+            ...config,
+            ...flatConfig,
+            _publishedAt: now.toISOString(),
+          },
           publishedAt: now,
         },
         update: {
-          configData: { ...config, ...flatConfig, _publishedAt: now.toISOString() },
+          configData: {
+            ...config,
+            ...flatConfig,
+            _publishedAt: now.toISOString(),
+          },
           publishedAt: now,
           updatedAt: now,
         },
@@ -338,20 +413,22 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       publishedAt: now.toISOString(),
       elapsed,
       warnings: validation.warnings,
-      stage: "complete"
+      stage: "complete",
     });
-
   } catch (error) {
     console.error("[Publish] Fatal error:", error);
-    await audit("webapp_publish_failed", "unknown", false,
-      error instanceof Error ? error.message : "Unknown error"
+    await audit(
+      "webapp_publish_failed",
+      "unknown",
+      false,
+      error instanceof Error ? error.message : "Unknown error",
     );
 
     return res.status(500).json({
       success: false,
       error: "Veröffentlichung fehlgeschlagen",
       message: error instanceof Error ? error.message : "Unbekannter Fehler",
-      stage: "error"
+      stage: "error",
     });
   }
 });
@@ -368,11 +445,18 @@ webAppsRouter.post("/apps/legacy-publish", async (req, res) => {
   const previewUrl = `${process.env.SITE_URL || `https://${baseDomain}`}/site/${subdomain}`;
 
   // Fire-and-forget DB upsert
-  prisma.webApp.upsert({
-    where: { subdomain },
-    create: { userId, subdomain, configId: `legacy-${Date.now()}`, configData: config },
-    update: { configData: config },
-  }).catch(e => console.error("legacy publish failed", e));
+  prisma.webApp
+    .upsert({
+      where: { subdomain },
+      create: {
+        userId,
+        subdomain,
+        configId: `legacy-${Date.now()}`,
+        configData: config,
+      },
+      update: { configData: config },
+    })
+    .catch((e) => console.error("legacy publish failed", e));
 
   return res.json({ subdomain, publishedUrl, previewUrl });
 });

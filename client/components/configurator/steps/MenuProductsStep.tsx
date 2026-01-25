@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronRight, Camera, Upload, Plus, X, Tag, Edit2, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Camera,
+  Upload,
+  Plus,
+  X,
+  Tag,
+  Edit2,
+  Check,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,9 +58,9 @@ export function MenuProductsStep({
   };
 
   const removeCategory = (cat: string) => {
-    actions.content.setCategories(categories.filter(c => c !== cat));
+    actions.content.setCategories(categories.filter((c) => c !== cat));
     // Also remove category from items
-    menuItems.forEach(item => {
+    menuItems.forEach((item) => {
       if ((item as any).category === cat) {
         actions.content.updateMenuItem(item.id, { category: undefined } as any);
       }
@@ -63,12 +73,14 @@ export function MenuProductsStep({
       setEditingCategory(null);
       return;
     }
-    const newCats = categories.map(c => c === oldCat ? newCat.trim() : c);
+    const newCats = categories.map((c) => (c === oldCat ? newCat.trim() : c));
     actions.content.setCategories(newCats);
     // Update items with old category
-    menuItems.forEach(item => {
+    menuItems.forEach((item) => {
       if ((item as any).category === oldCat) {
-        actions.content.updateMenuItem(item.id, { category: newCat.trim() } as any);
+        actions.content.updateMenuItem(item.id, {
+          category: newCat.trim(),
+        } as any);
       }
     });
     if (activeCategory === oldCat) setActiveCategory(newCat.trim());
@@ -77,7 +89,7 @@ export function MenuProductsStep({
 
   // Filter items by category
   const filteredItems = activeCategory
-    ? menuItems.filter(item => (item as any).category === activeCategory)
+    ? menuItems.filter((item) => (item as any).category === activeCategory)
     : menuItems;
 
   const addMenuItem = () => {
@@ -92,7 +104,13 @@ export function MenuProductsStep({
         images: newItem.images,
       };
       actions.content.addMenuItem(itemToAdd);
-      setNewItem({ name: "", description: "", price: "", category: "", images: [] });
+      setNewItem({
+        name: "",
+        description: "",
+        price: "",
+        category: "",
+        images: [],
+      });
     }
   };
 
@@ -348,9 +366,7 @@ export function MenuProductsStep({
               className="hidden"
               onChange={handleCSVUpload}
             />
-            <p className="text-xs text-gray-500 mt-2">
-              {t("menu.csvFormat")}
-            </p>
+            <p className="text-xs text-gray-500 mt-2">{t("menu.csvFormat")}</p>
           </div>
         </Card>
       </div>
@@ -367,7 +383,9 @@ export function MenuProductsStep({
       <Card className="p-6 mb-6 bg-gradient-to-r from-purple-50 to-teal-50 border-purple-100">
         <div className="flex items-center gap-2 mb-4">
           <Tag className="w-5 h-5 text-purple-600" />
-          <h3 className="text-lg font-bold text-gray-900">Kategorien verwalten</h3>
+          <h3 className="text-lg font-bold text-gray-900">
+            Kategorien verwalten
+          </h3>
         </div>
 
         {/* Add new category */}
@@ -377,7 +395,7 @@ export function MenuProductsStep({
             placeholder="Neue Kategorie (z.B. Heißgetränke)..."
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addCategory()}
+            onKeyDown={(e) => e.key === "Enter" && addCategory()}
             className="flex-1 bg-white"
           />
           <Button
@@ -404,7 +422,9 @@ export function MenuProductsStep({
               Alle ({menuItems.length})
             </Badge>
             {categories.map((cat) => {
-              const itemCount = menuItems.filter(item => (item as any).category === cat).length;
+              const itemCount = menuItems.filter(
+                (item) => (item as any).category === cat,
+              ).length;
               const isEditing = editingCategory === cat;
 
               return (
@@ -416,8 +436,9 @@ export function MenuProductsStep({
                         value={editCategoryValue}
                         onChange={(e) => setEditCategoryValue(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') updateCategory(cat, editCategoryValue);
-                          if (e.key === 'Escape') setEditingCategory(null);
+                          if (e.key === "Enter")
+                            updateCategory(cat, editCategoryValue);
+                          if (e.key === "Escape") setEditingCategory(null);
                         }}
                         className="h-7 w-32 text-sm"
                         autoFocus
@@ -467,13 +488,16 @@ export function MenuProductsStep({
           </div>
         ) : (
           <p className="text-sm text-gray-500 italic">
-            Noch keine Kategorien. Füge z.B. "Vorspeisen", "Hauptgerichte", "Getränke" hinzu.
+            Noch keine Kategorien. Füge z.B. "Vorspeisen", "Hauptgerichte",
+            "Getränke" hinzu.
           </p>
         )}
       </Card>
 
       <Card className="p-6 mb-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">{t("menu.addNewItem")}</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">
+          {t("menu.addNewItem")}
+        </h3>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -509,12 +533,16 @@ export function MenuProductsStep({
             </label>
             <select
               value={newItem.category}
-              onChange={(e) => setNewItem((prev) => ({ ...prev, category: e.target.value }))}
+              onChange={(e) =>
+                setNewItem((prev) => ({ ...prev, category: e.target.value }))
+              }
               className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="">Keine Kategorie</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
@@ -592,7 +620,9 @@ export function MenuProductsStep({
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-gray-900">
               {t("menu.yourMenuItems")}
-              {activeCategory && <span className="text-purple-600 ml-2">({activeCategory})</span>}
+              {activeCategory && (
+                <span className="text-purple-600 ml-2">({activeCategory})</span>
+              )}
             </h3>
             <span className="text-sm text-gray-500">
               {filteredItems.length} von {menuItems.length} Artikeln
@@ -605,7 +635,10 @@ export function MenuProductsStep({
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-semibold text-gray-900">{item.name}</h4>
                     {(item as any).category && (
-                      <Badge variant="outline" className="text-xs px-2 py-0.5 bg-purple-50 border-purple-200 text-purple-700">
+                      <Badge
+                        variant="outline"
+                        className="text-xs px-2 py-0.5 bg-purple-50 border-purple-200 text-purple-700"
+                      >
                         {(item as any).category}
                       </Badge>
                     )}
@@ -648,14 +681,14 @@ export function MenuProductsStep({
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      document.getElementById(`item-images-${index}`)?.click()
-                    }
-                  >
-                    {t("menu.uploadImages")}
-                  </Button>
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    document.getElementById(`item-images-${index}`)?.click()
+                  }
+                >
+                  {t("menu.uploadImages")}
+                </Button>
                 <input
                   id={`item-images-${index}`}
                   type="file"
@@ -667,7 +700,8 @@ export function MenuProductsStep({
                   }
                 />
                 <div className="text-xs text-gray-500">
-                  {Array.isArray(item.images) ? item.images.length : 0} {t("menu.images")}
+                  {Array.isArray(item.images) ? item.images.length : 0}{" "}
+                  {t("menu.images")}
                 </div>
               </div>
             </Card>

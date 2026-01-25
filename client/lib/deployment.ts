@@ -5,7 +5,7 @@
 
 import axios from "axios";
 
-export type DeploymentStage = 
+export type DeploymentStage =
   | "validating"
   | "checking_subdomain"
   | "persisting"
@@ -45,7 +45,7 @@ const STAGE_MESSAGES: Record<DeploymentStage, string> = {
   persisting: "Konfiguration wird gespeichert...",
   routing: "Subdomain wird geroutet...",
   complete: "Website ist live!",
-  error: "Fehler aufgetreten"
+  error: "Fehler aufgetreten",
 };
 
 /**
@@ -55,13 +55,13 @@ const STAGE_MESSAGES: Record<DeploymentStage, string> = {
 async function simulateProgress(
   onProgress: ((stage: DeploymentStage, message: string) => void) | undefined,
   stages: DeploymentStage[],
-  delayMs: number = 400
+  delayMs: number = 400,
 ): Promise<void> {
   if (!onProgress) return;
-  
+
   for (const stage of stages) {
     onProgress(stage, STAGE_MESSAGES[stage]);
-    await new Promise(resolve => setTimeout(resolve, delayMs));
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 }
 
@@ -69,24 +69,26 @@ async function simulateProgress(
  * Publish to internal Maitr infrastructure
  * Uses POST /api/apps/publish
  */
-async function publishInternal(config: DeploymentConfig): Promise<DeploymentResult> {
+async function publishInternal(
+  config: DeploymentConfig,
+): Promise<DeploymentResult> {
   const { onProgress } = config;
-  
+
   try {
     // Start progress simulation
     const progressPromise = simulateProgress(
       onProgress,
       ["validating", "checking_subdomain", "persisting"],
-      500
+      500,
     );
 
     // Make the actual API call
     const res = await axios.post(
       "/api/apps/publish",
-      { 
-        subdomain: config.subdomain, 
+      {
+        subdomain: config.subdomain,
         config: config.config,
-        configId: config.configId 
+        configId: config.configId,
       },
       {
         headers: {
@@ -103,7 +105,7 @@ async function publishInternal(config: DeploymentConfig): Promise<DeploymentResu
     // Show routing stage
     if (onProgress) {
       onProgress("routing", STAGE_MESSAGES.routing);
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
     const data = res.data;
@@ -113,7 +115,7 @@ async function publishInternal(config: DeploymentConfig): Promise<DeploymentResu
       if (onProgress) {
         onProgress("complete", STAGE_MESSAGES.complete);
       }
-      
+
       return {
         success: true,
         publishedUrl: data.publishedUrl,
@@ -131,7 +133,7 @@ async function publishInternal(config: DeploymentConfig): Promise<DeploymentResu
       if (onProgress) {
         onProgress("error", data.error || STAGE_MESSAGES.error);
       }
-      
+
       return {
         success: false,
         error: data.error || "Unbekannter Fehler",
@@ -143,7 +145,7 @@ async function publishInternal(config: DeploymentConfig): Promise<DeploymentResu
     }
   } catch (error) {
     console.error("[Deployment] Internal publish failed:", error);
-    
+
     if (onProgress) {
       onProgress("error", STAGE_MESSAGES.error);
     }
@@ -159,7 +161,7 @@ async function publishInternal(config: DeploymentConfig): Promise<DeploymentResu
         provider: "internal",
       };
     }
-    
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unbekannter Fehler",
@@ -173,9 +175,13 @@ async function publishInternal(config: DeploymentConfig): Promise<DeploymentResu
  * Main deployment function
  * Currently uses internal publishing, future support for Netlify/Vercel MCP
  */
-export async function deploy(config: DeploymentConfig): Promise<DeploymentResult> {
-  console.log(`[Deployment] Starting publish for subdomain: ${config.subdomain}`);
-  
+export async function deploy(
+  config: DeploymentConfig,
+): Promise<DeploymentResult> {
+  console.log(
+    `[Deployment] Starting publish for subdomain: ${config.subdomain}`,
+  );
+
   // Use internal Maitr publishing
   // When Netlify/Vercel MCP is connected, this would check availability and use those
   return publishInternal(config);
@@ -192,7 +198,7 @@ export async function getDeploymentStatus(webAppId: string): Promise<{
     const res = await axios.get(`/api/apps/${webAppId}`);
     return {
       status: res.data?.publishedAt ? "ready" : "pending",
-      url: res.data?.publishedUrl
+      url: res.data?.publishedUrl,
     };
   } catch {
     return { status: "ready" }; // Assume ready if we can't check
@@ -202,10 +208,10 @@ export async function getDeploymentStatus(webAppId: string): Promise<{
 /**
  * Pre-validate configuration before publish
  */
-export function validateConfig(config: any): { 
-  valid: boolean; 
-  errors: string[]; 
-  warnings: string[] 
+export function validateConfig(config: any): {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
 } {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -232,6 +238,6 @@ export function validateConfig(config: any): {
   return {
     valid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   };
 }

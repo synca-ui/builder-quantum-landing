@@ -8,11 +8,11 @@ type LivePhoneFrameProps = {
 };
 
 export function LivePhoneFrame({
-                                 children,
-                                 className = "",
-                                 widthClass = "w-[320px]",
-                                 heightClass = "h-[650px]",
-                               }: PropsWithChildren<LivePhoneFrameProps>) {
+  children,
+  className = "",
+  widthClass = "w-[320px]",
+  heightClass = "h-[650px]",
+}: PropsWithChildren<LivePhoneFrameProps>) {
   return (
     <div className={`relative ${className} flex justify-center`}>
       {/* --- IPHONE 14 PRO GEHÄUSE --- */}
@@ -24,7 +24,7 @@ export function LivePhoneFrame({
         `}
         style={{
           // Subtiler, realistischer Schatten und leichte Spiegelung am Rand
-          boxShadow: "0 0 0 1px #000, 0 20px 40px -10px rgba(0,0,0,0.6)"
+          boxShadow: "0 0 0 1px #000, 0 20px 40px -10px rgba(0,0,0,0.6)",
         }}
       >
         {/* --- DYNAMIC ISLAND (Die Pille) --- */}
@@ -49,7 +49,6 @@ export function LivePhoneFrame({
 
         {/* --- SCREEN CONTENT --- */}
         <div className="w-full h-full bg-white overflow-hidden rounded-[2.2rem] pointer-events-auto relative">
-
           {/* Status Bar (Uhrzeit & Icons passend zur Dynamic Island) */}
           <div className="absolute top-0 left-0 w-full h-12 px-6 pt-3.5 flex justify-between items-start z-40 text-[10px] font-semibold text-black mix-blend-difference pointer-events-none select-none">
             <span className="ml-2">9:41</span>
@@ -67,16 +66,14 @@ export function LivePhoneFrame({
               </div>
               {/* Battery */}
               <span className="h-2.5 w-5 border border-current rounded-[3px] relative opacity-90">
-                  <span className="absolute inset-0.5 right-1 bg-current rounded-[1px]" />
-                </span>
+                <span className="absolute inset-0.5 right-1 bg-current rounded-[1px]" />
+              </span>
             </div>
           </div>
 
           {/* Der eigentliche Inhalt - explicit height for scroll to work */}
           <div className="w-full h-full overflow-hidden pointer-events-auto">
-            <PhonePortalProvider>
-              {children}
-            </PhonePortalProvider>
+            <PhonePortalProvider>{children}</PhonePortalProvider>
           </div>
         </div>
       </div>

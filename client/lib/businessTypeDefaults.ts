@@ -1,6 +1,6 @@
 /**
  * Business Type Defaults
- * 
+ *
  * Provides smart defaults for menu items, opening hours, and features
  * based on the selected business type (Café, Restaurant, Bar).
  */
@@ -8,7 +8,8 @@
 import type { MenuItem, OpeningHours, FeatureFlags } from "@/types/domain";
 
 // Generate unique IDs for default items
-const generateId = () => `default-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const generateId = () =>
+  `default-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 /**
  * Default menu items per business type
@@ -209,8 +210,23 @@ export const defaultFeatures: Record<string, Partial<FeatureFlags>> = {
  * Default categories per business type
  */
 export const defaultCategories: Record<string, string[]> = {
-  cafe: ["Heißgetränke", "Kaltgetränke", "Frühstück", "Gebäck", "Kuchen", "Snacks"],
-  restaurant: ["Vorspeisen", "Salate", "Suppen", "Hauptgerichte", "Pasta", "Desserts", "Getränke"],
+  cafe: [
+    "Heißgetränke",
+    "Kaltgetränke",
+    "Frühstück",
+    "Gebäck",
+    "Kuchen",
+    "Snacks",
+  ],
+  restaurant: [
+    "Vorspeisen",
+    "Salate",
+    "Suppen",
+    "Hauptgerichte",
+    "Pasta",
+    "Desserts",
+    "Getränke",
+  ],
   bar: ["Cocktails", "Longdrinks", "Bier", "Wein", "Alkoholfrei", "Snacks"],
 };
 
@@ -228,13 +244,15 @@ export const defaultPages: Record<string, string[]> = {
  */
 export function getBusinessTypeDefaults(businessType: string) {
   const type = businessType.toLowerCase();
-  
+
   // Generate fresh IDs for menu items
-  const menuItems = (defaultMenuItems[type] || defaultMenuItems.restaurant).map(item => ({
-    ...item,
-    id: `default-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-  }));
-  
+  const menuItems = (defaultMenuItems[type] || defaultMenuItems.restaurant).map(
+    (item) => ({
+      ...item,
+      id: `default-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    }),
+  );
+
   return {
     menuItems,
     openingHours: defaultOpeningHours[type] || defaultOpeningHours.restaurant,

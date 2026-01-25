@@ -191,11 +191,11 @@ const defaultBusinessInfo: BusinessInfo = {
 const defaultDesignConfig: DesignConfig = {
   template: "modern",
   // Hauptfarben
-  primaryColor: "#4F46E5",    // Buttons, CTAs, Links
-  secondaryColor: "#7C3AED",  // Gradients, Akzente
+  primaryColor: "#4F46E5", // Buttons, CTAs, Links
+  secondaryColor: "#7C3AED", // Gradients, Akzente
   backgroundColor: "#FFFFFF", // Seitenhintergrund
-  fontColor: "#000000",       // Haupttextfarbe
-  priceColor: "#059669",      // Preisfarbe (grün - unabhängig!)
+  fontColor: "#000000", // Haupttextfarbe
+  priceColor: "#059669", // Preisfarbe (grün - unabhängig!)
   // Typografie
   fontFamily: "sans-serif",
   fontSize: "medium",
@@ -336,7 +336,10 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }
         // Update reactive history count
         set((s) => ({ ui: { ...s.ui, historyCount: historyStack.length } }));
-        console.log("[History] Snapshot pushed, stack size:", historyStack.length);
+        console.log(
+          "[History] Snapshot pushed, stack size:",
+          historyStack.length,
+        );
       },
 
       undo: () => {
@@ -346,7 +349,10 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           return;
         }
         const snapshot = historyStack.pop()!;
-        console.log("[History] Restoring snapshot from", new Date(snapshot.timestamp).toLocaleTimeString());
+        console.log(
+          "[History] Restoring snapshot from",
+          new Date(snapshot.timestamp).toLocaleTimeString(),
+        );
         set((s) => ({
           business: snapshot.business,
           design: snapshot.design,
@@ -426,12 +432,16 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         checkThrottleGuard("applyBusinessTypeDefaults");
         const defaults = getBusinessTypeDefaults(type);
 
-        console.log("[Store] Applying business type defaults for:", type, defaults);
+        console.log(
+          "[Store] Applying business type defaults for:",
+          type,
+          defaults,
+        );
 
         set((state) => {
           // Check if user has manually added custom items (not default items)
           const hasUserCustomItems = state.content.menuItems.some(
-            (item) => !item.id.startsWith("default-")
+            (item) => !item.id.startsWith("default-"),
           );
 
           return {
@@ -439,7 +449,12 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
             content: {
               ...state.content,
               menuItems: hasUserCustomItems
-                ? [...defaults.menuItems, ...state.content.menuItems.filter(item => !item.id.startsWith("default-"))]
+                ? [
+                    ...defaults.menuItems,
+                    ...state.content.menuItems.filter(
+                      (item) => !item.id.startsWith("default-"),
+                    ),
+                  ]
                 : defaults.menuItems,
               openingHours: defaults.openingHours,
               categories: defaults.categories,
@@ -452,9 +467,10 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
             // Apply default pages if none selected
             pages: {
               ...state.pages,
-              selectedPages: state.pages.selectedPages.length > 0
-                ? state.pages.selectedPages
-                : defaults.pages,
+              selectedPages:
+                state.pages.selectedPages.length > 0
+                  ? state.pages.selectedPages
+                  : defaults.pages,
             },
             publishing: {
               ...state.publishing,
