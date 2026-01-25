@@ -178,18 +178,49 @@ export function TemplatePreviewContent() {
 
   // --- RENDERERS ---
 
+  // Helper for header font size
+  const getHeaderFontClass = () => {
+    switch (formData.headerFontSize) {
+      case 'small': return 'text-xs';
+      case 'large': return 'text-base';
+      default: return 'text-sm';
+    }
+  };
+
   const renderNav = () => (
-    <div className={styles.nav} style={{ backgroundColor: formData.backgroundColor }}>
+    <div
+      className={styles.nav}
+      style={{
+        backgroundColor: formData.headerBackgroundColor,
+        color: formData.headerFontColor
+      }}
+    >
       <div className="flex items-center gap-2 overflow-hidden">
-        <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center bg-current opacity-10 text-current`}>
-          {formData.businessType === 'cafe' ? <Coffee className="w-4 h-4" /> : <Utensils className="w-4 h-4" />}
-        </div>
-        <span className="font-bold text-sm cursor-pointer truncate" onClick={() => navigateToPage('home')}>
+        {/* Logo or Icon */}
+        {formData.logo ? (
+          <img
+            src={formData.logo}
+            alt="Logo"
+            className="w-8 h-8 shrink-0 rounded-lg object-cover"
+          />
+        ) : (
+          <div
+            className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: `${formData.headerFontColor}15` }}
+          >
+            {formData.businessType === 'cafe' ? <Coffee className="w-4 h-4" /> : <Utensils className="w-4 h-4" />}
+          </div>
+        )}
+        <span
+          className={`font-bold cursor-pointer truncate ${getHeaderFontClass()}`}
+          onClick={() => navigateToPage('home')}
+          style={{ color: formData.headerFontColor }}
+        >
           {formData.businessName}
         </span>
       </div>
 
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-3 shrink-0" style={{ color: formData.headerFontColor }}>
         {formData.onlineOrdering && (
           <div className="relative cursor-pointer">
             <ShoppingBag className="w-5 h-5 opacity-90" />
