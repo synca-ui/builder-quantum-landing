@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Cloud, Rocket, Check, Eye, Home, AlertCircle, ChevronRight, ExternalLink, Copy, Share2 } from "lucide-react";
+import { ArrowLeft, Cloud, Rocket, Check, Eye, Home, AlertCircle, ChevronRight, ExternalLink, Copy, Share2, Server, Globe2 } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import {
   useConfiguratorStore,
   useConfiguratorActions,
 } from "@/store/configuratorStore";
-import { publishWebApp } from "@/lib/webapps";
+import { deploy, isNetlifyMCPAvailable, isVercelMCPAvailable } from "@/lib/deployment";
 import type { Configuration } from "@/types/domain";
 
 interface PublishStepProps {
