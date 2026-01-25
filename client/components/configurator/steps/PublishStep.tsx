@@ -56,9 +56,13 @@ export function PublishStep({
   const netlifyAvailable = isNetlifyMCPAvailable();
   const vercelAvailable = isVercelMCPAvailable();
 
+  // Get publishing status from store
+  const publishing = fullState.publishing;
+  const wasAlreadyPublished = publishing.status === "published" && !!publishing.publishedUrl;
+
   const liveUrl = getLiveUrl
     ? getLiveUrl()
-    : `https://${business.domain?.selectedDomain || business.name.toLowerCase().replace(/\s+/g, "")}.maitr.de`;
+    : publishing.publishedUrl || `https://${business.domain?.selectedDomain || business.name.toLowerCase().replace(/\s+/g, "")}.maitr.de`;
 
   const displayDomain = getDisplayedDomain
     ? getDisplayedDomain()
