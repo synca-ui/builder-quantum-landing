@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::", // Expose the server to all addresses (IPv6)
     port: 8081, // Set the port for the dev server
+    hmr: {
+      // Increase timeout to prevent "send before connect" errors
+      timeout: 5000,
+    },
     fs: {
       // Allow Vite to access specific directories
       allow: [
