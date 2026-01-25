@@ -185,6 +185,7 @@ export function PublishStep({
     try {
       const configData = actions.data.getFullConfiguration();
 
+      // Save to backend first
       if (saveToBackend) {
         await saveToBackend(configData);
       }
@@ -194,14 +195,20 @@ export function PublishStep({
         business.domain?.selectedDomain ||
         business.name.toLowerCase().replace(/\s+/g, "");
 
-      const result = await publishWebApp(
+      // Deploy using the deployment helper (Netlify/Vercel MCP or internal)
+      const result = await deploy({
         subdomain,
-        configData,
-        token || undefined,
-      );
+        config: configData,
+        token: token || undefined,
+      });
 
-      setPublishedUrl(result.publishedUrl || liveUrl);
-      setIsPublished(true);
+      if (result.success) {
+        setPublishedUrl(result.publishedUrl || liveUrl);
+        setDeploymentProvider(result.provider);
+        setIsPublished(true);
+      } else {
+        throw new Error(result.error || "Deployment failed");
+      }
 
     } catch (error) {
       console.error("Publishing failed:", error);
