@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useConfiguratorStore } from "@/store/configuratorStore";
 import {
   MapPin, Phone, Mail, Clock, Instagram, Facebook,
   Coffee, Utensils, ShoppingBag, Menu, X,
   Plus, ChevronRight, ChevronDown, Camera, ArrowRight,
-  Calendar, Users, CalendarCheck
+  Calendar, Users, CalendarCheck, ChevronLeft
 } from "lucide-react";
 import { ReservationButton } from "@/components/ui/ReservationButton";
 import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
+import type { MenuItem } from "@/types/domain";
 
 // --- HELPER: Bild-URLs normalisieren ---
 function normalizeImageSrc(img: any): string {
@@ -117,6 +118,34 @@ export function TemplatePreviewContent() {
 
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [hoursExpanded, setHoursExpanded] = useState(false);
+
+  // Dish modal state
+  const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const openDishModal = useCallback((dish: MenuItem) => {
+    setSelectedDish(dish);
+    setCurrentImageIndex(0);
+  }, []);
+
+  const closeDishModal = useCallback(() => {
+    setSelectedDish(null);
+    setCurrentImageIndex(0);
+  }, []);
+
+  const nextImage = useCallback(() => {
+    if (!selectedDish?.images) return;
+    setCurrentImageIndex((prev) =>
+      prev < selectedDish.images!.length - 1 ? prev + 1 : 0
+    );
+  }, [selectedDish]);
+
+  const prevImage = useCallback(() => {
+    if (!selectedDish?.images) return;
+    setCurrentImageIndex((prev) =>
+      prev > 0 ? prev - 1 : selectedDish.images!.length - 1
+    );
+  }, [selectedDish]);
 
   // 4. STYLE HELPER
   const getFontSize = (type: 'title' | 'body' | 'small' | 'price') => {
