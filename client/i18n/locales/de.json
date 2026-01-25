@@ -114,7 +114,7 @@
   },
   "business": {
     "name": "Geschäftsname",
-    "namePlaceholder": "z.B. Ristorante Milano",
+    "namePlaceholder": "z.B. Bella's Café",
     "type": "Geschäftsart",
     "types": {
       "restaurant": "Restaurant",
@@ -124,18 +124,47 @@
       "other": "Sonstiges"
     },
     "location": "Standort",
-    "locationPlaceholder": "z.B. Berlin Mitte",
+    "locationPlaceholder": "Stadt, Bundesland",
     "slogan": "Slogan",
-    "sloganPlaceholder": "z.B. Authentische italienische Küche",
+    "sloganPlaceholder": "z.B. Der beste Kaffee der Stadt",
     "description": "Beschreibung",
-    "descriptionPlaceholder": "Erzähl deinen Kunden, was dich besonders macht..."
+    "descriptionPlaceholder": "Erzähl uns, was dich besonders macht...",
+    "addOptional": "Slogan und Beschreibung hinzufügen (optional)",
+    "whatMakesYouSpecial": "Was macht dich besonders?",
+    "hideOptional": "Optionale Felder ausblenden"
   },
   "design": {
+    "title": "Design anpassen",
+    "subtitle": "Wähle Farben und Schriften, die deine Marke perfekt repräsentieren.",
+    "colorThemes": "Farbthemen",
+    "customColors": "Individuelle Farben",
     "primaryColor": "Primärfarbe",
     "secondaryColor": "Sekundärfarbe",
     "backgroundColor": "Hintergrundfarbe",
+    "priceColor": "Preisfarbe",
     "fontColor": "Textfarbe",
-    "fontFamily": "Schriftart"
+    "typography": "Typografie",
+    "fontFamily": "Schriftart",
+    "fontSize": "Schriftgröße",
+    "fonts": {
+      "sansSerif": "Sans Serif",
+      "sansSerifPreview": "Modern & Clean",
+      "sansSerifDesc": "Perfekt für digitale Lesbarkeit",
+      "serif": "Serif",
+      "serifPreview": "Klassisch & Elegant",
+      "serifDesc": "Traditionell und anspruchsvoll",
+      "display": "Display",
+      "displayPreview": "Bold & Kreativ",
+      "displayDesc": "Auffällig und einzigartig"
+    },
+    "sizes": {
+      "small": "Klein",
+      "smallDesc": "Kompakt und minimal",
+      "medium": "Mittel",
+      "mediumDesc": "Standard Lesbarkeit",
+      "large": "Groß",
+      "largeDesc": "Laut und deutlich"
+    }
   },
   "menu": {
     "title": "Speisekarte",
