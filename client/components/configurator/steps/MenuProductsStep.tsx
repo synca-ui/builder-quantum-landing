@@ -589,12 +589,27 @@ export function MenuProductsStep({
 
       {menuItems.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-bold text-gray-900">{t("menu.yourMenuItems")}</h3>
-          {menuItems.map((item, index) => (
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-gray-900">
+              {t("menu.yourMenuItems")}
+              {activeCategory && <span className="text-purple-600 ml-2">({activeCategory})</span>}
+            </h3>
+            <span className="text-sm text-gray-500">
+              {filteredItems.length} von {menuItems.length} Artikeln
+            </span>
+          </div>
+          {filteredItems.map((item, index) => (
             <Card key={item.id} className="p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                    {(item as any).category && (
+                      <Badge variant="outline" className="text-xs px-2 py-0.5 bg-purple-50 border-purple-200 text-purple-700">
+                        {(item as any).category}
+                      </Badge>
+                    )}
+                  </div>
                   {item.description && (
                     <p className="text-sm text-gray-600 mt-1">
                       {item.description}
@@ -619,7 +634,7 @@ export function MenuProductsStep({
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="text-lg font-bold text-teal-600">
-                    ${item.price}
+                    {item.price}€
                   </span>
                   <Button
                     variant="outline"
