@@ -129,8 +129,9 @@ export function TemplatePreviewContent() {
       itemDescClass: `${formData.fontSize === 'large' ? 'text-sm' : 'text-xs'} opacity-80 mt-1 leading-snug`,
       itemPriceClass: `${getFontSize('price')} font-bold`,
 
-      // FIX: absolute statt fixed für korrekte Position im skalierten Frame
-      nav: `absolute top-0 left-0 right-0 z-40 px-5 pt-12 pb-4 flex items-center justify-between backdrop-blur-md border-b border-black/5 transition-all`,
+      // STICKY NAV: Fixiert unterhalb der Dynamic Island (top-0 + pt-12 = Platz für Island)
+      // z-30 = unter Dynamic Island (z-50), aber über Content (z-10)
+      nav: `absolute top-0 left-0 right-0 z-30 px-5 pt-12 pb-4 flex items-center justify-between border-b border-black/5 transition-all`,
     };
 
     switch (formData.template) {
@@ -162,7 +163,7 @@ export function TemplatePreviewContent() {
   // --- RENDERERS ---
 
   const renderNav = () => (
-    <div className={styles.nav} style={{ backgroundColor: `${formData.backgroundColor}E6` }}>
+    <div className={styles.nav} style={{ backgroundColor: formData.backgroundColor }}>
       <div className="flex items-center gap-2 overflow-hidden">
         <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center bg-current opacity-10 text-current`}>
           {formData.businessType === 'cafe' ? <Coffee className="w-4 h-4" /> : <Utensils className="w-4 h-4" />}
@@ -509,16 +510,11 @@ export function TemplatePreviewContent() {
       style={styles.wrapper}
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* FIX: Z-Index von 50 auf 0 gesenkt.
-          Damit bleibt der Hintergrund HINTER der Notch des Rahmens (z-20),
-          aber VOR dem scrollenden Content.
-      */}
-      <div
-        className="absolute top-0 left-0 right-0 h-14 z-0 pointer-events-none transition-colors duration-300"
-        style={{ backgroundColor: formData.backgroundColor }}
-      />
+      {/* FIXED NAV HEADER - Außerhalb des Scroll-Containers für Sticky-Effekt */}
+      {renderNav()}
+      {renderMenuOverlay()}
 
-      {/* SCROLL CONTAINER */}
+      {/* SCROLL CONTAINER - Content scrollt unter dem fixierten Header */}
       <div
         className="flex-1 overflow-y-auto no-scrollbar scroll-smooth relative z-10"
         style={{
@@ -526,10 +522,6 @@ export function TemplatePreviewContent() {
           overscrollBehaviorY: 'contain'
         }}
       >
-        {/* Navigation muss über dem Content, aber unter der Notch liegen */}
-        {renderNav()}
-        {renderMenuOverlay()}
-
         <div className={styles.page}>
           {renderContent()}
         </div>
