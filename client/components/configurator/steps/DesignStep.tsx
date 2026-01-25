@@ -201,6 +201,7 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
   };
 
   return (
+    <TooltipProvider>
     <div className="py-8 max-w-4xl mx-auto animate-in fade-in duration-500">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -460,5 +461,6 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
         </Button>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
