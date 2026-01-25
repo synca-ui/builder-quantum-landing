@@ -339,12 +339,15 @@ export function TemplatePreviewContent() {
             ))}
           </div>
           <div className="space-y-4 pb-8">
-            {(formData.menuItems.length > 0 ? formData.menuItems : [1,2,3,4,5,6]).map((item: any, i: number) => (
+            {(formData.menuItems.length > 0
+              ? formData.menuItems
+              : getBusinessTypeDefaults(formData.businessType).menuItems
+            ).map((item: any, i: number) => (
               <div key={i} className={styles.itemCard}>
                 <div className="flex justify-between items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className={styles.itemNameClass} style={{ color: formData.fontColor }}>{item.name || `Gericht ${i+1}`}</div>
-                    <div className={styles.itemDescClass} style={{ color: formData.fontColor }}>{item.description || "Lecker und frisch zubereitet."}</div>
+                    <div className={styles.itemNameClass} style={{ color: formData.fontColor }}>{item.name}</div>
+                    <div className={styles.itemDescClass} style={{ color: formData.fontColor }}>{item.description}</div>
                   </div>
                   <div className="flex flex-col items-end gap-2 pl-2">
                     <div className={styles.itemPriceClass} style={{color: formData.priceColor}}>{item.price || "9.50"}€</div>
