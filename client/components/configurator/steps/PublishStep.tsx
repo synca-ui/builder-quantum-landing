@@ -206,6 +206,14 @@ export function PublishStep({
         setPublishedUrl(result.publishedUrl || liveUrl);
         setDeploymentProvider(result.provider);
         setIsPublished(true);
+
+        // Update store with publishing status
+        actions.publishing.updatePublishingInfo({
+          status: "published",
+          publishedUrl: result.publishedUrl || liveUrl,
+          previewUrl: result.previewUrl,
+          publishedAt: new Date().toISOString(),
+        });
       } else {
         throw new Error(result.error || "Deployment failed");
       }
