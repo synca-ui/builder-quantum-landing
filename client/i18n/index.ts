@@ -16,7 +16,7 @@ export type LanguageCode = keyof typeof LANGUAGES;
 // Default language is German (primary market)
 export const DEFAULT_LANGUAGE: LanguageCode = "de";
 
-// Initialize i18next
+// Initialize i18next - using initReactI18next for proper React binding
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -25,32 +25,29 @@ i18n
       de: { translation: de },
       en: { translation: en },
     },
+    lng: DEFAULT_LANGUAGE, // Set initial language explicitly
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: Object.keys(LANGUAGES),
-    
+
     // Detection options
     detection: {
-      // Order of language detection methods
       order: ["localStorage", "navigator", "htmlTag"],
-      // Cache user selection in localStorage
       caches: ["localStorage"],
       lookupLocalStorage: "i18nextLng",
     },
 
     interpolation: {
-      escapeValue: false, // React already escapes by default
+      escapeValue: false,
     },
 
-    // Namespace settings
     ns: ["translation"],
     defaultNS: "translation",
 
-    // Debug in development
-    debug: import.meta.env.DEV,
-
-    // React-specific options
+    // React-specific options - useSuspense must be false to avoid issues
     react: {
-      useSuspense: false, // Disable suspense for SSR compatibility
+      useSuspense: false,
+      bindI18n: "languageChanged",
+      bindI18nStore: "",
     },
   });
 
