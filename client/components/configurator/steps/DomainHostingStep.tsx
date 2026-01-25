@@ -320,7 +320,7 @@ export function DomainHostingStep({
               {/* Validation Message */}
               {validationError && (
                 <div className={`flex items-center gap-2 text-sm ${
-                  validationStatus === "taken" ? "text-red-600" : "text-orange-600"
+                  validationStatus === "taken" || validationStatus === "reserved" ? "text-red-600" : "text-orange-600"
                 }`}>
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{validationError}</span>
@@ -331,6 +331,13 @@ export function DomainHostingStep({
                 <div className="flex items-center gap-2 text-sm text-green-600">
                   <Check className="w-4 h-4 shrink-0" />
                   <span>Diese Subdomain ist verfügbar!</span>
+                </div>
+              )}
+
+              {validationStatus === "owned" && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span>Diese Subdomain gehört bereits Ihnen</span>
                 </div>
               )}
 
@@ -347,8 +354,8 @@ export function DomainHostingStep({
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-teal-500" />
                   <span className={`font-mono text-sm font-medium ${
-                    validationStatus === "available" ? "text-green-700" :
-                    validationStatus === "taken" || validationStatus === "invalid" ? "text-red-700" :
+                    validationStatus === "available" || validationStatus === "owned" ? "text-green-700" :
+                    validationStatus === "taken" || validationStatus === "reserved" || validationStatus === "invalid" ? "text-red-700" :
                     "text-gray-700"
                   }`}>
                     https://{displayDomain}
