@@ -275,6 +275,41 @@ export function PublishStep({
 
       {!isPublished ? (
         <div className="space-y-8">
+          {/* Already Published Banner */}
+          {wasAlreadyPublished && (
+            <Card className="p-4 bg-green-50 border-green-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                  <Check className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-green-900">Website bereits veröffentlicht</p>
+                  <a
+                    href={publishing.publishedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-green-700 hover:underline flex items-center gap-1"
+                  >
+                    {publishing.publishedUrl} <ExternalLink className="w-3 h-3" />
+                  </a>
+                  {publishing.publishedAt && (
+                    <p className="text-xs text-green-600 mt-1">
+                      Zuletzt veröffentlicht: {new Date(publishing.publishedAt).toLocaleString('de-DE')}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(publishing.publishedUrl, "_blank")}
+                  className="shrink-0 border-green-300 text-green-700 hover:bg-green-100"
+                >
+                  <Eye className="w-4 h-4 mr-1" /> Ansehen
+                </Button>
+              </div>
+            </Card>
+          )}
+
           {/* Progress Overview */}
           <Card className="p-6 bg-gradient-to-r from-teal-50 to-purple-50 border-teal-200">
             <div className="flex items-center justify-between mb-4">
