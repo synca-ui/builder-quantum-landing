@@ -82,6 +82,9 @@ export interface FeatureFlags {
   reservationsEnabled: boolean;
   maxGuests?: number;
   notificationMethod?: string;
+  reservationButtonColor?: string;
+  reservationButtonTextColor?: string;
+  reservationButtonShape?: "rounded" | "pill" | "square";
   onlineOrderingEnabled: boolean;
   onlineStoreEnabled: boolean;
   teamAreaEnabled: boolean;
