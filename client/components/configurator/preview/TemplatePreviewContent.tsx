@@ -37,6 +37,15 @@ export function TemplatePreviewContent() {
   const fontFamily = useConfiguratorStore((s) => s.design.fontFamily);
   const backgroundColor = useConfiguratorStore((s) => s.design.backgroundColor);
   const fontColor = useConfiguratorStore((s) => s.design.fontColor);
+  const priceColor = useConfiguratorStore((s) => (s.design as any).priceColor);
+
+  // Header/Navigation customization
+  const headerFontColor = useConfiguratorStore((s) => (s.design as any).headerFontColor);
+  const headerFontSize = useConfiguratorStore((s) => (s.design as any).headerFontSize);
+  const headerBackgroundColor = useConfiguratorStore((s) => (s.design as any).headerBackgroundColor);
+
+  // Logo
+  const logo = useConfiguratorStore((s) => s.business.logo);
 
   // Content fields
   const menuItems = useConfiguratorStore((s) => s.content.menuItems);
@@ -71,8 +80,13 @@ export function TemplatePreviewContent() {
     fontFamily: fontFamily || "sans-serif",
     backgroundColor: backgroundColor || "#FFFFFF",
     fontColor: fontColor || "#000000",
-    priceColor: primaryColor || "#2563EB",
+    priceColor: priceColor || "#059669", // Unabhängige Preisfarbe (grün)
     fontSize: "medium",
+    // Header customization
+    headerFontColor: headerFontColor || fontColor || "#000000",
+    headerFontSize: headerFontSize || "medium",
+    headerBackgroundColor: headerBackgroundColor || backgroundColor || "#FFFFFF",
+    logo: logo?.url || null,
     menuItems: menuItems || [],
     gallery: gallery || [],
     openingHours: openingHours || {},
@@ -87,7 +101,8 @@ export function TemplatePreviewContent() {
     selectedPages: selectedPages || ["home"],
   }), [
     businessName, businessType, location, slogan, uniqueDescription,
-    template, primaryColor, secondaryColor, fontFamily, backgroundColor, fontColor,
+    template, primaryColor, secondaryColor, fontFamily, backgroundColor, fontColor, priceColor,
+    headerFontColor, headerFontSize, headerBackgroundColor, logo,
     menuItems, gallery, openingHours,
     contactMethods, phone, email,
     onlineOrdering, reservationsEnabled, reservationButtonColor, reservationButtonTextColor, reservationButtonShape,
