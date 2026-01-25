@@ -123,8 +123,16 @@ export default function Configurator() {
     }
   }, [isSignedIn, getToken, currentConfigId, persistence]);
 
-  const nextStep = useCallback(() => nextStepStore(), [nextStepStore]);
-  const prevStep = useCallback(() => prevStepStore(), [prevStepStore]);
+  const nextStep = useCallback(() => {
+    actions.history.pushHistory(); // Push history before navigation
+    nextStepStore();
+  }, [nextStepStore, actions.history]);
+
+  const prevStep = useCallback(() => {
+    actions.history.pushHistory(); // Push history before navigation
+    prevStepStore();
+  }, [prevStepStore, actions.history]);
+
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
 
   const progressPercentage = useMemo(() => {
