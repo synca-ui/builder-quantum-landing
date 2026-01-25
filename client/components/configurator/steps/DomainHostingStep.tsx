@@ -62,6 +62,7 @@ export function DomainHostingStep({
   getDisplayedDomain,
 }: DomainHostingStepProps) {
   const { t } = useTranslation();
+  const { userId } = useAuth();
   const business = useConfiguratorStore((s) => s.business);
   const actions = useConfiguratorActions();
 
@@ -75,52 +76,63 @@ export function DomainHostingStep({
   // Subdomain validation state
   const [validationStatus, setValidationStatus] = useState<ValidationStatus>("idle");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [validationSuggestions, setValidationSuggestions] = useState<string[]>([]);
   const [lastCheckedSubdomain, setLastCheckedSubdomain] = useState<string>("");
 
   const hasDomain = business.domain?.hasDomain || false;
   const domainName = business.domain?.domainName || "";
   const selectedDomain = business.domain?.selectedDomain || "";
   const baseHost = getBaseHost ? getBaseHost() : "maitr.de";
-  
+
   // Generate subdomain from business name if not set
   const currentSubdomain = selectedDomain || business.name.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/--+/g, "-");
-  
+
   const displayDomain = `${currentSubdomain}.${baseHost}`;
 
-  // Debounced subdomain validation
+  // Debounced subdomain validation using real API
   const validateAndCheckSubdomain = useCallback(async (subdomain: string) => {
     if (!subdomain) {
       setValidationStatus("idle");
       setValidationError(null);
+      setValidationSuggestions([]);
       return;
     }
 
-    // Format validation first
-    const formatValidation = validateSubdomain(subdomain);
-    if (!formatValidation.valid) {
+    // Basic format check before API call
+    if (subdomain.length < 3) {
       setValidationStatus("invalid");
-      setValidationError(formatValidation.error || "Ungültiges Format");
+      setValidationError("Mindestens 3 Zeichen erforderlich");
+      setValidationSuggestions([]);
       return;
     }
 
-    // Check availability
+    // Check availability via API
     setValidationStatus("checking");
     setValidationError(null);
+    setValidationSuggestions([]);
 
-    try {
-      const isAvailable = await checkSubdomainAvailability(subdomain);
-      
-      // Only update if this is still the current subdomain
-      if (subdomain === currentSubdomain) {
-        setValidationStatus(isAvailable ? "available" : "taken");
-        setValidationError(isAvailable ? null : "Diese Subdomain ist bereits vergeben");
-        setLastCheckedSubdomain(subdomain);
+    const result = await checkSubdomainAvailability(subdomain, userId);
+
+    // Only update if this is still the current subdomain
+    if (subdomain === currentSubdomain) {
+      if (result.available) {
+        setValidationStatus(result.reason === "owned" ? "owned" : "available");
+        setValidationError(null);
+      } else {
+        // Map API reason to status
+        const statusMap: Record<string, ValidationStatus> = {
+          invalid: "invalid",
+          reserved: "reserved",
+          taken: "taken",
+          pending: "taken",
+        };
+        setValidationStatus(statusMap[result.reason || "invalid"] || "invalid");
+        setValidationError(result.error || "Diese Subdomain ist nicht verfügbar");
+        setValidationSuggestions(result.suggestions || []);
       }
-    } catch (error) {
-      setValidationStatus("invalid");
-      setValidationError("Fehler bei der Überprüfung");
+      setLastCheckedSubdomain(subdomain);
     }
-  }, [currentSubdomain]);
+  }, [currentSubdomain, userId]);
 
   // Debounce effect - also validates on mount if subdomain exists
   useEffect(() => {
