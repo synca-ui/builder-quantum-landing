@@ -52,10 +52,6 @@ export function PublishStep({
   const content = fullState.content;
   const features = fullState.features;
 
-  // Check deployment provider availability
-  const netlifyAvailable = isNetlifyMCPAvailable();
-  const vercelAvailable = isVercelMCPAvailable();
-
   // Get publishing status from store
   const publishing = fullState.publishing;
   const wasAlreadyPublished = publishing.status === "published" && !!publishing.publishedUrl;
