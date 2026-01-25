@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, ArrowLeft, ChevronRight, Palette, Type, PaintBucket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,6 +121,7 @@ interface DesignStepProps {
 
 // --- COMPONENT ---
 export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
+  const { t } = useTranslation();
   const design = useConfiguratorDesign();
   const { design: designActions } = useConfiguratorActions();
 
@@ -158,10 +160,10 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
     <div className="py-8 max-w-4xl mx-auto animate-in fade-in duration-500">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Design anpassen
+          {t("design.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Wähle Farben und Schriften, die deine Marke perfekt repräsentieren.
+          {t("design.subtitle")}
         </p>
       </div>
 
@@ -170,7 +172,7 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
         {/* --- COLOR THEMES --- */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-4">
-            Color Themes
+            {t("design.colorThemes")}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {COLOR_PRESETS.map((preset, index) => {
@@ -220,37 +222,37 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
         {/* --- CUSTOM COLORS (Optimized) --- */}
         <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
           <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <PaintBucket className="w-5 h-5 text-teal-600" /> Individuelle Farben
+            <PaintBucket className="w-5 h-5 text-teal-600" /> {t("design.customColors")}
           </h3>
           <div className="grid sm:grid-cols-2 gap-6 lg:gap-8">
 
             <ColorInput
-              label="Primärfarbe"
+              label={t("design.primaryColor")}
               value={design.primaryColor || "#000000"}
               onChange={designActions.updatePrimaryColor}
             />
 
             <ColorInput
-              label="Sekundärfarbe"
+              label={t("design.secondaryColor")}
               value={design.secondaryColor || "#000000"}
               onChange={designActions.updateSecondaryColor}
             />
 
             <ColorInput
-              label="Hintergrundfarbe"
+              label={t("design.backgroundColor")}
               value={design.backgroundColor || "#FFFFFF"}
               onChange={(v) => updateAny('backgroundColor', v)}
             />
 
             <ColorInput
-              label="Preisfarbe"
+              label={t("design.priceColor")}
               // @ts-ignore
               value={design.priceColor || design.primaryColor || "#000000"}
               onChange={(v) => updateAny('priceColor', v)}
             />
 
             <ColorInput
-              label="Textfarbe"
+              label={t("design.fontColor")}
               value={design.fontColor || "#000000"}
               onChange={(v) => designActions.updateDesign({ fontColor: v })}
             />
@@ -261,13 +263,13 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
         {/* --- TYPOGRAPHY STYLE --- */}
         <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
           <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <Type className="w-5 h-5 text-teal-600" /> Typografie
+            <Type className="w-5 h-5 text-teal-600" /> {t("design.typography")}
           </h3>
 
           <div className="space-y-8">
             {/* Font Family */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-4">Schriftart</label>
+              <label className="block text-sm font-bold text-gray-700 mb-4">{t("design.fontFamily")}</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {FONT_OPTIONS.map((font) => (
                   <Card
@@ -299,7 +301,7 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
 
             {/* Font Size */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-4">Schriftgröße</label>
+              <label className="block text-sm font-bold text-gray-700 mb-4">{t("design.fontSize")}</label>
               <div className="grid grid-cols-3 gap-4">
                 {FONT_SIZES.map((size) => {
                   // @ts-ignore
@@ -349,7 +351,7 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
 
       <div className="flex justify-between mt-12 pt-6 border-t border-gray-100">
         <Button onClick={prevStep} variant="outline" size="lg" className="border-gray-300">
-          <ArrowLeft className="mr-2 w-5 h-5" /> Zurück
+          <ArrowLeft className="mr-2 w-5 h-5" /> {t("common.back")}
         </Button>
         <Button
           onClick={() => isValid && nextStep()}
@@ -357,7 +359,7 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500 text-white shadow-lg"
         >
-          Weiter <ChevronRight className="ml-2 w-5 h-5" />
+          {t("common.next")} <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
     </div>
