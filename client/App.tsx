@@ -53,7 +53,8 @@ if (!CLERK_PUBLISHABLE_KEY) {
 
 const App = () => (
   <ErrorBoundary>
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <I18nextProvider i18n={i18n}>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
           <TooltipProvider>
@@ -101,7 +102,8 @@ const App = () => (
           </TooltipProvider>
         </HelmetProvider>
       </QueryClientProvider>
-    </ClerkProvider>
+      </ClerkProvider>
+    </I18nextProvider>
   </ErrorBoundary>
 );
 
