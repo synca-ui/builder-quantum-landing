@@ -60,11 +60,13 @@ export interface MenuItem {
   id: string;
   name: string;
   description?: string;
-  price?: number;
+  price?: number | string;
   imageUrl?: string;
   emoji?: string;
   available?: boolean;
   category?: string;
+  image?: { url: string; alt?: string; file?: File };
+  images?: { url: string; alt?: string; file?: File }[];
 }
 
 export interface GalleryImage {
