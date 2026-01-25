@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronRight, Smartphone, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +24,7 @@ export function PreviewAdjustmentsStep({
   TemplatePreviewContent,
   getDisplayedDomain,
 }: PreviewAdjustmentsStepProps) {
+  const { t } = useTranslation();
   const [previewMode, setPreviewMode] = useState<"mobile" | "desktop">(
     "mobile",
   );
@@ -39,10 +41,10 @@ export function PreviewAdjustmentsStep({
     <div className="py-8 max-w-6xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Preview & final tweaks
+          {t("steps.previewAdjustments.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Review your website and make any final adjustments before going live.
+          {t("steps.previewAdjustments.subtitle")}
         </p>
       </div>
 
@@ -50,12 +52,12 @@ export function PreviewAdjustmentsStep({
         <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Quick Adjustments
+              {t("preview.quickAdjustments")}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Website Title
+                  {t("preview.websiteTitle")}
                 </label>
                 <Input
                   type="text"
@@ -68,7 +70,7 @@ export function PreviewAdjustmentsStep({
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Tagline
+                  {t("business.slogan")}
                 </label>
                 <Input
                   type="text"
@@ -81,7 +83,7 @@ export function PreviewAdjustmentsStep({
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Primary Color
+                  {t("design.primaryColor")}
                 </label>
                 <div className="flex items-center space-x-2">
                   <input
@@ -107,7 +109,7 @@ export function PreviewAdjustmentsStep({
 
           <Card className="p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Performance Score
+              {t("preview.performanceScore")}
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -144,7 +146,7 @@ export function PreviewAdjustmentsStep({
         <div className="lg:col-span-2">
           <div className="bg-gray-100 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">Live Preview</h3>
+              <h3 className="text-lg font-bold text-gray-900">{t("nav.livePreview")}</h3>
               <div className="flex space-x-2">
                 <Button
                   variant={previewMode === "mobile" ? "default" : "outline"}
@@ -207,14 +209,14 @@ export function PreviewAdjustmentsStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Ready to Publish
+          {t("publish.readyToPublish")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>

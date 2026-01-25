@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Cloud, Rocket, Check, Eye, Home } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export function PublishStep({
                               getDisplayedDomain,
                               saveToBackend,
                             }: PublishStepProps) {
+  const { t } = useTranslation();
   const { getToken } = useAuth();
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
@@ -85,11 +87,10 @@ export function PublishStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Publish your website
+          {t("steps.publish.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Everything looks perfect! Ready to make your website live and start
-          attracting customers?
+          {t("steps.publish.subtitle")}
         </p>
       </div>
 
@@ -97,7 +98,7 @@ export function PublishStep({
         <div className="space-y-8">
           <Card className="p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-6">
-              Pre-Launch Checklist
+              {t("publish.checklist")}
             </h3>
             <div className="space-y-4">
               {[
@@ -144,12 +145,12 @@ export function PublishStep({
 
           <Card className="p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-6">
-              Your Website Summary
+              {t("publish.summary")}
             </h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">
-                  Business Details
+                  {t("publish.businessDetails")}
                 </h4>
                 <p className="text-gray-600 text-sm mb-1">
                   Name: {business.name}
@@ -163,7 +164,7 @@ export function PublishStep({
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">
-                  Website Features
+                  {t("publish.websiteFeatures")}
                 </h4>
                 <p className="text-gray-600 text-sm mb-1">
                   Template: {design.template}
@@ -177,7 +178,7 @@ export function PublishStep({
                   </p>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
                     <p className="text-sm font-semibold text-green-800 mb-1">
-                      Your Live URL:
+                      {t("publish.yourLiveUrl")}:
                     </p>
                     <p className="font-mono text-sm text-green-700 break-all">
                       {liveUrl}
@@ -198,17 +199,17 @@ export function PublishStep({
               {isPublishing ? (
                 <>
                   <Cloud className="mr-4 w-8 h-8 animate-pulse" />
-                  Publishing...
+                  {t("publish.publishing")}
                 </>
               ) : (
                 <>
                   <Rocket className="mr-4 w-8 h-8" />
-                  Publish Website
+                  {t("nav.publishWebsite")}
                 </>
               )}
             </Button>
             <p className="text-sm text-gray-500 mt-4">
-              Your website will be live in seconds!
+              {t("publish.liveInSeconds")}
             </p>
           </div>
         </div>
@@ -219,10 +220,10 @@ export function PublishStep({
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              🎉 Congratulations!
+              🎉 {t("publish.congratulations")}
             </h3>
             <p className="text-lg text-gray-600 mb-6">
-              Your website is now live and ready for customers!
+              {t("publish.nowLive")}
             </p>
             <div className="space-y-4">
               <Button
@@ -231,7 +232,7 @@ export function PublishStep({
                 className="bg-green-500 hover:bg-green-600 text-white mr-4"
               >
                 <Eye className="mr-2 w-5 h-5" />
-                View Live Website
+                {t("publish.viewLive")}
               </Button>
               <Button
                 onClick={() => (window.location.href = "/")}
@@ -239,7 +240,7 @@ export function PublishStep({
                 size="lg"
               >
                 <Home className="mr-2 w-5 h-5" />
-                Back to Dashboard
+                {t("publish.backToDashboard")}
               </Button>
             </div>
           </div>
@@ -259,7 +260,7 @@ export function PublishStep({
             size="lg"
           >
             <ArrowLeft className="mr-2 w-5 h-5" />
-            Back
+            {t("common.back")}
           </Button>
           <div></div>
         </div>
