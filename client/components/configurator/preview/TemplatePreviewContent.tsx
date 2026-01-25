@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import { useConfiguratorStore } from "@/store/configuratorStore";
 import {
   MapPin, Phone, Mail, Clock, Instagram, Facebook,
@@ -207,16 +207,25 @@ export function TemplatePreviewContent() {
   const navigateToPage = (page: string) => setPreviewState(p => ({ ...p, activePage: page, menuOpen: false }));
   const addToCart = (item: any) => setCartItems(prev => [...prev, item]);
 
-  // --- RENDERERS ---
-
-  // Helper for header font size
-  const getHeaderFontClass = () => {
-    switch (formData.headerFontSize) {
+  // --- HELPER: Header font size to tailwind class ---
+  const getHeaderFontClass = useCallback(() => {
+    const size = formData.headerFontSize;
+    // Support both legacy string IDs and new pixel-based IDs
+    switch (size) {
+      case 'xs': return 'text-[10px]';
       case 'small': return 'text-xs';
+      case 'medium': return 'text-sm';
       case 'large': return 'text-base';
+      case 'xl': return 'text-lg';
+      case '2xl': return 'text-xl';
+      case '3xl': return 'text-2xl';
+      case '4xl': return 'text-[28px]';
+      case '5xl': return 'text-[32px]';
       default: return 'text-sm';
     }
-  };
+  }, [formData.headerFontSize]);
+
+  // --- RENDERERS ---
 
   const renderNav = () => (
     <div
