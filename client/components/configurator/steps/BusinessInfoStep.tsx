@@ -15,6 +15,9 @@ import {
   ArrowLeft,
   ChevronRight,
   Check,
+  Upload,
+  Image,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,6 +138,62 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
       </div>
 
       <div className="space-y-4">
+        {/* Logo Upload */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            Logo (optional)
+          </label>
+          <div className="flex items-center gap-4">
+            {/* Logo Preview */}
+            <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden relative">
+              {business.logo?.url ? (
+                <>
+                  <img
+                    src={business.logo.url}
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => businessActions.setBusinessInfo({ logo: undefined })}
+                    className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </>
+              ) : (
+                <Image className="w-8 h-8 text-gray-400" />
+              )}
+            </div>
+
+            {/* Upload Button */}
+            <div className="flex-1">
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      businessActions.setBusinessInfo({
+                        logo: { url, file }
+                      });
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition-all cursor-pointer">
+                  <Upload className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">
+                    {business.logo?.url ? 'Logo ändern' : 'Logo hochladen'}
+                  </span>
+                </div>
+              </label>
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG bis 2MB</p>
+            </div>
+          </div>
+        </div>
+
         {/* Business Name */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">
