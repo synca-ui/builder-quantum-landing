@@ -1,4 +1,3 @@
-
 /**
  * Business Information Step Component
  * Extracts business name, type, location, slogan, and description
@@ -6,6 +5,7 @@
  */
 
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Coffee,
   Utensils,
@@ -53,6 +53,8 @@ interface StepProps {
 }
 
 export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
+  const { t } = useTranslation();
+
   // Get state from store
   const business = useConfiguratorBusiness();
 
@@ -125,20 +127,20 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
     <div className="py-8 max-w-xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-          Tell us about your business
+          {t("steps.businessInfo.title")}
         </h2>
-        <p className="text-gray-600">Just the basics to get started</p>
+        <p className="text-gray-600">{t("steps.businessInfo.subtitle")}</p>
       </div>
 
       <div className="space-y-4">
         {/* Business Name */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">
-            Business Name *
+            {t("business.name")} *
           </label>
           <Input
             type="text"
-            placeholder="e.g. Bella's Café"
+            placeholder={t("business.namePlaceholder")}
             value={business.name}
             onChange={(e) => handleBusinessNameChange(e.target.value)}
             className="w-full px-4 py-3 text-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
@@ -149,7 +151,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
         {/* Business Type - Compact */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-3">
-            Business Type *
+            {t("business.type")} *
           </label>
           <div className="grid grid-cols-2 gap-3">
             {BUSINESS_TYPES.map((type) => (
@@ -183,13 +185,13 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
         {/* Location */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">
-            Location
+            {t("business.location")}
           </label>
           <div className="relative">
             <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="City, State"
+              placeholder={t("business.locationPlaceholder")}
               value={business.location || ""}
               onChange={(e) => handleLocationChange(e.target.value)}
               className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
@@ -208,7 +210,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
               className="text-teal-600 hover:text-teal-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add tagline and description (optional)
+              {t("business.addOptional")}
             </Button>
           </div>
         )}
@@ -218,11 +220,11 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
           <div className="space-y-4 pt-2 border-t border-gray-100">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                Tagline
+                {t("business.slogan")}
               </label>
               <Input
                 type="text"
-                placeholder="e.g. The best coffee in town"
+                placeholder={t("business.sloganPlaceholder")}
                 value={business.slogan || ""}
                 onChange={(e) => handleSloganChange(e.target.value)}
                 className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
@@ -231,10 +233,10 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                What makes you special?
+                {t("business.whatMakesYouSpecial")}
               </label>
               <Textarea
-                placeholder="Tell us what sets you apart..."
+                placeholder={t("business.descriptionPlaceholder")}
                 value={business.uniqueDescription || ""}
                 onChange={(e) => handleDescriptionChange(e.target.value)}
                 className="w-full px-4 py-3 h-20 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
@@ -248,7 +250,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                 onClick={() => setShowOptionalFields(false)}
                 className="text-gray-500 hover:text-gray-700 text-sm"
               >
-                Hide optional fields
+                {t("business.hideOptional")}
               </Button>
             </div>
           </div>
@@ -263,7 +265,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={handleNextStep}
@@ -271,7 +273,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
