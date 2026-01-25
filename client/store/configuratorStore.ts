@@ -760,6 +760,8 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
 
       clearAllData: () => {
         checkThrottleGuard("clearAllData");
+
+        // Reset store state to defaults
         set({
           business: { ...defaultBusinessInfo },
           design: { ...defaultDesignConfig },
@@ -771,7 +773,20 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           payments: { ...defaultPaymentAndOffers },
           ui: { ...defaultUIState },
         });
+
+        // Clear Zustand persistence (localStorage)
         localStorage.removeItem("configurator-store");
+
+        // Clear StepPersistence data
+        localStorage.removeItem("configurator_persistence");
+        sessionStorage.removeItem("configurator_session");
+
+        // Clear any other related keys
+        localStorage.removeItem("currentConfigId");
+        localStorage.removeItem("configuratorData");
+        localStorage.removeItem("sync_user_id");
+
+        console.log("[Store] All configurator data cleared");
       },
     }),
     {
@@ -788,7 +803,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           payments: state.payments,
         }) as unknown as ConfiguratorState,
 
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
 
       version: 2,
       migrate: (persistedState: any, version: number) => {
