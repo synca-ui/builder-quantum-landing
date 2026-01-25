@@ -59,7 +59,7 @@ const FONT_SIZES = [
   },
 ];
 
-// Header font size options with pixel values
+// Header font size options with pixel values (extended to 32px)
 const HEADER_FONT_SIZES = [
   { id: "xs", name: "10px", value: "10px" },
   { id: "small", name: "12px", value: "12px" },
@@ -67,6 +67,9 @@ const HEADER_FONT_SIZES = [
   { id: "large", name: "16px", value: "16px" },
   { id: "xl", name: "18px", value: "18px" },
   { id: "2xl", name: "20px", value: "20px" },
+  { id: "3xl", name: "24px", value: "24px" },
+  { id: "4xl", name: "28px", value: "28px" },
+  { id: "5xl", name: "32px", value: "32px" },
 ];
 
 // Color tooltips for hover info
