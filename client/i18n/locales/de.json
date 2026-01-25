@@ -248,6 +248,34 @@
       "description": "Standort und Infos"
     }
   },
+  "features": {
+    "onlineOrdering": {
+      "title": "Online-Bestellung",
+      "description": "Ermögliche Kunden, direkt über deine Website zu bestellen"
+    },
+    "onlineStore": {
+      "title": "Online-Shop",
+      "description": "Verkaufe Produkte und Merchandise online mit Zahlungsabwicklung"
+    },
+    "teamSection": {
+      "title": "Team-Bereich",
+      "description": "Stelle dein Team und ihre Rollen vor"
+    },
+    "loyalty": {
+      "title": "Stempelkarte / Treue",
+      "description": "Belohne wiederkehrende Kunden mit digitalen Stempeln"
+    },
+    "coupons": {
+      "title": "Gutscheine / Voucher",
+      "description": "Erstelle und verwalte digitale Gutschein-Kampagnen"
+    },
+    "offers": {
+      "title": "Aktuelle Angebote",
+      "description": "Hebe zeitlich begrenzte Deals und Bundles hervor"
+    },
+    "enable": "Aktiviert",
+    "disable": "Deaktiviert"
+  },
   "preview": {
     "home": "Startseite",
     "menu": "Speisekarte",
