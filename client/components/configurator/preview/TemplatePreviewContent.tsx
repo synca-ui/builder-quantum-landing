@@ -422,7 +422,11 @@ export function TemplatePreviewContent() {
               ? formData.menuItems
               : getBusinessTypeDefaults(formData.businessType).menuItems
             ).map((item: any, i: number) => (
-              <div key={i} className={styles.itemCard}>
+              <div
+                key={i}
+                className={`${styles.itemCard} cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]`}
+                onClick={() => openDishModal(item)}
+              >
                 <div className="flex justify-between items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className={styles.itemNameClass} style={{ color: formData.fontColor }}>{item.name}</div>
@@ -431,7 +435,13 @@ export function TemplatePreviewContent() {
                   <div className="flex flex-col items-end gap-2 pl-2">
                     <div className={styles.itemPriceClass} style={{color: formData.priceColor}}>{item.price || "9.50"}€</div>
                     {formData.onlineOrdering && (
-                      <button onClick={() => addToCart(item)} className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md" style={{ backgroundColor: formData.primaryColor, color: '#FFF' }}><Plus className="w-4 h-4" /></button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                        className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md"
+                        style={{ backgroundColor: formData.primaryColor, color: '#FFF' }}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
                 </div>
