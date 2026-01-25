@@ -146,9 +146,9 @@ export default function Configurator() {
       <div className="w-[280px] xl:w-[320px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Preview</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{t("nav.livePreview")}</h3>
         </div>
-        <ShareQRButton url={getLiveUrl()} />
+        <ShareQRButton url={getLiveUrl()} t={t} />
       </div>
 
       <div className="relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-transform duration-300 pointer-events-auto">
@@ -161,7 +161,7 @@ export default function Configurator() {
       </div>
 
       <div className="mt-[-80px] xl:mt-[-40px] text-center opacity-60 shrink-0">
-        <p className="text-[10px] text-gray-400 font-medium">Interactive • Scrollable</p>
+        <p className="text-[10px] text-gray-400 font-medium">{t("nav.interactive")}</p>
       </div>
     </div>
   );
@@ -178,7 +178,7 @@ export default function Configurator() {
               <div className="hidden md:flex items-center ml-8">
                 <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                   <Settings className="w-4 h-4 text-teal-500" />
-                  <span className="text-sm font-bold text-gray-700">Step {currentStep + 1} of {CONFIGURATOR_STEPS_CONFIG.length}</span>
+                  <span className="text-sm font-bold text-gray-700">{t("nav.step", { current: currentStep + 1, total: CONFIGURATOR_STEPS_CONFIG.length })}</span>
                   <div className="w-16 bg-gray-200 rounded-full h-1.5 overflow-hidden ml-2">
                     <motion.div className="bg-gradient-to-r from-teal-500 to-purple-500 h-1.5 rounded-full" initial={{ width: 0 }} animate={{ width: `${progressPercentage}%` }} transition={{ duration: 0.5 }} />
                   </div>
@@ -186,7 +186,10 @@ export default function Configurator() {
               </div>
             )}
           </div>
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Language Selector */}
+            <LanguageSelector variant="compact" />
+
             {/* Explicit Save to Cloud Button */}
             <Button
               size="sm"
@@ -196,18 +199,18 @@ export default function Configurator() {
               className="border-gray-300 gap-2"
             >
               {saveStatus === 'saving' ? (
-                <><Loader2 className="w-3 h-3 animate-spin" /> Speichern...</>
+                <><Loader2 className="w-3 h-3 animate-spin" /> {t("common.saving")}</>
               ) : saveStatus === 'saved' ? (
-                <><Check className="w-3 h-3 text-green-500" /> Gespeichert</>
+                <><Check className="w-3 h-3 text-green-500" /> {t("common.saved")}</>
               ) : (
-                <><Save className="w-3 h-3" /> In Cloud speichern</>
+                <><Save className="w-3 h-3" /> {t("common.saveToCloud")}</>
               )}
             </Button>
             {currentStep >= 0 && (
               <div className="flex items-center space-x-2">
-                <Button size="sm" variant="outline" onClick={() => window.open(getLiveUrl(), "_blank")} className="border-gray-300">1:1 Preview</Button>
+                <Button size="sm" variant="outline" onClick={() => window.open(getLiveUrl(), "_blank")} className="border-gray-300">{t("nav.fullPreview")}</Button>
                 <Button size="sm" onClick={() => { saveToBackend(actions.data.getFullConfiguration()); }} className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white font-bold rounded-full shadow-lg ml-2">
-                  <Rocket className="w-4 h-4 mr-2" /> Publish Website
+                  <Rocket className="w-4 h-4 mr-2" /> {t("nav.publishWebsite")}
                 </Button>
               </div>
             )}
