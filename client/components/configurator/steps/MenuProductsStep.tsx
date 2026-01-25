@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronRight, Camera, Upload, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export function MenuProductsStep({
   nextStep,
   prevStep,
 }: MenuProductsStepProps) {
+  const { t } = useTranslation();
   const menuItems = useConfiguratorStore((s) => s.content.menuItems);
   const actions = useConfiguratorActions();
 
@@ -230,11 +232,10 @@ export function MenuProductsStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Add your menu or products
+          {t("steps.menuProducts.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Showcase what you offer. You can add items manually or upload your
-          menu.
+          {t("steps.menuProducts.subtitle")}
         </p>
       </div>
 
@@ -245,10 +246,10 @@ export function MenuProductsStep({
               <Camera className="w-8 h-8 text-orange-600" />
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">
-              Upload Menu Image
+              {t("menu.uploadMenuImage")}
             </h3>
             <p className="text-gray-600 text-sm mb-4">
-              Upload a photo of your existing menu
+              {t("menu.uploadMenuImageDesc")}
             </p>
             <Button
               variant="outline"
@@ -258,7 +259,7 @@ export function MenuProductsStep({
               }
             >
               <Upload className="w-4 h-4 mr-2" />
-              Choose Image File
+              {t("menu.chooseImageFile")}
             </Button>
             <input
               id="menu-img-upload"
@@ -277,10 +278,10 @@ export function MenuProductsStep({
               <Upload className="w-8 h-8 text-green-600" />
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">
-              Upload CSV File
+              {t("menu.uploadCSV")}
             </h3>
             <p className="text-gray-600 text-sm mb-4">
-              Upload structured menu data as CSV
+              {t("menu.uploadCSVDesc")}
             </p>
             <Button
               variant="outline"
@@ -288,7 +289,7 @@ export function MenuProductsStep({
               onClick={() => document.getElementById("csv-upload")?.click()}
             >
               <Upload className="w-4 h-4 mr-2" />
-              Choose CSV File
+              {t("menu.chooseCSVFile")}
             </Button>
             <input
               id="csv-upload"
@@ -298,7 +299,7 @@ export function MenuProductsStep({
               onChange={handleCSVUpload}
             />
             <p className="text-xs text-gray-500 mt-2">
-              Format: name,description,price
+              {t("menu.csvFormat")}
             </p>
           </div>
         </Card>
@@ -307,21 +308,21 @@ export function MenuProductsStep({
       <div className="text-center mb-8">
         <div className="flex items-center justify-center space-x-4">
           <div className="h-px bg-gray-300 flex-1"></div>
-          <span className="text-gray-500 font-medium">OR</span>
+          <span className="text-gray-500 font-medium">{t("menu.or")}</span>
           <div className="h-px bg-gray-300 flex-1"></div>
         </div>
       </div>
 
       <Card className="p-6 mb-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Item</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">{t("menu.addNewItem")}</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Item Name *
+              {t("menu.itemName")}
             </label>
             <Input
               type="text"
-              placeholder="e.g. Signature Latte"
+              placeholder={t("menu.itemNamePlaceholder")}
               value={newItem.name}
               onChange={(e) =>
                 setNewItem((prev) => ({ ...prev, name: e.target.value }))
@@ -331,11 +332,11 @@ export function MenuProductsStep({
           </div>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Description
+              {t("menu.itemDescription")}
             </label>
             <Input
               type="text"
-              placeholder="Brief description"
+              placeholder={t("menu.itemDescriptionPlaceholder")}
               value={newItem.description}
               onChange={(e) =>
                 setNewItem((prev) => ({ ...prev, description: e.target.value }))
@@ -345,7 +346,7 @@ export function MenuProductsStep({
           </div>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Price *
+              {t("menu.itemPrice")}
             </label>
             <div className="flex">
               <Input
@@ -370,7 +371,7 @@ export function MenuProductsStep({
         </div>
         <div className="mt-4">
           <label className="block text-sm font-bold text-gray-700 mb-2">
-            Images
+            {t("menu.images")}
           </label>
           <div className="flex items-center gap-3">
             <Button
@@ -379,7 +380,7 @@ export function MenuProductsStep({
                 document.getElementById("new-item-images")?.click()
               }
             >
-              Upload Images
+              {t("menu.uploadImages")}
             </Button>
             <input
               id="new-item-images"
@@ -390,7 +391,7 @@ export function MenuProductsStep({
               onChange={(e) => handleUploadImagesForNew(e.target.files)}
             />
             <div className="text-xs text-gray-500">
-              {newItem.images.length} selected
+              {newItem.images.length} {t("menu.selected")}
             </div>
           </div>
           {newItem.images.length > 0 && (
@@ -414,7 +415,7 @@ export function MenuProductsStep({
 
       {menuItems.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-bold text-gray-900">Your Menu Items</h3>
+          <h3 className="text-lg font-bold text-gray-900">{t("menu.yourMenuItems")}</h3>
           {menuItems.map((item, index) => (
             <Card key={item.id} className="p-4">
               <div className="flex justify-between items-start">
@@ -458,14 +459,14 @@ export function MenuProductsStep({
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    document.getElementById(`item-images-${index}`)?.click()
-                  }
-                >
-                  Upload Images
-                </Button>
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      document.getElementById(`item-images-${index}`)?.click()
+                    }
+                  >
+                    {t("menu.uploadImages")}
+                  </Button>
                 <input
                   id={`item-images-${index}`}
                   type="file"
@@ -477,7 +478,7 @@ export function MenuProductsStep({
                   }
                 />
                 <div className="text-xs text-gray-500">
-                  {Array.isArray(item.images) ? item.images.length : 0} images
+                  {Array.isArray(item.images) ? item.images.length : 0} {t("menu.images")}
                 </div>
               </div>
             </Card>
@@ -497,14 +498,14 @@ export function MenuProductsStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
