@@ -248,6 +248,34 @@
       "description": "Location and info"
     }
   },
+  "features": {
+    "onlineOrdering": {
+      "title": "Online Ordering",
+      "description": "Allow customers to place orders directly from your website"
+    },
+    "onlineStore": {
+      "title": "Online Store",
+      "description": "Sell products and merchandise online with payment processing"
+    },
+    "teamSection": {
+      "title": "Team Section",
+      "description": "Showcase your team members and their roles"
+    },
+    "loyalty": {
+      "title": "Stamp Card / Loyalty",
+      "description": "Reward returning customers with digital stamps"
+    },
+    "coupons": {
+      "title": "Coupons / Vouchers",
+      "description": "Create and manage digital coupon campaigns"
+    },
+    "offers": {
+      "title": "Current Offers / Specials",
+      "description": "Highlight time-limited deals and bundles"
+    },
+    "enable": "Enabled",
+    "disable": "Disabled"
+  },
   "preview": {
     "home": "Home",
     "menu": "Menu",
