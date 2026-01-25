@@ -334,7 +334,7 @@ export function TemplatePreviewContent() {
         <div className="space-y-6 animate-in fade-in duration-300">
           <h2 className={styles.titleClass}>Karte</h2>
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-            {['Alle', 'Speisen', 'Getränke', 'Desserts'].map((cat, i) => (
+            {['Alle', ...(getBusinessTypeDefaults(formData.businessType).categories.slice(0, 3))].map((cat, i) => (
               <span key={cat} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${i === 0 ? 'bg-current text-white/90 shadow-md' : 'border border-current/20 opacity-70'}`} style={i === 0 ? { backgroundColor: formData.fontColor, color: formData.backgroundColor } : {}}>{cat}</span>
             ))}
           </div>
