@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +20,8 @@ export function ReservationsStep({
                                    nextStep,
                                    prevStep,
                                  }: ReservationsStepProps) {
+  const { t } = useTranslation();
+
   // Store Selectors (einzeln selektiert für Performance)
   const reservationsEnabled = useConfiguratorStore(
     (s) => s.features.reservationsEnabled,
@@ -64,11 +67,10 @@ export function ReservationsStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Setup reservations
+          {t("steps.reservations.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Enable table bookings for your business. Perfect for restaurants and
-          cafés.
+          {t("steps.reservations.subtitle")}
         </p>
       </div>
 
@@ -77,10 +79,10 @@ export function ReservationsStep({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Enable Reservations
+                {t("reservations.enableReservations")}
               </h3>
               <p className="text-gray-600">
-                Allow customers to book tables online
+                {t("reservations.allowBooking")}
               </p>
             </div>
             <Button
@@ -92,7 +94,7 @@ export function ReservationsStep({
                 reservationsEnabled ? "bg-teal-500 hover:bg-teal-600" : ""
               }
             >
-              {reservationsEnabled ? "Enabled" : "Disabled"}
+              {reservationsEnabled ? t("reservations.enabled") : t("reservations.disabled")}
             </Button>
           </div>
         </Card>
@@ -101,12 +103,12 @@ export function ReservationsStep({
           <>
             <Card className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Booking Settings
+                {t("reservations.bookingSettings")}
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Maximum party size
+                    {t("reservations.maxPartySize")}
                   </label>
                   <Input
                     type="number"
@@ -123,7 +125,7 @@ export function ReservationsStep({
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Notification method
+                    {t("reservations.notificationMethod")}
                   </label>
                   <select
                     value={notificationMethod}
@@ -144,12 +146,12 @@ export function ReservationsStep({
 
             <Card className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Reservation Button Style
+                {t("reservations.buttonStyle")}
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
-                    Button Color
+                    {t("reservations.buttonColor")}
                   </label>
                   <div className="flex items-center space-x-4">
                     <input
@@ -173,7 +175,7 @@ export function ReservationsStep({
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
-                    Text Color
+                    {t("reservations.textColor")}
                   </label>
                   <div className="flex items-center space-x-4">
                     <input
@@ -201,13 +203,13 @@ export function ReservationsStep({
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-3">
-                    Button Shape
+                    {t("reservations.buttonShape")}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "rounded", name: "Rounded", class: "rounded-lg" },
-                      { id: "pill", name: "Pill", class: "rounded-full" },
-                      { id: "square", name: "Square", class: "rounded-none" },
+                      { id: "rounded", nameKey: "reservations.rounded", class: "rounded-lg" },
+                      { id: "pill", nameKey: "reservations.pill", class: "rounded-full" },
+                      { id: "square", nameKey: "reservations.square", class: "rounded-none" },
                     ].map((shape) => (
                       <Button
                         key={shape.id}
@@ -222,7 +224,7 @@ export function ReservationsStep({
                         }
                         className={`${shape.class} ${reservationButtonShape === shape.id ? "bg-teal-500 hover:bg-teal-600" : ""}`}
                       >
-                        {shape.name}
+                        {t(shape.nameKey)}
                       </Button>
                     ))}
                   </div>
@@ -246,17 +248,17 @@ export function ReservationsStep({
                   }}
                 >
                   <Calendar className="w-4 h-4 mr-2 inline" />
-                  Reserve Table
+                  {t("reservations.reserveTable")}
                 </button>
               </div>
             </Card>
 
             <Card className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Available Time Slots
+                {t("reservations.availableTimeSlots")}
               </h3>
               <p className="text-gray-600 mb-4">
-                Set the times when customers can make reservations
+                {t("reservations.timeSlotsDesc")}
               </p>
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {timeSlots.map((time) => {
@@ -290,14 +292,14 @@ export function ReservationsStep({
       <div className="flex justify-between mt-8">
         <Button type="button" onClick={prevStep} variant="outline" size="lg">
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
