@@ -3,8 +3,9 @@ import { useConfiguratorStore } from "@/store/configuratorStore";
 import {
   MapPin, Phone, Mail, Clock, Instagram, Facebook,
   Coffee, Utensils, ShoppingBag, Menu, X,
-  Plus, ChevronRight, Camera, ArrowRight
+  Plus, ChevronRight, ChevronDown, Camera, ArrowRight
 } from "lucide-react";
+import { ReservationButton } from "@/components/ui/ReservationButton";
 
 // --- HELPER: Bild-URLs normalisieren ---
 function normalizeImageSrc(img: any): string {
@@ -19,36 +20,77 @@ function normalizeImageSrc(img: any): string {
 }
 
 export function TemplatePreviewContent() {
-  // 1. DATEN AUS DEM STORE LADEN
-  const business = useConfiguratorStore((s) => s.business);
-  const design = useConfiguratorStore((s) => s.design);
-  const content = useConfiguratorStore((s) => s.content);
-  const contact = useConfiguratorStore((s) => s.contact);
-  const features = useConfiguratorStore((s) => s.features);
-  const pages = useConfiguratorStore((s) => s.pages);
+  // 1. GRANULAR SELECTORS for optimized re-renders
+  // Business fields
+  const businessName = useConfiguratorStore((s) => s.business.name);
+  const businessType = useConfiguratorStore((s) => s.business.type);
+  const location = useConfiguratorStore((s) => s.business.location);
+  const slogan = useConfiguratorStore((s) => s.business.slogan);
+  const uniqueDescription = useConfiguratorStore((s) => s.business.uniqueDescription);
 
-  // 2. ADAPTER
+  // Design fields
+  const template = useConfiguratorStore((s) => s.design.template);
+  const primaryColor = useConfiguratorStore((s) => s.design.primaryColor);
+  const secondaryColor = useConfiguratorStore((s) => s.design.secondaryColor);
+  const fontFamily = useConfiguratorStore((s) => s.design.fontFamily);
+  const backgroundColor = useConfiguratorStore((s) => s.design.backgroundColor);
+  const fontColor = useConfiguratorStore((s) => s.design.fontColor);
+
+  // Content fields
+  const menuItems = useConfiguratorStore((s) => s.content.menuItems);
+  const gallery = useConfiguratorStore((s) => s.content.gallery);
+  const openingHours = useConfiguratorStore((s) => s.content.openingHours);
+
+  // Contact fields
+  const contactMethods = useConfiguratorStore((s) => s.contact.contactMethods);
+  const phone = useConfiguratorStore((s) => s.contact.phone);
+  const email = useConfiguratorStore((s) => s.contact.email);
+
+  // Feature fields
+  const onlineOrdering = useConfiguratorStore((s) => s.features.onlineOrderingEnabled);
+  const reservationsEnabled = useConfiguratorStore((s) => s.features.reservationsEnabled);
+  const reservationButtonColor = useConfiguratorStore((s) => s.features.reservationButtonColor);
+  const reservationButtonTextColor = useConfiguratorStore((s) => s.features.reservationButtonTextColor);
+  const reservationButtonShape = useConfiguratorStore((s) => s.features.reservationButtonShape);
+
+  // Pages fields
+  const selectedPages = useConfiguratorStore((s) => s.pages.selectedPages);
+
+  // 2. ADAPTER - formData built from granular selectors
   const formData = useMemo(() => ({
-    businessName: business.name || "Dein Geschäft",
-    businessType: business.type || "restaurant",
-    location: business.location,
-    slogan: business.slogan,
-    uniqueDescription: business.uniqueDescription,
-    template: design.template || "minimalist",
-    primaryColor: design.primaryColor || "#2563EB",
-    secondaryColor: design.secondaryColor || "#7C3AED",
-    fontFamily: design.fontFamily || "sans-serif",
-    backgroundColor: design.backgroundColor || "#FFFFFF",
-    fontColor: design.fontColor || "#000000",
-    priceColor: (design as any).priceColor || design.primaryColor || "#2563EB",
-    fontSize: (design as any).fontSize || "medium",
-    menuItems: content.menuItems || [],
-    gallery: content.gallery || [],
-    openingHours: content.openingHours || {},
-    contactMethods: contact.contactMethods || [],
-    onlineOrdering: features.onlineOrderingEnabled,
-    selectedPages: pages.selectedPages || ["home"],
-  }), [business, design, content, contact, features, pages]);
+    businessName: businessName || "Dein Geschäft",
+    businessType: businessType || "restaurant",
+    location,
+    slogan,
+    uniqueDescription,
+    template: template || "minimalist",
+    primaryColor: primaryColor || "#2563EB",
+    secondaryColor: secondaryColor || "#7C3AED",
+    fontFamily: fontFamily || "sans-serif",
+    backgroundColor: backgroundColor || "#FFFFFF",
+    fontColor: fontColor || "#000000",
+    priceColor: primaryColor || "#2563EB",
+    fontSize: "medium",
+    menuItems: menuItems || [],
+    gallery: gallery || [],
+    openingHours: openingHours || {},
+    contactMethods: contactMethods || [],
+    phone,
+    email,
+    onlineOrdering,
+    reservationsEnabled,
+    reservationButtonColor: reservationButtonColor || primaryColor || "#2563EB",
+    reservationButtonTextColor: reservationButtonTextColor || "#FFFFFF",
+    reservationButtonShape: reservationButtonShape || "rounded",
+    selectedPages: selectedPages || ["home"],
+  }), [
+    businessName, businessType, location, slogan, uniqueDescription,
+    template, primaryColor, secondaryColor, fontFamily, backgroundColor, fontColor,
+    menuItems, gallery, openingHours,
+    contactMethods, phone, email,
+    onlineOrdering, reservationsEnabled, reservationButtonColor, reservationButtonTextColor, reservationButtonShape,
+    selectedPages
+  ]);
 
   // 3. LOKALER STATE
   const [previewState, setPreviewState] = useState({
@@ -57,6 +99,7 @@ export function TemplatePreviewContent() {
   });
 
   const [cartItems, setCartItems] = useState<any[]>([]);
+  const [hoursExpanded, setHoursExpanded] = useState(false);
 
   // 4. STYLE HELPER
   const getFontSize = (type: 'title' | 'body' | 'small' | 'price') => {
@@ -225,15 +268,43 @@ export function TemplatePreviewContent() {
             </div>
           </div>
 
-          <div className="opacity-60 text-center py-6 border-t border-current/10 mt-6 space-y-2">
-            <div className="flex items-center justify-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span className="text-xs font-medium">Heute: 09:00 - 22:00</span>
+          {/* Interactive Opening Hours & Location Section */}
+          <div
+            className="text-center py-6 border-t border-current/10 mt-6 space-y-3 cursor-pointer group"
+            onClick={() => setHoursExpanded(!hoursExpanded)}
+          >
+            {/* Collapsed/Expanded Toggle */}
+            <div className="flex items-center justify-center gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
+              <Clock className="w-4 h-4 shrink-0" />
+              <span className="text-xs font-medium">
+                {hoursExpanded ? "Öffnungszeiten" : "Heute: 09:00 - 22:00"}
+              </span>
+              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${hoursExpanded ? 'rotate-180' : ''}`} />
             </div>
+
+            {/* Expanded Opening Hours */}
+            {hoursExpanded && (
+              <div className="mt-3 space-y-1.5 text-left max-w-[200px] mx-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                {Object.keys(formData.openingHours).length > 0 ? (
+                  Object.entries(formData.openingHours).map(([day, hours]: any) => (
+                    <div key={day} className="flex justify-between text-xs opacity-80">
+                      <span className="capitalize">{day}</span>
+                      <span className="font-medium">
+                        {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs italic opacity-50 text-center">Keine Zeiten hinterlegt</p>
+                )}
+              </div>
+            )}
+
+            {/* Location - Always visible, fixed layout */}
             {formData.location && (
-              <div className="flex items-center justify-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span className="text-xs font-medium">{formData.location}</span>
+              <div className="flex items-center justify-center gap-2 opacity-70 mt-2 max-w-full px-4">
+                <MapPin className="w-4 h-4 shrink-0 flex-none" />
+                <span className="text-xs font-medium truncate">{formData.location}</span>
               </div>
             )}
           </div>
@@ -368,9 +439,23 @@ export function TemplatePreviewContent() {
         <div className={styles.page}>
           {renderContent()}
         </div>
-        {/* Footer Spacer */}
-        <div className="h-20 w-full" />
+        {/* Footer Spacer - extra space for reservation button */}
+        <div className="h-24 w-full" />
       </div>
+
+      {/* Reservation Button - Fixed at bottom when enabled */}
+      {formData.reservationsEnabled && (
+        <div className="absolute bottom-4 left-4 right-4 z-30 flex justify-center">
+          <ReservationButton
+            color={formData.reservationButtonColor}
+            textColor={formData.reservationButtonTextColor}
+            shape={formData.reservationButtonShape as "rounded" | "pill" | "square"}
+            className="w-full max-w-[280px] shadow-xl"
+          >
+            Reservieren
+          </ReservationButton>
+        </div>
+      )}
     </div>
   );
 }
