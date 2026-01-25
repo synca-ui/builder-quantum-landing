@@ -99,11 +99,18 @@
     "continueProject": "Projekt fortsetzen"
   },
   "templates": {
+    "available": "Verfügbare Templates",
     "minimalist": "Minimalistisch",
+    "minimalistDesc": "Narratives, minimales Design mit bildschirmfüllenden Sektionen.",
     "modern": "Modern",
+    "modernDesc": "Zeitgemäßes Design mit kräftigen Farben und eleganten Animationen.",
     "stylish": "Stilvoll",
+    "stylishDesc": "Visuell orientiertes Design mit Overlays, gemischten Sektionen und Bewegung.",
     "cozy": "Gemütlich",
-    "selected": "Ausgewählt: {{name}}"
+    "cozyDesc": "Warme, freundliche Ästhetik mit abgerundeten Elementen und authentischen Fotos.",
+    "selected": "Ausgewählt: {{name}}",
+    "selectedLabel": "Ausgewählt",
+    "useThis": "Dieses Template verwenden"
   },
   "business": {
     "name": "Geschäftsname",
