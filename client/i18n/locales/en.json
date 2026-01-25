@@ -331,6 +331,32 @@
     "customDomain": "Custom Domain",
     "liveAt": "Live at"
   },
+  "domain": {
+    "freeSubdomain": "Free Subdomain",
+    "freeSubdomainDesc": "Get started quickly with a free subdomain",
+    "free": "FREE",
+    "customDomain": "Custom Domain",
+    "customDomainDesc": "Professional domain for your business",
+    "fromPrice": "From $12.99/year",
+    "yourFreeUrl": "Your Free Website URL",
+    "availableAt": "Your website will be available at",
+    "connectCustom": "Connect Your Custom Domain",
+    "enterDomain": "Enter Your Domain",
+    "validate": "Validate",
+    "searchDomains": "Or Search New Domains",
+    "search": "Search",
+    "select": "Select"
+  },
+  "seo": {
+    "basicSettings": "Basic SEO Settings",
+    "metaTitle": "Meta Title",
+    "metaDescription": "Meta Description",
+    "keywords": "Keywords",
+    "socialSharing": "Social Media Sharing",
+    "socialImage": "Social Media Image",
+    "analytics": "Analytics & Tracking",
+    "searchPreview": "Search Result Preview"
+  },
   "footer": {
     "poweredBy": "Powered by Maitr",
     "allRightsReserved": "All rights reserved",
