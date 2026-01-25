@@ -86,6 +86,7 @@ export default function Configurator() {
   const actions = useConfiguratorActions();
 
   const currentStep = useConfiguratorStore((s) => s.ui.currentStep);
+  const cloudSyncEnabled = useConfiguratorStore((s) => s.ui.cloudSyncEnabled);
   const nextStepStore = useConfiguratorStore((s) => s.nextStep);
   const prevStepStore = useConfiguratorStore((s) => s.prevStep);
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
