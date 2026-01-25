@@ -19,7 +19,8 @@
     "close": "Close",
     "confirm": "Confirm",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "required": "Required"
   },
   "nav": {
     "step": "Step {{current}} of {{total}}",
@@ -214,6 +215,32 @@
     "phone": "Phone",
     "notes": "Notes",
     "submit": "Submit Request"
+  },
+  "pages": {
+    "home": {
+      "name": "Home",
+      "description": "Main landing page"
+    },
+    "menu": {
+      "name": "Menu",
+      "description": "Your products or dishes"
+    },
+    "gallery": {
+      "name": "Gallery",
+      "description": "Photos of your business"
+    },
+    "about": {
+      "name": "About",
+      "description": "Your story and team"
+    },
+    "reservations": {
+      "name": "Reservations",
+      "description": "Table booking system"
+    },
+    "contact": {
+      "name": "Contact",
+      "description": "Location and info"
+    }
   },
   "preview": {
     "home": "Home",

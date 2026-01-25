@@ -19,7 +19,8 @@
     "close": "Schließen",
     "confirm": "Bestätigen",
     "yes": "Ja",
-    "no": "Nein"
+    "no": "Nein",
+    "required": "Pflicht"
   },
   "nav": {
     "step": "Schritt {{current}} von {{total}}",
@@ -214,6 +215,32 @@
     "phone": "Telefon",
     "notes": "Anmerkungen",
     "submit": "Anfrage senden"
+  },
+  "pages": {
+    "home": {
+      "name": "Startseite",
+      "description": "Haupt-Landingpage"
+    },
+    "menu": {
+      "name": "Speisekarte",
+      "description": "Deine Produkte oder Gerichte"
+    },
+    "gallery": {
+      "name": "Galerie",
+      "description": "Fotos deines Geschäfts"
+    },
+    "about": {
+      "name": "Über uns",
+      "description": "Deine Geschichte und dein Team"
+    },
+    "reservations": {
+      "name": "Reservierungen",
+      "description": "Tischbuchungs-System"
+    },
+    "contact": {
+      "name": "Kontakt",
+      "description": "Standort und Infos"
+    }
   },
   "preview": {
     "home": "Startseite",
