@@ -35,7 +35,11 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./client"), // Alias for 'client' directory
       "@shared": path.resolve(__dirname, "./shared"), // Alias for 'shared' directory
+      // Force single React instance to prevent duplicate React issues
+      "react": path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
+    dedupe: ["react", "react-dom"],
   },
 }));
 
