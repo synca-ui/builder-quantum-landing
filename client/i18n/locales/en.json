@@ -1,0 +1,193 @@
+{
+  "common": {
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "saveToCloud": "Save to Cloud",
+    "cancel": "Cancel",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Finish",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "preview": "Preview",
+    "publish": "Publish",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "step": "Step {{current}} of {{total}}",
+    "livePreview": "Live Preview",
+    "interactive": "Interactive • Scrollable",
+    "shareQr": "Share QR",
+    "fullPreview": "1:1 Preview",
+    "publishWebsite": "Publish Website",
+    "scanToOpen": "Scan to open"
+  },
+  "steps": {
+    "template": {
+      "title": "Choose Your Template",
+      "subtitle": "Select a design that matches your business"
+    },
+    "businessInfo": {
+      "title": "Tell Us About Your Business",
+      "subtitle": "This information will appear on your website"
+    },
+    "design": {
+      "title": "Design Customization",
+      "subtitle": "Customize colors and fonts to match your branding"
+    },
+    "pageStructure": {
+      "title": "Select Your Pages",
+      "subtitle": "Choose which pages your website should have"
+    },
+    "openingHours": {
+      "title": "Set Your Opening Hours",
+      "subtitle": "When can your customers visit you?"
+    },
+    "menuProducts": {
+      "title": "Menu or Products",
+      "subtitle": "Add your dishes, drinks or products"
+    },
+    "reservations": {
+      "title": "Setup Reservations",
+      "subtitle": "Allow your customers to book online"
+    },
+    "contactSocial": {
+      "title": "Contact & Social Media",
+      "subtitle": "How can your customers reach you?"
+    },
+    "mediaGallery": {
+      "title": "Upload Your Photos",
+      "subtitle": "Show your business at its best"
+    },
+    "advancedFeatures": {
+      "title": "Optional Features",
+      "subtitle": "Extend your website with additional functionality"
+    },
+    "featureConfig": {
+      "title": "Configure Feature",
+      "subtitle": "Customize the selected feature"
+    },
+    "domainHosting": {
+      "title": "Choose Your Domain",
+      "subtitle": "Select your web address"
+    },
+    "seoOptimization": {
+      "title": "SEO Optimization",
+      "subtitle": "Get found better on Google"
+    },
+    "previewAdjustments": {
+      "title": "Preview & Final Tweaks",
+      "subtitle": "Review everything before publishing"
+    },
+    "publish": {
+      "title": "Publish Your Website",
+      "subtitle": "Your website is ready for the world!"
+    }
+  },
+  "welcome": {
+    "title": "Welcome to Maitr",
+    "subtitle": "Create a professional website for your hospitality business in minutes",
+    "getStarted": "Get Started",
+    "continueProject": "Continue Project"
+  },
+  "templates": {
+    "minimalist": "Minimalist",
+    "modern": "Modern",
+    "stylish": "Stylish",
+    "cozy": "Cozy",
+    "selected": "Selected: {{name}}"
+  },
+  "business": {
+    "name": "Business Name",
+    "namePlaceholder": "e.g. Ristorante Milano",
+    "type": "Business Type",
+    "types": {
+      "restaurant": "Restaurant",
+      "cafe": "Café",
+      "bar": "Bar",
+      "bakery": "Bakery",
+      "other": "Other"
+    },
+    "location": "Location",
+    "locationPlaceholder": "e.g. Downtown",
+    "slogan": "Slogan",
+    "sloganPlaceholder": "e.g. Authentic Italian cuisine",
+    "description": "Description",
+    "descriptionPlaceholder": "Tell your customers what makes you special..."
+  },
+  "design": {
+    "primaryColor": "Primary Color",
+    "secondaryColor": "Secondary Color",
+    "backgroundColor": "Background Color",
+    "fontColor": "Font Color",
+    "fontFamily": "Font Family"
+  },
+  "menu": {
+    "title": "Menu",
+    "addItem": "Add Item",
+    "addCategory": "Add Category",
+    "itemName": "Name",
+    "itemDescription": "Description",
+    "itemPrice": "Price",
+    "category": "Category"
+  },
+  "hours": {
+    "title": "Opening Hours",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "open": "Opens",
+    "close": "Closes",
+    "closed": "Closed",
+    "today": "Today"
+  },
+  "contact": {
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "socialMedia": "Social Media"
+  },
+  "reservations": {
+    "title": "Reservation",
+    "book": "Reserve",
+    "requestReservation": "Request Reservation",
+    "date": "Date",
+    "time": "Time",
+    "guests": "Guests",
+    "name": "Name",
+    "phone": "Phone",
+    "notes": "Notes",
+    "submit": "Submit Request"
+  },
+  "preview": {
+    "home": "Home",
+    "menu": "Menu",
+    "contact": "Contact",
+    "gallery": "Gallery",
+    "highlights": "Highlights",
+    "ourSpecials": "Our Specials"
+  },
+  "publishing": {
+    "subdomain": "Subdomain",
+    "customDomain": "Custom Domain",
+    "liveAt": "Live at"
+  },
+  "footer": {
+    "poweredBy": "Powered by Maitr",
+    "allRightsReserved": "All rights reserved",
+    "privacy": "Privacy",
+    "imprint": "Imprint"
+  }
+}

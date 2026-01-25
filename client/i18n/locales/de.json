@@ -1,0 +1,193 @@
+{
+  "common": {
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "saved": "Gespeichert",
+    "saveToCloud": "In Cloud speichern",
+    "cancel": "Abbrechen",
+    "next": "Weiter",
+    "back": "Zurück",
+    "finish": "Abschließen",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolgreich",
+    "preview": "Vorschau",
+    "publish": "Veröffentlichen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "add": "Hinzufügen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "yes": "Ja",
+    "no": "Nein"
+  },
+  "nav": {
+    "step": "Schritt {{current}} von {{total}}",
+    "livePreview": "Live-Vorschau",
+    "interactive": "Interaktiv • Scrollbar",
+    "shareQr": "QR teilen",
+    "fullPreview": "1:1 Vorschau",
+    "publishWebsite": "Website veröffentlichen",
+    "scanToOpen": "Zum Öffnen scannen"
+  },
+  "steps": {
+    "template": {
+      "title": "Wähle dein Template",
+      "subtitle": "Wähle ein Design, das zu deinem Geschäft passt"
+    },
+    "businessInfo": {
+      "title": "Erzähl uns von deinem Geschäft",
+      "subtitle": "Diese Informationen erscheinen auf deiner Website"
+    },
+    "design": {
+      "title": "Design anpassen",
+      "subtitle": "Passe Farben und Schriften an dein Branding an"
+    },
+    "pageStructure": {
+      "title": "Seiten auswählen",
+      "subtitle": "Wähle welche Seiten deine Website haben soll"
+    },
+    "openingHours": {
+      "title": "Öffnungszeiten festlegen",
+      "subtitle": "Wann können dich deine Kunden besuchen?"
+    },
+    "menuProducts": {
+      "title": "Speisekarte oder Produkte",
+      "subtitle": "Füge deine Speisen, Getränke oder Produkte hinzu"
+    },
+    "reservations": {
+      "title": "Reservierungen einrichten",
+      "subtitle": "Ermögliche deinen Kunden, online zu reservieren"
+    },
+    "contactSocial": {
+      "title": "Kontakt & Social Media",
+      "subtitle": "Wie können dich deine Kunden erreichen?"
+    },
+    "mediaGallery": {
+      "title": "Fotos hochladen",
+      "subtitle": "Zeige dein Geschäft von seiner besten Seite"
+    },
+    "advancedFeatures": {
+      "title": "Optionale Features",
+      "subtitle": "Erweitere deine Website mit zusätzlichen Funktionen"
+    },
+    "featureConfig": {
+      "title": "Feature konfigurieren",
+      "subtitle": "Passe das ausgewählte Feature an"
+    },
+    "domainHosting": {
+      "title": "Domain wählen",
+      "subtitle": "Wähle deine Webadresse"
+    },
+    "seoOptimization": {
+      "title": "SEO-Optimierung",
+      "subtitle": "Werde besser in Google gefunden"
+    },
+    "previewAdjustments": {
+      "title": "Vorschau & letzte Anpassungen",
+      "subtitle": "Überprüfe alles vor der Veröffentlichung"
+    },
+    "publish": {
+      "title": "Website veröffentlichen",
+      "subtitle": "Deine Website ist bereit für die Welt!"
+    }
+  },
+  "welcome": {
+    "title": "Willkommen bei Maitr",
+    "subtitle": "Erstelle in Minuten eine professionelle Website für dein Gastronomiebetrieb",
+    "getStarted": "Jetzt starten",
+    "continueProject": "Projekt fortsetzen"
+  },
+  "templates": {
+    "minimalist": "Minimalistisch",
+    "modern": "Modern",
+    "stylish": "Stilvoll",
+    "cozy": "Gemütlich",
+    "selected": "Ausgewählt: {{name}}"
+  },
+  "business": {
+    "name": "Geschäftsname",
+    "namePlaceholder": "z.B. Ristorante Milano",
+    "type": "Geschäftsart",
+    "types": {
+      "restaurant": "Restaurant",
+      "cafe": "Café",
+      "bar": "Bar",
+      "bakery": "Bäckerei",
+      "other": "Sonstiges"
+    },
+    "location": "Standort",
+    "locationPlaceholder": "z.B. Berlin Mitte",
+    "slogan": "Slogan",
+    "sloganPlaceholder": "z.B. Authentische italienische Küche",
+    "description": "Beschreibung",
+    "descriptionPlaceholder": "Erzähl deinen Kunden, was dich besonders macht..."
+  },
+  "design": {
+    "primaryColor": "Primärfarbe",
+    "secondaryColor": "Sekundärfarbe",
+    "backgroundColor": "Hintergrundfarbe",
+    "fontColor": "Textfarbe",
+    "fontFamily": "Schriftart"
+  },
+  "menu": {
+    "title": "Speisekarte",
+    "addItem": "Gericht hinzufügen",
+    "addCategory": "Kategorie hinzufügen",
+    "itemName": "Name",
+    "itemDescription": "Beschreibung",
+    "itemPrice": "Preis",
+    "category": "Kategorie"
+  },
+  "hours": {
+    "title": "Öffnungszeiten",
+    "monday": "Montag",
+    "tuesday": "Dienstag",
+    "wednesday": "Mittwoch",
+    "thursday": "Donnerstag",
+    "friday": "Freitag",
+    "saturday": "Samstag",
+    "sunday": "Sonntag",
+    "open": "Öffnet",
+    "close": "Schließt",
+    "closed": "Geschlossen",
+    "today": "Heute"
+  },
+  "contact": {
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "address": "Adresse",
+    "socialMedia": "Social Media"
+  },
+  "reservations": {
+    "title": "Reservierung",
+    "book": "Reservieren",
+    "requestReservation": "Reservierung anfragen",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "guests": "Gäste",
+    "name": "Name",
+    "phone": "Telefon",
+    "notes": "Anmerkungen",
+    "submit": "Anfrage senden"
+  },
+  "preview": {
+    "home": "Startseite",
+    "menu": "Speisekarte",
+    "contact": "Kontakt",
+    "gallery": "Galerie",
+    "highlights": "Highlights",
+    "ourSpecials": "Unsere Empfehlungen"
+  },
+  "publishing": {
+    "subdomain": "Subdomain",
+    "customDomain": "Eigene Domain",
+    "liveAt": "Erreichbar unter"
+  },
+  "footer": {
+    "poweredBy": "Erstellt mit Maitr",
+    "allRightsReserved": "Alle Rechte vorbehalten",
+    "privacy": "Datenschutz",
+    "imprint": "Impressum"
+  }
+}
