@@ -335,30 +335,36 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
       /**
        * Apply smart defaults based on business type
        * Auto-populates menu items, opening hours, features, and pages
+       * ALWAYS applies defaults when business type is explicitly selected
        */
       applyBusinessTypeDefaults: (type) => {
         checkThrottleGuard("applyBusinessTypeDefaults");
         const defaults = getBusinessTypeDefaults(type);
 
+        console.log("[Store] Applying business type defaults for:", type, defaults);
+
         set((state) => {
-          // Only apply defaults if content is empty (don't overwrite user data)
-          const hasExistingMenuItems = state.content.menuItems.length > 0;
-          const hasCustomizedFeatures = state.features.reservationsEnabled || state.features.onlineOrderingEnabled;
+          // Check if user has manually added custom items (not default items)
+          const hasUserCustomItems = state.content.menuItems.some(
+            (item) => !item.id.startsWith("default-")
+          );
 
           return {
-            // Update menu items only if empty
+            // Apply menu items: replace defaults, keep user custom items
             content: {
               ...state.content,
-              menuItems: hasExistingMenuItems ? state.content.menuItems : defaults.menuItems,
+              menuItems: hasUserCustomItems
+                ? [...defaults.menuItems, ...state.content.menuItems.filter(item => !item.id.startsWith("default-"))]
+                : defaults.menuItems,
               openingHours: defaults.openingHours,
               categories: defaults.categories,
             },
-            // Update features only if not customized
-            features: hasCustomizedFeatures ? state.features : {
+            // Always apply features for the business type
+            features: {
               ...state.features,
               ...defaults.features,
             },
-            // Update pages
+            // Apply default pages if none selected
             pages: {
               ...state.pages,
               selectedPages: state.pages.selectedPages.length > 0
