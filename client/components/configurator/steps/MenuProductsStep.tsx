@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronRight, Camera, Upload, Plus, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Camera, Upload, Plus, X, Tag, Edit2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   useConfiguratorStore,
   useConfiguratorActions,
@@ -22,14 +23,62 @@ export function MenuProductsStep({
 }: MenuProductsStepProps) {
   const { t } = useTranslation();
   const menuItems = useConfiguratorStore((s) => s.content.menuItems);
+  const categories = useConfiguratorStore((s) => s.content.categories) || [];
   const actions = useConfiguratorActions();
 
   const [newItem, setNewItem] = useState({
     name: "",
     description: "",
     price: "",
+    category: "",
     images: [] as { url: string; alt: string; file?: File }[],
   });
+
+  // Category management state
+  const [newCategory, setNewCategory] = useState("");
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [editCategoryValue, setEditCategoryValue] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const addCategory = () => {
+    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
+      actions.content.setCategories([...categories, newCategory.trim()]);
+      setNewCategory("");
+    }
+  };
+
+  const removeCategory = (cat: string) => {
+    actions.content.setCategories(categories.filter(c => c !== cat));
+    // Also remove category from items
+    menuItems.forEach(item => {
+      if ((item as any).category === cat) {
+        actions.content.updateMenuItem(item.id, { category: undefined } as any);
+      }
+    });
+    if (activeCategory === cat) setActiveCategory(null);
+  };
+
+  const updateCategory = (oldCat: string, newCat: string) => {
+    if (!newCat.trim() || categories.includes(newCat.trim())) {
+      setEditingCategory(null);
+      return;
+    }
+    const newCats = categories.map(c => c === oldCat ? newCat.trim() : c);
+    actions.content.setCategories(newCats);
+    // Update items with old category
+    menuItems.forEach(item => {
+      if ((item as any).category === oldCat) {
+        actions.content.updateMenuItem(item.id, { category: newCat.trim() } as any);
+      }
+    });
+    if (activeCategory === oldCat) setActiveCategory(newCat.trim());
+    setEditingCategory(null);
+  };
+
+  // Filter items by category
+  const filteredItems = activeCategory
+    ? menuItems.filter(item => (item as any).category === activeCategory)
+    : menuItems;
 
   const addMenuItem = () => {
     if (newItem.name && newItem.price) {
@@ -38,11 +87,12 @@ export function MenuProductsStep({
         name: newItem.name,
         description: newItem.description,
         price: newItem.price,
+        category: newItem.category || undefined,
         image: newItem.images?.[0],
         images: newItem.images,
       };
       actions.content.addMenuItem(itemToAdd);
-      setNewItem({ name: "", description: "", price: "", images: [] });
+      setNewItem({ name: "", description: "", price: "", category: "", images: [] });
     }
   };
 
