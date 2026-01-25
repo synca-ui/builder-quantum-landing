@@ -73,6 +73,7 @@ interface UIState {
   saveLoading: boolean;
   saveError: string | null;
   cloudSyncEnabled: boolean;
+  historyCount: number; // Track history stack size for reactive undo button
 }
 
 // History stack (kept outside store to avoid persisting)
@@ -273,6 +274,7 @@ const defaultUIState: UIState = {
   saveLoading: false,
   saveError: null,
   cloudSyncEnabled: true,
+  historyCount: 0,
 };
 
 /**
@@ -332,6 +334,8 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         if (historyStack.length > MAX_HISTORY) {
           historyStack.shift();
         }
+        // Update reactive history count
+        set((s) => ({ ui: { ...s.ui, historyCount: historyStack.length } }));
         console.log("[History] Snapshot pushed, stack size:", historyStack.length);
       },
 
@@ -343,7 +347,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }
         const snapshot = historyStack.pop()!;
         console.log("[History] Restoring snapshot from", new Date(snapshot.timestamp).toLocaleTimeString());
-        set({
+        set((s) => ({
           business: snapshot.business,
           design: snapshot.design,
           content: snapshot.content,
@@ -351,7 +355,8 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           contact: snapshot.contact,
           pages: snapshot.pages,
           payments: snapshot.payments,
-        });
+          ui: { ...s.ui, historyCount: historyStack.length },
+        }));
       },
 
       // ============================================
