@@ -21,7 +21,8 @@
     "yes": "Ja",
     "no": "Nein",
     "required": "Pflicht",
-    "tip": "Tipp"
+    "tip": "Tipp",
+    "saveAndContinue": "Speichern & Weiter"
   },
   "nav": {
     "step": "Schritt {{current}} von {{total}}",
@@ -324,7 +325,24 @@
     "contact": "Kontakt",
     "gallery": "Galerie",
     "highlights": "Highlights",
-    "ourSpecials": "Unsere Empfehlungen"
+    "ourSpecials": "Unsere Empfehlungen",
+    "quickAdjustments": "Schnelle Anpassungen",
+    "websiteTitle": "Website-Titel",
+    "performanceScore": "Performance-Wertung"
+  },
+  "publish": {
+    "readyToPublish": "Bereit zum Veröffentlichen",
+    "checklist": "Vor-Launch Checkliste",
+    "summary": "Website-Zusammenfassung",
+    "businessDetails": "Geschäftsdetails",
+    "websiteFeatures": "Website-Features",
+    "yourLiveUrl": "Deine Live-URL",
+    "publishing": "Veröffentliche...",
+    "liveInSeconds": "Deine Website ist in Sekunden live!",
+    "congratulations": "Herzlichen Glückwunsch!",
+    "nowLive": "Deine Website ist jetzt live und bereit für Kunden!",
+    "viewLive": "Live-Website ansehen",
+    "backToDashboard": "Zurück zum Dashboard"
   },
   "publishing": {
     "subdomain": "Subdomain",
