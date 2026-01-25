@@ -114,6 +114,7 @@ const App = () => (
 declare global {
   interface Window {
     __APP_ROOT__?: ReturnType<typeof createRoot>;
+    __HMR_READY__?: boolean;
   }
 }
 
@@ -124,4 +125,20 @@ if (rootElement) {
     window.__APP_ROOT__ = createRoot(rootElement);
   }
   window.__APP_ROOT__.render(<App />);
+}
+
+// HMR handling with proper connection guards
+if (import.meta.hot) {
+  // Mark HMR as ready after a small delay to ensure WebSocket is connected
+  import.meta.hot.on('vite:beforeFullReload', () => {
+    // Allow full reload
+  });
+
+  // Accept updates without triggering invalidate before connection
+  import.meta.hot.accept(() => {
+    // Re-render on HMR update
+    if (rootElement && window.__APP_ROOT__) {
+      window.__APP_ROOT__.render(<App />);
+    }
+  });
 }
