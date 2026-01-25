@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ArrowLeft, ChevronRight, Palette, Type, PaintBucket, Navigation, Info } from "lucide-react";
+import { Check, ArrowLeft, ChevronRight, Palette, Type, PaintBucket, Navigation, Info, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,12 @@ import {
   useConfiguratorActions,
   useConfiguratorBusiness,
 } from "@/store/configuratorStore";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // --- KONSTANTEN ---
 const FONT_OPTIONS = [
@@ -53,6 +59,27 @@ const FONT_SIZES = [
   },
 ];
 
+// Header font size options with pixel values
+const HEADER_FONT_SIZES = [
+  { id: "xs", name: "10px", value: "10px" },
+  { id: "small", name: "12px", value: "12px" },
+  { id: "medium", name: "14px", value: "14px" },
+  { id: "large", name: "16px", value: "16px" },
+  { id: "xl", name: "18px", value: "18px" },
+  { id: "2xl", name: "20px", value: "20px" },
+];
+
+// Color tooltips for hover info
+const COLOR_TOOLTIPS: Record<string, string> = {
+  primary: "Buttons, Links, CTAs, Hauptakzente",
+  secondary: "Gradients, Hover-Effekte, sekundäre Elemente",
+  background: "Seitenhintergrund",
+  price: "Nur für Preisanzeigen (€)",
+  font: "Haupttextfarbe für Inhalte",
+  headerFont: "Textfarbe der Navigation",
+  headerBackground: "Hintergrund der Navigation",
+};
+
 const COLOR_PRESETS = [
   { primary: "#2563EB", secondary: "#7C3AED", bg: "#EFF6FF", name: "Ocean" },
   { primary: "#059669", secondary: "#10B981", bg: "#F0FDF4", name: "Forest" },
@@ -64,8 +91,22 @@ const COLOR_PRESETS = [
   { primary: "#0891B2", secondary: "#06B6D4", bg: "#ECFEFF", name: "Sky" },
 ];
 
+// --- HELPER: Tooltip Info Icon ---
+const ColorInfoIcon = ({ tooltipKey }: { tooltipKey: string }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <button type="button" className="ml-1.5 text-gray-400 hover:text-teal-500 transition-colors">
+        <HelpCircle className="w-4 h-4" />
+      </button>
+    </TooltipTrigger>
+    <TooltipContent side="top" className="max-w-[200px] text-xs">
+      <p>{COLOR_TOOLTIPS[tooltipKey]}</p>
+    </TooltipContent>
+  </Tooltip>
+);
+
 // --- HELPER COMPONENT (Verhindert Neu-Rendern beim Tippen) ---
-const ColorInput = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => {
+const ColorInput = ({ label, value, onChange, tooltipKey }: { label: string, value: string, onChange: (val: string) => void, tooltipKey?: string }) => {
   const [localValue, setLocalValue] = useState(value);
 
   useEffect(() => {
@@ -86,7 +127,10 @@ const ColorInput = ({ label, value, onChange }: { label: string, value: string, 
 
   return (
     <div>
-      <label className="block text-sm font-bold text-gray-700 mb-4">{label}</label>
+      <label className="flex items-center text-sm font-bold text-gray-700 mb-4">
+        {label}
+        {tooltipKey && <ColorInfoIcon tooltipKey={tooltipKey} />}
+      </label>
       <div className="flex items-center space-x-4">
         <div className="relative">
           <input
@@ -225,51 +269,41 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
             <PaintBucket className="w-5 h-5 text-teal-600" /> {t("design.customColors")}
           </h3>
 
-          {/* Color Explanation */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-2">
-              <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-semibold mb-1">Was machen die Farben?</p>
-                <ul className="space-y-1 text-blue-700">
-                  <li><strong>Primärfarbe:</strong> Buttons, Links, CTAs, Akzente</li>
-                  <li><strong>Sekundärfarbe:</strong> Gradients, Hover-Effekte, sekundäre Elemente</li>
-                  <li><strong>Preisfarbe:</strong> Nur für Preisanzeigen (unabhängig)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
           <div className="grid sm:grid-cols-2 gap-6 lg:gap-8">
 
             <ColorInput
-              label={`${t("design.primaryColor")} (Buttons, CTAs)`}
+              label={t("design.primaryColor")}
               value={design.primaryColor || "#4F46E5"}
               onChange={designActions.updatePrimaryColor}
+              tooltipKey="primary"
             />
 
             <ColorInput
-              label={`${t("design.secondaryColor")} (Gradients, Akzente)`}
+              label={t("design.secondaryColor")}
               value={design.secondaryColor || "#7C3AED"}
               onChange={designActions.updateSecondaryColor}
+              tooltipKey="secondary"
             />
 
             <ColorInput
               label={t("design.backgroundColor")}
               value={design.backgroundColor || "#FFFFFF"}
               onChange={(v) => updateAny('backgroundColor', v)}
+              tooltipKey="background"
             />
 
             <ColorInput
-              label={`${t("design.priceColor")} (€-Preise)`}
+              label={t("design.priceColor")}
               value={(design as any).priceColor || "#059669"}
               onChange={(v) => updateAny('priceColor', v)}
+              tooltipKey="price"
             />
 
             <ColorInput
-              label={`${t("design.fontColor")} (Haupttext)`}
+              label={t("design.fontColor")}
               value={design.fontColor || "#000000"}
               onChange={(v) => designActions.updateDesign({ fontColor: v })}
+              tooltipKey="font"
             />
 
           </div>
@@ -286,44 +320,37 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
               label="Header Schriftfarbe"
               value={(design as any).headerFontColor || "#000000"}
               onChange={(v) => updateAny('headerFontColor', v)}
+              tooltipKey="headerFont"
             />
 
             <ColorInput
               label="Header Hintergrund"
               value={(design as any).headerBackgroundColor || "#FFFFFF"}
               onChange={(v) => updateAny('headerBackgroundColor', v)}
+              tooltipKey="headerBackground"
             />
           </div>
 
-          {/* Header Font Size */}
+          {/* Header Font Size - Granular pixel options */}
           <div className="mt-6">
             <label className="block text-sm font-bold text-gray-700 mb-4">Header Schriftgröße</label>
-            <div className="grid grid-cols-3 gap-4">
-              {FONT_SIZES.map((size) => {
+            <div className="flex flex-wrap gap-2">
+              {HEADER_FONT_SIZES.map((size) => {
                 const isSelected = ((design as any).headerFontSize || 'medium') === size.id;
                 return (
-                  <Card
+                  <button
                     key={`header-${size.id}`}
-                    className={`cursor-pointer transition-all duration-300 border-2 ${
+                    type="button"
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                       isSelected
-                        ? "border-teal-500 bg-teal-50 shadow-md"
-                        : "border-gray-200 hover:border-teal-300"
+                        ? "bg-teal-500 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-teal-100 hover:text-teal-700"
                     }`}
                     onClick={() => updateAny('headerFontSize', size.id)}
                   >
-                    <CardContent className="p-3 text-center">
-                      <div className={`font-bold ${size.id === "small" ? "text-xs" : size.id === "medium" ? "text-sm" : "text-base"}`}>
-                        {size.name}
-                      </div>
-                      {isSelected && (
-                        <div className="mt-2 flex justify-center">
-                          <div className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5 text-white" />
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    {size.name}
+                    {isSelected && <Check className="w-3 h-3 ml-1.5 inline" />}
+                  </button>
                 );
               })}
             </div>
