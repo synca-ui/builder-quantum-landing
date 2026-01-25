@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   Rocket, Menu, X, Settings, Smartphone, Share2,
-  Cloud, Check, Crown, Save, Loader2
+  Cloud, Check, Crown, Save, Loader2, Undo2
 } from "lucide-react";
 
 import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
@@ -186,33 +186,69 @@ export default function Configurator() {
               </div>
             )}
           </div>
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             {/* Language Selector */}
             <LanguageSelector variant="compact" />
 
-            {/* Explicit Save to Cloud Button */}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => saveToBackend(actions.data.getFullConfiguration())}
-              disabled={saveStatus === 'saving'}
-              className="border-gray-300 gap-2"
-            >
-              {saveStatus === 'saving' ? (
-                <><Loader2 className="w-3 h-3 animate-spin" /> {t("common.saving")}</>
-              ) : saveStatus === 'saved' ? (
-                <><Check className="w-3 h-3 text-green-500" /> {t("common.saved")}</>
-              ) : (
-                <><Save className="w-3 h-3" /> {t("common.saveToCloud")}</>
-              )}
-            </Button>
+            {/* Undo Button */}
             {currentStep >= 0 && (
-              <div className="flex items-center space-x-2">
-                <Button size="sm" variant="outline" onClick={() => window.open(getLiveUrl(), "_blank")} className="border-gray-300">{t("nav.fullPreview")}</Button>
-                <Button size="sm" onClick={() => { saveToBackend(actions.data.getFullConfiguration()); }} className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white font-bold rounded-full shadow-lg ml-2">
-                  <Rocket className="w-4 h-4 mr-2" /> {t("nav.publishWebsite")}
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  actions.history.undo();
+                }}
+                disabled={!actions.history.canUndo()}
+                className="text-gray-500 hover:text-gray-900 gap-1.5"
+                title="Rückgängig"
+              >
+                <Undo2 className="w-4 h-4" />
+                <span className="hidden lg:inline text-xs">Zurück</span>
+              </Button>
+            )}
+
+            {/* Cloud Sync Toggle + Save Button */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-full px-2 py-1 border border-gray-200">
+              <button
+                onClick={() => actions.ui.setCloudSyncEnabled(!cloudSyncEnabled)}
+                className={`p-1.5 rounded-full transition-colors ${
+                  cloudSyncEnabled ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-500'
+                }`}
+                title={cloudSyncEnabled ? 'Cloud-Sync aktiv' : 'Cloud-Sync deaktiviert'}
+              >
+                <Cloud className="w-3.5 h-3.5" />
+              </button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  // Push to history before saving
+                  actions.history.pushHistory();
+                  if (cloudSyncEnabled) {
+                    saveToBackend(actions.data.getFullConfiguration());
+                  } else {
+                    setSaveStatus('saved');
+                    setTimeout(() => setSaveStatus('idle'), 2000);
+                  }
+                }}
+                disabled={saveStatus === 'saving'}
+                className="h-7 px-3 text-xs font-medium"
+              >
+                {saveStatus === 'saving' ? (
+                  <><Loader2 className="w-3 h-3 animate-spin mr-1" /> Speichern...</>
+                ) : saveStatus === 'saved' ? (
+                  <><Check className="w-3 h-3 text-green-500 mr-1" /> Gespeichert</>
+                ) : (
+                  <><Save className="w-3 h-3 mr-1" /> Speichern</>
+                )}
+              </Button>
+            </div>
+
+            {/* Publish Button */}
+            {currentStep >= 0 && (
+              <Button size="sm" onClick={() => { saveToBackend(actions.data.getFullConfiguration()); }} className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white font-bold rounded-full shadow-lg">
+                <Rocket className="w-4 h-4 mr-2" /> {t("nav.publishWebsite")}
+              </Button>
             )}
           </div>
         </div>
