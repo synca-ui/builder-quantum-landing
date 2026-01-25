@@ -299,18 +299,19 @@ const DishModal = memo(function DishModal({
 export function TemplatePreviewContent() {
   // Use shallow comparison for object selectors to prevent unnecessary re-renders
   const businessData = useConfiguratorStore(
-    useShallow((s) => ({
+    (s) => ({
       name: s.business.name || "Dein Geschäft",
       type: s.business.type || "restaurant",
       location: s.business.location,
       slogan: s.business.slogan,
       uniqueDescription: s.business.uniqueDescription,
       logo: s.business.logo?.url || null,
-    }))
+    }),
+    shallow
   );
 
   const designData = useConfiguratorStore(
-    useShallow((s) => ({
+    (s) => ({
       template: s.design.template || "minimalist",
       primaryColor: s.design.primaryColor || "#2563EB",
       secondaryColor: s.design.secondaryColor || "#7C3AED",
@@ -321,34 +322,38 @@ export function TemplatePreviewContent() {
       headerFontColor: (s.design as any).headerFontColor || s.design.fontColor || "#000000",
       headerFontSize: (s.design as any).headerFontSize || "medium",
       headerBackgroundColor: (s.design as any).headerBackgroundColor || s.design.backgroundColor || "#FFFFFF",
-    }))
+    }),
+    shallow
   );
 
   const contentData = useConfiguratorStore(
-    useShallow((s) => ({
+    (s) => ({
       menuItems: s.content.menuItems || [],
       categories: s.content.categories || [],
       gallery: s.content.gallery || [],
       openingHours: s.content.openingHours || {},
-    }))
+    }),
+    shallow
   );
 
   const contactData = useConfiguratorStore(
-    useShallow((s) => ({
+    (s) => ({
       contactMethods: s.contact.contactMethods || [],
       phone: s.contact.phone,
       email: s.contact.email,
-    }))
+    }),
+    shallow
   );
 
   const featureData = useConfiguratorStore(
-    useShallow((s) => ({
+    (s) => ({
       onlineOrdering: s.features.onlineOrderingEnabled,
       reservationsEnabled: s.features.reservationsEnabled,
       reservationButtonColor: s.features.reservationButtonColor || s.design.primaryColor || "#2563EB",
       reservationButtonTextColor: s.features.reservationButtonTextColor || "#FFFFFF",
       reservationButtonShape: s.features.reservationButtonShape || "rounded",
-    }))
+    }),
+    shallow
   );
 
   const selectedPages = useConfiguratorStore((s) => s.pages.selectedPages) || [];
