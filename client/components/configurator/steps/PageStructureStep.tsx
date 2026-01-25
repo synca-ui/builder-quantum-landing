@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Check, Home, Coffee, Camera, Heart, Calendar, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,6 +50,7 @@ interface StepProps {
 }
 
 export function PageStructureStep({ nextStep, prevStep }: StepProps) {
+  const { t } = useTranslation();
   const selectedPages = useConfiguratorStore((s) => s.pages.selectedPages);
   const { pages: pageActions } = useConfiguratorActions();
 
@@ -70,8 +72,8 @@ export function PageStructureStep({ nextStep, prevStep }: StepProps) {
   return (
     <div className="max-w-4xl mx-auto py-6">
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Select your pages</h2>
-        <p className="text-gray-600">Choose which pages your website will include.</p>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">{t("steps.pageStructure.title")}</h2>
+        <p className="text-gray-600">{t("steps.pageStructure.subtitle")}</p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -99,9 +101,9 @@ export function PageStructureStep({ nextStep, prevStep }: StepProps) {
                 </div>
 
                 <h3 className={`font-bold text-lg mb-1 ${isSelected ? "text-teal-900" : "text-gray-900"}`}>
-                  {page.name}
+                  {t(`pages.${page.id}.name`)}
                 </h3>
-                <p className="text-xs text-gray-500">{page.description}</p>
+                <p className="text-xs text-gray-500">{t(`pages.${page.id}.description`)}</p>
 
                 {isSelected && (
                   <div className="absolute top-3 right-3">
@@ -113,7 +115,7 @@ export function PageStructureStep({ nextStep, prevStep }: StepProps) {
 
                 {page.required && (
                   <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                     Required
+                     {t("common.required")}
                    </span>
                 )}
               </CardContent>
@@ -124,14 +126,14 @@ export function PageStructureStep({ nextStep, prevStep }: StepProps) {
 
       <div className="flex justify-between mt-8">
         <Button onClick={prevStep} variant="outline" size="lg">
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
         >
-          Continue
+          {t("common.next")}
         </Button>
       </div>
     </div>
