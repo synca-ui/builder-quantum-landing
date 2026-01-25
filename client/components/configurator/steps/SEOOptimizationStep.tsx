@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ChevronRight,
@@ -27,6 +28,7 @@ export function SEOOptimizationStep({
   prevStep,
   getDisplayedDomain,
 }: SEOOptimizationStepProps) {
+  const { t } = useTranslation();
   const business = useConfiguratorStore((s) => s.business);
   const publishing = useConfiguratorStore((s) => s.publishing);
   const actions = useConfiguratorActions();
@@ -47,11 +49,10 @@ export function SEOOptimizationStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          SEO Optimization
+          {t("steps.seoOptimization.title")}
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Improve your search engine visibility and help customers find your
-          business online.
+          {t("steps.seoOptimization.subtitle")}
         </p>
       </div>
 
@@ -59,12 +60,12 @@ export function SEOOptimizationStep({
         <Card className="p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <Search className="w-5 h-5 mr-2 text-blue-600" />
-            Basic SEO Settings
+            {t("seo.basicSettings")}
           </h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                Meta Title
+                {t("seo.metaTitle")}
               </label>
               <Input
                 type="text"
@@ -85,7 +86,7 @@ export function SEOOptimizationStep({
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                Meta Description
+                {t("seo.metaDescription")}
               </label>
               <Textarea
                 placeholder={`Discover ${business.name} ${business.location ? `in ${business.location}` : ""}. ${business.uniqueDescription || "Quality service and great experience await you."}`}
@@ -106,7 +107,7 @@ export function SEOOptimizationStep({
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                Keywords
+                {t("seo.keywords")}
               </label>
               <Input
                 type="text"
@@ -129,11 +130,11 @@ export function SEOOptimizationStep({
         <Card className="p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <Share2 className="w-5 h-5 mr-2 text-purple-600" />
-            Social Media Sharing
+            {t("seo.socialSharing")}
           </h3>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Social Media Image
+              {t("seo.socialImage")}
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               {socialMediaImage ? (
@@ -199,7 +200,7 @@ export function SEOOptimizationStep({
         <Card className="p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <Eye className="w-5 h-5 mr-2 text-green-600" />
-            Analytics & Tracking
+            {t("seo.analytics")}
           </h3>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -292,7 +293,7 @@ export function SEOOptimizationStep({
 
         <Card className="p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
-            Search Result Preview
+            {t("seo.searchPreview")}
           </h3>
           <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
             <div className="space-y-1">
@@ -322,14 +323,14 @@ export function SEOOptimizationStep({
           size="lg"
         >
           <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
+          {t("common.back")}
         </Button>
         <Button
           onClick={nextStep}
           size="lg"
           className="bg-gradient-to-r from-teal-500 to-purple-500"
         >
-          Continue
+          {t("common.next")}
           <ChevronRight className="ml-2 w-5 h-5" />
         </Button>
       </div>
