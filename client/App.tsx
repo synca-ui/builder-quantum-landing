@@ -9,6 +9,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ClerkProvider } from "@clerk/clerk-react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/i18n";
 import Index from "./pages/Index";
 import Configurator from "./pages/Configurator";
 import AdvancedConfigurator from "./pages/AdvancedConfigurator";
