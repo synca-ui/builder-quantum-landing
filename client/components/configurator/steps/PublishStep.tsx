@@ -40,6 +40,7 @@ export function PublishStep({
   const [isPublished, setIsPublished] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [deploymentProvider, setDeploymentProvider] = useState<"netlify" | "vercel" | "internal">("internal");
 
   const fullState = useConfiguratorStore((s) => s);
   const actions = useConfiguratorActions();
@@ -50,6 +51,10 @@ export function PublishStep({
   const contact = fullState.contact;
   const content = fullState.content;
   const features = fullState.features;
+
+  // Check deployment provider availability
+  const netlifyAvailable = isNetlifyMCPAvailable();
+  const vercelAvailable = isVercelMCPAvailable();
 
   const liveUrl = getLiveUrl
     ? getLiveUrl()
