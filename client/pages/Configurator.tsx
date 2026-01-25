@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 import {
   Rocket, Menu, X, Settings, Smartphone, Share2,
-  Cloud, Check, Crown
+  Cloud, Check, Crown, Save, Loader2
 } from "lucide-react";
 
 import { useConfiguratorStore, useConfiguratorActions } from "@/store/configuratorStore";
@@ -184,12 +184,22 @@ export default function Configurator() {
             )}
           </div>
           <div className="hidden md:flex items-center space-x-6">
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              {saveStatus === 'saving' && <Cloud className="w-3 h-3 animate-pulse text-orange-500" />}
-              {saveStatus === 'saved' && <Check className="w-3 h-3 text-green-500" />}
-              <span>Save progress</span>
-              <Switch checked={true} onCheckedChange={() => {}} />
-            </div>
+            {/* Explicit Save to Cloud Button */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => saveToBackend(actions.data.getFullConfiguration())}
+              disabled={saveStatus === 'saving'}
+              className="border-gray-300 gap-2"
+            >
+              {saveStatus === 'saving' ? (
+                <><Loader2 className="w-3 h-3 animate-spin" /> Speichern...</>
+              ) : saveStatus === 'saved' ? (
+                <><Check className="w-3 h-3 text-green-500" /> Gespeichert</>
+              ) : (
+                <><Save className="w-3 h-3" /> In Cloud speichern</>
+              )}
+            </Button>
             {currentStep >= 0 && (
               <div className="flex items-center space-x-2">
                 <Button size="sm" variant="outline" onClick={() => window.open(getLiveUrl(), "_blank")} className="border-gray-300">1:1 Preview</Button>
