@@ -22,6 +22,7 @@ import type {
   OpeningHours,
   Configuration,
 } from "@/types/domain";
+import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
 
 // ============================================
 // EMERGENCY THROTTLE GUARD (to detect infinite loops)
@@ -86,6 +87,7 @@ interface ConfiguratorState {
   updateBusinessType: (type: string) => void;
   updateLocation: (location: string) => void;
   updateSlogan: (slogan: string) => void;
+  applyBusinessTypeDefaults: (type: string) => void;
 
   // Actions: Design Domain
   updateDesign: (config: Partial<DesignConfig>) => void;
@@ -328,6 +330,47 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
             updatedAt: new Date().toISOString(),
           },
         }));
+      },
+
+      /**
+       * Apply smart defaults based on business type
+       * Auto-populates menu items, opening hours, features, and pages
+       */
+      applyBusinessTypeDefaults: (type) => {
+        checkThrottleGuard("applyBusinessTypeDefaults");
+        const defaults = getBusinessTypeDefaults(type);
+
+        set((state) => {
+          // Only apply defaults if content is empty (don't overwrite user data)
+          const hasExistingMenuItems = state.content.menuItems.length > 0;
+          const hasCustomizedFeatures = state.features.reservationsEnabled || state.features.onlineOrderingEnabled;
+
+          return {
+            // Update menu items only if empty
+            content: {
+              ...state.content,
+              menuItems: hasExistingMenuItems ? state.content.menuItems : defaults.menuItems,
+              openingHours: defaults.openingHours,
+              categories: defaults.categories,
+            },
+            // Update features only if not customized
+            features: hasCustomizedFeatures ? state.features : {
+              ...state.features,
+              ...defaults.features,
+            },
+            // Update pages
+            pages: {
+              ...state.pages,
+              selectedPages: state.pages.selectedPages.length > 0
+                ? state.pages.selectedPages
+                : defaults.pages,
+            },
+            publishing: {
+              ...state.publishing,
+              updatedAt: new Date().toISOString(),
+            },
+          };
+        });
       },
 
       // ============================================
@@ -860,6 +903,7 @@ export const useConfiguratorActions = () => {
         updateBusinessType: store.updateBusinessType,
         updateLocation: store.updateLocation,
         updateSlogan: store.updateSlogan,
+        applyBusinessTypeDefaults: store.applyBusinessTypeDefaults,
       },
       design: {
         updateDesign: store.updateDesign,
