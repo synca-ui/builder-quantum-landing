@@ -411,44 +411,85 @@ export function TemplatePreviewContent() {
     }
 
     if (previewState.activePage === 'menu') {
+      // Get categories from store or defaults
+      const displayCategories = (categories && categories.length > 0)
+        ? categories
+        : getBusinessTypeDefaults(formData.businessType).categories;
+
+      // Get items from store or defaults
+      const allItems = formData.menuItems.length > 0
+        ? formData.menuItems
+        : getBusinessTypeDefaults(formData.businessType).menuItems;
+
+      // Filter by active category
+      const filteredMenuItems = activeMenuCategory
+        ? allItems.filter((item: any) => item.category === activeMenuCategory)
+        : allItems;
+
       return (
         <div className="space-y-6 animate-in fade-in duration-300">
           <h2 className={styles.titleClass}>Karte</h2>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-            {['Alle', ...(getBusinessTypeDefaults(formData.businessType).categories.slice(0, 3))].map((cat, i) => (
-              <span key={cat} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${i === 0 ? 'bg-current text-white/90 shadow-md' : 'border border-current/20 opacity-70'}`} style={i === 0 ? { backgroundColor: formData.fontColor, color: formData.backgroundColor } : {}}>{cat}</span>
+          {/* Swipeable category tabs */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2">
+            <button
+              onClick={() => setActiveMenuCategory(null)}
+              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${
+                activeMenuCategory === null
+                  ? 'shadow-md'
+                  : 'border border-current/20 opacity-70'
+              }`}
+              style={activeMenuCategory === null ? { backgroundColor: formData.fontColor, color: formData.backgroundColor } : {}}
+            >
+              Alle
+            </button>
+            {displayCategories.slice(0, 5).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveMenuCategory(cat)}
+                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${
+                  activeMenuCategory === cat
+                    ? 'shadow-md'
+                    : 'border border-current/20 opacity-70'
+                }`}
+                style={activeMenuCategory === cat ? { backgroundColor: formData.fontColor, color: formData.backgroundColor } : {}}
+              >
+                {cat}
+              </button>
             ))}
           </div>
           <div className="space-y-4 pb-8">
-            {(formData.menuItems.length > 0
-              ? formData.menuItems
-              : getBusinessTypeDefaults(formData.businessType).menuItems
-            ).map((item: any, i: number) => (
-              <div
-                key={i}
-                className={`${styles.itemCard} cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]`}
-                onClick={() => openDishModal(item)}
-              >
-                <div className="flex justify-between items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className={styles.itemNameClass} style={{ color: formData.fontColor }}>{item.name}</div>
-                    <div className={styles.itemDescClass} style={{ color: formData.fontColor }}>{item.description}</div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 pl-2">
-                    <div className={styles.itemPriceClass} style={{color: formData.priceColor}}>{item.price || "9.50"}€</div>
-                    {formData.onlineOrdering && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); addToCart(item); }}
-                        className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md"
-                        style={{ backgroundColor: formData.primaryColor, color: '#FFF' }}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    )}
+            {filteredMenuItems.length > 0 ? (
+              filteredMenuItems.map((item: any, i: number) => (
+                <div
+                  key={i}
+                  className={`${styles.itemCard} cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]`}
+                  onClick={() => openDishModal(item)}
+                >
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className={styles.itemNameClass} style={{ color: formData.fontColor }}>{item.name}</div>
+                      <div className={styles.itemDescClass} style={{ color: formData.fontColor }}>{item.description}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 pl-2">
+                      <div className={styles.itemPriceClass} style={{color: formData.priceColor}}>{item.price || "9.50"}€</div>
+                      {formData.onlineOrdering && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md"
+                          style={{ backgroundColor: formData.primaryColor, color: '#FFF' }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8 opacity-50 text-sm">
+                Keine Artikel in dieser Kategorie
               </div>
-            ))}
+            )}
           </div>
         </div>
       );
