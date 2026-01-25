@@ -19,10 +19,10 @@ export default defineConfig(({ mode }) => ({
       ],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
     },
-    // Optional: You can proxy API requests to your backend if needed
-    // proxy: {
-    //   '/api': 'http://localhost:3000', // Forward API requests to your backend server
-    // },
+  },
+  // Deduplicate React to avoid multiple instance issues
+  optimizeDeps: {
+    include: ["react", "react-dom", "react-i18next", "i18next"],
   },
   build: {
     outDir: "dist/spa", // Set the output directory for the built files
