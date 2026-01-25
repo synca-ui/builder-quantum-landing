@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@clerk/clerk-react";
 import { ArrowLeft, ChevronRight, Zap, Globe, Check, X, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,56 +17,43 @@ interface DomainHostingStepProps {
   getDisplayedDomain?: () => string;
 }
 
-// Simulated list of taken subdomains (in production this would be an API call)
-const TAKEN_SUBDOMAINS = [
-  "demo", "test", "admin", "api", "app", "www", "mail", "ftp", 
-  "blog", "shop", "store", "help", "support", "info", "news",
-  "restaurant", "cafe", "bar", "pizza", "burger", "sushi"
-];
-
-// Validation helper
-function validateSubdomain(subdomain: string): { valid: boolean; error?: string } {
-  if (!subdomain) {
-    return { valid: false, error: "Bitte gib einen Namen ein" };
-  }
-  
-  if (subdomain.length < 3) {
-    return { valid: false, error: "Mindestens 3 Zeichen" };
-  }
-  
-  if (subdomain.length > 63) {
-    return { valid: false, error: "Maximal 63 Zeichen" };
-  }
-  
-  if (!/^[a-z0-9]/.test(subdomain)) {
-    return { valid: false, error: "Muss mit Buchstabe oder Zahl beginnen" };
-  }
-  
-  if (!/[a-z0-9]$/.test(subdomain)) {
-    return { valid: false, error: "Muss mit Buchstabe oder Zahl enden" };
-  }
-  
-  if (!/^[a-z0-9-]+$/.test(subdomain)) {
-    return { valid: false, error: "Nur Kleinbuchstaben, Zahlen und Bindestriche" };
-  }
-  
-  if (/--/.test(subdomain)) {
-    return { valid: false, error: "Keine doppelten Bindestriche" };
-  }
-  
-  return { valid: true };
+interface SubdomainValidationResult {
+  available: boolean;
+  reason?: "invalid" | "reserved" | "taken" | "pending" | "owned";
+  error?: string;
+  suggestions?: string[];
+  subdomain?: string;
+  fullDomain?: string;
 }
 
-// Simulated availability check (would be API in production)
-async function checkSubdomainAvailability(subdomain: string): Promise<boolean> {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
-  
-  // Check against taken list
-  return !TAKEN_SUBDOMAINS.includes(subdomain.toLowerCase());
+// Check subdomain availability via API
+async function checkSubdomainAvailability(
+  subdomain: string,
+  userId?: string | null
+): Promise<SubdomainValidationResult> {
+  try {
+    const response = await fetch("/api/subdomains/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subdomain, userId }),
+    });
+
+    if (!response.ok) {
+      throw new Error("API error");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("[Subdomain] Validation error:", error);
+    return {
+      available: false,
+      reason: "invalid",
+      error: "Fehler bei der Überprüfung. Bitte versuche es erneut.",
+    };
+  }
 }
 
-type ValidationStatus = "idle" | "checking" | "available" | "taken" | "invalid";
+type ValidationStatus = "idle" | "checking" | "available" | "taken" | "invalid" | "reserved" | "owned";
 
 export function DomainHostingStep({
   nextStep,
