@@ -46,22 +46,24 @@ i18n.use(initReactI18next);
 // Only load browser-specific detector when running in the browser (avoid SSR/build issues)
 if (typeof window !== "undefined") {
   // Use dynamic import so bundlers that build server-side won't try to resolve this module
-  void import("i18next-browser-languagedetector").then((mod) => {
-    const LanguageDetector = (mod && (mod as any).default) || mod;
-    i18n.use(LanguageDetector).init({
-      ...baseInitOptions,
-      // Detection options
-      detection: {
-        order: ["localStorage", "navigator", "htmlTag"],
-        caches: ["localStorage"],
-        lookupLocalStorage: "i18nextLng",
-      },
-    } as any);
-  }).catch((err) => {
-    console.warn("i18next language detector failed to load:", err);
-    // Fallback to basic init without detector
-    i18n.init(baseInitOptions as any);
-  });
+  void import("i18next-browser-languagedetector")
+    .then((mod) => {
+      const LanguageDetector = (mod && (mod as any).default) || mod;
+      i18n.use(LanguageDetector).init({
+        ...baseInitOptions,
+        // Detection options
+        detection: {
+          order: ["localStorage", "navigator", "htmlTag"],
+          caches: ["localStorage"],
+          lookupLocalStorage: "i18nextLng",
+        },
+      } as any);
+    })
+    .catch((err) => {
+      console.warn("i18next language detector failed to load:", err);
+      // Fallback to basic init without detector
+      i18n.init(baseInitOptions as any);
+    });
 } else {
   // Server-side / build environment - init without the browser detector
   i18n.init(baseInitOptions as any);
