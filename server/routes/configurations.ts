@@ -405,12 +405,17 @@ export async function deleteConfiguration(req: Request, res: Response) {
 /**
  * ✅ POST /api/configurations/:id/publish
  */
+/**
+ * ✅ POST /api/configurations/:id/publish
+ * Veröffentlicht eine Konfiguration auf der gewählten Subdomain
+ */
 export async function publishConfiguration(req: Request, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
 
   try {
+    // 1. Konfiguration laden
     const configuration = await prisma.configuration.findFirst({
       where: {
         id,
@@ -419,21 +424,14 @@ export async function publishConfiguration(req: Request, res: Response) {
     });
 
     if (!configuration) {
-      await audit(
-        "config_publish_failed",
-        id,
-        false,
-        "Not found or unauthorized",
-      );
-
-      return res.status(403).json({
-        error: "Forbidden",
-        message:
-          "Configuration not found or you do not have permission to publish it",
+      await audit("config_publish_failed", id, false, "Not found or unauthorized");
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Konfiguration wurde nicht gefunden.",
       });
     }
 
-    // Check subscription limits
+    // 2. Abonnement-Limits prüfen
     const subscription = await prisma.subscription.findUnique({
       where: { userId },
     });
@@ -449,25 +447,37 @@ export async function publishConfiguration(req: Request, res: Response) {
     if (publishedSites >= maxSites) {
       return res.status(403).json({
         error: "Subscription limit exceeded",
-        message: `Your ${subscription?.plan || "free"} plan allows ${maxSites} published site(s). Upgrade to publish more.`,
+        message: `Dein ${subscription?.plan || "Free"}-Plan erlaubt maximal ${maxSites} veröffentlichte Website(s).`,
         currentPublished: publishedSites,
         maxAllowed: maxSites,
       });
     }
 
-    const subdomain = generateSubdomain(configuration.businessName);
+    // 3. Subdomain bestimmen (Priorität: Manuelle Wahl > Generierung)
+    // Wir nutzen 'as any', da 'selectedDomain' im Prisma-Typ oft erst nach einem 'generate' erscheint
+    const subdomain = (configuration as any).selectedDomain || generateSubdomain(configuration.businessName);
 
-    const existing = await prisma.webApp.findUnique({
-      where: { subdomain },
-    });
-
-    if (existing && existing.configId !== configuration.id) {
+    if (!subdomain) {
       return res.status(400).json({
-        error: "Subdomain already taken",
-        message: "Choose a different business name or contact support",
+        error: "Validation Error",
+        message: "Es wurde keine Subdomain ausgewählt.",
       });
     }
 
+    // 4. Verfügbarkeit der Subdomain final prüfen
+    const existingWebApp = await prisma.webApp.findUnique({
+      where: { subdomain },
+    });
+
+    // Falls die Subdomain existiert und nicht zu dieser Config gehört -> Abbruch
+    if (existingWebApp && existingWebApp.configId !== configuration.id) {
+      return res.status(400).json({
+        error: "Subdomain already taken",
+        message: "Diese Subdomain ist bereits vergeben. Bitte wähle eine andere.",
+      });
+    }
+
+    // 5. Konfiguration in der Datenbank aktualisieren
     const published = await prisma.configuration.update({
       where: { id },
       data: {
@@ -477,11 +487,13 @@ export async function publishConfiguration(req: Request, res: Response) {
       },
     });
 
-    await prisma.webApp.upsert({
+    // 6. Live-Eintrag in der WebApp-Tabelle erstellen oder aktualisieren (Sync)
+    // Dies füllt die Tabelle, die für das öffentliche Routing zuständig ist
+    const webApp = await prisma.webApp.upsert({
       where: { configId: id },
       update: {
         subdomain,
-        configData: published as any,
+        configData: published as any, // Speichert den aktuellen Snapshot der Config
         publishedAt: new Date(),
       },
       create: {
@@ -495,12 +507,15 @@ export async function publishConfiguration(req: Request, res: Response) {
 
     await audit("config_published", id, true);
 
+    // 7. Erfolg zurückgeben
     return res.json({
       success: true,
       data: published,
+      webAppId: webApp.id,
       publishedUrl: `https://${subdomain}.maitr.de`,
-      message: "Configuration published successfully",
+      message: "Website wurde erfolgreich veröffentlicht! 🚀",
     });
+
   } catch (error) {
     console.error("[Configurations] Publish error:", error);
     await audit(
@@ -511,7 +526,7 @@ export async function publishConfiguration(req: Request, res: Response) {
     );
 
     return res.status(500).json({
-      error: "Failed to publish configuration",
+      error: "Fehler beim Veröffentlichen",
       message: error instanceof Error ? error.message : undefined,
     });
   }
