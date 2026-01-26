@@ -1,42 +1,79 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Index from "./Index";
-import Site from "./Site";
+import { Loader2 } from "lucide-react";
+import AppRenderer from "@/components/dynamic/AppRenderer.tsx";
 
 export default function HostAwareRoot() {
-  const shouldRenderSite = useMemo(() => {
+  const [config, setConfig] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 1. Identifiziere die Subdomain (Deine bestehende Logik)
+  const subdomain = useMemo(() => {
     try {
       const host = window.location.hostname;
-
-      // 1. Liste deiner Haupt-Domains (Dashboard)
       const mainDomains = [
         "maitr.de",
-        "www.maitr.de", // WICHTIG: Auch mit www
+        "www.maitr.de",
         "staging.maitr.de",
-        "www.staging.maitr.de",// Sicherheitshalber auch hier mit www
+        "www.staging.maitr.de",
         "localhost",
         "127.0.0.1",
       ];
 
-      // 2. CHECK: Ist es eine deiner Haupt-Domains?
-      if (mainDomains.includes(host)) {
-        return false; // Zeige Dashboard / Landing Page
+      if (mainDomains.includes(host) || host.endsWith(".netlify.app")) {
+        return null;
       }
 
-      // 3. CHECK: Ist es eine Netlify Vorschau- oder System-URL?
-      // Das erkennt "starlit-madeleine...netlify.app" korrekt als System-Seite
-      if (host.endsWith(".netlify.app")) {
-        return false; // Zeige Dashboard / Landing Page
-      }
-
-      // 4. Fallback: Hat die Domain Punkte? Dann ist es eine Kunden-Subdomain
-      // (z.B. kunde.maitr.de -> Zeige JuJu/User-Site)
-      if (host.includes(".")) {
-        return true;
-      }
-    } catch {}
-
-    return false;
+      const parts = host.split('.');
+      return parts.length >= 2 ? parts[0] : null;
+    } catch {
+      return null;
+    }
   }, []);
 
-  return shouldRenderSite ? <Site /> : <Index />;
+  // 2. DATEN LADEN: Wenn eine Subdomain erkannt wurde, frage die API ab
+  useEffect(() => {
+    if (!subdomain) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchSiteData = async () => {
+      try {
+        // Wir rufen die API auf, die du vorhin im Backend erstellt hast
+        const response = await fetch(`https://www.maitr.de/api/sites/${subdomain}`);
+        const result = await response.json();
+
+        if (result.success) {
+          // Hier landen jetzt "Bekka", "Wiener Schnitzel" & Co. im State
+          setConfig(result.data);
+        }
+      } catch (err) {
+        console.error("Fehler beim Laden der Subdomain-Daten:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSiteData();
+  }, [subdomain]);
+
+  // 3. LADE-ZUSTAND: Verhindert das Flackern der "Your Business" Standardseite
+  if (isLoading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 text-teal-500 animate-spin mb-4" />
+        <p className="text-gray-500 font-medium animate-pulse">Lade Restaurant-Profil...</p>
+      </div>
+    );
+  }
+
+  // 4. RENDERING
+  // Wenn wir auf bekkas.maitr.de sind und Daten haben -> Zeige Bekka
+  if (subdomain && config) {
+    return <AppRenderer config={config} />;
+  }
+
+  // Ansonsten -> Zeige die Maitr-Hauptseite (Dashboard/Landingpage)
+  return <Index />;
 }
