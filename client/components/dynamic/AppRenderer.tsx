@@ -1,207 +1,200 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Menu as MenuIcon, X, ChevronRight, Clock, Camera } from "lucide-react";
 
-// Erweitertes Typ-Interface basierend auf deinen DB-Feldern
-export type DynamicConfig = {
-  businessName?: string;
-  slogan?: string;
-  uniqueDescription?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  backgroundColor?: string;
-  fontColor?: string;
-  fontFamily?: string;
-  headerFontSize?: string;
-  selectedPages?: string[];
-  menuItems?: Array<{ id?: string; name: string; description?: string; price?: string | number; category?: string }>;
-  gallery?: Array<{ id?: string; url: string; alt?: string }>;
-  contactMethods?: string[];
-  socialMedia?: Record<string, string>;
-  openingHours?: Record<string, any>;
-};
+export default function AppRenderer({ config }: { config: any }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activePage, setActivePage] = useState("home");
 
-export default function AppRenderer({ config }: { config: DynamicConfig }) {
-  const pages = config.selectedPages && config.selectedPages.length > 0
-    ? config.selectedPages
-    : ["home", "menu", "gallery", "contact"];
+  // --- 1. DATEN-EXTRAKTION (Alles aus dem JSON) ---
+  const {
+    businessName,
+    slogan,
+    uniqueDescription,
+    primaryColor,
+    backgroundColor,
+    fontColor,
+    fontFamily,
+    headerFontSize,
+    headerFontColor,
+    headerBackgroundColor,
+    menuItems = [],
+    gallery = [],
+    openingHours = {},
+    selectedPages = [],
+    reservationsEnabled,
+    priceColor
+  } = config;
 
-  const businessName = config.businessName || "Your Business";
+  // --- 2. DYNAMISCHE STYLE-BERECHNUNG ---
+  const styles = useMemo(() => {
+    // Mapping der Font-Größe aus dem Konfigurator
+    const getFontSize = (size: string) => {
+      const map: Record<string, string> = {
+        "xs": "text-xs", "small": "text-sm", "medium": "text-base",
+        "large": "text-lg", "xl": "text-xl", "2xl": "text-2xl", "3xl": "text-3xl"
+      };
+      return map[size] || "text-base";
+    };
 
-  // Mapping der Header-Größe (z.B. "2xl" -> "text-5xl")
-  const getHeaderSizeClass = (size?: string) => {
-    switch (size) {
-      case "xl": return "text-4xl";
-      case "2xl": return "text-5xl md:text-6xl";
-      case "3xl": return "text-7xl";
-      default: return "text-4xl";
-    }
-  };
+    return {
+      root: {
+        backgroundColor: backgroundColor,
+        color: fontColor,
+        fontFamily: fontFamily || "sans-serif",
+      },
+      header: {
+        backgroundColor: headerBackgroundColor || backgroundColor,
+        color: headerFontColor || fontColor,
+      },
+      primaryButton: {
+        backgroundColor: primaryColor,
+        color: "#FFFFFF", // Kontrastfarbe für Text auf Buttons
+      },
+      accentText: {
+        color: primaryColor,
+      },
+      priceText: {
+        color: priceColor || primaryColor,
+      },
+      headerFontClass: getFontSize(headerFontSize)
+    };
+  }, [config]);
+
+  // Hilfsfunktion für Sektions-Check (Nur anzeigen, wenn im JSON ausgewählt)
+  const isVisible = (page: string) => selectedPages.includes(page) || activePage === page;
 
   return (
-    <div
-      style={{
-        fontFamily: config.fontFamily || "Inter, sans-serif",
-        backgroundColor: config.backgroundColor || "#ffffff",
-        color: config.fontColor || "#111827"
-      }}
-      className="min-h-screen transition-colors duration-500"
-    >
-      {/* Header / Navigation */}
-      <header className="sticky top-0 z-50 bg-white/10 backdrop-blur-md border-b border-black/5">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div style={styles.root} className="min-h-screen transition-all duration-500">
+
+      {/* --- DYNAMISCHER HEADER --- */}
+      <header
+        style={styles.header}
+        className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between border-b border-black/5 backdrop-blur-md bg-opacity-80"
+      >
+        <div className="flex items-center gap-3">
           <div
-            className="font-black text-xl tracking-tighter"
-            style={{ color: config.primaryColor || "#111827" }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white shadow-sm"
+            style={{ backgroundColor: primaryColor }}
           >
-            {businessName}
+            {businessName?.charAt(0)}
           </div>
-          <nav className="flex gap-6 text-sm font-medium opacity-80">
-            {pages.includes("menu") && <a href="#menu" className="hover:opacity-100 transition-opacity">Karte</a>}
-            {pages.includes("gallery") && <a href="#gallery" className="hover:opacity-100 transition-opacity">Galerie</a>}
-            {pages.includes("contact") && <a href="#contact" className="hover:opacity-100 transition-opacity">Kontakt</a>}
-          </nav>
+          <span className={`font-black tracking-tight ${styles.headerFontClass}`}>
+            {businessName}
+          </span>
         </div>
+        <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 outline-none">
+          {menuOpen ? <X /> : <MenuIcon />}
+        </button>
       </header>
 
-      <main>
-        {/* Hero Section */}
-        {pages.includes("home") && (
-          <section className="py-24 px-6 text-center">
-            <div className="max-w-4xl mx-auto">
-              <h1
-                className={`font-black mb-6 leading-tight ${getHeaderSizeClass(config.headerFontSize)}`}
-                style={{ color: config.primaryColor || "#111827" }}
-              >
-                {businessName}
-              </h1>
-              {config.slogan && (
-                <p className="text-xl md:text-2xl opacity-90 mb-8 font-medium italic">
-                  „{config.slogan}“
-                </p>
-              )}
-              {config.uniqueDescription && (
-                <p className="text-lg opacity-80 max-w-2xl mx-auto leading-relaxed">
-                  {config.uniqueDescription}
-                </p>
-              )}
-              <div className="mt-10">
-                <Button
-                  size="lg"
-                  className="rounded-full px-10 py-7 text-lg font-bold shadow-xl transition-transform hover:scale-105"
-                  style={{
-                    backgroundColor: config.primaryColor || "#111827",
-                    color: "#ffffff"
-                  }}
-                  onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+      {/* --- MOBILE MENU OVERLAY --- */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={() => setMenuOpen(false)}>
+          <div
+            style={styles.root}
+            className="absolute right-0 top-0 bottom-0 w-4/5 p-12 pt-32 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <nav className="space-y-8">
+              {["home", ...selectedPages].map((page) => (
+                <div
+                  key={page}
+                  className="text-2xl font-black capitalize cursor-pointer flex justify-between items-center border-b border-current/10 pb-4"
+                  onClick={() => { setActivePage(page); setMenuOpen(false); }}
                 >
-                  Tisch reservieren
-                </Button>
-              </div>
+                  {page === "home" ? "Startseite" : page}
+                  <ChevronRight className="opacity-30" />
+                </div>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-xl mx-auto px-6 pt-32 pb-20">
+
+        {/* --- HERO / HOME --- */}
+        {activePage === "home" && (
+          <section className="py-12 text-center animate-in fade-in slide-in-from-bottom-4">
+            <h1 className="text-5xl md:text-6xl font-black mb-6 leading-tight" style={styles.accentText}>
+              {slogan}
+            </h1>
+            <p className="text-lg opacity-80 mb-10 leading-relaxed">
+              {uniqueDescription || "Willkommen bei uns."}
+            </p>
+            {reservationsEnabled && (
+              <Button
+                style={styles.primaryButton}
+                className="w-full py-8 rounded-2xl text-lg font-bold shadow-xl hover:scale-[1.02] transition-transform"
+              >
+                <Clock className="mr-2" /> Tisch reservieren
+              </Button>
+            )}
+          </section>
+        )}
+
+        {/* --- MENU SEKTION --- */}
+        {isVisible("menu") && (
+          <section id="menu" className="mt-16">
+            <div className="flex justify-between items-baseline mb-8">
+              <h2 className="text-[10px] uppercase tracking-[0.2em] font-black opacity-40">Speisekarte</h2>
+              <button className="text-xs font-bold" style={styles.accentText}>Alle ansehen</button>
+            </div>
+            <div className="space-y-6">
+              {menuItems.map((item: any, i: number) => (
+                <div key={i} className="flex justify-between items-start border-b border-black/5 pb-6 last:border-0">
+                  <div className="flex-1 pr-4">
+                    <h3 className="font-bold text-xl mb-1">{item.name}</h3>
+                    <p className="text-sm opacity-60 italic">{item.description}</p>
+                  </div>
+                  <span className="font-black text-xl" style={styles.priceText}>
+                    {item.price}€
+                  </span>
+                </div>
+              ))}
             </div>
           </section>
         )}
 
-        {/* Menu Section */}
-        {pages.includes("menu") && (
-          <section id="menu" className="py-20 px-6">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-black mb-12 text-center" style={{ color: config.primaryColor }}>
-                Highlights der Karte
-              </h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {(config.menuItems && config.menuItems.length > 0) ? (
-                  config.menuItems.map((item) => (
-                    <div
-                      key={item.id || item.name}
-                      className="p-6 rounded-3xl bg-white/30 backdrop-blur-sm border border-white/20 shadow-sm flex flex-col justify-between"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="font-bold text-lg">{item.name}</div>
-                        <div className="font-black" style={{ color: config.primaryColor }}>
-                          {item.price}€
-                        </div>
-                      </div>
-                      {item.description && <p className="text-sm opacity-70 italic">{item.description}</p>}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center opacity-50 col-span-2">Noch keine Gerichte eingetragen.</p>
-                )}
-              </div>
+        {/* --- GALERIE SEKTION --- */}
+        {isVisible("gallery") && (
+          <section id="gallery" className="mt-20">
+            <h2 className="text-[10px] uppercase tracking-[0.2em] font-black opacity-40 mb-8">Galerie</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {gallery.map((img: any, i: number) => (
+                <div key={i} className="aspect-square rounded-[2rem] overflow-hidden bg-black/5 border border-white/20">
+                  <img src={img.url} alt={img.alt} className="w-full h-full object-cover" />
+                </div>
+              ))}
+              {gallery.length === 0 && <div className="col-span-2 py-10 text-center opacity-30"><Camera className="mx-auto mb-2" />Keine Bilder</div>}
             </div>
           </section>
         )}
 
-        {/* Gallery Section */}
-        {pages.includes("gallery") && (
-          <section id="gallery" className="py-20 px-6 bg-black/5">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-black mb-12 text-center" style={{ color: config.primaryColor }}>Galerie</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {(config.gallery && config.gallery.length > 0) ? (
-                  config.gallery.map((img) => (
-                    <div key={img.id || img.url} className="aspect-square overflow-hidden rounded-2xl shadow-md">
-                      <img
-                        src={img.url}
-                        alt={img.alt || "Gallery image"}
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center opacity-50 col-span-full">Noch keine Bilder hochgeladen.</p>
-                )}
-              </div>
+        {/* --- ÖFFNUNGSZEITEN --- */}
+        {isVisible("contact") && (
+          <section id="contact" className="mt-20 p-8 rounded-[2.5rem] bg-black/5 border border-black/5">
+            <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+              <Clock className="opacity-40" /> Öffnungszeiten
+            </h3>
+            <div className="space-y-3">
+              {Object.entries(openingHours).map(([day, sched]: any) => (
+                <div key={day} className="flex justify-between text-sm py-2 border-b border-black/5 last:border-0">
+                  <span className="capitalize font-bold opacity-60">{day}</span>
+                  <span className="font-mono font-bold">
+                    {sched.closed ? "Geschlossen" : `${sched.open} - ${sched.close}`}
+                  </span>
+                </div>
+              ))}
             </div>
           </section>
         )}
 
-        {/* Contact & Hours Section */}
-        {pages.includes("contact") && (
-          <section id="contact" className="py-20 px-6">
-            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <h2 className="text-3xl font-black" style={{ color: config.primaryColor }}>Kontakt</h2>
-                {config.contactMethods && config.contactMethods.length > 0 ? (
-                  <ul className="space-y-4">
-                    {config.contactMethods.map((c, i) => (
-                      <li key={i} className="flex items-center gap-3 p-4 bg-white/20 rounded-2xl border border-white/20">
-                        <span className="opacity-90 font-medium">{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="opacity-60">Keine Kontaktinfos hinterlegt.</p>
-                )}
-              </div>
-
-              <div className="p-8 rounded-3xl bg-white/40 border border-white/20 shadow-inner">
-                <h3 className="font-black text-xl mb-6">Öffnungszeiten</h3>
-                {config.openingHours && Object.keys(config.openingHours).length > 0 ? (
-                  <ul className="space-y-3">
-                    {Object.entries(config.openingHours).map(([day, sched]: any) => (
-                      <li key={day} className="flex justify-between border-b border-black/5 pb-2">
-                        <span className="capitalize font-bold opacity-70">{day}</span>
-                        <span className="font-mono">
-                          {sched.closed ? 'Geschlossen' : `${sched.open} - ${sched.close}`}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="opacity-60">Nicht konfiguriert.</p>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
       </main>
 
-      <footer className="py-12 border-t border-black/5 text-center text-sm opacity-50">
-        <div className="max-w-4xl mx-auto px-4">
-          <p className="font-bold">© {new Date().getFullYear()} {businessName}</p>
-          <p className="mt-1">Handcrafted with Maitr</p>
-        </div>
+      <footer className="py-12 text-center opacity-30 text-[10px] font-black uppercase tracking-[0.3em]">
+        © {new Date().getFullYear()} {businessName}
       </footer>
     </div>
   );

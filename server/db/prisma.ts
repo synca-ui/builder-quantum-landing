@@ -1,82 +1,65 @@
-import pkg from "@prisma/client";
-const { PrismaClient } = pkg;
+import { PrismaClient } from "@prisma/client";
 
+// Jetzt ist PrismaClient sowohl als Wert (Klasse) als auch als Typ bekannt
 export let prisma: PrismaClient | null = null;
 
-function initializePrisma() {
+/**
+ * Initialisiert Prisma mit Validierung und Logging
+ */
+function initializePrisma(): PrismaClient {
   const dbUrl = process.env.DATABASE_URL || "";
 
-  // Validate DATABASE_URL is configured
   if (!dbUrl) {
-    const errorMessage =
-      "[Prisma] FATAL: DATABASE_URL environment variable is not configured";
+    const errorMessage = "[Prisma] FATAL: DATABASE_URL variable is not configured";
     console.error(errorMessage);
     throw new Error(errorMessage);
   }
 
-  // Extract host information for logging
+  // Host-Extraktion für das Logging
   const host = dbUrl.match(/ep-([a-z-]+)/)?.[1] || "unknown";
-  const maskedUrl = `${dbUrl.substring(0, 30)}...${dbUrl.substring(dbUrl.length - 10)}`;
 
-  console.log("[Prisma] Initializing database connection", {
+  console.log("[Prisma] Connecting to NeonDB", {
     host: `ep-${host}`,
-    databaseUrl: maskedUrl,
     timestamp: new Date().toISOString(),
   });
 
-  const client = new PrismaClient({
-    log: ["error", "warn"], // Log errors and warnings
+  return new PrismaClient({
+    log: ["error", "warn"],
     errorFormat: "pretty",
   });
-
-  // Add connection error handler
-  client.$on("error" as any, (error: any) => {
-    console.error("[Prisma] Connection error event:", {
-      code: error?.code,
-      message: error?.message,
-      timestamp: new Date().toISOString(),
-    });
-  });
-
-  return client;
 }
 
-// Lazy initialization: only create PrismaClient when first accessed
+/**
+ * Singleton-Instanz (Lazy Loading)
+ */
 function getPrismaInstance(): PrismaClient {
   if (!prisma) {
     try {
       prisma = initializePrisma();
-      console.log("[Prisma] PrismaClient initialized successfully");
+      console.log("[Prisma] Client initialized successfully");
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error("[Prisma] FATAL: Failed to initialize PrismaClient:", {
-        message: errorMessage,
-        timestamp: new Date().toISOString(),
-      });
+      console.error("[Prisma] Initialization failed:", error);
       throw error;
     }
   }
   return prisma;
 }
 
-// Handle serverless disconnect: called after each request
+/**
+ * Serverless Disconnect Helper
+ */
 export async function disconnectPrisma() {
   if (prisma) {
-    try {
-      console.log("[Prisma] Disconnecting from database");
-      await prisma.$disconnect();
-      prisma = null;
-      console.log("[Prisma] Successfully disconnected");
-    } catch (error) {
-      console.error("[Prisma] Error disconnecting:", error);
-    }
+    await prisma.$disconnect();
+    prisma = null;
+    console.log("[Prisma] Disconnected");
   }
 }
 
-// Get singleton instance (lazy-loaded)
+// Export der Proxy-Instanz für einfachen Zugriff im Rest der App
 export default new Proxy({} as PrismaClient, {
   get(_target, prop) {
-    return (getPrismaInstance() as any)[prop];
+    const instance = getPrismaInstance();
+    return (instance as any)[prop];
   },
 });

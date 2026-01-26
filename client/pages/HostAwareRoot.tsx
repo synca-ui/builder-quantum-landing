@@ -1,47 +1,60 @@
 import React, { useState, useEffect, useMemo } from "react";
-import Index from "./Index";
+import Index from "./Index"; // Deine Landingpage/Dashboard
 import { Loader2 } from "lucide-react";
 import AppRenderer from "@/components/dynamic/AppRenderer.tsx";
 
 export default function HostAwareRoot() {
-  const [config, setConfig] = useState(null);
+  const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. Subdomain aus der URL extrahieren
+  // 1. Subdomain-Logik: Wer sind wir? (z.B. bekkas)
   const subdomain = useMemo(() => {
-    const host = window.location.hostname;
-    // Liste der Hauptdomains, auf denen wir das Dashboard zeigen
-    const mainDomains = ["maitr.de", "www.maitr.de", "localhost", "staging.maitr.de"];
+    try {
+      const host = window.location.hostname;
+      const mainDomains = [
+        "maitr.de",
+        "www.maitr.de",
+        "localhost",
+        "staging.maitr.de"
+      ];
 
-    if (mainDomains.includes(host) || host.endsWith(".netlify.app")) {
+      // Wenn wir auf der Hauptseite oder Netlify-Vorschau sind -> Dashboard zeigen
+      if (mainDomains.includes(host) || host.endsWith(".netlify.app")) {
+        return null;
+      }
+
+      const parts = host.split('.');
+      return parts.length >= 2 ? parts[0] : null;
+    } catch {
       return null;
     }
-
-    const parts = host.split('.');
-    return parts.length >= 2 ? parts[0] : null;
   }, []);
 
-  // 2. Daten von der API laden
+  // 2. Daten-Fetch: Hol das JSON aus der Neon-Datenbank
   useEffect(() => {
     if (!subdomain) {
       setLoading(false);
       return;
     }
 
-    // Wir rufen deine API auf, die uns gerade das JSON geliefert hat
-    fetch(`/api/sites/${subdomain}`)
-      .then((res) => res.json())
-      .then((result) => {
+    const fetchData = async () => {
+      try {
+        // Ruft die API auf, die wir im Backend gebaut haben
+        const response = await fetch(`/api/sites/${subdomain}`);
+        const result = await response.json();
+
         if (result.success && result.data) {
-          // Hier setzen wir die "Bekka"-Daten in den State
+          // Das ist das JSON, das du mir geschickt hast!
           setConfig(result.data);
         }
+      } catch (err) {
+        console.error("API-Fehler beim Laden der Subdomain:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Fehler beim Abruf der Website-Daten:", err);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, [subdomain]);
 
   // 3. Anzeige-Logik
@@ -49,16 +62,18 @@ export default function HostAwareRoot() {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white">
         <Loader2 className="w-10 h-10 text-orange-500 animate-spin mb-4" />
-        <p className="text-gray-500 animate-pulse">Lade dein Restaurant...</p>
+        <p className="text-gray-500 font-medium animate-pulse italic">
+          Maitr erstellt deine Website...
+        </p>
       </div>
     );
   }
 
-  // Wenn wir auf bekkas.maitr.de sind und die API-Daten haben
+  // WENN Subdomain erkannt UND Daten vorhanden -> Dynamische Website
   if (subdomain && config) {
     return <AppRenderer config={config} />;
   }
 
-  // Ansonsten (Hauptseite oder Fehler) -> Maitr Landingpage
+  // ANSONSTEN -> Maitr Homepage / Dashboard
   return <Index />;
 }
