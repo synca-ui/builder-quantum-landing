@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { prisma } from "../db/prisma";
+import prisma from "../db/prisma";
 
 export const subdomainsRouter = Router();
 
