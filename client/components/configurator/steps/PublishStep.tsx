@@ -385,15 +385,14 @@ export function PublishStep({
   const wasAlreadyPublished =
     publishing.status === "published" && !!publishing.publishedUrl;
 
-  const displayDomain = getDisplayedDomain
-    ? getDisplayedDomain()
-    : `${
-        business.domain?.selectedDomain ||
-        business.name
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-      }.maitr.de`;
+  const displayDomain = useMemo(() => {
+    if (getDisplayedDomain) return getDisplayedDomain();
+
+    const name = business.domain?.selectedDomain ||
+      business.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+
+    return name.includes(".") ? name : `${name}.maitr.de`;
+  }, [getDisplayedDomain, business.domain?.selectedDomain, business.name]);
 
   const liveUrl = getLiveUrl
     ? getLiveUrl()

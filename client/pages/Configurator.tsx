@@ -241,15 +241,15 @@ export default function Configurator() {
   }, [publishedUrl, business.domain?.selectedDomain, business.name]);
 
   const getDisplayedDomain = useCallback(() => {
-    if (business.domain?.selectedDomain) {
-      return business.domain.selectedDomain;
+    const selected = business.domain?.selectedDomain;
+
+    if (selected) {
+      return selected.includes(".") ? selected : `${selected}.maitr.de`;
     }
 
-    return business.name
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "") || "site";
-  }, [business.domain?.selectedDomain, business.name]);
+    // Fallback, falls noch nichts gewählt wurde
+    return "site.maitr.de";
+  }, [business.domain?.selectedDomain]);
 
   const saveToBackend = useCallback(
     async (data: Partial<Configuration>) => {
