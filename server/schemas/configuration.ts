@@ -199,6 +199,11 @@ export const LegacyConfigurationSchema = z
     paymentOptions: z.array(z.string()).default([]),
     offers: z.array(z.any()).default([]),
     offerBanner: z.any().optional(),
+    businessId: z.string().optional().nullable(),
+    selectedTemplate: z.string().optional().nullable(),
+    backgroundColor: z.string().optional(),
+    backgroundType: z.enum(["color", "image"]).optional(),
+    fontColor: z.string().optional(),
   })
   .strict(); // 🔥 STRICT! No unknown fields allowed (unlike before with .passthrough())
 
