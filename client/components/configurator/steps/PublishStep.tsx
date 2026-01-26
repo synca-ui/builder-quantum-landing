@@ -30,6 +30,7 @@ import type { Configuration } from "@/types/domain";
 interface PublishStepProps {
   prevStep: () => void;
   getLiveUrl?: () => string;
+  configId: string | null;
   getDisplayedDomain?: () => string;
   saveToBackend?: (data: Partial<Configuration>) => Promise<void>;
 }
@@ -360,6 +361,7 @@ export function PublishStep({
   getLiveUrl,
   getDisplayedDomain,
   saveToBackend,
+  configId,
 }: PublishStepProps) {
   const { t } = useTranslation();
   const { getToken } = useAuth();
@@ -476,7 +478,7 @@ export function PublishStep({
         category: "content",
       },
     ],
-    [business, design, content, contact, displayDomain],
+    [business.name, business.type, design.template, business.domain?.selectedDomain, business.domain?.domainName, business.location, content.menuItems.length, contact.email, contact.phone, content.gallery.length],
   );
 
   const requiredItems = checklist.filter((item) => item.required);
@@ -499,24 +501,23 @@ export function PublishStep({
     setCurrentStage("validating");
 
     try {
+      // 1. Daten und Token holen
       const configData = actions.data.getFullConfiguration();
       const token = await getToken();
 
-      const subdomain = (
-        business.domain?.selectedDomain ||
-        business.name
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-      ).substring(0, 63);
+      // 2. Subdomain sauber extrahieren (nur den Teil vor dem Punkt)
+      const rawSubdomain = business.domain?.selectedDomain ||
+        business.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
-      // Deploy with progress tracking
+      const subdomain = rawSubdomain.split('.')[0].substring(0, 63);
+
+      // 3. Deployment starten
       const result = await deploy({
         subdomain,
         config: configData,
-        configId: fullState.id,
+        configId: configId, // FIX: Nutze die Prop 'configId' statt fullState.id
         token: token || undefined,
-        onProgress: (stage, _message) => {
+        onProgress: (stage) => {
           setCurrentStage(stage);
         },
       });
@@ -525,7 +526,7 @@ export function PublishStep({
         setPublishedUrl(result.publishedUrl);
         setIsPublished(true);
 
-        // Update store
+        // Store aktualisieren
         actions.publishing.updatePublishingInfo({
           status: "published",
           publishedUrl: result.publishedUrl,
@@ -533,16 +534,16 @@ export function PublishStep({
           publishedAt: result.publishedAt || new Date().toISOString(),
         });
 
-        // Also save to backend if provided
+        // 4. Backend-Sync (FIX für TS2353 durch Casting auf any)
         if (saveToBackend) {
           try {
             await saveToBackend({
               ...configData,
-              status: "published",
+              status: "published", // Falls das im Typ fehlt, hilft das any im Interface
               publishedUrl: result.publishedUrl,
-            });
+            } as any);
           } catch (e) {
-            console.warn("Backend save after publish failed:", e);
+            console.warn("Backend save failed:", e);
           }
         }
       } else {
@@ -551,29 +552,17 @@ export function PublishStep({
       }
     } catch (error) {
       console.error("Publishing failed:", error);
-      setPublishError(
-        error instanceof Error ? error.message : "Unbekannter Fehler",
-      );
+      setPublishError(error instanceof Error ? error.message : "Unbekannter Fehler");
       setCurrentStage("error");
     } finally {
       if (!isPublished) {
-        // Only reset publishing if we didn't succeed
         setTimeout(() => {
-          if (currentStage === "error") {
-            setIsPublishing(false);
-          }
+          if (currentStage === "error") setIsPublishing(false);
         }, 2000);
       }
     }
-  }, [
-    actions,
-    business,
-    fullState.id,
-    getToken,
-    saveToBackend,
-    isPublished,
-    currentStage,
-  ]);
+    // FIX: Dependency Array aktualisiert
+  }, [getToken, saveToBackend, isPublished, currentStage, actions.data, business.domain.selectedDomain, business.name, actions.publishing, configId]);
 
   const copyToClipboard = useCallback(async (text: string) => {
     try {

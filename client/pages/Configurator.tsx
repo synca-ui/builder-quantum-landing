@@ -214,7 +214,7 @@ export default function Configurator() {
   const nextStepStore = useConfiguratorStore((s) => s.nextStep);
   const prevStepStore = useConfiguratorStore((s) => s.prevStep);
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
-
+  const business = useConfiguratorStore((s) => s.business); // <-- DIESE ZEILE HINZUFÜGEN
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(
     () => persistence.getConfigId() || null,
   );
@@ -230,11 +230,26 @@ export default function Configurator() {
   );
   const [pendingFeatureConfig, setPendingFeatureConfig] = useState<any>(null);
 
-  const getLiveUrl = useCallback(
-    () => publishedUrl || "https://site.maitr.de",
-    [publishedUrl],
-  );
-  const getDisplayedDomain = useCallback(() => "site.maitr.de", []);
+  const getLiveUrl = useCallback(() => {
+    if (publishedUrl) return publishedUrl;
+
+    const subdomain = business.domain?.selectedDomain ||
+      business.name.toLowerCase().replace(/[^a-z0-9]/g, "-") ||
+      "site";
+
+    return `https://${subdomain}.maitr.de`;
+  }, [publishedUrl, business.domain?.selectedDomain, business.name]);
+
+  const getDisplayedDomain = useCallback(() => {
+    if (business.domain?.selectedDomain) {
+      return business.domain.selectedDomain;
+    }
+
+    return business.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "") || "site";
+  }, [business.domain?.selectedDomain, business.name]);
 
   const saveToBackend = useCallback(
     async (data: Partial<Configuration>) => {
@@ -535,6 +550,7 @@ export default function Configurator() {
         return (
           <PublishStep
             prevStep={prevStep}
+            configId={currentConfigId}
             getLiveUrl={getLiveUrl}
             getDisplayedDomain={getDisplayedDomain}
             saveToBackend={saveToBackend}
