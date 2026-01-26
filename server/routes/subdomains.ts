@@ -19,9 +19,10 @@ export async function handleSubdomainRequest(
   next: NextFunction,
 ) {
   try {
+    if (req.path.startsWith('/api')) return next();
+
     const host = req.hostname || req.headers.host?.split(":")[0] || "";
 
-    // Skip if not a subdomain request - main domains serve the dashboard
     const mainDomains = [
       "maitr.de",
       "www.maitr.de",

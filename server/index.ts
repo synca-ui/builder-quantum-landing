@@ -3,6 +3,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { handleClerkWebhook } from "./webhooks/clerk";
+import { subdomainsRouter } from "./routes/subdomains";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -91,6 +92,7 @@ export function createServer() {
 
   // Use aggregated API router
   app.use("/api", apiRouter);
+  app.use("/api/subdomains", subdomainsRouter);
 
   // Additional explicit routes / routers
   app.use("/api", webAppsRouter);
