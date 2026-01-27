@@ -507,7 +507,7 @@ export function TemplatePreviewContent() {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
     } else {
-      // Modal geschlossen: Body-Scroll wiederherstellen
+      // Modal geschlossen: Scroll wiederherstellen
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     }
@@ -554,6 +554,15 @@ export function TemplatePreviewContent() {
 
   const navigateToPage = useCallback((page: string) => {
     setPreviewState((p) => ({ ...p, activePage: page, menuOpen: false }));
+
+    // FIX 2: SCROLL-TO-TOP bei Seitenwechsel
+    setTimeout(() => {
+      const container = document.querySelector('[data-preview-scroll]');
+      if (container) {
+        container.scrollTop = 0;
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }, 0);
   }, []);
 
   const addToCart = useCallback((item: any) => {

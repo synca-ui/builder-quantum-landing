@@ -274,6 +274,10 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   // Handlers
   const toggleMenu = useCallback(() => setMenuOpen(prev => !prev), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
+
+  // FIX 2: SCROLL-TO-TOP bei Seitenwechsel + Ref für Main-Container
+  const mainScrollRef = React.useRef<HTMLDivElement>(null);
+
   const navigateToPage = useCallback((page: string) => {
     setActivePage(page);
     setMenuOpen(false);
@@ -285,6 +289,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     setSelectedDish(dish);
     setCurrentImageIndex(0);
   }, []);
+
   const closeDishModal = useCallback(() => {
     setSelectedDish(null);
     setCurrentImageIndex(0);
@@ -297,6 +302,31 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     if (!selectedDish?.images) return;
     setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedDish.images!.length - 1);
   }, [selectedDish?.images]);
+
+  // FIX 1: SCROLL-LOCK für Modal - Verhindert Hintergrund-Scroll
+  React.useEffect(() => {
+    if (selectedDish) {
+      // Modal offen: Body-Scroll sperren
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      // Modal geschlossen: Scroll wiederherstellen
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+
+    // Cleanup beim Unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [selectedDish]);
 
   // Kategorien extrahieren
   const allCategories = useMemo(() => {
@@ -330,21 +360,6 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       case "modern":
         return {
           ...base,
-          wrapper: {
-            background: `linear-gradient(135deg, ${design.backgroundColor} 0%, ${design.secondaryColor} 100%)`,
-            color: design.fontColor,
-          },
-          itemCard: "bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/20 shadow-lg mb-4 md:mb-6 hover:scale-[1.01] transition-transform",
-        };
-      case "stylish":
-        return {
-          ...base,
-          itemCard: "bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 mb-4 md:mb-6 hover:scale-[1.01] transition-transform",
-        };
-      case "cozy":
-        return {
-          ...base,
-          itemCard: "bg-white/90 rounded-[2rem] p-5 md:p-7 border border-amber-100/50 shadow-md mb-5 md:mb-7 hover:scale-[1.01] transition-transform",
         };
       default:
         return {
