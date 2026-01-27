@@ -1,14 +1,8 @@
 import React from "react";
 import { Plus, X, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
-
-export interface MenuItem {
-  name: string;
-  description?: string;
-  price: string;
-  emoji?: string;
-  id?: string;
-}
+// 1. Importiere den globalen Typ (Pfad ggf. anpassen)
+import { MenuItem } from "@/types/domain";
 
 export interface MenuItemStats {
   itemId?: string;
@@ -183,7 +177,9 @@ export function MenuSection({
                 className={styles.itemPrice}
                 style={{ color: primaryColor || undefined }}
               >
-                ${item.price}
+                {typeof item.price === 'number'
+                  ? `${item.price.toFixed(2)}€`
+                  : `${item.price}${item.price?.includes('€') ? '' : '€'}`}
               </span>
 
               {showOrderingButtons && onAddToCart && (

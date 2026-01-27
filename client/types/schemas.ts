@@ -50,7 +50,7 @@ export const MenuItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   description: z.string().optional(),
-  price: z.number().positive().optional(),
+  price: z.union([z.number(), z.string()]).optional(),
   imageUrl: z.string().url().optional(),
   emoji: z.string().optional(),
   available: z.boolean().optional().default(true),
@@ -172,7 +172,8 @@ export type ConfigurationType = z.infer<typeof ConfigurationSchema>;
  * Validation helper function
  */
 export function validateConfiguration(data: unknown): Configuration {
-  return ConfigurationSchema.parse(data);
+  const validatedData = ConfigurationSchema.parse(data);
+  return validatedData as unknown as Configuration;
 }
 
 /**
