@@ -64,6 +64,20 @@ function getHeaderFontClass(size: string): string {
   }
 }
 
+// --- HELPER: Page ID zu deutschem Label mappen ---
+function getPageLabel(pageId: string): string {
+  const labels: Record<string, string> = {
+    home: "Startseite",
+    menu: "Speisekarte",
+    gallery: "Galerie",
+    about: "Über uns",
+    contact: "Kontakt",
+    reservations: "Reservieren",
+    offers: "Angebote",
+  };
+  return labels[pageId] || pageId;
+}
+
 // ============================================
 // MEMOIZED SUB-COMPONENTS
 // ============================================
@@ -164,7 +178,7 @@ interface MenuOverlayProps {
   isOpen: boolean;
   backgroundColor: string;
   fontColor: string;
-  selectedPages: string[];
+  menuItems: Array<{ id: string; label: string }>;
   onClose: () => void;
   onNavigate: (page: string) => void;
 }
@@ -173,7 +187,7 @@ const MenuOverlay = memo(function MenuOverlay({
   isOpen,
   backgroundColor,
   fontColor,
-  selectedPages,
+  menuItems,
   onClose,
   onNavigate,
 }: MenuOverlayProps) {
@@ -191,15 +205,13 @@ const MenuOverlay = memo(function MenuOverlay({
       >
         <h3 className="font-bold text-2xl mb-8 opacity-90">Menü</h3>
         <div className="space-y-4 flex-1 overflow-y-auto">
-          {["home", ...selectedPages].map((item) => (
+          {menuItems.map((item) => (
             <div
-              key={item}
+              key={item.id}
               className="text-lg font-medium cursor-pointer flex justify-between items-center group pb-3 border-b border-current/10"
-              onClick={() => onNavigate(item)}
+              onClick={() => onNavigate(item.id)}
             >
-              <span className="capitalize">
-                {item === "home" ? "Startseite" : item}
-              </span>
+              <span>{item.label}</span>
               <ChevronRight className="w-4 h-4 opacity-50" />
             </div>
           ))}
@@ -242,14 +254,19 @@ const DishModal = memo(function DishModal({
 
   return (
     <div
-      className="absolute inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-end animate-in fade-in duration-200"
+      className="absolute inset-0 z-[70] bg-black/70 backdrop-blur-md flex items-end animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="w-full bg-white rounded-t-3xl max-h-[85%] overflow-hidden animate-in slide-in-from-bottom duration-300"
+        className="w-full bg-white rounded-t-3xl max-h-[90%] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl"
         style={{ backgroundColor, color: fontColor }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Grabber Handle */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+        </div>
+
         {/* Image Carousel */}
         {dish.images && dish.images.length > 0 ? (
           <div className="relative aspect-[4/3] bg-gray-100">
@@ -262,13 +279,13 @@ const DishModal = memo(function DishModal({
               <>
                 <button
                   onClick={onPrevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={onNextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -289,7 +306,7 @@ const DishModal = memo(function DishModal({
             )}
             <button
               onClick={onClose}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -299,7 +316,7 @@ const DishModal = memo(function DishModal({
             <Camera className="w-12 h-12 text-gray-300" />
             <button
               onClick={onClose}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -307,7 +324,7 @@ const DishModal = memo(function DishModal({
         )}
 
         {/* Dish Details */}
-        <div className="p-5 space-y-3">
+        <div className="p-5 space-y-3 overflow-y-auto max-h-[40vh]">
           <div className="flex justify-between items-start gap-3">
             <h3 className="text-xl font-bold">{dish.name}</h3>
             <span
@@ -414,6 +431,43 @@ export function TemplatePreviewContent() {
   const selectedPages =
     useConfiguratorStore((s) => s.pages.selectedPages) || [];
 
+  // Payment/Offers fields
+  const offerBannerEnabled = useConfiguratorStore(
+    (s) => s.payments?.offerBanner?.enabled,
+  ) || false;
+
+  // Build deduplicated menu with labels
+  const navigationMenu = useMemo(() => {
+    const menuSet = new Set<string>();
+    const menuArray: Array<{ id: string; label: string }> = [];
+
+    // Immer Startseite als erstes
+    menuArray.push({ id: "home", label: "Startseite" });
+    menuSet.add("home");
+
+    // Füge selectedPages hinzu (ohne Duplikate)
+    selectedPages.forEach((pageId) => {
+      if (!menuSet.has(pageId)) {
+        menuArray.push({ id: pageId, label: getPageLabel(pageId) });
+        menuSet.add(pageId);
+      }
+    });
+
+    // Dynamisch: Reservierungen nur wenn aktiviert
+    if (reservationsEnabled && !menuSet.has("reservations")) {
+      menuArray.push({ id: "reservations", label: "Reservieren" });
+      menuSet.add("reservations");
+    }
+
+    // Dynamisch: Angebote nur wenn Banner aktiviert
+    if (offerBannerEnabled && !menuSet.has("offers")) {
+      menuArray.push({ id: "offers", label: "Angebote" });
+      menuSet.add("offers");
+    }
+
+    return menuArray;
+  }, [selectedPages, reservationsEnabled, offerBannerEnabled]);
+
   // Local state
   const [previewState, setPreviewState] = useState({
     menuOpen: false,
@@ -480,13 +534,13 @@ export function TemplatePreviewContent() {
   const styles = useMemo(() => {
     const base = {
       wrapper: { backgroundColor, color: fontColor },
-      page: `px-5 pt-32 pb-24 min-h-full ${fontClass}`,
+      page: `px-5 pt-24 pb-16 min-h-full ${fontClass}`,
       titleClass: `text-3xl font-bold mb-6 text-center leading-tight`,
       bodyClass: `text-sm opacity-90 leading-relaxed`,
       itemNameClass: `text-base font-bold leading-tight`,
       itemDescClass: `text-xs opacity-80 mt-1 leading-snug`,
       itemPriceClass: `text-lg font-bold`,
-      nav: `absolute top-0 left-0 right-0 z-30 px-5 pt-12 pb-4 flex items-center justify-between border-b border-black/5 transition-all`,
+      nav: `absolute top-0 left-0 right-0 z-30 px-5 pt-6 pb-4 flex items-center justify-between border-b border-black/5 transition-all`,
     };
 
     switch (template) {
@@ -721,7 +775,7 @@ export function TemplatePreviewContent() {
               </button>
             ))}
           </div>
-          <div className="space-y-4 pb-8">
+          <div className="space-y-4 pb-4">
             {filteredMenuItems.length > 0 ? (
               filteredMenuItems.map((item: any, i: number) => (
                 <div
@@ -1006,7 +1060,7 @@ export function TemplatePreviewContent() {
         isOpen={previewState.menuOpen}
         backgroundColor={backgroundColor}
         fontColor={fontColor}
-        selectedPages={selectedPages}
+        menuItems={navigationMenu}
         onClose={closeMenu}
         onNavigate={navigateToPage}
       />
@@ -1020,7 +1074,7 @@ export function TemplatePreviewContent() {
         }}
       >
         <div className={styles.page}>{renderContent()}</div>
-        <div className="h-20 w-full" />
+        <div className="h-12 w-full" />
       </div>
 
       {/* MEMOIZED DISH MODAL */}

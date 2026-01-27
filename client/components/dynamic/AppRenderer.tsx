@@ -5,12 +5,12 @@
  *
  * Features:
  * ✅ Pixel-perfekte Visual Parity zur Live-Preview
- * ✅ Mobile Hamburger-Menü mit Overlay
- * ✅ Interaktive Dish-Modals mit Bild-Karussell
+ * ✅ Mobile Hamburger-Menü mit Overlay und dedupl izierten Labels
+ * ✅ Interaktive Dish-Modals als Bottom-Sheet mit Grabber
  * ✅ Kategorie-Filter für Speisekarte
  * ✅ Robuste Daten-Normalisierung (flach → verschachtelt)
- * ✅ Responsive Design (Mobile-First)
- * ✅ Template Intent Support (VISUAL, NARRATIVE, COMMERCIAL)
+ * ✅ Responsive Design (Mobile-First mit Desktop-Optimierungen)
+ * ✅ Optimierte Header-Position für Notch-Bereich
  */
 
 import React, { useState, useMemo, useCallback } from "react";
@@ -87,6 +87,22 @@ function getHeaderFontClass(size: string): string {
 }
 
 /**
+ * Page ID zu deutschem Label mappen
+ */
+function getPageLabel(pageId: string): string {
+  const labels: Record<string, string> = {
+    home: "Startseite",
+    menu: "Speisekarte",
+    gallery: "Galerie",
+    about: "Über uns",
+    contact: "Kontakt",
+    reservations: "Reservieren",
+    offers: "Angebote",
+  };
+  return labels[pageId] || pageId;
+}
+
+/**
  * Normalisiert flache DB-Daten zu verschachtelter Configuration-Struktur
  */
 const normalizeConfig = (rawConfig: any): Configuration => {
@@ -157,7 +173,7 @@ const normalizeConfig = (rawConfig: any): Configuration => {
 
 export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) => {
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
-  const { business, design, content, features, contact, pages } = config;
+  const { business, design, content, features, contact, pages, payments } = config;
 
   // Template Metadaten laden
   const templateMeta = defaultTemplates.find(t => t.id === design.template) || defaultTemplates[0];
@@ -202,6 +218,38 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   // Header Font Class
   const headerFontClass = getHeaderFontClass(design.headerFontSize);
 
+  // Build deduplicated navigation menu
+  const navigationMenu = useMemo(() => {
+    const menuSet = new Set<string>();
+    const menuArray: Array<{ id: string; label: string }> = [];
+
+    // Immer Startseite als erstes
+    menuArray.push({ id: "home", label: "Startseite" });
+    menuSet.add("home");
+
+    // Füge selectedPages hinzu (ohne Duplikate)
+    pages.selectedPages.forEach((pageId) => {
+      if (!menuSet.has(pageId)) {
+        menuArray.push({ id: pageId, label: getPageLabel(pageId) });
+        menuSet.add(pageId);
+      }
+    });
+
+    // Dynamisch: Reservierungen nur wenn aktiviert
+    if (features.reservationsEnabled && !menuSet.has("reservations")) {
+      menuArray.push({ id: "reservations", label: "Reservieren" });
+      menuSet.add("reservations");
+    }
+
+    // Dynamisch: Angebote nur wenn Banner aktiviert
+    if ((payments as any)?.offerBanner?.enabled && !menuSet.has("offers")) {
+      menuArray.push({ id: "offers", label: "Angebote" });
+      menuSet.add("offers");
+    }
+
+    return menuArray;
+  }, [pages.selectedPages, features.reservationsEnabled, payments]);
+
   // Handlers
   const toggleMenu = useCallback(() => setMenuOpen(prev => !prev), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -223,11 +271,11 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const nextImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex(prev => prev < selectedDish.images!.length - 1 ? prev + 1 : 0);
-  }, [selectedDish]);
+  }, [selectedDish?.images]);
   const prevImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedDish.images!.length - 1);
-  }, [selectedDish]);
+  }, [selectedDish?.images]);
 
   // Kategorien extrahieren
   const allCategories = useMemo(() => {
@@ -248,13 +296,13 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const styles = useMemo(() => {
     const base = {
       wrapper: { backgroundColor: design.backgroundColor, color: design.fontColor },
-      page: `px-5 md:px-8 lg:px-12 pt-32 md:pt-40 pb-24 min-h-screen ${fontClass} max-w-7xl mx-auto`,
+      page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
       titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
       bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
       itemNameClass: `text-base md:text-lg font-bold leading-tight`,
       itemDescClass: `text-xs md:text-sm opacity-80 mt-1 leading-snug`,
       itemPriceClass: `text-lg md:text-xl font-bold`,
-      nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-12 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
+      nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
     };
 
     switch (design.template) {
@@ -265,17 +313,17 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
             background: `linear-gradient(135deg, ${design.backgroundColor} 0%, ${design.secondaryColor} 100%)`,
             color: design.fontColor,
           },
-          itemCard: "bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/20 shadow-lg mb-4 md:mb-6",
+          itemCard: "bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/20 shadow-lg mb-4 md:mb-6 hover:scale-[1.01] transition-transform",
         };
       case "stylish":
         return {
           ...base,
-          itemCard: "bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 mb-4 md:mb-6 transform hover:scale-[1.01] transition-transform",
+          itemCard: "bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 mb-4 md:mb-6 hover:scale-[1.01] transition-transform",
         };
       case "cozy":
         return {
           ...base,
-          itemCard: "bg-white/90 rounded-[2rem] p-5 md:p-7 border border-amber-100/50 shadow-md mb-5 md:mb-7",
+          itemCard: "bg-white/90 rounded-[2rem] p-5 md:p-7 border border-amber-100/50 shadow-md mb-5 md:mb-7 hover:scale-[1.01] transition-transform",
         };
       default:
         return {
@@ -283,7 +331,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
           itemCard: "py-5 md:py-6 border-b border-current/10 last:border-0",
         };
     }
-  }, [design, fontClass]);
+  }, [design.backgroundColor, design.fontColor, design.template, design.secondaryColor]);
 
   // ============================================
   // RENDER FUNCTIONS
@@ -327,7 +375,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
               Highlights
             </h3>
             <span
-              className="text-[10px] md:text-xs font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1"
+              className="text-[10px] md:text-xs font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1 transition-opacity"
               onClick={() => navigateToPage("menu")}
             >
               Alle anzeigen <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
@@ -339,7 +387,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
             {content.menuItems.slice(0, 6).map((item: any, i: number) => (
               <div
                 key={i}
-                className={`${styles.itemCard} cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]`}
+                className={`${styles.itemCard} cursor-pointer active:scale-[0.98]`}
                 onClick={() => openDishModal(item)}
               >
                 <div className="flex justify-between items-start gap-3">
@@ -367,7 +415,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       {features.reservationsEnabled && (
         <div className="mt-8 md:mt-12 mb-6 md:mb-10 max-w-md mx-auto">
           <button
-            className="w-full py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl"
+            className="w-full py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
             style={{
               backgroundColor: features.reservationButtonColor,
               color: features.reservationButtonTextColor,
@@ -436,7 +484,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         <div className="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 md:justify-center">
           <button
             onClick={() => setActiveMenuCategory(null)}
-            className={`px-4 py-2 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${
+            className={`px-4 py-2 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 active:scale-95 ${
               activeMenuCategory === null ? "shadow-md" : "border border-current/20 opacity-70"
             }`}
             style={
@@ -451,7 +499,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
             <button
               key={cat}
               onClick={() => setActiveMenuCategory(cat)}
-              className={`px-4 py-2 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 ${
+              className={`px-4 py-2 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 active:scale-95 ${
                 activeMenuCategory === cat ? "shadow-md" : "border border-current/20 opacity-70"
               }`}
               style={
@@ -467,12 +515,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       )}
 
       {/* Menu Items - Desktop: 2-3 Spalten Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-4">
         {filteredMenuItems.length > 0 ? (
           filteredMenuItems.map((item: any, i: number) => (
             <div
               key={i}
-              className={`${styles.itemCard} cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]`}
+              className={`${styles.itemCard} cursor-pointer active:scale-[0.98]`}
               onClick={() => openDishModal(item)}
             >
               <div className="flex justify-between items-start gap-3">
@@ -496,7 +544,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                         e.stopPropagation();
                         addToCart(item);
                       }}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md hover:shadow-lg"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md hover:shadow-lg hover:scale-110"
                       style={{ backgroundColor: design.primaryColor, color: "#FFF" }}
                     >
                       <Plus className="w-4 h-4 md:w-5 md:h-5" />
@@ -594,7 +642,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
               href={contact.socialMedia.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:opacity-100 transition-opacity"
+              className="hover:opacity-100 hover:scale-110 transition-all"
             >
               <Instagram className="w-6 h-6 md:w-8 md:h-8 cursor-pointer" />
             </a>
@@ -604,7 +652,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
               href={contact.socialMedia.facebook}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:opacity-100 transition-opacity"
+              className="hover:opacity-100 hover:scale-110 transition-all"
             >
               <Facebook className="w-6 h-6 md:w-8 md:h-8 cursor-pointer" />
             </a>
@@ -680,7 +728,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       </div>
 
       <button
-        className="w-full py-3 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl"
+        className="w-full py-3 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
         style={{
           backgroundColor: features.reservationButtonColor,
           color: features.reservationButtonTextColor,
@@ -749,24 +797,24 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 
         {/* Desktop Navigation Links - Hidden on Mobile */}
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold uppercase tracking-wider">
-          {pages.selectedPages.map((page) => (
+          {navigationMenu.map((item) => (
             <button
-              key={page}
-              onClick={() => navigateToPage(page)}
-              className={`hover:opacity-100 transition-opacity ${activePage === page ? 'opacity-100 border-b-2' : 'opacity-70'}`}
+              key={item.id}
+              onClick={() => navigateToPage(item.id)}
+              className={`hover:opacity-100 transition-all ${activePage === item.id ? 'opacity-100 border-b-2 scale-105' : 'opacity-70'}`}
               style={{
                 color: design.headerFontColor,
-                borderColor: activePage === page ? design.headerFontColor : 'transparent'
+                borderColor: activePage === item.id ? design.headerFontColor : 'transparent'
               }}
             >
-              {page === "home" ? "Home" : page.charAt(0).toUpperCase() + page.slice(1)}
+              {item.label}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-3 shrink-0" style={{ color: design.headerFontColor }}>
           {features.onlineOrderingEnabled && (
-            <div className="relative cursor-pointer">
+            <div className="relative cursor-pointer hover:scale-110 transition-transform">
               <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 opacity-90" />
               {cartItems.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-3.5 h-3.5 md:w-4 md:h-4 bg-red-500 text-white text-[9px] md:text-[10px] flex items-center justify-center rounded-full font-bold shadow-sm">
@@ -795,16 +843,14 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
           >
             <h3 className="font-bold text-2xl mb-8 opacity-90">Menü</h3>
             <div className="space-y-4 flex-1 overflow-y-auto">
-              {["home", ...pages.selectedPages].map((item) => (
+              {navigationMenu.map((item) => (
                 <div
-                  key={item}
+                  key={item.id}
                   className="text-lg font-medium cursor-pointer flex justify-between items-center group pb-3 border-b border-current/10"
-                  onClick={() => navigateToPage(item)}
+                  onClick={() => navigateToPage(item.id)}
                 >
-                  <span className="capitalize">
-                    {item === "home" ? "Startseite" : item}
-                  </span>
-                  <ChevronRight className="w-4 h-4 opacity-50" />
+                  <span>{item.label}</span>
+                  <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </div>
               ))}
             </div>
@@ -815,20 +861,25 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className={styles.page}>{renderContent()}</div>
-        <div className="h-20 w-full" />
+        <div className="h-12 w-full" />
       </main>
 
-      {/* DISH MODAL */}
+      {/* DISH MODAL - BOTTOM SHEET */}
       {selectedDish && (
         <div
-          className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center md:items-center justify-center p-0 md:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-md flex items-end md:items-center md:justify-center p-0 md:p-6 animate-in fade-in duration-200"
           onClick={closeDishModal}
         >
           <div
-            className="w-full md:w-auto md:min-w-[600px] md:max-w-3xl rounded-t-3xl md:rounded-3xl max-h-[85%] md:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-bottom-0 duration-300"
+            className="w-full md:w-auto md:min-w-[600px] md:max-w-3xl rounded-t-3xl md:rounded-3xl max-h-[90%] md:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-bottom-0 duration-300 shadow-2xl"
             style={{ backgroundColor: design.backgroundColor, color: design.fontColor }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Grabber Handle - Only on Mobile */}
+            <div className="flex md:hidden justify-center pt-3 pb-2">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </div>
+
             {/* Image Carousel */}
             {selectedDish.images && selectedDish.images.length > 0 ? (
               <div className="relative aspect-[4/3] md:aspect-[16/9] bg-gray-100">
@@ -841,13 +892,13 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                   <>
                     <button
                       onClick={prevImage}
-                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
                     >
                       <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                     </button>
                     <button
                       onClick={nextImage}
-                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
                     >
                       <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                     </button>
@@ -866,7 +917,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                 )}
                 <button
                   onClick={closeDishModal}
-                  className="absolute top-3 md:top-4 right-3 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                  className="absolute top-3 md:top-4 right-3 md:right-4 w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
                 >
                   <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
@@ -876,7 +927,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                 <Camera className="w-12 h-12 md:w-16 md:h-16 text-gray-300" />
                 <button
                   onClick={closeDishModal}
-                  className="absolute top-3 md:top-4 right-3 md:right-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                  className="absolute top-3 md:top-4 right-3 md:right-4 w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
                 >
                   <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
@@ -884,7 +935,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
             )}
 
             {/* Dish Details */}
-            <div className="p-5 md:p-8 space-y-3 md:space-y-4">
+            <div className="p-5 md:p-8 space-y-3 md:space-y-4 overflow-y-auto max-h-[40vh]">
               <div className="flex justify-between items-start gap-3 md:gap-4">
                 <h3 className="text-xl md:text-3xl font-bold">{selectedDish.name}</h3>
                 <span className="text-xl md:text-3xl font-bold shrink-0" style={{ color: design.priceColor }}>
@@ -901,7 +952,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                     addToCart(selectedDish);
                     closeDishModal();
                   }}
-                  className="w-full py-3 md:py-4 rounded-xl font-bold text-base md:text-lg text-white shadow-lg mt-4 md:mt-6 transition-transform active:scale-[0.98] hover:shadow-xl"
+                  className="w-full py-3 md:py-4 rounded-xl font-bold text-base md:text-lg text-white shadow-lg mt-4 md:mt-6 transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
                   style={{ backgroundColor: design.primaryColor }}
                 >
                   <Plus className="w-4 h-4 md:w-5 md:h-5 inline mr-2" />
@@ -922,3 +973,4 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 };
 
 export default AppRenderer;
+
