@@ -232,6 +232,28 @@ export const defaultTemplates: Template[] = [
     },
   },
 ];
+export interface TemplateWithIntent extends Template {
+  intent: 'VISUAL' | 'NARRATIVE' | 'COMMERCIAL';
+}
+
+export const defaultTemplatesWithIntent: TemplateWithIntent[] = [
+  {
+    ...defaultTemplates[0], // minimalist
+    intent: 'NARRATIVE',
+  },
+  {
+    ...defaultTemplates[1], // modern
+    intent: 'COMMERCIAL',
+  },
+  {
+    ...defaultTemplates[2], // stylish
+    intent: 'VISUAL',
+  },
+  {
+    ...defaultTemplates[3], // cozy
+    intent: 'NARRATIVE',
+  },
+];
 
 export const defaultTemplateThemes: Record<string, TemplateTheme> = {
   minimalist: {

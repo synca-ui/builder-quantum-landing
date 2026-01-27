@@ -1,3 +1,13 @@
+/**
+ * AppRenderer.tsx - REFACTORED VERSION
+ *
+ * Diese Version implementiert 100% visuelle Parität zur Preview durch:
+ * 1. Template Intent Berücksichtigung (VISUAL vs. NARRATIVE vs. COMMERCIAL)
+ * 2. Globale CSS-Variable-Injektion aus Template-Tokens
+ * 3. Glassmorphism, Animationen, Overlays basierend auf Intent
+ * 4. Utility Classes statt hartcodierter Tailwind-Klassen
+ */
+
 import React, { useMemo } from "react";
 import {
   Clock,
@@ -10,19 +20,23 @@ import {
   UtensilsCrossed
 } from "lucide-react";
 import { Configuration, MenuItem, OpeningHours } from "@/types/domain";
-import { defaultTemplates, defaultTemplateThemes } from "@/components/template/TemplateRegistry.tsx";
-import MenuSection from "@/components/sections/MenuSection.tsx";
-
+import { defaultTemplates, defaultTemplateThemes } from "@/components/template/TemplateRegistry";
+import MenuSection from "@/components/sections/MenuSection";
+import { generateGlobalStyles } from "@/lib/styleInjector";
+import {
+  getTemplateTokens,
+  getTemplateIntent,
+  getVisualConfig,
+  type VisualConfig
+} from "@/lib/templateTokens";
+import { cn } from "@/lib/utils";
 
 interface AppRendererProps {
   config: any; // Akzeptiert flache DB-Daten oder verschachtelte Configuration
 }
 
 /**
- * ARCHITEKTUR-ENTSCHEIDUNG:
- * Wir nutzen eine Normalisierungs-Funktion, um sicherzustellen, dass der Renderer
- * sowohl mit dem verschachtelten Zustand aus dem Store als auch mit flachen
- * Objekten aus der NeonDB (Legacy/Flat-Migration) umgehen kann.
+ * Normalisierungs-Funktion (unverändert)
  */
 const normalizeConfig = (rawConfig: any): Configuration => {
   if (rawConfig.business && rawConfig.design) {
@@ -79,65 +93,100 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
   const { business, design, content, features, contact } = config;
 
-  // Extraktion der Template-Metadaten aus der Registry
+  // ✅ NEU: Template-Metadaten + Tokens laden
   const templateMeta = defaultTemplates.find(t => t.id === design.template) || defaultTemplates[0];
   const theme = defaultTemplateThemes[design.template] || defaultTemplateThemes.modern;
+  const templateIntent = getTemplateIntent(design.template);
+  const templateTokens = getTemplateTokens(design.template);
+  const visualConfig: VisualConfig = getVisualConfig(design.template);
 
-  // Mapping von Font-Keywords auf CSS-Klassen
+  // ✅ NEU: Globale CSS-Styles generieren
+  const globalStyles = generateGlobalStyles(design.template, {
+    primaryColor: design.primaryColor,
+    secondaryColor: design.secondaryColor,
+    backgroundColor: design.backgroundColor,
+    fontColor: design.fontColor,
+    priceColor: design.priceColor,
+  });
+
+  // Font-Mapping
   const fontClass = {
     "sans-serif": "font-sans",
     "serif": "font-serif",
     "monospace": "font-mono"
   }[design.fontFamily] || "font-sans";
 
-  // Dynamische Styles für Injektion
-  const dynamicStyles = {
-    "--primary": design.primaryColor,
-    "--secondary": design.secondaryColor,
-    "--bg-site": design.backgroundColor,
-    "--text-main": design.fontColor,
-    "--price": design.priceColor,
-    color: design.fontColor,
-    backgroundColor: design.backgroundColor,
-  } as React.CSSProperties;
-
   return (
-    <div className={`min-h-screen ${fontClass} transition-colors duration-500`} style={dynamicStyles}>
+    <div className={`min-h-screen ${fontClass} transition-colors duration-500`}>
+      {/* ✅ KRITISCH: Globale Styles injizieren */}
+      <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
-      {/* --- NAVIGATION --- */}
+      {/* --- NAVIGATION mit Intent-basiertem Styling --- */}
       <nav
-        className={`fixed top-0 w-full z-50 px-6 py-4 transition-all border-b ${templateMeta.mockup.nav.bg} ${templateMeta.mockup.nav.border}`}
+        className={cn(
+          "fixed top-0 w-full z-50 px-6 py-4 transition-all border-b",
+          visualConfig.glassmorphism ? "nav-glassmorphic" : "nav-solid"
+        )}
       >
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             {business.logo?.url ? (
-              <img src={business.logo.url} alt={business.name} className="h-10 w-auto object-contain" />
+              <img
+                src={business.logo.url}
+                alt={business.name}
+                className="h-10 w-auto object-contain"
+              />
             ) : (
-              <span className="text-xl font-black tracking-tighter" style={{ color: "var(--primary)" }}>
+              <span className="text-xl font-black tracking-tighter text-primary">
                 {business.name.toUpperCase()}
               </span>
             )}
           </div>
           <div className="hidden md:flex gap-8 text-sm font-bold uppercase tracking-widest opacity-80">
-            {content.menuItems.length > 0 && <a href="#menu">Speisekarte</a>}
-            {content.gallery.length > 0 && <a href="#gallery">Galerie</a>}
-            <a href="#contact">Kontakt</a>
+            {content.menuItems.length > 0 && <a href="#menu" className="hover:text-primary transition-colors">Speisekarte</a>}
+            {content.gallery.length > 0 && <a href="#gallery" className="hover:text-primary transition-colors">Galerie</a>}
+            <a href="#contact" className="hover:text-primary transition-colors">Kontakt</a>
           </div>
         </div>
       </nav>
 
-      {/* --- HERO SEKTION (Dynamisches Layout) --- */}
-      <section className={`pt-32 pb-20 px-6 ${templateMeta.style.layout === 'narrative-fullscreen' ? 'min-h-screen flex items-center' : ''}`}>
-        <div className={`max-w-4xl mx-auto ${design.template === 'minimalist' ? 'text-left' : 'text-center'}`}>
-          <h1 className="text-5xl md:text-7xl font-black mb-6 leading-[1.1]" style={{ color: "var(--primary)" }}>
+      {/* --- HERO SECTION mit Animations + Overlays --- */}
+      <section
+        className={cn(
+          "pt-32 pb-20 px-6 relative",
+          templateMeta.style.layout === 'narrative-fullscreen' && 'min-h-screen flex items-center',
+          visualConfig.animations && "animate-fade-in-up"
+        )}
+        style={{
+          backgroundColor: visualConfig.glassmorphism
+            ? 'transparent'
+            : design.backgroundColor
+        }}
+      >
+        {/* Overlay nur für VISUAL Intent */}
+        {visualConfig.overlays && <div className="overlay-dark" />}
+
+        <div
+          className={cn(
+            "max-w-4xl mx-auto relative z-10",
+            design.template === 'minimalist' ? 'text-left' : 'text-center'
+          )}
+        >
+          <h1 className="text-h1 mb-6 leading-tight text-primary">
             {business.slogan || business.name}
           </h1>
-          <p className="text-xl md:text-2xl mb-10 opacity-70 max-w-2xl mx-auto">
+          <p className="text-h2 mb-10 opacity-70 max-w-2xl mx-auto">
             {business.uniqueDescription}
           </p>
+
+          {/* CTA Button mit Intent-basiertem Hover */}
           {features.reservationsEnabled && (
             <button
-              className={`px-8 py-4 text-lg font-bold transition-transform hover:scale-105 active:scale-95 shadow-xl`}
+              className={cn(
+                "px-8 py-4 text-lg font-bold shadow-xl",
+                visualConfig.hoverEffects && "hover:scale-105 active:scale-95 transition-transform duration-300",
+                visualConfig.animations && "animate-scale-in stagger-1"
+              )}
               style={{
                 backgroundColor: features.reservationButtonColor,
                 color: "#fff",
@@ -150,13 +199,20 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </div>
       </section>
 
-      {/* --- SPEISEKARTE (Content-Driven) --- */}
+      {/* --- SPEISEKARTE mit Animations --- */}
       {content.menuItems.length > 0 && (
-        <section id="menu" className="py-24 px-6 bg-black/5">
+        <section
+          id="menu"
+          className={cn(
+            "py-24 px-6",
+            visualConfig.glassmorphism ? "bg-black/5" : "bg-accent",
+            visualConfig.animations && "animate-slide-in-left stagger-2"
+          )}
+        >
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-4 mb-12">
               <UtensilsCrossed className="w-8 h-8 opacity-20" />
-              <h2 className="text-3xl font-black uppercase tracking-tighter">Speisekarte</h2>
+              <h2 className="text-h2 uppercase tracking-tighter">Speisekarte</h2>
             </div>
             <MenuSection
               items={content.menuItems as MenuItem[]}
@@ -169,22 +225,51 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </section>
       )}
 
-      {/* --- GALERIE --- */}
+      {/* --- GALERIE mit Visual Config --- */}
       {content.gallery.length > 0 && (
-        <section id="gallery" className="py-24 px-6">
+        <section
+          id="gallery"
+          className={cn(
+            "py-24 px-6",
+            visualConfig.animations && "animate-fade-in-up stagger-3"
+          )}
+        >
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-[10px] uppercase tracking-[0.4em] font-black opacity-30 mb-12 text-center">Impressionen</h2>
-            <div className={`grid gap-4 ${templateMeta.style.layout === 'cozy-grid' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
+            <h2 className="text-[10px] uppercase tracking-[0.4em] font-black opacity-30 mb-12 text-center">
+              Impressionen
+            </h2>
+            <div
+              className={cn(
+                "grid gap-4",
+                templateMeta.style.layout === 'cozy-grid'
+                  ? 'grid-cols-2 md:grid-cols-4'
+                  : 'grid-cols-1 md:grid-cols-3'
+              )}
+            >
               {content.gallery.map((img, idx) => (
                 <div
                   key={img.id || idx}
-                  className="aspect-square overflow-hidden group shadow-lg"
-                  style={{ borderRadius: templateMeta.style.layout === 'cozy-grid' ? '2rem' : '0' }}
+                  className={cn(
+                    "aspect-square overflow-hidden group",
+                    visualConfig.shadows && "shadow-lg",
+                    visualConfig.hoverEffects && "hover:shadow-2xl transition-shadow duration-300",
+                    visualConfig.animations && `animate-scale-in stagger-${Math.min(idx + 1, 6)}`
+                  )}
+                  style={{
+                    borderRadius: templateMeta.style.layout === 'cozy-grid'
+                      ? '2rem'
+                      : visualConfig.borderRadius === '2xl'
+                        ? '1rem'
+                        : '0'
+                  }}
                 >
                   <img
                     src={img.url}
                     alt={img.alt || "Gallery"}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className={cn(
+                      "w-full h-full object-cover",
+                      visualConfig.hoverEffects && "transition-transform duration-700 group-hover:scale-110"
+                    )}
                   />
                 </div>
               ))}
@@ -193,64 +278,120 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </section>
       )}
 
-      {/* --- ÖFFNUNGSZEITEN & KONTAKT --- */}
-      <footer id="contact" className="py-24 px-6 border-t border-black/5">
+      {/* --- KONTAKT FOOTER mit Glassmorphic/Solid Cards --- */}
+      <footer
+        id="contact"
+        className={cn(
+          "py-24 px-6 border-t border-black/5",
+          visualConfig.animations && "animate-fade-in-up stagger-4"
+        )}
+      >
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
 
-          {/* Linke Seite: Info */}
+          {/* Linke Seite: Kontakt-Informationen */}
           <div>
-            <h3 className="text-2xl font-black mb-8">Kontakt & Anfahrt</h3>
+            <h3 className="text-h2 mb-8">Kontakt & Anfahrt</h3>
             <div className="space-y-6 opacity-80">
               {business.location && (
                 <div className="flex items-center gap-4">
-                  <MapPin className="w-5 h-5" style={{ color: "var(--primary)" }} />
-                  <span>{business.location}</span>
+                  <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-body">{business.location}</span>
                 </div>
               )}
               {contact.phone && (
                 <div className="flex items-center gap-4">
-                  <Phone className="w-5 h-5" style={{ color: "var(--primary)" }} />
-                  <a href={`tel:${contact.phone}`}>{contact.phone}</a>
+                  <Phone className="w-5 h-5 text-primary flex-shrink-0" />
+                  <a
+                    href={`tel:${contact.phone}`}
+                    className={cn(
+                      "text-body",
+                      visualConfig.hoverEffects && "hover:text-primary transition-colors"
+                    )}
+                  >
+                    {contact.phone}
+                  </a>
                 </div>
               )}
               {contact.email && (
                 <div className="flex items-center gap-4">
-                  <Mail className="w-5 h-5" style={{ color: "var(--primary)" }} />
-                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                  <Mail className="w-5 h-5 text-primary flex-shrink-0" />
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className={cn(
+                      "text-body",
+                      visualConfig.hoverEffects && "hover:text-primary transition-colors"
+                    )}
+                  >
+                    {contact.email}
+                  </a>
                 </div>
               )}
             </div>
 
             {/* Social Media */}
-            <div className="flex gap-4 mt-10">
-              {Object.entries(contact.socialMedia).map(([platform, url]) => (
-                <a key={platform} href={url as string} className="p-3 bg-black/5 rounded-full hover:bg-black/10 transition-colors">
-                  {platform === 'instagram' && <Instagram className="w-5 h-5" />}
-                  {platform === 'facebook' && <Facebook className="w-5 h-5" />}
-                </a>
-              ))}
-            </div>
+            {Object.keys(contact.socialMedia).length > 0 && (
+              <div className="flex gap-4 mt-10">
+                {Object.entries(contact.socialMedia).map(([platform, url]) => (
+                  <a
+                    key={platform}
+                    href={url as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "p-3 rounded-full transition-colors",
+                      visualConfig.glassmorphism
+                        ? "bg-white/10 hover:bg-white/20"
+                        : "bg-black/5 hover:bg-black/10"
+                    )}
+                  >
+                    {platform === 'instagram' && <Instagram className="w-5 h-5" />}
+                    {platform === 'facebook' && <Facebook className="w-5 h-5" />}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Rechte Seite: Zeiten */}
-          <div className={`p-8 rounded-3xl ${templateMeta.mockup.cards.bg} ${templateMeta.mockup.cards.border} border`}>
+          {/* Rechte Seite: Öffnungszeiten mit Glassmorphic/Solid Card */}
+          <div
+            className={cn(
+              "p-8 border",
+              visualConfig.glassmorphism ? "card-glassmorphic" : "card-solid"
+            )}
+            style={{
+              borderRadius: visualConfig.borderRadius === '2xl' ? '1.5rem' : '1rem'
+            }}
+          >
             <div className="flex items-center gap-3 mb-8">
               <Clock className="w-6 h-6 opacity-40" />
               <h3 className="text-xl font-bold">Öffnungszeiten</h3>
             </div>
             <div className="space-y-4">
-              {Object.entries(content.openingHours || {}).map(([day, hours]: [string, any]) => (
-                <div key={day} className="flex justify-between border-b border-black/5 pb-2 last:border-0">
-                  <span className="capitalize font-medium opacity-60">{day}</span>
-                  <span className="font-bold">
-                    {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
-                  </span>
+              {Object.keys(content.openingHours).length > 0 ? (
+                Object.entries(content.openingHours).map(([day, hours]: [string, any]) => (
+                  <div
+                    key={day}
+                    className="flex justify-between border-b border-current/5 pb-2 last:border-0"
+                  >
+                    <span className="capitalize font-medium opacity-60 text-body">
+                      {day}
+                    </span>
+                    <span className="font-bold text-body">
+                      {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm opacity-60 italic">
+                  Keine Öffnungszeiten hinterlegt.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
         </div>
+
+        {/* Footer Copyright */}
         <div className="text-center mt-20 opacity-30 text-[10px] font-bold uppercase tracking-widest">
           © {new Date().getFullYear()} {business.name} | Maitr Website Builder
         </div>
