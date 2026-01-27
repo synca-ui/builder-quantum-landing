@@ -31,12 +31,16 @@ export function ReservationsStep({
     (s) => s.features.notificationMethod,
   );
 
-  // Design Werte selektieren
-  const primaryColor = useConfiguratorStore((s) => s.design.primaryColor);
-  const designBgColor = useConfiguratorStore((s) => s.design.backgroundColor);
-
-  const reservationButtonColor = primaryColor || "#2563EB";
-  const reservationButtonTextColor = designBgColor || "#FFFFFF";
+  // Reservierungsbutton-Einstellungen aus Store laden
+  const reservationButtonColor = useConfiguratorStore(
+    (s) => s.features.reservationButtonColor,
+  );
+  const reservationButtonTextColor = useConfiguratorStore(
+    (s) => s.features.reservationButtonTextColor,
+  );
+  const reservationButtonShape = useConfiguratorStore(
+    (s) => s.features.reservationButtonShape,
+  );
 
   const actions = useConfiguratorActions();
 
@@ -50,17 +54,20 @@ export function ReservationsStep({
   const rawSlots = useConfiguratorStore((s) => (s.features as any).timeSlots);
   const selectedTimeSlots = Array.isArray(rawSlots) ? rawSlots : DEFAULT_SLOTS;
 
-  // FIX: Sichere Selektion der Button Shape
-  const reservationButtonShape = useConfiguratorStore(
-    (s) => (s.features as any).reservationButtonShape || "rounded",
-  );
-
   const updateTimeSlots = (slots: string[]) => {
     actions.features.updateFeatureFlags({ timeSlots: slots } as any);
   };
 
-  const updateButtonStyle = (key: string, value: any) => {
-    actions.features.updateFeatureFlags({ [key]: value } as any);
+  const updateButtonColor = (color: string) => {
+    actions.features.updateFeatureFlags({ reservationButtonColor: color });
+  };
+
+  const updateButtonTextColor = (color: string) => {
+    actions.features.updateFeatureFlags({ reservationButtonTextColor: color });
+  };
+
+  const updateButtonShape = (shape: string) => {
+    actions.features.updateFeatureFlags({ reservationButtonShape: shape });
   };
 
   return (
@@ -157,17 +164,13 @@ export function ReservationsStep({
                     <input
                       type="color"
                       value={reservationButtonColor}
-                      onChange={(e) =>
-                        actions.design.updatePrimaryColor(e.target.value)
-                      }
+                      onChange={(e) => updateButtonColor(e.target.value)}
                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
                     />
                     <Input
                       type="text"
                       value={reservationButtonColor}
-                      onChange={(e) =>
-                        actions.design.updatePrimaryColor(e.target.value)
-                      }
+                      onChange={(e) => updateButtonColor(e.target.value)}
                       className="font-mono flex-1"
                       placeholder="#2563EB"
                     />
@@ -181,21 +184,13 @@ export function ReservationsStep({
                     <input
                       type="color"
                       value={reservationButtonTextColor}
-                      onChange={(e) =>
-                        actions.design.updateDesign({
-                          backgroundColor: e.target.value,
-                        })
-                      }
+                      onChange={(e) => updateButtonTextColor(e.target.value)}
                       className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300"
                     />
                     <Input
                       type="text"
                       value={reservationButtonTextColor}
-                      onChange={(e) =>
-                        actions.design.updateDesign({
-                          backgroundColor: e.target.value,
-                        })
-                      }
+                      onChange={(e) => updateButtonTextColor(e.target.value)}
                       className="font-mono flex-1"
                       placeholder="#FFFFFF"
                     />
@@ -231,9 +226,7 @@ export function ReservationsStep({
                             : "outline"
                         }
                         size="sm"
-                        onClick={() =>
-                          updateButtonStyle("reservationButtonShape", shape.id)
-                        }
+                        onClick={() => updateButtonShape(shape.id)}
                         className={`${shape.class} ${reservationButtonShape === shape.id ? "bg-teal-500 hover:bg-teal-600" : ""}`}
                       >
                         {t(shape.nameKey)}

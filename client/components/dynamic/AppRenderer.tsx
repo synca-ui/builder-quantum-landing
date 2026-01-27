@@ -218,7 +218,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   // Header Font Class
   const headerFontClass = getHeaderFontClass(design.headerFontSize);
 
-  // Build deduplicated navigation menu
+  // Build deduplicated navigation menu + AUTO-DISCOVERY
   const navigationMenu = useMemo(() => {
     const menuSet = new Set<string>();
     const menuArray: Array<{ id: string; label: string }> = [];
@@ -235,6 +235,27 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       }
     });
 
+    // AUTO-DISCOVERY: Zeige Seiten an, wenn Daten vorhanden sind
+    // Speisekarte: Wenn Menü-Items existieren
+    if (content.menuItems.length > 0 && !menuSet.has("menu")) {
+      menuArray.push({ id: "menu", label: "Speisekarte" });
+      menuSet.add("menu");
+    }
+
+    // Galerie: Wenn Bilder vorhanden sind
+    if (content.gallery.length > 0 && !menuSet.has("gallery")) {
+      menuArray.push({ id: "gallery", label: "Galerie" });
+      menuSet.add("gallery");
+    }
+
+    // Kontakt: Wenn Kontaktmethoden oder Location vorhanden
+    if ((contact.contactMethods && contact.contactMethods.length > 0) || contact.phone || contact.email || business.location) {
+      if (!menuSet.has("contact")) {
+        menuArray.push({ id: "contact", label: "Kontakt" });
+        menuSet.add("contact");
+      }
+    }
+
     // Dynamisch: Reservierungen nur wenn aktiviert
     if (features.reservationsEnabled && !menuSet.has("reservations")) {
       menuArray.push({ id: "reservations", label: "Reservieren" });
@@ -248,7 +269,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     }
 
     return menuArray;
-  }, [pages.selectedPages, features.reservationsEnabled, payments]);
+  }, [pages.selectedPages, features.reservationsEnabled, payments, content.menuItems.length, content.gallery.length, contact.contactMethods, contact.phone, contact.email, business.location]);
 
   // Handlers
   const toggleMenu = useCallback(() => setMenuOpen(prev => !prev), []);

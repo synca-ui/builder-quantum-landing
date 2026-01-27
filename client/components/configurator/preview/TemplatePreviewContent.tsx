@@ -436,7 +436,7 @@ export function TemplatePreviewContent() {
     (s) => s.payments?.offerBanner?.enabled,
   ) || false;
 
-  // Build deduplicated menu with labels
+  // Build deduplicated menu with labels + AUTO-DISCOVERY
   const navigationMenu = useMemo(() => {
     const menuSet = new Set<string>();
     const menuArray: Array<{ id: string; label: string }> = [];
@@ -453,6 +453,25 @@ export function TemplatePreviewContent() {
       }
     });
 
+    // AUTO-DISCOVERY: Zeige Seiten an, wenn Daten vorhanden sind
+    // Speisekarte: Wenn Menü-Items existieren
+    if (menuItems.length > 0 && !menuSet.has("menu")) {
+      menuArray.push({ id: "menu", label: "Speisekarte" });
+      menuSet.add("menu");
+    }
+
+    // Galerie: Wenn Bilder vorhanden sind
+    if (gallery.length > 0 && !menuSet.has("gallery")) {
+      menuArray.push({ id: "gallery", label: "Galerie" });
+      menuSet.add("gallery");
+    }
+
+    // Kontakt: Wenn Kontaktmethoden oder Location vorhanden
+    if ((contactMethods.length > 0 || location) && !menuSet.has("contact")) {
+      menuArray.push({ id: "contact", label: "Kontakt" });
+      menuSet.add("contact");
+    }
+
     // Dynamisch: Reservierungen nur wenn aktiviert
     if (reservationsEnabled && !menuSet.has("reservations")) {
       menuArray.push({ id: "reservations", label: "Reservieren" });
@@ -466,7 +485,7 @@ export function TemplatePreviewContent() {
     }
 
     return menuArray;
-  }, [selectedPages, reservationsEnabled, offerBannerEnabled]);
+  }, [selectedPages, reservationsEnabled, offerBannerEnabled, menuItems.length, gallery.length, contactMethods.length, location]);
 
   // Local state
   const [previewState, setPreviewState] = useState({
@@ -480,6 +499,25 @@ export function TemplatePreviewContent() {
   );
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Scroll-Lock für Modal
+  React.useEffect(() => {
+    if (selectedDish) {
+      // Modal offen: Body-Scroll verhindern
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      // Modal geschlossen: Body-Scroll wiederherstellen
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    // Cleanup beim Unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [selectedDish]);
 
   // Handlers
   const openDishModal = useCallback((dish: MenuItem) => {
