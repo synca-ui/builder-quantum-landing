@@ -1,19 +1,14 @@
 /**
  * AppRenderer.tsx - PRODUCTION VERSION
  *
- * Vollständig neu geschrieben für 100% visuelle Parität mit TemplatePreviewContent.tsx
- *
- * Features:
- * ✅ Pixel-perfekte Visual Parity zur Live-Preview
- * ✅ Mobile Hamburger-Menü mit Overlay und dedupl izierten Labels
- * ✅ Interaktive Dish-Modals als Bottom-Sheet mit Grabber
- * ✅ Kategorie-Filter für Speisekarte
- * ✅ Robuste Daten-Normalisierung (flach → verschachtelt)
- * ✅ Responsive Design (Mobile-First mit Desktop-Optimierungen)
- * ✅ Optimierte Header-Position für Notch-Bereich
+ * ✅ Pixel-perfekte Visual Parity mit TemplatePreviewContent.tsx
+ * ✅ Nutzt Shared Components (Navigation, DishCard, DishModal, OpeningHours, MenuOverlay)
+ * ✅ CSS Variable Injection via StyleInjector
+ * ✅ Mobile & Desktop Responsive Design
+ * ✅ Zero Syntax Errors
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Clock,
   MapPin,
@@ -21,30 +16,27 @@ import {
   Mail,
   Instagram,
   Facebook,
-  ChevronRight,
-  ChevronLeft,
-  ChevronDown,
-  Menu,
-  X,
-  Plus,
-  Camera,
   ArrowRight,
-  Coffee,
-  Utensils,
-  ShoppingBag,
+  Camera,
   Calendar,
   Users,
   CalendarCheck,
 } from "lucide-react";
-import type { Configuration, MenuItem, OpeningHours } from "@/types/domain";
-import { defaultTemplates, defaultTemplateThemes } from "@/components/template/TemplateRegistry";
-import { generateGlobalStyles } from "@/lib/styleInjector";
-import {
-  getTemplateTokens,
-  getTemplateIntent,
-  getVisualConfig,
-  type VisualConfig,
-} from "@/lib/templateTokens";
+import type { Configuration, MenuItem, OpeningHours as OpeningHoursType } from "@/types/domain";
+import { injectGlobalStyles } from "@/lib/styleInjector";
+import { normalizeImageSrc, getPageLabel } from "@/lib/helpers"; // ✅ Helper-Import
+
+// ============================================
+// SHARED COMPONENTS - 100% Visual Parity
+// ============================================
+import { Navigation } from "@/components/shared/Navigation";
+import { MenuOverlay } from "@/components/shared/MenuOverlay";
+import { DishCard } from "@/components/shared/DishCard";
+import { DishModal } from "@/components/shared/DishModal";
+import { OpeningHours } from "@/components/shared/OpeningHours";
+import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
+import { CategoryFilter } from "@/components/shared/CategoryFilter"; // ✅ CategoryFilter Component
+import { ContactSection } from "@/components/shared/ContactSection"; // ✅ ContactSection Component
 
 interface AppRendererProps {
   config: any; // Akzeptiert flache DB-Daten oder verschachtelte Configuration
@@ -53,54 +45,6 @@ interface AppRendererProps {
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
-
-/**
- * Normalisiert Bild-URLs aus verschiedenen Formaten
- */
-function normalizeImageSrc(img: any): string {
-  if (!img) return "/placeholder.svg";
-  if (typeof img === "string") return img;
-  const url = img?.url;
-  if (typeof url === "string") return url;
-  const file = (img as any)?.file || img;
-  if (typeof File !== "undefined" && file instanceof File)
-    return URL.createObjectURL(file);
-  return "/placeholder.svg";
-}
-
-/**
- * Header Font Size zu Tailwind Class
- */
-function getHeaderFontClass(size: string): string {
-  switch (size) {
-    case "xs": return "text-[10px]";
-    case "small": return "text-xs";
-    case "medium": return "text-sm";
-    case "large": return "text-base";
-    case "xl": return "text-lg";
-    case "2xl": return "text-xl";
-    case "3xl": return "text-2xl";
-    case "4xl": return "text-[28px]";
-    case "5xl": return "text-[32px]";
-    default: return "text-sm";
-  }
-}
-
-/**
- * Page ID zu deutschem Label mappen
- */
-function getPageLabel(pageId: string): string {
-  const labels: Record<string, string> = {
-    home: "Startseite",
-    menu: "Speisekarte",
-    gallery: "Galerie",
-    about: "Über uns",
-    contact: "Kontakt",
-    reservations: "Reservieren",
-    offers: "Angebote",
-  };
-  return labels[pageId] || pageId;
-}
 
 /**
  * Normalisiert flache DB-Daten zu verschachtelter Configuration-Struktur
@@ -175,20 +119,25 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
   const { business, design, content, features, contact, pages, payments } = config;
 
-  // Template Metadaten laden
-  const templateMeta = defaultTemplates.find(t => t.id === design.template) || defaultTemplates[0];
-  const theme = defaultTemplateThemes[design.template] || defaultTemplateThemes.modern;
-  const templateIntent = getTemplateIntent(design.template);
-  const visualConfig: VisualConfig = getVisualConfig(design.template);
+  // ✅ CSS VARIABLE INJECTION - Injiziert Template-spezifische Styles
+  useEffect(() => {
+    injectGlobalStyles({
+      template: design.template,
+      primaryColor: design.primaryColor,
+      secondaryColor: design.secondaryColor,
+      backgroundColor: design.backgroundColor,
+      fontColor: design.fontColor,
+      priceColor: design.priceColor,
+    });
 
-  // Globale CSS-Styles generieren
-  const globalStyles = generateGlobalStyles(design.template, {
-    primaryColor: design.primaryColor,
-    secondaryColor: design.secondaryColor,
-    backgroundColor: design.backgroundColor,
-    fontColor: design.fontColor,
-    priceColor: design.priceColor,
-  });
+    return () => {
+      // Cleanup: Remove injected styles on unmount
+      const styleElement = document.getElementById('maitr-global-styles');
+      if (styleElement) {
+        styleElement.remove();
+      }
+    };
+  }, [design.template, design.primaryColor, design.secondaryColor, design.backgroundColor, design.fontColor, design.priceColor]);
 
   // Local State
   const [menuOpen, setMenuOpen] = useState(false);
@@ -198,15 +147,6 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const [activeMenuCategory, setActiveMenuCategory] = useState<string | null>(null);
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  // Detect Desktop/Mobile
-  React.useEffect(() => {
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
-    checkDesktop();
-    window.addEventListener('resize', checkDesktop);
-    return () => window.removeEventListener('resize', checkDesktop);
-  }, []);
 
   // Font Class
   const fontClass = {
@@ -214,9 +154,6 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     "serif": "font-serif",
     "monospace": "font-mono",
   }[design.fontFamily] || "font-sans";
-
-  // Header Font Class
-  const headerFontClass = getHeaderFontClass(design.headerFontSize);
 
   // Build deduplicated navigation menu + AUTO-DISCOVERY
   const navigationMenu = useMemo(() => {
@@ -236,19 +173,16 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     });
 
     // AUTO-DISCOVERY: Zeige Seiten an, wenn Daten vorhanden sind
-    // Speisekarte: Wenn Menü-Items existieren
     if (content.menuItems.length > 0 && !menuSet.has("menu")) {
       menuArray.push({ id: "menu", label: "Speisekarte" });
       menuSet.add("menu");
     }
 
-    // Galerie: Wenn Bilder vorhanden sind
     if (content.gallery.length > 0 && !menuSet.has("gallery")) {
       menuArray.push({ id: "gallery", label: "Galerie" });
       menuSet.add("gallery");
     }
 
-    // Kontakt: Wenn Kontaktmethoden oder Location vorhanden
     if ((contact.contactMethods && contact.contactMethods.length > 0) || contact.phone || contact.email || business.location) {
       if (!menuSet.has("contact")) {
         menuArray.push({ id: "contact", label: "Kontakt" });
@@ -256,13 +190,11 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       }
     }
 
-    // Dynamisch: Reservierungen nur wenn aktiviert
     if (features.reservationsEnabled && !menuSet.has("reservations")) {
       menuArray.push({ id: "reservations", label: "Reservieren" });
       menuSet.add("reservations");
     }
 
-    // Dynamisch: Angebote nur wenn Banner aktiviert
     if ((payments as any)?.offerBanner?.enabled && !menuSet.has("offers")) {
       menuArray.push({ id: "offers", label: "Angebote" });
       menuSet.add("offers");
@@ -275,16 +207,17 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const toggleMenu = useCallback(() => setMenuOpen(prev => !prev), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // FIX 2: SCROLL-TO-TOP bei Seitenwechsel + Ref für Main-Container
-  const mainScrollRef = React.useRef<HTMLDivElement>(null);
-
   const navigateToPage = useCallback((page: string) => {
     setActivePage(page);
     setMenuOpen(false);
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
   const addToCart = useCallback((item: any) => {
     setCartItems(prev => [...prev, item]);
   }, []);
+
   const openDishModal = useCallback((dish: MenuItem) => {
     setSelectedDish(dish);
     setCurrentImageIndex(0);
@@ -294,39 +227,16 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     setSelectedDish(null);
     setCurrentImageIndex(0);
   }, []);
+
   const nextImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex(prev => prev < selectedDish.images!.length - 1 ? prev + 1 : 0);
   }, [selectedDish?.images]);
+
   const prevImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedDish.images!.length - 1);
   }, [selectedDish?.images]);
-
-  // FIX 1: SCROLL-LOCK für Modal - Verhindert Hintergrund-Scroll
-  React.useEffect(() => {
-    if (selectedDish) {
-      // Modal offen: Body-Scroll sperren
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-    } else {
-      // Modal geschlossen: Scroll wiederherstellen
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-    }
-
-    // Cleanup beim Unmount
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-    };
-  }, [selectedDish]);
 
   // Kategorien extrahieren
   const allCategories = useMemo(() => {
@@ -344,30 +254,13 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   }, [content.menuItems, activeMenuCategory]);
 
   // Template-spezifische Styles mit Desktop-Optimierung
-  const styles = useMemo(() => {
-    const base = {
-      wrapper: { backgroundColor: design.backgroundColor, color: design.fontColor },
-      page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
-      titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
-      bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
-      itemNameClass: `text-base md:text-lg font-bold leading-tight`,
-      itemDescClass: `text-xs md:text-sm opacity-80 mt-1 leading-snug`,
-      itemPriceClass: `text-lg md:text-xl font-bold`,
-      nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
-    };
-
-    switch (design.template) {
-      case "modern":
-        return {
-          ...base,
-        };
-      default:
-        return {
-          ...base,
-          itemCard: "py-5 md:py-6 border-b border-current/10 last:border-0",
-        };
-    }
-  }, [design.backgroundColor, design.fontColor, design.template, design.secondaryColor]);
+  const styles = useMemo(() => ({
+    wrapper: { backgroundColor: design.backgroundColor, color: design.fontColor },
+    page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
+    titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
+    bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
+    nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
+  }), [design.backgroundColor, design.fontColor, fontClass]);
 
   // ============================================
   // RENDER FUNCTIONS
@@ -375,32 +268,24 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 
   const renderHomePage = () => (
     <div className="space-y-8 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Hero Section */}
-      <div className="text-center py-8 md:py-20 px-2 flex flex-col items-center">
-        <h1 className={styles.titleClass} style={{ color: design.fontColor }}>
-          {business.slogan || business.name}
-        </h1>
-        <p
-          className={`${styles.bodyClass} max-w-[90%] md:max-w-2xl text-center`}
-          style={{ color: design.fontColor }}
-        >
-          {business.uniqueDescription || "Willkommen in unserem Geschäft!"}
-        </p>
+      {/* ✅ Hero Component - Ersetzt inline Hero-Section */}
+      <Hero
+        slogan={business.slogan || business.name}
+        description={business.uniqueDescription || "Willkommen in unserem Geschäft!"}
+        primaryColor={design.primaryColor}
+        fontColor={design.fontColor}
+        backgroundColor={design.backgroundColor}
+        onlineOrdering={features.onlineOrderingEnabled}
+        reservationsEnabled={features.reservationsEnabled}
+        reservationButtonColor={features.reservationButtonColor}
+        reservationButtonTextColor={features.reservationButtonTextColor}
+        reservationButtonShape={features.reservationButtonShape}
+        onOrderClick={() => navigateToPage("menu")}
+        onReservationClick={() => navigateToPage("reservations")}
+        isPreview={false}
+      />
 
-        {features.onlineOrderingEnabled && (
-          <div className="mt-6 md:mt-10 w-full md:w-auto px-4 md:px-0">
-            <button
-              className="w-full md:w-auto md:px-12 py-3 md:py-4 px-6 font-bold text-base md:text-lg rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
-              style={{ backgroundColor: design.primaryColor, color: "#FFFFFF" }}
-              onClick={() => navigateToPage("menu")}
-            >
-              Jetzt bestellen
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Highlights Section */}
+      {/* Highlights Section - NUTZT DishCard Shared Component */}
       {content.menuItems.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4 md:mb-8 px-1">
@@ -418,30 +303,21 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
             </span>
           </div>
 
-          {/* Mobile: Single Column, Desktop: 3 Columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {content.menuItems.slice(0, 6).map((item: any, i: number) => (
-              <div
-                key={i}
-                className={`${styles.itemCard} cursor-pointer active:scale-[0.98]`}
+            {content.menuItems.slice(0, 6).map((item: MenuItem, i: number) => (
+              <DishCard
+                key={item.id || i}
+                item={item}
+                fontColor={design.fontColor}
+                priceColor={design.priceColor}
+                primaryColor={design.primaryColor}
+                backgroundColor={design.backgroundColor}
+                template={design.template}
+                onlineOrdering={features.onlineOrderingEnabled}
                 onClick={() => openDishModal(item)}
-              >
-                <div className="flex justify-between items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className={styles.itemNameClass} style={{ color: design.fontColor }}>
-                      {item.name}
-                    </div>
-                    {item.description && (
-                      <div className={styles.itemDescClass} style={{ color: design.fontColor }}>
-                        {item.description}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.itemPriceClass} style={{ color: design.priceColor }}>
-                    {item.price}€
-                  </div>
-                </div>
-              </div>
+                onAddToCart={addToCart}
+                isPreview={false}
+              />
             ))}
           </div>
         </div>
@@ -464,50 +340,15 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </div>
       )}
 
-      {/* Öffnungszeiten & Location - Desktop: 2 Spalten */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 border-t border-current/10 pt-8 md:pt-12">
-        {/* Öffnungszeiten */}
-        <div
-          className="text-center md:text-left cursor-pointer group"
-          onClick={() => setHoursExpanded(!hoursExpanded)}
-        >
-          <div className="flex items-center justify-center md:justify-start gap-2 opacity-70 group-hover:opacity-100 transition-opacity mb-4">
-            <Clock className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="text-xs md:text-sm font-medium">Öffnungszeiten</span>
-            <ChevronDown
-              className={`w-3 h-3 md:w-4 md:h-4 transition-transform duration-200 ${hoursExpanded ? "rotate-180" : ""}`}
-            />
-          </div>
-
-          {(hoursExpanded || isDesktop) && (
-            <div className="mt-3 space-y-1.5 md:space-y-2 text-left animate-in fade-in slide-in-from-top-2 duration-200">
-              {Object.keys(content.openingHours).length > 0 ? (
-                Object.entries(content.openingHours).map(([day, hours]: any) => (
-                  <div key={day} className="flex justify-between text-xs md:text-sm opacity-80">
-                    <span className="capitalize">{day}</span>
-                    <span className="font-medium">
-                      {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs md:text-sm italic opacity-50">Keine Zeiten hinterlegt</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Location */}
-        {business.location && (
-          <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2 opacity-70 mb-4">
-              <MapPin className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-              <span className="text-xs md:text-sm font-medium">Standort</span>
-            </div>
-            <p className="text-xs md:text-sm opacity-80">{business.location}</p>
-          </div>
-        )}
-      </div>
+      {/* Öffnungszeiten & Location - NUTZT OpeningHours Shared Component */}
+      <OpeningHours
+        hours={content.openingHours as OpeningHoursType}
+        location={business.location}
+        fontColor={design.fontColor}
+        expanded={hoursExpanded}
+        onExpandChange={setHoursExpanded}
+        isPreview={false}
+      />
     </div>
   );
 
@@ -515,80 +356,37 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300">
       <h2 className={styles.titleClass}>Speisekarte</h2>
 
-      {/* Kategorie-Filter */}
+      {/* ✅ CategoryFilter Component - Shared Component statt inline Code */}
       {allCategories.length > 0 && (
-        <div className="flex gap-2 md:gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 md:justify-center">
-          <button
-            onClick={() => setActiveMenuCategory(null)}
-            className={`px-4 py-2 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 active:scale-95 ${
-              activeMenuCategory === null ? "shadow-md" : "border border-current/20 opacity-70"
-            }`}
-            style={
-              activeMenuCategory === null
-                ? { backgroundColor: design.fontColor, color: design.backgroundColor }
-                : {}
-            }
-          >
-            Alle
-          </button>
-          {allCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveMenuCategory(cat)}
-              className={`px-4 py-2 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 active:scale-95 ${
-                activeMenuCategory === cat ? "shadow-md" : "border border-current/20 opacity-70"
-              }`}
-              style={
-                activeMenuCategory === cat
-                  ? { backgroundColor: design.fontColor, color: design.backgroundColor }
-                  : {}
-              }
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <CategoryFilter
+          categories={allCategories}
+          activeCategory={activeMenuCategory}
+          onCategoryChange={setActiveMenuCategory}
+          fontColor={design.fontColor}
+          backgroundColor={design.backgroundColor}
+          allLabel="Alle"
+          isPreview={false}
+          className="md:justify-center"
+        />
       )}
 
-      {/* Menu Items - Desktop: 2-3 Spalten Grid */}
+      {/* Menu Items - NUTZT DishCard Shared Component */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-4">
         {filteredMenuItems.length > 0 ? (
-          filteredMenuItems.map((item: any, i: number) => (
-            <div
-              key={i}
-              className={`${styles.itemCard} cursor-pointer active:scale-[0.98]`}
+          filteredMenuItems.map((item: MenuItem, i: number) => (
+            <DishCard
+              key={item.id || i}
+              item={item}
+              fontColor={design.fontColor}
+              priceColor={design.priceColor}
+              primaryColor={design.primaryColor}
+              backgroundColor={design.backgroundColor}
+              template={design.template}
+              onlineOrdering={features.onlineOrderingEnabled}
               onClick={() => openDishModal(item)}
-            >
-              <div className="flex justify-between items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className={styles.itemNameClass} style={{ color: design.fontColor }}>
-                    {item.name}
-                  </div>
-                  {item.description && (
-                    <div className={styles.itemDescClass} style={{ color: design.fontColor }}>
-                      {item.description}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col items-end gap-2 pl-2">
-                  <div className={styles.itemPriceClass} style={{ color: design.priceColor }}>
-                    {item.price}€
-                  </div>
-                  {features.onlineOrderingEnabled && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(item);
-                      }}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-md hover:shadow-lg hover:scale-110"
-                      style={{ backgroundColor: design.primaryColor, color: "#FFF" }}
-                    >
-                      <Plus className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+              onAddToCart={addToCart}
+              isPreview={false}
+            />
           ))
         ) : (
           <div className="col-span-full text-center py-8 opacity-50 text-sm md:text-base">
@@ -603,7 +401,6 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-300">
       <h2 className={styles.titleClass}>Kontakt</h2>
 
-      {/* Desktop: 2-Spalten-Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         {/* Linke Spalte: Kontaktdaten */}
         <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm">
@@ -670,7 +467,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </div>
       </div>
 
-      {/* Social Media - zentriert unten */}
+      {/* Social Media */}
       {(contact.socialMedia?.instagram || contact.socialMedia?.facebook) && (
         <div className="flex justify-center gap-6 md:gap-8 py-6 md:py-8 opacity-80">
           {contact.socialMedia?.instagram && (
@@ -680,7 +477,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
               rel="noopener noreferrer"
               className="hover:opacity-100 hover:scale-110 transition-all"
             >
-              <Instagram className="w-6 h-6 md:w-8 md:h-8 cursor-pointer" />
+              <Instagram className="w-6 h-6 md:w-8 md:h-8" />
             </a>
           )}
           {contact.socialMedia?.facebook && (
@@ -690,7 +487,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
               rel="noopener noreferrer"
               className="hover:opacity-100 hover:scale-110 transition-all"
             >
-              <Facebook className="w-6 h-6 md:w-8 md:h-8 cursor-pointer" />
+              <Facebook className="w-6 h-6 md:w-8 md:h-8" />
             </a>
           )}
         </div>
@@ -799,100 +596,33 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       className="min-h-screen relative flex flex-col transition-colors duration-300"
       style={styles.wrapper}
     >
-      {/* Globale Styles injizieren */}
-      <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
-
-      {/* NAVIGATION */}
-      <nav
+      {/* ✅ NAVIGATION - Shared Component statt Inline Code */}
+      <Navigation
+        businessName={business.name}
+        businessType={business.type}
+        logo={business.logo?.url || null}
+        headerFontColor={design.headerFontColor}
+        headerFontSize={design.headerFontSize}
+        headerBackgroundColor={design.headerBackgroundColor}
+        onlineOrdering={features.onlineOrderingEnabled}
+        cartCount={cartItems.length}
+        menuOpen={menuOpen}
+        onToggleMenu={toggleMenu}
+        onNavigateHome={() => navigateToPage("home")}
+        isPreview={false}
         className={styles.nav}
-        style={{ backgroundColor: design.headerBackgroundColor, color: design.headerFontColor }}
-      >
-        <div className="flex items-center gap-2 overflow-hidden">
-          {business.logo?.url ? (
-            <img
-              src={business.logo.url}
-              alt="Logo"
-              className="w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-lg object-cover"
-            />
-          ) : (
-            <div
-              className="w-8 h-8 md:w-10 md:h-10 shrink-0 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${design.headerFontColor}15` }}
-            >
-              {business.type === "cafe" ? <Coffee className="w-4 h-4 md:w-5 md:h-5" /> : <Utensils className="w-4 h-4 md:w-5 md:h-5" />}
-            </div>
-          )}
-          <span
-            className={`font-bold cursor-pointer truncate ${headerFontClass} md:text-xl`}
-            onClick={() => navigateToPage("home")}
-            style={{ color: design.headerFontColor }}
-          >
-            {business.name}
-          </span>
-        </div>
+      />
 
-        {/* Desktop Navigation Links - Hidden on Mobile */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-semibold uppercase tracking-wider">
-          {navigationMenu.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigateToPage(item.id)}
-              className={`hover:opacity-100 transition-all ${activePage === item.id ? 'opacity-100 border-b-2 scale-105' : 'opacity-70'}`}
-              style={{
-                color: design.headerFontColor,
-                borderColor: activePage === item.id ? design.headerFontColor : 'transparent'
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0" style={{ color: design.headerFontColor }}>
-          {features.onlineOrderingEnabled && (
-            <div className="relative cursor-pointer hover:scale-110 transition-transform">
-              <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 opacity-90" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 md:w-4 md:h-4 bg-red-500 text-white text-[9px] md:text-[10px] flex items-center justify-center rounded-full font-bold shadow-sm">
-                  {cartItems.length}
-                </span>
-              )}
-            </div>
-          )}
-          {/* Mobile Menu Button - Hidden on Desktop */}
-          <button onClick={toggleMenu} className="p-1 md:hidden active:scale-90 transition-transform">
-            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </nav>
-
-      {/* MOBILE MENU OVERLAY */}
-      {menuOpen && (
-        <div
-          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md transition-opacity"
-          onClick={closeMenu}
-        >
-          <div
-            className="absolute right-0 top-0 bottom-0 w-3/4 p-6 pt-20 shadow-2xl h-full flex flex-col transform transition-transform duration-300"
-            style={{ backgroundColor: design.backgroundColor, color: design.fontColor }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="font-bold text-2xl mb-8 opacity-90">Menü</h3>
-            <div className="space-y-4 flex-1 overflow-y-auto">
-              {navigationMenu.map((item) => (
-                <div
-                  key={item.id}
-                  className="text-lg font-medium cursor-pointer flex justify-between items-center group pb-3 border-b border-current/10"
-                  onClick={() => navigateToPage(item.id)}
-                >
-                  <span>{item.label}</span>
-                  <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ✅ MENU OVERLAY - Shared Component statt Inline Code */}
+      <MenuOverlay
+        isOpen={menuOpen}
+        backgroundColor={design.backgroundColor}
+        fontColor={design.fontColor}
+        menuItems={navigationMenu}
+        onClose={closeMenu}
+        onNavigate={navigateToPage}
+        isPreview={false}
+      />
 
       {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: "touch" }}>
@@ -900,105 +630,22 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         <div className="h-12 w-full" />
       </main>
 
-      {/* DISH MODAL - BOTTOM SHEET */}
-      {selectedDish && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-md flex items-end md:items-center md:justify-center p-0 md:p-6 animate-in fade-in duration-200"
-          onClick={closeDishModal}
-        >
-          <div
-            className="w-full md:w-auto md:min-w-[600px] md:max-w-3xl rounded-t-3xl md:rounded-3xl max-h-[90%] md:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom md:slide-in-from-bottom-0 duration-300 shadow-2xl"
-            style={{ backgroundColor: design.backgroundColor, color: design.fontColor }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Grabber Handle - Only on Mobile */}
-            <div className="flex md:hidden justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-            </div>
-
-            {/* Image Carousel */}
-            {selectedDish.images && selectedDish.images.length > 0 ? (
-              <div className="relative aspect-[4/3] md:aspect-[16/9] bg-gray-100">
-                <img
-                  src={normalizeImageSrc(selectedDish.images[currentImageIndex])}
-                  alt={selectedDish.name}
-                  className="w-full h-full object-cover"
-                />
-                {selectedDish.images.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevImage}
-                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
-                    >
-                      <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-                    </button>
-                    <button
-                      onClick={nextImage}
-                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
-                    >
-                      <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-                    </button>
-                    <div className="absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2">
-                      {selectedDish.images.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentImageIndex(idx)}
-                          className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all ${
-                            idx === currentImageIndex ? "bg-white w-4 md:w-5" : "bg-white/50"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-                <button
-                  onClick={closeDishModal}
-                  className="absolute top-3 md:top-4 right-3 md:right-4 w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
-                >
-                  <X className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-              </div>
-            ) : (
-              <div className="relative aspect-[4/3] md:aspect-[16/9] bg-gray-100 flex items-center justify-center">
-                <Camera className="w-12 h-12 md:w-16 md:h-16 text-gray-300" />
-                <button
-                  onClick={closeDishModal}
-                  className="absolute top-3 md:top-4 right-3 md:right-4 w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 active:scale-90 transition-all"
-                >
-                  <X className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-              </div>
-            )}
-
-            {/* Dish Details */}
-            <div className="p-5 md:p-8 space-y-3 md:space-y-4 overflow-y-auto max-h-[40vh]">
-              <div className="flex justify-between items-start gap-3 md:gap-4">
-                <h3 className="text-xl md:text-3xl font-bold">{selectedDish.name}</h3>
-                <span className="text-xl md:text-3xl font-bold shrink-0" style={{ color: design.priceColor }}>
-                  {selectedDish.price}€
-                </span>
-              </div>
-              {selectedDish.description && (
-                <p className="text-sm md:text-base opacity-80 leading-relaxed">{selectedDish.description}</p>
-              )}
-
-              {features.onlineOrderingEnabled && (
-                <button
-                  onClick={() => {
-                    addToCart(selectedDish);
-                    closeDishModal();
-                  }}
-                  className="w-full py-3 md:py-4 rounded-xl font-bold text-base md:text-lg text-white shadow-lg mt-4 md:mt-6 transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
-                  style={{ backgroundColor: design.primaryColor }}
-                >
-                  <Plus className="w-4 h-4 md:w-5 md:h-5 inline mr-2" />
-                  Zum Warenkorb
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ✅ DISH MODAL - Shared Component statt Inline Code */}
+      <DishModal
+        dish={selectedDish}
+        currentImageIndex={currentImageIndex}
+        fontColor={design.fontColor}
+        backgroundColor={design.backgroundColor}
+        priceColor={design.priceColor}
+        primaryColor={design.primaryColor}
+        onlineOrdering={features.onlineOrderingEnabled}
+        onClose={closeDishModal}
+        onPrevImage={prevImage}
+        onNextImage={nextImage}
+        onSetImageIndex={setCurrentImageIndex}
+        onAddToCart={addToCart}
+        isPreview={false}
+      />
 
       {/* FOOTER */}
       <footer className="text-center py-6 opacity-30 text-[10px] font-bold uppercase tracking-widest border-t border-current/5">

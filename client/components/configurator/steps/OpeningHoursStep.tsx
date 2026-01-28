@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   useConfiguratorStore,
   useConfiguratorActions,
@@ -35,6 +36,8 @@ export function OpeningHoursStep({
     close: "17:00",
     closed: false,
   });
+
+  const debouncedWeekdayHours = useDebounce(weekdayHours, 400);
 
   const isMountedRef = useRef(true);
   useEffect(() => {
@@ -70,6 +73,17 @@ export function OpeningHoursStep({
       actions.content.updateOpeningHours(defaultOpeningHours as OpeningHours);
     }
   }, [openingHours, actions.content]);
+
+  useEffect(() => {
+    if (useWeekdaySchedule && isMountedRef.current) {
+      const newHours = { ...openingHours };
+      weekdays.forEach((day) => {
+        const key = day.toLowerCase();
+        newHours[key as keyof OpeningHours] = { ...debouncedWeekdayHours };
+      });
+      actions.content.updateOpeningHours(newHours as OpeningHours);
+    }
+  }, [debouncedWeekdayHours, useWeekdaySchedule]);
 
   const applyWeekdaySchedule = () => {
     const newHours = { ...openingHours };

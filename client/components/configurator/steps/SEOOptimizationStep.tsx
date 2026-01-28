@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react"; // ✅ useState, useEffect für Debounce
+import { useDebounce } from "@/hooks/useDebounce"; // ✅ Debounce Hook
 import {
   ArrowLeft,
   ChevronRight,
@@ -22,6 +24,60 @@ interface SEOOptimizationStepProps {
   prevStep: () => void;
   getDisplayedDomain?: () => string;
 }
+
+// ✅ Debounced Input Helper Component
+const DebouncedSEOInput = ({
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+  className = "",
+  maxLength,
+}: {
+  type?: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+  maxLength?: number;
+}) => {
+  const [localValue, setLocalValue] = useState(value);
+  const debouncedValue = useDebounce(localValue, 500); // 500ms für SEO-Texte
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (debouncedValue !== value) {
+      onChange(debouncedValue);
+    }
+  }, [debouncedValue, value, onChange]);
+
+  if (type === "textarea") {
+    return (
+      <Textarea
+        placeholder={placeholder}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        className={className}
+        maxLength={maxLength}
+        rows={3}
+      />
+    );
+  }
+
+  return (
+    <Input
+      type={type}
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      className={className}
+      maxLength={maxLength}
+    />
+  );
+};
 
 export function SEOOptimizationStep({
   nextStep,
@@ -67,20 +123,19 @@ export function SEOOptimizationStep({
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 {t("seo.metaTitle")}
               </label>
-              <Input
-                type="text"
+              {/* ✅ Debounced Input statt direkter Input */}
+              <DebouncedSEOInput
                 placeholder={`${business.name} - ${business.slogan || "Best Local Business"}`}
                 value={metaTitle}
-                onChange={(e) =>
+                onChange={(value) =>
                   actions.publishing.updatePublishingInfo({
-                    metaTitle: e.target.value,
+                    metaTitle: value,
                   } as any)
                 }
-                className="w-full"
+                maxLength={60}
               />
               <p className="text-xs text-gray-500 mt-1">
-                The title that appears in search results (50-60 characters
-                recommended)
+                {t("seo.metaTitleHint")} ({metaTitle.length}/60)
               </p>
             </div>
 
@@ -88,20 +143,20 @@ export function SEOOptimizationStep({
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 {t("seo.metaDescription")}
               </label>
-              <Textarea
-                placeholder={`Discover ${business.name} ${business.location ? `in ${business.location}` : ""}. ${business.uniqueDescription || "Quality service and great experience await you."}`}
+              {/* ✅ Debounced Textarea statt direkter Textarea */}
+              <DebouncedSEOInput
+                type="textarea"
+                placeholder={t("seo.metaDescriptionPlaceholder")}
                 value={metaDescription}
-                onChange={(e) =>
+                onChange={(value) =>
                   actions.publishing.updatePublishingInfo({
-                    metaDescription: e.target.value,
+                    metaDescription: value,
                   } as any)
                 }
-                className="w-full"
-                rows={3}
+                maxLength={160}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Description that appears in search results (150-160 characters
-                recommended)
+                {t("seo.metaDescriptionHint")} ({metaDescription.length}/160)
               </p>
             </div>
 
@@ -109,19 +164,18 @@ export function SEOOptimizationStep({
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 {t("seo.keywords")}
               </label>
-              <Input
-                type="text"
-                placeholder={`${business.type}, ${business.location}, restaurant, food, dining`}
+              {/* ✅ Debounced Input statt direkter Input */}
+              <DebouncedSEOInput
+                placeholder={t("seo.keywordsPlaceholder")}
                 value={keywords}
-                onChange={(e) =>
+                onChange={(value) =>
                   actions.publishing.updatePublishingInfo({
-                    keywords: e.target.value,
+                    keywords: value,
                   } as any)
                 }
-                className="w-full"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Comma-separated keywords that describe your business
+                {t("seo.keywordsHint")}
               </p>
             </div>
           </div>

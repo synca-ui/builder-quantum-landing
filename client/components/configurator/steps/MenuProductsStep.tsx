@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   ArrowLeft,
   ChevronRight,
@@ -26,6 +27,44 @@ interface MenuProductsStepProps {
   nextStep: () => void;
   prevStep: () => void;
 }
+
+// Debounced Input Helper für Menu Items
+const DebouncedMenuInput = ({
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+  className = "",
+}: {
+  type?: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}) => {
+  const [localValue, setLocalValue] = useState(value);
+  const debouncedValue = useDebounce(localValue, 400);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (debouncedValue !== value) {
+      onChange(debouncedValue);
+    }
+  }, [debouncedValue, value, onChange]);
+
+  return (
+    <Input
+      type={type}
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      className={className}
+    />
+  );
+};
 
 export function MenuProductsStep({
   nextStep,
@@ -503,12 +542,12 @@ export function MenuProductsStep({
             <label className="block text-sm font-bold text-gray-700 mb-2">
               {t("menu.itemName")}
             </label>
-            <Input
+            <DebouncedMenuInput
               type="text"
               placeholder={t("menu.itemNamePlaceholder")}
               value={newItem.name}
-              onChange={(e) =>
-                setNewItem((prev) => ({ ...prev, name: e.target.value }))
+              onChange={(value) =>
+                setNewItem((prev) => ({ ...prev, name: value }))
               }
               className="w-full"
             />
@@ -517,12 +556,12 @@ export function MenuProductsStep({
             <label className="block text-sm font-bold text-gray-700 mb-2">
               {t("menu.itemDescription")}
             </label>
-            <Input
+            <DebouncedMenuInput
               type="text"
               placeholder={t("menu.itemDescriptionPlaceholder")}
               value={newItem.description}
-              onChange={(e) =>
-                setNewItem((prev) => ({ ...prev, description: e.target.value }))
+              onChange={(value) =>
+                setNewItem((prev) => ({ ...prev, description: value }))
               }
               className="w-full"
             />

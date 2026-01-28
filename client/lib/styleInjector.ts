@@ -443,3 +443,305 @@ function generateIntentSpecificStyles(intent: TemplateIntent): string {
     }
   `;
 }
+
+// ============================================
+// TEMPLATE TOKEN REGISTRY
+// Design-DNA aus TemplateRegistry.tsx extrahiert
+// ============================================
+
+export interface TemplateDesignTokens {
+  // Shape Tokens
+  borderRadius: {
+    card: string;
+    button: string;
+    input: string;
+    modal: string;
+  };
+  // Shadow Tokens
+  boxShadow: {
+    card: string;
+    cardHover: string;
+    button: string;
+    modal: string;
+  };
+  // Gradient Tokens
+  gradients: {
+    background: string;
+    hero: string;
+    overlay: string;
+  };
+  // Animation Tokens
+  transitions: {
+    fast: string;
+    normal: string;
+    slow: string;
+  };
+}
+
+/**
+ * Design-DNA Token Registry pro Template
+ * Basiert auf TemplateRegistry.tsx und seed-templates.ts
+ */
+const TEMPLATE_DESIGN_TOKENS: Record<string, TemplateDesignTokens> = {
+  minimalist: {
+    borderRadius: {
+      card: '8px',
+      button: '6px',
+      input: '6px',
+      modal: '12px',
+    },
+    boxShadow: {
+      card: '0 1px 3px rgba(0, 0, 0, 0.05)',
+      cardHover: '0 4px 12px rgba(0, 0, 0, 0.08)',
+      button: 'none',
+      modal: '0 20px 60px rgba(0, 0, 0, 0.15)',
+    },
+    gradients: {
+      background: 'none',
+      hero: 'none',
+      overlay: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.02))',
+    },
+    transitions: {
+      fast: '0.1s ease',
+      normal: '0.2s ease',
+      slow: '0.3s ease',
+    },
+  },
+  modern: {
+    borderRadius: {
+      card: '16px',
+      button: '12px',
+      input: '10px',
+      modal: '24px',
+    },
+    boxShadow: {
+      card: '0 8px 32px rgba(0, 0, 0, 0.12)',
+      cardHover: '0 16px 48px rgba(0, 0, 0, 0.18)',
+      button: '0 4px 16px rgba(79, 70, 229, 0.3)',
+      modal: '0 32px 80px rgba(0, 0, 0, 0.25)',
+    },
+    gradients: {
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      hero: 'linear-gradient(135deg, rgba(79,70,229,0.9) 0%, rgba(124,58,237,0.9) 100%)',
+      overlay: 'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6))',
+    },
+    transitions: {
+      fast: '0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+      normal: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      slow: '0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+  },
+  stylish: {
+    borderRadius: {
+      card: '20px',
+      button: '16px',
+      input: '12px',
+      modal: '28px',
+    },
+    boxShadow: {
+      card: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+      cardHover: '0 16px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
+      button: '0 4px 20px rgba(5, 150, 105, 0.4)',
+      modal: '0 40px 100px rgba(0, 0, 0, 0.3)',
+    },
+    gradients: {
+      background: 'linear-gradient(180deg, #111827 0%, #1f2937 100%)',
+      hero: 'linear-gradient(135deg, rgba(5,150,105,0.2) 0%, transparent 50%)',
+      overlay: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7))',
+    },
+    transitions: {
+      fast: '0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      normal: '0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      slow: '0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+  },
+  cozy: {
+    borderRadius: {
+      card: '24px',
+      button: '20px',
+      input: '14px',
+      modal: '32px',
+    },
+    boxShadow: {
+      card: '0 4px 16px rgba(139, 111, 71, 0.08)',
+      cardHover: '0 8px 24px rgba(139, 111, 71, 0.12)',
+      button: '0 2px 8px rgba(234, 88, 12, 0.2)',
+      modal: '0 24px 64px rgba(0, 0, 0, 0.15)',
+    },
+    gradients: {
+      background: 'linear-gradient(180deg, #FFFBF0 0%, #FEF3E2 100%)',
+      hero: 'linear-gradient(135deg, rgba(234,88,12,0.05) 0%, transparent 50%)',
+      overlay: 'linear-gradient(to bottom, transparent, rgba(255,251,240,0.9))',
+    },
+    transitions: {
+      fast: '0.15s ease-out',
+      normal: '0.25s ease-out',
+      slow: '0.4s ease-out',
+    },
+  },
+};
+
+/**
+ * Gibt Design-Tokens für ein Template zurück
+ */
+export function getTemplateDesignTokens(templateId: string): TemplateDesignTokens {
+  return TEMPLATE_DESIGN_TOKENS[templateId] || TEMPLATE_DESIGN_TOKENS.minimalist;
+}
+
+// ============================================
+// STYLE INJECTION SYSTEM
+// Injiziert CSS-Variablen in den DOM
+// ============================================
+
+const STYLE_ELEMENT_ID = 'maitr-injected-styles';
+
+/**
+ * Configuration Interface für injectGlobalStyles
+ * Kompatibel mit domain.ts Configuration
+ */
+export interface StyleInjectionConfig {
+  // Template ID
+  template?: string;
+
+  // Design Overrides
+  primaryColor?: string;
+  secondaryColor?: string;
+  backgroundColor?: string;
+  fontColor?: string;
+  priceColor?: string;
+
+  // Optional: Direct token overrides
+  borderRadiusCard?: string;
+  boxShadowCard?: string;
+}
+
+/**
+ * HAUPTFUNKTION: Injiziert globale Styles basierend auf Configuration
+ *
+ * Wird aufgerufen in:
+ * - AppRenderer.tsx beim Laden einer publizierten Seite
+ * - TemplatePreviewContent.tsx beim Template-Wechsel
+ * - Configurator.tsx bei Design-Änderungen
+ *
+ * @param config - Configuration-Objekt oder Teil davon
+ * @param targetElement - Optional: Parent-Container statt :root
+ */
+export function injectGlobalStyles(
+  config: StyleInjectionConfig,
+  targetElement?: HTMLElement
+): void {
+  const templateId = config.template || 'minimalist';
+  const designTokens = getTemplateDesignTokens(templateId);
+
+  // User-Overrides zusammenbauen
+  const userColors: UserColorOverrides = {
+    primaryColor: config.primaryColor || '',
+    secondaryColor: config.secondaryColor || '',
+    backgroundColor: config.backgroundColor || '',
+    fontColor: config.fontColor || '',
+    priceColor: config.priceColor || '',
+  };
+
+  // Vollständige CSS generieren
+  const css = generateGlobalStyles(templateId, userColors);
+
+  // Design-Token CSS-Variablen generieren
+  const tokenVars = `
+    :root {
+      /* Shape Tokens */
+      --radius-card: ${config.borderRadiusCard || designTokens.borderRadius.card};
+      --radius-button: ${designTokens.borderRadius.button};
+      --radius-input: ${designTokens.borderRadius.input};
+      --radius-modal: ${designTokens.borderRadius.modal};
+      
+      /* Shadow Tokens */
+      --shadow-card: ${config.boxShadowCard || designTokens.boxShadow.card};
+      --shadow-card-hover: ${designTokens.boxShadow.cardHover};
+      --shadow-button: ${designTokens.boxShadow.button};
+      --shadow-modal: ${designTokens.boxShadow.modal};
+      
+      /* Gradient Tokens */
+      --gradient-background: ${designTokens.gradients.background};
+      --gradient-hero: ${designTokens.gradients.hero};
+      --gradient-overlay: ${designTokens.gradients.overlay};
+      
+      /* Transition Tokens */
+      --transition-fast: ${designTokens.transitions.fast};
+      --transition-normal: ${designTokens.transitions.normal};
+      --transition-slow: ${designTokens.transitions.slow};
+    }
+  `;
+
+  // Bestehenden Style-Tag entfernen oder erstellen
+  let styleElement = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null;
+
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = STYLE_ELEMENT_ID;
+    styleElement.setAttribute('data-maitr', 'injected');
+    document.head.appendChild(styleElement);
+  }
+
+  // Styles setzen
+  styleElement.textContent = tokenVars + css;
+
+  // Optional: Auf spezifisches Element anwenden (für isolierte Previews)
+  if (targetElement) {
+    // CSS-Variablen auf Element-Ebene setzen
+    targetElement.style.setProperty('--radius-card', config.borderRadiusCard || designTokens.borderRadius.card);
+    targetElement.style.setProperty('--shadow-card', config.boxShadowCard || designTokens.boxShadow.card);
+    targetElement.style.setProperty('--color-primary', config.primaryColor || '');
+    targetElement.style.setProperty('--color-secondary', config.secondaryColor || '');
+    targetElement.style.setProperty('--color-background', config.backgroundColor || '');
+    targetElement.style.setProperty('--color-text', config.fontColor || '');
+    targetElement.style.setProperty('--color-price', config.priceColor || '');
+  }
+
+  console.log(`[StyleInjector] Styles injected for template: ${templateId}`);
+}
+
+/**
+ * Entfernt injizierte Styles (Cleanup)
+ */
+export function removeInjectedStyles(): void {
+  const styleElement = document.getElementById(STYLE_ELEMENT_ID);
+  if (styleElement) {
+    styleElement.remove();
+    console.log('[StyleInjector] Styles removed');
+  }
+}
+
+/**
+ * React Hook: Injiziert Styles bei Änderungen
+ *
+ * @example
+ * ```tsx
+ * function MyComponent() {
+ *   const design = useConfiguratorStore(s => s.design);
+ *   useStyleInjection(design);
+ *   return <div>...</div>;
+ * }
+ * ```
+ */
+export function useStyleInjection(config: StyleInjectionConfig): void {
+  // Wird in React-Komponenten mit useEffect verwendet
+  if (typeof window !== 'undefined') {
+    injectGlobalStyles(config);
+  }
+}
+
+/**
+ * Utility: Extrahiert CSS-Variable aus dem DOM
+ */
+export function getCSSVariable(name: string): string {
+  if (typeof window === 'undefined') return '';
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+/**
+ * Utility: Setzt CSS-Variable im DOM
+ */
+export function setCSSVariable(name: string, value: string): void {
+  if (typeof window === 'undefined') return;
+  document.documentElement.style.setProperty(name, value);
+}

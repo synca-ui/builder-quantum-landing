@@ -99,8 +99,9 @@ export function DomainHostingStep({
   const [lastCheckedSubdomain, setLastCheckedSubdomain] = useState<string>("");
 
   const hasDomain = business.domain?.hasDomain || false;
-  const domainName = business.domain?.domainName || "";
   const selectedDomain = business.domain?.selectedDomain || "";
+  const domainName = business.domain?.domainName || "";
+
   const baseHost = getBaseHost ? getBaseHost() : "maitr.de";
 
   // Generate subdomain from business name if not set

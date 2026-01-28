@@ -2,6 +2,8 @@
  * Business Information Step Component
  * Extracts business name, type, location, slogan, and description
  * Consumes Zustand store directly - zero prop drilling
+ *
+ * ✅ ANTI-FLICKER: Nutzt DebouncedInput für alle Text-Eingaben
  */
 
 import { useCallback, useState } from "react";
@@ -20,8 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { DebouncedInput } from "@/components/ui/DebouncedInput";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   useConfiguratorBusiness,
@@ -62,8 +63,6 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   const business = useConfiguratorBusiness();
 
   // Get actions from store
-  // FIX: Wir holen hier NUR 'business', 'navigation' brauchen wir nicht mehr,
-  // da wir die Props nutzen.
   const { business: businessActions } = useConfiguratorActions();
 
   // Local UI state for optional fields visibility
@@ -73,13 +72,12 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   const isValid = !!(business.name && business.type);
 
   // Handlers
-  const handleBusinessNameChange = useCallback(
+  useCallback(
     (value: string) => {
       businessActions.updateBusinessName(value);
     },
     [businessActions],
   );
-
   const handleBusinessTypeChange = useCallback(
     (type: string) => {
       businessActions.updateBusinessType(type);
@@ -88,21 +86,18 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
     },
     [businessActions],
   );
-
-  const handleLocationChange = useCallback(
+  useCallback(
     (value: string) => {
       businessActions.updateLocation(value);
     },
     [businessActions],
   );
-
-  const handleSloganChange = useCallback(
+  useCallback(
     (value: string) => {
       businessActions.updateSlogan(value);
     },
     [businessActions],
   );
-
   const handleDescriptionChange = useCallback(
     (value: string) => {
       // Nutze hier die passende Action aus deinem Store (entweder setBusinessInfo oder updateUniqueDescription)
@@ -126,7 +121,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
     if (isValid) {
       nextStep();
     }
-  }, [isValid, nextStep]);
+  }, [nextStep]);
 
   return (
     <div className="py-8 max-w-xl mx-auto">
@@ -196,18 +191,19 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
           </div>
         </div>
 
-        {/* Business Name */}
+        {/* Business Name - DEBOUNCED */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">
             {t("business.name")} *
           </label>
-          <Input
+          <DebouncedInput
             type="text"
             placeholder={t("business.namePlaceholder")}
             value={business.name}
-            onChange={(e) => handleBusinessNameChange(e.target.value)}
+            onChange={businessActions.updateBusinessName}
             className="w-full px-4 py-3 text-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
             autoComplete="organization"
+            debounceMs={300}
           />
         </div>
 
@@ -245,20 +241,21 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
           </div>
         </div>
 
-        {/* Location */}
+        {/* Location - DEBOUNCED */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">
             {t("business.location")}
           </label>
           <div className="relative">
             <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-            <Input
+            <DebouncedInput
               type="text"
               placeholder={t("business.locationPlaceholder")}
               value={business.location || ""}
-              onChange={(e) => handleLocationChange(e.target.value)}
+              onChange={businessActions.updateLocation}
               className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
               autoComplete="address-level2"
+              debounceMs={300}
             />
           </div>
         </div>
@@ -285,12 +282,13 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 {t("business.slogan")}
               </label>
-              <Input
+              <DebouncedInput
                 type="text"
                 placeholder={t("business.sloganPlaceholder")}
                 value={business.slogan || ""}
-                onChange={(e) => handleSloganChange(e.target.value)}
+                onChange={businessActions.updateSlogan}
                 className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                debounceMs={300}
               />
             </div>
 
@@ -298,11 +296,14 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 {t("business.whatMakesYouSpecial")}
               </label>
-              <Textarea
+              <DebouncedInput
+                multiline
+                rows={3}
                 placeholder={t("business.descriptionPlaceholder")}
                 value={business.uniqueDescription || ""}
-                onChange={(e) => handleDescriptionChange(e.target.value)}
-                className="w-full px-4 py-3 h-20 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
+                onChange={handleDescriptionChange}
+                className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none"
+                debounceMs={300}
               />
             </div>
 

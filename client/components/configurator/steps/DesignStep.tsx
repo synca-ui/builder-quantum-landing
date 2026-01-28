@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Check,
   ArrowLeft,
@@ -121,7 +122,7 @@ const ColorInfoIcon = ({ tooltipKey }: { tooltipKey: string }) => (
   </Tooltip>
 );
 
-// --- HELPER COMPONENT (Verhindert Neu-Rendern beim Tippen) ---
+// --- HELPER COMPONENT mit Debounce ---
 const ColorInput = ({
   label,
   value,
@@ -134,16 +135,23 @@ const ColorInput = ({
   tooltipKey?: string;
 }) => {
   const [localValue, setLocalValue] = useState(value);
+  const debouncedValue = useDebounce(localValue, 300); // ✅ 300ms Debounce
 
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
 
+  // ✅ Debounced onChange - nur wenn sich der debounced Wert ändert
+  useEffect(() => {
+    if (debouncedValue !== value && debouncedValue) {
+      onChange(debouncedValue);
+    }
+  }, [debouncedValue, value, onChange]);
+
   const handleBlur = () => {
     if (localValue !== value) onChange(localValue);
   };
 
-  // FIX: Hier wurde der Typ <HTMLInputElement> hinzugefügt, damit .blur() existiert
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.currentTarget.blur();

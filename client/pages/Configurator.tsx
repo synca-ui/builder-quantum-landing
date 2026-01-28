@@ -5,14 +5,10 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   Rocket,
-  Menu,
-  X,
   Settings,
-  Smartphone,
   Share2,
   Cloud,
   Check,
-  Crown,
   Save,
   Loader2,
   Undo2,
@@ -31,8 +27,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { injectGlobalStyles } from "@/lib/styleInjector";
 
-// Steps Imports
+// Steps Importssd
 import { WelcomePage } from "@/components/configurator/steps/WelcomePage";
 import { TemplateStep } from "@/components/configurator/steps/TemplateStep";
 import { BusinessInfoStep } from "@/components/configurator/steps/BusinessInfoStep";
@@ -215,6 +212,7 @@ export default function Configurator() {
   const prevStepStore = useConfiguratorStore((s) => s.prevStep);
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
   const business = useConfiguratorStore((s) => s.business); // <-- DIESE ZEILE HINZUFÜGEN
+  const design = useConfiguratorStore((s) => s.design);
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(
     () => persistence.getConfigId() || null,
   );
@@ -250,6 +248,24 @@ export default function Configurator() {
     // Fallback, falls noch nichts gewählt wurde
     return "site.maitr.de";
   }, [business.domain?.selectedDomain]);
+
+  // ✅ StyleInjector Integration
+  useEffect(() => {
+    injectGlobalStyles({
+      template: design.template || 'minimalist',
+      primaryColor: design.primaryColor || '#2563EB',
+      secondaryColor: design.secondaryColor || '#7C3AED',
+      backgroundColor: design.backgroundColor || '#FFFFFF',
+      fontColor: design.fontColor || '#111827',
+      priceColor: (design as any).priceColor || '#059669',
+    });
+
+    return () => {
+      const styleElement = document.getElementById('maitr-global-styles');
+      if (styleElement) styleElement.remove();
+    };
+  }, [design.template, design.primaryColor, design.secondaryColor, design.backgroundColor, design.fontColor]);
+
 
   const saveToBackend = useCallback(
     async (data: Partial<Configuration>) => {

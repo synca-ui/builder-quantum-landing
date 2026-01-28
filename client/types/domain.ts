@@ -109,10 +109,19 @@ export interface FeatureFlags {
 }
 
 /**
+ * Contact Method Type
+ * ✅ FIX: Unified type for contact methods
+ */
+export interface ContactMethod {
+  type: "phone" | "email";
+  value: string;
+}
+
+/**
  * Contact & Social Domain
  */
 export interface ContactInfo {
-  contactMethods: string[];
+  contactMethods: ContactMethod[]; // ✅ Changed from string[] to ContactMethod[]
   socialMedia: Record<string, string>;
   phone?: string;
   email?: string;

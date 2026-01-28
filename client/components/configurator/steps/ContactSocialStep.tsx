@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import React, { useState, useEffect } from "react"; // ✅ useState, useEffect für Debounce
+import { useDebounce } from "@/hooks/useDebounce"; // ✅ Debounce Hook
 import {
   ArrowLeft,
   ChevronRight,
@@ -20,6 +22,45 @@ interface ContactSocialStepProps {
   nextStep: () => void;
   prevStep: () => void;
 }
+
+// ✅ Debounced Input Helper Component
+const DebouncedContactInput = ({
+  icon,
+  placeholder,
+  value,
+  onChange,
+}: {
+  icon: React.ReactNode;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+}) => {
+  const [localValue, setLocalValue] = useState(value);
+  const debouncedValue = useDebounce(localValue, 400);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (debouncedValue !== value) {
+      onChange(debouncedValue);
+    }
+  }, [debouncedValue, value, onChange]);
+
+  return (
+    <div className="relative">
+      <div className="absolute left-3 top-3 text-gray-400">{icon}</div>
+      <Input
+        type="text"
+        placeholder={placeholder}
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        className="pl-12"
+      />
+    </div>
+  );
+};
 
 export function ContactSocialStep({
   nextStep,
@@ -99,138 +140,127 @@ export function ContactSocialStep({
       );
       const updatedMethods = [...currentMethods];
 
+      type ValidMethodType = "phone" | "email";
+
       if (existingIndex >= 0) {
-        updatedMethods[existingIndex] = { type: methodId, value };
+        updatedMethods[existingIndex] = {
+          type: methodId as ValidMethodType, // 👈 Cast it here
+          value
+        };
       } else {
-        updatedMethods.push({ type: methodId, value });
+        updatedMethods.push({
+          type: methodId as ValidMethodType, // 👈 And here
+          value
+        });
       }
 
-      actions.contact.updateContactInfo({ contactMethods: updatedMethods });
+      const instagramSync = (contact as any).instagramSync || false;
+      const toggleInstagramSync = () => {
+        actions.contact.updateContactInfo({ instagramSync: !instagramSync } as any);
+      };
+
+      return (
+        <div className="py-8 max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              {t("steps.contactSocial.title")}
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {t("steps.contactSocial.subtitle")}
+            </p>
+          </div>
+
+          <div className="space-y-8">
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-6">
+                {t("contact.information")}
+              </h3>
+              <div className="space-y-4">
+                {contactMethods.map((method) => (
+                  <div key={method.id}>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      {t(method.labelKey)}
+                    </label>
+                    {/* ✅ Debounced Input statt direkter Input */}
+                    <DebouncedContactInput
+                      icon={method.icon}
+                      placeholder={method.placeholder}
+                      value={getContactValue(method.id)}
+                      onChange={(value) => updateContactValue(method.id, value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-6">
+                {t("contact.socialMedia")}
+              </h3>
+              <div className="space-y-4">
+                {socialPlatforms.map((platform) => (
+                  <div key={platform.id}>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      {platform.label}
+                    </label>
+                    {/* ✅ Debounced Input statt direkter Input */}
+                    <DebouncedContactInput
+                      icon={platform.icon}
+                      placeholder={platform.placeholder}
+                      value={getSocialValue(platform.id)}
+                      onChange={(value) => actions.contact.updateSocialMedia(platform.id, value)}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-md font-bold text-gray-900">
+                      {t("contact.instagramIntegration")}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {t("contact.instagramIntegrationDesc")}
+                    </p>
+                  </div>
+                  <Button
+                    variant={instagramSync ? "default" : "outline"}
+                    onClick={toggleInstagramSync}
+                    className={instagramSync ? "bg-teal-500 hover:bg-teal-600" : ""}
+                  >
+                    {instagramSync ? t("features.enable") : t("features.disable")}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="flex justify-between mt-8">
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                prevStep();
+              }}
+              variant="outline"
+              size="lg"
+            >
+              <ArrowLeft className="mr-2 w-5 h-5" />
+              {t("common.back")}
+            </Button>
+            <Button
+              onClick={nextStep}
+              size="lg"
+              className="bg-gradient-to-r from-teal-500 to-purple-500"
+            >
+              {t("common.next")}
+              <ChevronRight className="ml-2 w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      );
     }
   };
-
-  const instagramSync = (contact as any).instagramSync || false;
-  const toggleInstagramSync = () => {
-    actions.contact.updateContactInfo({ instagramSync: !instagramSync } as any);
-  };
-
-  return (
-    <div className="py-8 max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          {t("steps.contactSocial.title")}
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          {t("steps.contactSocial.subtitle")}
-        </p>
-      </div>
-
-      <div className="space-y-8">
-        <Card className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">
-            {t("contact.information")}
-          </h3>
-          <div className="space-y-4">
-            {contactMethods.map((method) => (
-              <div key={method.id}>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  {t(method.labelKey)}
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-3 text-gray-400">
-                    {method.icon}
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder={method.placeholder}
-                    value={getContactValue(method.id)}
-                    onChange={(e) =>
-                      updateContactValue(method.id, e.target.value)
-                    }
-                    className="pl-12"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">
-            {t("contact.socialMedia")}
-          </h3>
-          <div className="space-y-4">
-            {socialPlatforms.map((platform) => (
-              <div key={platform.id}>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  {platform.label}
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-3 text-gray-400">
-                    {platform.icon}
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder={platform.placeholder}
-                    value={getSocialValue(platform.id)}
-                    onChange={(e) =>
-                      actions.contact.updateSocialMedia(
-                        platform.id,
-                        e.target.value,
-                      )
-                    }
-                    className="pl-12"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-md font-bold text-gray-900">
-                  {t("contact.instagramIntegration")}
-                </h4>
-                <p className="text-sm text-gray-600">
-                  {t("contact.instagramIntegrationDesc")}
-                </p>
-              </div>
-              <Button
-                variant={instagramSync ? "default" : "outline"}
-                onClick={toggleInstagramSync}
-                className={instagramSync ? "bg-teal-500 hover:bg-teal-600" : ""}
-              >
-                {instagramSync ? t("features.enable") : t("features.disable")}
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            prevStep();
-          }}
-          variant="outline"
-          size="lg"
-        >
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          {t("common.back")}
-        </Button>
-        <Button
-          onClick={nextStep}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          {t("common.next")}
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
 }
