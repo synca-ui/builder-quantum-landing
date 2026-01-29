@@ -36,7 +36,6 @@ import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
 import { CategoryFilter } from "@/components/shared/CategoryFilter"; // ✅ CategoryFilter Component
-import { ContactSection } from "@/components/shared/ContactSection"; // ✅ ContactSection Component
 
 interface AppRendererProps {
   config: any; // Akzeptiert flache DB-Daten oder verschachtelte Configuration
