@@ -26,7 +26,8 @@ import type {
   MenuItem,
   OpeningHours,
   GalleryImage,
-} from '@/types/domain';
+  ContactMethod,
+} from "@/types/domain";
 import { getBusinessTypeDefaults } from './businessTypeDefaults';
 
 // ============================================
@@ -312,18 +313,37 @@ function extractCategories(menuItems: MenuItem[]): string[] {
 }
 
 /**
- * Normalisiert Kontaktmethoden (domain.ts erwartet string[])
+ * Normalisiert Kontaktmethoden zu ContactMethod[] Format
  */
-function normalizeContactMethods(methods: unknown): string[] {
+function normalizeContactMethods(methods: unknown): ContactMethod[] {
   const parsed = safeParseJSON<unknown[]>(methods, []);
   if (!Array.isArray(parsed)) return [];
 
-  return parsed.map(m => {
-    if (typeof m === 'string') return m;
-    const method = m as Record<string, unknown>;
-    // Unterstütze beide Formate: { type, value } und einfache Strings
-    return (method.value as string) || (method.type as string) || '';
-  }).filter(Boolean);
+  return parsed.map((m, index) => {
+    // Fall 1: Bereits im richtigen Format { type: 'phone', value: '...' }
+    if (typeof m === 'object' && m !== null) {
+      const method = m as Record<string, unknown>;
+      if (method.type && method.value) {
+        return {
+          type: (method.type as 'phone' | 'email'),
+          value: String(method.value),
+        };
+      }
+    }
+
+    // Fall 2: Legacy-Format - String wird zu email konvertiert
+    if (typeof m === 'string' && m.trim()) {
+      // Heuristik: Enthält @ = email, sonst phone
+      const isEmail = m.includes('@');
+      return {
+        type: isEmail ? 'email' as const : 'phone' as const,
+        value: m.trim(),
+      };
+    }
+
+    // Fall 3: Fallback - leerer Eintrag
+    return null;
+  }).filter((m): m is ContactMethod => m !== null);
 }
 
 /**
@@ -385,16 +405,25 @@ export function normalizeConfig(
     return createDefaultConfiguration();
   }
 
-  // Menu Items normalisieren
-  const menuItems = normalizeMenuItems(flatConfig.menuItems);
+  // ✅ FIX: Extrahiere verschachtelte Objekte falls vorhanden (gemischte Struktur aus DB)
+  const designObj = (flatConfig as any).design || {};
+  const featuresObj = (flatConfig as any).features || {};
+  const contentObj = (flatConfig as any).content || {};
+  const contactObj = (flatConfig as any).contact || {};
+  const businessObj = (flatConfig as any).business || {};
+  const pagesObj = (flatConfig as any).pages || {};
+  const paymentsObj = (flatConfig as any).payments || {};
 
-  // Kategorien aus Menu-Items oder separat
-  const categories = flatConfig.categories
-    ? safeParseJSON<string[]>(flatConfig.categories, [])
+  // Menu Items normalisieren (prüfe beide Stellen)
+  const menuItems = normalizeMenuItems(contentObj.menuItems || flatConfig.menuItems);
+
+  // Kategorien aus Menu-Items oder separat (prüfe beide Stellen)
+  const categories = (contentObj.categories || flatConfig.categories)
+    ? safeParseJSON<string[]>(contentObj.categories || flatConfig.categories, [])
     : extractCategories(menuItems);
 
-  // Business Type für Defaults
-  const businessType = flatConfig.businessType || 'restaurant';
+  // Business Type für Defaults (prüfe beide Stellen)
+  const businessType = businessObj.type || flatConfig.businessType || 'restaurant';
   const typeDefaults = applyDefaults ? getBusinessTypeDefaults(businessType) : null;
 
   // Configuration zusammenbauen
@@ -404,13 +433,13 @@ export function normalizeConfig(
 
     // ========== BUSINESS ==========
     business: {
-      name: flatConfig.businessName || DEFAULT_BUSINESS_INFO.name,
+      name: businessObj.name || flatConfig.businessName || DEFAULT_BUSINESS_INFO.name,
       type: businessType,
-      location: flatConfig.location || undefined,
-      slogan: flatConfig.slogan || undefined,
-      uniqueDescription: flatConfig.uniqueDescription || undefined,
-      logo: normalizeLogo(flatConfig.logo),
-      domain: {
+      location: businessObj.location || flatConfig.location || undefined,
+      slogan: businessObj.slogan || flatConfig.slogan || undefined,
+      uniqueDescription: businessObj.uniqueDescription || flatConfig.uniqueDescription || undefined,
+      logo: normalizeLogo(businessObj.logo || flatConfig.logo),
+      domain: businessObj.domain || {
         hasDomain: !!(flatConfig.domainName || flatConfig.selectedDomain),
         domainName: flatConfig.domainName || undefined,
         selectedDomain: flatConfig.selectedDomain || undefined,
@@ -418,20 +447,21 @@ export function normalizeConfig(
     },
 
     // ========== DESIGN ==========
+    // ✅ FIX: Prüfe ZUERST im design Objekt, dann in root-level
     design: {
-      template: flatConfig.selectedTemplate || flatConfig.template || DEFAULT_DESIGN_CONFIG.template,
-      primaryColor: flatConfig.primaryColor || DEFAULT_DESIGN_CONFIG.primaryColor,
-      secondaryColor: flatConfig.secondaryColor || DEFAULT_DESIGN_CONFIG.secondaryColor,
-      backgroundColor: flatConfig.backgroundColor || DEFAULT_DESIGN_CONFIG.backgroundColor,
-      fontColor: flatConfig.fontColor || DEFAULT_DESIGN_CONFIG.fontColor,
-      priceColor: flatConfig.priceColor || DEFAULT_DESIGN_CONFIG.priceColor,
-      fontFamily: flatConfig.fontFamily || DEFAULT_DESIGN_CONFIG.fontFamily,
-      fontSize: flatConfig.fontSize || DEFAULT_DESIGN_CONFIG.fontSize,
-      headerFontColor: flatConfig.headerFontColor || DEFAULT_DESIGN_CONFIG.headerFontColor,
-      headerFontSize: flatConfig.headerFontSize || DEFAULT_DESIGN_CONFIG.headerFontSize,
-      headerBackgroundColor: flatConfig.headerBackgroundColor || DEFAULT_DESIGN_CONFIG.headerBackgroundColor,
-      backgroundImage: flatConfig.backgroundImage || null,
-      backgroundType: (flatConfig.backgroundType as 'color' | 'image') || 'color',
+      template: designObj.template || flatConfig.selectedTemplate || flatConfig.template || DEFAULT_DESIGN_CONFIG.template,
+      primaryColor: designObj.primaryColor || flatConfig.primaryColor || DEFAULT_DESIGN_CONFIG.primaryColor,
+      secondaryColor: designObj.secondaryColor || flatConfig.secondaryColor || DEFAULT_DESIGN_CONFIG.secondaryColor,
+      backgroundColor: designObj.backgroundColor || flatConfig.backgroundColor || DEFAULT_DESIGN_CONFIG.backgroundColor,
+      fontColor: designObj.fontColor || flatConfig.fontColor || DEFAULT_DESIGN_CONFIG.fontColor,
+      priceColor: designObj.priceColor || flatConfig.priceColor || DEFAULT_DESIGN_CONFIG.priceColor,
+      fontFamily: designObj.fontFamily || flatConfig.fontFamily || DEFAULT_DESIGN_CONFIG.fontFamily,
+      fontSize: designObj.fontSize || flatConfig.fontSize || DEFAULT_DESIGN_CONFIG.fontSize,
+      headerFontColor: designObj.headerFontColor || flatConfig.headerFontColor || DEFAULT_DESIGN_CONFIG.headerFontColor,
+      headerFontSize: designObj.headerFontSize || flatConfig.headerFontSize || DEFAULT_DESIGN_CONFIG.headerFontSize,
+      headerBackgroundColor: designObj.headerBackgroundColor || flatConfig.headerBackgroundColor || DEFAULT_DESIGN_CONFIG.headerBackgroundColor,
+      backgroundImage: designObj.backgroundImage ?? flatConfig.backgroundImage ?? null,
+      backgroundType: (designObj.backgroundType || flatConfig.backgroundType as 'color' | 'image') || 'color',
     },
 
     // ========== CONTENT ==========
@@ -439,37 +469,38 @@ export function normalizeConfig(
       menuItems: menuItems.length > 0
         ? menuItems
         : (typeDefaults?.menuItems || DEFAULT_CONTENT_DATA.menuItems),
-      gallery: normalizeGallery(flatConfig.gallery),
-      openingHours: Object.keys(normalizeOpeningHours(flatConfig.openingHours)).length > 0
-        ? normalizeOpeningHours(flatConfig.openingHours)
+      gallery: normalizeGallery(contentObj.gallery || flatConfig.gallery),
+      openingHours: Object.keys(normalizeOpeningHours(contentObj.openingHours || flatConfig.openingHours)).length > 0
+        ? normalizeOpeningHours(contentObj.openingHours || flatConfig.openingHours)
         : (typeDefaults?.openingHours || DEFAULT_CONTENT_DATA.openingHours),
       categories: categories.length > 0
         ? categories
         : (typeDefaults?.categories || DEFAULT_CONTENT_DATA.categories),
-      homepageDishImageVisibility: flatConfig.homepageDishImageVisibility || 'visible',
+      homepageDishImageVisibility: contentObj.homepageDishImageVisibility || flatConfig.homepageDishImageVisibility || 'visible',
     },
 
     // ========== FEATURES ==========
+    // ✅ FIX: Prüfe ZUERST im features Objekt, dann in root-level
     features: {
-      reservationsEnabled: flatConfig.reservationsEnabled ??
+      reservationsEnabled: featuresObj.reservationsEnabled ?? flatConfig.reservationsEnabled ??
         (typeDefaults?.features?.reservationsEnabled ?? DEFAULT_FEATURE_FLAGS.reservationsEnabled),
-      maxGuests: flatConfig.maxGuests ?? DEFAULT_FEATURE_FLAGS.maxGuests,
-      notificationMethod: flatConfig.notificationMethod || DEFAULT_FEATURE_FLAGS.notificationMethod,
-      reservationButtonColor: flatConfig.reservationButtonColor || DEFAULT_FEATURE_FLAGS.reservationButtonColor,
-      reservationButtonTextColor: flatConfig.reservationButtonTextColor || DEFAULT_FEATURE_FLAGS.reservationButtonTextColor,
-      reservationButtonShape: (flatConfig.reservationButtonShape as 'rounded' | 'pill' | 'square') || DEFAULT_FEATURE_FLAGS.reservationButtonShape,
-      onlineOrderingEnabled: flatConfig.onlineOrdering ??
+      maxGuests: featuresObj.maxGuests ?? flatConfig.maxGuests ?? DEFAULT_FEATURE_FLAGS.maxGuests,
+      notificationMethod: featuresObj.notificationMethod || flatConfig.notificationMethod || DEFAULT_FEATURE_FLAGS.notificationMethod,
+      reservationButtonColor: featuresObj.reservationButtonColor || flatConfig.reservationButtonColor || DEFAULT_FEATURE_FLAGS.reservationButtonColor,
+      reservationButtonTextColor: featuresObj.reservationButtonTextColor || flatConfig.reservationButtonTextColor || DEFAULT_FEATURE_FLAGS.reservationButtonTextColor,
+      reservationButtonShape: (featuresObj.reservationButtonShape || flatConfig.reservationButtonShape as 'rounded' | 'pill' | 'square') || DEFAULT_FEATURE_FLAGS.reservationButtonShape,
+      onlineOrderingEnabled: featuresObj.onlineOrderingEnabled ?? flatConfig.onlineOrdering ??
         (typeDefaults?.features?.onlineOrderingEnabled ?? DEFAULT_FEATURE_FLAGS.onlineOrderingEnabled),
-      onlineStoreEnabled: flatConfig.onlineStore ?? DEFAULT_FEATURE_FLAGS.onlineStoreEnabled,
-      teamAreaEnabled: flatConfig.teamArea ?? DEFAULT_FEATURE_FLAGS.teamAreaEnabled,
+      onlineStoreEnabled: featuresObj.onlineStoreEnabled ?? flatConfig.onlineStore ?? DEFAULT_FEATURE_FLAGS.onlineStoreEnabled,
+      teamAreaEnabled: featuresObj.teamAreaEnabled ?? flatConfig.teamArea ?? DEFAULT_FEATURE_FLAGS.teamAreaEnabled,
     },
 
     // ========== CONTACT ==========
     contact: {
-      contactMethods: normalizeContactMethods(flatConfig.contactMethods),
-      socialMedia: normalizeSocialMedia(flatConfig.socialMedia),
-      phone: flatConfig.phone || undefined,
-      email: flatConfig.email || undefined,
+      contactMethods: normalizeContactMethods(contactObj.contactMethods || flatConfig.contactMethods),
+      socialMedia: normalizeSocialMedia(contactObj.socialMedia || flatConfig.socialMedia),
+      phone: contactObj.phone || flatConfig.phone || undefined,
+      email: contactObj.email || flatConfig.email || undefined,
     },
 
     // ========== PUBLISHING ==========
@@ -490,17 +521,17 @@ export function normalizeConfig(
 
     // ========== PAGES ==========
     pages: {
-      selectedPages: safeParseJSON<string[]>(flatConfig.selectedPages,
+      selectedPages: safeParseJSON<string[]>(pagesObj.selectedPages || flatConfig.selectedPages,
         typeDefaults?.pages || DEFAULT_PAGE_MANAGEMENT.selectedPages),
-      customPages: safeParseJSON<string[]>(flatConfig.customPages, DEFAULT_PAGE_MANAGEMENT.customPages),
+      customPages: safeParseJSON<string[]>(pagesObj.customPages || flatConfig.customPages, DEFAULT_PAGE_MANAGEMENT.customPages),
     },
 
     // ========== PAYMENTS ==========
     payments: {
-      paymentOptions: safeParseJSON<string[]>(flatConfig.paymentOptions, DEFAULT_PAYMENT_AND_OFFERS.paymentOptions),
-      offers: safeParseJSON(flatConfig.offers, DEFAULT_PAYMENT_AND_OFFERS.offers),
-      offerBanner: flatConfig.offerBanner
-        ? safeParseJSON(flatConfig.offerBanner, DEFAULT_PAYMENT_AND_OFFERS.offerBanner)
+      paymentOptions: safeParseJSON<string[]>(paymentsObj.paymentOptions || flatConfig.paymentOptions, DEFAULT_PAYMENT_AND_OFFERS.paymentOptions),
+      offers: safeParseJSON(paymentsObj.offers || flatConfig.offers, DEFAULT_PAYMENT_AND_OFFERS.offers),
+      offerBanner: (paymentsObj.offerBanner || flatConfig.offerBanner)
+        ? safeParseJSON(paymentsObj.offerBanner || flatConfig.offerBanner, DEFAULT_PAYMENT_AND_OFFERS.offerBanner)
         : DEFAULT_PAYMENT_AND_OFFERS.offerBanner,
     },
 
