@@ -340,7 +340,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </div>
       )}
 
-      {/* Reservierungsbutton */}
+      {/* Reservierungsbuttonn */}
       {features.reservationsEnabled && (
         <div className="mt-8 md:mt-12 mb-6 md:mb-10 max-w-md mx-auto">
           <button
