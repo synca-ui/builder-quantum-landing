@@ -4,6 +4,7 @@
  * ✅ Pixel-perfekte Visual Parity mit TemplatePreviewContent.tsx
  * ✅ Nutzt Shared Components (Navigation, DishCard, DishModal, OpeningHours, MenuOverlay)
  * ✅ CSS Variable Injection via StyleInjector
+ * ✅ Template Tokens Integration
  * ✅ Mobile & Desktop Responsive Design
  * ✅ Zero Syntax Errors
  */
@@ -24,7 +25,8 @@ import {
 } from "lucide-react";
 import type { Configuration, MenuItem, OpeningHours as OpeningHoursType } from "@/types/domain";
 import { injectGlobalStyles } from "@/lib/styleInjector";
-import { normalizeImageSrc, getPageLabel } from "@/lib/helpers"; // ✅ Helper-Import
+import { getTemplateTokens, getVisualConfig, TemplateTokens } from "@/lib/templateTokens";
+import { normalizeImageSrc, getPageLabel } from "@/lib/helpers";
 
 // ============================================
 // SHARED COMPONENTS - 100% Visual Parity
@@ -34,8 +36,8 @@ import { MenuOverlay } from "@/components/shared/MenuOverlay";
 import { DishCard } from "@/components/shared/DishCard";
 import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
-import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
-import { CategoryFilter } from "@/components/shared/CategoryFilter"; // ✅ CategoryFilter Component
+import { Hero } from "@/components/shared/Hero";
+import { CategoryFilter } from "@/components/shared/CategoryFilter";
 
 interface AppRendererProps {
   config: any; // Akzeptiert flache DB-Daten oder verschachtelte Configuration
@@ -118,15 +120,39 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
   const { business, design, content, features, contact, pages, payments } = config;
 
-  // ✅ CSS VARIABLE INJECTION - Injiziert Template-spezifische Styles
+  // ✅ TEMPLATE TOKENS INTEGRATION
+  // Load template-specific tokens (colors, spacing, typography)
+  const templateTokens = useMemo(
+    () => getTemplateTokens(design.template),
+    [design.template]
+  );
+
+  const visualConfig = useMemo(
+    () => getVisualConfig(design.template),
+    [design.template]
+  );
+
+  // ✅ MERGE TEMPLATE TOKENS WITH USER OVERRIDES
+  // User config has priority, but template tokens provide defaults
+  const finalColors = useMemo(() => ({
+    primary: design.primaryColor || templateTokens.colors.primary,
+    secondary: design.secondaryColor || templateTokens.colors.secondary,
+    background: design.backgroundColor || templateTokens.colors.background,
+    text: design.fontColor || templateTokens.colors.text,
+    accent: templateTokens.colors.accent, // Always from template
+    border: templateTokens.colors.border, // Always from template
+    price: design.priceColor || templateTokens.colors.primary,
+  }), [design.primaryColor, templateTokens.colors.primary, design.secondaryColor, templateTokens.colors.secondary, design.backgroundColor, templateTokens.colors.background, design.fontColor, templateTokens.colors.text, templateTokens.colors.accent, templateTokens.colors.border, design.priceColor]);
+
+  // ✅ CSS VARIABLE INJECTION - Inject template-specific styles
   useEffect(() => {
     injectGlobalStyles({
       template: design.template,
-      primaryColor: design.primaryColor,
-      secondaryColor: design.secondaryColor,
-      backgroundColor: design.backgroundColor,
-      fontColor: design.fontColor,
-      priceColor: design.priceColor,
+      primaryColor: finalColors.primary,
+      secondaryColor: finalColors.secondary,
+      backgroundColor: finalColors.background,
+      fontColor: finalColors.text,
+      priceColor: finalColors.price,
     });
 
     return () => {
@@ -136,7 +162,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         styleElement.remove();
       }
     };
-  }, [design.template, design.primaryColor, design.secondaryColor, design.backgroundColor, design.fontColor, design.priceColor]);
+  }, [design.template, finalColors]);
 
   // Local State
   const [menuOpen, setMenuOpen] = useState(false);
@@ -252,14 +278,24 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     return content.menuItems.filter((item: any) => item.category === activeMenuCategory);
   }, [content.menuItems, activeMenuCategory]);
 
-  // Template-spezifische Styles mit Desktop-Optimierung
-  const styles = useMemo(() => ({
-    wrapper: { backgroundColor: design.backgroundColor, color: design.fontColor },
-    page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
-    titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
-    bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
-    nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
-  }), [design.backgroundColor, design.fontColor]);
+  // Template-spezifische Styles mit Desktop-Optimierung und Token-Integration
+  const styles = useMemo(() => {
+    const spacing = templateTokens.spacing;
+    const typography = templateTokens.typography;
+
+    return {
+      wrapper: {
+        backgroundColor: finalColors.background,
+        color: finalColors.text
+      },
+      page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
+      // Use CSS variables for title sizing - set via styleInjector
+      titleClass: `maitr-title text-3xl md:text-5xl lg:text-6xl`,
+      // Use CSS variables for body sizing
+      bodyClass: `maitr-body text-sm md:text-base`,
+      nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
+    };
+  }, [templateTokens.spacing, templateTokens.typography, finalColors.background, finalColors.text]);
 
   // ============================================
   // RENDER FUNCTIONS
@@ -271,35 +307,28 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       <Hero
         slogan={business.slogan || business.name}
         description={business.uniqueDescription || "Willkommen in unserem Geschäft!"}
-        primaryColor={design.primaryColor}
-        fontColor={design.fontColor}
-        backgroundColor={design.backgroundColor}
+        primaryColor={finalColors.primary}
+        fontColor={finalColors.text}
+        backgroundColor={finalColors.background}
         onlineOrdering={features.onlineOrderingEnabled}
         reservationsEnabled={features.reservationsEnabled}
         reservationButtonColor={features.reservationButtonColor}
         reservationButtonTextColor={features.reservationButtonTextColor}
-        reservationButtonShape={features.reservationButtonShape}
-        onOrderClick={() => navigateToPage("menu")}
-        onReservationClick={() => navigateToPage("reservations")}
-        isPreview={false}
+        reservationButtonShape={features.reservationButtonShape as "rounded" | "pill" | "square"}
       />
 
-      {/* Highlights Section - NUTZT DishCard Shared Component */}
+      {/* Highlights / Featured Items */}
       {content.menuItems.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4 md:mb-8 px-1">
-            <h3
-              className="uppercase tracking-widest font-bold opacity-60 text-[10px] md:text-xs"
-              style={{ color: design.fontColor }}
-            >
-              Highlights
-            </h3>
-            <span
-              className="text-[10px] md:text-xs font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1 transition-opacity"
+        <div className="space-y-6 md:space-y-8">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl md:text-2xl font-bold">Highlights</h3>
+            <button
               onClick={() => navigateToPage("menu")}
+              className="flex items-center gap-2 text-sm md:text-base font-medium hover:gap-3 transition-all"
+              style={{ color: finalColors.text }}
             >
-              Alle anzeigen <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-            </span>
+              Alle anzeigen <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
@@ -324,13 +353,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                 <DishCard
                   key={item.id || i}
                   item={item}
-                  fontColor={design.fontColor}
-                  priceColor={design.priceColor}
-                  primaryColor={design.primaryColor}
-                  backgroundColor={design.backgroundColor}
-                  template={design.template}
-                  onlineOrdering={features.onlineOrderingEnabled}
                   onClick={() => openDishModal(item)}
+                  fontColor={finalColors.text}
+                  priceColor={finalColors.price}
+                  primaryColor={finalColors.primary}
+                  backgroundColor={finalColors.background}
+                  onlineOrdering={features.onlineOrderingEnabled}
                   onAddToCart={addToCart}
                   isPreview={false}
                 />
@@ -340,32 +368,27 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </div>
       )}
 
-      {/* Reservierungsbutton */}
+      {/* Reservierungen CTA (wenn aktiviert) */}
       {features.reservationsEnabled && (
-        <div className="mt-8 md:mt-12 mb-6 md:mb-10 max-w-md mx-auto">
+        <div className="text-center p-8 md:p-12 rounded-2xl border border-current/10 bg-white/5 backdrop-blur-sm space-y-4 shadow-sm">
+          <CalendarCheck className="w-12 h-12 md:w-16 md:h-16 mx-auto opacity-80" />
+          <h3 className="text-xl md:text-2xl font-bold">Jetzt Tisch reservieren</h3>
+          <p className={`${styles.bodyClass} opacity-70 max-w-md mx-auto`}>
+            Sichern Sie sich Ihren Platz – schnell und unkompliziert online buchen
+          </p>
           <button
+            onClick={() => navigateToPage("reservations")}
             className="w-full py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
             style={{
               backgroundColor: features.reservationButtonColor,
               color: features.reservationButtonTextColor,
               borderRadius: features.reservationButtonShape === "pill" ? "9999px" : features.reservationButtonShape === "square" ? "0.5rem" : "0.75rem",
             }}
-            onClick={() => navigateToPage("reservations")}
           >
-            Tisch reservieren
+            Zur Reservierung
           </button>
         </div>
       )}
-
-      {/* Öffnungszeiten & Location - NUTZT OpeningHours Shared Component */}
-      <OpeningHours
-        hours={content.openingHours as OpeningHoursType}
-        location={business.location}
-        fontColor={design.fontColor}
-        expanded={hoursExpanded}
-        onExpandChange={setHoursExpanded}
-        isPreview={false}
-      />
     </div>
   );
 
@@ -373,17 +396,14 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300">
       <h2 className={styles.titleClass}>Speisekarte</h2>
 
-      {/* ✅ CategoryFilter Component - Shared Component statt inline Code */}
+      {/* ✅ CategoryFilter Component */}
       {allCategories.length > 0 && (
         <CategoryFilter
           categories={allCategories}
           activeCategory={activeMenuCategory}
           onCategoryChange={setActiveMenuCategory}
-          fontColor={design.fontColor}
-          backgroundColor={design.backgroundColor}
-          allLabel="Alle"
-          isPreview={false}
-          className="md:justify-center"
+          fontColor={finalColors.text}
+          backgroundColor={finalColors.background}
         />
       )}
 
@@ -415,71 +435,79 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   );
 
   const renderContactPage = () => (
-    <div className="space-y-8 md:space-y-12 animate-in fade-in duration-300">
+    <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300">
       <h2 className={styles.titleClass}>Kontakt</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        {/* Linke Spalte: Kontaktdaten */}
-        <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm">
-          <h3 className="font-bold text-lg md:text-xl mb-6">Kontaktinformationen</h3>
-          <div className="space-y-6">
-            {business.location && (
-              <div className="flex items-start gap-4">
-                <div className="mt-1 p-2 md:p-3 bg-current/5 rounded-full">
-                  <MapPin className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <div>
-                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">Adresse</div>
-                  <div className={styles.bodyClass}>{business.location}</div>
-                </div>
+      <div className="grid gap-6 md:gap-8 max-w-3xl mx-auto">
+        {/* Location */}
+        {business.location && (
+          <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="mt-1 p-2 md:p-3 bg-current/5 rounded-full">
+                <MapPin className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-            )}
-            {contact.phone && (
-              <div className="flex items-center gap-4">
-                <div className="p-2 md:p-3 bg-current/5 rounded-full">
-                  <Phone className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <div>
-                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">Telefon</div>
-                  <div className={styles.bodyClass}>{contact.phone}</div>
-                </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-base md:text-lg mb-1">Standort</h3>
+                <div className={styles.bodyClass}>{business.location}</div>
               </div>
-            )}
-            {contact.email && (
-              <div className="flex items-center gap-4">
-                <div className="p-2 md:p-3 bg-current/5 rounded-full">
-                  <Mail className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <div>
-                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">E-Mail</div>
-                  <div className={styles.bodyClass}>{contact.email}</div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Rechte Spalte: Öffnungszeiten */}
+        {/* Phone */}
+        {contact.phone && (
+          <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 backdrop-blur-sm shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="p-2 md:p-3 bg-current/5 rounded-full">
+                <Phone className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-base md:text-lg mb-1">Telefon</h3>
+                <div className={styles.bodyClass}>{contact.phone}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email */}
+        {contact.email && (
+          <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 backdrop-blur-sm shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="p-2 md:p-3 bg-current/5 rounded-full">
+                <Mail className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-base md:text-lg mb-1">E-Mail</h3>
+                <div className={styles.bodyClass}>{contact.email}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Opening Hours */}
         <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm">
-          <h3 className="font-bold text-lg md:text-xl mb-6 flex items-center gap-2">
-            <Clock className="w-5 h-5 md:w-6 md:h-6 opacity-70" /> Öffnungszeiten
-          </h3>
-          <div className="space-y-2 md:space-y-3 opacity-90">
-            {Object.keys(content.openingHours).length > 0 ? (
-              Object.entries(content.openingHours).map(([day, hours]: any) => (
-                <div
-                  key={day}
-                  className="flex justify-between text-xs md:text-sm py-2 md:py-3 border-b border-current/5 last:border-0"
-                >
-                  <span className="capitalize opacity-80 font-medium">{day}</span>
-                  <span className="font-bold">
-                    {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="text-xs md:text-sm opacity-60 italic">Keine Zeiten hinterlegt.</div>
-            )}
+          <div className="flex items-start gap-4">
+            <div className="p-2 md:p-3 bg-current/5 rounded-full">
+              <Clock className="w-5 h-5 md:w-6 md:h-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-base md:text-lg mb-4">Öffnungszeiten</h3>
+              {Object.keys(content.openingHours).length > 0 ? (
+                Object.entries(content.openingHours).map(([day, hours]) => (
+                  <div
+                    key={day}
+                    className="flex justify-between py-2 border-b border-current/5 last:border-b-0 text-xs md:text-sm"
+                  >
+                    <span className="capitalize opacity-80 font-medium">{day}</span>
+                    <span className="font-bold">
+                      {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs md:text-sm opacity-60 italic">Keine Zeiten hinterlegt.</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -543,9 +571,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       <div className="text-center">
         <div
           className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: `${design.primaryColor}20` }}
+          style={{ backgroundColor: `${finalColors.primary}20` }}
         >
-          <CalendarCheck className="w-8 h-8 md:w-10 md:h-10" style={{ color: design.primaryColor }} />
+          <CalendarCheck className="w-8 h-8 md:w-10 md:h-10" style={{ color: finalColors.primary }} />
         </div>
         <h2 className={styles.titleClass}>Reservierung</h2>
         <p className={`${styles.bodyClass} opacity-70`}>Buchen Sie Ihren Tisch online</p>
@@ -634,8 +662,8 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       {/* ✅ MENU OVERLAY - Shared Component statt Inline Code */}
       <MenuOverlay
         isOpen={menuOpen}
-        backgroundColor={design.backgroundColor}
-        fontColor={design.fontColor}
+        backgroundColor={finalColors.background}
+        fontColor={finalColors.text}
         menuItems={navigationMenu}
         onClose={closeMenu}
         onNavigate={navigateToPage}
@@ -652,10 +680,10 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       <DishModal
         dish={selectedDish}
         currentImageIndex={currentImageIndex}
-        fontColor={design.fontColor}
-        backgroundColor={design.backgroundColor}
-        priceColor={design.priceColor}
-        primaryColor={design.primaryColor}
+        fontColor={finalColors.text}
+        backgroundColor={finalColors.background}
+        priceColor={finalColors.price}
+        primaryColor={finalColors.primary}
         onlineOrdering={features.onlineOrderingEnabled}
         onClose={closeDishModal}
         onPrevImage={prevImage}
@@ -674,4 +702,3 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 };
 
 export default AppRenderer;
-
