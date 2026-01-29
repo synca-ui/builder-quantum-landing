@@ -85,6 +85,9 @@ export const FeatureFlagsSchema = z.object({
   onlineOrderingEnabled: z.boolean().default(false),
   onlineStoreEnabled: z.boolean().default(false),
   teamAreaEnabled: z.boolean().default(false),
+  reservationButtonColor: z.string().optional(),
+  reservationButtonTextColor: z.string().optional(),
+  reservationButtonShape: z.string().optional(),
 });
 
 // Contact Info Schema
