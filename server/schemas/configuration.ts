@@ -48,11 +48,12 @@ export const MenuItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   description: z.string().optional(),
-  price: z.number().positive().optional(),
+  price: z.coerce.number().positive().optional(), // ✅ Konvertiert "18.90" → 18.90
   imageUrl: z.string().url().optional().or(z.string().length(0)),
   emoji: z.string().optional(),
   available: z.boolean().optional().default(true),
   category: z.string().optional(),
+  isHighlight: z.boolean().optional(), // ✅ Fehlende Property hinzugefügt
 });
 
 // Gallery Image Schema
@@ -151,18 +152,16 @@ export const IntegrationConfigSchema = z.record(z.any());
 export const ConfigurationSchema = z
   .object({
     id: z.string().uuid().optional(),
-    userId: z.string().optional(), // Optional, da vom Backend aus Auth-Context gesetzt
+    userId: z.string().min(1, "User ID is required"),
     business: BusinessInfoSchema,
     design: DesignConfigSchema,
     content: ContentDataSchema,
     features: FeatureFlagsSchema,
     contact: ContactInfoSchema,
-    publishing: PublishingInfoSchema.optional(),
+    publishing: PublishingInfoSchema,
     pages: PageManagementSchema,
     payments: PaymentAndOffersSchema,
     integrations: IntegrationConfigSchema.optional(),
-    status: z.enum(["draft", "published", "archived"]).optional(),
-    publishedUrl: z.string().optional(),
   })
   .strict();
 
@@ -316,3 +315,4 @@ export function validateLegacyConfiguration(
 export function safeParse(data: unknown) {
   return ConfigurationSchema.safeParse(data);
 }
+
