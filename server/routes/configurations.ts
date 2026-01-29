@@ -79,7 +79,13 @@ export async function saveConfiguration(req: Request, res: Response) {
 
   try {
     // 1. ✅ WICHTIG: Nutze das NEUE ConfigurationSchema (nicht LegacyConfigurationSchema!)
-    const parsed = ConfigurationSchema.safeParse(req.body);
+    // Setze die userId aus dem Auth-Context, da das Frontend einen leeren String schickt
+    const bodyWithUserId = {
+      ...req.body,
+      userId: userId, // Überschreibe mit dem echten userId aus Auth
+    };
+
+    const parsed = ConfigurationSchema.safeParse(bodyWithUserId);
     if (!parsed.success) {
       await audit(
         "config_update_failed",

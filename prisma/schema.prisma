@@ -188,11 +188,17 @@ model Configuration {
   secondaryColor  String    @default("#6B7280")
   fontFamily      String    @default("sans-serif")
   backgroundColor String    @default("#FFFFFF")
+  fontColor       String    @default("#000000")
+  priceColor      String?
+  headerFontColor String?
+  headerFontSize  String?
+  headerBackgroundColor String?
 
   // Content
   menuItems       Json      @default("[]")
   gallery         Json      @default("[]")
   openingHours    Json      @default("{}")
+  homepageDishImageVisibility String?
 
   // Features
   reservationsEnabled Boolean @default(false)
@@ -200,6 +206,9 @@ model Configuration {
   onlineOrdering  Boolean   @default(false)
   onlineStore     Boolean   @default(false)
   teamArea        Boolean   @default(false)
+  reservationButtonColor String?
+  reservationButtonTextColor String?
+  reservationButtonShape String?
 
   // Contact & Social
   contactMethods  Json      @default("[]")
@@ -217,6 +226,7 @@ model Configuration {
   // Extra
   domainName      String?
   selectedDomain  String?
+  hasDomain       Boolean   @default(false)
   paymentOptions  Json      @default("[]")
   offers          Json      @default("[]")
 

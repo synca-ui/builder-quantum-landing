@@ -151,16 +151,18 @@ export const IntegrationConfigSchema = z.record(z.any());
 export const ConfigurationSchema = z
   .object({
     id: z.string().uuid().optional(),
-    userId: z.string().min(1, "User ID is required"),
+    userId: z.string().optional(), // Optional, da vom Backend aus Auth-Context gesetzt
     business: BusinessInfoSchema,
     design: DesignConfigSchema,
     content: ContentDataSchema,
     features: FeatureFlagsSchema,
     contact: ContactInfoSchema,
-    publishing: PublishingInfoSchema,
+    publishing: PublishingInfoSchema.optional(),
     pages: PageManagementSchema,
     payments: PaymentAndOffersSchema,
     integrations: IntegrationConfigSchema.optional(),
+    status: z.enum(["draft", "published", "archived"]).optional(),
+    publishedUrl: z.string().optional(),
   })
   .strict();
 
@@ -314,4 +316,3 @@ export function validateLegacyConfiguration(
 export function safeParse(data: unknown) {
   return ConfigurationSchema.safeParse(data);
 }
-
