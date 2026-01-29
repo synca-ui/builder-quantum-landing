@@ -304,21 +304,39 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {content.menuItems.slice(0, 6).map((item: MenuItem, i: number) => (
-              <DishCard
-                key={item.id || i}
-                item={item}
-                fontColor={design.fontColor}
-                priceColor={design.priceColor}
-                primaryColor={design.primaryColor}
-                backgroundColor={design.backgroundColor}
-                template={design.template}
-                onlineOrdering={features.onlineOrderingEnabled}
-                onClick={() => openDishModal(item)}
-                onAddToCart={addToCart}
-                isPreview={false}
-              />
-            ))}
+            {(() => {
+              // ✅ Smart Highlight-Logik: Zeige markierte Highlights, fülle mit zufälligen auf
+              const selectedHighlights = content.menuItems.filter(
+                (item: MenuItem) => (item as any).isHighlight
+              );
+
+              const remainingSlots = Math.max(0, 3 - selectedHighlights.length);
+
+              // Zufällige Gerichte zum Auffüllen
+              const randomFiller = content.menuItems
+                .filter((item: MenuItem) => !(item as any).isHighlight)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, remainingSlots);
+
+              // Kombiniere und limitiere auf 3
+              const highlightsToShow = [...selectedHighlights, ...randomFiller].slice(0, 3);
+
+              return highlightsToShow.map((item: MenuItem, i: number) => (
+                <DishCard
+                  key={item.id || i}
+                  item={item}
+                  fontColor={design.fontColor}
+                  priceColor={design.priceColor}
+                  primaryColor={design.primaryColor}
+                  backgroundColor={design.backgroundColor}
+                  template={design.template}
+                  onlineOrdering={features.onlineOrderingEnabled}
+                  onClick={() => openDishModal(item)}
+                  onAddToCart={addToCart}
+                  isPreview={false}
+                />
+              ));
+            })()}
           </div>
         </div>
       )}
@@ -565,6 +583,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         style={{
           backgroundColor: features.reservationButtonColor,
           color: features.reservationButtonTextColor,
+          borderRadius: features.reservationButtonShape === "pill" ? "9999px" : features.reservationButtonShape === "square" ? "0.5rem" : "0.75rem",
         }}
       >
         Reservierung anfragen

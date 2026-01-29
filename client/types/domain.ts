@@ -67,6 +67,7 @@ export interface MenuItem {
   category?: string;
   image?: { url: string; alt?: string; file?: File };
   images?: { url: string; alt?: string; file?: File }[];
+  isHighlight?: boolean; // ✅ NEU: Markiert Dish als Highlight auf der Startseite
 }
 
 export interface GalleryImage {

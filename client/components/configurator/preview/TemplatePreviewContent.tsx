@@ -352,21 +352,39 @@ export function TemplatePreviewContent() {
           </div>
 
           <div className="space-y-3">
-            {displayItems.slice(0, 3).map((item: MenuItem, i: number) => (
-              <DishCard
-                key={item.id || i}
-                item={item}
-                fontColor={fontColor}
-                priceColor={priceColor}
-                primaryColor={primaryColor}
-                backgroundColor={backgroundColor}
-                template={template}
-                onlineOrdering={onlineOrdering}
-                onClick={() => openDishModal(item)}
-                onAddToCart={addToCart}
-                isPreview={true}
-              />
-            ))}
+            {(() => {
+              // ✅ Smart Highlight-Logik: Zeige markierte Highlights, fülle mit zufälligen auf
+              const selectedHighlights = displayItems.filter(
+                (item: MenuItem) => (item as any).isHighlight
+              );
+
+              const remainingSlots = Math.max(0, 3 - selectedHighlights.length);
+
+              // Zufällige Gerichte zum Auffüllen
+              const randomFiller = displayItems
+                .filter((item: MenuItem) => !(item as any).isHighlight)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, remainingSlots);
+
+              // Kombiniere und limitiere auf 3
+              const highlightsToShow = [...selectedHighlights, ...randomFiller].slice(0, 3);
+
+              return highlightsToShow.map((item: MenuItem, i: number) => (
+                <DishCard
+                  key={item.id || i}
+                  item={item}
+                  fontColor={fontColor}
+                  priceColor={priceColor}
+                  primaryColor={primaryColor}
+                  backgroundColor={backgroundColor}
+                  template={template}
+                  onlineOrdering={onlineOrdering}
+                  onClick={() => openDishModal(item)}
+                  onAddToCart={addToCart}
+                  isPreview={true}
+                />
+              ));
+            })()}
             {reservationsEnabled && (
               <div className="mt-4 w-full px-4">
                 <ReservationButton

@@ -743,6 +743,52 @@ export function MenuProductsStep({
                   {t("menu.images")}
                 </div>
               </div>
+
+              {/* ✅ HIGHLIGHT CHECKBOX */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={(item as any).isHighlight || false}
+                    onChange={(e) => {
+                      const currentHighlights = menuItems.filter(
+                        (d) => (d as any).isHighlight
+                      ).length;
+
+                      // Verhindere mehr als 3 Highlights
+                      if (e.target.checked && currentHighlights >= 3) {
+                        return;
+                      }
+
+                      actions.content.updateMenuItem(item.id, {
+                        isHighlight: e.target.checked,
+                      } as any);
+                    }}
+                    disabled={
+                      !(item as any).isHighlight &&
+                      menuItems.filter((d) => (d as any).isHighlight).length >= 3
+                    }
+                    className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-semibold text-gray-700 group-hover:text-purple-600 transition-colors">
+                      Als Highlight anzeigen
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Wird prominent auf der Startseite angezeigt
+                    </p>
+                  </div>
+                  {menuItems.filter((d) => (d as any).isHighlight).length >= 3 &&
+                    !(item as any).isHighlight && (
+                      <Badge
+                        variant="outline"
+                        className="text-xs bg-amber-50 border-amber-300 text-amber-700"
+                      >
+                        Max. 3 erreicht
+                      </Badge>
+                    )}
+                </label>
+              </div>
             </Card>
           ))}
         </div>
