@@ -74,6 +74,7 @@ export interface GalleryImage {
   url: string;
   title?: string;
   alt?: string;
+  file?: File;
 }
 
 export interface OpeningHours {

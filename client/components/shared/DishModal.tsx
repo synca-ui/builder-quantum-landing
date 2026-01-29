@@ -13,7 +13,7 @@
  */
 
 import React, { memo, useCallback, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Camera } from "lucide-react";
 import type { MenuItem } from '@/types/domain';
 
 // ============================================
@@ -54,16 +54,36 @@ export interface DishModalProps {
 // ============================================
 
 function normalizeImageSrc(img: unknown): string {
+  // Null/Undefined
   if (!img) return '/placeholder.svg';
-  if (typeof img === 'string') return img;
 
-  const imgObj = img as { url?: string; file?: File };
-  if (imgObj.url) return imgObj.url;
-
-  if (typeof File !== 'undefined' && imgObj.file instanceof File) {
-    return URL.createObjectURL(imgObj.file);
+  // Direkter String
+  if (typeof img === 'string') {
+    if (img.trim() === '') return '/placeholder.svg';
+    return img;
   }
 
+  // Object mit url Property
+  if (typeof img === 'object') {
+    const imgObj = img as { url?: string; file?: File };
+
+    // url Property
+    if (imgObj.url && typeof imgObj.url === 'string') {
+      return imgObj.url;
+    }
+
+    // File Object (Browser)
+    if (typeof File !== 'undefined' && imgObj.file instanceof File) {
+      try {
+        return URL.createObjectURL(imgObj.file);
+      } catch (e) {
+        console.error('[normalizeImageSrc] File to URL failed:', e);
+      }
+    }
+  }
+
+  // Fallback
+  console.warn('[normalizeImageSrc] Could not normalize:', img);
   return '/placeholder.svg';
 }
 
@@ -135,26 +155,58 @@ export const DishModal = memo(function DishModal({
 
   // Bilder sammeln
   const images: string[] = [];
-  if (dish.imageUrl) images.push(dish.imageUrl);
-  if (dish.image) images.push(normalizeImageSrc(dish.image));
-  if (dish.images) {
-    dish.images.forEach(img => images.push(normalizeImageSrc(img)));
+
+// Priorität 1: imageUrl (direkter String)
+  if (dish.imageUrl && typeof dish.imageUrl === 'string' && dish.imageUrl.trim() !== '') {
+    images.push(dish.imageUrl);
   }
 
+// Priorität 2: image (kann Object oder String sein)
+  if (dish.image) {
+    const imgSrc = normalizeImageSrc(dish.image);
+    if (imgSrc && imgSrc !== '/placeholder.svg' && !images.includes(imgSrc)) {
+      images.push(imgSrc);
+    }
+  }
+
+// Priorität 3: images Array
+  if (dish.images && Array.isArray(dish.images) && dish.images.length > 0) {
+    dish.images.forEach(img => {
+      const imgSrc = normalizeImageSrc(img);
+      if (imgSrc && imgSrc !== '/placeholder.svg' && !images.includes(imgSrc)) {
+        images.push(imgSrc);
+      }
+    });
+  }
+
+// Debug Log
+  console.log('[DishModal] Images:', {
+    dish: dish.name,
+    rawImageUrl: dish.imageUrl,
+    rawImage: dish.image,
+    rawImagesArray: dish.images,
+    normalizedImages: images,
+  });
+
+  const hasImages = images.length > 0;
   const hasMultipleImages = images.length > 1;
   const currentImage = images[currentImageIndex] || '/placeholder.svg';
 
-  // Preis formatieren
+// Preis formatieren
   const formattedPrice = typeof dish.price === 'number'
     ? `${dish.price.toFixed(2)}€`
     : dish.price
       ? `${dish.price}€`
       : '';
 
+// ============================================
+// RENDER: Modal mit Bildern
+// ============================================
+
   return (
     <div
       className="absolute inset-0 z-[70] bg-black/70 backdrop-blur-md flex items-end animate-in fade-in duration-200"
-      onClick={handleBackdropClick}
+      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`${dish.name} Details`}
@@ -169,26 +221,46 @@ export const DishModal = memo(function DishModal({
           borderTopRightRadius: 'var(--radius-modal, 24px)',
           boxShadow: 'var(--shadow-modal, 0 -10px 40px rgba(0,0,0,0.2))',
         }}
-        onClick={handleContentClick}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Grabber Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div
-            className="w-12 h-1.5 bg-gray-300 rounded-full"
+            className="w-12 h-1.5 rounded-full"
             style={{ backgroundColor: `${fontColor}30` }}
           />
         </div>
 
-        {/* Image Carousel */}
-        {images.length > 0 && (
-          <div className="relative w-full h-48 overflow-hidden">
+        {/* ✅ FIX: Image Section mit Close Button */}
+        {hasImages ? (
+          <div className="relative w-full h-48 overflow-hidden bg-gray-900">
             <img
               src={currentImage}
               alt={dish.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('[DishModal] Image load error:', currentImage);
+                e.currentTarget.src = '/placeholder.svg';
+              }}
             />
 
-            {/* Image Navigation (wenn mehrere Bilder) */}
+            {/* ✅ Close Button - Höchste Priorität */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="absolute top-3 right-3 w-10 h-10 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black/90 transition-colors shadow-xl z-[80]"
+              aria-label="Schließen"
+              style={{
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Navigation Buttons (wenn mehrere Bilder) */}
             {hasMultipleImages && (
               <>
                 {/* Previous Button */}
@@ -197,7 +269,7 @@ export const DishModal = memo(function DishModal({
                     e.stopPropagation();
                     onPrevImage?.();
                   }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors z-[70]"
                   aria-label="Vorheriges Bild"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -209,14 +281,14 @@ export const DishModal = memo(function DishModal({
                     e.stopPropagation();
                     onNextImage?.();
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors z-[70]"
                   aria-label="Nächstes Bild"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
 
                 {/* Dots Indicator */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-[70]">
                   {images.map((_, idx) => (
                     <button
                       key={idx}
@@ -225,20 +297,37 @@ export const DishModal = memo(function DishModal({
                         onSetImageIndex?.(idx);
                       }}
                       className={`h-2 rounded-full transition-all ${
-                        idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/50 w-2'
+                        idx === currentImageIndex
+                          ? 'bg-white w-4'
+                          : 'bg-white/50 w-2'
                       }`}
-                      aria-label={`Bild ${idx + 1}`}
+                      aria-label={`Bild ${idx + 1} von ${images.length}`}
                     />
                   ))}
                 </div>
               </>
             )}
+          </div>
+        ) : (
+          // ✅ Fallback wenn keine Bilder vorhanden
+          <div className="relative w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <Camera className="w-12 h-12 mx-auto mb-2 opacity-30" />
+              <p className="text-sm font-medium opacity-50">Kein Bild verfügbar</p>
+            </div>
 
-            {/* Close Button */}
+            {/* ✅ Close Button auch ohne Bild */}
             <button
-              onClick={onClose}
-              className="absolute top-3 right-3 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="absolute top-3 right-3 w-10 h-10 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black/90 transition-colors shadow-xl z-[80]"
               aria-label="Schließen"
+              style={{
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              }}
             >
               <X className="w-5 h-5" />
             </button>
@@ -266,8 +355,8 @@ export const DishModal = memo(function DishModal({
                     borderRadius: 'var(--radius-button, 4px)',
                   }}
                 >
-                  {dish.category}
-                </span>
+                {dish.category}
+              </span>
               )}
             </div>
 
@@ -275,8 +364,8 @@ export const DishModal = memo(function DishModal({
               className="text-2xl font-bold whitespace-nowrap"
               style={{ color: priceColor }}
             >
-              {formattedPrice}
-            </span>
+            {formattedPrice}
+          </span>
           </div>
 
           {/* Description */}
@@ -306,7 +395,13 @@ export const DishModal = memo(function DishModal({
           {/* Add to Cart Button */}
           {onlineOrdering && dish.available !== false && (
             <button
-              onClick={handleAddToCart}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (dish && onAddToCart) {
+                  onAddToCart(dish);
+                  onClose();
+                }
+              }}
               className="w-full py-3 font-bold text-white shadow-lg mt-4 transition-transform active:scale-[0.98]"
               style={{
                 backgroundColor: primaryColor,
@@ -318,20 +413,21 @@ export const DishModal = memo(function DishModal({
             </button>
           )}
 
-          {/* Close Button (Alternative) */}
-          {!onlineOrdering && (
-            <button
-              onClick={onClose}
-              className="w-full py-3 font-medium border transition-colors mt-4"
-              style={{
-                borderColor: `${fontColor}20`,
-                color: fontColor,
-                borderRadius: 'var(--radius-button, 12px)',
-              }}
-            >
-              Schließen
-            </button>
-          )}
+          {/* Close Button Alternative (für Barrierefreiheit) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="w-full py-3 font-medium border transition-colors mt-2"
+            style={{
+              borderColor: `${fontColor}20`,
+              color: fontColor,
+              borderRadius: 'var(--radius-button, 12px)',
+            }}
+          >
+            Schließen
+          </button>
         </div>
       </div>
     </div>

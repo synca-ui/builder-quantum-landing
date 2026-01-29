@@ -10,7 +10,7 @@
  */
 
 import React, { memo } from 'react';
-import { Menu, X, ShoppingBag, Coffee, Utensils } from 'lucide-react';
+import { Menu, X, ShoppingBag, Coffee, Utensils, Wine, Store } from "lucide-react";
 
 // ============================================
 // TYPES
@@ -112,6 +112,17 @@ export const Navigation = memo(function Navigation({
     onToggleMenu();
   };
 
+  const getBusinessIcon = () => {
+    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+      cafe: Coffee,
+      restaurant: Utensils,
+      bar: Wine,
+      shop: Store,
+      default: ShoppingBag,
+    };
+
+    return iconMap[businessType?.toLowerCase()] || iconMap.default;
+  };
   // Business-Type Icon
   const BusinessIcon = businessType === 'cafe' ? Coffee : Utensils;
 
@@ -128,7 +139,6 @@ export const Navigation = memo(function Navigation({
         backgroundColor: headerBackgroundColor,
         color: headerFontColor,
         borderColor: `${headerFontColor}10`,
-        // CSS-Variable für Backdrop-Blur (Template-abhängig)
         backdropFilter: 'var(--nav-backdrop, none)',
         WebkitBackdropFilter: 'var(--nav-backdrop, none)',
       }}
@@ -136,25 +146,36 @@ export const Navigation = memo(function Navigation({
       {/* Left: Logo + Business Name */}
       <div className="flex items-center gap-2 overflow-hidden">
         {logo ? (
+          // ✅ Echtes Logo
           <img
             src={logo}
             alt={`${businessName} Logo`}
             className="w-8 h-8 shrink-0 object-cover"
             style={{ borderRadius: 'var(--radius-button, 8px)' }}
+            onError={(e) => {
+              console.error('[Navigation] Logo load failed:', logo);
+              // Fallback auf Icon
+              e.currentTarget.style.display = 'none';
+            }}
           />
         ) : (
+          // ✅ FIX: Icon als Placeholder
           <div
-            className="w-8 h-8 shrink-0 flex items-center justify-center"
+            className="w-8 h-8 shrink-0 flex items-center justify-center transition-all hover:scale-110"
             style={{
               backgroundColor: `${headerFontColor}15`,
               borderRadius: 'var(--radius-button, 8px)',
             }}
           >
-            <BusinessIcon className="w-4 h-4" />
+            <BusinessIcon
+              className="w-4 h-4"
+              style={{ color: headerFontColor }}
+            />
           </div>
         )}
+
         <span
-          className={`font-bold cursor-pointer truncate ${fontClass}`}
+          className={`font-bold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`}
           onClick={handleHomeClick}
           style={{ color: headerFontColor }}
         >
@@ -171,16 +192,19 @@ export const Navigation = memo(function Navigation({
         {onlineOrdering && (
           <button
             onClick={handleCartClick}
-            className="relative cursor-pointer p-1 transition-transform active:scale-90"
+            className="relative cursor-pointer p-1 transition-transform active:scale-90 hover:opacity-80"
             aria-label="Warenkorb"
           >
             <ShoppingBag className="w-5 h-5 opacity-90" />
             {cartCount > 0 && (
               <span
-                className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full font-bold"
-                style={{ boxShadow: 'var(--shadow-button, 0 2px 4px rgba(0,0,0,0.1))' }}
+                className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full font-bold"
+                style={{
+                  boxShadow: 'var(--shadow-button, 0 2px 4px rgba(0,0,0,0.1))',
+                  lineHeight: 1,
+                }}
               >
-                {cartCount}
+                {cartCount > 9 ? '9+' : cartCount}
               </span>
             )}
           </button>
@@ -189,7 +213,7 @@ export const Navigation = memo(function Navigation({
         {/* Hamburger Menu Toggle */}
         <button
           onClick={handleMenuToggle}
-          className="p-1 active:scale-90 transition-transform"
+          className="p-1 active:scale-90 transition-transform hover:opacity-80"
           aria-label={menuOpen ? 'Menü schließen' : 'Menü öffnen'}
           aria-expanded={menuOpen}
         >

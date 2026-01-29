@@ -260,7 +260,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
     bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
     nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
-  }), [design.backgroundColor, design.fontColor, fontClass]);
+  }), [design.backgroundColor, design.fontColor]);
 
   // ============================================
   // RENDER FUNCTIONS

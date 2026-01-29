@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +19,6 @@ import {
   useConfiguratorActions,
 } from "@/store/configuratorStore";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -433,7 +432,7 @@ export default function Configurator() {
                   // Push to history before saving
                   actions.history.pushHistory();
                   if (cloudSyncEnabled) {
-                    saveToBackend(actions.data.getFullConfiguration());
+                    saveToBackend(actions.data.getFullConfiguration()).then(() => {});
                   } else {
                     setSaveStatus("saved");
                     setTimeout(() => setSaveStatus("idle"), 2000);

@@ -105,7 +105,8 @@ const COLOR_PRESETS = [
   { primary: "#0891B2", secondary: "#06B6D4", bg: "#ECFEFF", name: "Sky" },
 ];
 
-// --- HELPER: Tooltip Info Icon ---
+
+// --- COMPONENTS ---
 const ColorInfoIcon = ({ tooltipKey }: { tooltipKey: string }) => (
   <Tooltip>
     <TooltipTrigger asChild>
@@ -122,40 +123,53 @@ const ColorInfoIcon = ({ tooltipKey }: { tooltipKey: string }) => (
   </Tooltip>
 );
 
-// --- HELPER COMPONENT mit Debounce ---
-const ColorInput = ({
-  label,
-  value,
-  onChange,
-  tooltipKey,
-}: {
+interface ColorInputProps {
   label: string;
   value: string;
   onChange: (val: string) => void;
   tooltipKey?: string;
-}) => {
+}
+
+export const ColorInput = ({
+                             label,
+                             value,
+                             onChange,
+                             tooltipKey,
+                           }: ColorInputProps) => {
   const [localValue, setLocalValue] = useState(value);
-  const debouncedValue = useDebounce(localValue, 300); // ✅ 300ms Debounce
+  const debouncedValue = useDebounce(localValue, 300);
 
+  // ✅ FIX 1: Sync only when external value changes (one-way binding)
   useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  // ✅ Debounced onChange - nur wenn sich der debounced Wert ändert
-  useEffect(() => {
-    if (debouncedValue !== value && debouncedValue) {
-      onChange(debouncedValue);
+    if (value !== localValue) {
+      setLocalValue(value);
     }
-  }, [debouncedValue, value, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]); // Intentionally excluding localValue
+
+  // ✅ FIX 2: Debounced update with strict comparison + early return
+  useEffect(() => {
+    if (!debouncedValue || debouncedValue === value) {
+      return; // Skip if same value
+    }
+
+    // Only call onChange if value actually changed
+    onChange(debouncedValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValue]); // Intentionally excluding value and onChange
 
   const handleBlur = () => {
-    if (localValue !== value) onChange(localValue);
+    if (localValue && localValue !== value) {
+      onChange(localValue);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.currentTarget.blur();
-      onChange(localValue);
+      if (localValue && localValue !== value) {
+        onChange(localValue);
+      }
     }
   };
 
@@ -166,15 +180,22 @@ const ColorInput = ({
         {tooltipKey && <ColorInfoIcon tooltipKey={tooltipKey} />}
       </label>
       <div className="flex items-center space-x-4">
+        {/* Color Picker - Immediate updates */}
         <div className="relative">
           <input
             type="color"
             value={value || "#000000"}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              const newColor = e.target.value;
+              setLocalValue(newColor);
+              onChange(newColor); // ✅ Immediate update for color picker
+            }}
             className="w-16 h-16 rounded-xl cursor-pointer border-2 border-gray-300 hover:border-teal-400 transition-all hover:scale-105 shadow-sm"
             style={{ WebkitAppearance: "none", padding: "4px" }}
           />
         </div>
+
+        {/* Text Input - Debounced */}
         <div className="flex-1">
           <Input
             value={localValue || ""}
@@ -190,6 +211,8 @@ const ColorInput = ({
     </div>
   );
 };
+
+export default ColorInput;
 
 // --- INTERFACE ---
 interface DesignStepProps {

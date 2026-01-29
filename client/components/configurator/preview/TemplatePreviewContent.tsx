@@ -171,7 +171,7 @@ export function TemplatePreviewContent() {
     }
 
     return menuArray;
-  }, [selectedPages, menuItems, gallery, contactMethods, location, reservationsEnabled, offerBannerEnabled]);
+  }, [location, reservationsEnabled]);
 
   // ==========================================
   // LOCAL STATE
@@ -291,7 +291,7 @@ export function TemplatePreviewContent() {
       default:
         return base;
     }
-  }, [template, backgroundColor, secondaryColor, fontColor, fontClass]);
+  }, []);
 
   // ==========================================
   // CONTENT RENDERERS
@@ -301,16 +301,6 @@ export function TemplatePreviewContent() {
       menuItems.length > 0
         ? menuItems
         : getBusinessTypeDefaults(businessType).menuItems;
-
-    // Kategorie-Liste für Filter
-    const displayCategories = categories.length > 0
-      ? categories
-      : [...new Set(menuItems.map(item => item.category).filter(Boolean))];
-
-    // Gefilterte Menu-Items basierend auf aktiver Kategorie
-    const filteredMenuItems = activeMenuCategory
-      ? menuItems.filter(item => item.category === activeMenuCategory)
-      : menuItems;
 
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -340,20 +330,6 @@ export function TemplatePreviewContent() {
               >
                 Jetzt bestellen
               </button>
-            </div>
-          )}
-
-          {reservationsEnabled && (
-            <div className="mt-4 w-full px-4">
-              <ReservationButton
-                color={reservationButtonColor}
-                textColor={reservationButtonTextColor}
-                shape={reservationButtonShape as "rounded" | "pill" | "square"}
-                className="w-full shadow-lg"
-                onClick={() => navigateToPage("reservations")}
-              >
-                Tisch reservieren
-              </ReservationButton>
             </div>
           )}
         </div>
@@ -391,6 +367,19 @@ export function TemplatePreviewContent() {
                 isPreview={true}
               />
             ))}
+            {reservationsEnabled && (
+              <div className="mt-4 w-full px-4">
+                <ReservationButton
+                  color={reservationButtonColor}
+                  textColor={reservationButtonTextColor}
+                  shape={reservationButtonShape as "rounded" | "pill" | "square"}
+                  className="w-full shadow-lg"
+                  onClick={() => navigateToPage("reservations")}
+                >
+                  Tisch reservieren
+                </ReservationButton>
+              </div>
+            )}
           </div>
         </div>
 
@@ -400,94 +389,133 @@ export function TemplatePreviewContent() {
           location={location}
           fontColor={fontColor}
         />
-
-        {/* ✅ CategoryFilter Component - Shared Component statt inline Code */}
-        {displayCategories.length > 0 && (
-          <CategoryFilter
-            categories={displayCategories.slice(0, 5)}
-            activeCategory={activeMenuCategory}
-            onCategoryChange={setActiveMenuCategory}
-            fontColor={fontColor}
-            backgroundColor={backgroundColor}
-            allLabel="Alle"
-            maxVisible={5}
-            isPreview={true}
-          />
-        )}
-
-        {/* Menu Items - nutzt DishCard Shared Component */}
-        <div className="space-y-4 pb-4">
-          {filteredMenuItems.length > 0 ? (
-            filteredMenuItems.map((item: MenuItem, i: number) => (
-              <DishCard
-                key={item.id || i}
-                item={item}
-                fontColor={fontColor}
-                priceColor={priceColor}
-                primaryColor={primaryColor}
-                backgroundColor={backgroundColor}
-                template={template}
-                onlineOrdering={onlineOrdering}
-                onClick={() => openDishModal(item)}
-                onAddToCart={addToCart}
-                isPreview={true}
-              />
-            ))
-          ) : (
-            <div className="text-center py-8 opacity-50 text-sm">
-              Keine Artikel in dieser Kategorie
-            </div>
-          )}
-        </div>
       </div>
     );
   };
 
   const renderMenuPage = () => {
+    const filteredItems = activeMenuCategory
+      ? menuItems.filter(item => item.category === activeMenuCategory)
+      : menuItems;
+
     return (
-      <div className="space-y-8 animate-in fade-in duration-300">
+      <div className="space-y-6 animate-in fade-in duration-300">
+        {/* Page Title */}
         <h2 className={styles.titleClass}>Speisekarte</h2>
 
-        {/* ✅ CategoryFilter Component - Shared Component für Kategorienavigation */}
+        {/* Category Filter - NUR wenn Kategorien existieren */}
         {categories.length > 0 && (
-          <div className="flex flex-col gap-4">
+          <div className="sticky top-0 z-20 pb-4 -mx-4 px-4">
             <CategoryFilter
               categories={categories}
               activeCategory={activeMenuCategory}
-              onCategoryChange={setActiveMenuCategory}
+              onCategoryChange={(category) => {
+                console.log('[MenuPage] Category changed:', category);
+                setActiveMenuCategory(category);
+              }}
               fontColor={fontColor}
               backgroundColor={backgroundColor}
-              allLabel="Alle Gerichte"
-              maxVisible={10}
+              allLabel="Alle"
+              maxVisible={5}
               isPreview={true}
             />
           </div>
         )}
 
-        {/* Menu Items - nutzt DishCard Shared Component */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {menuItems.length > 0 ? (
-            menuItems.map((item: MenuItem, i: number) => (
-              <DishCard
-                key={item.id || i}
-                item={item}
-                fontColor={fontColor}
-                priceColor={priceColor}
-                primaryColor={primaryColor}
-                backgroundColor={backgroundColor}
-                template={template}
-                onlineOrdering={onlineOrdering}
-                onClick={() => openDishModal(item)}
-                onAddToCart={addToCart}
-                isPreview={true}
-              />
-            ))
+        {/* Menu Items List */}
+        <div className="space-y-3">
+          {filteredItems.length > 0 ? (
+            <>
+              {/* Items nach Kategorie gruppieren (optional) */}
+              {!activeMenuCategory && categories.length > 0 ? (
+                // Gruppierte Ansicht wenn "Alle" ausgewählt
+                categories.map(category => {
+                  const categoryItems = menuItems.filter(item => item.category === category);
+                  if (categoryItems.length === 0) return null;
+
+                  return (
+                    <div key={category} className="space-y-3">
+                      <h3
+                        className="text-lg font-bold mt-6 mb-3 pb-2 border-b"
+                        style={{
+                          color: fontColor,
+                          borderColor: `${fontColor}20`
+                        }}
+                      >
+                        {category}
+                      </h3>
+                      {categoryItems.map((item) => (
+                        <DishCard
+                          key={item.id}
+                          item={item}
+                          fontColor={fontColor}
+                          priceColor={priceColor}
+                          primaryColor={primaryColor}
+                          backgroundColor={backgroundColor}
+                          template={template}
+                          onlineOrdering={onlineOrdering}
+                          showImage={true}
+                          onClick={() => openDishModal(item)}
+                          onAddToCart={addToCart}
+                          isPreview={true}
+                        />
+                      ))}
+                    </div>
+                  );
+                })
+              ) : (
+                // Flache Liste wenn Kategorie ausgewählt
+                filteredItems.map((item) => (
+                  <DishCard
+                    key={item.id}
+                    item={item}
+                    fontColor={fontColor}
+                    priceColor={priceColor}
+                    primaryColor={primaryColor}
+                    backgroundColor={backgroundColor}
+                    template={template}
+                    onlineOrdering={onlineOrdering}
+                    showImage={true}
+                    onClick={() => openDishModal(item)}
+                    onAddToCart={addToCart}
+                    isPreview={true}
+                  />
+                ))
+              )}
+            </>
           ) : (
-            <div className="col-span-full text-center py-8 opacity-50 text-sm">
-              Keine Gerichte in dieser Kategorie
+            // Empty State
+            <div className="text-center py-16 opacity-50">
+              <div className="text-5xl mb-4">🍽️</div>
+              <p className="text-base font-medium mb-2" style={{ color: fontColor }}>
+                {activeMenuCategory
+                  ? `Keine Gerichte in "${activeMenuCategory}"`
+                  : "Noch keine Gerichte hinzugefügt"
+                }
+              </p>
+              {activeMenuCategory && (
+                <button
+                  onClick={() => setActiveMenuCategory(null)}
+                  className="mt-4 px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                  style={{
+                    borderColor: `${fontColor}30`,
+                    color: fontColor,
+                  }}
+                >
+                  Alle anzeigen
+                </button>
+              )}
             </div>
           )}
         </div>
+
+        {/* Item Count Info */}
+        {filteredItems.length > 0 && (
+          <div className="text-center text-xs opacity-50 pt-4 border-t" style={{ borderColor: `${fontColor}10` }}>
+            {filteredItems.length} {filteredItems.length === 1 ? 'Gericht' : 'Gerichte'}
+            {activeMenuCategory && ` in "${activeMenuCategory}"`}
+          </div>
+        )}
       </div>
     );
   };

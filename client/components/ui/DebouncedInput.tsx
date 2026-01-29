@@ -1,14 +1,12 @@
 /**
- * DebouncedInput.tsx
+ * FIXED: DebouncedInput.tsx
  *
- * Anti-Flicker Input Component für Konfigurator-Steps
- * Verhindert Store-Updates bei jedem Tastendruck durch Debouncing
+ * Optimiert für bessere Performance und verhindert unnötige Store-Updates
  *
- * Features:
- * - Lokaler State für sofortiges visuelles Feedback
- * - Debounced Store-Updates (300ms default)
- * - TypeScript generics für verschiedene Input-Typen
- * - Kompatibel mit allen HTML-Input-Attributen
+ * Änderungen:
+ * 1. useEffect Dependencies optimiert (verhindert Loop)
+ * 2. Cleanup bei Unmount verbessert
+ * 3. Nur onChange triggern wenn Wert sich wirklich geändert hat
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -44,12 +42,20 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaEl
     // Timeout-Ref für Cleanup
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Sync lokaler State mit Store-Wert (nur wenn von außen geändert)
-    useEffect(() => {
-      setLocalValue(value);
-    }, [value]);
+    // ✅ FIX: Ref für vorherigen Wert - verhindert unnötige Updates
+    const prevValueRef = useRef(value);
 
-    // Debounced onChange Handler
+    // ✅ FIX: Sync lokaler State mit Store-Wert NUR wenn extern geändert
+    useEffect(() => {
+      // Nur updaten wenn sich der externe Wert wirklich geändert hat
+      if (value !== prevValueRef.current && value !== localValue) {
+        console.log('[DebouncedInput] External value changed:', { from: prevValueRef.current, to: value });
+        setLocalValue(value);
+        prevValueRef.current = value;
+      }
+    }, [value]); // ✅ Intentionally excluding localValue
+
+    // ✅ FIX: Debounced onChange Handler mit Gleichheitsprüfung
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const newValue = e.target.value;
 
@@ -61,20 +67,53 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaEl
         clearTimeout(timeoutRef.current);
       }
 
-      // Neues Timeout für Store-Update
-      timeoutRef.current = setTimeout(() => {
-        onChange(newValue);
-      }, debounceMs);
+      // ✅ FIX: Nur Store updaten wenn sich der Wert geändert hat
+      if (newValue !== prevValueRef.current) {
+        // Neues Timeout für Store-Update
+        timeoutRef.current = setTimeout(() => {
+          console.log('[DebouncedInput] Triggering onChange:', { from: prevValueRef.current, to: newValue });
+          prevValueRef.current = newValue;
+          onChange(newValue);
+        }, debounceMs);
+      }
     }, [onChange, debounceMs]);
 
-    // Cleanup bei Unmount
+    // ✅ FIX: Blur Handler - sofortiges Update
+    const handleBlur = useCallback(() => {
+      // Wenn noch ein Timeout läuft, sofort ausführen
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+
+      // Nur onChange triggern wenn Wert sich geändert hat
+      if (localValue !== prevValueRef.current) {
+        console.log('[DebouncedInput] Blur - immediate update:', { from: prevValueRef.current, to: localValue });
+        prevValueRef.current = localValue;
+        onChange(localValue);
+      }
+    }, [localValue, onChange]);
+
+    // ✅ FIX: Enter-Taste Handler
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !multiline) {
+        // Blur triggert sofortiges Update
+        e.currentTarget.blur();
+      }
+    }, [multiline]);
+
+    // ✅ FIX: Cleanup bei Unmount - führe pending Updates aus
     useEffect(() => {
       return () => {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
+          // Final update bei Unmount
+          if (localValue !== prevValueRef.current) {
+            onChange(localValue);
+          }
         }
       };
-    }, []);
+    }, []); // ✅ Empty deps - nur bei Mount/Unmount
 
     // Render
     if (multiline) {
@@ -83,6 +122,8 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaEl
           ref={ref as React.Ref<HTMLTextAreaElement>}
           value={localValue}
           onChange={handleChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           rows={rows}
           className={className}
           {...(props as any)}
@@ -95,6 +136,8 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaEl
         ref={ref as React.Ref<HTMLInputElement>}
         value={localValue}
         onChange={handleChange}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
         className={className}
         {...props}
       />
@@ -180,3 +223,18 @@ export const DebouncedColorInput = React.forwardRef<HTMLInputElement, DebouncedC
 
 DebouncedColorInput.displayName = 'DebouncedColorInput';
 
+// ============================================
+// PERFORMANCE NOTES
+// ============================================
+
+/**
+ * Diese Component verhindert Performance-Probleme durch:
+ *
+ * 1. **Lokaler State**: Sofortiges visuelles Feedback ohne Store-Update
+ * 2. **Debouncing**: Store-Updates nur alle 300ms (konfigurierbar)
+ * 3. **Gleichheitsprüfung**: onChange nur wenn Wert sich wirklich ändert
+ * 4. **Blur-Handling**: Sofortiges Update beim Verlassen des Feldes
+ * 5. **Cleanup**: Pending Updates werden bei Unmount ausgeführt
+ *
+ * WICHTIG: useEffect Dependencies wurden bewusst minimiert um Loops zu vermeiden!
+ */
