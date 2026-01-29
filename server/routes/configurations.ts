@@ -78,7 +78,8 @@ export async function saveConfiguration(req: Request, res: Response) {
   const audit = getAuditLogger(req);
 
   try {
-    const parsed = LegacyConfigurationSchema.safeParse(req.body);
+    // 1. ✅ WICHTIG: Nutze das NEUE ConfigurationSchema (nicht LegacyConfigurationSchema!)
+    const parsed = ConfigurationSchema.safeParse(req.body);
     if (!parsed.success) {
       await audit(
         "config_update_failed",
@@ -95,12 +96,12 @@ export async function saveConfiguration(req: Request, res: Response) {
 
     const configData = parsed.data;
 
+    // Extrahiere businessId aus verschiedenen möglichen Quellen
+    const businessId = (req.body as any).businessId || null;
+
     // ✅ RLS CHECK 1: Verify businessId ownership
-    if (configData.businessId) {
-      const authorized = await authorizeUserBusiness(
-        userId,
-        configData.businessId,
-      );
+    if (businessId) {
+      const authorized = await authorizeUserBusiness(userId, businessId);
       if (!authorized) {
         await audit(
           "config_update_failed",
@@ -138,15 +139,16 @@ export async function saveConfiguration(req: Request, res: Response) {
       }
 
       // Validate template if specified
-      if (configData.selectedTemplate) {
+      const selectedTemplate = (req.body as any).selectedTemplate;
+      if (selectedTemplate) {
         const template = await prisma.template.findUnique({
-          where: { id: configData.selectedTemplate },
+          where: { id: selectedTemplate },
         });
 
         if (!template) {
           return res.status(400).json({
             error: "Invalid template",
-            message: `Template "${configData.selectedTemplate}" not found`,
+            message: `Template "${selectedTemplate}" not found`,
           });
         }
 
@@ -165,34 +167,47 @@ export async function saveConfiguration(req: Request, res: Response) {
         }
       }
 
-      // Update configuration
+      // 2. ✅ MAPPING: Verschachtelte Daten → Flache Prisma-Spalten
       const updated = await prisma.configuration.update({
         where: { id: configData.id },
         data: {
-          businessName: configData.businessName,
-          businessType: configData.businessType,
-          location: configData.location,
-          slogan: configData.slogan,
-          uniqueDescription: configData.uniqueDescription,
-          template: configData.template,
-          selectedTemplate: configData.selectedTemplate,
-          primaryColor: configData.primaryColor,
-          secondaryColor: configData.secondaryColor,
-          fontFamily: configData.fontFamily,
-          menuItems: configData.menuItems,
-          gallery: configData.gallery,
-          openingHours: configData.openingHours,
-          reservationsEnabled: configData.reservationsEnabled,
-          maxGuests: configData.maxGuests,
-          onlineOrdering: configData.onlineOrdering,
-          onlineStore: configData.onlineStore,
-          teamArea: configData.teamArea,
-          contactMethods: configData.contactMethods,
-          socialMedia: configData.socialMedia,
-          selectedPages: configData.selectedPages,
-          customPages: configData.customPages,
-          paymentOptions: configData.paymentOptions,
-          offers: configData.offers,
+          businessName: configData.business.name,
+          businessType: configData.business.type,
+          location: configData.business.location,
+          slogan: configData.business.slogan,
+          uniqueDescription: configData.business.uniqueDescription,
+          template: configData.design.template,
+          selectedTemplate: selectedTemplate,
+          primaryColor: configData.design.primaryColor,
+          secondaryColor: configData.design.secondaryColor,
+          fontFamily: configData.design.fontFamily,
+          backgroundColor: configData.design.backgroundColor,
+          fontColor: configData.design.fontColor,
+          priceColor: configData.design.priceColor,
+          headerFontColor: configData.design.headerFontColor,
+          headerFontSize: configData.design.headerFontSize,
+          headerBackgroundColor: configData.design.headerBackgroundColor,
+          menuItems: configData.content.menuItems as any,
+          gallery: configData.content.gallery as any,
+          openingHours: configData.content.openingHours as any,
+          reservationsEnabled: configData.features.reservationsEnabled,
+          maxGuests: configData.features.maxGuests,
+          onlineOrdering: configData.features.onlineOrderingEnabled,
+          onlineStore: configData.features.onlineStoreEnabled,
+          teamArea: configData.features.teamAreaEnabled,
+          contactMethods: configData.contact.contactMethods,
+          socialMedia: configData.contact.socialMedia,
+          selectedPages: configData.pages.selectedPages,
+          customPages: configData.pages.customPages,
+          paymentOptions: configData.payments.paymentOptions || [],
+          offers: configData.payments.offers || [],
+          selectedDomain: configData.business.domain?.selectedDomain,
+          hasDomain: configData.business.domain?.hasDomain || false,
+          domainName: configData.business.domain?.domainName,
+          homepageDishImageVisibility: configData.content.homepageDishImageVisibility,
+          reservationButtonColor: configData.features.reservationButtonColor,
+          reservationButtonTextColor: configData.features.reservationButtonTextColor,
+          reservationButtonShape: configData.features.reservationButtonShape,
           updatedAt: new Date(),
         },
       });
@@ -206,34 +221,49 @@ export async function saveConfiguration(req: Request, res: Response) {
       });
     } else {
       // Create new configuration
+      const selectedTemplate = (req.body as any).selectedTemplate;
+
       const newConfig = await prisma.configuration.create({
         data: {
           userId,
-          businessId: configData.businessId,
-          businessName: configData.businessName || "",
-          businessType: configData.businessType || "",
-          location: configData.location,
-          slogan: configData.slogan,
-          uniqueDescription: configData.uniqueDescription,
-          template: configData.template || "",
-          selectedTemplate: configData.selectedTemplate,
-          primaryColor: configData.primaryColor || "#111827",
-          secondaryColor: configData.secondaryColor || "#6B7280",
-          fontFamily: configData.fontFamily || "sans-serif",
-          menuItems: configData.menuItems || [],
-          gallery: configData.gallery || [],
-          openingHours: configData.openingHours || {},
-          reservationsEnabled: configData.reservationsEnabled || false,
-          maxGuests: configData.maxGuests || 10,
-          onlineOrdering: configData.onlineOrdering || false,
-          onlineStore: configData.onlineStore || false,
-          teamArea: configData.teamArea || false,
-          contactMethods: configData.contactMethods || [],
-          socialMedia: configData.socialMedia || {},
-          selectedPages: configData.selectedPages || ["home"],
-          customPages: configData.customPages || [],
-          paymentOptions: configData.paymentOptions || [],
-          offers: configData.offers || [],
+          businessId,
+          businessName: configData.business.name || "",
+          businessType: configData.business.type || "",
+          location: configData.business.location,
+          slogan: configData.business.slogan,
+          uniqueDescription: configData.business.uniqueDescription,
+          template: configData.design.template || "",
+          selectedTemplate,
+          primaryColor: configData.design.primaryColor || "#111827",
+          secondaryColor: configData.design.secondaryColor || "#6B7280",
+          fontFamily: configData.design.fontFamily || "sans-serif",
+          backgroundColor: configData.design.backgroundColor,
+          fontColor: configData.design.fontColor,
+          priceColor: configData.design.priceColor,
+          headerFontColor: configData.design.headerFontColor,
+          headerFontSize: configData.design.headerFontSize,
+          headerBackgroundColor: configData.design.headerBackgroundColor,
+          menuItems: configData.content.menuItems || [],
+          gallery: configData.content.gallery || [],
+          openingHours: configData.content.openingHours || {},
+          reservationsEnabled: configData.features.reservationsEnabled || false,
+          maxGuests: configData.features.maxGuests || 10,
+          onlineOrdering: configData.features.onlineOrderingEnabled || false,
+          onlineStore: configData.features.onlineStoreEnabled || false,
+          teamArea: configData.features.teamAreaEnabled || false,
+          contactMethods: configData.contact.contactMethods || [],
+          socialMedia: configData.contact.socialMedia || {},
+          selectedPages: configData.pages.selectedPages || ["home"],
+          customPages: configData.pages.customPages || [],
+          paymentOptions: configData.payments.paymentOptions || [],
+          offers: configData.payments.offers || [],
+          selectedDomain: configData.business.domain?.selectedDomain,
+          hasDomain: configData.business.domain?.hasDomain || false,
+          domainName: configData.business.domain?.domainName,
+          homepageDishImageVisibility: configData.content.homepageDishImageVisibility,
+          reservationButtonColor: configData.features.reservationButtonColor,
+          reservationButtonTextColor: configData.features.reservationButtonTextColor,
+          reservationButtonShape: configData.features.reservationButtonShape,
           status: "draft",
         },
       });

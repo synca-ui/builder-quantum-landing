@@ -187,6 +187,7 @@ model Configuration {
   primaryColor    String    @default("#111827")
   secondaryColor  String    @default("#6B7280")
   fontFamily      String    @default("sans-serif")
+  backgroundColor String    @default("#FFFFFF")
 
   // Content
   menuItems       Json      @default("[]")
