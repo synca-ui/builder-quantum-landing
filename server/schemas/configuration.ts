@@ -48,12 +48,12 @@ export const MenuItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   description: z.string().optional(),
-  price: z.coerce.number().positive().optional(), // ✅ Konvertiert "18.90" → 18.90
+  price: z.coerce.number().positive().optional(),
   imageUrl: z.string().url().optional().or(z.string().length(0)),
   emoji: z.string().optional(),
   available: z.boolean().optional().default(true),
   category: z.string().optional(),
-  isHighlight: z.boolean().optional(), // ✅ Fehlende Property hinzugefügt
+  isHighlight: z.boolean().optional(),
 });
 
 // Gallery Image Schema
@@ -152,13 +152,12 @@ export const IntegrationConfigSchema = z.record(z.any());
 export const ConfigurationSchema = z
   .object({
     id: z.string().uuid().optional(),
-    userId: z.string().min(1, "User ID is required"),
+    userId: z.string().default("anonymous"),
     business: BusinessInfoSchema,
     design: DesignConfigSchema,
     content: ContentDataSchema,
     features: FeatureFlagsSchema,
     contact: ContactInfoSchema,
-    publishing: PublishingInfoSchema,
     pages: PageManagementSchema,
     payments: PaymentAndOffersSchema,
     integrations: IntegrationConfigSchema.optional(),
@@ -267,13 +266,6 @@ export function migrateLegacyConfiguration(
         ? legacy.contactMethods
         : [],
       socialMedia: legacy.socialMedia || {},
-    },
-    publishing: {
-      status: (legacy.status || "draft") as any,
-      publishedUrl: legacy.publishedUrl,
-      previewUrl: legacy.previewUrl,
-      publishedAt: legacy.createdAt,
-      updatedAt: legacy.updatedAt,
     },
     pages: {
       selectedPages: legacy.selectedPages || ["home"],

@@ -2,7 +2,6 @@ import { Request, Response, Router } from "express";
 import prisma from "../db/prisma";
 import { requireAuth } from "../middleware/auth";
 import { ConfigurationSchema } from "../schemas/configuration";
-import type { Configuration } from "../schemas/configuration";
 import { createAuditLogger } from "../utils/audit";
 
 const router = Router();
