@@ -32,10 +32,15 @@ export const DesignConfigSchema = z.object({
     .enum(["sans-serif", "serif", "monospace"])
     .default("sans-serif"),
   fontColor: z.string().optional(),
+  priceColor: z.string().optional(),
+  headerFontColor: z.string().optional(),
+  headerFontSize: z.string().optional(),
+  headerBackgroundColor: z.string().optional(),
   fontSize: z.enum(["small", "medium", "large"]).optional(),
   backgroundColor: z.string().optional(),
   backgroundImage: z.string().nullable().optional(),
   backgroundType: z.enum(["color", "image"]).optional(),
+  logo: z.string().optional(),
 });
 
 // Menu Item Schema
@@ -82,12 +87,12 @@ export const FeatureFlagsSchema = z.object({
   reservationsEnabled: z.boolean().default(false),
   maxGuests: z.number().positive().default(10),
   notificationMethod: z.string().default("email"),
-  onlineOrderingEnabled: z.boolean().default(false),
-  onlineStoreEnabled: z.boolean().default(false),
-  teamAreaEnabled: z.boolean().default(false),
   reservationButtonColor: z.string().optional(),
   reservationButtonTextColor: z.string().optional(),
   reservationButtonShape: z.string().optional(),
+  onlineOrderingEnabled: z.boolean().default(false),
+  onlineStoreEnabled: z.boolean().default(false),
+  teamAreaEnabled: z.boolean().default(false),
 });
 
 // Contact Info Schema
@@ -157,12 +162,11 @@ export const ConfigurationSchema = z
     payments: PaymentAndOffersSchema,
     integrations: IntegrationConfigSchema.optional(),
   })
-  .strict(); // 🔥 STRICT: Rejects unknown fields!
+  .strict();
 
 /**
  * LEGACY Configuration Schema - FOR BACKWARD COMPATIBILITY
  * Accepts old flat structure, BUT IS STRICT (no passthrough)
- * Migration to domain-driven structure happens in Phase 1
  */
 export const LegacyConfigurationSchema = z
   .object({
@@ -208,7 +212,7 @@ export const LegacyConfigurationSchema = z
     backgroundType: z.enum(["color", "image"]).optional(),
     fontColor: z.string().optional(),
   })
-  .strict(); // 🔥 STRICT! No unknown fields allowed (unlike before with .passthrough())
+  .strict();
 
 export type Configuration = z.infer<typeof ConfigurationSchema>;
 export type LegacyConfiguration = z.infer<typeof LegacyConfigurationSchema>;
@@ -310,3 +314,4 @@ export function validateLegacyConfiguration(
 export function safeParse(data: unknown) {
   return ConfigurationSchema.safeParse(data);
 }
+
