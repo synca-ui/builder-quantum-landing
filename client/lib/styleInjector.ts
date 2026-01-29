@@ -1,9 +1,9 @@
 /**
  * Style Injector
- * 
+ *
  * Generiert globale CSS-Variablen und Utility Classes
  * basierend auf Template-Tokens und User-Overrides.
- * 
+ *
  * Diese Styles werden im <head> injiziert, damit Tailwind
  * darauf zugreifen kann.
  */
@@ -27,7 +27,7 @@ export function generateGlobalStyles(
 ): string {
   const tokens = getTemplateTokens(templateId);
   const intent = getTemplateIntent(templateId);
-  
+
   // User-Overrides haben Priorität über Template-Tokens
   const finalColors = {
     primary: userColors.primaryColor || tokens.colors.primary,
@@ -38,12 +38,12 @@ export function generateGlobalStyles(
     accent: tokens.colors.accent,
     border: tokens.colors.border,
   };
-  
+
   // RGB-Varianten für Transparenz
   const primaryRgb = hexToRgb(finalColors.primary);
   const secondaryRgb = hexToRgb(finalColors.secondary);
   const accentRgb = hexToRgb(finalColors.accent);
-  
+
   return `
     /* ============================================ */
     /* CSS VARIABLES (ROOT) */
@@ -347,7 +347,7 @@ function generateIntentSpecificStyles(intent: TemplateIntent): string {
     .stagger-6 { animation-delay: 0.6s; }
     `;
   }
-  
+
   if (intent === 'COMMERCIAL') {
     return `
     /* ============================================ */
@@ -412,7 +412,7 @@ function generateIntentSpecificStyles(intent: TemplateIntent): string {
     .stagger-3 { animation-delay: 0.3s; }
     `;
   }
-  
+
   // NARRATIVE Intent
   return `
     /* ============================================ */
