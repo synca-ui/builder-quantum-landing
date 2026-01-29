@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import prisma from "../db/prisma";
 import { requireAuth } from "../middleware/auth";
-import { ConfigurationSchema } from "../schemas/configuration";
+import { ConfigurationSchema, type Configuration } from "../schemas/configuration";
 import { createAuditLogger } from "../utils/audit";
 
 const router = Router();
@@ -17,15 +17,10 @@ async function authorizeUserBusiness(
   userId: string,
   businessId: string | undefined | null,
 ): Promise<boolean> {
-  if (!businessId) {
-    return true;
-  }
+  if (!businessId) return true;
 
   const membership = await prisma.businessMember.findFirst({
-    where: {
-      userId,
-      businessId,
-    },
+    where: { userId, businessId },
   });
 
   return !!membership;
@@ -53,6 +48,9 @@ function getAuditLogger(req: Request) {
   });
 }
 
+/**
+ * ✅ Generate subdomain from business name
+ */
 function generateSubdomain(businessName: string): string {
   return (
     businessName
@@ -65,23 +63,67 @@ function generateSubdomain(businessName: string): string {
   );
 }
 
+/**
+ * ✅ Helper: Map nested configuration to flat Prisma structure
+ */
+function mapConfigToDatabase(configData: Configuration, selectedTemplate?: string) {
+  return {
+    businessName: configData.business.name,
+    businessType: configData.business.type,
+    location: configData.business.location,
+    slogan: configData.business.slogan,
+    uniqueDescription: configData.business.uniqueDescription,
+    template: configData.design.template,
+    selectedTemplate,
+    primaryColor: configData.design.primaryColor,
+    secondaryColor: configData.design.secondaryColor,
+    fontFamily: configData.design.fontFamily,
+    backgroundColor: configData.design.backgroundColor,
+    fontColor: configData.design.fontColor,
+    priceColor: configData.design.priceColor,
+    headerFontColor: configData.design.headerFontColor,
+    headerFontSize: configData.design.headerFontSize,
+    headerBackgroundColor: configData.design.headerBackgroundColor,
+    menuItems: configData.content.menuItems as any,
+    gallery: configData.content.gallery as any,
+    openingHours: configData.content.openingHours as any,
+    homepageDishImageVisibility: configData.content.homepageDishImageVisibility,
+    reservationsEnabled: configData.features.reservationsEnabled,
+    maxGuests: configData.features.maxGuests,
+    onlineOrdering: configData.features.onlineOrderingEnabled,
+    onlineStore: configData.features.onlineStoreEnabled,
+    teamArea: configData.features.teamAreaEnabled,
+    reservationButtonColor: configData.features.reservationButtonColor,
+    reservationButtonTextColor: configData.features.reservationButtonTextColor,
+    reservationButtonShape: configData.features.reservationButtonShape,
+    contactMethods: configData.contact.contactMethods,
+    socialMedia: configData.contact.socialMedia,
+    selectedPages: configData.pages.selectedPages,
+    customPages: configData.pages.customPages,
+    paymentOptions: configData.payments.paymentOptions || [],
+    offers: configData.payments.offers || [],
+    selectedDomain: configData.business.domain?.selectedDomain,
+    hasDomain: configData.business.domain?.hasDomain || false,
+    domainName: configData.business.domain?.domainName,
+  };
+}
+
 // ============================================
-// HANDLER FUNCTIONS (Exported individually)
+// HANDLER FUNCTIONS
 // ============================================
 
 /**
- * ✅ POST /api/configurations - Create or Update
+ * ✅ POST /api/configurations - Create or Update Configuration
  */
 export async function saveConfiguration(req: Request, res: Response) {
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
 
   try {
-    // 1. ✅ WICHTIG: Nutze das NEUE ConfigurationSchema (nicht LegacyConfigurationSchema!)
-    // Setze die userId aus dem Auth-Context, da das Frontend einen leeren String schickt
+    // 1. Validate and parse configuration with userId from auth context
     const bodyWithUserId = {
       ...req.body,
-      userId: userId, // Überschreibe mit dem echten userId aus Auth
+      userId,
     };
 
     const parsed = ConfigurationSchema.safeParse(bodyWithUserId);
@@ -100,36 +142,28 @@ export async function saveConfiguration(req: Request, res: Response) {
     }
 
     const configData = parsed.data;
-
-    // Extrahiere businessId aus verschiedenen möglichen Quellen
     const businessId = (req.body as any).businessId || null;
+    const selectedTemplate = (req.body as any).selectedTemplate;
 
-    // ✅ RLS CHECK 1: Verify businessId ownership
-    if (businessId) {
-      const authorized = await authorizeUserBusiness(userId, businessId);
-      if (!authorized) {
-        await audit(
-          "config_update_failed",
-          configData.id || "unknown",
-          false,
-          "Unauthorized business access",
-        );
+    // 2. Verify business access
+    if (businessId && !(await authorizeUserBusiness(userId, businessId))) {
+      await audit(
+        "config_update_failed",
+        configData.id || "unknown",
+        false,
+        "Unauthorized business access",
+      );
 
-        return res.status(403).json({
-          error: "Forbidden",
-          message: "You do not have access to this business",
-        });
-      }
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "You do not have access to this business",
+      });
     }
 
-    // Update existing or create new
+    // 3. Update existing configuration
     if (configData.id) {
-      // ✅ RLS CHECK 2: Verify user owns config
       const existing = await prisma.configuration.findFirst({
-        where: {
-          id: configData.id,
-          userId,
-        },
+        where: { id: configData.id, userId },
       });
 
       if (!existing) {
@@ -139,12 +173,10 @@ export async function saveConfiguration(req: Request, res: Response) {
           false,
           "Configuration not found",
         );
-
         return res.status(404).json({ error: "Configuration not found" });
       }
 
       // Validate template if specified
-      const selectedTemplate = (req.body as any).selectedTemplate;
       if (selectedTemplate) {
         const template = await prisma.template.findUnique({
           where: { id: selectedTemplate },
@@ -157,7 +189,7 @@ export async function saveConfiguration(req: Request, res: Response) {
           });
         }
 
-        // Check if premium template
+        // Check premium template access
         if (template.isPremium) {
           const subscription = await prisma.subscription.findUnique({
             where: { userId },
@@ -172,47 +204,11 @@ export async function saveConfiguration(req: Request, res: Response) {
         }
       }
 
-      // 2. ✅ MAPPING: Verschachtelte Daten → Flache Prisma-Spalten
+      // Update configuration
       const updated = await prisma.configuration.update({
         where: { id: configData.id },
         data: {
-          businessName: configData.business.name,
-          businessType: configData.business.type,
-          location: configData.business.location,
-          slogan: configData.business.slogan,
-          uniqueDescription: configData.business.uniqueDescription,
-          template: configData.design.template,
-          selectedTemplate: selectedTemplate,
-          primaryColor: configData.design.primaryColor,
-          secondaryColor: configData.design.secondaryColor,
-          fontFamily: configData.design.fontFamily,
-          backgroundColor: configData.design.backgroundColor,
-          fontColor: configData.design.fontColor,
-          priceColor: configData.design.priceColor,
-          headerFontColor: configData.design.headerFontColor,
-          headerFontSize: configData.design.headerFontSize,
-          headerBackgroundColor: configData.design.headerBackgroundColor,
-          menuItems: configData.content.menuItems as any,
-          gallery: configData.content.gallery as any,
-          openingHours: configData.content.openingHours as any,
-          reservationsEnabled: configData.features.reservationsEnabled,
-          maxGuests: configData.features.maxGuests,
-          onlineOrdering: configData.features.onlineOrderingEnabled,
-          onlineStore: configData.features.onlineStoreEnabled,
-          teamArea: configData.features.teamAreaEnabled,
-          contactMethods: configData.contact.contactMethods,
-          socialMedia: configData.contact.socialMedia,
-          selectedPages: configData.pages.selectedPages,
-          customPages: configData.pages.customPages,
-          paymentOptions: configData.payments.paymentOptions || [],
-          offers: configData.payments.offers || [],
-          selectedDomain: configData.business.domain?.selectedDomain,
-          hasDomain: configData.business.domain?.hasDomain || false,
-          domainName: configData.business.domain?.domainName,
-          homepageDishImageVisibility: configData.content.homepageDishImageVisibility,
-          reservationButtonColor: configData.features.reservationButtonColor,
-          reservationButtonTextColor: configData.features.reservationButtonTextColor,
-          reservationButtonShape: configData.features.reservationButtonShape,
+          ...mapConfigToDatabase(configData, selectedTemplate),
           updatedAt: new Date(),
         },
       });
@@ -222,65 +218,27 @@ export async function saveConfiguration(req: Request, res: Response) {
       return res.json({
         success: true,
         data: updated,
-        message: "Configuration updated",
-      });
-    } else {
-      // Create new configuration
-      const selectedTemplate = (req.body as any).selectedTemplate;
-
-      const newConfig = await prisma.configuration.create({
-        data: {
-          userId,
-          businessId,
-          businessName: configData.business.name || "",
-          businessType: configData.business.type || "",
-          location: configData.business.location,
-          slogan: configData.business.slogan,
-          uniqueDescription: configData.business.uniqueDescription,
-          template: configData.design.template || "",
-          selectedTemplate,
-          primaryColor: configData.design.primaryColor || "#111827",
-          secondaryColor: configData.design.secondaryColor || "#6B7280",
-          fontFamily: configData.design.fontFamily || "sans-serif",
-          backgroundColor: configData.design.backgroundColor,
-          fontColor: configData.design.fontColor,
-          priceColor: configData.design.priceColor,
-          headerFontColor: configData.design.headerFontColor,
-          headerFontSize: configData.design.headerFontSize,
-          headerBackgroundColor: configData.design.headerBackgroundColor,
-          menuItems: configData.content.menuItems || [],
-          gallery: configData.content.gallery || [],
-          openingHours: configData.content.openingHours || {},
-          reservationsEnabled: configData.features.reservationsEnabled || false,
-          maxGuests: configData.features.maxGuests || 10,
-          onlineOrdering: configData.features.onlineOrderingEnabled || false,
-          onlineStore: configData.features.onlineStoreEnabled || false,
-          teamArea: configData.features.teamAreaEnabled || false,
-          contactMethods: configData.contact.contactMethods || [],
-          socialMedia: configData.contact.socialMedia || {},
-          selectedPages: configData.pages.selectedPages || ["home"],
-          customPages: configData.pages.customPages || [],
-          paymentOptions: configData.payments.paymentOptions || [],
-          offers: configData.payments.offers || [],
-          selectedDomain: configData.business.domain?.selectedDomain,
-          hasDomain: configData.business.domain?.hasDomain || false,
-          domainName: configData.business.domain?.domainName,
-          homepageDishImageVisibility: configData.content.homepageDishImageVisibility,
-          reservationButtonColor: configData.features.reservationButtonColor,
-          reservationButtonTextColor: configData.features.reservationButtonTextColor,
-          reservationButtonShape: configData.features.reservationButtonShape,
-          status: "draft",
-        },
-      });
-
-      await audit("config_created", newConfig.id, true);
-
-      return res.status(201).json({
-        success: true,
-        data: newConfig,
-        message: "Configuration created",
+        message: "Configuration updated successfully",
       });
     }
+
+    // 4. Create new configuration
+    const newConfig = await prisma.configuration.create({
+      data: {
+        userId,
+        businessId,
+        ...mapConfigToDatabase(configData, selectedTemplate),
+        status: "draft",
+      },
+    });
+
+    await audit("config_created", newConfig.id, true);
+
+    return res.status(201).json({
+      success: true,
+      data: newConfig,
+      message: "Configuration created successfully",
+    });
   } catch (error) {
     console.error("[Configurations] Save error:", error);
     await audit(
@@ -335,10 +293,7 @@ export async function getConfiguration(req: Request, res: Response) {
 
   try {
     const configuration = await prisma.configuration.findFirst({
-      where: {
-        id,
-        userId,
-      },
+      where: { id, userId },
       include: {
         business: {
           include: {
@@ -387,24 +342,15 @@ export async function deleteConfiguration(req: Request, res: Response) {
 
   try {
     const existing = await prisma.configuration.findFirst({
-      where: {
-        id,
-        userId,
-      },
+      where: { id, userId },
     });
 
     if (!existing) {
-      await audit(
-        "config_delete_failed",
-        id,
-        false,
-        "Not found or unauthorized",
-      );
+      await audit("config_delete_failed", id, false, "Not found or unauthorized");
 
       return res.status(403).json({
         error: "Forbidden",
-        message:
-          "Configuration not found or you do not have permission to delete it",
+        message: "Configuration not found or you do not have permission to delete it",
       });
     }
 
@@ -420,7 +366,7 @@ export async function deleteConfiguration(req: Request, res: Response) {
 
     return res.json({
       success: true,
-      message: "Configuration deleted",
+      message: "Configuration deleted successfully",
     });
   } catch (error) {
     console.error("[Configurations] Delete error:", error);
@@ -439,9 +385,6 @@ export async function deleteConfiguration(req: Request, res: Response) {
 
 /**
  * ✅ POST /api/configurations/:id/publish
- */
-/**
- * ✅ POST /api/configurations/:id/publish
  * Veröffentlicht eine Konfiguration auf der gewählten Subdomain
  */
 export async function publishConfiguration(req: Request, res: Response) {
@@ -450,12 +393,8 @@ export async function publishConfiguration(req: Request, res: Response) {
   const audit = getAuditLogger(req);
 
   try {
-    // 1. Konfiguration laden
     const configuration = await prisma.configuration.findFirst({
-      where: {
-        id,
-        userId,
-      },
+      where: { id, userId },
     });
 
     if (!configuration) {
@@ -466,17 +405,13 @@ export async function publishConfiguration(req: Request, res: Response) {
       });
     }
 
-    // 2. Abonnement-Limits prüfen
     const subscription = await prisma.subscription.findUnique({
       where: { userId },
     });
 
     const maxSites = subscription?.maxSites || 1;
     const publishedSites = await prisma.configuration.count({
-      where: {
-        userId,
-        status: "published",
-      },
+      where: { userId, status: "published" },
     });
 
     if (publishedSites >= maxSites) {
@@ -488,8 +423,6 @@ export async function publishConfiguration(req: Request, res: Response) {
       });
     }
 
-    // 3. Subdomain bestimmen (Priorität: Manuelle Wahl > Generierung)
-    // Wir nutzen 'as any', da 'selectedDomain' im Prisma-Typ oft erst nach einem 'generate' erscheint
     const subdomain = (configuration as any).selectedDomain || generateSubdomain(configuration.businessName);
 
     if (!subdomain) {
@@ -499,12 +432,10 @@ export async function publishConfiguration(req: Request, res: Response) {
       });
     }
 
-    // 4. Verfügbarkeit der Subdomain final prüfen
     const existingWebApp = await prisma.webApp.findUnique({
       where: { subdomain },
     });
 
-    // Falls die Subdomain existiert und nicht zu dieser Config gehört -> Abbruch
     if (existingWebApp && existingWebApp.configId !== configuration.id) {
       return res.status(400).json({
         error: "Subdomain already taken",
@@ -512,7 +443,6 @@ export async function publishConfiguration(req: Request, res: Response) {
       });
     }
 
-    // 5. Konfiguration in der Datenbank aktualisieren
     const published = await prisma.configuration.update({
       where: { id },
       data: {
@@ -522,13 +452,11 @@ export async function publishConfiguration(req: Request, res: Response) {
       },
     });
 
-    // 6. Live-Eintrag in der WebApp-Tabelle erstellen oder aktualisieren (Sync)
-    // Dies füllt die Tabelle, die für das öffentliche Routing zuständig ist
     const webApp = await prisma.webApp.upsert({
       where: { configId: id },
       update: {
         subdomain,
-        configData: published as any, // Speichert den aktuellen Snapshot der Config
+        configData: published as any,
         publishedAt: new Date(),
       },
       create: {
@@ -542,7 +470,6 @@ export async function publishConfiguration(req: Request, res: Response) {
 
     await audit("config_published", id, true);
 
-    // 7. Erfolg zurückgeben
     return res.json({
       success: true,
       data: published,
@@ -550,7 +477,6 @@ export async function publishConfiguration(req: Request, res: Response) {
       publishedUrl: `https://${subdomain}.maitr.de`,
       message: "Website wurde erfolgreich veröffentlicht! 🚀",
     });
-
   } catch (error) {
     console.error("[Configurations] Publish error:", error);
     await audit(
@@ -569,7 +495,6 @@ export async function publishConfiguration(req: Request, res: Response) {
 
 /**
  * ✅ GET /api/sites/:subdomain - Get published site (PUBLIC)
- * Returns the config stored in WebApp.configData for instant serving
  */
 export async function getPublishedSite(req: Request, res: Response) {
   const { subdomain } = req.params;
@@ -593,7 +518,6 @@ export async function getPublishedSite(req: Request, res: Response) {
       });
     }
 
-    // Use configData directly from WebApp for fastest response
     const config = webApp.configData as any;
 
     if (!config) {
@@ -603,7 +527,6 @@ export async function getPublishedSite(req: Request, res: Response) {
       });
     }
 
-    // Flatten nested structure for frontend compatibility
     const flatConfig = {
       id: webApp.id,
       userId: config.userId || "published",
@@ -611,32 +534,23 @@ export async function getPublishedSite(req: Request, res: Response) {
       businessType: config.business?.type || config.businessType || "",
       location: config.business?.location || config.location || "",
       slogan: config.business?.slogan || config.slogan || "",
-      uniqueDescription:
-        config.business?.uniqueDescription || config.uniqueDescription || "",
+      uniqueDescription: config.business?.uniqueDescription || config.uniqueDescription || "",
       template: config.design?.template || config.template || "modern",
-      primaryColor:
-        config.design?.primaryColor || config.primaryColor || "#111827",
-      secondaryColor:
-        config.design?.secondaryColor || config.secondaryColor || "#6B7280",
-      fontFamily:
-        config.design?.fontFamily || config.fontFamily || "sans-serif",
+      primaryColor: config.design?.primaryColor || config.primaryColor || "#111827",
+      secondaryColor: config.design?.secondaryColor || config.secondaryColor || "#6B7280",
+      fontFamily: config.design?.fontFamily || config.fontFamily || "sans-serif",
       backgroundColor: config.design?.backgroundColor || config.backgroundColor,
       fontColor: config.design?.fontColor || config.fontColor,
-      headerFontSize:
-        config.design?.headerFontSize || config.headerFontSize || 24,
+      headerFontSize: config.design?.headerFontSize || config.headerFontSize || 24,
       logo: config.design?.logo || config.logo,
       selectedPages: config.pages?.selected || config.selectedPages || ["home"],
       customPages: config.pages?.custom || config.customPages || [],
       openingHours: config.content?.openingHours || config.openingHours || {},
       menuItems: config.content?.menuItems || config.menuItems || [],
       gallery: config.content?.gallery || config.gallery || [],
-      reservationsEnabled:
-        config.features?.reservationsEnabled ??
-        config.reservationsEnabled ??
-        false,
+      reservationsEnabled: config.features?.reservationsEnabled ?? config.reservationsEnabled ?? false,
       maxGuests: config.features?.maxGuests || config.maxGuests || 10,
-      onlineOrdering:
-        config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
+      onlineOrdering: config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
       onlineStore: config.features?.onlineStore ?? config.onlineStore ?? false,
       teamArea: config.features?.teamArea ?? config.teamArea ?? false,
       contactMethods: config.contact?.methods || config.contactMethods || [],
@@ -700,7 +614,7 @@ export async function setPreviewConfig(req: Request, res: Response) {
 }
 
 // ============================================
-// ROUTER (For /api/configurations routes)
+// ROUTER SETUP
 // ============================================
 
 router.post("/", requireAuth, saveConfiguration);
@@ -714,7 +628,6 @@ router.post("/:id/preview", setPreviewConfig);
 // EXPORTS
 // ============================================
 
-// Export both router (for server/routes/index.ts) and functions (for server/index.ts)
 export const configurationsRouter = router;
-
 export default router;
+

@@ -107,8 +107,8 @@ export const ContactInfoSchema = z.object({
 // Publishing Info Schema
 export const PublishingInfoSchema = z.object({
   status: z.enum(["draft", "published", "archived"]).default("draft"),
-  publishedUrl: z.string().url().optional(),
-  previewUrl: z.string().url().optional(),
+  publishedUrl: z.string().optional(),
+  previewUrl: z.string().optional(),
   publishedAt: z.string().datetime().optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
@@ -161,6 +161,11 @@ export const ConfigurationSchema = z
     pages: PageManagementSchema,
     payments: PaymentAndOffersSchema,
     integrations: IntegrationConfigSchema.optional(),
+    // Publishing-related fields (flattened for backward compatibility)
+    status: z.enum(["draft", "published", "archived"]).optional().default("draft"),
+    publishedUrl: z.string().optional(),
+    previewUrl: z.string().optional(),
+    publishing: PublishingInfoSchema.optional(),
   })
   .strict();
 
@@ -211,73 +216,18 @@ export const LegacyConfigurationSchema = z
     backgroundColor: z.string().optional(),
     backgroundType: z.enum(["color", "image"]).optional(),
     fontColor: z.string().optional(),
+    priceColor: z.string().optional(),
+    headerFontColor: z.string().optional(),
+    headerFontSize: z.string().optional(),
+    headerBackgroundColor: z.string().optional(),
+    reservationButtonColor: z.string().optional(),
+    reservationButtonTextColor: z.string().optional(),
+    reservationButtonShape: z.string().optional(),
   })
   .strict();
 
 export type Configuration = z.infer<typeof ConfigurationSchema>;
 export type LegacyConfiguration = z.infer<typeof LegacyConfigurationSchema>;
-
-/**
- * Migration function: Convert legacy flat structure to new domain-driven structure
- */
-export function migrateLegacyConfiguration(
-  legacy: LegacyConfiguration,
-): Configuration {
-  return {
-    id: legacy.id,
-    userId: legacy.userId || "anonymous",
-    business: {
-      name: legacy.businessName || "",
-      type: legacy.businessType || "",
-      location: legacy.location,
-      slogan: legacy.slogan,
-      uniqueDescription: legacy.uniqueDescription,
-      domain: {
-        hasDomain: legacy.hasDomain || false,
-        domainName: legacy.domainName,
-        selectedDomain: legacy.selectedDomain,
-      },
-    },
-    design: {
-      template: legacy.template || "",
-      primaryColor: legacy.primaryColor || "#111827",
-      secondaryColor: legacy.secondaryColor || "#6B7280",
-      fontFamily: (legacy.fontFamily || "sans-serif") as any,
-      backgroundColor: legacy.backgroundColor,
-      backgroundType: legacy.backgroundType as any,
-    },
-    content: {
-      menuItems: legacy.menuItems || [],
-      gallery: legacy.gallery || [],
-      openingHours: legacy.openingHours || {},
-      homepageDishImageVisibility: legacy.homepageDishImageVisibility,
-      categories: [],
-    },
-    features: {
-      reservationsEnabled: legacy.reservationsEnabled || false,
-      maxGuests: legacy.maxGuests || 10,
-      notificationMethod: legacy.notificationMethod || "email",
-      onlineOrderingEnabled: legacy.onlineOrdering || false,
-      onlineStoreEnabled: legacy.onlineStore || false,
-      teamAreaEnabled: legacy.teamArea || false,
-    },
-    contact: {
-      contactMethods: Array.isArray(legacy.contactMethods)
-        ? legacy.contactMethods
-        : [],
-      socialMedia: legacy.socialMedia || {},
-    },
-    pages: {
-      selectedPages: legacy.selectedPages || ["home"],
-      customPages: legacy.customPages || [],
-    },
-    payments: {
-      paymentOptions: legacy.paymentOptions,
-      offers: legacy.offers,
-      offerBanner: legacy.offerBanner,
-    },
-  };
-}
 
 /**
  * Validation helpers
