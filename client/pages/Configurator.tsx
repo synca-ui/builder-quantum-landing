@@ -350,7 +350,7 @@ export default function Configurator() {
     nextStepStore();
 
     // Re-enable Preview nach Step-Wechsel
-    setTimeout(() => setIsTransitioning(false), 150);
+    setTimeout(() => setIsTransitioning(false), 100);
   }, [nextStepStore, actions.history]);
 
   const prevStep = useCallback(async () => {
@@ -365,7 +365,7 @@ export default function Configurator() {
     prevStepStore();
 
     // Re-enable Preview nach Step-Wechsel
-    setTimeout(() => setIsTransitioning(false), 150);
+    setTimeout(() => setIsTransitioning(false), 100);
   }, [prevStepStore, actions.history]);
 
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
@@ -398,13 +398,13 @@ export default function Configurator() {
         <ShareQRButton url={getLiveUrl()} t={t} />
       </div>
 
-      <div className={`relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-all duration-200 pointer-events-auto ${
-        isTransitioning ? 'opacity-80 scale-[0.74] xl:scale-[0.84]' : 'opacity-100'
+      <div className={`relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-all duration-100 pointer-events-auto ${
+        isTransitioning ? 'opacity-90 scale-[0.745] xl:scale-[0.845]' : 'opacity-100'
       }`}>
         <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/10 to-purple-500/10 blur-3xl rounded-full opacity-30 -z-10" />
         <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
           <PhonePortal>
-            <div className={`transition-opacity duration-200 ${
+            <div className={`transition-opacity duration-100 ${
               isTransitioning ? 'opacity-50' : 'opacity-100'
             }`}>
               <TemplatePreviewContent />
@@ -422,7 +422,7 @@ export default function Configurator() {
   );
 
   const NavigationHeader = () => (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200/80 h-20">
+    <nav className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200/80 h-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex items-center justify-between h-full">
           <div className="flex items-center space-x-4">
@@ -669,7 +669,7 @@ export default function Configurator() {
 
           {/* RECHTES PANEL: Sticky Live Preview */}
           {!isFullWidthStep && currentStep !== -1 && (
-            <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2 sticky top-28 self-start">
+            <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2 sticky top-32 self-start">
               <LivePreview />
             </div>
           )}

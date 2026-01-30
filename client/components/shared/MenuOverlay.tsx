@@ -67,7 +67,7 @@ export const MenuOverlay = memo(function MenuOverlay({
 
   return (
     <div
-      className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
+      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -75,7 +75,7 @@ export const MenuOverlay = memo(function MenuOverlay({
     >
       {/* Slide-Out Panel */}
       <div
-        className="absolute right-0 top-0 bottom-0 w-3/4 max-w-[300px] p-6 pt-20 flex flex-col transform transition-transform duration-300 animate-in slide-in-from-right"
+        className="fixed right-0 top-0 bottom-0 w-3/4 max-w-[300px] p-6 pt-20 flex flex-col transform transition-transform duration-300 animate-in slide-in-from-right"
         style={{
           backgroundColor,
           color: fontColor,
@@ -92,7 +92,7 @@ export const MenuOverlay = memo(function MenuOverlay({
         </h3>
 
         {/* Menu Items */}
-        <nav className="space-y-4 flex-1 overflow-y-auto">
+        <nav className="space-y-4 flex-1">
           {menuItems.map((item) => (
             <button
               key={item.id}

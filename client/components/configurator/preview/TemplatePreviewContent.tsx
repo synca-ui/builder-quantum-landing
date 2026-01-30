@@ -243,7 +243,7 @@ export function TemplatePreviewContent() {
   const navigateToPage = useCallback((page: string) => {
     setPreviewState((p) => ({ ...p, activePage: page, menuOpen: false }));
 
-    // SCROLL-TO-TOP bei Seitenwechsel
+    // SCROLL-TO-TOP bei Seitenwechsel - verkürzt für weniger "Springen"
     setTimeout(() => {
       const container = document.querySelector('[data-preview-scroll="true"]');
       if (container) {
