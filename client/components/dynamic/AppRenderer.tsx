@@ -211,7 +211,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
     titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
     bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
-    nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
+    nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-sm`,
   }), [design.backgroundColor, design.fontColor]);
 
   // ============================================
@@ -564,7 +564,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 
   return (
     <div
-      className="min-h-screen relative flex flex-col transition-colors duration-300"
+      className="h-screen relative flex flex-col transition-colors duration-300 overflow-hidden"
       style={styles.wrapper}
     >
       {/* ✅ NAVIGATION - Shared Component statt Inline Code */}
@@ -595,10 +595,21 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         isPreview={false}
       />
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: "touch" }}>
+      {/* MAIN CONTENT - Scrollable Container */}
+      <main
+        className="flex-1 overflow-y-auto scroll-smooth relative z-10"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorY: "contain"
+        }}
+      >
         <div className={styles.page}>{renderContent()}</div>
         <div className="h-12 w-full" />
+
+        {/* FOOTER - Inside scroll container */}
+        <footer className="text-center py-6 opacity-30 text-[10px] font-bold uppercase tracking-widest border-t border-current/5">
+          © {new Date().getFullYear()} {business.name} | Maitr Website Builder
+        </footer>
       </main>
 
       {/* ✅ DISH MODAL - Shared Component statt Inline Code */}
@@ -617,11 +628,6 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         onAddToCart={addToCart}
         isPreview={false}
       />
-
-      {/* FOOTER */}
-      <footer className="text-center py-6 opacity-30 text-[10px] font-bold uppercase tracking-widest border-t border-current/5">
-        © {new Date().getFullYear()} {business.name} | Maitr Website Builder
-      </footer>
     </div>
   );
 };
