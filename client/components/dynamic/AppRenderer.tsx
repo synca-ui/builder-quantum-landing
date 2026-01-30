@@ -214,6 +214,8 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   // ============================================
   // RENDER FUNCTIONS
   // ============================================
+  // RENDER FUNCTIONS
+  // ============================================
 
   const renderHomePage = () => (
     <div className="space-y-8 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -316,6 +318,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     </div>
   );
 
+  // ✅ ORIGINAL MENU PAGE (Fallback)
   const renderMenuPage = () => (
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300">
       <h2 className={styles.titleClass}>Speisekarte</h2>
@@ -552,7 +555,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       case "contact": return renderContactPage();
       case "gallery": return renderGalleryPage();
       case "reservations": return renderReservationsPage();
-      default: return <div className="p-10 text-center opacity-50 pt-20">Seite nicht gefunden</div>;
+      default: return <div className="p-10 text-center opacity-50 pt-20">404 - Seite nicht gefunden</div>;
     }
   };
 

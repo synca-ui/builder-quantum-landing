@@ -11,9 +11,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
-import Index from "./pages/Index";
+
 import Configurator from "./pages/Configurator";
-import AdvancedConfigurator from "./pages/AdvancedConfigurator";
 import ModeSelection from "./pages/ModeSelection";
 import AutoConfigurator from "./pages/AutoConfigurator";
 import Dashboard from "./pages/Dashboard";
@@ -72,10 +71,6 @@ const App = () => (
                   <Route
                     path="/configurator/auto"
                     element={<AutoConfigurator />}
-                  />
-                  <Route
-                    path="/configurator/advanced"
-                    element={<AdvancedConfigurator />}
                   />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />

@@ -296,6 +296,13 @@ export function TemplatePreviewContent() {
   // ==========================================
   // CONTENT RENDERERS
   // ==========================================
+
+  // ✅ DEAKTIVIERT - Moderne Templates nutzen wieder die ursprünglichen Components
+  const renderHomePageModern = () => {
+    return renderHomePage(); // Fallback zur ursprünglichen Version
+  };
+
+  // ✅ ORIGINAL VERSION (Fallback)
   const renderHomePage = () => {
     const displayItems =
       menuItems.length > 0
@@ -411,6 +418,12 @@ export function TemplatePreviewContent() {
     );
   };
 
+  // ✅ DEAKTIVIERT - Moderne Templates nutzen wieder die ursprüngliche MenuPage
+  const renderMenuPageModern = () => {
+    return renderMenuPage(); // Fallback zur ursprünglichen Version
+  };
+
+  // ✅ ORIGINAL MENU PAGE (Fallback)
   const renderMenuPage = () => {
     const filteredItems = activeMenuCategory
       ? menuItems.filter(item => item.category === activeMenuCategory)
@@ -740,6 +753,10 @@ export function TemplatePreviewContent() {
       </div>
     );
   };
+
+  // ==========================================
+  // RENDER CONTENT WITH VERSIONING
+  // ==========================================
 
   const renderContent = () => {
     switch (previewState.activePage) {
