@@ -98,7 +98,15 @@ export const FeatureFlagsSchema = z.object({
 
 // Contact Info Schema
 export const ContactInfoSchema = z.object({
-  contactMethods: z.array(z.string()).default([]),
+  contactMethods: z.array(
+    z.union([
+      z.string(), // Legacy support
+      z.object({
+        type: z.string(),
+        value: z.string(),
+      })
+    ])
+  ).default([]),
   socialMedia: z.record(z.string()).default({}),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -194,7 +202,15 @@ export const LegacyConfigurationSchema = z
     reservationsEnabled: z.coerce.boolean().default(false),
     maxGuests: z.coerce.number().default(10),
     notificationMethod: z.string().default("email"),
-    contactMethods: z.array(z.any()).default([]),
+    contactMethods: z.array(
+      z.union([
+        z.string(),
+        z.object({
+          type: z.string(),
+          value: z.string(),
+        })
+      ])
+    ).default([]),
     socialMedia: z.record(z.string()).default({}),
     gallery: z.array(z.any()).default([]),
     onlineOrdering: z.coerce.boolean().default(false),

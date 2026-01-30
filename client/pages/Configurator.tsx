@@ -292,14 +292,36 @@ export default function Configurator() {
     [isSignedIn, getToken, currentConfigId, persistence],
   );
 
-  const nextStep = useCallback(() => {
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const nextStep = useCallback(async () => {
+    // Verhindere Preview-Updates während Transition
+    setIsTransitioning(true);
+
     actions.history.pushHistory(); // Push history before navigation
+
+    // Kurze Delay für stabile Transition
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     nextStepStore();
+
+    // Re-enable Preview nach Step-Wechsel
+    setTimeout(() => setIsTransitioning(false), 150);
   }, [nextStepStore, actions.history]);
 
-  const prevStep = useCallback(() => {
+  const prevStep = useCallback(async () => {
+    // Verhindere Preview-Updates während Transition
+    setIsTransitioning(true);
+
     actions.history.pushHistory(); // Push history before navigation
+
+    // Kurze Delay für stabile Transition
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     prevStepStore();
+
+    // Re-enable Preview nach Step-Wechsel
+    setTimeout(() => setIsTransitioning(false), 150);
   }, [prevStepStore, actions.history]);
 
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
@@ -332,11 +354,17 @@ export default function Configurator() {
         <ShareQRButton url={getLiveUrl()} t={t} />
       </div>
 
-      <div className="relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-transform duration-300 pointer-events-auto">
+      <div className={`relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-all duration-200 pointer-events-auto ${
+        isTransitioning ? 'opacity-80 scale-[0.74] xl:scale-[0.84]' : 'opacity-100'
+      }`}>
         <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/10 to-purple-500/10 blur-3xl rounded-full opacity-30 -z-10" />
         <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
           <PhonePortal>
-            <TemplatePreviewContent />
+            <div className={`transition-opacity duration-200 ${
+              isTransitioning ? 'opacity-50' : 'opacity-100'
+            }`}>
+              <TemplatePreviewContent />
+            </div>
           </PhonePortal>
         </LivePhoneFrame>
       </div>
