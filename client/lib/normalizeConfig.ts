@@ -254,6 +254,7 @@ function normalizeMenuItems(items: unknown): MenuItem[] {
       category: (i.category as string) || 'Sonstiges',
       image: i.image as MenuItem['image'] || undefined,
       images: i.images as MenuItem['images'] || undefined,
+      isHighlight: i.isHighlight === true,
     };
   });
 }
