@@ -39,6 +39,12 @@ export interface Configuration {
   paymentOptions?: string[];
   offers?: any[];
   offerBanner?: any;
+  priceColor?: string;
+  reservationButtonColor?: string;
+  reservationButtonShape?: "pill" | "rounded" | "square";
+  reservationButtonTextColor?: string;
+  headerFontColor?: string;
+  headerBackgroundColor?: string;
 }
 
 export interface ApiResponse<T> {

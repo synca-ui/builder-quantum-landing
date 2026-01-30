@@ -40,8 +40,6 @@ export interface HeroProps {
   onOrderClick?: () => void;
   /** Handler für "Reservieren" Button */
   onReservationClick?: () => void;
-  /** Handler für "Mehr erfahren" */
-  onLearnMoreClick?: () => void;
   /** Preview-Modus (Editor) */
   isPreview?: boolean;
   /** Zusätzliche CSS-Klassen */
@@ -78,7 +76,6 @@ export const Hero = memo(function Hero({
   reservationButtonShape = 'rounded',
   onOrderClick,
   onReservationClick,
-  onLearnMoreClick,
   isPreview = false,
   className = '',
 }: HeroProps) {
@@ -89,10 +86,6 @@ export const Hero = memo(function Hero({
 
   const handleReservationClick = () => {
     if (onReservationClick) onReservationClick();
-  };
-
-  const handleLearnMoreClick = () => {
-    if (onLearnMoreClick) onLearnMoreClick();
   };
 
   const buttonRadius = getButtonRadius(reservationButtonShape);
@@ -158,18 +151,6 @@ export const Hero = memo(function Hero({
             }}
           >
             Tisch reservieren
-          </button>
-        )}
-
-        {/* Tertiary CTA: Mehr erfahren (wenn keine anderen CTAs) */}
-        {!onlineOrdering && !reservationsEnabled && (
-          <button
-            onClick={handleLearnMoreClick}
-            className="inline-flex items-center gap-2 py-2 px-4 font-medium text-sm opacity-70 hover:opacity-100 transition-opacity"
-            style={{ color: fontColor }}
-          >
-            Mehr erfahren
-            <ArrowRight className="w-4 h-4" />
           </button>
         )}
       </div>

@@ -212,6 +212,7 @@ export default function Configurator() {
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
   const business = useConfiguratorStore((s) => s.business); // <-- DIESE ZEILE HINZUFÜGEN
   const design = useConfiguratorStore((s) => s.design);
+  const features = useConfiguratorStore((s) => s.features);
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(
     () => persistence.getConfigId() || null,
   );
@@ -250,21 +251,39 @@ export default function Configurator() {
 
   // ✅ StyleInjector Integration
   useEffect(() => {
+    // Styles injizieren
     injectGlobalStyles({
       template: design.template || 'minimalist',
       primaryColor: design.primaryColor || '#2563EB',
       secondaryColor: design.secondaryColor || '#7C3AED',
       backgroundColor: design.backgroundColor || '#FFFFFF',
       fontColor: design.fontColor || '#111827',
-      priceColor: (design as any).priceColor || '#059669',
+      priceColor: design.priceColor || '#059669',
+      headerFontColor: design.headerFontColor || '#5e30eb',
+      headerBackgroundColor: design.headerBackgroundColor || '#FFFFFF',
+      headerFontSize: design.headerFontSize || '3xl',
+      reservationButtonColor: features.reservationButtonColor || '#94e3fe',
+      reservationButtonTextColor: features.reservationButtonTextColor || '#000000',
     });
 
     return () => {
-      const styleElement = document.getElementById('maitr-global-styles');
+      // ID muss exakt mit STYLE_ELEMENT_ID in styleInjector.ts übereinstimmen
+      const styleElement = document.getElementById('maitr-injected-styles');
       if (styleElement) styleElement.remove();
     };
-  }, [design.template, design.primaryColor, design.secondaryColor, design.backgroundColor, design.fontColor]);
-
+  }, [
+    // Alle Werte hinzufügen, die eine Live-Aktualisierung auslösen sollen
+    design.template,
+    design.primaryColor,
+    design.secondaryColor,
+    design.backgroundColor,
+    design.fontColor,
+    design.headerFontColor,
+    design.headerFontSize,
+    design.priceColor,
+    features.reservationButtonColor,
+    features.reservationButtonTextColor
+  ]);
 
   const saveToBackend = useCallback(
     async (data: Partial<Configuration>) => {

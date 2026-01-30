@@ -16,6 +16,11 @@ export interface UserColorOverrides {
   backgroundColor: string;
   fontColor: string;
   priceColor: string;
+  headerFontColor?: string;
+  headerBackgroundColor?: string;
+  headerFontSize?: string;
+  reservationButtonColor?: string;
+  reservationButtonTextColor?: string;
 }
 
 /**
@@ -37,6 +42,9 @@ export function generateGlobalStyles(
     price: userColors.priceColor || "#059669", // Fallback
     accent: tokens.colors.accent,
     border: tokens.colors.border,
+
+
+
   };
 
   // RGB-Varianten für Transparenz
@@ -58,6 +66,11 @@ export function generateGlobalStyles(
       --color-background: ${finalColors.background};
       --color-text: ${finalColors.text};
       --color-price: ${finalColors.price};
+      --color-header-font: ${userColors.headerFontColor || '#000000'};
+      --color-header-bg: ${userColors.headerBackgroundColor || 'transparent'};
+      --font-header-size-override: ${userColors.headerFontSize || 'inherit'};
+      --color-res-btn: ${userColors.reservationButtonColor || 'var(--color-primary)'};
+      --color-res-btn-text: ${userColors.reservationButtonTextColor || '#FFFFFF'};
       
       /* Template Tokens (aus CSV) */
       --color-accent: ${finalColors.accent};
@@ -600,17 +613,18 @@ const STYLE_ELEMENT_ID = 'maitr-injected-styles';
  * Kompatibel mit domain.ts Configuration
  */
 export interface StyleInjectionConfig {
-  // Template ID
   template?: string;
-
-  // Design Overrides
   primaryColor?: string;
   secondaryColor?: string;
   backgroundColor?: string;
   fontColor?: string;
   priceColor?: string;
-
-  // Optional: Direct token overrides
+  headerFontColor?: string;
+  headerBackgroundColor?: string;
+  headerFontSize?: string;
+  reservationButtonColor?: string;
+  reservationButtonTextColor?: string;
+  reservationButtonShape?: string;
   borderRadiusCard?: string;
   boxShadowCard?: string;
 }
@@ -640,6 +654,11 @@ export function injectGlobalStyles(
     backgroundColor: config.backgroundColor || '',
     fontColor: config.fontColor || '',
     priceColor: config.priceColor || '',
+    headerFontColor: config.headerFontColor,
+    headerBackgroundColor: config.headerBackgroundColor,
+    headerFontSize: config.headerFontSize,
+    reservationButtonColor: config.reservationButtonColor,
+    reservationButtonTextColor: config.reservationButtonTextColor,
   };
 
   // Vollständige CSS generieren
