@@ -894,10 +894,14 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
 
         // Wir bauen ein flaches Objekt für die API
         return {
-          // Basis-Daten direkt aus business (Name, Type, Location, Slogan)
-          ...state.business,
 
-          // Design-Werte "flachklopfen"
+          businessName: state.business.name,
+          businessType: state.business.type,
+          location: state.business.location,
+          slogan: state.business.slogan,
+          uniqueDescription: state.business.uniqueDescription,
+
+          // Design-Werte (Flachklopfen)
           template: state.design.template,
           primaryColor: state.design.primaryColor,
           secondaryColor: state.design.secondaryColor,
@@ -909,29 +913,27 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           headerBackgroundColor: state.design.headerBackgroundColor,
           priceColor: state.design.priceColor,
 
-          // Features "flachklopfen"
+          // Features
           reservationsEnabled: state.features.reservationsEnabled,
           maxGuests: state.features.maxGuests,
           reservationButtonColor: state.features.reservationButtonColor,
           reservationButtonTextColor: state.features.reservationButtonTextColor,
           reservationButtonShape: state.features.reservationButtonShape,
 
-          // Content & Pages
+          // Listen & Content
           openingHours: state.content.openingHours,
           menuItems: state.content.menuItems,
           gallery: state.content.gallery,
           selectedPages: state.pages.selectedPages,
           customPages: state.pages.customPages,
 
-          // Kontakt
+          // Kontakt & Meta
           phone: state.contact.phone,
           email: state.contact.email,
           socialMedia: state.contact.socialMedia,
-
-          // Publishing Status
           status: state.publishing.status,
           userId: state.userId || "published",
-        };
+      } as any;
       },
 
       loadConfiguration: (config) => {
