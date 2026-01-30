@@ -87,6 +87,7 @@ interface ConfiguratorState {
   // Domain-specific state
   business: BusinessInfo;
   design: DesignConfig;
+  userId: string;
   content: ContentData;
   features: FeatureFlags;
   contact: ContactInfo;
@@ -167,7 +168,7 @@ interface ConfiguratorState {
 
   // Actions: Data Management
   resetConfig: () => void;
-  getFullConfiguration: () => Configuration;
+  getFullConfiguration: () => any;
   loadConfiguration: (config: Partial<Configuration>) => void;
   clearAllData: () => void;
 }
@@ -284,6 +285,7 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
   persist(
     (set, get) => ({
       // Initial state
+      userId: "",
       business: { ...defaultBusinessInfo },
       design: { ...defaultDesignConfig },
       content: { ...defaultContentData },
@@ -889,16 +891,46 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
 
       getFullConfiguration: () => {
         const state = get();
+
+        // Wir bauen ein flaches Objekt für die API
         return {
-          userId: "", // Placeholder or from auth context
-          business: state.business,
-          design: state.design,
-          content: state.content,
-          features: state.features,
-          contact: state.contact,
-          publishing: state.publishing,
-          pages: state.pages,
-          payments: state.payments,
+          // Basis-Daten direkt aus business (Name, Type, Location, Slogan)
+          ...state.business,
+
+          // Design-Werte "flachklopfen"
+          template: state.design.template,
+          primaryColor: state.design.primaryColor,
+          secondaryColor: state.design.secondaryColor,
+          backgroundColor: state.design.backgroundColor,
+          fontColor: state.design.fontColor,
+          fontFamily: state.design.fontFamily,
+          headerFontSize: state.design.headerFontSize,
+          headerFontColor: state.design.headerFontColor,
+          headerBackgroundColor: state.design.headerBackgroundColor,
+          priceColor: state.design.priceColor,
+
+          // Features "flachklopfen"
+          reservationsEnabled: state.features.reservationsEnabled,
+          maxGuests: state.features.maxGuests,
+          reservationButtonColor: state.features.reservationButtonColor,
+          reservationButtonTextColor: state.features.reservationButtonTextColor,
+          reservationButtonShape: state.features.reservationButtonShape,
+
+          // Content & Pages
+          openingHours: state.content.openingHours,
+          menuItems: state.content.menuItems,
+          gallery: state.content.gallery,
+          selectedPages: state.pages.selectedPages,
+          customPages: state.pages.customPages,
+
+          // Kontakt
+          phone: state.contact.phone,
+          email: state.contact.email,
+          socialMedia: state.contact.socialMedia,
+
+          // Publishing Status
+          status: state.publishing.status,
+          userId: state.userId || "published",
         };
       },
 
