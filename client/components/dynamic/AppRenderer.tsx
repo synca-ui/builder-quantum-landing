@@ -24,7 +24,8 @@ import {
 } from "lucide-react";
 import type { Configuration, MenuItem, OpeningHours as OpeningHoursType } from "@/types/domain";
 import { injectGlobalStyles } from "@/lib/styleInjector";
-import { normalizeImageSrc, getPageLabel } from "@/lib/helpers"; // ✅ Helper-Import
+import { normalizeImageSrc, getPageLabel } from "@/lib/helpers";
+import normalizeConfig from "@/lib/normalizeConfig"; // ✅ FIX 1: Import zentrale normalizeConfig
 
 // ============================================
 // SHARED COMPONENTS - 100% Visual Parity
@@ -44,71 +45,7 @@ interface AppRendererProps {
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
-
-/**
- * Normalisiert flache DB-Daten zu verschachtelter Configuration-Struktur
- */
-const normalizeConfig = (rawConfig: any): Configuration => {
-  // Fall 1: Bereits verschachtelt (aus Store)
-  if (rawConfig.business && rawConfig.design) {
-    return {
-      ...rawConfig,
-      userId: rawConfig.userId || "anonymous",
-    } as Configuration;
-  }
-
-  // Fall 2: Flache Struktur (aus DB)
-  return {
-    userId: rawConfig.userId || "anonymous",
-    business: {
-      name: rawConfig.businessName || rawConfig.name || "Ihr Geschäft",
-      type: rawConfig.businessType || rawConfig.type || "restaurant",
-      location: rawConfig.location || "",
-      slogan: rawConfig.slogan || "",
-      uniqueDescription: rawConfig.uniqueDescription || "",
-      logo: rawConfig.logo || null,
-    },
-    design: {
-      template: rawConfig.template || "minimalist",
-      primaryColor: rawConfig.primaryColor || "#2563EB",
-      secondaryColor: rawConfig.secondaryColor || "#7C3AED",
-      backgroundColor: rawConfig.backgroundColor || "#FFFFFF",
-      fontColor: rawConfig.fontColor || "#111827",
-      fontFamily: rawConfig.fontFamily || "sans-serif",
-      priceColor: rawConfig.priceColor || "#059669",
-      headerFontColor: rawConfig.headerFontColor || rawConfig.fontColor || "#111827",
-      headerFontSize: rawConfig.headerFontSize || "medium",
-      headerBackgroundColor: rawConfig.headerBackgroundColor || rawConfig.backgroundColor || "#FFFFFF",
-    },
-    content: {
-      menuItems: rawConfig.menuItems || [],
-      gallery: rawConfig.gallery || [],
-      openingHours: rawConfig.openingHours || {},
-      categories: rawConfig.categories || [],
-    },
-    features: {
-      reservationsEnabled: rawConfig.reservationsEnabled || false,
-      reservationButtonColor: rawConfig.reservationButtonColor || "#2563EB",
-      reservationButtonTextColor: rawConfig.reservationButtonTextColor || "#FFFFFF",
-      reservationButtonShape: rawConfig.reservationButtonShape || "rounded",
-      onlineOrderingEnabled: rawConfig.onlineOrdering || rawConfig.onlineOrderingEnabled || false,
-      onlineStoreEnabled: rawConfig.onlineStore || rawConfig.onlineStoreEnabled || false,
-      teamAreaEnabled: rawConfig.teamArea || rawConfig.teamAreaEnabled || false,
-    },
-    contact: {
-      email: rawConfig.email || "",
-      phone: rawConfig.phone || "",
-      socialMedia: rawConfig.socialMedia || {},
-      contactMethods: rawConfig.contactMethods || [],
-    },
-    publishing: rawConfig.publishing || { status: rawConfig.status || "draft" },
-    pages: {
-      selectedPages: rawConfig.selectedPages || ["home"],
-      customPages: rawConfig.customPages || [],
-    },
-    payments: rawConfig.payments || {},
-  } as Configuration;
-};
+// ✅ FIX 2: Lokale normalizeConfig entfernt - wird jetzt aus @/lib/normalizeConfig importiert
 
 // ============================================
 // MAIN COMPONENT
@@ -118,7 +55,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
   const { business, design, content, features, contact, pages, payments } = config;
 
-  // ✅ CSS VARIABLE INJECTION - Injiziert Template-spezifische Styles
+  // ✅ FIX 3: CSS VARIABLE INJECTION - ALLE Design-Parameter inkl. Header-Styles
   useEffect(() => {
     injectGlobalStyles({
       template: design.template,
@@ -127,16 +64,29 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       backgroundColor: design.backgroundColor,
       fontColor: design.fontColor,
       priceColor: design.priceColor,
-    });
+      headerFontColor: design.headerFontColor,           // ✅ NEU
+      headerFontSize: design.headerFontSize,             // ✅ NEU
+      headerBackgroundColor: design.headerBackgroundColor, // ✅ NEU
+    } as any);
 
     return () => {
       // Cleanup: Remove injected styles on unmount
-      const styleElement = document.getElementById('maitr-global-styles');
+      const styleElement = document.getElementById('maitr-injected-styles');
       if (styleElement) {
         styleElement.remove();
       }
     };
-  }, [design.template, design.primaryColor, design.secondaryColor, design.backgroundColor, design.fontColor, design.priceColor]);
+  }, [
+    design.template,
+    design.primaryColor,
+    design.secondaryColor,
+    design.backgroundColor,
+    design.fontColor,
+    design.priceColor,
+    design.headerFontColor,           // ✅ NEU
+    design.headerFontSize,            // ✅ NEU
+    design.headerBackgroundColor,     // ✅ NEU
+  ]);
 
   // Local State
   const [menuOpen, setMenuOpen] = useState(false);
@@ -269,18 +219,15 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     <div className="space-y-8 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* ✅ Hero Component - Ersetzt inline Hero-Section */}
       <Hero
-        slogan={business.slogan || business.name}
+        slogan={business.slogan && business.slogan.trim() !== "" ? business.slogan : undefined} // ✅ FIX 4: Nur echten Slogan zeigen
         description={business.uniqueDescription || "Willkommen in unserem Geschäft!"}
         primaryColor={design.primaryColor}
         fontColor={design.fontColor}
         backgroundColor={design.backgroundColor}
         onlineOrdering={features.onlineOrderingEnabled}
-        reservationsEnabled={features.reservationsEnabled}
-        reservationButtonColor={features.reservationButtonColor}
-        reservationButtonTextColor={features.reservationButtonTextColor}
-        reservationButtonShape={features.reservationButtonShape}
+
         onOrderClick={() => navigateToPage("menu")}
-        onReservationClick={() => navigateToPage("reservations")}
+
         isPreview={false}
       />
 
@@ -346,8 +293,8 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
           <button
             className="w-full py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
             style={{
-              backgroundColor: features.reservationButtonColor,
-              color: features.reservationButtonTextColor,
+              backgroundColor: features.reservationButtonColor || design.primaryColor,
+              color: features.reservationButtonTextColor || "#FFFFFF",
               borderRadius: features.reservationButtonShape === "pill" ? "9999px" : features.reservationButtonShape === "square" ? "0.5rem" : "0.75rem",
             }}
             onClick={() => navigateToPage("reservations")}
@@ -674,4 +621,3 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 };
 
 export default AppRenderer;
-
