@@ -891,49 +891,25 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
 
       getFullConfiguration: () => {
         const state = get();
-
-        // Wir bauen ein flaches Objekt für die API
         return {
+          // 1. Verschachtelte Objekte für den Backend-Validator (Zwingend erforderlich!)
+          business: state.business,
+          design: state.design,
+          content: state.content,
+          features: state.features,
+          contact: state.contact,
+          pages: state.pages,
 
+          // 2. Flache Felder für die direkte Speicherung in der Datenbank (Prisma-Mapping)
           businessName: state.business.name,
           businessType: state.business.type,
-          location: state.business.location,
-          slogan: state.business.slogan,
-          uniqueDescription: state.business.uniqueDescription,
-
-          // Design-Werte (Flachklopfen)
           template: state.design.template,
           primaryColor: state.design.primaryColor,
-          secondaryColor: state.design.secondaryColor,
-          backgroundColor: state.design.backgroundColor,
-          fontColor: state.design.fontColor,
-          fontFamily: state.design.fontFamily,
           headerFontSize: state.design.headerFontSize,
           headerFontColor: state.design.headerFontColor,
-          headerBackgroundColor: state.design.headerBackgroundColor,
           priceColor: state.design.priceColor,
-
-          // Features
-          reservationsEnabled: state.features.reservationsEnabled,
-          maxGuests: state.features.maxGuests,
-          reservationButtonColor: state.features.reservationButtonColor,
-          reservationButtonTextColor: state.features.reservationButtonTextColor,
-          reservationButtonShape: state.features.reservationButtonShape,
-
-          // Listen & Content
-          openingHours: state.content.openingHours,
-          menuItems: state.content.menuItems,
-          gallery: state.content.gallery,
-          selectedPages: state.pages.selectedPages,
-          customPages: state.pages.customPages,
-
-          // Kontakt & Meta
-          phone: state.contact.phone,
-          email: state.contact.email,
-          socialMedia: state.contact.socialMedia,
-          status: state.publishing.status,
           userId: state.userId || "published",
-      } as any;
+        } as any;
       },
 
       loadConfiguration: (config) => {

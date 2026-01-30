@@ -4,7 +4,8 @@ export async function publishWebApp(subdomain: string, config: any, token?: stri
   try {
     const res = await axios.post(
       "/api/apps/publish",
-      { subdomain, config }, // ✅ EXAKT SO: config muss ein Unterobjekt bleiben
+      // WICHTIG: Sende ein Objekt mit den Keys 'subdomain' und 'config'
+      { subdomain, config },
       {
         baseURL: "",
         headers: {

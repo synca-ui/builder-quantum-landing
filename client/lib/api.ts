@@ -217,13 +217,17 @@ export const configurationApi = {
   },
 
   // Publish configuration (accepts optional config payload to avoid FS writes on server)
-  async publish(id: string, config?: Partial<Configuration>, token?: string) {
+  async publish(
+    id: string,
+    config?: Partial<Configuration>,
+    token?: string,
+  ): Promise<ApiResponse<Configuration>> {
     try {
       return await apiRequest<Configuration>(
         `/configurations/${id}/publish`,
         {
           method: "POST",
-          // JETZT: Schicke das config-Objekt direkt (ohne { config })
+          // Sende die config direkt als JSON-Body
           body: config ? JSON.stringify(config) : undefined,
         },
         token,

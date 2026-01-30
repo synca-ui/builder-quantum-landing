@@ -64,9 +64,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       backgroundColor: design.backgroundColor,
       fontColor: design.fontColor,
       priceColor: design.priceColor,
-      headerFontColor: design.headerFontColor,           // ✅ NEU
-      headerFontSize: design.headerFontSize,             // ✅ NEU
-      headerBackgroundColor: design.headerBackgroundColor, // ✅ NEU
+      headerFontColor: design.headerFontColor,
+      headerFontSize: design.headerFontSize,
+      headerBackgroundColor: design.headerBackgroundColor,
     } as any);
 
     return () => {
@@ -83,9 +83,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     design.backgroundColor,
     design.fontColor,
     design.priceColor,
-    design.headerFontColor,           // ✅ NEU
-    design.headerFontSize,            // ✅ NEU
-    design.headerBackgroundColor,     // ✅ NEU
+    design.headerFontColor,
+    design.headerFontSize,
+    design.headerBackgroundColor,
+    features.reservationButtonColor,
+    features.reservationButtonTextColor,
+    features.reservationButtonShape,
   ]);
 
   // Local State
