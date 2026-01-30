@@ -1,14 +1,10 @@
 import axios from "axios";
 
-export async function publishWebApp(
-  subdomain: string,
-  config: any,
-  token?: string,
-) {
+export async function publishWebApp(subdomain: string, config: any, token?: string) {
   try {
     const res = await axios.post(
       "/api/apps/publish",
-      { subdomain, config },
+      { subdomain, config }, // ✅ EXAKT SO: config muss ein Unterobjekt bleiben
       {
         baseURL: "",
         headers: {
@@ -17,16 +13,7 @@ export async function publishWebApp(
         },
       },
     );
-    return res.data as {
-      id: string;
-      user_id: string;
-      subdomain: string;
-      config_data: any;
-      published_at: string;
-      updated_at: string;
-      publishedUrl?: string;
-      previewUrl?: string;
-    };
+    return res.data;
   } catch (error) {
     console.error("Failed to publish web app:", error);
     throw error;

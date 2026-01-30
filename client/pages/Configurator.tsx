@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
+import { publishWebApp } from "@/lib/webapps";
 import {
   Rocket,
   Settings,
@@ -311,6 +312,30 @@ export default function Configurator() {
     [isSignedIn, getToken, currentConfigId, persistence],
   );
 
+  const handlePublish = useCallback(async () => {
+    if (!isSignedIn) return;
+    setSaveStatus("saving");
+
+    try {
+      const token = await getToken();
+      const config = actions.data.getFullConfiguration();
+      // Generiere Subdomain aus dem gewählten Namen oder Business-Namen
+      const subdomain = business.domain?.selectedDomain ||
+        business.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+
+      const result = await publishWebApp(subdomain, config, token || undefined);
+
+      if (result.success) {
+        setPublishedUrl(result.publishedUrl);
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      }
+    } catch (e) {
+      console.error("Publishing failed", e);
+      setSaveStatus("idle");
+    }
+  }, [isSignedIn, getToken, setPublishedUrl, actions.data, business.domain?.selectedDomain, business.name]);
+
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const nextStep = useCallback(async () => {
@@ -510,10 +535,8 @@ export default function Configurator() {
             {currentStep >= 0 && (
               <Button
                 size="sm"
-                onClick={() => {
-                  saveToBackend(actions.data.getFullConfiguration());
-                }}
-                className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white font-bold rounded-full shadow-lg"
+                onClick={handlePublish} // ✅ Hier handlePublish statt saveToBackend nutzen!
+                className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 ..."
               >
                 <Rocket className="w-4 h-4 mr-2" /> {t("nav.publishWebsite")}
               </Button>
