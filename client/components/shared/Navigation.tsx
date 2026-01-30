@@ -128,12 +128,11 @@ export const Navigation = memo(function Navigation({
 
   return (
     <nav
-      className={`
+      className={className || `
         absolute top-0 left-0 right-0 z-30 
         px-5 pt-6 pb-4 
         flex items-center justify-between 
         border-b transition-all
-        ${className}
       `}
       style={{
         backgroundColor: headerBackgroundColor,

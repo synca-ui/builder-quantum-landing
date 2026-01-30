@@ -211,7 +211,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
     titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
     bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
-    nav: `fixed top-0 left-0 right-0 z-30 px-5 md:px-8 lg:px-12 pt-6 md:pt-6 pb-4 md:pb-5 flex items-center justify-between border-b border-black/5 transition-all`,
+    nav: `fixed top-0 left-0 right-0 z-50 px-5 md:px-8 lg:px-12 py-4 md:py-5 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
   }), [design.backgroundColor, design.fontColor]);
 
   // ============================================
