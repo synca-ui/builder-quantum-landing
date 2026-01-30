@@ -243,7 +243,7 @@ export function TemplatePreviewContent() {
   const navigateToPage = useCallback((page: string) => {
     setPreviewState((p) => ({ ...p, activePage: page, menuOpen: false }));
 
-    // SCROLL-TO-TOP bei Seitenwechsel
+    // SCROLL-TO-TOP bei Seitenwechsel - verkürzt für weniger "Springen"
     setTimeout(() => {
       const container = document.querySelector('[data-preview-scroll="true"]');
       if (container) {
@@ -274,7 +274,7 @@ export function TemplatePreviewContent() {
       page: `px-5 pt-24 pb-16 min-h-full ${fontClass}`,
       titleClass: `text-3xl font-bold mb-6 text-center leading-tight`,
       bodyClass: `text-sm opacity-90 leading-relaxed`,
-      nav: `absolute top-0 left-0 right-0 z-30 px-5 pt-6 pb-4 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-sm`,
+      nav: `fixed top-0 left-0 right-0 z-50 px-5 py-4 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
     };
 
     switch (template) {
@@ -285,17 +285,13 @@ export function TemplatePreviewContent() {
             background: `linear-gradient(135deg, ${backgroundColor} 0%, ${secondaryColor} 100%)`,
             color: fontColor,
           },
-          nav: `${base.nav} backdrop-blur-sm`,
         };
       case "stylish":
       case "cozy":
       default:
-        return {
-          ...base,
-          nav: `${base.nav} backdrop-blur-sm`,
-        };
+        return base;
     }
-  }, [backgroundColor, fontColor, secondaryColor, template, fontClass]);
+  }, []);
 
   // ==========================================
   // CONTENT RENDERERS
@@ -792,14 +788,14 @@ export function TemplatePreviewContent() {
       style={styles.wrapper}
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* Navigation Header - SHARED COMPONENT - Fixed innerhalb des Preview-Containers */}
+      {/* Navigation Header - SHARED COMPONENT */}
       <Navigation
         businessName={businessName}
         businessType={businessType}
         logo={logo?.url || null}
         headerFontColor={headerFontColor}
         headerFontSize={headerFontSize}
-        headerBackgroundColor={backgroundColor}
+        headerBackgroundColor={headerBackgroundColor}
         onlineOrdering={onlineOrdering}
         cartCount={cartItems.length}
         menuOpen={previewState.menuOpen}
