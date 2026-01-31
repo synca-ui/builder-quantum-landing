@@ -274,7 +274,7 @@ export function TemplatePreviewContent() {
       page: `px-5 pt-24 pb-16 min-h-full ${fontClass}`,
       titleClass: `text-3xl font-bold mb-6 text-center leading-tight`,
       bodyClass: `text-sm opacity-90 leading-relaxed`,
-      nav: `fixed top-0 left-0 right-0 z-50 px-5 py-4 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
+      nav: `absolute top-0 left-0 right-0 z-50 px-5 py-4 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
     };
 
     switch (template) {

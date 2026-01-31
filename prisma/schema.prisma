@@ -385,38 +385,38 @@ model BillingEvent {
 // ============================================
 
 model ScraperJob {
-  id              String    @id @default(uuid())
-  
-  // Input
-  businessName    String
-  businessType    String    @default("restaurant")
-  websiteUrl      String    @unique
-  
-  // Execution
-  n8nExecutionId  String?
-  status          String    @default("pending")  // pending | processing | completed | failed
-  
-  // Results
-  extractedData   Json?     // Raw data from n8n
-  suggestedConfig Json?     // Pre-populated Configuration
-  
-  // Linking
-  userId          String?
-  linkedConfigId  String?   @unique
-  
-  // Error Handling
-  failureReason   String?
-  
-  // Timestamps
-  createdAt       DateTime  @default(now())
-  startedAt       DateTime?
-  completedAt     DateTime?
-  
-  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  @@index([status])
-  @@index([userId])
-  @@index([createdAt])
+  // Der Primärschlüssel bleibt, aber Prisma sorgt für die UUID-Generierung
+  id                String    @id @default(uuid())
+
+  // Grunddaten
+  businessName      String
+  businessType      String?   // z.B. "pizzeria", "cafe"
+  websiteUrl        String    @unique // WICHTIG: Unique für das n8n-Matching
+
+  // Analyse-Ergebnisse (New Columns)
+  maitrScore        Int?      @default(0)
+  email             String?
+  phone             String?
+  instagramUrl      String?
+  menuUrl           String?
+  hasReservation    Boolean   @default(false)
+  googleSearchQuery String?
+  analysisFeedback  String?
+
+  // Status-Tracking
+  status            String    @default("pending") // "pending", "completed", "failed"
+  isDeepScrapeReady Boolean   @default(false)
+
+  // Flexibler Datenspeicher (RawConfig/Gedächtnis)
+  extractedData     Json?     // Speichert das komplette JSON-Objekt
+
+  // Metadaten
+  userId            String?   // Bleibt leer bis zum Login
+  createdAt         DateTime  @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+
+  User User[]
 }
 
 // ============================================
