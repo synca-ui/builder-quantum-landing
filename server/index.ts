@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { handleDemo } from "./routes/demo";
 import { handleSubdomainRequest } from "./routes/subdomains";
-import {
+import router, {
   saveConfiguration,
   getConfigurations,
   getConfiguration,
@@ -97,6 +97,8 @@ export function createServer() {
   app.use("/api", apiRouter);
   app.use("/api/subdomains", subdomainsRouter);
 
+  apiRouter.post("/forward-to-n8n", handleForwardN8n);
+
   // Additional explicit routes / routers
   app.use("/api", webAppsRouter);
   app.use("/api", publicAppsRouter);
@@ -136,7 +138,6 @@ export function createServer() {
   app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
   app.post("/api/orders/:webAppId/clear-old", handleClearOldOrders);
-
 
   // Demo endpoint
   app.get("/api/demo", handleDemo);
