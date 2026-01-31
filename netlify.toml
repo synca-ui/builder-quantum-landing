@@ -6,15 +6,14 @@ publish = "dist/spa"
 [functions]
 node_bundler = "nft"
 
-# --- WICHTIG: Die Änderung für Railway ---
-# Leitet alle API-Anfragen an dein Railway-Backend weiter.
+# API Weiterleitung an Railway
 [[redirects]]
 from = "/api/*"
 to = "https://builder-quantum-landing-production.up.railway.app/api/:splat"
 status = 200
 force = true
 
-# Fallback für Single-Page-Application (Bleibt so)
+# Fallback für Single-Page-Application
 [[redirects]]
 from = "/*"
 to = "/index.html"

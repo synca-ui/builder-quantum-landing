@@ -33,7 +33,6 @@ import {
   handleGetMenuStats,
   handleClearOldOrders,
 } from "./routes/orders";
-import { handleForwardN8n } from "./routes/n8nProxy";
 
 // Middleware to fix Buffer-body issues (Netlify edge cases)
 const rawBodyMiddleware = (req: any, _res: any, next: any) => {

@@ -55,10 +55,13 @@ export default function Index() {
   const handleMagicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isMagicLinkValid(magicLink)) {
+      alert('Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)');
       return;
     }
     setIsLoadingMagic(true);
     try {
+      console.log('🚀 Sending to n8n:', magicLink);
+
       const res = await fetch(`/api/forward-to-n8n`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -67,11 +70,26 @@ export default function Index() {
           timestamp: new Date().toISOString(),
         }),
       });
-      if (!res.ok) throw new Error("Network response was not ok");
-      const encoded = encodeURIComponent(magicLink);
-      navigate(`/mode-selection?sourceLink=${encoded}`);
+
+      console.log('📥 Response status:', res.status);
+
+      const data = await res.json();
+      console.log('📦 Response data:', data);
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status} - ${JSON.stringify(data)}`);
+      }
+
+      if (data.success) {
+        console.log('✅ Success! Navigating...');
+        const encoded = encodeURIComponent(magicLink);
+        navigate(`/mode-selection?sourceLink=${encoded}`);
+      } else {
+        throw new Error('API returned success: false');
+      }
     } catch (err) {
-      console.error(err);
+      console.error('❌ Error:', err);
+      alert(`Fehler: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`);
       setIsLoadingMagic(false);
     }
   };
