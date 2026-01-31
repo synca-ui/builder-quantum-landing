@@ -60,7 +60,6 @@ export function createServer() {
   });
 
   app.post("/api/webhooks/test", handleWebhookTest);
-  app.post("/api/forward-to-n8n", handleForwardN8n);
 
   // Root endpoint
   app.get("/", (_req, res) => {
