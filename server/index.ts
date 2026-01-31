@@ -59,6 +59,9 @@ export function createServer() {
     res.json({ status: "ok" });
   });
 
+  app.post("/api/webhooks/test", handleWebhookTest);
+  app.post("/api/forward-to-n8n", handleForwardN8n);
+
   // Root endpoint
   app.get("/", (_req, res) => {
     res.json({
@@ -86,9 +89,6 @@ export function createServer() {
   app.use(rawBodyMiddleware);
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
-
-  app.post("/api/webhooks/test", handleWebhookTest);
-  app.post("/api/forward-to-n8n", handleForwardN8n);
 
   // --- API ROUTEN (WICHTIG: ZUERST DEFINIEREN) ---
   // Damit haben API-Calls Vorrang vor Subdomain-Routing
