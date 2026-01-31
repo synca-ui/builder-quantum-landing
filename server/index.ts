@@ -97,8 +97,6 @@ export function createServer() {
   app.use("/api", apiRouter);
   app.use("/api/subdomains", subdomainsRouter);
 
-  apiRouter.post("/forward-to-n8n", handleForwardN8n);
-
   // Additional explicit routes / routers
   app.use("/api", webAppsRouter);
   app.use("/api", publicAppsRouter);
