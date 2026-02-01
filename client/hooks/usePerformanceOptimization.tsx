@@ -1,10 +1,31 @@
 import { useEffect, useCallback } from 'react';
 
-// Critical resource preloader - only for essential resources
+// Hook to ensure demo dashboard button is always visible on first load
+export function useDemoDashboardVisibility() {
+  useEffect(() => {
+    // Ensure demo button is always visible regardless of other loading states
+    const ensureVisibility = () => {
+      const demoButton = document.querySelector('a[href="/demo-dashboard"]');
+      if (demoButton) {
+        (demoButton as HTMLElement).style.opacity = '1';
+        (demoButton as HTMLElement).style.visibility = 'visible';
+        (demoButton as HTMLElement).style.display = 'inline-flex';
+      }
+    };
+
+    // Run immediately and after a short delay
+    ensureVisibility();
+    const timer = setTimeout(ensureVisibility, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+}
+
+// Critical resource preloader - optimized for homepage and demo dashboard
 export function useResourcePreloader() {
   const preloadCriticalResources = useCallback(() => {
-    // Only preload truly critical routes, not all routes
-    const criticalRoutes = ['/configurator']; // Reduced list
+    // Preload only essential routes, prioritize demo dashboard for instant access
+    const criticalRoutes = ['/demo-dashboard', '/configurator'];
 
     // Use requestIdleCallback if available
     const preloadWhenIdle = () => {
@@ -13,10 +34,33 @@ export function useResourcePreloader() {
         link.rel = 'prefetch';
         link.href = route;
         link.as = 'document';
+        link.crossOrigin = 'anonymous'; // Better caching
         document.head.appendChild(link);
       });
 
-      // Preload critical API endpoints only when needed
+      // Preload demo dashboard API endpoints for instant demo access
+      const demoEndpoints = [
+        '/api/demo/dashboard/insights/overview',
+        '/api/demo/dashboard/floor-plan/plans',
+        '/api/demo/dashboard/health'
+      ];
+
+      demoEndpoints.forEach(endpoint => {
+        fetch(endpoint, { method: 'HEAD' }).catch(() => {
+          // Silently handle errors, don't block main thread
+        });
+      });
+
+      // Preload demo dashboard component resources
+      if (window.location.pathname === '/') {
+        // Specifically preload demo dashboard when on homepage
+        const demoLink = document.createElement('link');
+        demoLink.rel = 'modulepreload';
+        demoLink.href = '/demo-dashboard';
+        document.head.appendChild(demoLink);
+      }
+
+      // Preload configurator API only when on configurator route
       if (window.location.pathname.includes('/configurator')) {
         fetch('/api/templates', { method: 'HEAD' }).catch(() => {});
       }
@@ -25,13 +69,14 @@ export function useResourcePreloader() {
     if ('requestIdleCallback' in window) {
       (window as any).requestIdleCallback(preloadWhenIdle, { timeout: 2000 });
     } else {
-      setTimeout(preloadWhenIdle, 3000); // Delayed to not interfere with LCP
+      // Reduced delay for better demo button responsiveness
+      setTimeout(preloadWhenIdle, 2000);
     }
   }, []);
 
   useEffect(() => {
-    // Delay preloading to avoid impacting LCP
-    const timer = setTimeout(preloadCriticalResources, 5000); // Increased delay
+    // Reduced delay to improve homepage performance
+    const timer = setTimeout(preloadCriticalResources, 2000);
     return () => clearTimeout(timer);
   }, [preloadCriticalResources]);
 }

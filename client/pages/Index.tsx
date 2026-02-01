@@ -28,6 +28,13 @@ import {
   SignInButton,
   SignUpButton,
 } from "@clerk/clerk-react";
+import {
+  useResourcePreloader,
+  useLazyCSS,
+  usePerformanceObserver,
+  useImageOptimization,
+  useDemoDashboardVisibility
+} from "@/hooks/usePerformanceOptimization";
 
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
@@ -35,12 +42,20 @@ export default function Index() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Initialize performance optimizations
+  useResourcePreloader();
+  useLazyCSS();
+  usePerformanceObserver();
+  useImageOptimization();
+  useDemoDashboardVisibility(); // Ensure demo button is always visible
+
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  const { isSignedIn } = useClerkAuth();
-  const { user, isLoaded } = useUser();
+  // Get auth state but with fallbacks to ensure button visibility
+  const { isSignedIn, isLoaded: authLoaded } = useClerkAuth();
+  const { user, isLoaded: userLoaded } = useUser();
 
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
@@ -597,25 +612,34 @@ export default function Index() {
           </div>
           <div className="text-center mt-8">
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {/* Login/Dashboard Button - conditional */}
-              {isSignedIn ? (
-                <a href="/dashboard">
-                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                    Go to Dashboard
-                  </Button>
-                </a>
+              {/* Login/Dashboard Button - conditional but with loading fallback */}
+              {authLoaded ? (
+                isSignedIn ? (
+                  <a href="/dashboard">
+                    <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
+                      Go to Dashboard
+                    </Button>
+                  </a>
+                ) : (
+                  <SignInButton mode="modal">
+                    <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
+                      Log in to access Dashboard
+                    </Button>
+                  </SignInButton>
+                )
               ) : (
-                <SignInButton mode="modal">
-                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                    Log in to access Dashboard
-                  </Button>
-                </SignInButton>
+                // Show fallback button while auth is loading to prevent layout shift
+                <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3 opacity-70">
+                  Loading...
+                </Button>
               )}
-            </div>
 
-            {/* Demo Dashboard Button - subtle like Watch Demo */}
-            <div className="mt-4">
-              <a href="/demo-dashboard" className="inline-flex">
+              {/* Demo Dashboard Button - always visible immediately, no auth dependency */}
+              <a
+                href="/demo-dashboard"
+                className="inline-flex"
+                aria-label="Try Dashboard Demo"
+              >
                 <Button
                   variant="ghost"
                   size="sm"
