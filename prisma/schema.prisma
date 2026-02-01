@@ -416,7 +416,7 @@ model ScraperJob {
   startedAt         DateTime?
   completedAt       DateTime?
 
-  User User[]
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 // ============================================
