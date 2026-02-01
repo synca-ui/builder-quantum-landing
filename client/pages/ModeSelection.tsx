@@ -1,14 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Sparkles, Copy } from "lucide-react";
+import { Settings, Sparkles, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import Headbar from "@/components/Headbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import MaitrScoreCircle from "@/components/MaitrScoreCircle";
@@ -29,21 +22,21 @@ export default function ModeSelection() {
     "Almost ready…",
   ];
 
+  const maitrScore = n8nData?.analysis?.maitr_score ?? 0;
+  const highScore = maitrScore > 80;
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(decodeURIComponent(urlSource || ""));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   };
 
   useEffect(() => {
     if (urlSource) {
       const decoded = decodeURIComponent(urlSource);
       setSourceLink(decoded);
-      // Only run analysis if we don't already have n8nData cached
       if (!n8nData) {
         runAnalysis(decoded);
       }
@@ -73,11 +66,8 @@ export default function ModeSelection() {
       }
 
       const payload = await res.json();
-
-      // Extract the response - could be nested or flat
       let data = payload?.response || payload;
 
-      // Handle case where response is a stringified JSON
       if (typeof data === "string") {
         try {
           data = JSON.parse(data);
@@ -86,7 +76,6 @@ export default function ModeSelection() {
         }
       }
 
-      // Validate it has expected structure
       if (data && typeof data === "object") {
         setN8nData(data as N8nResult);
       } else {
@@ -101,166 +90,154 @@ export default function ModeSelection() {
     }
   }
 
-  const recommendedFullAuto = n8nData?.analysis?.recommendation === "full_auto";
-  const highScore = (n8nData?.analysis?.maitr_score ?? 0) > 80;
-
   return (
-    <div>
-      <Headbar title="Selection" breadcrumbs={["Dashboard", "Selection"]} />
-
+    <div className="min-h-screen bg-gradient-to-b from-white via-teal-50 to-gray-100">
+      <Headbar title="Selection" />
       <LoadingOverlay visible={isLoading} messages={loadingMessages} onCancel={() => setIsLoading(false)} />
 
-      <div className="min-h-screen flex items-start justify-center bg-gradient-to-b from-white via-teal-50 to-gray-100 p-6">
-        <div className="max-w-5xl w-full">
-          <div className="text-center mb-6">
-            {n8nData && !isLoading ? (
-              <div className="mb-6">
-                <MaitrScoreCircle
-                  score={n8nData.analysis?.maitr_score || 0}
-                  isLoading={false}
-                />
-              </div>
-            ) : null}
-            <h1 className="text-3xl md:text-4xl font-extrabold">
-              {n8nData ? `Welcome, ${n8nData?.restaurant?.name || "Friend"}!` : "How would you like Maitr to help?"}
-            </h1>
-            <p className="mt-2 text-gray-600">
-              {n8nData
-                ? "Your site looks great! Choose how you'd like to proceed:"
-                : "Choose between a guided manual setup or let Maitr build a working app automatically from a single link."}
-            </p>
-          </div>
+      <div className="max-w-4xl mx-auto px-5 pt-10 pb-16">
 
-          {urlSource && (
-            <div className="bg-white shadow-md rounded-2xl p-4 border border-gray-100 mb-6 flex items-center justify-between">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-teal-50">
-                  <Sparkles className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Detected source</div>
-                  <div className="mt-1 text-sm font-medium break-words text-gray-800 max-w-xl">
-                    {decodeURIComponent(urlSource)}
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500">
-                    Tip: You can upload logos and tweak colors after choosing
-                    automatic mode.
-                  </div>
-                </div>
+        {/* ─── HERO: Score + Heading ─── */}
+        <div className="text-center mb-10">
+          <MaitrScoreCircle score={maitrScore} isLoading={isLoading} />
+
+          <h1 className="mt-5 text-3xl md:text-4xl font-extrabold text-gray-900">
+            {n8nData
+              ? `Welcome, ${n8nData?.restaurant?.name || "Friend"}!`
+              : "How would you like Maitr to help?"}
+          </h1>
+          <p className="mt-2 text-gray-500 text-sm max-w-md mx-auto">
+            {n8nData
+              ? "Your site looks great! Choose how you'd like to proceed:"
+              : "Choose between a guided manual setup or let Maitr build a working app automatically from a single link."}
+          </p>
+        </div>
+
+        {/* ─── SOURCE CARD ─── */}
+        {urlSource && (
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 p-2 rounded-lg bg-gradient-to-br from-purple-50 to-teal-50 shrink-0">
+                <Sparkles className="w-5 h-5 text-purple-600" />
               </div>
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    navigate(
-                      `/configurator/auto?sourceLink=${encodeURIComponent(decodeURIComponent(urlSource))}`,
-                    )
-                  }
-                >
-                  Start Automatic
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleCopy} className="flex items-center">
-                  <Copy className="w-4 h-4 mr-2" /> {copied ? "Copied" : "Copy"}
-                </Button>
+              <div>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Detected source</div>
+                <div className="mt-0.5 text-sm font-semibold text-gray-800 break-all">
+                  {decodeURIComponent(urlSource)}
+                </div>
+                <div className="mt-1 text-xs text-gray-400">
+                  You can upload logos and tweak colors after choosing automatic mode.
+                </div>
               </div>
             </div>
-          )}
+            <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/configurator/auto?sourceLink=${encodeURIComponent(decodeURIComponent(urlSource))}`)}
+                className="text-xs font-semibold"
+              >
+                Start Automatic
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleCopy} className="text-xs font-semibold text-gray-500">
+                <Copy className="w-3.5 h-3.5 mr-1.5" />
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+            </div>
+          </div>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="hover:shadow-2xl transition-shadow duration-300">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-gradient-to-br from-teal-100 to-white">
-                    <Settings className="w-8 h-8 text-teal-600" style={{ color: n8nData?.branding?.primary_color }} />
-                  </div>
-                  <div>
-                    <CardTitle>Guided (Manual)</CardTitle>
-                    <CardDescription>
-                      Step through content, colors and modules with full
-                      control. Best if you want to exactly tailor the
-                      look-and-feel.
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="mt-2 text-sm text-gray-600 space-y-2 list-inside">
-                  <li>• Pick sections and modules</li>
-                  <li>• Upload logos & images</li>
-                  <li>• Fine-tune prices and opening hours</li>
-                </ul>
+        {/* ─── TWO OPTION CARDS ─── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <div className="mt-6">
-                  <Button
-                    onClick={() => navigate("/configurator/manual")}
-                    variant={"outline"}
-                    size="sm"
-                    className=""
-                  >
-                    Continue to manual configurator
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Manual */}
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 flex flex-col hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2.5 rounded-xl bg-teal-50 shrink-0">
+                <Settings className="w-5 h-5 text-teal-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-base">Guided (Manual)</h3>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  Step through content, colors and modules with full control. Best if you want to exactly tailor the look-and-feel.
+                </p>
+              </div>
+            </div>
 
-            <Card className="hover:shadow-2xl transition-shadow duration-300">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-gradient-to-br from-purple-100 to-orange-50">
-                    <Sparkles className="w-8 h-8 text-purple-600" style={{ color: n8nData?.branding?.primary_color }} />
-                  </div>
-                  <div>
-                    <CardTitle>Automatic (Zero-Input)</CardTitle>
-                    <CardDescription>
-                      We extract name, address, hours, photos and more from the
-                      link and propose a ready-to-publish app. Perfect for a
-                      fast launch.
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
+            <ul className="text-xs text-gray-500 space-y-1.5 mb-6 ml-0.5">
+              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" /> Pick sections and modules</li>
+              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" /> Upload logos & images</li>
+              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" /> Fine-tune prices and opening hours</li>
+            </ul>
 
-              <CardContent>
-                <ul className="mt-2 text-sm text-gray-600 space-y-2 list-inside">
-                  <li>• Extracts menu & images</li>
-                  <li>• Generates colors & layout</li>
-                  <li>• Live preview & edit after generation</li>
-                </ul>
-
-                <div className="mt-6 flex items-center gap-3">
-                  <Button
-                    onClick={() =>
-                      navigate(
-                        `/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`,
-                      )
-                    }
-                    className={`${
-                      highScore
-                        ? "bg-gradient-to-r from-cyan-400 via-purple-500 to-orange-500 text-white shadow-lg shadow-orange-400/40 animate-pulse scale-105 font-bold"
-                        : "bg-gradient-to-r from-purple-500 to-orange-500 text-white"
-                    } transition-all duration-300`}
-                  >
-                    Start Automatic
-                    {highScore && <span className="ml-2">✨</span>}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/configurator/manual")}
-                  >
-                    I want to edit after
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mt-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/configurator/manual")}
+                className="w-full text-xs font-semibold"
+              >
+                Continue to manual configurator
+              </Button>
+            </div>
           </div>
 
-          <div className="mt-10 text-center text-sm text-gray-500">
-            Need help? Our Concierge can finish the setup for you — or you can
-            continue tweaking everything yourself.
+          {/* Automatic — visually elevated as recommended */}
+          <div className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${highScore ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white" : "border-purple-200 bg-white"}`}>
+
+            {/* Recommended badge */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm">
+                <Sparkles className="w-3 h-3" /> Recommended
+              </span>
+            </div>
+
+            <div className="flex items-start gap-3 mb-4 mt-1">
+              <div className="p-2.5 rounded-xl bg-purple-50 shrink-0">
+                <Sparkles className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-base">Automatic (Zero-Input)</h3>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  We extract name, address, hours, photos and more from the link and propose a ready-to-publish app. Perfect for a fast launch.
+                </p>
+              </div>
+            </div>
+
+            <ul className="text-xs text-gray-500 space-y-1.5 mb-6 ml-0.5">
+              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" /> Extracts menu & images</li>
+              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" /> Generates colors & layout</li>
+              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" /> Live preview & edit after generation</li>
+            </ul>
+
+            <div className="mt-auto flex items-center gap-2">
+              <Button
+                onClick={() => navigate(`/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`)}
+                size="sm"
+                className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${
+                  highScore
+                    ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
+                    : "bg-gradient-to-r from-purple-500 to-orange-500"
+                }`}
+              >
+                Start Automatic {highScore && "✨"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/configurator/manual")}
+                className="text-xs font-semibold text-gray-500 shrink-0"
+              >
+                Edit after
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* ─── FOOTER HINT ─── */}
+        <p className="mt-8 text-center text-xs text-gray-400">
+          Need help? Our Concierge can finish the setup for you — or you can continue tweaking everything yourself.
+        </p>
       </div>
     </div>
   );
