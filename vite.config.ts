@@ -24,14 +24,23 @@ export default defineConfig(({ mode }) => ({
   },
   // Deduplicate React to avoid multiple instance issues
   optimizeDeps: {
-    include: ["react", "react-dom", "react-i18next", "i18next"],
-    exclude: ["lucide-react"], // Dynamically import icons
+    include: [
+      "react",
+      "react-dom",
+      "react-i18next",
+      "i18next",
+      // Include frequently used dependencies
+      "@tanstack/react-query",
+      "react-router-dom"
+    ],
+    exclude: ["lucide-react"], // Dynamically import icons for smaller initial bundle
   },
   build: {
     outDir: "dist/spa", // Set the output directory for the built files
     sourcemap: false, // Disable sourcemaps for production
     minify: "esbuild", // Use esbuild for faster minification
     target: "esnext", // Target modern browsers
+    chunkSizeWarningLimit: 1000, // Increase warning limit for larger chunks
     rollupOptions: {
       output: {
         // Manual chunk splitting for better caching
@@ -41,7 +50,13 @@ export default defineConfig(({ mode }) => ({
             "react",
             "react-dom",
             "react-router-dom",
-            "@tanstack/react-query",
+          ],
+          // Query chunk for data fetching
+          query: [
+            "@tanstack/react-query"
+          ],
+          // Auth chunk for authentication
+          auth: [
             "@clerk/clerk-react"
           ],
           // UI components chunk
@@ -52,26 +67,31 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-select"
           ],
           // Icons chunk (lazy loaded)
-          icons: ["lucide-react"]
+          icons: ["lucide-react"],
+          // Utils chunk
+          utils: ["clsx", "tailwind-merge"]
         },
         // Optimize chunk file names for caching
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId
-            ? chunkInfo.facadeModuleId.split('/').pop().replace('.tsx', '').replace('.ts', '')
+            ? chunkInfo.facadeModuleId.split('/').pop()?.replace(/\.(tsx?|jsx?)$/, '') || 'chunk'
             : 'chunk';
           return `js/${facadeModuleId}-[hash].js`;
         },
         assetFileNames: (assetInfo) => {
+          if (!assetInfo.name) return 'assets/[name]-[hash][extname]';
+
           const info = assetInfo.name.split('.');
-          let extType = info[info.length - 1];
+          const extType = info[info.length - 1];
+
           if (/\.(css)$/.test(assetInfo.name)) {
-            extType = 'css';
-          } else if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name)) {
-            extType = 'images';
+            return 'css/[name]-[hash][extname]';
+          } else if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp|avif)$/i.test(assetInfo.name)) {
+            return 'images/[name]-[hash][extname]';
           } else if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name)) {
-            extType = 'fonts';
+            return 'fonts/[name]-[hash][extname]';
           }
-          return `${extType}/[name]-[hash][extname]`;
+          return `assets/[name]-[hash][extname]`;
         }
       }
     }

@@ -1,5 +1,6 @@
 import "./global.css";
 
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +9,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
@@ -17,12 +19,13 @@ import { useServiceWorker, useInstallPrompt } from "@/hooks/useServiceWorker";
 
 import Configurator from "./pages/Configurator";
 import ModeSelection from "./pages/ModeSelection";
-import AutoConfigurator from "./pages/AutoConfigurator";
-import Dashboard from "./pages/Dashboard";
+// Lazy load heavy components for better performance
+const AutoConfigurator = lazy(() => import("./pages/AutoConfigurator"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Site = lazy(() => import("./pages/Site"));
+const TestSite = lazy(() => import("./pages/TestSite"));
 import NotFound from "./pages/NotFound";
-import Site from "./pages/Site";
 import HostAwareRoot from "./pages/HostAwareRoot";
-import TestSite from "./pages/TestSite";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
@@ -59,51 +62,58 @@ const App = () => {
   useInstallPrompt();
 
   return (
-    <ErrorBoundary>
-      <I18nextProvider i18n={i18n}>
-        <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-          <QueryClientProvider client={queryClient}>
-            <HelmetProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                  <Routes>
-                    <Route path="/" element={<HostAwareRoot />} />
-                    <Route path="/mode-selection" element={<ModeSelection />} />
-                    <Route path="/configurator" element={<Configurator />} />
-                    <Route
-                      path="/configurator/manual"
-                      element={<Configurator />}
-                    />
-                    <Route
-                      path="/configurator/auto"
-                      element={<AutoConfigurator />}
-                    />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route
-                      path="/profile"
-                      element={
-                        <RequireAuth>
-                          <Profile />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <RequireAuth>
-                          <Dashboard />
-                        </RequireAuth>
-                      }
-                    />
-                    <Route path="/site/:subdomain/*" element={<Site />} />
-                    <Route path="/:id/:name/*" element={<Site />} />
-                    <Route path="/test-site" element={<TestSite />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+    <PerformanceErrorBoundary>
+      <ErrorBoundary>
+        <I18nextProvider i18n={i18n}>
+          <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+            <QueryClientProvider client={queryClient}>
+              <HelmetProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+                    <Suspense fallback={
+                      <div className="min-h-screen flex items-center justify-center">
+                        <div className="loading-spinner"></div>
+                      </div>
+                    }>
+                      <Routes>
+                        <Route path="/" element={<HostAwareRoot />} />
+                        <Route path="/mode-selection" element={<ModeSelection />} />
+                        <Route path="/configurator" element={<Configurator />} />
+                        <Route
+                          path="/configurator/manual"
+                          element={<Configurator />}
+                        />
+                        <Route
+                          path="/configurator/auto"
+                          element={<AutoConfigurator />}
+                        />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route
+                          path="/profile"
+                          element={
+                            <RequireAuth>
+                              <Profile />
+                            </RequireAuth>
+                          }
+                        />
+                        <Route
+                          path="/dashboard"
+                          element={
+                            <RequireAuth>
+                              <Dashboard />
+                            </RequireAuth>
+                          }
+                        />
+                        <Route path="/site/:subdomain/*" element={<Site />} />
+                        <Route path="/:id/:name/*" element={<Site />} />
+                        <Route path="/test-site" element={<TestSite />} />
+                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
                 </BrowserRouter>
               </TooltipProvider>
             </HelmetProvider>
@@ -111,6 +121,7 @@ const App = () => {
         </ClerkProvider>
       </I18nextProvider>
     </ErrorBoundary>
+  </PerformanceErrorBoundary>
   );
 };
 
