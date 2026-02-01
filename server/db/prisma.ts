@@ -1,65 +1,44 @@
+// db/prisma.ts
 import { PrismaClient } from "@prisma/client";
 
-// Jetzt ist PrismaClient sowohl als Wert (Klasse) als auch als Typ bekannt
-export let prisma: PrismaClient | null = null;
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-/**
- * Initialisiert Prisma mit Validierung und Logging
- */
-function initializePrisma(): PrismaClient {
-  const dbUrl = process.env.DATABASE_URL || "";
+// Validiere DATABASE_URL
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  console.error("[Prisma] FATAL: DATABASE_URL is not configured");
+  throw new Error("DATABASE_URL environment variable is required");
+}
 
-  if (!dbUrl) {
-    const errorMessage = "[Prisma] FATAL: DATABASE_URL variable is not configured";
-    console.error(errorMessage);
-    throw new Error(errorMessage);
-  }
+// Log connection info (ohne sensitive Daten)
+const host = dbUrl.match(/ep-([a-z0-9-]+)/)?.[1] || "unknown";
+console.log("[Prisma] Connecting to NeonDB", {
+  host: `ep-${host}`,
+  timestamp: new Date().toISOString(),
+});
 
-  // Host-Extraktion für das Logging
-  const host = dbUrl.match(/ep-([a-z-]+)/)?.[1] || "unknown";
-
-  console.log("[Prisma] Connecting to NeonDB", {
-    host: `ep-${host}`,
-    timestamp: new Date().toISOString(),
-  });
-
-  return new PrismaClient({
-    log: ["error", "warn"],
+// Singleton Pattern - erstelle nur eine Instanz
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error", "warn"],
     errorFormat: "pretty",
   });
+
+// In Development: speichere global um HMR zu überleben
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
 
-/**
- * Singleton-Instanz (Lazy Loading)
- */
-function getPrismaInstance(): PrismaClient {
-  if (!prisma) {
-    try {
-      prisma = initializePrisma();
-      console.log("[Prisma] Client initialized successfully");
-    } catch (error) {
-      console.error("[Prisma] Initialization failed:", error);
-      throw error;
-    }
-  }
-  return prisma;
-}
+// Default export für: import prisma from "../db/prisma"
+export default prisma;
 
-/**
- * Serverless Disconnect Helper
- */
+// Serverless Disconnect Helper
 export async function disconnectPrisma() {
-  if (prisma) {
-    await prisma.$disconnect();
-    prisma = null;
-    console.log("[Prisma] Disconnected");
-  }
+  await prisma.$disconnect();
+  console.log("[Prisma] Disconnected");
 }
 
-// Export der Proxy-Instanz für einfachen Zugriff im Rest der App
-export default new Proxy({} as PrismaClient, {
-  get(_target, prop) {
-    const instance = getPrismaInstance();
-    return (instance as any)[prop];
-  },
-});
+console.log("[Prisma] Client initialized successfully");

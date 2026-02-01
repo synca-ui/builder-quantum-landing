@@ -1,7 +1,6 @@
 // routes/scraperJob.ts
 import express from "express";
-import { prisma } from "../db/prisma.ts";
-
+import prisma from "../db/prisma";
 
 const router = express.Router();
 

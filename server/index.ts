@@ -4,7 +4,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { handleClerkWebhook } from "./webhooks/clerk";
 import { subdomainsRouter } from "./routes/subdomains";
-import { scraperJobRouter } from "./routes/scraperJob"; // ✅ ES Module Import
+import { scraperJobRouter } from "./routes/scraperJob";
+import { handleForwardN8n } from "./routes/n8nProxy"; // ✅ Import hinzugefügt
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -61,9 +62,6 @@ export function createServer() {
 
   app.post("/api/webhooks/test", handleWebhookTest);
 
-  // ✅ Scraper Job Router (jetzt mit ES Module Import)
-  app.use("/api/scraper-job", scraperJobRouter);
-
   // Root endpoint
   app.get("/", (_req, res) => {
     res.json({
@@ -94,6 +92,12 @@ export function createServer() {
 
   // --- API ROUTEN (WICHTIG: ZUERST DEFINIEREN) ---
   // Damit haben API-Calls Vorrang vor Subdomain-Routing
+
+  // ✅ WICHTIG: n8n Proxy Route VOR dem apiRouter definieren
+  app.post("/api/forward-to-n8n", handleForwardN8n);
+
+  // ✅ Scraper Job Router
+  app.use("/api/scraper-job", scraperJobRouter);
 
   // Use aggregated API router
   app.use("/api", apiRouter);
