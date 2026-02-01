@@ -558,24 +558,6 @@ export default function Index() {
                     </a>
                   </div>
                 </div>
-
-                {/* Demo Dashboard CTA - prominently placed in hero */}
-                <div className="mt-8">
-                  <p className="text-sm text-gray-500 mb-3">Oder schaue dir das fertige Ergebnis an:</p>
-                  <a
-                    href="/demo-dashboard"
-                    className="inline-flex items-center rounded-full px-6 py-3 border-2 border-transparent bg-gradient-to-r from-white via-gray-50 to-white text-teal-700 font-bold shadow-lg hover:shadow-xl transition-all duration-300 group ring-2 ring-teal-500/20 hover:ring-teal-500/40"
-                  >
-                    <div className="flex items-center justify-center w-5 h-5 mr-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
-                      <BarChart3 className="w-3 h-3 text-teal-600 group-hover:scale-110 transition-transform" />
-                    </div>
-                    <span className="hidden sm:inline">Live Dashboard Demo ansehen</span>
-                    <span className="sm:hidden">Live Demo</span>
-                    <div className="flex items-center justify-center w-5 h-5 ml-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
-                      <ChevronRight className="w-3 h-3 text-teal-600 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </a>
-                </div>
               </div>
             </div>
           </div>
@@ -631,20 +613,16 @@ export default function Index() {
               )}
             </div>
 
-            {/* Demo Dashboard Button - always visible */}
+            {/* Demo Dashboard Button - subtle like Watch Demo */}
             <div className="mt-4">
-              <a
-                href="/demo-dashboard"
-                className="inline-flex items-center rounded-full px-6 py-3 border-2 border-transparent bg-gradient-to-r from-white via-gray-50 to-white text-teal-700 font-bold shadow-lg hover:shadow-xl transition-all duration-300 group ring-2 ring-teal-500/20 hover:ring-teal-500/40"
-              >
-                <div className="flex items-center justify-center w-5 h-5 mr-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
-                  <BarChart3 className="w-3 h-3 text-teal-600 group-hover:scale-110 transition-transform" />
-                </div>
-                <span className="hidden sm:inline">Dashboard Demo ansehen</span>
-                <span className="sm:hidden">Demo ansehen</span>
-                <div className="flex items-center justify-center w-5 h-5 ml-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
-                  <ChevronRight className="w-3 h-3 text-teal-600 group-hover:translate-x-0.5 transition-transform" />
-                </div>
+              <a href="/demo-dashboard" className="inline-flex">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/20 hover:bg-white/80 transition-all duration-300 rounded-full"
+                >
+                  <BarChart3 className="mr-2 w-4 h-4" /> Dashboard Demo
+                </Button>
               </a>
             </div>
           </div>
