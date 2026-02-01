@@ -544,18 +544,6 @@ export default function Index() {
                         )}
                       </button>
                     </div>
-
-                    {/* Demo Dashboard Button */}
-                    <div className="mt-4">
-                      <a
-                        href="/demo-dashboard"
-                        className="inline-flex items-center px-6 py-3 border-2 border-teal-500 text-teal-600 bg-white hover:bg-teal-50 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
-                      >
-                        <BarChart3 className="mr-3 w-5 h-5 group-hover:scale-110 transition-transform" />
-                        Dashboard Demo ansehen
-                        <ChevronRight className="ml-3 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </a>
-                    </div>
                   </form>
 
                   <div className="flex-shrink-0">
@@ -608,19 +596,31 @@ export default function Index() {
             </div>
           </div>
           <div className="text-center mt-8">
-            {isSignedIn ? (
-              <a href="/dashboard">
-                <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
-                  Go to Dashboard
-                </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {isSignedIn ? (
+                <a href="/dashboard">
+                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
+                    Go to Dashboard
+                  </Button>
+                </a>
+              ) : (
+                <SignInButton mode="modal">
+                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
+                    Log in to access Dashboard
+                  </Button>
+                </SignInButton>
+              )}
+
+              {/* Demo Dashboard Button */}
+              <a
+                href="/demo-dashboard"
+                className="inline-flex items-center px-8 py-3 border-2 border-teal-500 text-teal-600 bg-white hover:bg-teal-50 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
+              >
+                <BarChart3 className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
+                Dashboard Demo ansehen
+                <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
-            ) : (
-              <SignInButton mode="modal">
-                <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white">
-                  Log in to access Dashboard
-                </Button>
-              </SignInButton>
-            )}
+            </div>
           </div>
         </div>
       </section>
