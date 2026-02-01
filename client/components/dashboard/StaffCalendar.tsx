@@ -46,7 +46,8 @@ export default function StaffCalendar({ businessId }: { businessId?: string }) {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [conflicts, setConflicts] = useState<ShiftConflict[]>([]);
-  const [conflicts, setConflicts] = useState<ShiftConflict[]>([]);
+  const [draggedShift, setDraggedShift] = useState<Shift | null>(null);
+  const [showAddShift, setShowAddShift] = useState(false);
 
   // Get current week dates
   const getWeekDates = () => {
