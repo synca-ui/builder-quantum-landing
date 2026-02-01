@@ -11,7 +11,7 @@ import { subdomainsRouter } from "./subdomains";
 import { handleForwardN8n } from "./n8nProxy";
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
-import demoDashboardRouter from "./demo-dashboard";
+import { demoDashboardRouter } from "./demo-dashboard";
 import staffRouter from "./staff";
 import creativeStudioRouter from "./creative-studio";
 import adminRouter from "./admin";
