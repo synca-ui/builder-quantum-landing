@@ -9,6 +9,8 @@ import scraperRouter from "./scraper";
 import subscriptionsRouter from "./subscriptions";
 import { subdomainsRouter } from "./subdomains";
 import { handleForwardN8n } from "./n8nProxy";
+import insightsRouter from "./insights";
+import floorPlanRouter from "./floor-plan";
 
 // Erstellen Sie einen Haupt-API-Router, um alle Teil-Routen zu bündeln
 export const apiRouter = Router();
@@ -18,9 +20,13 @@ apiRouter.use("/configurations", configurationsRouter);
 apiRouter.use("/webapps", webAppsRouter);
 apiRouter.use("/webapps", publicAppsRouter);
 apiRouter.use("/templates", templatesRouter);
-apiRouter.use("/scraper/jobs", scraperRouter);
+apiRouter.use("/scraper", scraperRouter);
 apiRouter.use("/subscriptions", subscriptionsRouter);
 apiRouter.use("/subdomains", subdomainsRouter);
+
+// Dashboard API routes
+apiRouter.use("/dashboard/insights", insightsRouter);
+apiRouter.use("/dashboard/floor-plan", floorPlanRouter);
 
 
 // Standalone configuration routes (for backward compatibility)

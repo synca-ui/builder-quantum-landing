@@ -8,141 +8,222 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// 1. USERs & AUTH (Clerk Integration)
-// ============================================
-
 model User {
-  id            String    @id @default(uuid())
-  clerkId       String    @unique @map("clerk_id")
-  email         String    @unique
-  fullName      String?
-  role          UserRole  @default(OWNER)
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations
-  businesses    BusinessMember[]
-  webApps       WebApp[]
-  configurations Configuration[]
-  tenants       Tenant[]
-  scraperJobs   ScraperJob[]
-  subscription  Subscription?
-  billingEvents BillingEvent[]
-  auditLogs     AuditLog[]
+  id              String           @id @default(uuid())
+  clerkId         String           @unique @map("clerk_id")
+  email           String           @unique
+  fullName        String?
+  role            UserRole         @default(OWNER)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  auditLogs       AuditLog[]
+  billingEvents   BillingEvent[]
+  businesses      BusinessMember[]
+  configurations  Configuration[]
+  scraperJobs     ScraperJob[]
+  subscription    Subscription?
   templateRatings TemplateRating[]
+  tenants         Tenant[]
+  webApps         WebApp[]
 }
-
-enum UserRole {
-  OWNER
-  ADMIN
-  STAFF
-}
-
-// ============================================
-// 2. BUSINESS MANAGEMENT
-// ============================================
 
 model Business {
-  id              String   @id @default(uuid())
-  slug            String   @unique
-
-  // Core Info
-  name            String
-  description     String?  @db.Text
-  tagline         String?
-  cuisine         String?
-
-  // Branding
-  logoUrl         String?
-  primaryColor    String   @default("#000000")
-  secondaryColor  String   @default("#ffffff")
-  fontFamily      String   @default("sans")
-
-  // Template Reference (✅ NEW: Proper foreign key)
-  templateId      String?
-  template        Template? @relation(fields: [templateId], references: [id])
-
-  // Operational Data
-  openingHours    Json?
-  socialLinks     Json?
-  contactInfo     Json?
-
-  // Status
-  maitrScore      Int      @default(0)
-  originalPdfUrl  String?
-  status          BusinessStatus @default(DRAFT)
-
-  // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  members         BusinessMember[]
-  categories      MenuCategory[]
-  configurations  Configuration[]
+  id                 String              @id @default(uuid())
+  slug               String              @unique
+  name               String
+  description        String?
+  tagline            String?
+  cuisine            String?
+  logoUrl            String?
+  primaryColor       String              @default("#000000")
+  secondaryColor     String              @default("#ffffff")
+  fontFamily         String              @default("sans")
+  templateId         String?
+  openingHours       Json?
+  socialLinks        Json?
+  contactInfo        Json?
+  maitrScore         Int                 @default(0)
+  originalPdfUrl     String?
+  status             BusinessStatus      @default(DRAFT)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  analyticsSnapshots AnalyticsSnapshot[]
+  template           Template?           @relation(fields: [templateId], references: [id])
+  members            BusinessMember[]
+  configurations     Configuration[]
+  floorPlans         FloorPlan[]
+  categories         MenuCategory[]
+  orders             Order[]
+  reservations       Reservation[]
+  tables             Table[]
 
   @@index([slug])
   @@index([status])
 }
 
-enum BusinessStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
-
 model BusinessMember {
-  id          String   @id @default(uuid())
-  userId      String
-  businessId  String
-  role        UserRole @default(STAFF)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  userId     String
+  businessId String
+  role       UserRole @default(STAFF)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, businessId])
   @@index([businessId])
 }
 
-// ============================================
-// 3. TEMPLATE MARKETPLACE (✅ NEW)
-// ============================================
+model AnalyticsSnapshot {
+  id               String   @id @default(uuid())
+  businessId       String
+  revenue          Decimal  @default(0) @db.Decimal(10, 2)
+  orders           Int      @default(0)
+  uniqueVisitors   Int      @default(0)
+  qrScans          Int      @default(0)
+  trafficDirect    Int      @default(0)
+  trafficGoogle    Int      @default(0)
+  trafficFacebook  Int      @default(0)
+  trafficInstagram Int      @default(0)
+  trafficQR        Int      @default(0)
+  trafficOther     Int      @default(0)
+  avgOrderValue    Decimal  @default(0) @db.Decimal(10, 2)
+  popularItems     Json     @default("[]")
+  date             DateTime @default(now()) @db.Date
+  period           String   @default("daily")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, date, period])
+  @@index([businessId, date])
+  @@index([date, period])
+}
+
+model Reservation {
+  id              String            @id @default(uuid())
+  businessId      String
+  tableId         String?
+  guestName       String
+  guestEmail      String?
+  guestPhone      String?
+  guestCount      Int               @default(2)
+  reservationTime DateTime
+  duration        Int               @default(120)
+  specialRequests String?
+  status          ReservationStatus @default(PENDING)
+  source          String            @default("website")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  business        Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  table           Table?            @relation(fields: [tableId], references: [id])
+
+  @@index([businessId, reservationTime])
+  @@index([reservationTime, status])
+}
+
+model FloorPlan {
+  id          String   @id @default(uuid())
+  businessId  String
+  name        String
+  description String?
+  width       Int      @default(800)
+  height      Int      @default(600)
+  gridSize    Int      @default(20)
+  bgColor     String   @default("#f8fafc")
+  bgImage     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  tables      Table[]
+
+  @@index([businessId])
+  @@index([businessId, isActive])
+}
+
+model Table {
+  id           String        @id @default(uuid())
+  floorPlanId  String
+  businessId   String
+  number       String
+  name         String?
+  x            Float
+  y            Float
+  rotation     Float         @default(0)
+  shape        TableShape    @default(ROUND)
+  width        Float         @default(80)
+  height       Float         @default(80)
+  minCapacity  Int           @default(2)
+  maxCapacity  Int           @default(4)
+  qrEnabled    Boolean       @default(false)
+  qrCode       String?
+  qrCodeImage  String?
+  status       TableStatus   @default(AVAILABLE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  orders       Order[]
+  reservations Reservation[]
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  floorPlan    FloorPlan     @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, number])
+  @@index([floorPlanId])
+  @@index([businessId])
+  @@index([businessId, status])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  businessId      String
+  tableId         String?
+  orderNumber     String      @unique
+  customerName    String?
+  customerEmail   String?
+  customerPhone   String?
+  subtotal        Decimal     @db.Decimal(10, 2)
+  tax             Decimal     @default(0) @db.Decimal(10, 2)
+  tip             Decimal     @default(0) @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  items           Json
+  status          OrderStatus @default(PENDING)
+  orderType       OrderType   @default(DINE_IN)
+  source          String      @default("qr-code")
+  notes           String?
+  specialRequests String?
+  orderedAt       DateTime    @default(now())
+  confirmedAt     DateTime?
+  preparedAt      DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  business        Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  table           Table?      @relation(fields: [tableId], references: [id])
+
+  @@index([businessId, orderedAt])
+  @@index([orderNumber])
+  @@index([status])
+}
 
 model Template {
-  id              String    @id  // e.g., "minimalist", "modern", "stylish", "cozy"
-
-  // Metadata
-  name            String
-  description     String    @db.Text
-  version         String    @default("1.0.0")
-  isPremium       Boolean   @default(false)
-
-  // Categorization
-  category        String    // "restaurant", "cafe", "bar", "retail", "service"
-
-  // Design System
-  layout          Json      @default("{}")    // { intent, navigation, typography }
-  tokens          Json      @default("{}")    // { colors, typography, spacing, shapes }
-  preview         Json      @default("{}")    // { thumbnail, features }
-
-  // Marketplace Metrics
-  creator         String    @default("maitr")
-  downloads       Int       @default(0)
-  avgRating       Float     @default(0)
-
-  // Timestamps
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Relations
-  businesses      Business[]
-  configurations  Configuration[]
-  ratings         TemplateRating[]
+  id             String           @id
+  name           String
+  description    String
+  version        String           @default("1.0.0")
+  isPremium      Boolean          @default(false)
+  category       String
+  layout         Json             @default("{}")
+  tokens         Json             @default("{}")
+  preview        Json             @default("{}")
+  creator        String           @default("maitr")
+  downloads      Int              @default(0)
+  avgRating      Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  businesses     Business[]
+  configurations Configuration[]
+  ratings        TemplateRating[]
 
   @@index([isPremium])
   @@index([category])
@@ -150,118 +231,85 @@ model Template {
 }
 
 model TemplateRating {
-  id              String    @id @default(uuid())
-  templateId      String
-  userId          String
-  rating          Int       // 1-5 stars
-  comment         String?   @db.Text
-
-  createdAt       DateTime  @default(now())
-
-  template        Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  templateId String
+  userId     String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([templateId, userId])
   @@index([templateId])
 }
 
-// ============================================
-// 4. CONFIGURATIONS (✅ WITH RLS SUPPORT)
-// ============================================
-
 model Configuration {
-  id              String    @id @default(uuid())
-  userId          String    // ✅ RLS: User ownership
-  businessId      String?   // ✅ RLS: Business ownership
-
-  // Business Info
-  businessName    String    @default("")
-  businessType    String    @default("")
-  location        String?
-  slogan          String?
-  uniqueDescription String?
-
-  // Design
-  template        String    @default("")  // Legacy field
-  selectedTemplate String?  // ✅ NEW: FK to Template
-  primaryColor    String    @default("#111827")
-  secondaryColor  String    @default("#6B7280")
-  fontFamily      String    @default("sans-serif")
-  backgroundColor String    @default("#FFFFFF")
-  fontColor       String    @default("#000000")
-  priceColor      String?
-  headerFontColor String?
-  headerFontSize  String?
-  headerBackgroundColor String?
-
-  // Content
-  menuItems       Json      @default("[]")
-  gallery         Json      @default("[]")
-  openingHours    Json      @default("{}")
+  id                          String          @id @default(uuid())
+  userId                      String
+  businessId                  String?
+  businessName                String          @default("")
+  businessType                String          @default("")
+  location                    String?
+  slogan                      String?
+  uniqueDescription           String?
+  template                    String          @default("")
+  selectedTemplate            String?
+  primaryColor                String          @default("#111827")
+  secondaryColor              String          @default("#6B7280")
+  fontFamily                  String          @default("sans-serif")
+  menuItems                   Json            @default("[]")
+  gallery                     Json            @default("[]")
+  openingHours                Json            @default("{}")
+  reservationsEnabled         Boolean         @default(false)
+  maxGuests                   Int             @default(10)
+  onlineOrdering              Boolean         @default(false)
+  onlineStore                 Boolean         @default(false)
+  teamArea                    Boolean         @default(false)
+  contactMethods              Json            @default("[]")
+  socialMedia                 Json            @default("{}")
+  selectedPages               Json            @default("[\"home\"]")
+  customPages                 Json            @default("[]")
+  status                      String          @default("draft")
+  publishedUrl                String?         @unique
+  previewUrl                  String?
+  domainName                  String?
+  selectedDomain              String?
+  paymentOptions              Json            @default("[]")
+  offers                      Json            @default("[]")
+  createdAt                   DateTime        @default(now())
+  updatedAt                   DateTime        @updatedAt
+  backgroundColor             String          @default("#FFFFFF")
+  fontColor                   String          @default("#000000")
+  hasDomain                   Boolean         @default(false)
+  headerBackgroundColor       String?
+  headerFontColor             String?
+  headerFontSize              String?
   homepageDishImageVisibility String?
+  priceColor                  String?
+  reservationButtonColor      String?
+  reservationButtonShape      String?
+  reservationButtonTextColor  String?
+  addOns                      AddOnInstance[]
+  business                    Business?       @relation(fields: [businessId], references: [id])
+  templateData                Template?       @relation(fields: [selectedTemplate], references: [id])
+  user                        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Features
-  reservationsEnabled Boolean @default(false)
-  maxGuests       Int       @default(10)
-  onlineOrdering  Boolean   @default(false)
-  onlineStore     Boolean   @default(false)
-  teamArea        Boolean   @default(false)
-  reservationButtonColor String?
-  reservationButtonTextColor String?
-  reservationButtonShape String?
-
-  // Contact & Social
-  contactMethods  Json      @default("[]")
-  socialMedia     Json      @default("{}")
-
-  // Pages
-  selectedPages   Json      @default("[\"home\"]")
-  customPages     Json      @default("[]")
-
-  // Publishing
-  status          String    @default("draft")  // draft | published | archived
-  publishedUrl    String?   @unique
-  previewUrl      String?
-
-  // Extra
-  domainName      String?
-  selectedDomain  String?
-  hasDomain       Boolean   @default(false)
-  paymentOptions  Json      @default("[]")
-  offers          Json      @default("[]")
-
-  // Timestamps
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Relations
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  business        Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
-  templateData    Template? @relation(fields: [selectedTemplate], references: [id], onDelete: SetNull)
-  addOns          AddOnInstance[]
-
-  // ✅ RLS Indexes
   @@unique([userId, businessId])
   @@index([userId])
   @@index([businessId])
   @@index([status])
 }
 
-// ============================================
-// 5. MENU MANAGEMENT
-// ============================================
-
 model MenuCategory {
-  id          String     @id @default(uuid())
-  name        String
-  sortOrder   Int        @default(0)
-  businessId  String
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  items       MenuItem[]
+  id         String     @id @default(uuid())
+  name       String
+  sortOrder  Int        @default(0)
+  businessId String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  items      MenuItem[]
 
   @@index([businessId])
 }
@@ -269,131 +317,95 @@ model MenuCategory {
 model MenuItem {
   id          String       @id @default(uuid())
   name        String
-  description String?      @db.Text
+  description String?
   price       Decimal      @db.Decimal(10, 2)
   imageUrl    String?
-
   categoryId  String
-  
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-
   category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([categoryId])
 }
 
-// ============================================
-// 6. WEB APPS (Published Websites)
-// ============================================
-
 model WebApp {
-  id            String    @id @default(uuid())
-  userId        String
-  configId      String    @unique  // ✅ NEW: Link to Configuration
-  subdomain     String    @unique
-  configData    Json
-  publishedAt   DateTime?
-  updatedAt     DateTime  @updatedAt
-
-  createdAt     DateTime  @default(now())
-
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders        OrderEvent[]
+  id          String       @id @default(uuid())
+  userId      String
+  configId    String       @unique
+  subdomain   String       @unique
+  configData  Json
+  publishedAt DateTime?
+  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime     @default(now())
+  orders      OrderEvent[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([subdomain])
 }
 
-// ============================================
-// 7. ORDER EVENTS (Social Proof & Analytics)
-// ============================================
-
 model OrderEvent {
-  id              String    @id @default(uuid())
-  webAppId        String
-  orderId         String?
-  menuItemId      String?
-  menuItemName    String
-  orderedAt       DateTime  @default(now())
-  orderSource     String    // 'stripe' | 'pos_api' | 'manual'
-  userAvatarUrl   String?
-
-  webApp          WebApp    @relation(fields: [webAppId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  webAppId      String
+  orderId       String?
+  menuItemId    String?
+  menuItemName  String
+  orderedAt     DateTime @default(now())
+  orderSource   String
+  userAvatarUrl String?
+  webApp        WebApp   @relation(fields: [webAppId], references: [id], onDelete: Cascade)
 
   @@index([webAppId])
   @@index([orderedAt])
 }
 
-// ============================================
-// 8. SUBSCRIPTION & BILLING (✅ NEW - Stripe Integration)
-// ============================================
-
 model Subscription {
-  id              String    @id @default(uuid())
-  userId          String    @unique
-  
-  // Stripe References
-  stripeCustomerId String? @unique
-  stripeSubscriptionId String? @unique
-  
-  // Plan Info
-  plan            String    @default("free")  // free | basic | pro | enterprise
-  status          String    @default("active")  // active | paused | canceled | past_due
-  
-  // Features
-  maxSites        Int       @default(1)
-  maxUsers        Int       @default(1)
-  
-  // Billing Period
-  currentPeriodStart DateTime?
-  currentPeriodEnd DateTime?
-  canceledAt      DateTime?
-  
-  // Timestamps
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  plan                 String    @default("free")
+  status               String    @default("active")
+  maxSites             Int       @default(1)
+  maxUsers             Int       @default(1)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  canceledAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([status])
   @@index([stripeCustomerId])
 }
 
 model BillingEvent {
-  id              String    @id @default(uuid())
-  userId          String
-  subscriptionId  String?
-  
-  eventType       String    // subscription_created | payment_succeeded | invoice_paid | payment_failed
-  amount          Int?      // Cents
-  currency        String    @default("EUR")
-  
-  stripeEventId   String?   @unique
-  metadata        Json?
-  
-  createdAt       DateTime  @default(now())
-  
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id             String   @id @default(uuid())
+  userId         String
+  subscriptionId String?
+  eventType      String
+  amount         Int?
+  currency       String   @default("EUR")
+  stripeEventId  String?  @unique
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
   @@index([eventType])
 }
 
-// ============================================
-// 9. n8n SCRAPER PIPELINE (✅ NEW)
-// ============================================
-
 model ScraperJob {
-  // Der Primärschlüssel bleibt, aber Prisma sorgt für die UUID-Generierung
-  id  String  @id @default(dbgenerated("gen_random_uuid()"))
-
-  // Grunddaten
+  id                String    @id @default(dbgenerated("gen_random_uuid()"))
   businessName      String
-  businessType      String?   // z.B. "pizzeria", "cafe"
-  websiteUrl        String    @unique // WICHTIG: Unique für das n8n-Matching
-
-  // Analyse-Ergebnisse (New Columns)
+  businessType      String?
+  websiteUrl        String    @unique
+  status            String    @default("pending")
+  extractedData     Json?
+  userId            String?
+  createdAt         DateTime  @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
   maitrScore        Int?      @default(0)
   email             String?
   phone             String?
@@ -402,131 +414,131 @@ model ScraperJob {
   hasReservation    Boolean   @default(false)
   googleSearchQuery String?
   analysisFeedback  String?
-
-  // Status-Tracking
-  status            String    @default("pending") // "pending", "completed", "failed"
   isDeepScrapeReady Boolean   @default(false)
-
-  // Flexibler Datenspeicher (RawConfig/Gedächtnis)
-  extractedData     Json?     // Speichert das komplette JSON-Objekt
-
-  // Metadaten
-  userId            String?   // Bleibt leer bis zum Login
-  createdAt         DateTime  @default(now())
-  startedAt         DateTime?
-  completedAt       DateTime?
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user              User?     @relation(fields: [userId], references: [id])
 }
 
-// ============================================
-// 10. PLUGIN/ADD-ON SYSTEM (✅ NEW)
-// ============================================
-
 model AddOnRegistry {
-  id              String    @id  // e.g., "calendly-reservations"
-  name            String
-  description     String    @db.Text
-  category        String    // "reservations" | "pos" | "staff" | "marketing"
-  
-  // Plugin Manifest
-  manifest        Json      // { entrypoint, slots: [], config: {} }
-  version         String    @default("1.0.0")
-  creator         String    @default("maitr")
-  
-  // Marketplace
-  isPublished     Boolean   @default(false)
-  isPremium       Boolean   @default(false)
-  
-  // Metrics
-  installations   Int       @default(0)
-  avgRating       Float     @default(0)
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  instances       AddOnInstance[]
-  
+  id            String          @id
+  name          String
+  description   String
+  category      String
+  manifest      Json
+  version       String          @default("1.0.0")
+  creator       String          @default("maitr")
+  isPublished   Boolean         @default(false)
+  isPremium     Boolean         @default(false)
+  installations Int             @default(0)
+  avgRating     Float           @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  instances     AddOnInstance[]
+
   @@index([category])
   @@index([isPublished])
 }
 
 model AddOnInstance {
-  id              String    @id @default(uuid())
-  configId        String
-  addOnId         String
-  
-  // Configuration
-  config          Json      @default("{}")  // Add-on specific config
-  status          String    @default("active")  // active | inactive | error
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  configuration   Configuration @relation(fields: [configId], references: [id], onDelete: Cascade)
-  addOn           AddOnRegistry @relation(fields: [addOnId], references: [id], onDelete: Cascade)
-  
+  id            String        @id @default(uuid())
+  configId      String
+  addOnId       String
+  config        Json          @default("{}")
+  status        String        @default("active")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  addOn         AddOnRegistry @relation(fields: [addOnId], references: [id], onDelete: Cascade)
+  configuration Configuration @relation(fields: [configId], references: [id], onDelete: Cascade)
+
   @@unique([configId, addOnId])
   @@index([configId])
 }
 
-// ============================================
-// 11. AUDIT LOG (✅ NEW - Compliance & Security)
-// ============================================
-
 model AuditLog {
-  id              String    @id @default(uuid())
-  userId          String
-  action          String    // config_created | config_modified | config_deleted | config_published
-  resource        String    // "configuration" | "subscription" | "addon"
-  resourceId      String
-  
-  // Request Context
-  ipAddress       String?
-  userAgent       String?
-  
-  // Result
-  success         Boolean   @default(true)
-  errorMessage    String?
-  
-  // Changes
-  changes         Json?     // { before: {}, after: {} }
-  
-  createdAt       DateTime  @default(now())
-  
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id           String   @id @default(uuid())
+  userId       String
+  action       String
+  resource     String
+  resourceId   String
+  ipAddress    String?
+  userAgent    String?
+  success      Boolean  @default(true)
+  errorMessage String?
+  changes      Json?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
   @@index([action, createdAt])
   @@index([resource, resourceId])
 }
 
-// ============================================
-// 12. MULTI-TENANT SUPPORT (Legacy)
-// ============================================
-
 model Tenant {
-  id              String    @id @default(uuid())
-  slug            String    @unique
-  userId          String
-  schemaName      String    @unique
-  restaurantId    String
-
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  restaurants     Restaurant[]
+  id           String       @id @default(uuid())
+  slug         String       @unique
+  userId       String
+  schemaName   String       @unique
+  restaurantId String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  restaurants  Restaurant[]
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Restaurant {
-  id              String    @id @default(uuid())
-  tenantId        String
-  name            String
-  configJson      Json?
+  id         String   @id @default(uuid())
+  tenantId   String
+  name       String
+  configJson Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+enum UserRole {
+  OWNER
+  ADMIN
+  STAFF
+}
 
-  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+enum BusinessStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  ARRIVED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum TableShape {
+  ROUND
+  SQUARE
+  RECTANGLE
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEOUT
+  DELIVERY
 }

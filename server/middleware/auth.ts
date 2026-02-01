@@ -11,6 +11,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      userId?: string; // Add userId for compatibility
     }
   }
 }
@@ -40,6 +41,9 @@ export async function requireAuth(
       email: prismaUser.email,
       clerkId: prismaUser.clerkId,
     };
+
+    // Also set userId for API route compatibility
+    req.userId = prismaUser.id;
 
     return next();
   } catch (e) {
