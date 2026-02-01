@@ -2,24 +2,27 @@ import { useEffect } from 'react';
 
 export function useServiceWorker() {
   useEffect(() => {
-    // Register Service Worker
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    // Register Service Worker only in production and when supported
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      // Register after initial page load to avoid blocking
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+          updateViaCache: 'none' // Always check for updates
+        })
           .then((registration) => {
-            console.log('SW registered: ', registration);
+            console.log('SW registered successfully:', registration.scope);
 
-            // Check for updates
+            // Check for updates periodically
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New content is available, show update notification
-                    console.log('New content is available; please refresh.');
-
-                    // Optional: Show toast or notification to user
-                    if (window.confirm('New version available! Reload to update?')) {
+                    console.log('New SW version available');
+                    // Optionally notify user about update
+                    if (confirm('New version available! Reload to update?')) {
+                      newWorker.postMessage({ action: 'skipWaiting' });
                       window.location.reload();
                     }
                   }
@@ -27,10 +30,17 @@ export function useServiceWorker() {
               }
             });
           })
-          .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
+          .catch((error) => {
+            console.warn('SW registration failed:', error);
           });
       });
+
+      // Listen for SW updates
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('SW controller changed');
+      });
+    } else if (import.meta.env.DEV) {
+      console.log('SW registration skipped in development');
     }
   }, []);
 }

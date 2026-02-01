@@ -1,11 +1,8 @@
-const CACHE_NAME = 'maitr-builder-v1';
+const CACHE_NAME = 'maitr-builder-v2';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/configurator',
-  '/auto-configurator',
-  '/manifest.json'
+  '/manifest.json',
+  '/index.html'
 ];
 
 // Install Service Worker
@@ -14,8 +11,13 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Service Worker: Caching Files');
-        return cache.addAll(urlsToCache);
+        console.log('Service Worker: Caching essential files');
+        // Cache only essential files first, discover others during runtime
+        return cache.addAll(['/'])
+          .catch((error) => {
+            console.warn('Service Worker: Failed to cache some resources:', error);
+            // Continue anyway with basic caching
+          });
       })
       .then(() => {
         console.log('Service Worker: Installed');
@@ -44,34 +46,52 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event
+// Fetch Event - Optimized for performance
 self.addEventListener('fetch', (event) => {
-  if (event.request.method === 'GET') {
-    event.respondWith(
-      caches.match(event.request)
-        .then((response) => {
-          // Cache hit - return response
-          if (response) {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
+  // Skip API calls (let them go to network)
+  if (event.request.url.includes('/api/')) return;
+
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+
+        // Clone the request for caching
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then((response) => {
+          // Check if we received a valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
-          return fetch(event.request).then((response) => {
-            // Check if we received a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
 
-            // Clone the response
-            const responseToCache = response.clone();
+          // Clone the response for caching
+          const responseToCache = response.clone();
 
-            caches.open(CACHE_NAME)
-              .then((cache) => {
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              // Only cache certain file types
+              const url = event.request.url;
+              if (url.includes('.js') || url.includes('.css') || url.includes('.html') ||
+                  url === self.location.origin + '/') {
                 cache.put(event.request, responseToCache);
-              });
+              }
+            });
 
-            return response;
-          });
-        }
-      )
-    );
-  }
+          return response;
+        }).catch(() => {
+          // Network failed, try to serve from cache
+          return caches.match('/') || new Response('Offline', { status: 503 });
+        });
+      })
+  );
 });

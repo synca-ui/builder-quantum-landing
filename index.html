@@ -111,22 +111,28 @@
       <div class="loading-spinner"></div>
     </div>
 
-    <!-- Load non-critical CSS asynchronously -->
+    <!-- Load non-critical CSS asynchronously - optimized -->
     <script>
-      // Async CSS loading
-      function loadCSS(href) {
+      // More efficient CSS loading
+      function loadCSS(href, media = 'all') {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = href;
         link.media = 'print';
-        link.onload = () => { link.media = 'all'; };
+        link.onload = () => { link.media = media; };
         document.head.appendChild(link);
       }
 
-      // Load main CSS after critical path
-      setTimeout(() => loadCSS('/src/index.css'), 100);
+      // Delay non-critical CSS to improve LCP
+      setTimeout(() => {
+        if (!document.querySelector('link[href*="main.css"]')) {
+          loadCSS('/src/index.css');
+        }
+      }, 500); // Reduced delay for better UX
     </script>
 
+    <!-- Preload main script for better performance -->
+    <script rel="modulepreload" href="/client/App.tsx"></script>
     <script type="module" src="/client/App.tsx"></script>
   </body>
 </html>

@@ -1,38 +1,42 @@
 import { useEffect, useCallback } from 'react';
 
-// Critical resource preloader
+// Critical resource preloader - only for essential resources
 export function useResourcePreloader() {
   const preloadCriticalResources = useCallback(() => {
-    // Preload critical routes
-    const criticalRoutes = [
-      '/configurator',
-      '/auto-configurator',
-      '/mode-selection'
-    ];
+    // Only preload truly critical routes, not all routes
+    const criticalRoutes = ['/configurator']; // Reduced list
 
-    criticalRoutes.forEach(route => {
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.href = route;
-      document.head.appendChild(link);
-    });
+    // Use requestIdleCallback if available
+    const preloadWhenIdle = () => {
+      criticalRoutes.forEach(route => {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = route;
+        link.as = 'document';
+        document.head.appendChild(link);
+      });
 
-    // Preload critical API endpoints
-    if ('fetch' in window) {
-      // Prefetch API endpoints that are commonly used
-      fetch('/api/templates', { method: 'HEAD' }).catch(() => {});
-      fetch('/api/business-types', { method: 'HEAD' }).catch(() => {});
+      // Preload critical API endpoints only when needed
+      if (window.location.pathname.includes('/configurator')) {
+        fetch('/api/templates', { method: 'HEAD' }).catch(() => {});
+      }
+    };
+
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(preloadWhenIdle, { timeout: 2000 });
+    } else {
+      setTimeout(preloadWhenIdle, 3000); // Delayed to not interfere with LCP
     }
   }, []);
 
   useEffect(() => {
-    // Preload resources after initial page load
-    const timer = setTimeout(preloadCriticalResources, 2000);
+    // Delay preloading to avoid impacting LCP
+    const timer = setTimeout(preloadCriticalResources, 5000); // Increased delay
     return () => clearTimeout(timer);
   }, [preloadCriticalResources]);
 }
 
-// Lazy load non-critical CSS
+// Lazy load non-critical CSS - optimized for LCP
 export function useLazyCSS() {
   useEffect(() => {
     const loadCSS = (href: string) => {
@@ -43,52 +47,61 @@ export function useLazyCSS() {
       link.onload = () => {
         link.media = 'all';
         // Mark non-critical content as loaded
-        const elements = document.querySelectorAll('.non-critical');
-        elements.forEach(el => el.classList.add('loaded'));
+        document.documentElement.classList.add('css-loaded');
       };
       document.head.appendChild(link);
     };
 
-    // Load non-critical CSS after critical path
+    // Only load non-critical CSS after LCP
     const timer = setTimeout(() => {
-      loadCSS('/src/components.css');
-      loadCSS('/src/animations.css');
-    }, 300);
+      // Check if additional CSS is actually needed
+      if (!document.querySelector('link[href*="components.css"]')) {
+        loadCSS('/src/components.css');
+      }
+      if (!document.querySelector('link[href*="animations.css"]')) {
+        loadCSS('/src/animations.css');
+      }
+    }, 1000); // Reduced delay for better UX
 
     return () => clearTimeout(timer);
   }, []);
 }
 
-// Performance observer for monitoring
+// Performance observer for monitoring - with LCP focus
 export function usePerformanceObserver() {
   useEffect(() => {
     if (!('PerformanceObserver' in window)) return;
 
     const observer = new PerformanceObserver((list) => {
       list.getEntries().forEach((entry) => {
-        // Log slow operations in development
-        if (process.env.NODE_ENV === 'development' && entry.duration > 100) {
-          console.warn(`Slow operation detected: ${entry.name} took ${entry.duration}ms`);
+        // Track LCP specifically for regression analysis
+        if (entry.entryType === 'largest-contentful-paint') {
+          console.log(`🎯 LCP: ${entry.startTime}ms`);
+          if (entry.startTime > 4000) {
+            console.warn('⚠️ LCP is slow:', entry);
+          }
         }
 
-        // Track LCP improvements
-        if (entry.entryType === 'largest-contentful-paint') {
-          console.log(`LCP: ${entry.startTime}ms`);
+        // Log slow operations only in development
+        if (import.meta.env.DEV && entry.duration && entry.duration > 100) {
+          console.warn(`Slow operation: ${entry.name} took ${entry.duration}ms`);
         }
       });
     });
 
     try {
-      observer.observe({ entryTypes: ['measure', 'largest-contentful-paint'] });
+      observer.observe({
+        entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift']
+      });
     } catch (e) {
-      console.warn('Performance observer not supported for these entry types');
+      console.warn('Performance observer not fully supported');
     }
 
     return () => observer.disconnect();
   }, []);
 }
 
-// Image lazy loading optimization
+// Image lazy loading optimization - enhanced for LCP
 export function useImageOptimization() {
   useEffect(() => {
     if (!('IntersectionObserver' in window)) return;
@@ -98,6 +111,12 @@ export function useImageOptimization() {
         if (entry.isIntersecting) {
           const img = entry.target as HTMLImageElement;
           if (img.dataset.src) {
+            // Prioritize above-the-fold images
+            const isAboveFold = entry.intersectionRatio > 0.1;
+            if (isAboveFold) {
+              img.loading = 'eager';
+            }
+
             img.src = img.dataset.src;
             img.removeAttribute('data-src');
             imageObserver.unobserve(img);
@@ -105,11 +124,11 @@ export function useImageOptimization() {
         }
       });
     }, {
-      rootMargin: '50px 0px', // Start loading 50px before image enters viewport
-      threshold: 0.1
+      rootMargin: '20px 0px', // Reduced margin for better performance
+      threshold: [0.1, 0.5] // Multiple thresholds for better detection
     });
 
-    // Observe all images with data-src attribute
+    // Observe all lazy images
     const lazyImages = document.querySelectorAll('img[data-src]');
     lazyImages.forEach(img => imageObserver.observe(img));
 
