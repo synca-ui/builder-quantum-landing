@@ -1,14 +1,18 @@
 /**
  * Demo Dashboard Home Component
- * Main demo dashboard component with all modules inline for simplicity
+ * Main demo dashboard component with enterprise-grade modules
  */
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DemoDashboardLayout from '../../components/demo/DemoDashboardLayout';
 import DemoInsightsBentoGrid from '../../components/demo/DemoInsightsBentoGrid';
+import DemoStaffCalendar from '../../components/demo/DemoStaffCalendar';
+import DemoFloorPlanEditor from '../../components/demo/DemoFloorPlanEditor';
+import DemoCreativeStudio from '../../components/demo/DemoCreativeStudio';
+import DemoAdminPanel from '../../components/demo/DemoAdminPanel';
 
-// Simple inline components for demo pages
+// Enterprise-grade demo pages
 function DemoInsightsPage() {
   return (
     <div className="space-y-8">
@@ -16,7 +20,7 @@ function DemoInsightsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Analytics & Insights</h1>
           <p className="text-gray-600 mt-2">
-            Demo-Version: Echtzeit-Übersicht über Performance und Geschäftskennzahlen
+            Enterprise Dashboard: Echtzeit-Übersicht über Performance und Geschäftskennzahlen
           </p>
         </div>
 
@@ -41,13 +45,15 @@ function DemoInsightsPage() {
 function DemoStaffPage() {
   return (
     <div className="space-y-8">
-      <div className="card-elevated bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl p-6">
-        <h3 className="font-semibold text-blue-900 mb-2">Demo Mitarbeiterplanung</h3>
-        <p className="text-blue-700 text-sm">
-          Diese Seite würde das vollständige Schichtplanungs-System mit Drag-and-Drop und Konflikterkennung zeigen.
-          In der echten Version können Sie hier Ihre Mitarbeiter verwalten und Schichten planen.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
+          <p className="text-gray-600 mt-2">
+            Enterprise-grade Personalplanung mit KI-Optimierung und Echtzeit-Analytics
+          </p>
+        </div>
       </div>
+      <DemoStaffCalendar />
     </div>
   );
 }
@@ -55,13 +61,15 @@ function DemoStaffPage() {
 function DemoFloorPlanPage() {
   return (
     <div className="space-y-8">
-      <div className="card-elevated bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6">
-        <h3 className="font-semibold text-purple-900 mb-2">Demo Lageplan-Editor</h3>
-        <p className="text-purple-700 text-sm">
-          Hier würden Sie Ihren interaktiven Lageplan bearbeiten, Tische verschieben und QR-Codes für das Bestellen generieren.
-          Die Drag-and-Drop Funktionalität ist vollständig implementiert.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Floor Plan Editor</h1>
+          <p className="text-gray-600 mt-2">
+            Intelligente Raumplanung mit Drag-and-Drop und Revenue-Analytics
+          </p>
+        </div>
       </div>
+      <DemoFloorPlanEditor />
     </div>
   );
 }
@@ -69,13 +77,15 @@ function DemoFloorPlanPage() {
 function DemoCreativeStudioPage() {
   return (
     <div className="space-y-8">
-      <div className="card-elevated bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-2xl p-6">
-        <h3 className="font-semibold text-pink-900 mb-2">Demo Creative Studio</h3>
-        <p className="text-pink-700 text-sm">
-          Das Creative Studio bietet Template-Wechsel, KI-gestützte Optimierungen und einen No-Code-Editor für Ihr Menü.
-          Alle Features sind in der Vollversion verfügbar.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Creative Studio</h1>
+          <p className="text-gray-600 mt-2">
+            No-Code Design System mit KI-Optimierung und Multi-Device Preview
+          </p>
+        </div>
       </div>
+      <DemoCreativeStudio />
     </div>
   );
 }
@@ -83,13 +93,15 @@ function DemoCreativeStudioPage() {
 function DemoAdminPage() {
   return (
     <div className="space-y-8">
-      <div className="card-elevated bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-2xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-2">Demo Admin & Verwaltung</h3>
-        <p className="text-gray-600 text-sm">
-          Verwalten Sie Reservierungen, überwachen Sie SEO-Gesundheit und behalten Sie den Systemstatus im Blick.
-          Alle Verwaltungstools sind in der echten Version verfügbar.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Center</h1>
+          <p className="text-gray-600 mt-2">
+            Enterprise Admin Dashboard mit System-Monitoring und Security Center
+          </p>
+        </div>
       </div>
+      <DemoAdminPanel />
     </div>
   );
 }

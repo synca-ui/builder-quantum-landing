@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Sparkles, Copy, CheckCircle2, Globe, MapPin, Clock, Phone, Mail, Image as ImageIcon, Star } from "lucide-react";
+import {
+  Settings, Sparkles, Copy, CheckCircle2, Globe, MapPin,
+  Clock, Phone, Mail, Instagram, ExternalLink, Utensils,
+  TrendingUp, AlertCircle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Headbar from "@/components/Headbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -8,18 +12,45 @@ import MaitrScoreCircle from "@/components/MaitrScoreCircle";
 import { useAnalysis, setIsLoading, setN8nData, setSourceLink } from "@/data/analysisStore";
 import { useMaitrScore } from "../../server/routes/useMaitrScore.ts";
 
-// Define interface for extracted data
-interface ExtractedData {
-  name?: string;
-  address?: string;
-  opening_hours?: any;
-  phone?: string;
-  email?: string;
-  images?: string[];
-  menu_items?: any[];
-  menuItems?: any[];
-  colors?: string[];
-  [key: string]: any; // Allow additional properties
+// ScraperJob data structure based on Prisma schema + JSON example
+interface ScraperJobData {
+  id: string;
+  businessName: string;
+  businessType?: string;
+  websiteUrl: string;
+  status: string;
+  extractedData?: {
+    email?: string | null;
+    phone?: string | null;
+    status?: string;
+    menuUrl?: string;
+    maitrScore?: number;
+    businessName?: string;
+    businessType?: string;
+    instagramUrl?: string;
+    hasReservation?: boolean;
+    analysisFeedback?: string;
+    googleSearchQuery?: string;
+    isDeepScrapeReady?: boolean;
+    extractedData?: {
+      raw_snippet?: string;
+      ssl_detected?: boolean;
+      analysis_timestamp?: string;
+    };
+  };
+  userId?: string | null;
+  createdAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  maitrScore?: number | null;
+  email?: string | null;
+  phone?: string | null;
+  instagramUrl?: string | null;
+  menuUrl?: string | null;
+  hasReservation?: boolean;
+  googleSearchQuery?: string | null;
+  analysisFeedback?: string | null;
+  isDeepScrapeReady?: boolean;
 }
 
 export default function ModeSelection() {
@@ -29,28 +60,74 @@ export default function ModeSelection() {
   const urlSource = params.get("sourceLink");
   const { isLoading, n8nData } = useAnalysis();
   const [copied, setCopied] = useState(false);
+  const [scraperData, setScraperData] = useState<ScraperJobData | null>(null);
 
-  // Decodierte URL für Polling + Anzeige
   const decodedUrl = urlSource ? decodeURIComponent(urlSource) : null;
 
-  // Polling startet erst nachdem der n8n-Webhook-Call gemacht wurde
+  // Get maitr score from either scraperData or hook
   const webhookConfirmed = !!n8nData;
-  const { maitrScore, scoreStatus } = useMaitrScore(decodedUrl, webhookConfirmed);
+  const { maitrScore: hookScore, scoreStatus } = useMaitrScore(decodedUrl, webhookConfirmed);
+  const maitrScore = scraperData?.maitrScore ?? hookScore ?? 0;
 
-  // Score-Kreis: Loading solange pending, sonst den Score zeigen
   const scoreIsLoading = isLoading || scoreStatus === "pending" || scoreStatus === "idle";
 
   const loadingMessages = [
-    "Maitr is analyzing…",
-    "Gathering branding…",
-    "Almost ready…",
+    "Analyzing your website…",
+    "Extracting business information…",
+    "Calculating Maitr Score…",
   ];
 
   const highScore = maitrScore > 80;
 
-  // Extract extracted data from n8nData if available
-  const extractedData: ExtractedData = n8nData?.analysis || n8nData?.restaurant || {};
-  const hasExtractedData = Object.keys(extractedData).length > 0;
+  // Extract meaningful data from ScraperJob
+  const hasExtractedData = scraperData?.status === "completed" || !!scraperData?.extractedData;
+
+  const businessName = scraperData?.businessName ||
+    scraperData?.extractedData?.businessName ||
+    "";
+
+  const businessType = scraperData?.businessType ||
+    scraperData?.extractedData?.businessType ||
+    "";
+
+  const phone = scraperData?.phone ||
+    scraperData?.extractedData?.phone ||
+    null;
+
+  const email = scraperData?.email ||
+    scraperData?.extractedData?.email ||
+    null;
+
+  const instagramUrl = scraperData?.instagramUrl ||
+    scraperData?.extractedData?.instagramUrl ||
+    null;
+
+  const menuUrl = scraperData?.menuUrl ||
+    scraperData?.extractedData?.menuUrl ||
+    null;
+
+  const hasReservation = scraperData?.hasReservation ||
+    scraperData?.extractedData?.hasReservation ||
+    false;
+
+  const analysisFeedback = scraperData?.analysisFeedback ||
+    scraperData?.extractedData?.analysisFeedback ||
+    null;
+
+  const isDeepScrapeReady = scraperData?.isDeepScrapeReady ||
+    scraperData?.extractedData?.isDeepScrapeReady ||
+    false;
+
+  // Count extracted data points for summary
+  const extractedCount = [
+    businessName,
+    phone,
+    email,
+    instagramUrl,
+    menuUrl,
+    hasReservation,
+    isDeepScrapeReady
+  ].filter(Boolean).length;
 
   const handleCopy = async () => {
     try {
@@ -74,7 +151,7 @@ export default function ModeSelection() {
     try {
       setIsLoading(true);
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 25000);
+      const timer = setTimeout(() => controller.abort(), 30000);
 
       const res = await fetch(`/api/forward-to-n8n`, {
         method: "POST",
@@ -95,6 +172,11 @@ export default function ModeSelection() {
 
       if (payload?.success) {
         setN8nData({ _webhookConfirmed: true } as any);
+
+        // If payload contains scraper data, store it
+        if (payload.scraperJob) {
+          setScraperData(payload.scraperJob);
+        }
       }
 
       setIsLoading(false);
@@ -103,6 +185,16 @@ export default function ModeSelection() {
       setIsLoading(false);
     }
   }
+
+  // Helper function to get score rating text
+  const getScoreRating = () => {
+    if (maitrScore >= 86) return { text: "Excellent", color: "text-emerald-600", icon: <CheckCircle2 className="w-4 h-4" /> };
+    if (maitrScore >= 71) return { text: "Good", color: "text-teal-600", icon: <TrendingUp className="w-4 h-4" /> };
+    if (maitrScore >= 51) return { text: "Fair", color: "text-amber-600", icon: <AlertCircle className="w-4 h-4" /> };
+    return { text: "Needs Work", color: "text-red-600", icon: <AlertCircle className="w-4 h-4" /> };
+  };
+
+  const scoreRating = getScoreRating();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-teal-50 to-gray-100">
@@ -116,104 +208,151 @@ export default function ModeSelection() {
           <MaitrScoreCircle score={maitrScore} isLoading={scoreIsLoading} />
 
           <h1 className="mt-5 text-3xl md:text-4xl font-extrabold text-gray-900">
-            Welcome, Friend!
+            {businessName || "Welcome, Friend!"}
           </h1>
           <p className="mt-2 text-gray-500 text-sm max-w-md mx-auto">
             {scoreIsLoading
               ? "Analyzing your site… this may take a moment."
-              : "Your site looks great! Choose how you'd like to proceed:"}
+              : analysisFeedback || "Your site looks great! Choose how you'd like to proceed:"}
           </p>
+
+          {/* ─── COMPACT EXTRACTED DATA SUMMARY ─── */}
+          {hasExtractedData && !scoreIsLoading && extractedCount > 0 && (
+            <div className="mt-6 inline-flex items-center gap-3 px-5 py-3 bg-white border border-teal-100 rounded-2xl shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-teal-50">
+                  <CheckCircle2 className="w-4 h-4 text-teal-600" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">
+                  {extractedCount} data point{extractedCount !== 1 ? 's' : ''} extracted
+                </span>
+              </div>
+
+              {/* Mini icons showing what was found */}
+              <div className="flex items-center gap-1.5 pl-3 border-l border-gray-200">
+                {businessName && (
+                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Business name">
+                    <Globe className="w-3.5 h-3.5 text-teal-600" />
+                  </div>
+                )}
+                {phone && (
+                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Phone number">
+                    <Phone className="w-3.5 h-3.5 text-teal-600" />
+                  </div>
+                )}
+                {email && (
+                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Email">
+                    <Mail className="w-3.5 h-3.5 text-teal-600" />
+                  </div>
+                )}
+                {instagramUrl && (
+                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Instagram">
+                    <Instagram className="w-3.5 h-3.5 text-teal-600" />
+                  </div>
+                )}
+                {menuUrl && (
+                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Menu available">
+                    <Utensils className="w-3.5 h-3.5 text-teal-600" />
+                  </div>
+                )}
+                {hasReservation && (
+                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Reservation system">
+                    <Clock className="w-3.5 h-3.5 text-teal-600" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ─── WHAT WE ALREADY KNOW SECTION ─── */}
+        {/* ─── DETAILED EXTRACTED DATA SECTION ─── */}
         {hasExtractedData && !scoreIsLoading && (
-          <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100 rounded-2xl shadow-sm p-6 mb-8">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-teal-100 shrink-0">
-                <CheckCircle2 className="w-5 h-5 text-teal-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-gray-900 mb-1">What we already know</h3>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  Based on your Maitr Score of <span className="font-bold text-teal-600">{maitrScore}</span>,
-                  we've automatically extracted the following information from your website:
-                </p>
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-8">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-teal-50 shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-teal-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Extracted Information</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Based on your Maitr Score of{" "}
+                    <span className={`font-bold ${scoreRating.color}`}>{maitrScore}</span>
+                    {" "}({scoreRating.text})
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              {extractedData.name && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {businessName && (
                 <InfoCard
                   icon={<Globe className="w-4 h-4" />}
                   label="Business Name"
-                  value={extractedData.name}
+                  value={businessName}
                 />
               )}
-              {extractedData.address && (
+
+              {businessType && (
                 <InfoCard
-                  icon={<MapPin className="w-4 h-4" />}
-                  label="Address"
-                  value={extractedData.address}
+                  icon={<Utensils className="w-4 h-4" />}
+                  label="Business Type"
+                  value={businessType}
                 />
               )}
-              {extractedData.opening_hours && (
-                <InfoCard
-                  icon={<Clock className="w-4 h-4" />}
-                  label="Opening Hours"
-                  value="Available"
-                />
-              )}
-              {extractedData.phone && (
+
+              {phone && (
                 <InfoCard
                   icon={<Phone className="w-4 h-4" />}
                   label="Phone"
-                  value={extractedData.phone}
+                  value={phone}
                 />
               )}
-              {extractedData.email && (
+
+              {email && (
                 <InfoCard
                   icon={<Mail className="w-4 h-4" />}
                   label="Email"
-                  value={extractedData.email}
+                  value={email}
                 />
               )}
-              {extractedData.images && extractedData.images.length > 0 && (
+
+              {instagramUrl && (
+                <InfoCardWithLink
+                  icon={<Instagram className="w-4 h-4" />}
+                  label="Instagram"
+                  value="Profile Found"
+                  link={instagramUrl}
+                />
+              )}
+
+              {menuUrl && (
+                <InfoCardWithLink
+                  icon={<Utensils className="w-4 h-4" />}
+                  label="Menu"
+                  value="Available Online"
+                  link={decodedUrl + menuUrl}
+                />
+              )}
+
+              {hasReservation && (
                 <InfoCard
-                  icon={<ImageIcon className="w-4 h-4" />}
-                  label="Images"
-                  value={`${extractedData.images.length} found`}
+                  icon={<Clock className="w-4 h-4" />}
+                  label="Reservations"
+                  value="System Detected"
                 />
               )}
-              {(extractedData.menu_items || extractedData.menuItems) && (
+
+              {isDeepScrapeReady && (
                 <InfoCard
-                  icon={<Star className="w-4 h-4" />}
-                  label="Menu Items"
-                  value="Extracted"
+                  icon={<CheckCircle2 className="w-4 h-4" />}
+                  label="Deep Scrape"
+                  value="Ready for Analysis"
                 />
-              )}
-              {extractedData.colors && extractedData.colors.length > 0 && (
-                <div className="bg-white rounded-xl p-3 border border-teal-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-1.5 rounded bg-teal-50">
-                      <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded" />
-                    </div>
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Brand Colors</span>
-                  </div>
-                  <div className="flex gap-1.5">
-                    {extractedData.colors.slice(0, 5).map((color: string, idx: number) => (
-                      <div
-                        key={idx}
-                        className="w-6 h-6 rounded-lg border border-gray-200 shadow-sm"
-                        style={{ backgroundColor: color }}
-                        title={color}
-                      />
-                    ))}
-                  </div>
-                </div>
               )}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-teal-100">
+            <div className="mt-5 pt-5 border-t border-gray-100">
               <p className="text-xs text-gray-500 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-teal-500" />
                 With automatic mode, we'll use this data to generate your website instantly
@@ -224,12 +363,12 @@ export default function ModeSelection() {
 
         {/* ─── SOURCE CARD ─── */}
         {urlSource && (
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 p-2 rounded-lg bg-gradient-to-br from-purple-50 to-teal-50 shrink-0">
                 <Sparkles className="w-5 h-5 text-purple-600" />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Detected source</div>
                 <div className="mt-0.5 text-sm font-semibold text-gray-800 break-all">{decodedUrl}</div>
                 <div className="mt-1 text-xs text-gray-400">
@@ -272,9 +411,18 @@ export default function ModeSelection() {
             </div>
 
             <ul className="text-xs text-gray-500 space-y-1.5 mb-6 ml-0.5">
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" /> Pick sections and modules</li>
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" /> Upload logos & images</li>
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" /> Fine-tune prices and opening hours</li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
+                Pick sections and modules
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
+                Upload logos & images
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
+                Fine-tune prices and opening hours
+              </li>
             </ul>
 
             <div className="mt-auto">
@@ -290,7 +438,9 @@ export default function ModeSelection() {
           </div>
 
           {/* Automatic – recommended */}
-          <div className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${highScore ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white" : "border-purple-200 bg-white"}`}>
+          <div className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${
+            highScore ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white" : "border-purple-200 bg-white"
+          }`}>
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm">
                 <Sparkles className="w-3 h-3" /> Recommended
@@ -310,9 +460,18 @@ export default function ModeSelection() {
             </div>
 
             <ul className="text-xs text-gray-500 space-y-1.5 mb-6 ml-0.5">
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" /> Extracts menu & images</li>
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" /> Generates colors & layout</li>
-              <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" /> Live preview & edit after generation</li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
+                Extracts menu & contact info
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
+                Generates colors & layout
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
+                Live preview & edit after generation
+              </li>
             </ul>
 
             <div className="mt-auto flex items-center gap-2">
@@ -351,7 +510,7 @@ export default function ModeSelection() {
 // Helper component for info cards
 function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-white rounded-xl p-3 border border-teal-100">
+    <div className="bg-teal-50/30 rounded-xl p-3 border border-teal-100/50">
       <div className="flex items-center gap-2 mb-1">
         <div className="p-1.5 rounded bg-teal-50 text-teal-600">
           {icon}
@@ -360,5 +519,33 @@ function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string
       </div>
       <p className="text-sm font-medium text-gray-800 truncate">{value}</p>
     </div>
+  );
+}
+
+// Helper component for info cards with external links
+function InfoCardWithLink({ icon, label, value, link }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  link: string;
+}) {
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="bg-teal-50/30 rounded-xl p-3 border border-teal-100/50 hover:border-teal-200 hover:bg-teal-50/50 transition-colors group"
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <div className="p-1.5 rounded bg-teal-50 text-teal-600">
+          {icon}
+        </div>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+        <ExternalLink className="w-3 h-3 text-gray-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <p className="text-sm font-medium text-teal-700 truncate group-hover:text-teal-800 transition-colors">
+        {value}
+      </p>
+    </a>
   );
 }

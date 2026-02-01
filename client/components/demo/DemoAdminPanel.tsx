@@ -1,13 +1,217 @@
 /**
- * Demo Admin Panel Component
+ * Demo Admin Panel Component - Enterprise SaaS Grade
+ * Advanced restaurant management dashboard with analytics, settings, and system monitoring
  */
 
-import React, { useState } from 'react';
-import { Settings, Calendar, Search, CheckCircle, XCircle, Clock, MoreHorizontal, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Shield,
+  Users,
+  Settings,
+  BarChart3,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Database,
+  Globe,
+  Lock,
+  Mail,
+  Smartphone,
+  CreditCard,
+  Zap,
+  Eye,
+  Download,
+  Upload,
+  RefreshCw,
+  Server,
+  Activity,
+  FileText,
+  Bell,
+  Search,
+  Filter,
+  Calendar,
+  DollarSign,
+  UserCheck,
+  MapPin,
+  Star,
+  Award,
+  Target,
+  XCircle,
+  MoreHorizontal
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'OWNER' | 'MANAGER' | 'STAFF';
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  lastLogin: string;
+  avatar: string;
+  permissions: string[];
+}
+
+interface SystemMetric {
+  id: string;
+  name: string;
+  value: string;
+  change: string;
+  trend: 'up' | 'down' | 'stable';
+  status: 'healthy' | 'warning' | 'critical';
+}
+
+interface SecurityEvent {
+  id: string;
+  type: 'LOGIN_SUCCESS' | 'LOGIN_FAILED' | 'PERMISSION_CHANGE' | 'DATA_EXPORT';
+  user: string;
+  timestamp: string;
+  ipAddress: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
 export default function DemoAdminPanel() {
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'security' | 'analytics' | 'settings'>('overview');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [systemHealth, setSystemHealth] = useState(98);
+  const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
+  // Professional demo data
+  const demoUsers: User[] = [
+    {
+      id: '1',
+      name: 'Max Mustermann',
+      email: 'max@restaurant-demo.de',
+      role: 'OWNER',
+      status: 'ACTIVE',
+      lastLogin: '2 Minuten',
+      avatar: 'MM',
+      permissions: ['FULL_ACCESS', 'BILLING', 'USER_MANAGEMENT', 'SYSTEM_CONFIG']
+    },
+    {
+      id: '2',
+      name: 'Sarah Schmidt',
+      email: 'sarah@restaurant-demo.de',
+      role: 'MANAGER',
+      status: 'ACTIVE',
+      lastLogin: '1 Stunde',
+      avatar: 'SS',
+      permissions: ['DASHBOARD', 'STAFF_MANAGEMENT', 'ORDERS', 'ANALYTICS']
+    },
+    {
+      id: '3',
+      name: 'Tom Weber',
+      email: 'tom@restaurant-demo.de',
+      role: 'STAFF',
+      status: 'INACTIVE',
+      lastLogin: '3 Tage',
+      avatar: 'TW',
+      permissions: ['DASHBOARD', 'ORDERS']
+    }
+  ];
+
+  const systemMetrics: SystemMetric[] = [
+    {
+      id: 'uptime',
+      name: 'System Uptime',
+      value: '99.9%',
+      change: '+0.1%',
+      trend: 'up',
+      status: 'healthy'
+    },
+    {
+      id: 'response',
+      name: 'Response Time',
+      value: '89ms',
+      change: '-12ms',
+      trend: 'up',
+      status: 'healthy'
+    },
+    {
+      id: 'storage',
+      name: 'Storage Usage',
+      value: '67%',
+      change: '+5%',
+      trend: 'up',
+      status: 'warning'
+    },
+    {
+      id: 'requests',
+      name: 'API Requests/min',
+      value: '1,247',
+      change: '+23%',
+      trend: 'up',
+      status: 'healthy'
+    }
+  ];
+
+  const demoSecurityEvents: SecurityEvent[] = [
+    {
+      id: '1',
+      type: 'LOGIN_SUCCESS',
+      user: 'Max Mustermann',
+      timestamp: '2 Minuten',
+      ipAddress: '192.168.1.100',
+      description: 'Erfolgreiche Anmeldung über Web-Interface',
+      severity: 'low'
+    },
+    {
+      id: '2',
+      type: 'PERMISSION_CHANGE',
+      user: 'Sarah Schmidt',
+      timestamp: '1 Stunde',
+      ipAddress: '192.168.1.105',
+      description: 'Berechtigung für Analytics hinzugefügt',
+      severity: 'medium'
+    },
+    {
+      id: '3',
+      type: 'LOGIN_FAILED',
+      user: 'unknown',
+      timestamp: '2 Stunden',
+      ipAddress: '203.45.67.89',
+      description: 'Fehlgeschlagener Anmeldeversuch mit ungültigen Daten',
+      severity: 'medium'
+    }
+  ];
+
+  useEffect(() => {
+    setUsers(demoUsers);
+    setSecurityEvents(demoSecurityEvents);
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      'ACTIVE': 'bg-green-100 text-green-700 border-green-300',
+      'INACTIVE': 'bg-gray-100 text-gray-700 border-gray-300',
+      'SUSPENDED': 'bg-red-100 text-red-700 border-red-300',
+      'healthy': 'text-green-600',
+      'warning': 'text-yellow-600',
+      'critical': 'text-red-600'
+    };
+    return colors[status as keyof typeof colors] || colors.INACTIVE;
+  };
+
+  const getSeverityColor = (severity: string) => {
+    const colors = {
+      'low': 'bg-blue-100 text-blue-700 border-blue-300',
+      'medium': 'bg-yellow-100 text-yellow-700 border-yellow-300',
+      'high': 'bg-red-100 text-red-700 border-red-300'
+    };
+    return colors[severity as keyof typeof colors] || colors.low;
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'OWNER': return Shield;
+      case 'MANAGER': return UserCheck;
+      case 'STAFF': return Users;
+      default: return Users;
+    }
+  };
   const [showDemo, setShowDemo] = useState(true);
 
   const demoReservations = [
