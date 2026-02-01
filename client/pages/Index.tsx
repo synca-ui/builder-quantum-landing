@@ -558,6 +558,24 @@ export default function Index() {
                     </a>
                   </div>
                 </div>
+
+                {/* Demo Dashboard CTA - prominently placed in hero */}
+                <div className="mt-8">
+                  <p className="text-sm text-gray-500 mb-3">Oder schaue dir das fertige Ergebnis an:</p>
+                  <a
+                    href="/demo-dashboard"
+                    className="inline-flex items-center rounded-full px-6 py-3 border-2 border-transparent bg-gradient-to-r from-white via-gray-50 to-white text-teal-700 font-bold shadow-lg hover:shadow-xl transition-all duration-300 group ring-2 ring-teal-500/20 hover:ring-teal-500/40"
+                  >
+                    <div className="flex items-center justify-center w-5 h-5 mr-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
+                      <BarChart3 className="w-3 h-3 text-teal-600 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <span className="hidden sm:inline">Live Dashboard Demo ansehen</span>
+                    <span className="sm:hidden">Live Demo</span>
+                    <div className="flex items-center justify-center w-5 h-5 ml-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
+                      <ChevronRight className="w-3 h-3 text-teal-600 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -597,6 +615,7 @@ export default function Index() {
           </div>
           <div className="text-center mt-8">
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {/* Login/Dashboard Button - conditional */}
               {isSignedIn ? (
                 <a href="/dashboard">
                   <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
@@ -610,15 +629,22 @@ export default function Index() {
                   </Button>
                 </SignInButton>
               )}
+            </div>
 
-              {/* Demo Dashboard Button */}
+            {/* Demo Dashboard Button - always visible */}
+            <div className="mt-4">
               <a
                 href="/demo-dashboard"
-                className="inline-flex items-center px-8 py-3 border-2 border-teal-500 text-teal-600 bg-white hover:bg-teal-50 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
+                className="inline-flex items-center rounded-full px-6 py-3 border-2 border-transparent bg-gradient-to-r from-white via-gray-50 to-white text-teal-700 font-bold shadow-lg hover:shadow-xl transition-all duration-300 group ring-2 ring-teal-500/20 hover:ring-teal-500/40"
               >
-                <BarChart3 className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" />
-                Dashboard Demo ansehen
-                <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="flex items-center justify-center w-5 h-5 mr-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
+                  <BarChart3 className="w-3 h-3 text-teal-600 group-hover:scale-110 transition-transform" />
+                </div>
+                <span className="hidden sm:inline">Dashboard Demo ansehen</span>
+                <span className="sm:hidden">Demo ansehen</span>
+                <div className="flex items-center justify-center w-5 h-5 ml-3 rounded-full bg-teal-100 group-hover:bg-teal-200 transition-colors">
+                  <ChevronRight className="w-3 h-3 text-teal-600 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </a>
             </div>
           </div>
