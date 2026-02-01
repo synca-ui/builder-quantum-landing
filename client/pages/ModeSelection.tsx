@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Sparkles, Copy, ExternalLink } from "lucide-react";
+import { Settings, Sparkles, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Headbar from "@/components/Headbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import MaitrScoreCircle from "@/components/MaitrScoreCircle";
 import { useAnalysis, setIsLoading, setN8nData, setSourceLink } from "@/data/analysisStore";
 import type { N8nResult } from "@/types/n8n";
+import { useMaitrScore } from "../../server/routes/useMaitrScore.ts";
 
 export default function ModeSelection() {
   const navigate = useNavigate();
@@ -16,18 +17,29 @@ export default function ModeSelection() {
   const { isLoading, n8nData } = useAnalysis();
   const [copied, setCopied] = useState(false);
 
+  // Decodierte URL für Polling + Anzeige
+  const decodedUrl = urlSource ? decodeURIComponent(urlSource) : null;
+
+  // ── Polling startet erst nachdem der n8n-Webhook-Call gemacht wurde ──
+  // n8nData wird gesetzt sobald der Webhook-Call zurückkommt (auch wenn er nur
+  // die Bestätigung enthält). Das nutzen wir als Signal dass der Workflow läuft.
+  const webhookConfirmed = !!n8nData;
+  const { maitrScore, scoreStatus } = useMaitrScore(decodedUrl, webhookConfirmed);
+
+  // Score-Kreis: Loading solange pending, sonst den Score zeigen
+  const scoreIsLoading = isLoading || scoreStatus === "pending" || scoreStatus === "idle";
+
   const loadingMessages = [
     "Maitr is analyzing…",
     "Gathering branding…",
     "Almost ready…",
   ];
 
-  const maitrScore = n8nData?.analysis?.maitr_score ?? 0;
   const highScore = maitrScore > 80;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(decodeURIComponent(urlSource || ""));
+      await navigator.clipboard.writeText(decodedUrl || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {}
@@ -35,10 +47,9 @@ export default function ModeSelection() {
 
   useEffect(() => {
     if (urlSource) {
-      const decoded = decodeURIComponent(urlSource);
-      setSourceLink(decoded);
+      setSourceLink(decodedUrl!);
       if (!n8nData) {
-        runAnalysis(decoded);
+        runAnalysis(decodedUrl!);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,21 +77,14 @@ export default function ModeSelection() {
       }
 
       const payload = await res.json();
-      let data = payload?.response || payload;
 
-      if (typeof data === "string") {
-        try {
-          data = JSON.parse(data);
-        } catch (e) {
-          console.warn("Could not parse response as JSON", data);
-        }
-      }
-
-      if (data && typeof data === "object") {
-        setN8nData(data as N8nResult);
-      } else {
-        console.warn("Invalid response format:", data);
-        setN8nData(null);
+      // ── WICHTIG: Diese Antwort ist NUR die Webhook-Bestätigung von n8n. ──
+      // Sie enthält KEIN maitr_score / analysis / restaurant.
+      // Wir setzen n8nData trotzdem, damit das Polling starten kann.
+      // Der Score kommt separat über useMaitrScore aus der DB.
+      if (payload?.success) {
+        // Minimales Objekt setzen → triggert webhookConfirmed = true → Polling startet
+        setN8nData({ _webhookConfirmed: true } as any);
       }
 
       setIsLoading(false);
@@ -97,19 +101,17 @@ export default function ModeSelection() {
 
       <div className="max-w-4xl mx-auto px-5 pt-10 pb-16">
 
-        {/* ─── HERO: Score + Heading ─── */}
+        {/* ─── HERO ─── */}
         <div className="text-center mb-10">
-          <MaitrScoreCircle score={maitrScore} isLoading={isLoading} />
+          <MaitrScoreCircle score={maitrScore} isLoading={scoreIsLoading} />
 
           <h1 className="mt-5 text-3xl md:text-4xl font-extrabold text-gray-900">
-            {n8nData
-              ? `Welcome, ${n8nData?.restaurant?.name || "Friend"}!`
-              : "How would you like Maitr to help?"}
+            Welcome, Friend!
           </h1>
           <p className="mt-2 text-gray-500 text-sm max-w-md mx-auto">
-            {n8nData
-              ? "Your site looks great! Choose how you'd like to proceed:"
-              : "Choose between a guided manual setup or let Maitr build a working app automatically from a single link."}
+            {scoreIsLoading
+              ? "Analyzing your site… this may take a moment."
+              : "Your site looks great! Choose how you'd like to proceed:"}
           </p>
         </div>
 
@@ -122,9 +124,7 @@ export default function ModeSelection() {
               </div>
               <div>
                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Detected source</div>
-                <div className="mt-0.5 text-sm font-semibold text-gray-800 break-all">
-                  {decodeURIComponent(urlSource)}
-                </div>
+                <div className="mt-0.5 text-sm font-semibold text-gray-800 break-all">{decodedUrl}</div>
                 <div className="mt-1 text-xs text-gray-400">
                   You can upload logos and tweak colors after choosing automatic mode.
                 </div>
@@ -134,7 +134,7 @@ export default function ModeSelection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate(`/configurator/auto?sourceLink=${encodeURIComponent(decodeURIComponent(urlSource))}`)}
+                onClick={() => navigate(`/configurator/auto?sourceLink=${encodeURIComponent(decodedUrl || "")}`)}
                 className="text-xs font-semibold"
               >
                 Start Automatic
@@ -182,10 +182,8 @@ export default function ModeSelection() {
             </div>
           </div>
 
-          {/* Automatic — visually elevated as recommended */}
+          {/* Automatic — recommended */}
           <div className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${highScore ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white" : "border-purple-200 bg-white"}`}>
-
-            {/* Recommended badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm">
                 <Sparkles className="w-3 h-3" /> Recommended
@@ -234,7 +232,7 @@ export default function ModeSelection() {
           </div>
         </div>
 
-        {/* ─── FOOTER HINT ─── */}
+        {/* ─── FOOTER ─── */}
         <p className="mt-8 text-center text-xs text-gray-400">
           Need help? Our Concierge can finish the setup for you — or you can continue tweaking everything yourself.
         </p>

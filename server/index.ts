@@ -60,6 +60,9 @@ export function createServer() {
 
   app.post("/api/webhooks/test", handleWebhookTest);
 
+  const scraperJobRouter = require("./routes/scraperJob");
+  app.use("/api/scraper-job", scraperJobRouter);
+
   // Root endpoint
   app.get("/", (_req, res) => {
     res.json({
