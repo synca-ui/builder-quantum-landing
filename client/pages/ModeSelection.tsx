@@ -1,13 +1,26 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Settings, Sparkles, Copy } from "lucide-react";
+import { Settings, Sparkles, Copy, CheckCircle2, Globe, MapPin, Clock, Phone, Mail, Image as ImageIcon, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Headbar from "@/components/Headbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import MaitrScoreCircle from "@/components/MaitrScoreCircle";
 import { useAnalysis, setIsLoading, setN8nData, setSourceLink } from "@/data/analysisStore";
-import type { N8nResult } from "@/types/n8n";
 import { useMaitrScore } from "../../server/routes/useMaitrScore.ts";
+
+// Define interface for extracted data
+interface ExtractedData {
+  name?: string;
+  address?: string;
+  opening_hours?: any;
+  phone?: string;
+  email?: string;
+  images?: string[];
+  menu_items?: any[];
+  menuItems?: any[];
+  colors?: string[];
+  [key: string]: any; // Allow additional properties
+}
 
 export default function ModeSelection() {
   const navigate = useNavigate();
@@ -20,9 +33,7 @@ export default function ModeSelection() {
   // Decodierte URL für Polling + Anzeige
   const decodedUrl = urlSource ? decodeURIComponent(urlSource) : null;
 
-  // ── Polling startet erst nachdem der n8n-Webhook-Call gemacht wurde ──
-  // n8nData wird gesetzt sobald der Webhook-Call zurückkommt (auch wenn er nur
-  // die Bestätigung enthält). Das nutzen wir als Signal dass der Workflow läuft.
+  // Polling startet erst nachdem der n8n-Webhook-Call gemacht wurde
   const webhookConfirmed = !!n8nData;
   const { maitrScore, scoreStatus } = useMaitrScore(decodedUrl, webhookConfirmed);
 
@@ -36,6 +47,10 @@ export default function ModeSelection() {
   ];
 
   const highScore = maitrScore > 80;
+
+  // Extract extracted data from n8nData if available
+  const extractedData: ExtractedData = n8nData?.analysis || n8nData?.restaurant || {};
+  const hasExtractedData = Object.keys(extractedData).length > 0;
 
   const handleCopy = async () => {
     try {
@@ -78,12 +93,7 @@ export default function ModeSelection() {
 
       const payload = await res.json();
 
-      // ── WICHTIG: Diese Antwort ist NUR die Webhook-Bestätigung von n8n. ──
-      // Sie enthält KEIN maitr_score / analysis / restaurant.
-      // Wir setzen n8nData trotzdem, damit das Polling starten kann.
-      // Der Score kommt separat über useMaitrScore aus der DB.
       if (payload?.success) {
-        // Minimales Objekt setzen → triggert webhookConfirmed = true → Polling startet
         setN8nData({ _webhookConfirmed: true } as any);
       }
 
@@ -114,6 +124,103 @@ export default function ModeSelection() {
               : "Your site looks great! Choose how you'd like to proceed:"}
           </p>
         </div>
+
+        {/* ─── WHAT WE ALREADY KNOW SECTION ─── */}
+        {hasExtractedData && !scoreIsLoading && (
+          <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100 rounded-2xl shadow-sm p-6 mb-8">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-teal-100 shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-teal-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-gray-900 mb-1">What we already know</h3>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Based on your Maitr Score of <span className="font-bold text-teal-600">{maitrScore}</span>,
+                  we've automatically extracted the following information from your website:
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              {extractedData.name && (
+                <InfoCard
+                  icon={<Globe className="w-4 h-4" />}
+                  label="Business Name"
+                  value={extractedData.name}
+                />
+              )}
+              {extractedData.address && (
+                <InfoCard
+                  icon={<MapPin className="w-4 h-4" />}
+                  label="Address"
+                  value={extractedData.address}
+                />
+              )}
+              {extractedData.opening_hours && (
+                <InfoCard
+                  icon={<Clock className="w-4 h-4" />}
+                  label="Opening Hours"
+                  value="Available"
+                />
+              )}
+              {extractedData.phone && (
+                <InfoCard
+                  icon={<Phone className="w-4 h-4" />}
+                  label="Phone"
+                  value={extractedData.phone}
+                />
+              )}
+              {extractedData.email && (
+                <InfoCard
+                  icon={<Mail className="w-4 h-4" />}
+                  label="Email"
+                  value={extractedData.email}
+                />
+              )}
+              {extractedData.images && extractedData.images.length > 0 && (
+                <InfoCard
+                  icon={<ImageIcon className="w-4 h-4" />}
+                  label="Images"
+                  value={`${extractedData.images.length} found`}
+                />
+              )}
+              {(extractedData.menu_items || extractedData.menuItems) && (
+                <InfoCard
+                  icon={<Star className="w-4 h-4" />}
+                  label="Menu Items"
+                  value="Extracted"
+                />
+              )}
+              {extractedData.colors && extractedData.colors.length > 0 && (
+                <div className="bg-white rounded-xl p-3 border border-teal-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 rounded bg-teal-50">
+                      <div className="w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded" />
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Brand Colors</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {extractedData.colors.slice(0, 5).map((color: string, idx: number) => (
+                      <div
+                        key={idx}
+                        className="w-6 h-6 rounded-lg border border-gray-200 shadow-sm"
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-teal-100">
+              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-teal-500" />
+                With automatic mode, we'll use this data to generate your website instantly
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ─── SOURCE CARD ─── */}
         {urlSource && (
@@ -182,7 +289,7 @@ export default function ModeSelection() {
             </div>
           </div>
 
-          {/* Automatic — recommended */}
+          {/* Automatic – recommended */}
           <div className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${highScore ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white" : "border-purple-200 bg-white"}`}>
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm">
@@ -237,6 +344,21 @@ export default function ModeSelection() {
           Need help? Our Concierge can finish the setup for you — or you can continue tweaking everything yourself.
         </p>
       </div>
+    </div>
+  );
+}
+
+// Helper component for info cards
+function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-white rounded-xl p-3 border border-teal-100">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="p-1.5 rounded bg-teal-50 text-teal-600">
+          {icon}
+        </div>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+      </div>
+      <p className="text-sm font-medium text-gray-800 truncate">{value}</p>
     </div>
   );
 }
