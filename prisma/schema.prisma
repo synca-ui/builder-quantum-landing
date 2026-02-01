@@ -57,6 +57,11 @@ model Business {
   reservations       Reservation[]
   tables             Table[]
 
+  // Staff Management Relations (NEW)
+  staff              Staff[]
+  shifts             Shift[]
+  absences           Absence[]
+
   @@index([slug])
   @@index([status])
 }
@@ -242,6 +247,146 @@ model TemplateRating {
 
   @@unique([templateId, userId])
   @@index([templateId])
+}
+
+// ============================================
+// STAFF MANAGEMENT SYSTEM (✅ NEW)
+// ============================================
+
+model Staff {
+  id           String    @id @default(uuid())
+  businessId   String
+  email        String
+  firstName    String
+  lastName     String
+  phone        String?
+  position     String    @default("Staff") // Kitchen, Service, Manager, etc.
+  hourlyRate   Decimal?  @db.Decimal(8, 2)
+  isActive     Boolean   @default(true)
+
+  // Employment Details
+  hireDate     DateTime  @default(now())
+  terminationDate DateTime?
+
+  // Permissions & Access
+  permissions  Json      @default("[]") // ["floor_plan", "reservations", "reports"]
+
+  // Timestamps
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  shifts       Shift[]
+  absences     Absence[]
+
+  @@unique([businessId, email])
+  @@index([businessId, isActive])
+  @@index([position])
+}
+
+model Shift {
+  id           String      @id @default(uuid())
+  businessId   String
+  staffId      String
+
+  // Shift Details
+  date         DateTime    @db.Date
+  startTime    DateTime    // Full timestamp for flexibility
+  endTime      DateTime
+  breakDuration Int        @default(0) // minutes
+
+  // Shift Type & Status
+  shiftType    ShiftType   @default(REGULAR)
+  status       ShiftStatus @default(SCHEDULED)
+
+  // Work Details
+  position     String?     // Override staff default position
+  notes        String?
+
+  // Actual vs Scheduled (Clock In/Out)
+  actualStart  DateTime?
+  actualEnd    DateTime?
+  actualBreak  Int?        // actual break minutes taken
+
+  // Financial
+  hourlyRate   Decimal?    @db.Decimal(8, 2) // Override staff default rate
+
+  // Timestamps
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  business     Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  staff        Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, date])
+  @@index([staffId, date])
+  @@index([date, shiftType])
+}
+
+model Absence {
+  id           String      @id @default(uuid())
+  businessId   String
+  staffId      String
+
+  // Absence Details
+  startDate    DateTime    @db.Date
+  endDate      DateTime    @db.Date
+  absenceType  AbsenceType
+  reason       String?
+
+  // Approval Workflow
+  status       AbsenceStatus @default(PENDING)
+  approvedBy   String?     // Staff ID who approved
+  approvedAt   DateTime?
+
+  // Documentation
+  notes        String?
+  attachments  Json?       // URLs to medical certificates, etc.
+
+  // Timestamps
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  business     Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  staff        Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, startDate, endDate])
+  @@index([staffId, status])
+  @@index([absenceType])
+}
+
+enum ShiftType {
+  REGULAR     // Normal shift
+  OVERTIME    // Extra hours
+  HOLIDAY     // Holiday/special day
+  EMERGENCY   // Last-minute coverage
+}
+
+enum ShiftStatus {
+  SCHEDULED   // Planned shift
+  IN_PROGRESS // Currently working
+  COMPLETED   // Shift finished
+  MISSED      // No-show
+  CANCELLED   // Cancelled shift
+}
+
+enum AbsenceType {
+  VACATION    // Planned vacation
+  SICK_LEAVE  // Illness
+  PERSONAL    // Personal reasons
+  EMERGENCY   // Family emergency
+  TRAINING    // Training/education
+  OTHER       // Other reasons
+}
+
+enum AbsenceStatus {
+  PENDING     // Awaiting approval
+  APPROVED    // Approved by manager
+  REJECTED    // Rejected by manager
+  CANCELLED   // Cancelled by employee
 }
 
 model Configuration {

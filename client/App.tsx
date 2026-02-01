@@ -7,7 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
 import { ClerkProvider } from "@clerk/clerk-react";
@@ -21,7 +21,6 @@ import Configurator from "./pages/Configurator";
 import ModeSelection from "./pages/ModeSelection";
 // Lazy load heavy components for better performance
 const AutoConfigurator = lazy(() => import("./pages/AutoConfigurator"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Site = lazy(() => import("./pages/Site"));
 const TestSite = lazy(() => import("./pages/TestSite"));
 import NotFound from "./pages/NotFound";
@@ -30,6 +29,16 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import RequireAuth from "./components/RequireAuth";
+
+// Dashboard Pages (lazy loaded)
+const InsightsPage = lazy(() => import("./pages/dashboard/InsightsPage"));
+const StaffPage = lazy(() => import("./pages/dashboard/StaffPage"));
+const FloorPlanPage = lazy(() => import("./pages/dashboard/FloorPlanPage"));
+const CreativeStudioPage = lazy(() => import("./pages/dashboard/CreativeStudioPage"));
+const AdminPage = lazy(() => import("./pages/dashboard/AdminPage"));
+
+// Demo Dashboard (public, no auth)
+const DemoDashboardHome = lazy(() => import("./pages/demo/DemoDashboardHome"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +100,53 @@ const App = () => {
                         />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
+
+                        {/* Demo Dashboard Routes (Public - No Auth Required) */}
+                        <Route path="/demo-dashboard" element={<DemoDashboardHome />} />
+                        <Route path="/demo-dashboard/*" element={<DemoDashboardHome />} />
+
+                        {/* Dashboard Routes */}
+                        <Route
+                          path="/dashboard/insights"
+                          element={
+                            <RequireAuth>
+                              <InsightsPage />
+                            </RequireAuth>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/staff"
+                          element={
+                            <RequireAuth>
+                              <StaffPage />
+                            </RequireAuth>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/floor-plan"
+                          element={
+                            <RequireAuth>
+                              <FloorPlanPage />
+                            </RequireAuth>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/creative"
+                          element={
+                            <RequireAuth>
+                              <CreativeStudioPage />
+                            </RequireAuth>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/admin"
+                          element={
+                            <RequireAuth>
+                              <AdminPage />
+                            </RequireAuth>
+                          }
+                        />
+
                         <Route
                           path="/profile"
                           element={
@@ -101,11 +157,7 @@ const App = () => {
                         />
                         <Route
                           path="/dashboard"
-                          element={
-                            <RequireAuth>
-                              <Dashboard />
-                            </RequireAuth>
-                          }
+                          element={<Navigate to="/dashboard/insights" replace />}
                         />
                         <Route path="/site/:subdomain/*" element={<Site />} />
                         <Route path="/:id/:name/*" element={<Site />} />

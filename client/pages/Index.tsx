@@ -3,9 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   ChevronRight,
   Play,
-  Star,
-  Check,
-  ArrowRight,
   Zap,
   Palette,
   Smartphone,
@@ -16,8 +13,8 @@ import {
   Menu,
   X,
   Settings,
-  Home,
   Layers,
+  BarChart3,
   LayoutDashboard,
   Link as LinkIcon,
   Loader2,
@@ -546,6 +543,18 @@ export default function Index() {
                           </>
                         )}
                       </button>
+                    </div>
+
+                    {/* Demo Dashboard Button */}
+                    <div className="mt-4">
+                      <a
+                        href="/demo-dashboard"
+                        className="inline-flex items-center px-6 py-3 border-2 border-teal-500 text-teal-600 bg-white hover:bg-teal-50 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 group"
+                      >
+                        <BarChart3 className="mr-3 w-5 h-5 group-hover:scale-110 transition-transform" />
+                        Dashboard Demo ansehen
+                        <ChevronRight className="ml-3 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </a>
                     </div>
                   </form>
 

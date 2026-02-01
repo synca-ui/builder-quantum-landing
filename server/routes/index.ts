@@ -11,6 +11,10 @@ import { subdomainsRouter } from "./subdomains";
 import { handleForwardN8n } from "./n8nProxy";
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
+import demoDashboardRouter from "./demo-dashboard";
+import staffRouter from "./staff";
+import creativeStudioRouter from "./creative-studio";
+import adminRouter from "./admin";
 
 // Erstellen Sie einen Haupt-API-Router, um alle Teil-Routen zu bündeln
 export const apiRouter = Router();
@@ -24,9 +28,15 @@ apiRouter.use("/scraper", scraperRouter);
 apiRouter.use("/subscriptions", subscriptionsRouter);
 apiRouter.use("/subdomains", subdomainsRouter);
 
-// Dashboard API routes
+// Dashboard API routes (authenticated)
 apiRouter.use("/dashboard/insights", insightsRouter);
 apiRouter.use("/dashboard/floor-plan", floorPlanRouter);
+apiRouter.use("/dashboard/staff", staffRouter);
+apiRouter.use("/dashboard/creative", creativeStudioRouter);
+apiRouter.use("/dashboard/admin", adminRouter);
+
+// Demo Dashboard API routes (no auth required)
+apiRouter.use("/demo/dashboard", demoDashboardRouter);
 
 
 // Standalone configuration routes (for backward compatibility)
