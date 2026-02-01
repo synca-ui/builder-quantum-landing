@@ -11,7 +11,9 @@ export function useServiceWorker() {
           updateViaCache: 'none' // Always check for updates
         })
           .then((registration) => {
-            console.log('SW registered successfully:', registration.scope);
+            if (import.meta.env.DEV) {
+              console.log('SW registered successfully:', registration.scope);
+            }
 
             // Check for updates periodically
             registration.addEventListener('updatefound', () => {
@@ -19,7 +21,9 @@ export function useServiceWorker() {
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('New SW version available');
+                    if (import.meta.env.DEV) {
+                      console.log('New SW version available');
+                    }
                     // Optionally notify user about update
                     if (confirm('New version available! Reload to update?')) {
                       newWorker.postMessage({ action: 'skipWaiting' });
@@ -31,13 +35,17 @@ export function useServiceWorker() {
             });
           })
           .catch((error) => {
-            console.warn('SW registration failed:', error);
+            if (import.meta.env.DEV) {
+              console.warn('SW registration failed:', error);
+            }
           });
       });
 
       // Listen for SW updates
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('SW controller changed');
+        if (import.meta.env.DEV) {
+          console.log('SW controller changed');
+        }
       });
     } else if (import.meta.env.DEV) {
       console.log('SW registration skipped in development');

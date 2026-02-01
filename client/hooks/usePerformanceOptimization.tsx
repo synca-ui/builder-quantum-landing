@@ -39,29 +39,11 @@ export function useResourcePreloader() {
 // Lazy load non-critical CSS - optimized for LCP
 export function useLazyCSS() {
   useEffect(() => {
-    const loadCSS = (href: string) => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      link.media = 'print';
-      link.onload = () => {
-        link.media = 'all';
-        // Mark non-critical content as loaded
-        document.documentElement.classList.add('css-loaded');
-      };
-      document.head.appendChild(link);
-    };
-
-    // Only load non-critical CSS after LCP
+    // Only add CSS loading class indicator, don't try to load specific files
+    // Let Vite handle CSS bundling and loading automatically
     const timer = setTimeout(() => {
-      // Check if additional CSS is actually needed
-      if (!document.querySelector('link[href*="components.css"]')) {
-        loadCSS('/src/components.css');
-      }
-      if (!document.querySelector('link[href*="animations.css"]')) {
-        loadCSS('/src/animations.css');
-      }
-    }, 1000); // Reduced delay for better UX
+      document.documentElement.classList.add('css-loaded');
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -74,11 +56,13 @@ export function usePerformanceObserver() {
 
     const observer = new PerformanceObserver((list) => {
       list.getEntries().forEach((entry) => {
-        // Track LCP specifically for regression analysis
+        // Track LCP specifically for regression analysis (only in dev)
         if (entry.entryType === 'largest-contentful-paint') {
-          console.log(`🎯 LCP: ${entry.startTime}ms`);
-          if (entry.startTime > 4000) {
-            console.warn('⚠️ LCP is slow:', entry);
+          if (import.meta.env.DEV) {
+            console.log(`🎯 LCP: ${entry.startTime}ms`);
+            if (entry.startTime > 4000) {
+              console.warn('⚠️ LCP is slow:', entry);
+            }
           }
         }
 
@@ -94,7 +78,9 @@ export function usePerformanceObserver() {
         entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift']
       });
     } catch (e) {
-      console.warn('Performance observer not fully supported');
+      if (import.meta.env.DEV) {
+        console.warn('Performance observer not fully supported');
+      }
     }
 
     return () => observer.disconnect();
