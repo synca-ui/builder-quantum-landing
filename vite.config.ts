@@ -25,9 +25,56 @@ export default defineConfig(({ mode }) => ({
   // Deduplicate React to avoid multiple instance issues
   optimizeDeps: {
     include: ["react", "react-dom", "react-i18next", "i18next"],
+    exclude: ["lucide-react"], // Dynamically import icons
   },
   build: {
     outDir: "dist/spa", // Set the output directory for the built files
+    sourcemap: false, // Disable sourcemaps for production
+    minify: "esbuild", // Use esbuild for faster minification
+    target: "esnext", // Target modern browsers
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better caching
+        manualChunks: {
+          // Vendor chunk for third-party libraries
+          vendor: [
+            "react",
+            "react-dom",
+            "react-router-dom",
+            "@tanstack/react-query",
+            "@clerk/clerk-react"
+          ],
+          // UI components chunk
+          ui: [
+            "@radix-ui/react-toast",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-select"
+          ],
+          // Icons chunk (lazy loaded)
+          icons: ["lucide-react"]
+        },
+        // Optimize chunk file names for caching
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? chunkInfo.facadeModuleId.split('/').pop().replace('.tsx', '').replace('.ts', '')
+            : 'chunk';
+          return `js/${facadeModuleId}-[hash].js`;
+        },
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          let extType = info[info.length - 1];
+          if (/\.(css)$/.test(assetInfo.name)) {
+            extType = 'css';
+          } else if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name)) {
+            extType = 'images';
+          } else if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name)) {
+            extType = 'fonts';
+          }
+          return `${extType}/[name]-[hash][extname]`;
+        }
+      }
+    }
   },
   plugins: [
     react(), // Use the React plugin for handling React files with SWC for fast compilation

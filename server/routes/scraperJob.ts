@@ -1,16 +1,15 @@
-// routes/scraperJob.js
-const express = require("express");
-const { PrismaClient } = require("@prisma/client");
+// routes/scraperJob.ts
+import express from "express";
+import { prisma } from "../db/prisma.ts";
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/scraper-job/score?websiteUrl=https://kleiner-kiepenkerl.de
 router.get("/score", async (req, res) => {
   try {
     const { websiteUrl } = req.query;
 
-    if (!websiteUrl) {
+    if (!websiteUrl || typeof websiteUrl !== "string") {
       return res.status(400).json({ error: "websiteUrl is required" });
     }
 
@@ -23,7 +22,7 @@ router.get("/score", async (req, res) => {
       },
     });
 
-    // Kein Job gefunden oder Score noch null/0 und Status nicht "completed"
+    // Kein Job gefunden
     if (!job) {
       return res.json({ maitrScore: null, status: "not_found" });
     }
@@ -38,4 +37,4 @@ router.get("/score", async (req, res) => {
   }
 });
 
-module.exports = router;
+export { router as scraperJobRouter };

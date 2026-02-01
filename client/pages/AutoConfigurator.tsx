@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,44 @@ import { useToast } from "@/components/ui/use-toast";
 import { Sparkles, Upload, X, Copy, ChevronRight, ArrowLeft } from "lucide-react";
 import Headbar from "@/components/Headbar";
 
-function fileToDataUrl(file: File): Promise<{ name: string; dataUrl: string }> {
+// Optimized file conversion with image compression
+function fileToDataUrl(file: File, maxWidth = 800): Promise<{ name: string; dataUrl: string }> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
-    reader.onload = () =>
-      resolve({ name: file.name, dataUrl: String(reader.result || "") });
-    reader.readAsDataURL(file);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      // Image compression for performance
+      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+      if (ratio < 1) {
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve({
+          name: file.name,
+          dataUrl: canvas.toDataURL('image/webp', 0.8) // WebP with 80% quality
+        });
+      } else {
+        // No compression needed
+        const reader = new FileReader();
+        reader.onerror = () => reject(reader.error);
+        reader.onload = () =>
+          resolve({ name: file.name, dataUrl: String(reader.result || "") });
+        reader.readAsDataURL(file);
+      }
+    };
+
+    img.onerror = () => {
+      // Fallback to regular FileReader
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () =>
+        resolve({ name: file.name, dataUrl: String(reader.result || "") });
+      reader.readAsDataURL(file);
+    };
+
+    img.src = URL.createObjectURL(file);
   });
 }
 
@@ -42,27 +73,47 @@ export default function AutoConfigurator() {
     } catch (e) {}
   }, [search]);
 
-  const handleFile = async (f?: File) => {
-    if (!f) { setFileInfo(null); return; }
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      if (fileInfo?.dataUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(fileInfo.dataUrl);
+      }
+    };
+  }, [fileInfo]);
+
+  const handleFile = useCallback(async (f?: File) => {
+    if (!f) {
+      setFileInfo(null);
+      return;
+    }
+
     try {
       const converted = await fileToDataUrl(f);
       setFileInfo(converted);
     } catch (e) {
       console.error(e);
-      toast({ title: "File error", description: "Unable to read uploaded file" });
+      toast({
+        title: "File error",
+        description: "Unable to read uploaded file. Please try a different image."
+      });
     }
-  };
+  }, [toast]);
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file) handleFile(file);
-  };
+  }, [handleFile]);
 
-  const generate = async () => {
+  const generate = useCallback(async () => {
     setLoading(true);
     setResult(null);
+
     try {
       const payload: any = {
         url: url || null,
@@ -74,19 +125,35 @@ export default function AutoConfigurator() {
 
       const res = await fetch(`/api/autogen`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
       const data = await res.json();
       setResult(data);
-      setLoading(false);
-      toast({ title: "Auto-generation complete" });
+      toast({
+        title: "Auto-generation complete",
+        description: "Your website configuration is ready!"
+      });
     } catch (e) {
       console.error(e);
-      toast({ title: "Generation failed", description: String(e) });
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      toast({
+        title: "Generation failed",
+        description: `Please try again. Error: ${errorMessage}`,
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
     }
-  };
+  }, [url, mapsLink, businessName, fileInfo, toast]);
 
   const useConfiguration = () => {
     if (!result) return;
@@ -151,15 +218,15 @@ export default function AutoConfigurator() {
     <div className="min-h-screen bg-gradient-to-b from-white via-teal-50 to-gray-100">
       <Headbar title="Automatic" showBack />
 
-      <div className="max-w-5xl mx-auto px-5 pt-8 pb-16">
+      <div className="max-w-5xl mx-auto px-5 pt-8 pb-16" id="main-content">
 
         {/* ─── Page header ─── */}
         <div className="mb-8">
           <div className="flex items-center gap-2.5 mb-2">
             <div className="p-2 rounded-xl bg-gradient-to-br from-purple-50 to-orange-50">
-              <Sparkles className="w-5 h-5 text-purple-600" />
+              <Sparkles className="w-5 h-5 text-purple-600" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-extrabold text-gray-900">Auto-Generate</h1>
+            <h1 className="text-2xl font-extrabold text-gray-900">Auto-Generate Website</h1>
           </div>
           <p className="text-sm text-gray-500 ml-0.5">
             Enter a website URL, Google Maps link, or business name. Optionally upload a menu file to get started.

@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { handleClerkWebhook } from "./webhooks/clerk";
 import { subdomainsRouter } from "./routes/subdomains";
+import { scraperJobRouter } from "./routes/scraperJob"; // ✅ ES Module Import
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -60,7 +61,7 @@ export function createServer() {
 
   app.post("/api/webhooks/test", handleWebhookTest);
 
-  const scraperJobRouter = require("./routes/scraperJob");
+  // ✅ Scraper Job Router (jetzt mit ES Module Import)
   app.use("/api/scraper-job", scraperJobRouter);
 
   // Root endpoint

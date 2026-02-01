@@ -1,7 +1,14 @@
+User-agent: *
+Allow: /
+
+# Allow all major search engines
 User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
 Allow: /
 
 User-agent: Twitterbot
@@ -10,5 +17,12 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+# Block specific paths (if needed)
+# Disallow: /admin
+# Disallow: /api/private
+
+# Sitemap location
+Sitemap: https://starlit-madeleine-e40b38.netlify.app/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1

@@ -12,6 +12,9 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
 
+// Import Service Worker Hook
+import { useServiceWorker, useInstallPrompt } from "@/hooks/useServiceWorker";
+
 import Configurator from "./pages/Configurator";
 import ModeSelection from "./pages/ModeSelection";
 import AutoConfigurator from "./pages/AutoConfigurator";
@@ -50,60 +53,66 @@ if (!CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
 }
 
-const App = () => (
-  <ErrorBoundary>
-    <I18nextProvider i18n={i18n}>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-        <QueryClientProvider client={queryClient}>
-          <HelmetProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                <Routes>
-                  <Route path="/" element={<HostAwareRoot />} />
-                  <Route path="/mode-selection" element={<ModeSelection />} />
-                  <Route path="/configurator" element={<Configurator />} />
-                  <Route
-                    path="/configurator/manual"
-                    element={<Configurator />}
-                  />
-                  <Route
-                    path="/configurator/auto"
-                    element={<AutoConfigurator />}
-                  />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route
-                    path="/profile"
-                    element={
-                      <RequireAuth>
-                        <Profile />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <RequireAuth>
-                        <Dashboard />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route path="/site/:subdomain/*" element={<Site />} />
-                  <Route path="/:id/:name/*" element={<Site />} />
-                  <Route path="/test-site" element={<TestSite />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </HelmetProvider>
-        </QueryClientProvider>
-      </ClerkProvider>
-    </I18nextProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  // Register Service Worker and PWA functionality
+  useServiceWorker();
+  useInstallPrompt();
+
+  return (
+    <ErrorBoundary>
+      <I18nextProvider i18n={i18n}>
+        <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+          <QueryClientProvider client={queryClient}>
+            <HelmetProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+                  <Routes>
+                    <Route path="/" element={<HostAwareRoot />} />
+                    <Route path="/mode-selection" element={<ModeSelection />} />
+                    <Route path="/configurator" element={<Configurator />} />
+                    <Route
+                      path="/configurator/manual"
+                      element={<Configurator />}
+                    />
+                    <Route
+                      path="/configurator/auto"
+                      element={<AutoConfigurator />}
+                    />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route
+                      path="/profile"
+                      element={
+                        <RequireAuth>
+                          <Profile />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <RequireAuth>
+                          <Dashboard />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route path="/site/:subdomain/*" element={<Site />} />
+                    <Route path="/:id/:name/*" element={<Site />} />
+                    <Route path="/test-site" element={<TestSite />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </HelmetProvider>
+          </QueryClientProvider>
+        </ClerkProvider>
+      </I18nextProvider>
+    </ErrorBoundary>
+  );
+};
 
 // Store root instance globally
 declare global {
