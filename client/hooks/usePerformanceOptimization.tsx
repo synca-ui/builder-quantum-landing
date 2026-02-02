@@ -1,25 +1,7 @@
 import { useEffect, useCallback } from 'react';
 
-// Hook to ensure demo dashboard button is always visible on first load
-export function useDemoDashboardVisibility() {
-  useEffect(() => {
-    // Ensure demo button is always visible regardless of other loading states
-    const ensureVisibility = () => {
-      const demoButton = document.querySelector('a[href="/demo-dashboard"]');
-      if (demoButton) {
-        (demoButton as HTMLElement).style.opacity = '1';
-        (demoButton as HTMLElement).style.visibility = 'visible';
-        (demoButton as HTMLElement).style.display = 'inline-flex';
-      }
-    };
-
-    // Run immediately and after a short delay
-    ensureVisibility();
-    const timer = setTimeout(ensureVisibility, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-}
+// REMOVED: useDemoDashboardVisibility - this was interfering with natural rendering
+// The demo button should render naturally without JavaScript intervention
 
 // Critical resource preloader - optimized for homepage and demo dashboard
 export function useResourcePreloader() {

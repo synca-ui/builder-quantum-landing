@@ -33,7 +33,6 @@ import {
   useLazyCSS,
   usePerformanceObserver,
   useImageOptimization,
-  useDemoDashboardVisibility
 } from "@/hooks/usePerformanceOptimization";
 
 export default function Index() {
@@ -47,7 +46,6 @@ export default function Index() {
   useLazyCSS();
   usePerformanceObserver();
   useImageOptimization();
-  useDemoDashboardVisibility(); // Ensure demo button is always visible
 
   useEffect(() => {
     setIsVisible(true);
@@ -225,324 +223,184 @@ export default function Index() {
 
   const Navigation = () => {
     const [scrolled, setScrolled] = useState(false);
-    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
     useEffect(() => {
-      let ticking = false;
       const handleScroll = () => {
-        if (!ticking) {
-          requestAnimationFrame(() => {
-            setScrolled(window.scrollY > 50);
-            ticking = false;
-          });
-          ticking = true;
-        }
+        setScrolled(window.scrollY > 50);
       };
-      window.addEventListener("scroll", handleScroll, { passive: true });
+      window.addEventListener("scroll", handleScroll);
       return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const navItems = [
-      {
-        id: "features",
-        label: "Features",
-        icon: <Layers className="w-4 h-4" />,
-        href: "#features",
-      },
-      {
-        id: "demo",
-        label: "Demo",
-        icon: <Play className="w-4 h-4" />,
-        href: "#demo",
-      },
-      {
-        id: "pricing",
-        label: "Pricing",
-        icon: <Crown className="w-4 h-4" />,
-        href: "#pricing",
-      },
-      {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: <LayoutDashboard className="w-4 h-4" />,
-        href: "/dashboard",
-      },
-    ];
-
     return (
       <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-white/80 backdrop-blur-lg shadow-lg border-b border-gray-100"
+            : "bg-transparent"
+        }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="relative group">
-                <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
-                  Maitr
-                </h1>
-                <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Sparkles className="w-6 h-6 text-white" />
               </div>
+              <span className="text-2xl font-black text-gradient">Maitr</span>
             </div>
 
-            <div className="hidden md:block">
-              <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
-                {navItems
-                  .filter((n) => (isSignedIn ? true : n.id !== "dashboard"))
-                  .map((item) => (
-                    <a
-                      key={item.id}
-                      href={item.href}
-                      className="relative px-4 py-2 text-sm font-bold transition-all duration-500 ease-out rounded-full group"
-                      onMouseEnter={() => setHoveredItem(item.id)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                    >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20 rounded-full transition-all duration-500 ${hoveredItem === item.id ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
-                      ></div>
-                      <div
-                        className={`relative flex items-center space-x-2 transition-all duration-500 ${hoveredItem === item.id ? "text-teal-600 transform translate-y-[-1px]" : "text-gray-700"}`}
-                      >
-                        <div
-                          className={`transition-all duration-500 ${hoveredItem === item.id ? "rotate-12 scale-110" : "rotate-0 scale-100"}`}
-                        >
-                          {item.icon}
-                        </div>
-                        <span>{item.label}</span>
-                      </div>
-                      <div
-                        className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-teal-500 to-purple-500 transition-all duration-500 ${hoveredItem === item.id ? "w-8 -translate-x-1/2" : "w-0 -translate-x-1/2"}`}
-                      ></div>
-                    </a>
-                  ))}
-              </div>
-            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <a
+                href="#features"
+                className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#demo"
+                className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+              >
+                Demo
+              </a>
+              <a
+                href="#pricing"
+                className="text-gray-700 hover:text-teal-600 font-medium transition-colors"
+              >
+                Pricing
+              </a>
 
-            <div className="hidden md:flex items-center space-x-3">
-              {isSignedIn ? (
-                <>
-                  <a href="/profile">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-2 border-gray-300/60"
-                    >
-                      Profile
-                    </Button>
-                  </a>
+              {authLoaded ? (
+                isSignedIn ? (
                   <a href="/dashboard">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
-                    >
-                      <div className="relative flex items-center space-x-2">
-                        <LayoutDashboard className="w-4 h-4" />
-                        <span>Dashboard</span>
-                      </div>
+                    <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white hover:shadow-xl transition-all">
+                      <LayoutDashboard className="mr-2 w-4 h-4" />
+                      Dashboard
                     </Button>
                   </a>
-                </>
-              ) : (
-                <>
+                ) : (
                   <SignInButton mode="modal">
-                    <Button variant="outline" size="sm">
-                      Log in
+                    <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white hover:shadow-xl transition-all">
+                      Sign In
                     </Button>
                   </SignInButton>
-                  <SignUpButton mode="modal">
-                    <Button
-                      size="sm"
-                      className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                    >
-                      Sign up
-                    </Button>
-                  </SignUpButton>
-                </>
-              )}
-              <a href="/mode-selection">
+                )
+              ) : (
                 <Button
-                  size="sm"
-                  className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
+                  className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                  disabled
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                  <div className="relative flex items-center space-x-2">
-                    <div className="transition-all duration-300 group-hover:rotate-45">
-                      <Settings className="w-4 h-4" />
-                    </div>
-                    <span>Start Building</span>
-                    <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
-                  </div>
+                  Loading...
                 </Button>
-              </a>
+              )}
             </div>
 
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="relative p-2 text-gray-700 transition-all duration-300"
-              >
-                <div
-                  className={`transition-all duration-300 ${isMenuOpen ? "rotate-90 scale-110" : "rotate-0 scale-100"}`}
-                >
-                  {isMenuOpen ? (
-                    <X className="w-6 h-6" />
-                  ) : (
-                    <Menu className="w-6 h-6" />
-                  )}
-                </div>
-              </Button>
-            </div>
+            <button
+              className="md:hidden p-2"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
           </div>
         </div>
 
-        <div
-          className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"}`}
-        >
-          <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
-            <div className="px-4 py-4 space-y-2">
-              {navItems.map((item, index) => (
-                <a
-                  key={item.id}
-                  href={item.href}
-                  className="group flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 font-bold transition-all duration-300"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
-                    {item.icon}
-                  </div>
-                  <span>{item.label}</span>
-                  <div className="ml-auto w-0 group-hover:w-2 h-2 bg-gradient-to-r from-teal-500 to-purple-500 rounded-full transition-all duration-300"></div>
-                </a>
-              ))}
-
-              <div className="pt-2 border-t border-gray-200/50 space-y-2">
-                {!isSignedIn && (
-                  <>
-                    <SignInButton mode="modal">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Log in
-                      </Button>
-                    </SignInButton>
-                    <SignUpButton mode="modal">
-                      <Button
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Sign up
-                      </Button>
-                    </SignUpButton>
-                  </>
-                )}
-                {isSignedIn && (
-                  <a href="/profile" onClick={() => setIsMenuOpen(false)}>
-                    <Button size="sm" variant="outline" className="w-full">
-                      Profile
-                    </Button>
-                  </a>
-                )}
-                <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
-                  <Button
-                    size="sm"
-                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-xl py-3 transition-all duration-300 hover:scale-105"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Settings className="w-4 h-4" />
-                      <span>Start Building</span>
-                      <Sparkles className="w-4 h-4" />
-                    </div>
+        {isMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+            <div className="px-4 py-4 space-y-3">
+              <a
+                href="#features"
+                className="block text-gray-700 hover:text-teal-600 font-medium py-2"
+              >
+                Features
+              </a>
+              <a
+                href="#demo"
+                className="block text-gray-700 hover:text-teal-600 font-medium py-2"
+              >
+                Demo
+              </a>
+              <a
+                href="#pricing"
+                className="block text-gray-700 hover:text-teal-600 font-medium py-2"
+              >
+                Pricing
+              </a>
+              {authLoaded && isSignedIn ? (
+                <a href="/dashboard">
+                  <Button className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white">
+                    Dashboard
                   </Button>
                 </a>
-              </div>
+              ) : (
+                <SignInButton mode="modal">
+                  <Button className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white">
+                    Sign In
+                  </Button>
+                </SignInButton>
+              )}
             </div>
           </div>
-        </div>
+        )}
       </nav>
     );
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50">
       <Navigation />
 
-      <div
-        className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
-        style={{
-          left: mousePosition.x - 6,
-          top: mousePosition.y - 6,
-          transform: `translate3d(0, 0, 0) scale(0.8)`,
-          willChange: "transform",
-        }}
-      />
-
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-teal-50 min-h-screen flex items-center">
+      <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
         <Particles />
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-5"></div>
-          <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full opacity-5"></div>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
-          <div className="text-center">
-            <div
-              className={`transition-all duration-1500 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"}`}
-            >
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <Sparkles className="w-8 h-8 text-teal-500" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
-                </div>
-              </div>
-              <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
-                <span className="font-display text-gradient">
-                  Your Restaurant App.
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
-                  Ready in 30 Seconds
-                </span>
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
-                Paste your link. Maitr designs your app, menu, and bookings
-                instantly. You just{" "}
-                <span className="text-gradient font-bold">
-                  add the cherry on top
-                </span>{" "}
-                🍒
-              </p>
 
-              <div className="w-full max-w-3xl mx-auto mt-6">
-                <div className="flex flex-col md:flex-row items-center gap-4">
-                  <form
-                    onSubmit={handleMagicSubmit}
-                    className="flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl border border-white/20 p-1.5 flex-1"
-                  >
-                    <div className="flex items-center gap-3 px-4 flex-1">
-                      <LinkIcon className="w-5 h-5 text-gray-500" />
-                      <input
-                        value={magicLink}
-                        onChange={(e) => setMagicLink(e.target.value)}
-                        placeholder="Paste Google Maps or Website Link..."
-                        className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
-                        disabled={isLoadingMagic}
-                        aria-label="Paste link"
-                      />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full mb-8 shadow-lg border border-white/20">
+              <Rocket className="w-5 h-5 text-teal-600" />
+              <span className="text-teal-700 font-bold">
+                Launch Your Local Business Online in Minutes
+              </span>
+            </div>
+
+            <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-8 font-display leading-tight">
+              Digital Presence
+              <br />
+              <span className="text-gradient">Made Simple</span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto font-medium leading-relaxed">
+              Create a stunning app for your café, restaurant, or local shop.
+              No coding required — just paste your website or menu link and
+              watch the magic happen.
+            </p>
+
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20">
+                <form onSubmit={handleMagicSubmit} className="space-y-6">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <LinkIcon className="w-5 h-5 text-gray-400" />
                     </div>
-                    <div className="px-2">
+                    <input
+                      type="url"
+                      value={magicLink}
+                      onChange={(e) => setMagicLink(e.target.value)}
+                      placeholder="Paste your website or Google My Business link..."
+                      className="w-full pl-12 pr-4 py-5 text-lg border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-teal-500/30 focus:border-teal-500 transition-all"
+                      disabled={isLoadingMagic}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                    <div className="flex-grow w-full sm:w-auto">
                       <button
                         type="submit"
-                        aria-busy={isLoadingMagic}
-                        className={`inline-flex items-center rounded-full text-white px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
-                        disabled={
-                          isLoadingMagic || !isMagicLinkValid(magicLink)
+                        disabled={isLoadingMagic || !magicLink.trim()}
+                        className={
+                          "w-full sm:w-auto inline-flex items-center justify-center px-10 py-5 text-lg font-bold rounded-2xl transition-all duration-300 bg-gradient-to-r from-teal-500 to-purple-600 text-white hover:shadow-2xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                         }
                       >
                         {isLoadingMagic ? (
@@ -559,20 +417,20 @@ export default function Index() {
                         )}
                       </button>
                     </div>
-                  </form>
 
-                  <div className="flex-shrink-0">
-                    <a href="#demo" className="inline-flex">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-600 px-4 py-2"
-                      >
-                        <Play className="mr-2 w-4 h-4" /> Watch Demo
-                      </Button>
-                    </a>
+                    <div className="flex-shrink-0">
+                      <a href="#demo" className="inline-flex">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-600 px-4 py-2"
+                        >
+                          <Play className="mr-2 w-4 h-4" /> Watch Demo
+                        </Button>
+                      </a>
+                    </div>
                   </div>
-                </div>
+                </form>
               </div>
             </div>
           </div>
@@ -610,9 +468,29 @@ export default function Index() {
               <div className="text-xs text-gray-500 mt-1">average</div>
             </div>
           </div>
+
+          {/* FIXED: Demo button now renders independently with absolute guarantee */}
           <div className="text-center mt-8">
+            {/* Demo Dashboard Button - ALWAYS visible first, independent rendering */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {/* Login/Dashboard Button - conditional but with loading fallback */}
+              <a
+                href="/demo-dashboard"
+                style={{
+                  display: 'inline-flex',
+                  opacity: 1,
+                  visibility: 'visible'
+                }}
+                aria-label="Try Dashboard Demo"
+              >
+                <Button
+                  variant="outline"
+                  className="text-teal-600 px-6 py-3 bg-white border-2 border-teal-500 hover:bg-teal-50 transition-all duration-300 rounded-full font-semibold shadow-lg hover:shadow-xl"
+                >
+                  <BarChart3 className="mr-2 w-5 h-5" /> Try Dashboard Demo
+                </Button>
+              </a>
+
+              {/* Login/Dashboard Button - renders separately to avoid blocking */}
               {authLoaded ? (
                 isSignedIn ? (
                   <a href="/dashboard">
@@ -628,26 +506,10 @@ export default function Index() {
                   </SignInButton>
                 )
               ) : (
-                // Show fallback button while auth is loading to prevent layout shift
                 <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3 opacity-70">
                   Loading...
                 </Button>
               )}
-
-              {/* Demo Dashboard Button - always visible immediately, no auth dependency */}
-              <a
-                href="/demo-dashboard"
-                className="inline-flex"
-                aria-label="Try Dashboard Demo"
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-600 px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/20 hover:bg-white/80 transition-all duration-300 rounded-full"
-                >
-                  <BarChart3 className="mr-2 w-4 h-4" /> Dashboard Demo
-                </Button>
-              </a>
             </div>
           </div>
         </div>
