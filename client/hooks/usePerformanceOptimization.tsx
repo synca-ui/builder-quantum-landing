@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 
-// Hook to ensure demo dashboard button is always visible on first load
+// Hook to ensure demo dashboard button is always visible on first loadd
 export function useDemoDashboardVisibility() {
   useEffect(() => {
     // Ensure demo button is always visible regardless of other loading states

@@ -47,7 +47,7 @@ export default function Index() {
   useLazyCSS();
   usePerformanceObserver();
   useImageOptimization();
-  useDemoDashboardVisibility(); // Ensure demo button is always visible
+  useDemoDashboardVisibility(); // Ensure demo button is always visiblee
 
   useEffect(() => {
     setIsVisible(true);
