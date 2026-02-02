@@ -11,6 +11,7 @@ import DemoStaffCalendar from '../../components/demo/DemoStaffCalendar';
 import DemoFloorPlanEditor from '../../components/demo/DemoFloorPlanEditor';
 import DemoCreativeStudio from '../../components/demo/DemoCreativeStudio';
 import DemoAdminPanel from '../../components/demo/DemoAdminPanel';
+import DemoReservationsDashboard from '../../components/demo/DemoReservationsDashboard';
 
 // Enterprise-grade demo pages
 function DemoInsightsPage() {
@@ -49,7 +50,7 @@ function DemoStaffPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
           <p className="text-gray-600 mt-2">
-            Enterprise-grade Personalplanung mit KI-Optimierung und Echtzeit-Analytics
+            Enterprise-grade Personalplanung mit intelligenter Optimierung und Echtzeit-Analytics
           </p>
         </div>
       </div>
@@ -81,11 +82,27 @@ function DemoCreativeStudioPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Creative Studio</h1>
           <p className="text-gray-600 mt-2">
-            No-Code Design System mit KI-Optimierung und Multi-Device Preview
+            Live iPhone Preview mit echten Templates und Mobile-optimiertem Design
           </p>
         </div>
       </div>
       <DemoCreativeStudio />
+    </div>
+  );
+}
+
+function DemoReservationsPage() {
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Reservierungen</h1>
+          <p className="text-gray-600 mt-2">
+            Vollständiges Buchungsmanagement mit Live-Updates und Guest Analytics
+          </p>
+        </div>
+      </div>
+      <DemoReservationsDashboard />
     </div>
   );
 }
@@ -95,9 +112,9 @@ function DemoAdminPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Center</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Admin-Center</h1>
           <p className="text-gray-600 mt-2">
-            Enterprise Admin Dashboard mit System-Monitoring und Security Center
+            Account-Verwaltung und SEO-Optimization für maximale Sichtbarkeit
           </p>
         </div>
       </div>
@@ -116,6 +133,7 @@ export default function DemoDashboardHome() {
         <Route path="/staff" element={<DemoStaffPage />} />
         <Route path="/floor-plan" element={<DemoFloorPlanPage />} />
         <Route path="/creative" element={<DemoCreativeStudioPage />} />
+        <Route path="/reservations" element={<DemoReservationsPage />} />
         <Route path="/admin" element={<DemoAdminPage />} />
 
         {/* Fallback for any unmatched routes */}

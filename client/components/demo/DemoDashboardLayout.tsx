@@ -11,6 +11,7 @@ import {
   MapPin,
   Palette,
   Settings,
+  Calendar,
   Bell,
   User,
   LogIn,
@@ -48,14 +49,21 @@ const navigationItems = [
     title: 'Creative Studio',
     href: '/demo-dashboard/creative',
     icon: Palette,
-    description: 'Templates & Menu Design',
+    description: 'Templates & App Design',
     gradient: 'from-pink-500 to-pink-600',
   },
   {
-    title: 'Admin',
+    title: 'Reservierungen',
+    href: '/demo-dashboard/reservations',
+    icon: Calendar,
+    description: 'Booking Management',
+    gradient: 'from-blue-500 to-blue-600',
+  },
+  {
+    title: 'Admin-Center',
     href: '/demo-dashboard/admin',
     icon: Settings,
-    description: 'Reservations & SEO',
+    description: 'Account & SEO Management',
     gradient: 'from-gray-500 to-gray-600',
   },
 ];
@@ -72,8 +80,8 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Demo-Banner */}
-      <div className="bg-gradient-to-r from-teal-600 to-purple-600 text-white p-3">
+      {/* Fixed Demo-Banner */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-600 to-purple-600 text-white p-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
@@ -102,7 +110,7 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar - with top padding for fixed banner */}
       <div className="fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-xl" style={{ top: '52px' }}>
         {/* Header */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
@@ -220,8 +228,8 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+        {/* Page Content - scrollable */}
+        <main className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 52px)' }}>
           <div className="p-8">
             {children}
           </div>

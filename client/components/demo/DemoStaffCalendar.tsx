@@ -640,7 +640,7 @@ export default function DemoStaffCalendar() {
               <BarChart3 className="w-5 h-5" />
               <span>Performance Intelligence</span>
             </h3>
-            <p className="text-sm text-gray-600 mt-1">KI-basierte Teamanalyse und Optimierungsvorschläge</p>
+            <p className="text-sm text-gray-600 mt-1">Intelligente Teamanalyse und Optimierungsvorschläge</p>
           </div>
           <div className="flex items-center space-x-2">
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">

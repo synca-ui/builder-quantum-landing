@@ -297,10 +297,6 @@ export function TemplatePreviewContent() {
   // CONTENT RENDERERS
   // ==========================================
 
-  // ✅ DEAKTIVIERT - Moderne Templates nutzen wieder die ursprünglichen Components
-  const renderHomePageModern = () => {
-    return renderHomePage(); // Fallback zur ursprünglichen Version
-  };
 
   // ✅ ORIGINAL VERSION (Fallback)
   const renderHomePage = () => {
@@ -418,10 +414,6 @@ export function TemplatePreviewContent() {
     );
   };
 
-  // ✅ DEAKTIVIERT - Moderne Templates nutzen wieder die ursprüngliche MenuPage
-  const renderMenuPageModern = () => {
-    return renderMenuPage(); // Fallback zur ursprünglichen Version
-  };
 
   // ✅ ORIGINAL MENU PAGE (Fallback)
   const renderMenuPage = () => {

@@ -1,6 +1,6 @@
 /**
  * Demo Creative Studio Component - Enterprise SaaS Grade
- * Advanced no-code design system with AI-powered optimization and real-time preview
+ * Advanced no-code design system with intelligente Optimierung and real-time preview
  */
 
 import React, { useState, useEffect } from 'react';
@@ -15,7 +15,6 @@ import {
   Smartphone,
   Monitor,
   Tablet,
-  Wand2,
   Target,
   TrendingUp,
   Award,
@@ -26,27 +25,12 @@ import {
   Brush
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LivePhoneFrame } from '@/components/preview/LivePhoneFrame';
+import { TemplatePreviewContent } from '@/components/configurator/preview/TemplatePreviewContent';
+import { defaultTemplates } from '@/components/template/TemplateRegistry';
+import MobileCreativeStudio from './MobileCreativeStudio';
 
-interface Template {
-  id: string;
-  name: string;
-  category: 'MODERN' | 'CLASSIC' | 'TRENDY' | 'MINIMALIST';
-  preview: string;
-  colors: string[];
-  description: string;
-  popularity: number;
-  conversionRate: number;
-}
-
-interface DesignElement {
-  id: string;
-  type: 'header' | 'menu' | 'gallery' | 'contact' | 'footer';
-  name: string;
-  preview: string;
-  customizable: string[];
-}
-
-interface AIOptimization {
+interface OptimizationSuggestion {
   id: string;
   type: 'color' | 'layout' | 'typography' | 'imagery';
   suggestion: string;
@@ -55,88 +39,50 @@ interface AIOptimization {
 }
 
 export default function DemoCreativeStudio() {
-  const [selectedTemplate, setSelectedTemplate] = useState('modern-1');
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [activePanel, setActivePanel] = useState<'templates' | 'colors' | 'typography' | 'images' | 'ai'>('templates');
-  const [showPreview, setShowPreview] = useState(false);
-  const [aiOptimizations, setAiOptimizations] = useState<AIOptimization[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('minimalist');
+  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
+  const [activePanel, setActivePanel] = useState<'templates' | 'colors' | 'typography' | 'images' | 'optimization'>('templates');
+  const [showPreview, setShowPreview] = useState(true);
+  const [optimizations, setOptimizations] = useState<OptimizationSuggestion[]>([]);
+  const [isMobileView, setIsMobileView] = useState(false);
 
-  // Premium template collection
-  const templates: Template[] = [
-    {
-      id: 'modern-1',
-      name: 'Modern Elegance',
-      category: 'MODERN',
-      preview: '🎨',
-      colors: ['#0F172A', '#0D9488', '#F8FAFC', '#7C3AED'],
-      description: 'Minimalistisch & Performance-optimiert',
-      popularity: 94,
-      conversionRate: 8.7
-    },
-    {
-      id: 'classic-1',
-      name: 'Classic Heritage',
-      category: 'CLASSIC',
-      preview: '🏛️',
-      colors: ['#1F2937', '#B45309', '#FEF7ED', '#DC2626'],
-      description: 'Zeitlos & vertrauenerweckend',
-      popularity: 87,
-      conversionRate: 7.2
-    },
-    {
-      id: 'trendy-1',
-      name: 'Bold & Vibrant',
-      category: 'TRENDY',
-      preview: '⚡',
-      colors: ['#7C2D12', '#F59E0B', '#FEF3C7', '#EF4444'],
-      description: 'Auffällig & social media ready',
-      popularity: 91,
-      conversionRate: 9.1
-    },
-    {
-      id: 'minimal-1',
-      name: 'Pure Minimal',
-      category: 'MINIMALIST',
-      preview: '✨',
-      colors: ['#374151', '#6B7280', '#FFFFFF', '#3B82F6'],
-      description: 'Clean & fokussiert',
-      popularity: 89,
-      conversionRate: 8.3
-    }
-  ];
+  // Use real templates from database/registry
+  const templates = defaultTemplates;
 
-  // Smart design elements
-  const designElements = [
-    { id: 'header-1', type: 'header', name: 'Hero Section', preview: '🎯' },
-    { id: 'menu-1', type: 'menu', name: 'Food Menu', preview: '🍽️' }
-  ];
-
-  // AI-powered optimization suggestions
+  // Check for mobile viewport
   useEffect(() => {
-    const optimizations: AIOptimization[] = [
+    const checkMobile = () => setIsMobileView(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Smart optimization suggestions
+  useEffect(() => {
+    const suggestions: OptimizationSuggestion[] = [
       {
-        id: 'ai-1',
+        id: 'opt-1',
         type: 'color',
         suggestion: 'Primärfarbe zu #059669 ändern basierend auf Branche-Analyse',
         impact: 'high',
         expectedImprovement: '+23% Conversions'
       },
       {
-        id: 'ai-2',
+        id: 'opt-2',
         type: 'layout',
         suggestion: 'CTA-Button 15px höher positionieren für bessere Sichtbarkeit',
         impact: 'medium',
         expectedImprovement: '+12% Click-Rate'
       },
       {
-        id: 'ai-3',
+        id: 'opt-3',
         type: 'typography',
         suggestion: 'Font-Size der Überschrift auf 3.2rem erhöhen',
         impact: 'low',
         expectedImprovement: '+5% Engagement'
       }
     ];
-    setAiOptimizations(optimizations);
+    setOptimizations(suggestions);
   }, [selectedTemplate]);
 
   const getDeviceIcon = (device: string) => {
@@ -150,27 +96,35 @@ export default function DemoCreativeStudio() {
 
   const getImpactColor = (impact: string) => {
     const colors = {
-      'high': 'bg-red-100 text-red-700 border-red-300',
-      'medium': 'bg-yellow-100 text-yellow-700 border-yellow-300',
-      'low': 'bg-green-100 text-green-700 border-green-300'
+      'high': 'bg-red-100 border-red-300 text-red-700',
+      'medium': 'bg-yellow-100 border-yellow-300 text-yellow-700',
+      'low': 'bg-green-100 border-green-300 text-green-700'
     };
     return colors[impact as keyof typeof colors] || colors.medium;
   };
 
+  // Get selected template data
+  const currentTemplate = templates.find(t => t.id === selectedTemplate) || templates[0];
+
+  // Mobile optimized render
+  if (isMobileView) {
+    return <MobileCreativeStudio />;
+  }
+
   return (
     <div className="space-y-6">
-      {/* Enterprise Header */}
+      {/* Creative Studio Header */}
       <div className="card-elevated bg-white rounded-2xl p-6">
-        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-              <Palette className="w-6 h-6 text-white" />
+              <Brush className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
                 <span>Creative Studio</span>
                 <div className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full">
-                  AI-POWERED
+                  SMART STUDIO
                 </div>
               </h1>
               <p className="text-gray-600 mt-1">No-Code Design System mit intelligenter Optimierung</p>
@@ -213,17 +167,12 @@ export default function DemoCreativeStudio() {
               )}
             >
               <Eye className="w-4 h-4" />
-              <span>Live Preview</span>
+              <span>{showPreview ? 'Live Preview' : 'Preview aus'}</span>
             </button>
 
-            <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors">
-              <Share2 className="w-4 h-4" />
-              <span>Teilen</span>
-            </button>
-
-            <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-lg text-sm font-medium transition-all shadow-md">
+            <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all">
               <Save className="w-4 h-4" />
-              <span>Publish</span>
+              <span>Design speichern</span>
             </button>
           </div>
         </div>
@@ -254,8 +203,8 @@ export default function DemoCreativeStudio() {
             color: 'from-purple-500 to-purple-600'
           },
           {
-            title: 'AI-Optimierungen',
-            value: aiOptimizations.length,
+            title: 'Optimierungen',
+            value: '8',
             change: 'Bereit zur Anwendung',
             icon: Sparkles,
             color: 'from-yellow-500 to-orange-600'
@@ -301,7 +250,7 @@ export default function DemoCreativeStudio() {
                 { key: 'colors', label: 'Farben', icon: Palette },
                 { key: 'typography', label: 'Typography', icon: Type },
                 { key: 'images', label: 'Bilder', icon: ImageIcon },
-                { key: 'ai', label: 'AI Magic', icon: Sparkles }
+                { key: 'optimization', label: 'Optimierung', icon: Sparkles }
               ].map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
@@ -315,9 +264,9 @@ export default function DemoCreativeStudio() {
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{label}</span>
-                  {key === 'ai' && aiOptimizations.length > 0 && (
+                  {key === 'optimization' && optimizations.length > 0 && (
                     <div className="ml-auto w-6 h-6 bg-yellow-400 text-yellow-900 rounded-full flex items-center justify-center text-xs font-bold">
-                      {aiOptimizations.length}
+                      {optimizations.length}
                     </div>
                   )}
                 </button>
@@ -329,7 +278,7 @@ export default function DemoCreativeStudio() {
               {/* Templates Panel */}
               {activePanel === 'templates' && (
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-gray-900">Premium Templates</h4>
+                  <h4 className="text-sm font-medium text-gray-900">Verfügbare Templates</h4>
                   {templates.map((template) => (
                     <div
                       key={template.id}
@@ -342,45 +291,52 @@ export default function DemoCreativeStudio() {
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-2xl">{template.preview}</span>
+                        <div className="flex items-center space-x-3">
+                          <div className={cn('w-12 h-12 rounded-lg', template.preview)} />
                           <div>
                             <p className="font-medium text-gray-900">{template.name}</p>
-                            <p className="text-xs text-gray-600">{template.category}</p>
+                            <p className="text-xs text-gray-600">{template.businessTypes.join(', ')}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-medium text-green-600">
-                            {template.conversionRate}%
-                          </div>
-                          <div className="text-xs text-gray-500">Conversion</div>
+                          {selectedTemplate === template.id && (
+                            <div className="w-6 h-6 bg-pink-600 text-white rounded-full flex items-center justify-center">
+                              <Eye className="w-3 h-3" />
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       <p className="text-sm text-gray-600 mb-3">{template.description}</p>
 
-                      {/* Color Palette */}
-                      <div className="flex items-center space-x-1">
-                        {template.colors.map((color, index) => (
-                          <div
+                      {/* Template Features */}
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {template.features.map((feature, index) => (
+                          <span
                             key={index}
-                            className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
-                            style={{ backgroundColor: color }}
-                          ></div>
+                            className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                          >
+                            {feature}
+                          </span>
                         ))}
                       </div>
 
-                      {/* Popularity Bar */}
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                          <span>Beliebtheit</span>
-                          <span>{template.popularity}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      {/* Template Style Preview */}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-500">Style:</span>
+                        <div className="flex space-x-1">
                           <div
-                            className="bg-gradient-to-r from-pink-400 to-purple-500 h-1.5 rounded-full transition-all"
-                            style={{ width: `${template.popularity}%` }}
-                          ></div>
+                            className="w-4 h-4 rounded border border-gray-200"
+                            style={{ backgroundColor: template.style.background }}
+                          />
+                          <div
+                            className="w-4 h-4 rounded border border-gray-200"
+                            style={{ backgroundColor: template.style.accent }}
+                          />
+                          <div
+                            className="w-4 h-4 rounded border border-gray-200"
+                            style={{ backgroundColor: template.style.text }}
+                          />
                         </div>
                       </div>
                     </div>
@@ -388,67 +344,17 @@ export default function DemoCreativeStudio() {
                 </div>
               )}
 
-              {/* Colors Panel */}
-              {activePanel === 'colors' && (
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-900">Smart Color System</h4>
-
-                  {/* Brand Colors */}
-                  <div>
-                    <p className="text-xs font-medium text-gray-600 mb-2">Markenfarben</p>
-                    <div className="grid grid-cols-4 gap-2">
-                      {['#0F172A', '#0D9488', '#7C3AED', '#F59E0B'].map((color, index) => (
-                        <button
-                          key={index}
-                          className="w-full aspect-square rounded-lg border-2 border-white shadow-lg hover:scale-105 transition-transform"
-                          style={{ backgroundColor: color }}
-                        ></button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Color Suggestions */}
-                  <div>
-                    <p className="text-xs font-medium text-gray-600 mb-2">AI-Vorschläge</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['#059669', '#DC2626', '#7C2D12'].map((color, index) => (
-                        <button
-                          key={index}
-                          className="w-full aspect-square rounded-lg border-2 border-white shadow-lg hover:scale-105 transition-transform relative group"
-                          style={{ backgroundColor: color }}
-                        >
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 text-white" />
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Color Accessibility */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-green-800">AAA Konformität</span>
-                    </div>
-                    <p className="text-xs text-green-700">
-                      Alle Farbkombinationen erfüllen WCAG-Richtlinien
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* AI Panel */}
-              {activePanel === 'ai' && (
+              {/* Optimization Panel */}
+              {activePanel === 'optimization' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-900">AI Magic ✨</h4>
+                    <h4 className="text-sm font-medium text-gray-900">Optimierungsvorschläge ✨</h4>
                     <button className="text-xs text-pink-600 hover:text-pink-700 font-medium">
                       Alle anwenden
                     </button>
                   </div>
 
-                  {aiOptimizations.map((optimization) => (
+                  {optimizations.map((optimization) => (
                     <div key={optimization.id} className="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -478,16 +384,16 @@ export default function DemoCreativeStudio() {
                     </div>
                   ))}
 
-                  {/* AI Actions */}
+                  {/* Optimization Actions */}
                   <div className="space-y-2 pt-4 border-t border-gray-200">
                     <button className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg font-medium hover:shadow-lg transition-all">
-                      <Wand2 className="w-5 h-5" />
-                      <span>Auto-Optimize Website</span>
+                      <Sparkles className="w-5 h-5" />
+                      <span>Intelligente Analyse starten</span>
                     </button>
 
                     <button className="w-full flex items-center justify-center space-x-2 px-4 py-3 border-2 border-purple-300 text-purple-600 rounded-lg font-medium hover:bg-purple-50 transition-all">
                       <RefreshCw className="w-5 h-5" />
-                      <span>Generate New Ideas</span>
+                      <span>Neue Vorschläge generieren</span>
                     </button>
                   </div>
                 </div>
@@ -509,7 +415,7 @@ export default function DemoCreativeStudio() {
                     )}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    {templates.find(t => t.id === selectedTemplate)?.name} • {selectedDevice.toUpperCase()}
+                    {currentTemplate.name} • Live iPhone Preview
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -524,172 +430,37 @@ export default function DemoCreativeStudio() {
               </div>
             </div>
 
-            {/* Preview Container */}
-            <div className="p-6 bg-gray-100">
-              <div
-                className={cn(
-                  'mx-auto bg-white rounded-xl shadow-2xl overflow-hidden transition-all duration-500',
-                  selectedDevice === 'desktop' ? 'w-full h-96' :
-                  selectedDevice === 'tablet' ? 'w-4/5 h-80' :
-                  'w-64 h-96'
-                )}
-              >
-                {/* Mock Website Preview */}
-                <div className="h-full relative">
-                  {/* Header */}
-                  <div className="h-16 bg-gradient-to-r from-gray-900 to-gray-800 flex items-center px-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg"></div>
-                      <span className="text-white font-bold">Restaurant Demo</span>
-                    </div>
-                    <div className="ml-auto flex items-center space-x-2">
-                      <div className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg text-sm font-medium">
-                        Reservieren
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Hero Section */}
-                  <div className="h-32 bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20"></div>
-                    <div className="relative text-center">
-                      <h1 className="text-xl font-bold text-gray-900">Willkommen bei Demo</h1>
-                      <p className="text-sm text-gray-600 mt-1">Authentische Küche • Moderne Atmosphäre</p>
-                    </div>
-                  </div>
-
-                  {/* Content Area */}
-                  <div className="p-6 space-y-4">
-                    {/* Menu Preview */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {[1, 2, 3, 4].map((item) => (
-                        <div key={item} className="bg-gray-100 rounded-lg p-3">
-                          <div className="w-full h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded mb-2"></div>
-                          <div className="h-3 bg-gray-300 rounded w-3/4 mb-1"></div>
-                          <div className="h-2 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Contact Section */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="h-4 bg-gray-300 rounded w-1/3 mb-2"></div>
-                      <div className="space-y-1">
-                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* AI Optimization Overlay */}
-                  {activePanel === 'ai' && (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <div className="bg-white rounded-xl p-6 shadow-2xl max-w-sm">
-                        <div className="text-center">
-                          <Sparkles className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-                          <h3 className="font-bold text-gray-900 mb-2">AI Magic Active</h3>
-                          <p className="text-sm text-gray-600 mb-4">
-                            Analyzing design patterns and optimizing for maximum conversion rate...
-                          </p>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full w-3/4 animate-pulse"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            {/* Live Preview Container */}
+            <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 relative">
+              <div className="flex justify-center">
+                <LivePhoneFrame
+                  widthClass="w-[320px]"
+                  heightClass="h-[650px]"
+                  className="transform transition-all duration-500 hover:scale-105"
+                >
+                  <TemplatePreviewContent />
+                </LivePhoneFrame>
               </div>
+
+              {/* Optimization Overlay */}
+              {activePanel === 'optimization' && (
+                <div className="absolute inset-0 bg-black/20 flex items-center justify-center rounded-2xl">
+                  <div className="bg-white rounded-xl p-6 shadow-2xl max-w-sm">
+                    <div className="text-center">
+                      <Sparkles className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                      <h3 className="font-bold text-gray-900 mb-2">Optimierung Aktiv</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Analysiere Design-Patterns und optimiere für maximale Conversion-Rate...
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full w-3/4 animate-pulse"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Advanced Analytics Dashboard */}
-      <div className="card-elevated bg-white rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
-              <TrendingUp className="w-5 h-5" />
-              <span>Design Performance Analytics</span>
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">Echtzeit-Auswirkungen Ihrer Design-Entscheidungen</p>
-          </div>
-          <button className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all">
-            Detaillierte Analyse
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {[
-            {
-              title: 'Page Speed',
-              value: '94/100',
-              trend: '+12 Punkte',
-              description: 'Optimierte Assets & Lazy Loading',
-              icon: Target,
-              color: 'text-green-600',
-              bg: 'bg-green-50'
-            },
-            {
-              title: 'User Engagement',
-              value: '4:32min',
-              trend: '+45% länger',
-              description: 'Durchschnittliche Verweildauer',
-              icon: Eye,
-              color: 'text-blue-600',
-              bg: 'bg-blue-50'
-            },
-            {
-              title: 'Conversion Rate',
-              value: '8.7%',
-              trend: '+2.1% Lift',
-              description: 'Reservierungen & Bestellungen',
-              icon: TrendingUp,
-              color: 'text-purple-600',
-              bg: 'bg-purple-50'
-            },
-            {
-              title: 'Mobile Experience',
-              value: '98/100',
-              trend: 'Perfect Score',
-              description: 'Responsive & Touch-optimiert',
-              icon: Smartphone,
-              color: 'text-orange-600',
-              bg: 'bg-orange-50'
-            }
-          ].map((metric, index) => (
-            <div key={index} className={cn('rounded-xl p-6 border', metric.bg)}>
-              <div className="flex items-center justify-between mb-4">
-                <metric.icon className={cn('w-8 h-8', metric.color)} />
-                <span className="text-sm font-medium px-3 py-1 bg-white/80 rounded-full text-gray-700">
-                  {metric.trend}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <p className={cn('text-3xl font-bold', metric.color)}>{metric.value}</p>
-                <p className="text-sm font-medium text-gray-900">{metric.title}</p>
-                <p className="text-xs text-gray-600">{metric.description}</p>
-              </div>
-
-              {/* Progress visualization */}
-              <div className="mt-4">
-                <div className="w-full bg-white/60 rounded-full h-2">
-                  <div
-                    className={cn(
-                      'h-2 rounded-full transition-all',
-                      metric.color.includes('green') ? 'bg-gradient-to-r from-green-400 to-green-600' :
-                      metric.color.includes('blue') ? 'bg-gradient-to-r from-blue-400 to-blue-600' :
-                      metric.color.includes('purple') ? 'bg-gradient-to-r from-purple-400 to-purple-600' :
-                      'bg-gradient-to-r from-orange-400 to-orange-600'
-                    )}
-                    style={{ width: '85%' }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
