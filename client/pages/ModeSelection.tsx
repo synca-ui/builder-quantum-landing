@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Settings, Sparkles, Copy, CheckCircle2, Globe, MapPin,
+  Settings, Sparkles, Copy, CheckCircle2, Globe,
   Clock, Phone, Mail, Instagram, ExternalLink, Utensils,
   TrendingUp, AlertCircle
 } from "lucide-react";
@@ -63,6 +63,9 @@ export default function ModeSelection() {
   const [scraperData, setScraperData] = useState<ScraperJobData | null>(null);
 
   const decodedUrl = urlSource ? decodeURIComponent(urlSource) : null;
+
+  // Nur Maitr-Score anzeigen wenn über magicLink weitergeleitet
+  const shouldShowMaitrScore = !!urlSource && !!decodedUrl;
 
   // Get maitr score from either scraperData or hook
   const webhookConfirmed = !!n8nData;
@@ -194,7 +197,42 @@ export default function ModeSelection() {
     return { text: "Needs Work", color: "text-red-600", icon: <AlertCircle className="w-4 h-4" /> };
   };
 
+  // Score-Zusammensetzung berechnen
+  const getScoreBreakdown = () => {
+    const breakdown = {
+      technicalScore: Math.min(25, Math.round(maitrScore * 0.3)), // Max 25 Punkte
+      contentScore: Math.min(20, Math.round(maitrScore * 0.25)), // Max 20 Punkte
+      businessInfoScore: Math.min(30, Math.round(maitrScore * 0.35)), // Max 30 Punkte
+      digitalPresenceScore: Math.min(25, Math.round(maitrScore * 0.25)) // Max 25 Punkte
+    };
+
+    return breakdown;
+  };
+
+  // Extraktionsinformationen zusammenstellen
+  const getExtractionInfo = () => {
+    const extractionTime = scraperData?.completedAt || scraperData?.createdAt || new Date().toISOString();
+    const analysisDate = new Date(extractionTime);
+
+    return {
+      extractionTime: analysisDate.toLocaleString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      websiteUrl: decodedUrl,
+      dataPoints: extractedCount,
+      processingTime: scraperData?.completedAt && scraperData?.startedAt
+        ? `${Math.round((new Date(scraperData.completedAt).getTime() - new Date(scraperData.startedAt).getTime()) / 1000)}s`
+        : 'N/A'
+    };
+  };
+
   const scoreRating = getScoreRating();
+  const scoreBreakdown = shouldShowMaitrScore ? getScoreBreakdown() : null;
+  const extractionInfo = shouldShowMaitrScore ? getExtractionInfo() : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-teal-50 to-gray-100">
@@ -205,68 +243,172 @@ export default function ModeSelection() {
 
         {/* ─── HERO ─── */}
         <div className="text-center mb-10">
-          <MaitrScoreCircle score={maitrScore} isLoading={scoreIsLoading} />
+          {/* Maitr-Score nur anzeigen wenn über magicLink weitergeleitet */}
+          {shouldShowMaitrScore && (
+            <MaitrScoreCircle score={maitrScore} isLoading={scoreIsLoading} />
+          )}
 
-          <h1 className="mt-5 text-3xl md:text-4xl font-extrabold text-gray-900">
-            {businessName || "Welcome, Friend!"}
+          <h1 className={`${shouldShowMaitrScore ? 'mt-5' : 'mt-0'} text-3xl md:text-4xl font-extrabold text-gray-900`}>
+            {shouldShowMaitrScore
+              ? (businessName || "Website Analysis Complete!")
+              : "Choose Your Path"
+            }
           </h1>
           <p className="mt-2 text-gray-500 text-sm max-w-md mx-auto">
-            {scoreIsLoading
-              ? "Analyzing your site… this may take a moment."
-              : analysisFeedback || "Your site looks great! Choose how you'd like to proceed:"}
+            {shouldShowMaitrScore
+              ? (scoreIsLoading
+                  ? "Analyzing your site… this may take a moment."
+                  : analysisFeedback || "Your site analysis is complete! Choose how you'd like to proceed:")
+              : "Select the option that best fits your needs to get started."
+            }
           </p>
+        </div>
 
           {/* ─── COMPACT EXTRACTED DATA SUMMARY ─── */}
-          {hasExtractedData && !scoreIsLoading && extractedCount > 0 && (
-            <div className="mt-6 inline-flex items-center gap-3 px-5 py-3 bg-white border border-teal-100 rounded-2xl shadow-sm">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-teal-50">
-                  <CheckCircle2 className="w-4 h-4 text-teal-600" />
+          {shouldShowMaitrScore && hasExtractedData && !scoreIsLoading && extractedCount > 0 && (
+            <div className="mt-6 space-y-4">
+              {/* Extrahierte Daten Zusammenfassung */}
+              <div className="inline-flex items-center gap-3 px-5 py-3 bg-white border border-teal-100 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-teal-50">
+                    <CheckCircle2 className="w-4 h-4 text-teal-600" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">
+                    {extractedCount} data point{extractedCount !== 1 ? 's' : ''} extracted
+                  </span>
                 </div>
-                <span className="text-sm font-semibold text-gray-700">
-                  {extractedCount} data point{extractedCount !== 1 ? 's' : ''} extracted
-                </span>
+
+                {/* Mini icons showing what was found */}
+                <div className="flex items-center gap-1.5 pl-3 border-l border-gray-200">
+                  {businessName && (
+                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Business name">
+                      <Globe className="w-3.5 h-3.5 text-teal-600" />
+                    </div>
+                  )}
+                  {phone && (
+                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Phone number">
+                      <Phone className="w-3.5 h-3.5 text-teal-600" />
+                    </div>
+                  )}
+                  {email && (
+                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Email">
+                      <Mail className="w-3.5 h-3.5 text-teal-600" />
+                    </div>
+                  )}
+                  {instagramUrl && (
+                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Instagram">
+                      <Instagram className="w-3.5 h-3.5 text-teal-600" />
+                    </div>
+                  )}
+                  {menuUrl && (
+                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Menu">
+                      <Utensils className="w-3.5 h-3.5 text-teal-600" />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Mini icons showing what was found */}
-              <div className="flex items-center gap-1.5 pl-3 border-l border-gray-200">
-                {businessName && (
-                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Business name">
-                    <Globe className="w-3.5 h-3.5 text-teal-600" />
+              {/* Detaillierte Score-Informationen */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                {/* Score Zusammensetzung */}
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1.5 rounded-lg bg-blue-50">
+                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900">Score Zusammensetzung</h3>
                   </div>
-                )}
-                {phone && (
-                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Phone number">
-                    <Phone className="w-3.5 h-3.5 text-teal-600" />
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Technical Infrastructure</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {scoreBreakdown?.technicalScore}/25
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Content Quality</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {scoreBreakdown?.contentScore}/20
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Business Information</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {scoreBreakdown?.businessInfoScore}/30
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Digital Presence</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {scoreBreakdown?.digitalPresenceScore}/25
+                      </span>
+                    </div>
+                    <div className="pt-2 border-t border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-gray-900">Gesamt Score</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-bold ${scoreRating.color}`}>
+                            {maitrScore}/100
+                          </span>
+                          {scoreRating.icon}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
-                {email && (
-                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Email">
-                    <Mail className="w-3.5 h-3.5 text-teal-600" />
+                </div>
+
+                {/* Extraktions-Informationen */}
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1.5 rounded-lg bg-green-50">
+                      <Clock className="w-4 h-4 text-green-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900">Analyse Details</h3>
                   </div>
-                )}
-                {instagramUrl && (
-                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Instagram">
-                    <Instagram className="w-3.5 h-3.5 text-teal-600" />
+
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <span className="text-sm text-gray-600">Website URL</span>
+                      <span className="text-sm font-mono text-gray-900 text-right max-w-[200px] truncate">
+                        {extractionInfo?.websiteUrl}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Analyse Zeit</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {extractionInfo?.extractionTime}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Verarbeitungszeit</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {extractionInfo?.processingTime}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Datenpunkte gefunden</span>
+                      <span className="text-sm font-semibold text-green-600">
+                        {extractionInfo?.dataPoints}
+                      </span>
+                    </div>
+
+                    {businessType && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Business Type</span>
+                        <span className="text-sm font-semibold text-gray-900 capitalize">
+                          {businessType}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {menuUrl && (
-                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Menu available">
-                    <Utensils className="w-3.5 h-3.5 text-teal-600" />
-                  </div>
-                )}
-                {hasReservation && (
-                  <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Reservation system">
-                    <Clock className="w-3.5 h-3.5 text-teal-600" />
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           )}
-        </div>
 
         {/* ─── DETAILED EXTRACTED DATA SECTION ─── */}
-        {hasExtractedData && !scoreIsLoading && (
+        {shouldShowMaitrScore && hasExtractedData && !scoreIsLoading && (
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-8">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-3">
@@ -274,11 +416,11 @@ export default function ModeSelection() {
                   <CheckCircle2 className="w-5 h-5 text-teal-600" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Extracted Information</h3>
+                  <h3 className="text-base font-bold text-gray-900">Was wir über Sie gefunden haben</h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Based on your Maitr Score of{" "}
+                    Basierend auf Ihrem Maitr-Score von{" "}
                     <span className={`font-bold ${scoreRating.color}`}>{maitrScore}</span>
-                    {" "}({scoreRating.text})
+                    {" "}({scoreRating.text}) haben wir folgende Informationen extrahiert:
                   </p>
                 </div>
               </div>
@@ -355,24 +497,24 @@ export default function ModeSelection() {
             <div className="mt-5 pt-5 border-t border-gray-100">
               <p className="text-xs text-gray-500 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-teal-500" />
-                With automatic mode, we'll use this data to generate your website instantly
+                Mit dem automatischen Modus verwenden wir diese Daten, um Ihre Website sofort zu generieren
               </p>
             </div>
           </div>
         )}
 
         {/* ─── SOURCE CARD ─── */}
-        {urlSource && (
+        {shouldShowMaitrScore && (
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 p-2 rounded-lg bg-gradient-to-br from-purple-50 to-teal-50 shrink-0">
                 <Sparkles className="w-5 h-5 text-purple-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Detected source</div>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Analysierte Website</div>
                 <div className="mt-0.5 text-sm font-semibold text-gray-800 break-all">{decodedUrl}</div>
                 <div className="mt-1 text-xs text-gray-400">
-                  You can upload logos and tweak colors after choosing automatic mode.
+                  Sie können Logos hochladen und Farben anpassen, nachdem Sie den automatischen Modus gewählt haben.
                 </div>
               </div>
             </div>
@@ -383,7 +525,7 @@ export default function ModeSelection() {
                 onClick={() => navigate(`/configurator/auto?sourceLink=${encodeURIComponent(decodedUrl || "")}`)}
                 className="text-xs font-semibold"
               >
-                Start Automatic
+                Automatisch starten
               </Button>
               <Button variant="ghost" size="sm" onClick={handleCopy} className="text-xs font-semibold text-gray-500">
                 <Copy className="w-3.5 h-3.5 mr-1.5" />
