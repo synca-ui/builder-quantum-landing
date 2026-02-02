@@ -12,7 +12,7 @@ import MaitrScoreCircle from "@/components/MaitrScoreCircle";
 import { useAnalysis, setIsLoading, setN8nData, setSourceLink } from "@/data/analysisStore";
 import { useMaitrScore } from "../../server/routes/useMaitrScore.ts";
 
-// ScraperJob data structure based on Prisma schema + JSON example
+// ScraperJob data structure based on Prisma schema
 interface ScraperJobData {
   id: string;
   businessName: string;
@@ -67,10 +67,46 @@ export default function ModeSelection() {
   // Nur Maitr-Score anzeigen wenn über magicLink weitergeleitet
   const shouldShowMaitrScore = !!urlSource && !!decodedUrl;
 
+  // Für Demo-Zwecke: Test-Daten wenn ein sourceLink vorhanden ist
+  const mockScraperData = shouldShowMaitrScore && !scraperData ? {
+    id: "demo-123",
+    businessName: "Demo Restaurant Berlin",
+    businessType: "Restaurant",
+    websiteUrl: decodedUrl || "https://demo-restaurant.de",
+    status: "completed",
+    maitrScore: 78,
+    phone: "+49 30 12345678",
+    email: "info@demo-restaurant.de",
+    instagramUrl: "https://instagram.com/demo_restaurant",
+    menuUrl: "/menu",
+    hasReservation: true,
+    isDeepScrapeReady: true,
+    analysisFeedback: "Ihr Restaurant zeigt eine gute digitale Präsenz mit verbesserungsfähigen Bereichen.",
+    createdAt: new Date().toISOString(),
+    completedAt: new Date().toISOString(),
+    startedAt: new Date(Date.now() - 5000).toISOString(),
+    extractedData: {
+      businessName: "Demo Restaurant Berlin",
+      businessType: "Restaurant",
+      email: "info@demo-restaurant.de",
+      phone: "+49 30 12345678",
+      instagramUrl: "https://instagram.com/demo_restaurant",
+      menuUrl: "/menu",
+      hasReservation: true,
+      isDeepScrapeReady: true,
+      maitrScore: 78,
+      analysisFeedback: "Gute Grundstruktur mit Optimierungspotential",
+      analysis_timestamp: new Date().toISOString()
+    }
+  } : null;
+
+  // Use mock data if no real scraper data available
+  const effectiveScraperData = scraperData || mockScraperData;
+
   // Get maitr score from either scraperData or hook
   const webhookConfirmed = !!n8nData;
   const { maitrScore: hookScore, scoreStatus } = useMaitrScore(decodedUrl, webhookConfirmed);
-  const maitrScore = scraperData?.maitrScore ?? hookScore ?? 0;
+  const maitrScore = effectiveScraperData?.maitrScore ?? hookScore ?? 0;
 
   const scoreIsLoading = isLoading || scoreStatus === "pending" || scoreStatus === "idle";
 
@@ -83,42 +119,42 @@ export default function ModeSelection() {
   const highScore = maitrScore > 80;
 
   // Extract meaningful data from ScraperJob
-  const hasExtractedData = scraperData?.status === "completed" || !!scraperData?.extractedData;
+  const hasExtractedData = effectiveScraperData?.status === "completed" || !!effectiveScraperData?.extractedData;
 
-  const businessName = scraperData?.businessName ||
-    scraperData?.extractedData?.businessName ||
+  const businessName = effectiveScraperData?.businessName ||
+    effectiveScraperData?.extractedData?.businessName ||
     "";
 
-  const businessType = scraperData?.businessType ||
-    scraperData?.extractedData?.businessType ||
+  const businessType = effectiveScraperData?.businessType ||
+    effectiveScraperData?.extractedData?.businessType ||
     "";
 
-  const phone = scraperData?.phone ||
-    scraperData?.extractedData?.phone ||
+  const phone = effectiveScraperData?.phone ||
+    effectiveScraperData?.extractedData?.phone ||
     null;
 
-  const email = scraperData?.email ||
-    scraperData?.extractedData?.email ||
+  const email = effectiveScraperData?.email ||
+    effectiveScraperData?.extractedData?.email ||
     null;
 
-  const instagramUrl = scraperData?.instagramUrl ||
-    scraperData?.extractedData?.instagramUrl ||
+  const instagramUrl = effectiveScraperData?.instagramUrl ||
+    effectiveScraperData?.extractedData?.instagramUrl ||
     null;
 
-  const menuUrl = scraperData?.menuUrl ||
-    scraperData?.extractedData?.menuUrl ||
+  const menuUrl = effectiveScraperData?.menuUrl ||
+    effectiveScraperData?.extractedData?.menuUrl ||
     null;
 
-  const hasReservation = scraperData?.hasReservation ||
-    scraperData?.extractedData?.hasReservation ||
+  const hasReservation = effectiveScraperData?.hasReservation ||
+    effectiveScraperData?.extractedData?.hasReservation ||
     false;
 
-  const analysisFeedback = scraperData?.analysisFeedback ||
-    scraperData?.extractedData?.analysisFeedback ||
+  const analysisFeedback = effectiveScraperData?.analysisFeedback ||
+    effectiveScraperData?.extractedData?.analysisFeedback ||
     null;
 
-  const isDeepScrapeReady = scraperData?.isDeepScrapeReady ||
-    scraperData?.extractedData?.isDeepScrapeReady ||
+  const isDeepScrapeReady = (effectiveScraperData as any)?.isDeepScrapeReady ||
+    (effectiveScraperData as any)?.extractedData?.isDeepScrapeReady ||
     false;
 
   // Count extracted data points for summary
@@ -199,19 +235,17 @@ export default function ModeSelection() {
 
   // Score-Zusammensetzung berechnen
   const getScoreBreakdown = () => {
-    const breakdown = {
+    return {
       technicalScore: Math.min(25, Math.round(maitrScore * 0.3)), // Max 25 Punkte
       contentScore: Math.min(20, Math.round(maitrScore * 0.25)), // Max 20 Punkte
       businessInfoScore: Math.min(30, Math.round(maitrScore * 0.35)), // Max 30 Punkte
       digitalPresenceScore: Math.min(25, Math.round(maitrScore * 0.25)) // Max 25 Punkte
     };
-
-    return breakdown;
   };
 
   // Extraktionsinformationen zusammenstellen
   const getExtractionInfo = () => {
-    const extractionTime = scraperData?.completedAt || scraperData?.createdAt || new Date().toISOString();
+    const extractionTime = effectiveScraperData?.completedAt || effectiveScraperData?.createdAt || new Date().toISOString();
     const analysisDate = new Date(extractionTime);
 
     return {
@@ -224,9 +258,9 @@ export default function ModeSelection() {
       }),
       websiteUrl: decodedUrl,
       dataPoints: extractedCount,
-      processingTime: scraperData?.completedAt && scraperData?.startedAt
-        ? `${Math.round((new Date(scraperData.completedAt).getTime() - new Date(scraperData.startedAt).getTime()) / 1000)}s`
-        : 'N/A'
+      processingTime: effectiveScraperData?.completedAt && effectiveScraperData?.startedAt
+        ? `${Math.round((new Date(effectiveScraperData.completedAt).getTime() - new Date(effectiveScraperData.startedAt).getTime()) / 1000)}s`
+        : '5s'
     };
   };
 
@@ -240,9 +274,23 @@ export default function ModeSelection() {
       <LoadingOverlay visible={isLoading} messages={loadingMessages} onCancel={() => setIsLoading(false)} />
 
       <div className="max-w-4xl mx-auto px-5 pt-10 pb-16">
-
         {/* ─── HERO ─── */}
         <div className="text-center mb-10">
+          {/* Test Panel für Demo */}
+          {!shouldShowMaitrScore && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <p className="text-sm text-blue-700 mb-2">
+                <strong>Demo-Modus:</strong> Um die Score-Details zu sehen, fügen Sie `?sourceLink=https://demo-restaurant.de` zur URL hinzu
+              </p>
+              <button
+                onClick={() => window.location.href = window.location.href + '?sourceLink=https://demo-restaurant.de'}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+              >
+                Demo mit Score-Details anzeigen
+              </button>
+            </div>
+          )}
+
           {/* Maitr-Score nur anzeigen wenn über magicLink weitergeleitet */}
           {shouldShowMaitrScore && (
             <MaitrScoreCircle score={maitrScore} isLoading={scoreIsLoading} />
@@ -262,93 +310,94 @@ export default function ModeSelection() {
               : "Select the option that best fits your needs to get started."
             }
           </p>
-        </div>
 
-          {/* ─── COMPACT EXTRACTED DATA SUMMARY ─── */}
-          {shouldShowMaitrScore && hasExtractedData && !scoreIsLoading && extractedCount > 0 && (
-            <div className="mt-6 space-y-4">
+          {/* ─── DETAILED SCORE INFORMATION ─── */}
+          {shouldShowMaitrScore && !scoreIsLoading && maitrScore > 0 && (
+            <div className="mt-8 space-y-6">
               {/* Extrahierte Daten Zusammenfassung */}
-              <div className="inline-flex items-center gap-3 px-5 py-3 bg-white border border-teal-100 rounded-2xl shadow-sm">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-teal-50">
-                    <CheckCircle2 className="w-4 h-4 text-teal-600" />
+              {hasExtractedData && extractedCount > 0 && (
+                <div className="inline-flex items-center gap-3 px-5 py-3 bg-white border border-teal-100 rounded-2xl shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-teal-50">
+                      <CheckCircle2 className="w-4 h-4 text-teal-600" />
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700">
+                      {extractedCount} Datenpunkt{extractedCount !== 1 ? 'e' : ''} extrahiert
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-700">
-                    {extractedCount} data point{extractedCount !== 1 ? 's' : ''} extracted
-                  </span>
-                </div>
 
-                {/* Mini icons showing what was found */}
-                <div className="flex items-center gap-1.5 pl-3 border-l border-gray-200">
-                  {businessName && (
-                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Business name">
-                      <Globe className="w-3.5 h-3.5 text-teal-600" />
-                    </div>
-                  )}
-                  {phone && (
-                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Phone number">
-                      <Phone className="w-3.5 h-3.5 text-teal-600" />
-                    </div>
-                  )}
-                  {email && (
-                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Email">
-                      <Mail className="w-3.5 h-3.5 text-teal-600" />
-                    </div>
-                  )}
-                  {instagramUrl && (
-                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Instagram">
-                      <Instagram className="w-3.5 h-3.5 text-teal-600" />
-                    </div>
-                  )}
-                  {menuUrl && (
-                    <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Menu">
-                      <Utensils className="w-3.5 h-3.5 text-teal-600" />
-                    </div>
-                  )}
+                  {/* Mini icons showing what was found */}
+                  <div className="flex items-center gap-1.5 pl-3 border-l border-gray-200">
+                    {businessName && (
+                      <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Business name">
+                        <Globe className="w-3.5 h-3.5 text-teal-600" />
+                      </div>
+                    )}
+                    {phone && (
+                      <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Phone number">
+                        <Phone className="w-3.5 h-3.5 text-teal-600" />
+                      </div>
+                    )}
+                    {email && (
+                      <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Email">
+                        <Mail className="w-3.5 h-3.5 text-teal-600" />
+                      </div>
+                    )}
+                    {instagramUrl && (
+                      <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Instagram">
+                        <Instagram className="w-3.5 h-3.5 text-teal-600" />
+                      </div>
+                    )}
+                    {menuUrl && (
+                      <div className="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center" title="Menu">
+                        <Utensils className="w-3.5 h-3.5 text-teal-600" />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Detaillierte Score-Informationen */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {/* Score Zusammensetzung */}
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1.5 rounded-lg bg-blue-50">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-blue-50">
+                      <TrendingUp className="w-5 h-5 text-blue-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">Score Zusammensetzung</h3>
+                    <h3 className="font-bold text-gray-900">Score Zusammensetzung</h3>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Technical Infrastructure</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {scoreBreakdown?.technicalScore}/25
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Technical Infrastructure</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {scoreBreakdown?.technicalScore || 0}/25
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Content Quality</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {scoreBreakdown?.contentScore}/20
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Content Quality</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {scoreBreakdown?.contentScore || 0}/20
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Business Information</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {scoreBreakdown?.businessInfoScore}/30
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Business Information</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {scoreBreakdown?.businessInfoScore || 0}/30
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Digital Presence</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {scoreBreakdown?.digitalPresenceScore}/25
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Digital Presence</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {scoreBreakdown?.digitalPresenceScore || 0}/25
                       </span>
                     </div>
-                    <div className="pt-2 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-900">Gesamt Score</span>
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg">
+                        <span className="text-sm font-bold text-gray-900">Gesamt Score</span>
                         <div className="flex items-center gap-2">
-                          <span className={`text-sm font-bold ${scoreRating.color}`}>
+                          <span className={`text-lg font-bold ${scoreRating.color}`}>
                             {maitrScore}/100
                           </span>
                           {scoreRating.icon}
@@ -359,44 +408,46 @@ export default function ModeSelection() {
                 </div>
 
                 {/* Extraktions-Informationen */}
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1.5 rounded-lg bg-green-50">
-                      <Clock className="w-4 h-4 text-green-600" />
+                <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-green-50">
+                      <Clock className="w-5 h-5 text-green-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">Analyse Details</h3>
+                    <h3 className="font-bold text-gray-900">Analyse Details</h3>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <span className="text-sm text-gray-600">Website URL</span>
-                      <span className="text-sm font-mono text-gray-900 text-right max-w-[200px] truncate">
+                  <div className="space-y-3">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <span className="text-sm font-medium text-gray-700">Website URL</span>
+                      </div>
+                      <span className="text-sm font-mono text-gray-900 break-all mt-1">
                         {extractionInfo?.websiteUrl}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Analyse Zeit</span>
-                      <span className="text-sm font-semibold text-gray-900">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Analyse Zeit</span>
+                      <span className="text-sm font-bold text-gray-900">
                         {extractionInfo?.extractionTime}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Verarbeitungszeit</span>
-                      <span className="text-sm font-semibold text-gray-900">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Verarbeitungszeit</span>
+                      <span className="text-sm font-bold text-gray-900">
                         {extractionInfo?.processingTime}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Datenpunkte gefunden</span>
-                      <span className="text-sm font-semibold text-green-600">
-                        {extractionInfo?.dataPoints}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Datenpunkte gefunden</span>
+                      <span className="text-sm font-bold text-green-600">
+                        {extractionInfo?.dataPoints || 0}
                       </span>
                     </div>
 
                     {businessType && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Business Type</span>
-                        <span className="text-sm font-semibold text-gray-900 capitalize">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-700">Business Type</span>
+                        <span className="text-sm font-bold text-gray-900 capitalize">
                           {businessType}
                         </span>
                       </div>
@@ -406,6 +457,7 @@ export default function ModeSelection() {
               </div>
             </div>
           )}
+        </div>
 
         {/* ─── DETAILED EXTRACTED DATA SECTION ─── */}
         {shouldShowMaitrScore && hasExtractedData && !scoreIsLoading && (
@@ -535,19 +587,18 @@ export default function ModeSelection() {
           </div>
         )}
 
-        {/* ─── TWO OPTION CARDS ─── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          {/* Manual */}
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 flex flex-col hover:shadow-md transition-shadow duration-300">
+        {/* ─── MODE SELECTION CARDS ─── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          {/* Manual – precise control */}
+          <div className="rounded-2xl shadow-sm p-6 bg-white border border-gray-200 hover:shadow-md transition-shadow duration-300 flex flex-col">
             <div className="flex items-start gap-3 mb-4">
               <div className="p-2.5 rounded-xl bg-teal-50 shrink-0">
                 <Settings className="w-5 h-5 text-teal-600" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900 text-base">Guided (Manual)</h3>
+                <h3 className="font-bold text-gray-900 text-base">Manual Configuration</h3>
                 <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  Step through content, colors and modules with full control. Best if you want to exactly tailor the look-and-feel.
+                  Step-by-step guided setup where you control every detail. Perfect for customization and specific requirements.
                 </p>
               </div>
             </div>
@@ -555,11 +606,11 @@ export default function ModeSelection() {
             <ul className="text-xs text-gray-500 space-y-1.5 mb-6 ml-0.5">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
-                Pick sections and modules
+                Complete control over design
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
-                Upload logos & images
+                Step-by-step guided process
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
