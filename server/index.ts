@@ -1,11 +1,42 @@
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import helmet from "helmet";
 import { globalLimiter, strictLimiter } from "./middleware/rateLimit";
-
-// ... existing code ...
+import { handleClerkWebhook } from "./webhooks/clerk";
+import { subdomainsRouter } from "./routes/subdomains";
+import { scraperJobRouter } from "./routes/scraperJob";
+import { handleForwardN8n } from "./routes/n8nProxy";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ... existing imports ...
+import { handleDemo } from "./routes/demo";
+import { handleSubdomainRequest } from "./routes/subdomains";
+import router, {
+  saveConfiguration,
+  getConfigurations,
+  getConfiguration,
+  deleteConfiguration,
+  publishConfiguration,
+  getPublishedSite,
+} from "./routes/configurations";
+import { fetchInstagramPhotos } from "./routes/instagram";
+import { setPreviewConfig } from "./routes/configurations";
+import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
+import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
+import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe";
+import { apiRouter } from "./routes";
+import { requireAuth } from "./middleware/auth";
+import { usersRouter } from "./routes/users";
+import { handleAutogen } from "./routes/autogen";
+import { getConfigBySlug } from "./routes/config";
+import {
+  handleCreateOrder,
+  handleGetRecentOrders,
+  handleGetMenuStats,
+  handleClearOldOrders,
+} from "./routes/orders";
 
 // Middleware to fix Buffer-body issues (Netlify edge cases)
 const rawBodyMiddleware = (req: any, _res: any, next: any) => {
