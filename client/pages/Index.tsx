@@ -19,6 +19,7 @@ import {
   Link as LinkIcon,
   Loader2,
 } from "lucide-react";
+import MaitrWorkflowAnimation from "@/components/MaitrWorkflowAnimation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
@@ -500,11 +501,11 @@ export default function Index() {
               </div>
               <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
                 <span className="font-display text-gradient">
-                  Your Restaurant App.
+                  Transform Your Restaurant's
                 </span>
                 <br />
                 <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
-                  Ready in 30 Seconds
+                  Digital Presence in 30 Seconds
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
@@ -573,6 +574,33 @@ export default function Index() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Workflow Animation Section */}
+      <section id="about" className="relative py-16 bg-gradient-to-br from-gray-50 via-white to-teal-50 overflow-hidden">
+        {/* Subtle background circles */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-5"></div>
+          <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full opacity-5"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Title */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              So funktioniert{" "}
+              <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
+                Maitr
+              </span>
+            </h2>
+            <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+              Von der URL zur fertigen Restaurant-App in unter 30 Sekunden
+            </p>
+          </div>
+
+          {/* Workflow Animation */}
+          <MaitrWorkflowAnimation />
         </div>
       </section>
 
