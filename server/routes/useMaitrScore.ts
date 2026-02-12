@@ -6,7 +6,7 @@ interface UseMaitrScoreReturn {
   scoreStatus: "idle" | "pending" | "completed" | "failed" | "timeout";
 }
 
-const API_BASE = process.env.REACT_APP_API_BASE || "";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 const POLL_INTERVAL_MS = 3000;   // alle 3s prüfen
 const POLL_TIMEOUT_MS = 120_000; // nach 2 min aufgeben
 

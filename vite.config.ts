@@ -14,10 +14,9 @@ export default defineConfig(({ mode }) => ({
     // Removed hmr config - let Vite use sensible defaults
     // The HMR race condition is better handled by removing custom invalidate logic
     fs: {
-      // Allow Vite to access specific directories
+      // Allow Vite to access the entire project directory
       allow: [
-        path.resolve(__dirname, "client"), // Allow 'client' directory
-        path.resolve(__dirname, "shared"), // Allow 'shared' directory
+        path.resolve(__dirname), // Allow entire project root
       ],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
     },

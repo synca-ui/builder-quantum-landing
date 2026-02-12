@@ -140,51 +140,48 @@ export default function Index() {
   const pricingPlans = [
     {
       name: "Starter",
-      price: "$12",
+      price: "€23",
       period: "/month",
-      description: "Perfect for cafés & small shops",
+      description: "Perfect for cafés & small businesses",
       features: [
-        "Beautiful App",
-        "Menu/Product Display",
-        "Contact & Location Info",
+        "Professional Web App",
+        "Digital Menu",
         "Mobile Optimized",
         "Basic Analytics",
       ],
-      cta: "Start Your App",
+      cta: "Get Started",
       popular: false,
       gradient: "from-orange-400 to-red-500",
     },
     {
       name: "Business",
-      price: "$24",
+      price: "€39",
       period: "/month",
-      description: "Ideal for restaurants & stores",
+      description: "Ideal for restaurants & gastronomy",
       features: [
-        "Online Ordering System",
-        "Customer Reviews",
-        "Social Media Integration",
+        "Online Ordering",
+        "Table Reservations",
+        "POS Integration",
         "Advanced Analytics",
-        "Email Marketing",
         "Priority Support",
       ],
-      cta: "Create Your App",
+      cta: "Start Business",
       popular: true,
       gradient: "from-teal-400 to-purple-600",
     },
     {
       name: "Premium",
-      price: "$49",
+      price: "€89",
       period: "/month",
-      description: "For multi-location businesses",
+      description: "For multi-location & chains",
       features: [
-        "Multiple Locations",
-        "Advanced E-commerce",
-        "Custom Integrations",
-        "White-label Options",
+        "Multi-Location Management",
+        "Full Automation",
+        "Staff Management",
+        "Creative Studio Access",
         "Dedicated Manager",
-        "Custom Domain",
       ],
-      cta: "Scale Your App",
+      cta: "Scale Premium",
       popular: false,
       gradient: "from-purple-400 to-indigo-600",
     },
@@ -703,6 +700,100 @@ export default function Index() {
                   <p className="text-gray-600 leading-relaxed">
                     {feature.description}
                   </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="pricing"
+        className="py-32 bg-gradient-to-br from-gray-50 via-white to-purple-50 relative overflow-hidden"
+      >
+        <div
+          className={
+            'absolute inset-0 bg-[url(\'data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23f1f5f9" fill-opacity="0.3"%3E%3Ccircle cx="7" cy="7" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\')] opacity-50'
+          }
+        ></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-teal-100 px-6 py-3 rounded-full mb-6">
+              <Crown className="w-5 h-5 text-purple-600" />
+              <span className="text-purple-700 font-bold">Pricing</span>
+            </div>
+            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
+              <span className="text-gradient">Choose Your Plan</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
+              Flexible pricing for businesses of all sizes. Start small, scale as you grow.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {pricingPlans.map((plan, index) => (
+              <Card
+                key={index}
+                className={`group relative hover:shadow-2xl transition-all duration-700 ease-out transform hover:-translate-y-6 border-0 shadow-lg overflow-hidden ${plan.popular
+                  ? "ring-2 ring-purple-500 scale-105 md:scale-110"
+                  : ""
+                  }`}
+              >
+                {plan.popular && (
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-teal-500 to-purple-500 text-white px-4 py-1 text-xs font-bold rounded-bl-2xl">
+                    POPULAR
+                  </div>
+                )}
+                <div
+                  className="absolute inset-0 bg-gradient-to-br opacity-5 group-hover:opacity-10 transition-opacity duration-500"
+                  style={{
+                    background: `linear-gradient(to bottom right, ${plan.gradient.split(" ")[1]}, ${plan.gradient.split(" ")[3]})`,
+                  }}
+                ></div>
+                <CardContent className="p-8 relative z-10">
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-extrabold text-gray-900 mb-2">
+                      {plan.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm">{plan.description}</p>
+                  </div>
+
+                  <div className="text-center mb-8">
+                    <div className="flex items-baseline justify-center">
+                      <span className="text-5xl font-black bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent">
+                        {plan.price}
+                      </span>
+                      <span className="text-gray-500 ml-2">{plan.period}</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-4 mb-8">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li
+                        key={featureIndex}
+                        className="flex items-start gap-3 text-gray-700"
+                      >
+                        <div
+                          className={`mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br ${plan.gradient} flex items-center justify-center`}
+                        >
+                          <ChevronRight className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="text-sm font-medium">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
+                      ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
+                      }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <span>{plan.cta}</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
