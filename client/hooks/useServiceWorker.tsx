@@ -49,6 +49,14 @@ export function useServiceWorker() {
       });
     } else if (import.meta.env.DEV) {
       console.log('SW registration skipped in development');
+      // Force unregister in dev to prevent stale cache issues
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister();
+          console.log('🧹 Existing SW unregistered for dev mode');
+          window.location.reload(); // Reload once to flush cache
+        }
+      });
     }
   }, []);
 }

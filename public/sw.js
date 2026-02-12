@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maitr-builder-v2';
+const CACHE_NAME = 'maitr-builder-v3';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -76,7 +76,7 @@ self.addEventListener('fetch', (event) => {
               // Only cache certain file types
               const url = event.request.url;
               if (url.includes('.js') || url.includes('.css') || url.includes('.html') ||
-                  url === self.location.origin + '/') {
+                url === self.location.origin + '/') {
                 cache.put(event.request, responseToCache);
               }
             });

@@ -5,7 +5,6 @@ import AppRenderer from "@/components/dynamic/AppRenderer.tsx";
 
 export default function HostAwareRoot() {
   const [config, setConfig] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   // 1. Subdomain-Logik: Wer sind wir? (z.B. bekkas)
   const subdomain = useMemo(() => {
@@ -30,7 +29,9 @@ export default function HostAwareRoot() {
     }
   }, []);
 
-  // 2. Daten-Fetch: Hol das JSON aus der Neon-Datenbank
+  // Avoid loading state for main domain to prevent flash
+  // Initialize loading to TRUE only if we have a subdomain to fetch data for
+  const [loading, setLoading] = useState(!!subdomain);
   useEffect(() => {
     if (!subdomain) {
       setLoading(false);
