@@ -110,30 +110,30 @@ export default function Index() {
   const features = [
     {
       icon: <Zap className="w-8 h-8 text-teal-500" />,
-      title: "Quick Setup",
+      title: "Schnelle Einrichtung",
       description:
-        "Get your café or restaurant online in minutes. No technical skills needed - just add your info and go live.",
+        "Dein Café oder Restaurant in Minuten online. Keine technischen Kenntnisse nötig - einfach Infos eingeben und loslegen.",
       gradient: "from-teal-400 to-cyan-500",
     },
     {
       icon: <Palette className="w-8 h-8 text-purple-500" />,
-      title: "Local Business Templates",
+      title: "Lokale Business Vorlagen",
       description:
-        "Beautiful designs crafted specifically for restaurants, cafés, bakeries, and local shops.",
+        "Wunderschöne Designs, speziell für Restaurants, Cafés, Bäckereien und lokale Geschäfte.",
       gradient: "from-purple-400 to-pink-500",
     },
     {
       icon: <Smartphone className="w-8 h-8 text-orange-500" />,
       title: "Mobile-First Design",
       description:
-        "Your customers will love browsing your menu and location info on their phones.",
+        "Deine Gäste werden es lieben, deine Speisekarte und Infos auf dem Smartphone zu durchstöbern.",
       gradient: "from-orange-400 to-red-500",
     },
     {
       icon: <Globe className="w-8 h-8 text-teal-500" />,
-      title: "Local SEO Ready",
+      title: "Lokale SEO Ready",
       description:
-        "Get found by local customers with built-in SEO optimization for your neighborhood.",
+        "Werde von lokalen Kunden gefunden - mit integrierter SEO-Optimierung für deine Nachbarschaft.",
       gradient: "from-blue-400 to-indigo-500",
     },
   ];
@@ -142,47 +142,47 @@ export default function Index() {
     {
       name: "Starter",
       price: "€23",
-      period: "/month",
-      description: "Perfect for cafés & small businesses",
+      period: "/Monat",
+      description: "Perfekt für Cafés & kleine Betriebe",
       features: [
-        "Professional Web App",
-        "Digital Menu",
-        "Mobile Optimized",
-        "Basic Analytics",
+        "Professionelle Web App",
+        "Digitale Speisekarte",
+        "Mobil Optimiert",
+        "Basis Analytics",
       ],
-      cta: "Get Started",
+      cta: "Jetzt starten",
       popular: false,
       gradient: "from-orange-400 to-red-500",
     },
     {
       name: "Business",
       price: "€39",
-      period: "/month",
-      description: "Ideal for restaurants & gastronomy",
+      period: "/Monat",
+      description: "Ideal für Restaurants & Gastronomie",
       features: [
-        "Online Ordering",
-        "Table Reservations",
-        "POS Integration",
-        "Advanced Analytics",
-        "Priority Support",
+        "Online Bestellungen",
+        "Tischreservierungen",
+        "Kassen-Integration",
+        "Erweiterte Analytics",
+        "Prioritäts-Support",
       ],
-      cta: "Start Business",
+      cta: "Business starten",
       popular: true,
       gradient: "from-teal-400 to-purple-600",
     },
     {
       name: "Premium",
       price: "€89",
-      period: "/month",
-      description: "For multi-location & chains",
+      period: "/Monat",
+      description: "Für Multi-Standorte & Ketten",
       features: [
-        "Multi-Location Management",
-        "Full Automation",
-        "Staff Management",
-        "Creative Studio Access",
-        "Dedicated Manager",
+        "Multi-Standort Management",
+        "Volle Automatisierung",
+        "Mitarbeiter-Verwaltung",
+        "Creative Studio Zugang",
+        "Persönlicher Manager",
       ],
-      cta: "Scale Premium",
+      cta: "Premium skalieren",
       popular: false,
       gradient: "from-purple-400 to-indigo-600",
     },
@@ -255,7 +255,7 @@ export default function Index() {
       },
       {
         id: "pricing",
-        label: "Pricing",
+        label: "Preise",
         icon: <Crown className="w-4 h-4" />,
         href: "#pricing",
       },
@@ -325,7 +325,7 @@ export default function Index() {
                       size="sm"
                       className="border-2 border-gray-300/60"
                     >
-                      Profile
+                      Profil
                     </Button>
                   </a>
                   <a href="/dashboard">
@@ -444,7 +444,7 @@ export default function Index() {
                 {isSignedIn && (
                   <a href="/profile" onClick={() => setIsMenuOpen(false)}>
                     <Button size="sm" variant="outline" className="w-full">
-                      Profile
+                      Profil
                     </Button>
                   </a>
                 )}
@@ -455,7 +455,7 @@ export default function Index() {
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <Settings className="w-4 h-4" />
-                      <span>Start Building</span>
+                      <span>Jetzt starten</span>
                       <Sparkles className="w-4 h-4" />
                     </div>
                   </Button>
@@ -501,20 +501,15 @@ export default function Index() {
               </div>
               <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
                 <span className="font-display text-gradient">
-                  Transform Your Restaurant's
+                  Deine eigene Restaurant-App.
                 </span>
                 <br />
                 <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
-                  Digital Presence in 30 Seconds
+                  In 30 Sekunden.
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
-                Paste your link. Maitr designs your app, menu, and bookings
-                instantly. You just{" "}
-                <span className="text-gradient font-bold">
-                  add the cherry on top
-                </span>{" "}
-                🍒
+                Link einfügen, fertig. Maitr erstellt automatisch deine digitale Speisekarte und dein Reservierungssystem – bereit zum Servieren. 🍒
               </p>
 
               <div className="w-full max-w-3xl mx-auto mt-6">
@@ -528,10 +523,10 @@ export default function Index() {
                       <input
                         value={magicLink}
                         onChange={(e) => setMagicLink(e.target.value)}
-                        placeholder="Paste Google Maps or Website Link..."
+                        placeholder="Google Maps oder Website-Link einfügen..."
                         className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
                         disabled={isLoadingMagic}
-                        aria-label="Paste link"
+                        aria-label="Link einfügen"
                       />
                     </div>
                     <div className="px-2">
@@ -546,12 +541,12 @@ export default function Index() {
                         {isLoadingMagic ? (
                           <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Building...
+                            Erstelle...
                           </>
                         ) : (
                           <>
                             <Rocket className="mr-3 w-5 h-5" />
-                            Get Started Now
+                            Jetzt loslegen
                             <ChevronRight className="ml-3 w-4 h-4" />
                           </>
                         )}
@@ -566,7 +561,7 @@ export default function Index() {
                         size="sm"
                         className="text-gray-600 px-4 py-2"
                       >
-                        <Play className="mr-2 w-4 h-4" /> Watch Demo
+                        <Play className="mr-2 w-4 h-4" /> Demo ansehen
                       </Button>
                     </a>
                   </div>
@@ -578,16 +573,16 @@ export default function Index() {
       </section>
 
       {/* Interactive Workflow Animation Section */}
-      <section id="about" className="relative py-16 bg-gradient-to-br from-gray-50 via-white to-teal-50 overflow-hidden">
+      <section id="demo" className="relative py-16 bg-gradient-to-br from-gray-50 via-white to-teal-50 overflow-hidden">
         {/* Subtle background circles */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-5"></div>
           <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full opacity-5"></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative">
           {/* Section Title */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 px-4 sm:px-6 lg:px-8 pt-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               So funktioniert{" "}
               <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
@@ -602,14 +597,14 @@ export default function Index() {
           {/* Workflow Animation */}
           <MaitrWorkflowAnimation />
         </div>
-      </section>
+      </section >
 
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-4xl font-black">Example Dashboard</h2>
+            <h2 className="text-4xl font-black">Beispiel Dashboard</h2>
             <p className="text-gray-600 mt-2">
-              A quick preview of what you get after logging in.
+              Ein kurzer Vorgeschmack auf das, was dich nach dem Login erwartet.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -617,22 +612,22 @@ export default function Index() {
               <div className="text-sm font-semibold text-teal-700">Traffic</div>
               <div className="mt-2 text-3xl font-bold">1,284</div>
               <div className="text-xs text-gray-500 mt-1">
-                visits last 7 days
+                Besuche letzte 7 Tage
               </div>
             </div>
             <div className="rounded-2xl border p-6 bg-gradient-to-br from-purple-50 to-white">
               <div className="text-sm font-semibold text-purple-700">
-                Orders
+                Bestellungen
               </div>
               <div className="mt-2 text-3xl font-bold">76</div>
-              <div className="text-xs text-gray-500 mt-1">this week</div>
+              <div className="text-xs text-gray-500 mt-1">diese Woche</div>
             </div>
             <div className="rounded-2xl border p-6 bg-gradient-to-br from-orange-50 to-white">
               <div className="text-sm font-semibold text-orange-700">
-                Ratings
+                Bewertungen
               </div>
               <div className="mt-2 text-3xl font-bold">4.8</div>
-              <div className="text-xs text-gray-500 mt-1">average</div>
+              <div className="text-xs text-gray-500 mt-1">Durchschnitt</div>
             </div>
           </div>
           <div className="text-center mt-8">
@@ -642,20 +637,20 @@ export default function Index() {
                 isSignedIn ? (
                   <a href="/dashboard">
                     <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                      Go to Dashboard
+                      Zum Dashboard
                     </Button>
                   </a>
                 ) : (
                   <SignInButton mode="modal">
                     <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                      Log in to access Dashboard
+                      Log In um Dashboard zu öffnen
                     </Button>
                   </SignInButton>
                 )
               ) : (
                 // Show fallback button while auth is loading to prevent layout shift
                 <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3 opacity-70">
-                  Loading...
+                  Lädt...
                 </Button>
               )}
 
@@ -691,14 +686,14 @@ export default function Index() {
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-100 to-purple-100 px-6 py-3 rounded-full mb-6">
               <Crown className="w-5 h-5 text-teal-600" />
-              <span className="text-teal-700 font-bold">How It Works</span>
+              <span className="text-teal-700 font-bold">So funktioniert es</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
-              <span className="text-gradient">Three Simple Steps</span>
+              <span className="text-gradient">Drei einfache Schritte</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              From empty storefront to online success. Our platform helps local
-              businesses create their digital presence effortlessly.
+              Von der Idee zur erfolgreichen Online-Präsenz. Unsere Plattform hilft
+              Gastronomen, ihre digitale Präsenz mühelos aufzubauen.
             </p>
           </div>
 
@@ -748,13 +743,13 @@ export default function Index() {
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-teal-100 px-6 py-3 rounded-full mb-6">
               <Crown className="w-5 h-5 text-purple-600" />
-              <span className="text-purple-700 font-bold">Pricing</span>
+              <span className="text-purple-700 font-bold">Preise</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
-              <span className="text-gradient">Choose Your Plan</span>
+              <span className="text-gradient">Wähle deinen Plan</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Flexible pricing for businesses of all sizes. Start small, scale as you grow.
+              Flexible Preise für Unternehmen jeder Größe. Klein starten, mit dir wachsen.
             </p>
           </div>
 
@@ -769,7 +764,7 @@ export default function Index() {
               >
                 {plan.popular && (
                   <div className="absolute top-0 right-0 bg-gradient-to-r from-teal-500 to-purple-500 text-white px-4 py-1 text-xs font-bold rounded-bl-2xl">
-                    POPULAR
+                    BELIEBT
                   </div>
                 )}
                 <div
@@ -835,37 +830,37 @@ export default function Index() {
             <div>
               <h4 className="text-lg font-bold">Creative Studio</h4>
               <p className="mt-2 text-gray-600">
-                Fine-tune styles, colors and content. Your app, your brand —
-                with delightful defaults.
+                Passe Stil, Farben und Inhalte an. Deine App, deine Marke —
+                mit wunderschönen Standardeinstellungen.
               </p>
             </div>
             <div>
               <h4 className="text-lg font-bold">Backstage</h4>
               <p className="mt-2 text-gray-600">
-                Manage menus, opening hours, and orders from a simple dashboard
-                — built for hospitality.
+                Verwalte Menüs, Öffnungszeiten und Bestellungen von einem einfachen Dashboard
+                — gebaut für Gastronomie.
               </p>
             </div>
             <div>
               <h4 className="text-lg font-bold">Concierge</h4>
               <p className="mt-2 text-gray-600">
-                Need help? Our team can finish the setup for you, or provide
-                custom integrations.
+                Brauchst du Hilfe? Unser Team kann das Setup für dich fertigstellen oder
+                individuelle Integrationen bereitstellen.
               </p>
             </div>
           </div>
 
           <div className="mt-10 flex flex-col md:flex-row items-center justify-between">
             <div className="text-sm text-gray-600">
-              © {new Date().getFullYear()} Maitr — The digital host for
-              hospitality.
+              © {new Date().getFullYear()} Maitr — Der digitale Gastgeber für
+              Gastronomie.
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
               <a
                 href="/pricing"
                 className="text-sm font-medium text-gray-700 hover:text-teal-600"
               >
-                Pricing
+                Preise
               </a>
               <a
                 href="/docs"
@@ -877,12 +872,12 @@ export default function Index() {
                 href="/contact"
                 className="text-sm font-medium text-gray-700 hover:text-teal-600"
               >
-                Contact
+                Kontakt
               </a>
             </div>
           </div>
         </div>
       </footer>
-    </div>
+    </div >
   );
 }
