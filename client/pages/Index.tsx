@@ -143,14 +143,13 @@ export default function Index() {
       name: "Starter",
       price: "€23",
       period: "/Monat",
-      description: "Perfekt für Cafés & kleine Betriebe",
+      description: "Kommt bald",
       features: [
         "Professionelle Web App",
-        "Digitale Speisekarte",
-        "Mobil Optimiert",
-        "Basis Analytics",
+        "QR-Code für Tische",
+        "Automatische Updates"
       ],
-      cta: "Jetzt starten",
+      cta: "Kommt bald",
       popular: false,
       gradient: "from-orange-400 to-red-500",
     },
@@ -160,13 +159,12 @@ export default function Index() {
       period: "/Monat",
       description: "Ideal für Restaurants & Gastronomie",
       features: [
-        "Online Bestellungen",
-        "Tischreservierungen",
-        "Kassen-Integration",
-        "Erweiterte Analytics",
-        "Prioritäts-Support",
+        "Professionelle Web App",
+        "QR-Code für Tische",
+        "Reservierungssystem",
+        "Automatische Updates"
       ],
-      cta: "Business starten",
+      cta: "Jetzt starten",
       popular: true,
       gradient: "from-teal-400 to-purple-600",
     },
@@ -174,15 +172,13 @@ export default function Index() {
       name: "Premium",
       price: "€89",
       period: "/Monat",
-      description: "Für Multi-Standorte & Ketten",
+      description: "Kommt bald",
       features: [
         "Multi-Standort Management",
-        "Volle Automatisierung",
-        "Mitarbeiter-Verwaltung",
-        "Creative Studio Zugang",
-        "Persönlicher Manager",
+        "Eigene Domain",
+        "Maßgeschneiderte Features"
       ],
-      cta: "Premium skalieren",
+      cta: "Kommt bald",
       popular: false,
       gradient: "from-purple-400 to-indigo-600",
     },
@@ -573,7 +569,7 @@ export default function Index() {
       </section>
 
       {/* Interactive Workflow Animation Section */}
-      <section id="demo" className="relative py-16 bg-gradient-to-br from-gray-50 via-white to-teal-50 overflow-hidden">
+      <section id="demo" className="relative py-8 bg-gradient-to-br from-gray-50 via-white to-teal-50 overflow-hidden">
         {/* Subtle background circles */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-5"></div>
@@ -582,7 +578,7 @@ export default function Index() {
 
         <div className="relative">
           {/* Section Title */}
-          <div className="text-center mb-12 px-4 sm:px-6 lg:px-8 pt-16">
+          <div className="text-center mb-0 px-4 sm:px-6 lg:px-8 pt-4">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
               So funktioniert{" "}
               <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
@@ -757,9 +753,12 @@ export default function Index() {
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`group relative hover:shadow-2xl transition-all duration-700 ease-out transform hover:-translate-y-6 border-0 shadow-lg overflow-hidden ${plan.popular
-                  ? "ring-2 ring-purple-500 scale-105 md:scale-110"
-                  : ""
+                className={`group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl border-2 ${plan.popular
+                  ? "border-purple-200 shadow-purple-100/50"
+                  : "border-gray-200 hover:border-teal-200"
+                  } ${plan.cta === "Kommt bald"
+                    ? "opacity-60 pointer-events-none grayscale"
+                    : ""
                   }`}
               >
                 {plan.popular && (
@@ -774,49 +773,67 @@ export default function Index() {
                   }}
                 ></div>
                 <CardContent className="p-8 relative z-10">
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl font-extrabold text-gray-900 mb-2">
-                      {plan.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm">{plan.description}</p>
-                  </div>
-
-                  <div className="text-center mb-8">
-                    <div className="flex items-baseline justify-center">
-                      <span className="text-5xl font-black bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent">
-                        {plan.price}
-                      </span>
-                      <span className="text-gray-500 ml-2">{plan.period}</span>
+                  {plan.cta === "Kommt bald" ? (
+                    // Coming Soon Display
+                    <div className="text-center py-16">
+                      <h3 className="text-3xl font-extrabold text-gray-400 mb-4">
+                        {plan.name}
+                      </h3>
+                      <div className="text-6xl font-black text-gray-300 mb-4">
+                        Kommt bald
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        Bald verfügbar
+                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    // Active Plan Display
+                    <>
+                      <div className="text-center mb-6">
+                        <h3 className="text-2xl font-extrabold text-gray-900 mb-2">
+                          {plan.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm">{plan.description}</p>
+                      </div>
 
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li
-                        key={featureIndex}
-                        className="flex items-start gap-3 text-gray-700"
-                      >
-                        <div
-                          className={`mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br ${plan.gradient} flex items-center justify-center`}
-                        >
-                          <ChevronRight className="w-3 h-3 text-white" />
+                      <div className="text-center mb-8">
+                        <div className="flex items-baseline justify-center">
+                          <span className="text-5xl font-black bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent">
+                            {plan.price}
+                          </span>
+                          <span className="text-gray-500 ml-2">{plan.period}</span>
                         </div>
-                        <span className="text-sm font-medium">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                      </div>
 
-                  <Button
-                    className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
-                      ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
-                      : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
-                      }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <span>{plan.cta}</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                  </Button>
+                      <ul className="space-y-4 mb-8">
+                        {plan.features.map((feature, featureIndex) => (
+                          <li
+                            key={featureIndex}
+                            className="flex items-start gap-3 text-gray-700"
+                          >
+                            <div
+                              className={`mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br ${plan.gradient} flex items-center justify-center`}
+                            >
+                              <ChevronRight className="w-3 h-3 text-white" />
+                            </div>
+                            <span className="text-sm font-medium">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <Button
+                        className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
+                          ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+                          : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
+                          }`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <span>{plan.cta}</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             ))}

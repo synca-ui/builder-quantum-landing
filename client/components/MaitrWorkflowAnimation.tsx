@@ -27,7 +27,7 @@ export default function MaitrWorkflowAnimation() {
     return (
         <div className="relative w-full">
             {/* Main Animation - TALLER for smoother transitions */}
-            <div className="relative w-full h-[700px] flex items-center justify-center overflow-hidden mb-12">
+            <div className="relative w-full max-w-7xl mx-auto h-[850px] flex items-start justify-center overflow-hidden pt-40 bg-gray-50 rounded-3xl border border-gray-200 mt-8 mb-20" style={{ backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
                 <AnimatePresence mode="wait">
                     {workflowState === 'input' && <InputStage key="input" onStart={() => setWorkflowState('processing')} />}
                     {workflowState === 'processing' && <ProcessingCore key="processing" />}
@@ -112,7 +112,7 @@ function InputStage({ onStart }: { onStart: () => void }) {
                 whileHover={{ scale: 1.05 }}
                 animate={{ scale: isClicking ? 0.95 : (showCursor && cursorPos.x > 200 ? 1 : 1) }}
             >
-                Get Started Now
+                Jetzt loslegen
                 <ArrowRight className="w-5 h-5" />
 
                 {/* Click Ripple Effect */}
@@ -174,7 +174,7 @@ function ProcessingCore() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, x: 300, filter: 'blur(20px)' }}
             transition={{ duration: 0.6 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center -mt-16"
         >
             {/* Pulsing Core */}
             <motion.div
@@ -261,11 +261,11 @@ function DataImportStage() {
 
     return (
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.4 }}
-            className="flex flex-col items-center justify-center gap-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.6 }}
+            className="w-full max-w-md px-4 -mt-16 flex flex-col items-center justify-center gap-6"
         >
             {/* Header */}
             <motion.div
@@ -353,7 +353,7 @@ function PhoneReveal() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.7, type: "spring" }}
-            className="flex items-center justify-center gap-12"
+            className="flex items-center justify-center gap-12 -mt-12"
         >
             {/* iPhone 14 Pro Mockup - ULTRA REALISTIC */}
             <motion.div
@@ -364,7 +364,7 @@ function PhoneReveal() {
                 style={{ willChange: 'transform, opacity' }}
             >
                 {/* iPhone Frame with realistic proportions */}
-                <div className="w-[300px] h-[606px] bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-[3rem] p-2 shadow-2xl border-[3px] border-gray-700 relative" style={{ willChange: 'box-shadow' }}>
+                <div className="w-[300px] h-[606px] bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-[3rem] p-2 shadow-xl border-[3px] border-gray-700 relative" style={{ willChange: 'box-shadow' }}>
 
                     {/* LEFT SIDE BUTTONS */}
                     {/* Mute Switch */}
@@ -389,8 +389,8 @@ function PhoneReveal() {
                     <div className="bg-gray-50 h-full rounded-[2.5rem] overflow-hidden relative">
                         {/* Bella App Content */}
                         <div className="h-full overflow-y-auto">
-                            {/* Header - PURPLE BRANDING - EVEN LOWER */}
-                            <div className="bg-gray-50 px-5 py-8 flex items-center justify-between border-b border-gray-200">
+                            {/* Header - PURPLE BRANDING - below notch */}
+                            <div className="bg-gray-50 px-5 pt-10 pb-3 flex items-center justify-between border-b border-gray-200">
                                 {/* Purple Logo Icon with Cutlery */}
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0 }}
@@ -423,17 +423,17 @@ function PhoneReveal() {
                                 </motion.div>
                             </div>
 
-                            {/* Hero Section - "Wir sinds..." - SMALLER */}
+                            {/* Hero Section - "Wir sinds..." - CLOSER TO DIVIDER */}
                             <motion.div
-                                className="px-6 py-6 text-center"
+                                className="px-6 py-1 text-center mb-3"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.9, duration: 0.6 }}
                             >
-                                <h2 className="text-3xl font-black text-gray-900 mb-2">
+                                <h2 className="text-2xl font-black text-gray-900 mb-1.5">
                                     Wir sinds...
                                 </h2>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-[10px] text-gray-500">
                                     Erzähl uns gerne etwas von dir.
                                 </p>
                             </motion.div>
