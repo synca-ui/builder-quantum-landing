@@ -7,7 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
 import { ClerkProvider } from "@clerk/clerk-react";
@@ -65,6 +65,14 @@ if (!CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
 }
 
+const AuthWrapper = () => {
+  return (
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      <Outlet />
+    </ClerkProvider>
+  );
+};
+
 const App = () => {
   // Register Service Worker and PWA functionality
   useServiceWorker();
@@ -74,36 +82,38 @@ const App = () => {
     <PerformanceErrorBoundary>
       <ErrorBoundary>
         <I18nextProvider i18n={i18n}>
-          <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-            <QueryClientProvider client={queryClient}>
-              <HelmetProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                    <Suspense fallback={
-                      <div className="min-h-screen flex items-center justify-center">
-                        <div className="loading-spinner"></div>
-                      </div>
-                    }>
-                      <Routes>
-                        <Route path="/" element={<HostAwareRoot />} />
-                        <Route path="/mode-selection" element={<ModeSelection />} />
-                        <Route path="/configurator" element={<Configurator />} />
-                        <Route
-                          path="/configurator/manual"
-                          element={<Configurator />}
-                        />
-                        <Route
-                          path="/configurator/auto"
-                          element={<AutoConfigurator />}
-                        />
+          <QueryClientProvider client={queryClient}>
+            <HelmetProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+                  <Suspense fallback={
+                    <div className="min-h-screen flex items-center justify-center">
+                      <div className="loading-spinner"></div>
+                    </div>
+                  }>
+                    <Routes>
+                      <Route path="/" element={<HostAwareRoot />} />
+                      <Route path="/mode-selection" element={<ModeSelection />} />
+                      <Route path="/configurator" element={<Configurator />} />
+                      <Route
+                        path="/configurator/manual"
+                        element={<Configurator />}
+                      />
+                      <Route
+                        path="/configurator/auto"
+                        element={<AutoConfigurator />}
+                      />
+
+                      {/* Demo Dashboard Routes (Public - No Auth Required) */}
+                      <Route path="/demo-dashboard" element={<DemoDashboardHome />} />
+                      <Route path="/demo-dashboard/*" element={<DemoDashboardHome />} />
+
+                      {/* CLERK AUTHENTICATED ROUTES */}
+                      <Route element={<AuthWrapper />}>
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
-
-                        {/* Demo Dashboard Routes (Public - No Auth Required) */}
-                        <Route path="/demo-dashboard" element={<DemoDashboardHome />} />
-                        <Route path="/demo-dashboard/*" element={<DemoDashboardHome />} />
 
                         {/* Dashboard Routes */}
                         <Route
@@ -159,21 +169,22 @@ const App = () => {
                           path="/dashboard"
                           element={<Navigate to="/dashboard/insights" replace />}
                         />
-                        <Route path="/site/:subdomain/*" element={<Site />} />
-                        <Route path="/:id/:name/*" element={<Site />} />
-                        <Route path="/test-site" element={<TestSite />} />
-                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </Suspense>
+                      </Route>
+
+                      <Route path="/site/:subdomain/*" element={<Site />} />
+                      <Route path="/:id/:name/*" element={<Site />} />
+                      <Route path="/test-site" element={<TestSite />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
                 </BrowserRouter>
               </TooltipProvider>
             </HelmetProvider>
           </QueryClientProvider>
-        </ClerkProvider>
-      </I18nextProvider>
-    </ErrorBoundary>
-  </PerformanceErrorBoundary>
+        </I18nextProvider>
+      </ErrorBoundary>
+    </PerformanceErrorBoundary>
   );
 };
 

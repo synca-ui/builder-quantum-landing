@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo } from "react";
+import React, { useEffect, useState, memo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronRight,
@@ -19,16 +19,17 @@ import {
   Link as LinkIcon,
   Loader2,
 } from "lucide-react";
-import MaitrWorkflowAnimation from "@/components/MaitrWorkflowAnimation";
+const MaitrWorkflowAnimation = lazy(() => import("@/components/MaitrWorkflowAnimation"));
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
-import {
-  useAuth as useClerkAuth,
-  useUser,
-  SignInButton,
-  SignUpButton,
-} from "@clerk/clerk-react";
+// Clerk imports removed for performance
+// import {
+//   useAuth as useClerkAuth,
+//   useUser,
+//   SignInButton,
+//   SignUpButton,
+// } from "@clerk/clerk-react";
 import {
   useResourcePreloader,
   useLazyCSS,
@@ -55,8 +56,12 @@ export default function Index() {
   }, []);
 
   // Get auth state but with fallbacks to ensure button visibility
-  const { isSignedIn, isLoaded: authLoaded } = useClerkAuth();
-  const { user, isLoaded: userLoaded } = useUser();
+  // Get auth state but with fallbacks to ensure button visibility
+  // Clerk removed from Landing Page for performance -> Assume Guest
+  const isSignedIn = false;
+  const authLoaded = true;
+  const user = null;
+  const userLoaded = true;
 
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
@@ -313,47 +318,19 @@ export default function Index() {
             </div>
 
             <div className="hidden md:flex items-center space-x-3">
-              {isSignedIn ? (
-                <>
-                  <a href="/profile">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-2 border-gray-300/60"
-                    >
-                      Profil
-                    </Button>
-                  </a>
-                  <a href="/dashboard">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="group relative overflow-hidden border-2 border-teal-500/30 text-teal-600 hover:text-white hover:bg-teal-500 px-6 py-2 text-sm font-bold rounded-full transition-all duration-300 hover:scale-105"
-                    >
-                      <div className="relative flex items-center space-x-2">
-                        <LayoutDashboard className="w-4 h-4" />
-                        <span>Dashboard</span>
-                      </div>
-                    </Button>
-                  </a>
-                </>
-              ) : (
-                <>
-                  <SignInButton mode="modal">
-                    <Button variant="outline" size="sm">
-                      Log in
-                    </Button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <Button
-                      size="sm"
-                      className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                    >
-                      Sign up
-                    </Button>
-                  </SignUpButton>
-                </>
-              )}
+              <a href="/login">
+                <Button variant="outline" size="sm">
+                  Log in
+                </Button>
+              </a>
+              <a href="/signup">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                >
+                  Sign up
+                </Button>
+              </a>
               <a href="/mode-selection">
                 <Button
                   size="sm"
@@ -414,36 +391,25 @@ export default function Index() {
               ))}
 
               <div className="pt-2 border-t border-gray-200/50 space-y-2">
-                {!isSignedIn && (
-                  <>
-                    <SignInButton mode="modal">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Log in
-                      </Button>
-                    </SignInButton>
-                    <SignUpButton mode="modal">
-                      <Button
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Sign up
-                      </Button>
-                    </SignUpButton>
-                  </>
-                )}
-                {isSignedIn && (
-                  <a href="/profile" onClick={() => setIsMenuOpen(false)}>
-                    <Button size="sm" variant="outline" className="w-full">
-                      Profil
-                    </Button>
-                  </a>
-                )}
+
+                <a href="/login" onClick={() => setIsMenuOpen(false)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Log in
+                  </Button>
+                </a>
+                <a href="/signup" onClick={() => setIsMenuOpen(false)}>
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                  >
+                    Sign up
+                  </Button>
+                </a>
+
                 <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                   <Button
                     size="sm"
@@ -460,7 +426,8 @@ export default function Index() {
             </div>
           </div>
         </div>
-      </nav>
+
+      </nav >
     );
   };
 
@@ -591,7 +558,13 @@ export default function Index() {
           </div>
 
           {/* Workflow Animation */}
-          <MaitrWorkflowAnimation />
+          <Suspense fallback={
+            <div className="w-full max-w-7xl mx-auto h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-8 mb-20 flex items-center justify-center">
+              <Loader2 className="w-10 h-10 animate-spin text-teal-500" />
+            </div>
+          }>
+            <MaitrWorkflowAnimation />
+          </Suspense>
         </div>
       </section >
 
@@ -630,24 +603,18 @@ export default function Index() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {/* Login/Dashboard Button - conditional but with loading fallback */}
               {authLoaded ? (
-                isSignedIn ? (
-                  <a href="/dashboard">
-                    <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                      Zum Dashboard
-                    </Button>
-                  </a>
-                ) : (
-                  <SignInButton mode="modal">
-                    <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                      Log In um Dashboard zu öffnen
-                    </Button>
-                  </SignInButton>
-                )
+                <a href="/login">
+                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
+                    Log In um Dashboard zu öffnen
+                  </Button>
+                </a>
               ) : (
-                // Show fallback button while auth is loading to prevent layout shift
-                <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3 opacity-70">
-                  Lädt...
-                </Button>
+                // Safe Fallback
+                <a href="/login">
+                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
+                    Log In um Dashboard zu öffnen
+                  </Button>
+                </a>
               )}
 
               {/* Demo Dashboard Button - always visible immediately, no auth dependency */}

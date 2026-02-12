@@ -1,12 +1,9 @@
-/** @import must precede all other statements */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+
   /**
    * Tailwind CSS theme
    * tailwind.config.ts expects the following color variables to be expressed as HSL values.
@@ -141,32 +138,39 @@
 }
 
 @layer utilities {
+
   /* Optimized Animations for Performance */
   @keyframes subtle-float {
+
     0%,
     100% {
       transform: translateY(0px);
     }
+
     50% {
       transform: translateY(-10px);
     }
   }
 
   @keyframes fade-glow {
+
     0%,
     100% {
       box-shadow: 0 0 15px rgba(20, 184, 166, 0.3);
     }
+
     50% {
       box-shadow: 0 0 25px rgba(20, 184, 166, 0.6);
     }
   }
 
   @keyframes gentle-gradient {
+
     0%,
     100% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
@@ -185,7 +189,7 @@
 
   .animate-gradient {
     background-size: 200% 200%;
-    animation: gentle-gradient 3s ease infinite;
+    animation: gentle-gradient 8s ease-in-out infinite;
     will-change: background-position;
   }
 
@@ -209,20 +213,19 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: gentle-gradient 3s ease infinite;
+    animation: gentle-gradient 6s ease infinite;
   }
 
   /* iPhone 16 Pro realistic frame */
   .iphone-16pro {
     @apply rounded-[2rem] p-2 relative bg-zinc-900 shadow-2xl;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-    background-image: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.08),
-      rgba(0, 0, 0, 0.2)
-    );
+    background-image: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.08),
+        rgba(0, 0, 0, 0.2));
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
+
   .iphone-16pro .iphone-shadow {
     position: absolute;
     inset: 0;
@@ -230,9 +233,11 @@
     opacity: 0.12;
     pointer-events: none;
   }
+
   .iphone-16pro .iphone-screen {
     @apply w-full h-full relative rounded-[1.75rem] overflow-hidden bg-white;
   }
+
   .iphone-16pro .iphone-island {
     position: absolute;
     top: 6px;
@@ -249,22 +254,23 @@
     gap: 10px;
     box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.1);
   }
+
   .iphone-16pro .island-speaker {
     width: 46px;
     height: 6px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 9999px;
   }
+
   .iphone-16pro .island-camera {
     width: 10px;
     height: 10px;
-    background: radial-gradient(
-      circle at 30% 30%,
-      rgba(100, 200, 255, 0.6),
-      rgba(0, 0, 0, 0.9)
-    );
+    background: radial-gradient(circle at 30% 30%,
+        rgba(100, 200, 255, 0.6),
+        rgba(0, 0, 0, 0.9));
     border-radius: 9999px;
   }
+
   .iphone-16pro .iphone-buttons .btn {
     position: absolute;
     right: -2px;
@@ -272,16 +278,19 @@
     background: rgba(0, 0, 0, 0.6);
     border-radius: 2px;
   }
+
   .iphone-16pro .btn-power {
     top: 60px;
     height: 34px;
   }
+
   .iphone-16pro .btn-volume-up {
     left: -2px;
     right: auto;
     top: 100px;
     height: 46px;
   }
+
   .iphone-16pro .btn-volume-down {
     left: -2px;
     right: auto;
@@ -297,19 +306,24 @@
 
   /* Hide scrollbars inside phone preview but keep scrolling */
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
+
   .no-scrollbar::-webkit-scrollbar {
     /* Chrome, Safari and Opera */
     display: none;
     width: 0;
     height: 0;
   }
+
   .iphone-16pro *::-webkit-scrollbar {
     width: 0;
     height: 0;
   }
+
   .iphone-16pro {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -333,6 +347,7 @@
 
   /* Reduce motion for users who prefer it */
   @media (prefers-reduced-motion: reduce) {
+
     .animate-float,
     .animate-glow,
     .animate-gradient,
