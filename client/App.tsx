@@ -95,17 +95,6 @@ const App = () => {
                   }>
                     <Routes>
                       <Route path="/" element={<HostAwareRoot />} />
-                      <Route path="/mode-selection" element={<ModeSelection />} />
-                      <Route path="/configurator" element={<Configurator />} />
-                      <Route
-                        path="/configurator/manual"
-                        element={<Configurator />}
-                      />
-                      <Route
-                        path="/configurator/auto"
-                        element={<AutoConfigurator />}
-                      />
-
                       {/* Demo Dashboard Routes (Public - No Auth Required) */}
                       <Route path="/demo-dashboard" element={<DemoDashboardHome />} />
                       <Route path="/demo-dashboard/*" element={<DemoDashboardHome />} />
@@ -114,6 +103,16 @@ const App = () => {
                       <Route element={<AuthWrapper />}>
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
+                        <Route path="/mode-selection" element={<ModeSelection />} />
+                        <Route path="/configurator" element={<Configurator />} />
+                        <Route
+                          path="/configurator/manual"
+                          element={<Configurator />}
+                        />
+                        <Route
+                          path="/configurator/auto"
+                          element={<AutoConfigurator />}
+                        />
 
                         {/* Dashboard Routes */}
                         <Route

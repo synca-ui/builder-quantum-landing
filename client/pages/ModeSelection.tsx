@@ -10,7 +10,7 @@ import Headbar from "@/components/Headbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import MaitrScoreCircle from "@/components/MaitrScoreCircle";
 import { useAnalysis, setIsLoading, setN8nData, setSourceLink } from "@/data/analysisStore";
-import { useMaitrScore } from "../../server/routes/useMaitrScore.ts";
+import { useMaitrScore } from "@/hooks/useMaitrScore";
 
 // ScraperJob data structure based on Prisma schema
 interface ScraperJobData {
@@ -173,7 +173,7 @@ export default function ModeSelection() {
       await navigator.clipboard.writeText(decodedUrl || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
@@ -305,8 +305,8 @@ export default function ModeSelection() {
           <p className="mt-2 text-gray-500 text-sm max-w-md mx-auto">
             {shouldShowMaitrScore
               ? (scoreIsLoading
-                  ? "Analyzing your site… this may take a moment."
-                  : analysisFeedback || "Your site analysis is complete! Choose how you'd like to proceed:")
+                ? "Analyzing your site… this may take a moment."
+                : analysisFeedback || "Your site analysis is complete! Choose how you'd like to proceed:")
               : "Select the option that best fits your needs to get started."
             }
           </p>
@@ -631,9 +631,8 @@ export default function ModeSelection() {
           </div>
 
           {/* Automatic – recommended */}
-          <div className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${
-            highScore ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white" : "border-purple-200 bg-white"
-          }`}>
+          <div className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${highScore ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white" : "border-purple-200 bg-white"
+            }`}>
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm">
                 <Sparkles className="w-3 h-3" /> Recommended
@@ -671,11 +670,10 @@ export default function ModeSelection() {
               <Button
                 onClick={() => navigate(`/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`)}
                 size="sm"
-                className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${
-                  highScore
+                className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${highScore
                     ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
                     : "bg-gradient-to-r from-purple-500 to-orange-500"
-                }`}
+                  }`}
               >
                 Start Automatic {highScore && "✨"}
               </Button>
