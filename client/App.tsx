@@ -94,13 +94,13 @@ const App = () => {
                     </div>
                   }>
                     <Routes>
-                      <Route path="/" element={<HostAwareRoot />} />
                       {/* Demo Dashboard Routes (Public - No Auth Required) */}
                       <Route path="/demo-dashboard" element={<DemoDashboardHome />} />
                       <Route path="/demo-dashboard/*" element={<DemoDashboardHome />} />
 
                       {/* CLERK AUTHENTICATED ROUTES */}
                       <Route element={<AuthWrapper />}>
+                        <Route path="/" element={<HostAwareRoot />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/mode-selection" element={<ModeSelection />} />

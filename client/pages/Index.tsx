@@ -23,13 +23,10 @@ const MaitrWorkflowAnimation = lazy(() => import("@/components/MaitrWorkflowAnim
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
-// Clerk imports removed for performance
-// import {
-//   useAuth as useClerkAuth,
-//   useUser,
-//   SignInButton,
-//   SignUpButton,
-// } from "@clerk/clerk-react";
+import {
+  SignInButton,
+  SignUpButton,
+} from "@clerk/clerk-react";
 import {
   useResourcePreloader,
   useLazyCSS,
@@ -318,19 +315,19 @@ export default function Index() {
             </div>
 
             <div className="hidden md:flex items-center space-x-3">
-              <a href="/login">
+              <SignInButton mode="modal">
                 <Button variant="outline" size="sm">
                   Log in
                 </Button>
-              </a>
-              <a href="/signup">
+              </SignInButton>
+              <SignUpButton mode="modal">
                 <Button
                   size="sm"
                   className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
                 >
                   Sign up
                 </Button>
-              </a>
+              </SignUpButton>
               <a href="/mode-selection">
                 <Button
                   size="sm"
@@ -392,23 +389,25 @@ export default function Index() {
 
               <div className="pt-2 border-t border-gray-200/50 space-y-2">
 
-                <a href="/login" onClick={() => setIsMenuOpen(false)}>
+                <SignInButton mode="modal">
                   <Button
                     size="sm"
                     variant="outline"
                     className="w-full"
+                    onClick={() => setIsMenuOpen(false)}
                   >
                     Log in
                   </Button>
-                </a>
-                <a href="/signup" onClick={() => setIsMenuOpen(false)}>
+                </SignInButton>
+                <SignUpButton mode="modal">
                   <Button
                     size="sm"
                     className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                    onClick={() => setIsMenuOpen(false)}
                   >
                     Sign up
                   </Button>
-                </a>
+                </SignUpButton>
 
                 <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                   <Button
