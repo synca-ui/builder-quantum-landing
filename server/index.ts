@@ -60,7 +60,9 @@ export function createServer() {
   // Middleware
   app.use(cors());
 
-  // ...
+  // Parse JSON request bodies
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   // ✅ WICHTIG: n8n Proxy Route VOR dem apiRouter definieren
   // Protected with Strict Rate Limiting
