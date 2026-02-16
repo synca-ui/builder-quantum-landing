@@ -49,6 +49,8 @@ export interface NavigationProps {
   isPreview?: boolean;
   /** Zusätzliche CSS-Klassen */
   className?: string;
+  /** Hintergrundfarbe der Seite (Fallback für Sticky Header) */
+  backgroundColor?: string;
 }
 
 // ============================================
@@ -81,6 +83,7 @@ export const Navigation = memo(function Navigation({
   headerFontColor,
   headerFontSize,
   headerBackgroundColor,
+  backgroundColor = '#ffffff',
   onlineOrdering = false,
   cartCount = 0,
   menuOpen,
@@ -135,11 +138,11 @@ export const Navigation = memo(function Navigation({
         border-b transition-all
       `}
       style={{
-        backgroundColor: headerBackgroundColor,
+        backgroundColor: headerBackgroundColor || backgroundColor, // Ensure fallback 
         color: headerFontColor,
         borderColor: `${headerFontColor}10`,
-        backdropFilter: 'var(--nav-backdrop, none)',
-        WebkitBackdropFilter: 'var(--nav-backdrop, none)',
+        backdropFilter: 'var(--nav-backdrop, blur(8px))', // Ensure blur is active
+        WebkitBackdropFilter: 'var(--nav-backdrop, blur(8px))',
       }}
     >
       {/* Left: Logo + Business Name */}

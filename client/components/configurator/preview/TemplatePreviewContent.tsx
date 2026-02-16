@@ -271,10 +271,11 @@ export function TemplatePreviewContent() {
   const styles = useMemo(() => {
     const base = {
       wrapper: { backgroundColor, color: fontColor },
-      page: `px-5 pt-24 pb-16 min-h-full ${fontClass}`,
-      titleClass: `text-3xl font-bold mb-6 text-center leading-tight`,
+      wrapper: { backgroundColor, color: fontColor },
+      page: `px-5 pt-28 pb-20 min-h-full ${fontClass}`, // Reduced pt-36 to pt-28
+      titleClass: `text-3xl font-bold mb-2 text-center leading-tight`,
       bodyClass: `text-sm opacity-90 leading-relaxed`,
-      nav: `absolute top-0 left-0 right-0 z-50 px-5 py-4 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
+      nav: `absolute top-0 left-0 right-0 z-[100] px-5 pt-12 pb-3 flex items-center justify-between border-b border-black/5 transition-all bg-white backdrop-blur-md transform-gpu shadow-sm`, // Added shadow-sm
     };
 
     switch (template) {
@@ -291,12 +292,11 @@ export function TemplatePreviewContent() {
       default:
         return base;
     }
-  }, []);
+  }, [backgroundColor, fontColor, secondaryColor, template, fontFamily]);
 
   // ==========================================
   // CONTENT RENDERERS
   // ==========================================
-
 
   // ✅ ORIGINAL VERSION (Fallback)
   const renderHomePage = () => {
@@ -308,7 +308,7 @@ export function TemplatePreviewContent() {
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Hero Section */}
-        <div className="text-center py-8 px-2 flex flex-col items-center">
+        <div className="text-center px-2 flex flex-col items-center">
           <h1 className={styles.titleClass} style={{ color: fontColor }}>
             {slogan || "Willkommen"}
           </h1>
@@ -321,7 +321,7 @@ export function TemplatePreviewContent() {
           </p>
 
           {onlineOrdering && (
-            <div className="mt-6 w-full px-4">
+            <div className="mt-4 w-full px-4">
               <button
                 className="w-full py-3 px-6 font-bold text-base shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
                 style={{
@@ -388,20 +388,22 @@ export function TemplatePreviewContent() {
                 />
               ));
             })()}
-            {reservationsEnabled && (
-              <div className="mt-4 w-full px-4">
-                <ReservationButton
-                  color={reservationButtonColor}
-                  textColor={reservationButtonTextColor}
-                  shape={reservationButtonShape as "rounded" | "pill" | "square"}
-                  className="w-full shadow-lg"
-                  onClick={() => navigateToPage("reservations")}
-                >
-                  Tisch reservieren
-                </ReservationButton>
-              </div>
-            )}
           </div>
+
+          {/* Reservation Button - Dynamic Component */}
+          {reservationsEnabled && (
+            <div className="mt-8 w-full px-4">
+              <ReservationButton
+                color={reservationButtonColor}
+                textColor={reservationButtonTextColor}
+                shape={reservationButtonShape as "rounded" | "pill" | "square"}
+                className="w-full shadow-lg"
+                onClick={() => navigateToPage("reservations")}
+              >
+                Tisch reservieren
+              </ReservationButton>
+            </div>
+          )}
         </div>
 
         {/* Opening Hours - nutzt OpeningHours Shared Component */}
@@ -780,14 +782,15 @@ export function TemplatePreviewContent() {
       style={styles.wrapper}
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* Navigation Header - SHARED COMPONENT */}
+      {/* Navigation Header - SHARED COMPONENT - Absolute Positioned */}
       <Navigation
         businessName={businessName}
         businessType={businessType}
         logo={logo?.url || null}
         headerFontColor={headerFontColor}
-        headerFontSize={headerFontSize}
+        headerFontSize="2xl"
         headerBackgroundColor={headerBackgroundColor}
+        backgroundColor={backgroundColor}
         onlineOrdering={onlineOrdering}
         cartCount={cartItems.length}
         menuOpen={previewState.menuOpen}
@@ -798,15 +801,19 @@ export function TemplatePreviewContent() {
       />
 
       {/* Menu Overlay - SHARED COMPONENT */}
-      <MenuOverlay
-        isOpen={previewState.menuOpen}
-        backgroundColor={backgroundColor}
-        fontColor={fontColor}
-        menuItems={navigationMenu}
-        onClose={closeMenu}
-        onNavigate={navigateToPage}
-        isPreview={true}
-      />
+      <div className="absolute inset-0 z-[110] pointer-events-none">
+        <div className={`${previewState.menuOpen ? "pointer-events-auto" : "pointer-events-none"} h-full w-full`}>
+          <MenuOverlay
+            isOpen={previewState.menuOpen}
+            backgroundColor={backgroundColor}
+            fontColor={fontColor}
+            menuItems={navigationMenu}
+            onClose={closeMenu}
+            onNavigate={navigateToPage}
+            isPreview={true}
+          />
+        </div>
+      </div>
 
       {/* Scroll Container */}
       <div
@@ -817,27 +824,31 @@ export function TemplatePreviewContent() {
           overscrollBehaviorY: "contain",
         }}
       >
+
         <div className={styles.page}>{renderContent()}</div>
         <div className="h-12 w-full" />
       </div>
 
       {/* Dish Modal - SHARED COMPONENT */}
-      <DishModal
-        dish={selectedDish}
-        currentImageIndex={currentImageIndex}
-        fontColor={fontColor}
-        backgroundColor={backgroundColor}
-        priceColor={priceColor}
-        primaryColor={primaryColor}
-        onlineOrdering={onlineOrdering}
-        onClose={closeDishModal}
-        onPrevImage={prevImage}
-        onNextImage={nextImage}
-        onSetImageIndex={setCurrentImageIndex}
-        onAddToCart={addToCart}
-        isPreview={true}
-      />
+      <div className="absolute inset-0 z-[60] pointer-events-none">
+        <div className={`${selectedDish ? "pointer-events-auto" : "pointer-events-none"} h-full w-full`}>
+          <DishModal
+            dish={selectedDish}
+            currentImageIndex={currentImageIndex}
+            fontColor={fontColor}
+            backgroundColor={backgroundColor}
+            priceColor={priceColor}
+            primaryColor={primaryColor}
+            onlineOrdering={onlineOrdering}
+            onClose={closeDishModal}
+            onPrevImage={prevImage}
+            onNextImage={nextImage}
+            onSetImageIndex={setCurrentImageIndex}
+            onAddToCart={addToCart}
+            isPreview={true}
+          />
+        </div>
+      </div>
     </div>
   );
 }
-

@@ -69,15 +69,16 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   // Validation
-  const isValid = !!(business.name && business.type);
+  const isValid = Boolean(business.name && business.name.trim().length > 0 && business.type);
 
   // Handlers
-  useCallback(
+  const handleNameChange = useCallback(
     (value: string) => {
       businessActions.updateBusinessName(value);
     },
     [businessActions],
   );
+
   const handleBusinessTypeChange = useCallback(
     (type: string) => {
       businessActions.updateBusinessType(type);
@@ -86,13 +87,15 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
     },
     [businessActions],
   );
-  useCallback(
+
+  const handleLocationChange = useCallback(
     (value: string) => {
       businessActions.updateLocation(value);
     },
     [businessActions],
   );
-  useCallback(
+
+  const handleSloganChange = useCallback(
     (value: string) => {
       businessActions.updateSlogan(value);
     },
@@ -200,7 +203,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
             type="text"
             placeholder={t("business.namePlaceholder")}
             value={business.name}
-            onChange={businessActions.updateBusinessName}
+            onChange={handleNameChange} // FIX: Use the stable handler
             className="w-full px-4 py-3 text-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
             autoComplete="organization"
             debounceMs={300}
@@ -216,11 +219,10 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
             {BUSINESS_TYPES.map((type) => (
               <Card
                 key={type.value}
-                className={`cursor-pointer transition-all duration-300 border-2 ${
-                  business.type === type.value
-                    ? "border-teal-500 bg-teal-50"
-                    : "border-gray-200 hover:border-teal-300"
-                }`}
+                className={`cursor-pointer transition-all duration-300 border-2 ${business.type === type.value
+                  ? "border-teal-500 bg-teal-50"
+                  : "border-gray-200 hover:border-teal-300"
+                  }`}
                 onClick={() => handleBusinessTypeChange(type.value)}
               >
                 <CardContent className="p-3 text-center">
@@ -252,7 +254,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
               type="text"
               placeholder={t("business.locationPlaceholder")}
               value={business.location || ""}
-              onChange={businessActions.updateLocation}
+              onChange={handleLocationChange} // FIX: Use the stable handler
               className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
               autoComplete="address-level2"
               debounceMs={300}
@@ -286,7 +288,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                 type="text"
                 placeholder={t("business.sloganPlaceholder")}
                 value={business.slogan || ""}
-                onChange={businessActions.updateSlogan}
+                onChange={handleSloganChange} // FIX: Use the stable handler
                 className="w-full px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                 debounceMs={300}
               />

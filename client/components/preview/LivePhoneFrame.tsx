@@ -72,7 +72,7 @@ export function LivePhoneFrame({
           </div>
 
           {/* Der eigentliche Inhalt - explicit height for scroll to work */}
-          <div className="w-full h-full overflow-hidden pointer-events-auto">
+          <div className="w-full h-full overflow-hidden pointer-events-auto isolate relative z-0">
             <PhonePortalProvider>{children}</PhonePortalProvider>
           </div>
         </div>
