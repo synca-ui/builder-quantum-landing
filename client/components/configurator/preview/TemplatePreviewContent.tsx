@@ -271,11 +271,10 @@ export function TemplatePreviewContent() {
   const styles = useMemo(() => {
     const base = {
       wrapper: { backgroundColor, color: fontColor },
-      wrapper: { backgroundColor, color: fontColor },
-      page: `px-5 pt-28 pb-20 min-h-full ${fontClass}`, // Reduced pt-36 to pt-28
+      page: `px-5 pt-10 pb-20 min-h-full ${fontClass}`, // Increased pt-2 to pt-10
       titleClass: `text-3xl font-bold mb-2 text-center leading-tight`,
       bodyClass: `text-sm opacity-90 leading-relaxed`,
-      nav: `absolute top-0 left-0 right-0 z-[100] px-5 pt-12 pb-3 flex items-center justify-between border-b border-black/5 transition-all bg-white backdrop-blur-md transform-gpu shadow-sm`, // Added shadow-sm
+      nav: `!sticky !top-0 w-full z-[100] px-5 pt-12 pb-3 flex items-center justify-between border-b border-black/5 transition-all bg-white backdrop-blur-md shadow-sm`, // Forced sticky with !important
     };
 
     switch (template) {
@@ -824,7 +823,6 @@ export function TemplatePreviewContent() {
           overscrollBehaviorY: "contain",
         }}
       >
-
         <div className={styles.page}>{renderContent()}</div>
         <div className="h-12 w-full" />
       </div>
