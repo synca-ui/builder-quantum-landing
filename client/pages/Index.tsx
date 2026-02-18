@@ -513,73 +513,6 @@ export default function Index() {
                     </div>
                   </form>
 
-                  {/* ─── INLINE ERROR FEEDBACK ─── */}
-                  {inputError && (
-                    <div className="w-full mt-3 animate-in slide-in-from-top-2 duration-300">
-                      <div className={`rounded-2xl border p-4 backdrop-blur-sm ${inputError === "invalid_format"
-                          ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
-                          : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
-                        }`}>
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className={`p-1.5 rounded-lg shrink-0 ${inputError === "invalid_format" ? "bg-red-50" : "bg-orange-50"}`}>
-                            <XCircle className={`w-4 h-4 ${inputError === "invalid_format" ? "text-red-500" : "text-orange-500"}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-gray-900">
-                              {inputError === "invalid_format"
-                                ? "Hast du den Link richtig eingegeben?"
-                                : "Da ist leider etwas schiefgelaufen."}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {inputError === "invalid_format"
-                                ? "Der Link muss eine vollständige URL mit Domain sein."
-                                : "Unser Server konnte die Analyse nicht starten. Bitte versuch es erneut."}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => setInputError(null)}
-                            className="p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
-                            aria-label="Fehler schließen"
-                          >
-                            <XCircle className="w-3.5 h-3.5 text-gray-400" />
-                          </button>
-                        </div>
-
-                        {inputError === "invalid_format" && (
-                          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mb-3">
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Erwartetes Format</p>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                                <code className="text-xs text-gray-700 font-mono">https://www.restaurant-name.de</code>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                                <code className="text-xs text-gray-700 font-mono">https://maps.google.com/...</code>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                                <code className="text-xs text-gray-400 font-mono line-through">restaurant-name.de</code>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                                <code className="text-xs text-gray-400 font-mono line-through">Nur ein Name oder Wort</code>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <button
-                          onClick={() => { setInputError(null); document.querySelector<HTMLInputElement>('input[aria-label="Link einfügen"]')?.focus(); }}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Nochmal versuchen
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   <div className="flex-shrink-0">
                     <a href="#demo" className="inline-flex">
                       <Button
@@ -592,6 +525,73 @@ export default function Index() {
                     </a>
                   </div>
                 </div>
+
+                {/* ─── INLINE ERROR FEEDBACK ─── */}
+                {inputError && (
+                  <div className="w-full mt-3 animate-in slide-in-from-top-2 duration-300">
+                    <div className={`rounded-2xl border p-4 backdrop-blur-sm ${inputError === "invalid_format"
+                        ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
+                        : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
+                      }`}>
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`p-1.5 rounded-lg shrink-0 ${inputError === "invalid_format" ? "bg-red-50" : "bg-orange-50"}`}>
+                          <XCircle className={`w-4 h-4 ${inputError === "invalid_format" ? "text-red-500" : "text-orange-500"}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-900">
+                            {inputError === "invalid_format"
+                              ? "Hast du den Link richtig eingegeben?"
+                              : "Da ist leider etwas schiefgelaufen."}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {inputError === "invalid_format"
+                              ? "Der Link muss eine vollständige URL mit Domain sein."
+                              : "Unser Server konnte die Analyse nicht starten. Bitte versuch es erneut."}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setInputError(null)}
+                          className="p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+                          aria-label="Fehler schließen"
+                        >
+                          <XCircle className="w-3.5 h-3.5 text-gray-400" />
+                        </button>
+                      </div>
+
+                      {inputError === "invalid_format" && (
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mb-3">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Erwartetes Format</p>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                              <code className="text-xs text-gray-700 font-mono">https://www.restaurant-name.de</code>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                              <code className="text-xs text-gray-700 font-mono">https://maps.google.com/...</code>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                              <code className="text-xs text-gray-400 font-mono line-through">restaurant-name.de</code>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                              <code className="text-xs text-gray-400 font-mono line-through">Nur ein Name oder Wort</code>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => { setInputError(null); document.querySelector<HTMLInputElement>('input[aria-label="Link einfügen"]')?.focus(); }}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Nochmal versuchen
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
