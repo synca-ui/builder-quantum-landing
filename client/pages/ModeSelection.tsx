@@ -502,8 +502,8 @@ export default function ModeSelection() {
                 onClick={() => navigate(`/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`)}
                 size="sm"
                 className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${highScore
-                    ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
-                    : "bg-gradient-to-r from-purple-500 to-orange-500"
+                  ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
+                  : "bg-gradient-to-r from-purple-500 to-orange-500"
                   }`}
               >
                 Start Automatic {highScore && "✨"}
