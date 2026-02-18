@@ -11,42 +11,21 @@ import { useMaitrScore } from "@/hooks/useMaitrScore";
 // ─── Typen ────────────────────────────────────────────────────────────────────
 interface ScraperJobData {
   id: string;
-  businessName: string;
-  businessType?: string;
+  businessName?: string | null;
+  businessType?: string | null;
   websiteUrl: string;
   status: string;
-  extractedData?: {
-    email?: string | null;
-    phone?: string | null;
-    status?: string;
-    menuUrl?: string;
-    maitrScore?: number;
-    businessName?: string;
-    businessType?: string;
-    instagramUrl?: string;
-    hasReservation?: boolean;
-    analysisFeedback?: string;
-    googleSearchQuery?: string;
-    isDeepScrapeReady?: boolean;
-    extractedData?: {
-      raw_snippet?: string;
-      ssl_detected?: boolean;
-      analysis_timestamp?: string;
-    };
-  };
-  userId?: string | null;
-  createdAt: string;
-  startedAt?: string | null;
-  completedAt?: string | null;
   maitrScore?: number | null;
   email?: string | null;
   phone?: string | null;
   instagramUrl?: string | null;
   menuUrl?: string | null;
   hasReservation?: boolean;
-  googleSearchQuery?: string | null;
   analysisFeedback?: string | null;
   isDeepScrapeReady?: boolean;
+  createdAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
 }
 
 // ─── Komponente ───────────────────────────────────────────────────────────────
@@ -71,16 +50,15 @@ export default function ModeSelection() {
   const scoreIsLoading = isLoading || scraperLoading || scoreStatus === "pending" || scoreStatus === "idle";
   const highScore = maitrScore > 80;
 
-  // ── Extrahierte Felder abflachen ──
-  // Daten kommen entweder aus scraperData direkt oder aus extractedData (verschachtelt)
-  const businessName = scraperData?.businessName || scraperData?.extractedData?.businessName || "";
-  const businessType = scraperData?.businessType || scraperData?.extractedData?.businessType || "";
-  const phone = scraperData?.phone || scraperData?.extractedData?.phone || null;
-  const email = scraperData?.email || scraperData?.extractedData?.email || null;
-  const instagramUrl = scraperData?.instagramUrl || scraperData?.extractedData?.instagramUrl || null;
-  const menuUrl = scraperData?.menuUrl || scraperData?.extractedData?.menuUrl || null;
-  const hasReservation = scraperData?.hasReservation || scraperData?.extractedData?.hasReservation || false;
-  const analysisFeedback = scraperData?.analysisFeedback || scraperData?.extractedData?.analysisFeedback || null;
+  // ── Felder direkt aus dem vollständigen ScraperJob ──
+  const businessName = scraperData?.businessName ?? null;
+  const businessType = scraperData?.businessType ?? null;
+  const phone = scraperData?.phone ?? null;
+  const email = scraperData?.email ?? null;
+  const instagramUrl = scraperData?.instagramUrl ?? null;
+  const menuUrl = scraperData?.menuUrl ?? null;
+  const hasReservation = scraperData?.hasReservation ?? false;
+  const analysisFeedback = scraperData?.analysisFeedback ?? null;
 
   // ── Analyse-Meta ──
   const extractionTime = (() => {
@@ -108,26 +86,26 @@ export default function ModeSelection() {
     "Maitr Score wird berechnet…",
   ];
 
-  // ── Scraper-Job direkt aus NeonDB laden ──────────────────────────────────
-  // Wird ausgelöst sobald eine URL vorhanden ist.
-  // Passt den Endpunkt (/api/scraper-job) an euren tatsächlichen Route-Namen an.
-  async function fetchScraperJob(url: string) {
+  // ── Alle extrahierten Daten aus NeonDB laden ──────────────────────────────
+  // Korrekte Route: GET /api/scraper-job/full?websiteUrl=...
+  async function fetchFullScraperJob(url: string) {
     try {
       setScraperLoading(true);
       const res = await fetch(
-        `/api/scraper-job?url=${encodeURIComponent(url)}`,
-        { method: "GET" }
+        `/api/scraper-job/full?websiteUrl=${encodeURIComponent(url)}`
       );
       if (!res.ok) {
-        console.warn("ScraperJob-Fetch fehlgeschlagen:", res.status);
+        console.warn("[ModeSelection] ScraperJob-Fetch fehlgeschlagen:", res.status);
         return;
       }
       const data = await res.json();
-      // API gibt entweder { scraperJob: {...} } oder direkt das Objekt zurück
-      const job: ScraperJobData = data.scraperJob ?? data;
-      if (job?.id) setScraperData(job);
+      const job: ScraperJobData | null = data.job ?? null;
+      if (job) {
+        console.log("[ModeSelection] ScraperJob geladen:", job);
+        setScraperData(job);
+      }
     } catch (err) {
-      console.error("ScraperJob-Fetch Fehler:", err);
+      console.error("[ModeSelection] ScraperJob-Fetch Fehler:", err);
     } finally {
       setScraperLoading(false);
     }
@@ -152,24 +130,23 @@ export default function ModeSelection() {
       if (!res.ok) {
         console.error("n8n-Weiterleitung fehlgeschlagen:", res.status);
         setIsLoading(false);
+        // Trotzdem Daten aus DB laden falls bereits ein Job existiert
+        await fetchFullScraperJob(link);
         return;
       }
 
       const payload = await res.json();
       if (payload?.success) {
         setN8nData({ _webhookConfirmed: true } as any);
-        // Falls n8n den Job direkt zurückgibt → verwenden
-        if (payload.scraperJob) {
-          setScraperData(payload.scraperJob);
-        } else {
-          // Ansonsten separat aus NeonDB laden
-          await fetchScraperJob(link);
-        }
       }
+
       setIsLoading(false);
+      // Nach n8n immer aus DB laden — dort sind die vollständigen Daten
+      await fetchFullScraperJob(link);
     } catch (err) {
       console.error("n8n-Aufruf Fehler:", err);
       setIsLoading(false);
+      if (decodedUrl) await fetchFullScraperJob(decodedUrl);
     }
   }
 
@@ -183,15 +160,15 @@ export default function ModeSelection() {
   };
 
   useEffect(() => {
-    if (!urlSource) return;
-    setSourceLink(decodedUrl!);
+    if (!urlSource || !decodedUrl) return;
+    setSourceLink(decodedUrl);
 
     if (n8nData) {
-      // Webhook bereits bestätigt → nur Daten laden
-      fetchScraperJob(decodedUrl!);
+      // Webhook bereits bestätigt → direkt Daten aus DB laden
+      fetchFullScraperJob(decodedUrl);
     } else {
-      // Erste Analyse starten
-      runAnalysis(decodedUrl!);
+      // Neue Analyse starten
+      runAnalysis(decodedUrl);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSource]);
@@ -241,7 +218,7 @@ export default function ModeSelection() {
           </div>
         )}
 
-        {/* ─── ANALYSIERTE WEBSITE KARTE ─── */}
+        {/* ─── ANALYSIERTE WEBSITE ─── */}
         {shouldShowMaitrScore && (
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -330,8 +307,8 @@ export default function ModeSelection() {
           {/* Automatisch – empfohlen */}
           <div
             className={`relative rounded-2xl shadow-sm p-6 flex flex-col border transition-shadow duration-300 hover:shadow-md ${highScore
-                ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white"
-                : "border-purple-200 bg-white"
+              ? "border-purple-300 bg-gradient-to-b from-purple-50 to-white"
+              : "border-purple-200 bg-white"
               }`}
           >
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -373,8 +350,8 @@ export default function ModeSelection() {
                 }
                 size="sm"
                 className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${highScore
-                    ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
-                    : "bg-gradient-to-r from-purple-500 to-orange-500"
+                  ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
+                  : "bg-gradient-to-r from-purple-500 to-orange-500"
                   }`}
               >
                 Automatisch starten {highScore && "✨"}

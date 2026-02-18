@@ -4,28 +4,10 @@ import prisma from "../db/prisma";
 
 const router = express.Router();
 
-// GET /api/scraper-job?websiteUrl=https://kleiner-kiepenkerl.de  — public, full job data
-router.get("/", async (req, res) => {
-  try {
-    const { websiteUrl } = req.query;
-    if (!websiteUrl || typeof websiteUrl !== "string") {
-      return res.status(400).json({ error: "websiteUrl is required" });
-    }
-    const job = await prisma.scraperJob.findFirst({
-      where: { websiteUrl },
-      orderBy: { createdAt: "desc" },
-    });
-    if (!job) {
-      return res.status(404).json({ error: "No job found for this URL" });
-    }
-    return res.json(job);
-  } catch (error) {
-    console.error("[ScraperJob] Error fetching by websiteUrl:", error);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// GET /api/scraper-job/score?websiteUrl=https://kleiner-kiepenkerl.de
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/scraper-job/score?websiteUrl=...
+// Nur Score + Status (für den useMaitrScore-Hook)
+// ─────────────────────────────────────────────────────────────────────────────
 router.get("/score", async (req, res) => {
   try {
     const { websiteUrl } = req.query;
@@ -48,7 +30,6 @@ router.get("/score", async (req, res) => {
 
     console.log("[ScraperJob] Found job:", job);
 
-    // Kein Job gefunden
     if (!job) {
       console.log("[ScraperJob] No job found");
       return res.json({ maitrScore: null, status: "not_found" });
@@ -60,10 +41,86 @@ router.get("/score", async (req, res) => {
     });
   } catch (error) {
     console.error("[ScraperJob] Error fetching maitrScore:", error);
-    console.error("[ScraperJob] Error stack:", error instanceof Error ? error.stack : "Unknown");
     res.status(500).json({
       error: "Internal server error",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/scraper-job/full?websiteUrl=...
+// Alle extrahierten Felder — für die Score-Card im Frontend
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/full", async (req, res) => {
+  try {
+    const { websiteUrl } = req.query;
+
+    console.log("[ScraperJob] Full request for:", websiteUrl);
+
+    if (!websiteUrl || typeof websiteUrl !== "string") {
+      return res.status(400).json({ error: "websiteUrl is required" });
+    }
+
+    const job = await prisma.scraperJob.findFirst({
+      where: { websiteUrl },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        businessName: true,
+        businessType: true,
+        websiteUrl: true,
+        maitrScore: true,
+        email: true,
+        phone: true,
+        instagramUrl: true,
+        menuUrl: true,
+        hasReservation: true,
+        analysisFeedback: true,
+        isDeepScrapeReady: true,
+        googleSearchQuery: true,
+        createdAt: true,
+        startedAt: true,
+        completedAt: true,
+        extractedData: true,
+      },
+    });
+
+    console.log("[ScraperJob] Full job found:", job?.id, "status:", job?.status);
+
+    if (!job) {
+      return res.json({ job: null, status: "not_found" });
+    }
+
+    // Felder aus extractedData als Fallback nutzen, falls Top-Level leer
+    const extractedData = (job.extractedData as any) ?? {};
+
+    const merged = {
+      id: job.id,
+      status: job.status,
+      websiteUrl: job.websiteUrl,
+      maitrScore: job.maitrScore ?? extractedData.maitrScore ?? null,
+      businessName: job.businessName || extractedData.businessName || null,
+      businessType: job.businessType || extractedData.businessType || null,
+      email: job.email || extractedData.email || null,
+      phone: job.phone || extractedData.phone || null,
+      instagramUrl: job.instagramUrl || extractedData.instagramUrl || null,
+      menuUrl: job.menuUrl || extractedData.menuUrl || null,
+      hasReservation: job.hasReservation ?? extractedData.hasReservation ?? false,
+      analysisFeedback: job.analysisFeedback || extractedData.analysisFeedback || null,
+      isDeepScrapeReady: job.isDeepScrapeReady ?? extractedData.isDeepScrapeReady ?? false,
+      createdAt: job.createdAt,
+      startedAt: job.startedAt,
+      completedAt: job.completedAt,
+    };
+
+    res.json({ job: merged });
+  } catch (error) {
+    console.error("[ScraperJob] Full fetch error:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
