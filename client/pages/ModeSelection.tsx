@@ -83,10 +83,10 @@ export default function ModeSelection() {
   const fetchScraperJob = async () => {
     setFetchError(false);
 
-    // Primary: fetch by jobId (most reliable, no session mix-upp)
+    // Primary: fetch by jobId (most reliable, no session mix-up)
     if (isValidJobId(jobId)) {
       try {
-        const res = await fetch(`/api/scraper-jobs/${jobId}`);
+        const res = await fetch(`/api/scraper/jobs/${jobId}`);
         if (res.ok) {
           const json = await res.json();
           // scraper.ts wraps the job in { success, data } — unwrap it
@@ -104,12 +104,11 @@ export default function ModeSelection() {
     // Fallback: fetch by websiteUrl (for older navigations without jobId)
     if (decodedUrl) {
       try {
-        const res = await fetch(`/api/scraper-jobs?websiteUrl=${encodeURIComponent(decodedUrl)}`);
+        const res = await fetch(`/api/scraper-job?websiteUrl=${encodeURIComponent(decodedUrl)}`);
         if (res.ok) {
           const json = await res.json();
-          // May return { success, data } or array or single object
-          const raw = json?.data ?? json;
-          const job: ScraperJobData = Array.isArray(raw) ? raw[0] : raw;
+          // scraperJob.ts returns the job directly (no wrapper)
+          const job: ScraperJobData = json;
           if (job?.status === "completed") {
             setScraperData(job);
             return;
@@ -521,8 +520,8 @@ export default function ModeSelection() {
                 onClick={() => navigate(`/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`)}
                 size="sm"
                 className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${highScore
-                  ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
-                  : "bg-gradient-to-r from-purple-500 to-orange-500"
+                    ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
+                    : "bg-gradient-to-r from-purple-500 to-orange-500"
                   }`}
               >
                 Start Automatic {highScore && "✨"}
