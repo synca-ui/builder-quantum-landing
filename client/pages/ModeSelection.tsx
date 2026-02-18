@@ -81,32 +81,51 @@ export default function ModeSelection() {
   const shouldShowMaitrScore = !!urlSource && !!decodedUrl;
 
   const fetchScraperJob = async () => {
-    if (!isValidJobId(jobId)) {
-      setFetchError(true);
-      return;
-    }
     setFetchError(false);
-    try {
-      const res = await fetch(`/api/scraper-jobs/${jobId}`);
-      if (!res.ok) {
-        setFetchError(true);
-        return;
+
+    // Primary: fetch by jobId (most reliable, no session mix-up)
+    if (isValidJobId(jobId)) {
+      try {
+        const res = await fetch(`/api/scraper-jobs/${jobId}`);
+        if (res.ok) {
+          const json = await res.json();
+          // scraper.ts wraps the job in { success, data } — unwrap it
+          const job: ScraperJobData = json?.data ?? json;
+          if (job?.status === "completed") {
+            setScraperData(job);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("ScraperJob fetch by id failed", err);
       }
-      const job: ScraperJobData = await res.json();
-      if (job?.status === "completed") {
-        setScraperData(job);
-      } else {
-        setFetchError(true);
-      }
-    } catch (err) {
-      console.error("ScraperJob fetch failed", err);
-      setFetchError(true);
     }
+
+    // Fallback: fetch by websiteUrl (for older navigations without jobId)
+    if (decodedUrl) {
+      try {
+        const res = await fetch(`/api/scraper-jobs?websiteUrl=${encodeURIComponent(decodedUrl)}`);
+        if (res.ok) {
+          const json = await res.json();
+          // May return { success, data } or array or single object
+          const raw = json?.data ?? json;
+          const job: ScraperJobData = Array.isArray(raw) ? raw[0] : raw;
+          if (job?.status === "completed") {
+            setScraperData(job);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("ScraperJob fetch by url failed", err);
+      }
+    }
+
+    setFetchError(true);
   };
 
   useEffect(() => {
-    if (jobId) fetchScraperJob();
-  }, [jobId]);
+    if (jobId || decodedUrl) fetchScraperJob();
+  }, [jobId, decodedUrl]);
 
   const webhookConfirmed = !!n8nData;
   const { maitrScore: hookScore, scoreStatus } = useMaitrScore(decodedUrl, webhookConfirmed);

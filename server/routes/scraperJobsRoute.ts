@@ -1,10 +1,8 @@
 import { Router, Request, Response } from "express";
-import { prisma } from "../db/prisma"; // Pfad ggf. anpassen
+import { prisma } from "../db/prisma";
 
 const router = Router();
 
-// GET /api/scraper-jobs/:id
-// Lädt genau einen ScraperJob per ID — sicher, keine Session-Verwechslung
 router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
 
