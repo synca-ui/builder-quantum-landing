@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   Settings, Sparkles, Copy, CheckCircle2, Globe,
   Clock, Phone, Mail, Instagram, ExternalLink, Utensils,
-  TrendingUp, AlertCircle
+  TrendingUp, AlertCircle, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Headbar from "@/components/Headbar";
@@ -60,6 +60,12 @@ function parseMenuUrl(raw: string | string[] | null | undefined): string | null 
   return raw;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidJobId(id: string | null): id is string {
+  return !!id && UUID_REGEX.test(id);
+}
+
 export default function ModeSelection() {
   const navigate = useNavigate();
   const { search } = useLocation();
@@ -69,32 +75,42 @@ export default function ModeSelection() {
   const { isLoading, n8nData } = useAnalysis();
   const [copied, setCopied] = useState(false);
   const [scraperData, setScraperData] = useState<ScraperJobData | null>(null);
+  const [fetchError, setFetchError] = useState(false);
 
   const decodedUrl = urlSource ? decodeURIComponent(urlSource) : null;
   const shouldShowMaitrScore = !!urlSource && !!decodedUrl;
 
-  useEffect(() => {
-    if (!jobId) return;
-
-    async function fetchScraperJob() {
-      try {
-        const res = await fetch(`/api/scraper-jobs/${jobId}`);
-        if (!res.ok) return;
-        const job: ScraperJobData = await res.json();
-        if (job?.status === "completed") {
-          setScraperData(job);
-        }
-      } catch (err) {
-        console.error("ScraperJob fetch failed", err);
-      }
+  const fetchScraperJob = async () => {
+    if (!isValidJobId(jobId)) {
+      setFetchError(true);
+      return;
     }
+    setFetchError(false);
+    try {
+      const res = await fetch(`/api/scraper-jobs/${jobId}`);
+      if (!res.ok) {
+        setFetchError(true);
+        return;
+      }
+      const job: ScraperJobData = await res.json();
+      if (job?.status === "completed") {
+        setScraperData(job);
+      } else {
+        setFetchError(true);
+      }
+    } catch (err) {
+      console.error("ScraperJob fetch failed", err);
+      setFetchError(true);
+    }
+  };
 
-    fetchScraperJob();
+  useEffect(() => {
+    if (jobId) fetchScraperJob();
   }, [jobId]);
 
   const webhookConfirmed = !!n8nData;
   const { maitrScore: hookScore, scoreStatus } = useMaitrScore(decodedUrl, webhookConfirmed);
-  const maitrScore = scraperData?.maitrScore ?? hookScore ?? 0;
+  const maitrScore = scraperData?.maitrScore ?? hookScore ?? null;
   const scoreIsLoading = isLoading || scoreStatus === "pending" || scoreStatus === "idle";
 
   const loadingMessages = [
@@ -103,7 +119,7 @@ export default function ModeSelection() {
     "Calculating Maitr Score…",
   ];
 
-  const highScore = maitrScore > 80;
+  const highScore = (maitrScore ?? 0) > 80;
 
   const hasExtractedData = scraperData?.status === "completed" || !!scraperData?.extractedData;
 
@@ -177,6 +193,7 @@ export default function ModeSelection() {
   }
 
   const getScoreRating = () => {
+    if (!maitrScore) return { text: "Unknown", color: "text-gray-500", icon: <AlertCircle className="w-4 h-4" /> };
     if (maitrScore >= 86) return { text: "Excellent", color: "text-emerald-600", icon: <CheckCircle2 className="w-4 h-4" /> };
     if (maitrScore >= 71) return { text: "Good", color: "text-teal-600", icon: <TrendingUp className="w-4 h-4" /> };
     if (maitrScore >= 51) return { text: "Fair", color: "text-amber-600", icon: <AlertCircle className="w-4 h-4" /> };
@@ -184,10 +201,10 @@ export default function ModeSelection() {
   };
 
   const getScoreBreakdown = () => ({
-    technicalScore: Math.min(25, Math.round(maitrScore * 0.3)),
-    contentScore: Math.min(20, Math.round(maitrScore * 0.25)),
-    businessInfoScore: Math.min(30, Math.round(maitrScore * 0.35)),
-    digitalPresenceScore: Math.min(25, Math.round(maitrScore * 0.25)),
+    technicalScore: Math.min(25, Math.round((maitrScore ?? 0) * 0.3)),
+    contentScore: Math.min(20, Math.round((maitrScore ?? 0) * 0.25)),
+    businessInfoScore: Math.min(30, Math.round((maitrScore ?? 0) * 0.35)),
+    digitalPresenceScore: Math.min(25, Math.round((maitrScore ?? 0) * 0.25)),
   });
 
   const getExtractionInfo = () => {
@@ -234,7 +251,7 @@ export default function ModeSelection() {
               : "Select the option that best fits your needs to get started."}
           </p>
 
-          {shouldShowMaitrScore && !scoreIsLoading && maitrScore > 0 && (
+          {shouldShowMaitrScore && !scoreIsLoading && maitrScore !== null && maitrScore > 0 && (
             <div className="mt-8 space-y-6">
               {hasExtractedData && extractedCount > 0 && (
                 <div className="inline-flex items-center gap-3 px-5 py-3 bg-white border border-teal-100 rounded-2xl shadow-sm">

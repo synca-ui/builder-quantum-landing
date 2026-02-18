@@ -18,6 +18,9 @@ import {
   LayoutDashboard,
   Link as LinkIcon,
   Loader2,
+  AlertCircle,
+  XCircle,
+  CheckCircle2,
 } from "lucide-react";
 const MaitrWorkflowAnimation = lazy(() => import("@/components/MaitrWorkflowAnimation"));
 import { Button } from "@/components/ui/button";
@@ -63,20 +66,20 @@ export default function Index() {
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
   const [isLoadingMagic, setIsLoadingMagic] = useState(false);
+  const [inputError, setInputError] = useState<"invalid_format" | "server_error" | null>(null);
   const navigate = useNavigate();
 
-  const isMagicLinkValid = (link: string) => /^https?:\/\//i.test(link.trim());
+  const isMagicLinkValid = (link: string) => /^https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i.test(link.trim());
 
   const handleMagicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setInputError(null);
     if (!isMagicLinkValid(magicLink)) {
-      alert('Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)');
+      setInputError("invalid_format");
       return;
     }
     setIsLoadingMagic(true);
     try {
-      console.log('🚀 Sending to n8n:', magicLink);
-
       const res = await fetch(`/api/forward-to-n8n`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,28 +89,19 @@ export default function Index() {
         }),
       });
 
-      console.log('📥 Response status:', res.status);
-
       const data = await res.json();
-      console.log('📦 Response data:', data);
 
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status} - ${JSON.stringify(data)}`);
+      if (!res.ok || !data.success) {
+        setInputError("server_error");
+        setIsLoadingMagic(false);
+        return;
       }
 
-      if (data.success) {
-        console.log('✅ Success! Navigating...');
-        const encoded = encodeURIComponent(magicLink);
-        const jobId = data.jobId ?? data.scraperJob?.id ?? "";
-        const jobParam = jobId ? `&jobId=${jobId}` : "";
-        navigate(`/mode-selection?sourceLink=${encoded}${jobParam}`);
-
-      } else {
-        throw new Error('API returned success: false');
-      }
+      const encoded = encodeURIComponent(magicLink);
+      navigate(`/mode-selection?sourceLink=${encoded}`);
     } catch (err) {
-      console.error('❌ Error:', err);
-      alert(`Fehler: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`);
+      console.error("Magic submit error:", err);
+      setInputError("server_error");
       setIsLoadingMagic(false);
     }
   };
@@ -481,13 +475,13 @@ export default function Index() {
                 <div className="flex flex-col md:flex-row items-center gap-4">
                   <form
                     onSubmit={handleMagicSubmit}
-                    className="flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl border border-white/20 p-1.5 flex-1"
+                    className={`flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl p-1.5 flex-1 border transition-colors duration-300 ${inputError ? "border-red-300 shadow-red-100" : "border-white/20"}`}
                   >
                     <div className="flex items-center gap-3 px-4 flex-1">
                       <LinkIcon className="w-5 h-5 text-gray-500" />
                       <input
                         value={magicLink}
-                        onChange={(e) => setMagicLink(e.target.value)}
+                        onChange={(e) => { setMagicLink(e.target.value); setInputError(null); }}
                         placeholder="Google Maps oder Website-Link einfügen..."
                         className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
                         disabled={isLoadingMagic}
@@ -518,6 +512,73 @@ export default function Index() {
                       </button>
                     </div>
                   </form>
+
+                  {/* ─── INLINE ERROR FEEDBACK ─── */}
+                  {inputError && (
+                    <div className="w-full mt-3 animate-in slide-in-from-top-2 duration-300">
+                      <div className={`rounded-2xl border p-4 backdrop-blur-sm ${inputError === "invalid_format"
+                          ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
+                          : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
+                        }`}>
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className={`p-1.5 rounded-lg shrink-0 ${inputError === "invalid_format" ? "bg-red-50" : "bg-orange-50"}`}>
+                            <XCircle className={`w-4 h-4 ${inputError === "invalid_format" ? "text-red-500" : "text-orange-500"}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-gray-900">
+                              {inputError === "invalid_format"
+                                ? "Hast du den Link richtig eingegeben?"
+                                : "Da ist leider etwas schiefgelaufen."}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {inputError === "invalid_format"
+                                ? "Der Link muss eine vollständige URL mit Domain sein."
+                                : "Unser Server konnte die Analyse nicht starten. Bitte versuch es erneut."}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setInputError(null)}
+                            className="p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+                            aria-label="Fehler schließen"
+                          >
+                            <XCircle className="w-3.5 h-3.5 text-gray-400" />
+                          </button>
+                        </div>
+
+                        {inputError === "invalid_format" && (
+                          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mb-3">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Erwartetes Format</p>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                                <code className="text-xs text-gray-700 font-mono">https://www.restaurant-name.de</code>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                                <code className="text-xs text-gray-700 font-mono">https://maps.google.com/...</code>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                                <code className="text-xs text-gray-400 font-mono line-through">restaurant-name.de</code>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                                <code className="text-xs text-gray-400 font-mono line-through">Nur ein Name oder Wort</code>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => { setInputError(null); document.querySelector<HTMLInputElement>('input[aria-label="Link einfügen"]')?.focus(); }}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Nochmal versuchen
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex-shrink-0">
                     <a href="#demo" className="inline-flex">
