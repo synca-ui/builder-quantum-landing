@@ -321,19 +321,19 @@ export default function ModeSelection() {
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Technical Infrastructure</span>
+                      <span className="text-sm font-medium text-gray-700">Technische Infrastruktur</span>
                       <span className="text-sm font-bold text-gray-900">{scoreBreakdown?.technicalScore || 0}/25</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Content Quality</span>
+                      <span className="text-sm font-medium text-gray-700">Erscheinungsbild</span>
                       <span className="text-sm font-bold text-gray-900">{scoreBreakdown?.contentScore || 0}/20</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Business Information</span>
+                      <span className="text-sm font-medium text-gray-700">Unternehmensinformationen</span>
                       <span className="text-sm font-bold text-gray-900">{scoreBreakdown?.businessInfoScore || 0}/30</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Digital Presence</span>
+                      <span className="text-sm font-medium text-gray-700">Digitale Präsenz</span>
                       <span className="text-sm font-bold text-gray-900">{scoreBreakdown?.digitalPresenceScore || 0}/25</span>
                     </div>
                     <div className="pt-3 border-t border-gray-200">
@@ -408,24 +408,24 @@ export default function ModeSelection() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {businessName && <InfoCard icon={<Globe className="w-4 h-4" />} label="Business Name" value={businessName} />}
+              {businessName && <InfoCard icon={<Globe className="w-4 h-4" />} label="Name" value={businessName} />}
               {businessType && <InfoCard icon={<Utensils className="w-4 h-4" />} label="Business Type" value={businessType} />}
-              {phone && <InfoCard icon={<Phone className="w-4 h-4" />} label="Phone" value={phone} />}
+              {phone && <InfoCard icon={<Phone className="w-4 h-4" />} label="Telefon" value={phone} />}
               {email && <InfoCard icon={<Mail className="w-4 h-4" />} label="Email" value={email} />}
               {instagramUrl && (
-                <InfoCardWithLink icon={<Instagram className="w-4 h-4" />} label="Instagram" value="Profile Found" link={instagramUrl} />
+                <InfoCardWithLink icon={<Instagram className="w-4 h-4" />} label="Instagram" value="Profil gefunden" link={instagramUrl} />
               )}
               {menuUrl && (
-                <InfoCardWithLink icon={<Utensils className="w-4 h-4" />} label="Menu" value="Available Online" link={menuUrl} />
+                <InfoCardWithLink icon={<Utensils className="w-4 h-4" />} label="Speisekarte" value="Verfügbar Online" link={menuUrl} />
               )}
-              {hasReservation && <InfoCard icon={<Clock className="w-4 h-4" />} label="Reservations" value="System Detected" />}
-              {isDeepScrapeReady && <InfoCard icon={<CheckCircle2 className="w-4 h-4" />} label="Deep Scrape" value="Ready for Analysis" />}
+              {hasReservation && <InfoCard icon={<Clock className="w-4 h-4" />} label="Reservierungen" value="System gefunden" />}
+              {isDeepScrapeReady && <InfoCard icon={<CheckCircle2 className="w-4 h-4" />} label="Deep Scrape" value="Bereit für Analyse" />}
             </div>
 
             <div className="mt-5 pt-5 border-t border-gray-100">
               <p className="text-xs text-gray-500 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-teal-500" />
-                Mit dem automatischen Modus verwenden wir diese Daten, um Ihre Website sofort zu generieren
+                Mit dem automatischen Modus verwenden wir diese Daten, um Ihre Web-App sofort zu generieren
               </p>
             </div>
           </div>
@@ -520,8 +520,8 @@ export default function ModeSelection() {
                 onClick={() => navigate(`/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`)}
                 size="sm"
                 className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${highScore
-                    ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
-                    : "bg-gradient-to-r from-purple-500 to-orange-500"
+                  ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200"
+                  : "bg-gradient-to-r from-purple-500 to-orange-500"
                   }`}
               >
                 Start Automatic {highScore && "✨"}
