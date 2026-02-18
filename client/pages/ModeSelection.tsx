@@ -83,7 +83,7 @@ export default function ModeSelection() {
   const fetchScraperJob = async () => {
     setFetchError(false);
 
-    // Primary: fetch by jobId (most reliable, no session mix-up)
+    // Primary: fetch by jobId (most reliable, no session mix-upp)
     if (isValidJobId(jobId)) {
       try {
         const res = await fetch(`/api/scraper-jobs/${jobId}`);
