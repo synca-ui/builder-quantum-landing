@@ -209,7 +209,7 @@ function Chip({ icon, label, value, href }: { icon: React.ReactNode; label: stri
 }
 
 /* ─────────────────────────────────────────────────────────
-   Main export — drop-in replacement for old MaitrScoreCircle
+   Main export — drop-in replacement for old MaitrScoreCirclee
 ───────────────────────────────────────────────────────── */
 export default function MaitrScoreCircle({
   score,
