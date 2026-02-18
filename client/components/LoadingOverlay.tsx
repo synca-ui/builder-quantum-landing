@@ -5,6 +5,9 @@ import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import loaderData from "../assets/Loader.json";
 import loaderCatData from "../assets/Loadercat.json";
 import prepareFoodData from "../assets/PrepareFood.json"
+import CookingPreloader from "../assets/CookingPreloader.json";
+import MortarAndPestle from "../assets/Loading48.json";
+import ChefHat from "../assets/Burger.json";
 
 interface Props {
   visible: boolean;
@@ -12,7 +15,7 @@ interface Props {
   onCancel?: () => void;
 }
 
-const ANIMATIONS = [loaderData, loaderCatData, prepareFoodData];
+const ANIMATIONS = [loaderData, loaderCatData, prepareFoodData, CookingPreloader, MortarAndPestle, ChefHat];
 
 function randomIndex(exclude?: number): number {
   const pool = ANIMATIONS.map((_, i) => i).filter((i) => i !== exclude);
@@ -153,7 +156,7 @@ export default function LoadingOverlay({ visible, messages = [], onCancel }: Pro
             </div>
 
             <div className="flex justify-between items-center text-[11px] font-semibold px-0.5">
-              <span className="text-gray-400 tracking-widest uppercase">Analyzing</span>
+              <span className="text-gray-400 tracking-widest uppercase">Analysiere</span>
               <span className="bg-gradient-to-r from-cyan-500 to-orange-400 bg-clip-text text-transparent tabular-nums">
                 {Math.round(progress)}%
               </span>
