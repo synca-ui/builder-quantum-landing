@@ -10,6 +10,7 @@ import { scraperJobRouter } from "./routes/scraperJob";
 import { handleForwardN8n } from "./routes/n8nProxy";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import scraperJobsRoute from "./routes/scraperJobsRoute"
 
 import { handleDemo } from "./routes/demo";
 import { handleSubdomainRequest } from "./routes/subdomains";
@@ -70,6 +71,7 @@ export function createServer() {
 
   // ✅ Scraper Job Router
   app.use("/api/scraper-job", scraperJobRouter);
+  app.use("/api/scraper-jobs", scraperJobsRoute);
 
   // Use aggregated API router
   app.use("/api", apiRouter);

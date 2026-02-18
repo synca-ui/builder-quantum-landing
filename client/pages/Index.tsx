@@ -98,7 +98,10 @@ export default function Index() {
       if (data.success) {
         console.log('✅ Success! Navigating...');
         const encoded = encodeURIComponent(magicLink);
-        navigate(`/mode-selection?sourceLink=${encoded}`);
+        const jobId = data.jobId ?? data.scraperJob?.id ?? "";
+        const jobParam = jobId ? `&jobId=${jobId}` : "";
+        navigate(`/mode-selection?sourceLink=${encoded}${jobParam}`);
+
       } else {
         throw new Error('API returned success: false');
       }
