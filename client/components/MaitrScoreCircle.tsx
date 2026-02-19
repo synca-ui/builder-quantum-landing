@@ -187,16 +187,31 @@ export default function MaitrScoreCircle({
         @keyframes blob2 { 0%,100%{transform:translate(0,0)scale(1)} 35%{transform:translate(-35px,40px)scale(1.1)} 65%{transform:translate(40px,-20px)scale(0.92)} }
         @keyframes blob3 { 0%,100%{transform:translate(0,0)scale(1)} 50%{transform:translate(25px,25px)scale(1.08)} }
         @keyframes blob4 { 0%,100%{transform:translate(0,0)scale(1)} 45%{transform:translate(-20px,-30px)scale(1.06)} }
-        @keyframes ms-in { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        .ms-in { animation: ms-in 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes ms-in { from{opacity:0;transform:translateY(18px) scale(0.99)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .ms-in { animation: ms-in 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+        .ms-card-lift { transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s ease; }
+        .ms-card-lift:hover { transform: translateY(-4px); }
       `}</style>
 
-      {/* ── Card ── */}
-      <div className="ms-in" style={{ position: "relative", borderRadius: 22, overflow: "hidden" }}>
+      {/* ── Card ──
+          overflow:hidden NICHT am äußeren Wrapper — schneidet Schatten ab!
+          Stattdessen clippt der innere Blob-Container.                        */}
+      <div className="ms-in ms-card-lift" style={{
+        position: "relative",
+        borderRadius: 22,
+        boxShadow: [
+          /* Scharfe Kante */   "0 0 0 0.5px rgba(0,0,0,0.06)",
+          /* Top-Highlight */   "0 2px 0 rgba(255,255,255,0.85) inset",
+          /* Nah-Schatten */    "0 4px 10px rgba(0,0,0,0.07)",
+          /* Mid-Schatten */    "0 14px 30px rgba(0,0,0,0.10)",
+          /* Tiefer Schatten */ "0 36px 72px rgba(0,0,0,0.09)",
+          /* Farbiger Glow */   `0 20px 60px ${rating.accent}28`,
+        ].join(", "),
+      }}>
 
-        {/* Pastell-Hintergrund */}
+        {/* Pastell-Blobs — overflow:hidden hier */}
         <div aria-hidden style={{
-          position: "absolute", inset: 0,
+          position: "absolute", inset: 0, borderRadius: 22, overflow: "hidden",
           background: "linear-gradient(140deg,#eef9ff 0%,#faf5ff 45%,#fff8f0 100%)",
         }}>
           <div style={{ position: "absolute", width: 380, height: 380, top: -100, left: -80, borderRadius: "50%", background: "radial-gradient(circle,rgba(186,230,255,0.75) 0%,transparent 68%)", animation: "blob1 10s ease-in-out infinite" }} />
@@ -205,14 +220,15 @@ export default function MaitrScoreCircle({
           <div style={{ position: "absolute", width: 240, height: 240, bottom: 10, left: 220, borderRadius: "50%", background: "radial-gradient(circle,rgba(167,243,208,0.5) 0%,transparent 68%)", animation: "blob4 18s ease-in-out infinite" }} />
         </div>
 
-        {/* Glassmorphism */}
+        {/* Glassmorphism — Schatten sitzt am Wrapper, nicht hier */}
         <div style={{
           position: "relative", zIndex: 1,
-          background: "rgba(255,255,255,0.58)",
-          backdropFilter: "blur(28px)",
-          WebkitBackdropFilter: "blur(28px)",
-          border: "1px solid rgba(255,255,255,0.88)",
-          boxShadow: "0 0 0 0.5px rgba(0,0,0,0.04), 0 2px 0 rgba(255,255,255,1) inset, 0 18px 52px rgba(0,0,0,0.10), 0 4px 14px rgba(0,0,0,0.06)",
+          background: "rgba(255,255,255,0.56)",
+          backdropFilter: "blur(32px)",
+          WebkitBackdropFilter: "blur(32px)",
+          border: "1px solid rgba(255,255,255,0.92)",
+          /* Nur innerer Highlight, kein Box-Shadow mehr (kommt vom Wrapper) */
+          boxShadow: "0 1.5px 0 rgba(255,255,255,1) inset",
           borderRadius: 22,
           padding: "28px 28px 26px",
         }}>

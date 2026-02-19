@@ -2,11 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
 
 // ── Adjust these import paths to wherever you store your Lottie JSON files ──
-import loaderData from "../assets/Loader.json";
 import loaderCatData from "../assets/Loadercat.json";
 import prepareFoodData from "../assets/PrepareFood.json"
 import CookingPreloader from "../assets/CookingPreloader.json";
-import MortarAndPestle from "../assets/Loading48.json";
 import ChefHat from "../assets/Burger.json";
 
 interface Props {
@@ -15,7 +13,7 @@ interface Props {
   onCancel?: () => void;
 }
 
-const ANIMATIONS = [loaderData, loaderCatData, prepareFoodData, CookingPreloader, MortarAndPestle, ChefHat];
+const ANIMATIONS = [loaderCatData, prepareFoodData, CookingPreloader, ChefHat];
 
 function randomIndex(exclude?: number): number {
   const pool = ANIMATIONS.map((_, i) => i).filter((i) => i !== exclude);
