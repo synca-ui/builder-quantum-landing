@@ -6,12 +6,11 @@ const router = express.Router();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/scraper-job/score?websiteUrl=...
-// Nur Score + Status (für den useMaitrScore-Hook)
+// Nur Score + Status (für useMaitrScore-Hook)
 // ─────────────────────────────────────────────────────────────────────────────
 router.get("/score", async (req, res) => {
   try {
     const { websiteUrl } = req.query;
-
     console.log("[ScraperJob] Score request for:", websiteUrl);
 
     if (!websiteUrl || typeof websiteUrl !== "string") {
@@ -22,10 +21,7 @@ router.get("/score", async (req, res) => {
     const job = await prisma.scraperJob.findFirst({
       where: { websiteUrl },
       orderBy: { createdAt: "desc" },
-      select: {
-        maitrScore: true,
-        status: true,
-      },
+      select: { maitrScore: true, status: true },
     });
 
     console.log("[ScraperJob] Found job:", job);
@@ -35,10 +31,7 @@ router.get("/score", async (req, res) => {
       return res.json({ maitrScore: null, status: "not_found" });
     }
 
-    res.json({
-      maitrScore: job.maitrScore,
-      status: job.status,
-    });
+    res.json({ maitrScore: job.maitrScore, status: job.status });
   } catch (error) {
     console.error("[ScraperJob] Error fetching maitrScore:", error);
     res.status(500).json({
@@ -50,12 +43,11 @@ router.get("/score", async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/scraper-job/full?websiteUrl=...
-// Alle extrahierten Felder — für die Score-Card im Frontend
+// ALLE extrahierten Felder — für die Score-Card im Frontend
 // ─────────────────────────────────────────────────────────────────────────────
 router.get("/full", async (req, res) => {
   try {
     const { websiteUrl } = req.query;
-
     console.log("[ScraperJob] Full request for:", websiteUrl);
 
     if (!websiteUrl || typeof websiteUrl !== "string") {
@@ -79,7 +71,6 @@ router.get("/full", async (req, res) => {
         hasReservation: true,
         analysisFeedback: true,
         isDeepScrapeReady: true,
-        googleSearchQuery: true,
         createdAt: true,
         startedAt: true,
         completedAt: true,
@@ -87,29 +78,29 @@ router.get("/full", async (req, res) => {
       },
     });
 
-    console.log("[ScraperJob] Full job found:", job?.id, "status:", job?.status);
+    console.log("[ScraperJob] Full job:", job?.id, "status:", job?.status);
 
     if (!job) {
       return res.json({ job: null, status: "not_found" });
     }
 
-    // Felder aus extractedData als Fallback nutzen, falls Top-Level leer
-    const extractedData = (job.extractedData as any) ?? {};
+    // extractedData als JSON-Fallback (n8n schreibt manchmal nur dort hin)
+    const ex = (job.extractedData as Record<string, any>) ?? {};
 
     const merged = {
       id: job.id,
       status: job.status,
       websiteUrl: job.websiteUrl,
-      maitrScore: job.maitrScore ?? extractedData.maitrScore ?? null,
-      businessName: job.businessName || extractedData.businessName || null,
-      businessType: job.businessType || extractedData.businessType || null,
-      email: job.email || extractedData.email || null,
-      phone: job.phone || extractedData.phone || null,
-      instagramUrl: job.instagramUrl || extractedData.instagramUrl || null,
-      menuUrl: job.menuUrl || extractedData.menuUrl || null,
-      hasReservation: job.hasReservation ?? extractedData.hasReservation ?? false,
-      analysisFeedback: job.analysisFeedback || extractedData.analysisFeedback || null,
-      isDeepScrapeReady: job.isDeepScrapeReady ?? extractedData.isDeepScrapeReady ?? false,
+      maitrScore: job.maitrScore ?? ex.maitrScore ?? null,
+      businessName: job.businessName || ex.businessName || null,
+      businessType: job.businessType || ex.businessType || null,
+      email: job.email || ex.email || null,
+      phone: job.phone || ex.phone || null,
+      instagramUrl: job.instagramUrl || ex.instagramUrl || null,
+      menuUrl: job.menuUrl || ex.menuUrl || null,
+      hasReservation: job.hasReservation ?? ex.hasReservation ?? false,
+      analysisFeedback: job.analysisFeedback || ex.analysisFeedback || null,
+      isDeepScrapeReady: job.isDeepScrapeReady ?? ex.isDeepScrapeReady ?? false,
       createdAt: job.createdAt,
       startedAt: job.startedAt,
       completedAt: job.completedAt,
