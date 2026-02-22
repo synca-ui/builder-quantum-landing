@@ -65,21 +65,6 @@ to = "https://builder-quantum-landing-production.up.railway.app/api/:splat"
 status = 200
 force = true
 
-# check.maitr.de → /check-landing (Subdomain-Weiterleitung)
-# DNS: check.maitr.de CNAME → dieser Netlify-Site
-# Wenn jemand check.maitr.de besucht, wird er direkt zur Check-Seite geleitet
-[[redirects]]
-from = "https://check.maitr.de/"
-to = "/check-landing"
-status = 200
-force = true
-
-[[redirects]]
-from = "https://check.maitr.de/*"
-to = "/check-landing"
-status = 200
-force = true
-
 # Fallback für Single-Page-Application
 [[redirects]]
 from = "/*"
