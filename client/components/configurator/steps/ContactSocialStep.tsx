@@ -150,7 +150,9 @@ export function ContactSocialStep({
     }
 
     // Update via vorhandene action: updateContactInfo mit contactMethods
-    actions.contact.updateContactInfo({ contactMethods: updatedMethods } as any);
+    actions.contact.updateContactInfo({
+      contactMethods: updatedMethods,
+    } as any);
   };
 
   const instagramSync = (contact as any).instagramSync || false;
@@ -207,7 +209,9 @@ export function ContactSocialStep({
                   icon={platform.icon}
                   placeholder={platform.placeholder}
                   value={getSocialValue(platform.id)}
-                  onChange={(value) => actions.contact.updateSocialMedia(platform.id, value)}
+                  onChange={(value) =>
+                    actions.contact.updateSocialMedia(platform.id, value)
+                  }
                 />
               </div>
             ))}

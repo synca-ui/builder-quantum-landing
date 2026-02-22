@@ -9,15 +9,19 @@
  * 3. Nur onChange triggern wenn Wert sich wirklich geändert hat
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Input } from './input';
-import { Textarea } from './textarea';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Input } from "./input";
+import { Textarea } from "./textarea";
 
 // ============================================
 // TYPES
 // ============================================
 
-interface DebouncedInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+interface DebouncedInputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "onChange" | "value"
+  > {
   /** Aktueller Wert aus dem Store */
   value: string;
   /** Callback wenn der Wert sich ändert (debounced) */
@@ -34,8 +38,22 @@ interface DebouncedInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEl
 // COMPONENT
 // ============================================
 
-export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, DebouncedInputProps>(
-  ({ value, onChange, debounceMs = 300, multiline = false, rows, className, ...props }, ref) => {
+export const DebouncedInput = React.forwardRef<
+  HTMLInputElement | HTMLTextAreaElement,
+  DebouncedInputProps
+>(
+  (
+    {
+      value,
+      onChange,
+      debounceMs = 300,
+      multiline = false,
+      rows,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     // Lokaler State für sofortiges visuelles Feedback
     const [localValue, setLocalValue] = useState(value);
 
@@ -49,34 +67,43 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaEl
     useEffect(() => {
       // Nur updaten wenn sich der externe Wert wirklich geändert hat
       if (value !== prevValueRef.current && value !== localValue) {
-        console.log('[DebouncedInput] External value changed:', { from: prevValueRef.current, to: value });
+        console.log("[DebouncedInput] External value changed:", {
+          from: prevValueRef.current,
+          to: value,
+        });
         setLocalValue(value);
         prevValueRef.current = value;
       }
     }, [value]); // ✅ Intentionally excluding localValue
 
     // ✅ FIX: Debounced onChange Handler mit Gleichheitsprüfung
-    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const newValue = e.target.value;
+    const handleChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const newValue = e.target.value;
 
-      // Sofortiges visuelles Feedback
-      setLocalValue(newValue);
+        // Sofortiges visuelles Feedback
+        setLocalValue(newValue);
 
-      // Clear vorheriges Timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+        // Clear vorheriges Timeout
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
 
-      // ✅ FIX: Nur Store updaten wenn sich der Wert geändert hat
-      if (newValue !== prevValueRef.current) {
-        // Neues Timeout für Store-Update
-        timeoutRef.current = setTimeout(() => {
-          console.log('[DebouncedInput] Triggering onChange:', { from: prevValueRef.current, to: newValue });
-          prevValueRef.current = newValue;
-          onChange(newValue);
-        }, debounceMs);
-      }
-    }, [onChange, debounceMs]);
+        // ✅ FIX: Nur Store updaten wenn sich der Wert geändert hat
+        if (newValue !== prevValueRef.current) {
+          // Neues Timeout für Store-Update
+          timeoutRef.current = setTimeout(() => {
+            console.log("[DebouncedInput] Triggering onChange:", {
+              from: prevValueRef.current,
+              to: newValue,
+            });
+            prevValueRef.current = newValue;
+            onChange(newValue);
+          }, debounceMs);
+        }
+      },
+      [onChange, debounceMs],
+    );
 
     // ✅ FIX: Blur Handler - sofortiges Update
     const handleBlur = useCallback(() => {
@@ -88,19 +115,25 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaEl
 
       // Nur onChange triggern wenn Wert sich geändert hat
       if (localValue !== prevValueRef.current) {
-        console.log('[DebouncedInput] Blur - immediate update:', { from: prevValueRef.current, to: localValue });
+        console.log("[DebouncedInput] Blur - immediate update:", {
+          from: prevValueRef.current,
+          to: localValue,
+        });
         prevValueRef.current = localValue;
         onChange(localValue);
       }
     }, [localValue, onChange]);
 
     // ✅ FIX: Enter-Taste Handler
-    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !multiline) {
-        // Blur triggert sofortiges Update
-        e.currentTarget.blur();
-      }
-    }, [multiline]);
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !multiline) {
+          // Blur triggert sofortiges Update
+          e.currentTarget.blur();
+        }
+      },
+      [multiline],
+    );
 
     // ✅ FIX: Cleanup bei Unmount - führe pending Updates aus
     useEffect(() => {
@@ -142,10 +175,10 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement | HTMLTextAreaEl
         {...props}
       />
     );
-  }
+  },
 );
 
-DebouncedInput.displayName = 'DebouncedInput';
+DebouncedInput.displayName = "DebouncedInput";
 
 // ============================================
 // SPECIALIZED VARIANTS
@@ -155,7 +188,8 @@ DebouncedInput.displayName = 'DebouncedInput';
  * Debounced Number Input
  * Für Preis-, Mengen- und Zahlen-Eingaben
  */
-interface DebouncedNumberInputProps extends Omit<DebouncedInputProps, 'value' | 'onChange'> {
+interface DebouncedNumberInputProps
+  extends Omit<DebouncedInputProps, "value" | "onChange"> {
   value: number | string;
   onChange: (value: number) => void;
   min?: number;
@@ -163,65 +197,65 @@ interface DebouncedNumberInputProps extends Omit<DebouncedInputProps, 'value' | 
   step?: number;
 }
 
-export const DebouncedNumberInput = React.forwardRef<HTMLInputElement, DebouncedNumberInputProps>(
-  ({ value, onChange, min, max, step = 1, ...props }, ref) => {
-    const handleChange = useCallback((stringValue: string) => {
+export const DebouncedNumberInput = React.forwardRef<
+  HTMLInputElement,
+  DebouncedNumberInputProps
+>(({ value, onChange, min, max, step = 1, ...props }, ref) => {
+  const handleChange = useCallback(
+    (stringValue: string) => {
       const numValue = parseFloat(stringValue);
       if (!isNaN(numValue)) {
         onChange(numValue);
-      } else if (stringValue === '' || stringValue === '-') {
+      } else if (stringValue === "" || stringValue === "-") {
         // Erlaubt leeres Feld oder Minus-Zeichen während der Eingabe
         onChange(0);
       }
-    }, [onChange]);
+    },
+    [onChange],
+  );
 
-    return (
-      <DebouncedInput
-        ref={ref}
-        type="number"
-        value={String(value)}
-        onChange={handleChange}
-        min={min}
-        max={max}
-        step={step}
-        {...props}
-      />
-    );
-  }
-);
+  return (
+    <DebouncedInput
+      ref={ref}
+      type="number"
+      value={String(value)}
+      onChange={handleChange}
+      min={min}
+      max={max}
+      step={step}
+      {...props}
+    />
+  );
+});
 
-DebouncedNumberInput.displayName = 'DebouncedNumberInput';
+DebouncedNumberInput.displayName = "DebouncedNumberInput";
 
 /**
  * Debounced Color Input
  * Für Farbauswahl mit Hex-Validierung
  */
-interface DebouncedColorInputProps extends Omit<DebouncedInputProps, 'type'> {
+interface DebouncedColorInputProps extends Omit<DebouncedInputProps, "type"> {
   showPreview?: boolean;
 }
 
-export const DebouncedColorInput = React.forwardRef<HTMLInputElement, DebouncedColorInputProps>(
-  ({ showPreview = true, className, ...props }, ref) => {
-    return (
-      <div className="flex items-center gap-2">
-        {showPreview && (
-          <div
-            className="w-10 h-10 rounded-lg border-2 border-gray-200 shadow-sm"
-            style={{ backgroundColor: props.value }}
-          />
-        )}
-        <DebouncedInput
-          ref={ref}
-          type="color"
-          className={className}
-          {...props}
+export const DebouncedColorInput = React.forwardRef<
+  HTMLInputElement,
+  DebouncedColorInputProps
+>(({ showPreview = true, className, ...props }, ref) => {
+  return (
+    <div className="flex items-center gap-2">
+      {showPreview && (
+        <div
+          className="w-10 h-10 rounded-lg border-2 border-gray-200 shadow-sm"
+          style={{ backgroundColor: props.value }}
         />
-      </div>
-    );
-  }
-);
+      )}
+      <DebouncedInput ref={ref} type="color" className={className} {...props} />
+    </div>
+  );
+});
 
-DebouncedColorInput.displayName = 'DebouncedColorInput';
+DebouncedColorInput.displayName = "DebouncedColorInput";
 
 // ============================================
 // PERFORMANCE NOTES

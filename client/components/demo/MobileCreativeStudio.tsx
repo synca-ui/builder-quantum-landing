@@ -3,7 +3,7 @@
  * Optimierte Version für mobile Geräte mit Touch-freundlicher Navigation
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Palette,
   Eye,
@@ -13,24 +13,29 @@ import {
   ArrowLeft,
   Share2,
   Download,
-  Settings
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { LivePhoneFrame } from '@/components/preview/LivePhoneFrame';
-import { TemplatePreviewContent } from '@/components/configurator/preview/TemplatePreviewContent';
-import { defaultTemplates } from '@/components/template/TemplateRegistry';
+  Settings,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { LivePhoneFrame } from "@/components/preview/LivePhoneFrame";
+import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
+import { defaultTemplates } from "@/components/template/TemplateRegistry";
 
 interface MobileCreativeStudioProps {
   onBack?: () => void;
 }
 
-export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState('minimalist');
-  const [activeView, setActiveView] = useState<'preview' | 'templates' | 'customize'>('preview');
+export default function MobileCreativeStudio({
+  onBack,
+}: MobileCreativeStudioProps) {
+  const [selectedTemplate, setSelectedTemplate] = useState("minimalist");
+  const [activeView, setActiveView] = useState<
+    "preview" | "templates" | "customize"
+  >("preview");
   const [showFullPreview, setShowFullPreview] = useState(false);
 
   const templates = defaultTemplates;
-  const currentTemplate = templates.find(t => t.id === selectedTemplate) || templates[0];
+  const currentTemplate =
+    templates.find((t) => t.id === selectedTemplate) || templates[0];
 
   if (showFullPreview) {
     return (
@@ -69,12 +74,17 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {onBack && (
-              <button onClick={onBack} className="p-1 rounded-full hover:bg-gray-100">
+              <button
+                onClick={onBack}
+                className="p-1 rounded-full hover:bg-gray-100"
+              >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
             )}
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Creative Studio</h1>
+              <h1 className="text-lg font-bold text-gray-900">
+                Creative Studio
+              </h1>
               <p className="text-xs text-gray-500">Mobile Editor</p>
             </div>
           </div>
@@ -97,8 +107,12 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
               <Eye className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">{currentTemplate.name}</p>
-              <p className="text-xs text-gray-500">{currentTemplate.description}</p>
+              <p className="font-medium text-gray-900">
+                {currentTemplate.name}
+              </p>
+              <p className="text-xs text-gray-500">
+                {currentTemplate.description}
+              </p>
             </div>
           </div>
           <button
@@ -114,18 +128,18 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
       <div className="bg-white border-b border-gray-200">
         <div className="flex">
           {[
-            { key: 'preview', label: 'Preview', icon: Eye },
-            { key: 'templates', label: 'Templates', icon: Layout },
-            { key: 'customize', label: 'Anpassen', icon: Palette }
+            { key: "preview", label: "Preview", icon: Eye },
+            { key: "templates", label: "Templates", icon: Layout },
+            { key: "customize", label: "Anpassen", icon: Palette },
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveView(key as any)}
               className={cn(
-                'flex-1 flex flex-col items-center py-3 border-b-2 transition-colors',
+                "flex-1 flex flex-col items-center py-3 border-b-2 transition-colors",
                 activeView === key
-                  ? 'border-pink-600 text-pink-600'
-                  : 'border-transparent text-gray-500'
+                  ? "border-pink-600 text-pink-600"
+                  : "border-transparent text-gray-500",
               )}
             >
               <Icon className="w-5 h-5 mb-1" />
@@ -138,7 +152,7 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
         {/* Preview Tab */}
-        {activeView === 'preview' && (
+        {activeView === "preview" && (
           <div className="p-4 flex justify-center bg-gradient-to-br from-gray-100 to-gray-200 min-h-full">
             <div className="w-full max-w-sm">
               <LivePhoneFrame widthClass="w-full" heightClass="h-[500px]">
@@ -148,10 +162,14 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
               {/* Preview Controls */}
               <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium text-gray-900">Live Preview</span>
+                  <span className="font-medium text-gray-900">
+                    Live Preview
+                  </span>
                   <div className="flex items-center space-x-1">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-green-600 font-medium">Live</span>
+                    <span className="text-xs text-green-600 font-medium">
+                      Live
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -173,11 +191,15 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
         )}
 
         {/* Templates Tab */}
-        {activeView === 'templates' && (
+        {activeView === "templates" && (
           <div className="p-4">
             <div className="mb-4">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Template wählen</h2>
-              <p className="text-sm text-gray-600">Wähle das perfekte Design für dein Restaurant</p>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">
+                Template wählen
+              </h2>
+              <p className="text-sm text-gray-600">
+                Wähle das perfekte Design für dein Restaurant
+              </p>
             </div>
 
             <div className="space-y-3">
@@ -186,20 +208,26 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
                   key={template.id}
                   onClick={() => setSelectedTemplate(template.id)}
                   className={cn(
-                    'p-4 rounded-xl border-2 cursor-pointer transition-all',
+                    "p-4 rounded-xl border-2 cursor-pointer transition-all",
                     selectedTemplate === template.id
-                      ? 'border-pink-300 bg-pink-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? "border-pink-300 bg-pink-50"
+                      : "border-gray-200 hover:border-gray-300 bg-white",
                   )}
                 >
                   <div className="flex items-center space-x-4">
                     {/* Template Preview */}
-                    <div className={cn('w-16 h-16 rounded-xl', template.preview)} />
+                    <div
+                      className={cn("w-16 h-16 rounded-xl", template.preview)}
+                    />
 
                     {/* Template Info */}
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{template.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{template.description}</p>
+                      <h3 className="font-medium text-gray-900">
+                        {template.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {template.description}
+                      </p>
 
                       {/* Template Tags */}
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -228,11 +256,15 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
         )}
 
         {/* Customize Tab */}
-        {activeView === 'customize' && (
+        {activeView === "customize" && (
           <div className="p-4">
             <div className="mb-4">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Design anpassen</h2>
-              <p className="text-sm text-gray-600">Personalisiere dein Template</p>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">
+                Design anpassen
+              </h2>
+              <p className="text-sm text-gray-600">
+                Personalisiere dein Template
+              </p>
             </div>
 
             <div className="space-y-6">
@@ -243,18 +275,19 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
                   Farben anpassen
                 </h3>
                 <div className="grid grid-cols-4 gap-3">
-                  {currentTemplate.style && [
-                    currentTemplate.style.background,
-                    currentTemplate.style.accent,
-                    currentTemplate.style.text,
-                    currentTemplate.style.secondary
-                  ].map((color, index) => (
-                    <button
-                      key={index}
-                      className="w-12 h-12 rounded-lg border-2 border-gray-200 shadow-sm"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+                  {currentTemplate.style &&
+                    [
+                      currentTemplate.style.background,
+                      currentTemplate.style.accent,
+                      currentTemplate.style.text,
+                      currentTemplate.style.secondary,
+                    ].map((color, index) => (
+                      <button
+                        key={index}
+                        className="w-12 h-12 rounded-lg border-2 border-gray-200 shadow-sm"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
                 </div>
               </div>
 
@@ -266,7 +299,10 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
                 </h3>
                 <div className="space-y-2">
                   <div className="text-sm text-gray-600">
-                    Aktueller Stil: <span className="font-medium">{currentTemplate.style?.layout}</span>
+                    Aktueller Stil:{" "}
+                    <span className="font-medium">
+                      {currentTemplate.style?.layout}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -279,12 +315,20 @@ export default function MobileCreativeStudio({ onBack }: MobileCreativeStudioPro
                 </h3>
                 <div className="space-y-2">
                   <button className="w-full text-left p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="font-medium text-yellow-800">Performance optimieren</div>
-                    <div className="text-sm text-yellow-600">+15% schnellere Ladezeit</div>
+                    <div className="font-medium text-yellow-800">
+                      Performance optimieren
+                    </div>
+                    <div className="text-sm text-yellow-600">
+                      +15% schnellere Ladezeit
+                    </div>
                   </button>
                   <button className="w-full text-left p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="font-medium text-green-800">SEO verbessern</div>
-                    <div className="text-sm text-green-600">Bessere Suchmaschinen-Sichtbarkeit</div>
+                    <div className="font-medium text-green-800">
+                      SEO verbessern
+                    </div>
+                    <div className="text-sm text-green-600">
+                      Bessere Suchmaschinen-Sichtbarkeit
+                    </div>
                   </button>
                 </div>
               </div>

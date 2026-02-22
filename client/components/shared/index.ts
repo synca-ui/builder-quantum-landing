@@ -12,24 +12,30 @@
  */
 
 // Navigation Components
-export { Navigation, type NavigationProps } from './Navigation';
-export { MenuOverlay, type MenuOverlayProps } from './MenuOverlay';
+export { Navigation, type NavigationProps } from "./Navigation";
+export { MenuOverlay, type MenuOverlayProps } from "./MenuOverlay";
 
 // Hero Section
-export { Hero, type HeroProps } from './Hero';
-export { HeroSection, type HeroSectionProps } from './HeroSection';
+export { Hero, type HeroProps } from "./Hero";
+export { HeroSection, type HeroSectionProps } from "./HeroSection";
 
 // Menu/Dish Components
-export { DishCard, type DishCardProps } from './DishCard';
-export { DishModal, type DishModalProps } from './DishModal';
-export { CategoryFilter, type CategoryFilterProps } from './CategoryFilter';
-export { MenuSection, type MenuSectionProps, PriceTag } from './MenuSection';
+export { DishCard, type DishCardProps } from "./DishCard";
+export { DishModal, type DishModalProps } from "./DishModal";
+export { CategoryFilter, type CategoryFilterProps } from "./CategoryFilter";
+export { MenuSection, type MenuSectionProps, PriceTag } from "./MenuSection";
 
 // Information Components
-export { OpeningHours, type OpeningHoursProps } from './OpeningHours';
-export { BusinessHoursSection, type BusinessHoursSectionProps } from './BusinessHoursSection';
-export { ContactSection, type ContactSectionProps } from './ContactSection';
+export { OpeningHours, type OpeningHoursProps } from "./OpeningHours";
+export {
+  BusinessHoursSection,
+  type BusinessHoursSectionProps,
+} from "./BusinessHoursSection";
+export { ContactSection, type ContactSectionProps } from "./ContactSection";
 
 // Re-export for convenience
-export type { MenuItem, OpeningHours as OpeningHoursType, ContactInfo } from '@/types/domain';
-
+export type {
+  MenuItem,
+  OpeningHours as OpeningHoursType,
+  ContactInfo,
+} from "@/types/domain";

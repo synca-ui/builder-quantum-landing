@@ -3,7 +3,7 @@
  * Advanced no-code design system with intelligente Optimierung and real-time preview
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Palette,
   Sparkles,
@@ -22,28 +22,34 @@ import {
   Save,
   Share2,
   Code,
-  Brush
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { LivePhoneFrame } from '@/components/preview/LivePhoneFrame';
-import { TemplatePreviewContent } from '@/components/configurator/preview/TemplatePreviewContent';
-import { defaultTemplates } from '@/components/template/TemplateRegistry';
-import MobileCreativeStudio from './MobileCreativeStudio';
+  Brush,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { LivePhoneFrame } from "@/components/preview/LivePhoneFrame";
+import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
+import { defaultTemplates } from "@/components/template/TemplateRegistry";
+import MobileCreativeStudio from "./MobileCreativeStudio";
 
 interface OptimizationSuggestion {
   id: string;
-  type: 'color' | 'layout' | 'typography' | 'imagery';
+  type: "color" | "layout" | "typography" | "imagery";
   suggestion: string;
-  impact: 'high' | 'medium' | 'low';
+  impact: "high" | "medium" | "low";
   expectedImprovement: string;
 }
 
 export default function DemoCreativeStudio() {
-  const [selectedTemplate, setSelectedTemplate] = useState('minimalist');
-  const [selectedDevice, setSelectedDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
-  const [activePanel, setActivePanel] = useState<'templates' | 'colors' | 'typography' | 'images' | 'optimization'>('templates');
+  const [selectedTemplate, setSelectedTemplate] = useState("minimalist");
+  const [selectedDevice, setSelectedDevice] = useState<
+    "desktop" | "tablet" | "mobile"
+  >("mobile");
+  const [activePanel, setActivePanel] = useState<
+    "templates" | "colors" | "typography" | "images" | "optimization"
+  >("templates");
   const [showPreview, setShowPreview] = useState(true);
-  const [optimizations, setOptimizations] = useState<OptimizationSuggestion[]>([]);
+  const [optimizations, setOptimizations] = useState<OptimizationSuggestion[]>(
+    [],
+  );
   const [isMobileView, setIsMobileView] = useState(false);
 
   // Use real templates from database/registry
@@ -53,58 +59,65 @@ export default function DemoCreativeStudio() {
   useEffect(() => {
     const checkMobile = () => setIsMobileView(window.innerWidth < 1024);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Smart optimization suggestions
   useEffect(() => {
     const suggestions: OptimizationSuggestion[] = [
       {
-        id: 'opt-1',
-        type: 'color',
-        suggestion: 'Primärfarbe zu #059669 ändern basierend auf Branche-Analyse',
-        impact: 'high',
-        expectedImprovement: '+23% Conversions'
+        id: "opt-1",
+        type: "color",
+        suggestion:
+          "Primärfarbe zu #059669 ändern basierend auf Branche-Analyse",
+        impact: "high",
+        expectedImprovement: "+23% Conversions",
       },
       {
-        id: 'opt-2',
-        type: 'layout',
-        suggestion: 'CTA-Button 15px höher positionieren für bessere Sichtbarkeit',
-        impact: 'medium',
-        expectedImprovement: '+12% Click-Rate'
+        id: "opt-2",
+        type: "layout",
+        suggestion:
+          "CTA-Button 15px höher positionieren für bessere Sichtbarkeit",
+        impact: "medium",
+        expectedImprovement: "+12% Click-Rate",
       },
       {
-        id: 'opt-3',
-        type: 'typography',
-        suggestion: 'Font-Size der Überschrift auf 3.2rem erhöhen',
-        impact: 'low',
-        expectedImprovement: '+5% Engagement'
-      }
+        id: "opt-3",
+        type: "typography",
+        suggestion: "Font-Size der Überschrift auf 3.2rem erhöhen",
+        impact: "low",
+        expectedImprovement: "+5% Engagement",
+      },
     ];
     setOptimizations(suggestions);
   }, [selectedTemplate]);
 
   const getDeviceIcon = (device: string) => {
     switch (device) {
-      case 'desktop': return Monitor;
-      case 'tablet': return Tablet;
-      case 'mobile': return Smartphone;
-      default: return Monitor;
+      case "desktop":
+        return Monitor;
+      case "tablet":
+        return Tablet;
+      case "mobile":
+        return Smartphone;
+      default:
+        return Monitor;
     }
   };
 
   const getImpactColor = (impact: string) => {
     const colors = {
-      'high': 'bg-red-100 border-red-300 text-red-700',
-      'medium': 'bg-yellow-100 border-yellow-300 text-yellow-700',
-      'low': 'bg-green-100 border-green-300 text-green-700'
+      high: "bg-red-100 border-red-300 text-red-700",
+      medium: "bg-yellow-100 border-yellow-300 text-yellow-700",
+      low: "bg-green-100 border-green-300 text-green-700",
     };
     return colors[impact as keyof typeof colors] || colors.medium;
   };
 
   // Get selected template data
-  const currentTemplate = templates.find(t => t.id === selectedTemplate) || templates[0];
+  const currentTemplate =
+    templates.find((t) => t.id === selectedTemplate) || templates[0];
 
   // Mobile optimized render
   if (isMobileView) {
@@ -127,7 +140,9 @@ export default function DemoCreativeStudio() {
                   SMART STUDIO
                 </div>
               </h1>
-              <p className="text-gray-600 mt-1">No-Code Design System mit intelligenter Optimierung</p>
+              <p className="text-gray-600 mt-1">
+                No-Code Design System mit intelligenter Optimierung
+              </p>
             </div>
           </div>
 
@@ -135,20 +150,22 @@ export default function DemoCreativeStudio() {
             {/* Device Preview Toggle */}
             <div className="bg-gray-100 rounded-lg p-1 flex">
               {[
-                { key: 'desktop', label: 'Desktop' },
-                { key: 'tablet', label: 'Tablet' },
-                { key: 'mobile', label: 'Mobile' }
+                { key: "desktop", label: "Desktop" },
+                { key: "tablet", label: "Tablet" },
+                { key: "mobile", label: "Mobile" },
               ].map(({ key, label }) => {
                 const IconComponent = getDeviceIcon(key);
                 return (
                   <button
                     key={key}
-                    onClick={() => setSelectedDevice(key as 'desktop' | 'tablet' | 'mobile')}
+                    onClick={() =>
+                      setSelectedDevice(key as "desktop" | "tablet" | "mobile")
+                    }
                     className={cn(
-                      'px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center space-x-1',
+                      "px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center space-x-1",
                       selectedDevice === key
-                        ? 'bg-white text-pink-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? "bg-white text-pink-600 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900",
                     )}
                   >
                     <IconComponent className="w-4 h-4" />
@@ -162,12 +179,14 @@ export default function DemoCreativeStudio() {
             <button
               onClick={() => setShowPreview(!showPreview)}
               className={cn(
-                'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                showPreview ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                "flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                showPreview
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200",
               )}
             >
               <Eye className="w-4 h-4" />
-              <span>{showPreview ? 'Live Preview' : 'Preview aus'}</span>
+              <span>{showPreview ? "Live Preview" : "Preview aus"}</span>
             </button>
 
             <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all">
@@ -182,44 +201,52 @@ export default function DemoCreativeStudio() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         {[
           {
-            title: 'Performance Score',
-            value: '94/100',
-            change: '+8 seit letzter Änderung',
+            title: "Performance Score",
+            value: "94/100",
+            change: "+8 seit letzter Änderung",
             icon: Target,
-            color: 'from-green-500 to-green-600'
+            color: "from-green-500 to-green-600",
           },
           {
-            title: 'Conversion Rate',
-            value: '8.7%',
-            change: '+2.1% vs. Standard-Template',
+            title: "Conversion Rate",
+            value: "8.7%",
+            change: "+2.1% vs. Standard-Template",
             icon: TrendingUp,
-            color: 'from-blue-500 to-blue-600'
+            color: "from-blue-500 to-blue-600",
           },
           {
-            title: 'Mobile Score',
-            value: '98/100',
-            change: 'Fully responsive',
+            title: "Mobile Score",
+            value: "98/100",
+            change: "Fully responsive",
             icon: Smartphone,
-            color: 'from-purple-500 to-purple-600'
+            color: "from-purple-500 to-purple-600",
           },
           {
-            title: 'Optimierungen',
-            value: '8',
-            change: 'Bereit zur Anwendung',
+            title: "Optimierungen",
+            value: "8",
+            change: "Bereit zur Anwendung",
             icon: Sparkles,
-            color: 'from-yellow-500 to-orange-600'
+            color: "from-yellow-500 to-orange-600",
           },
           {
-            title: 'Design System',
-            value: '12/12',
-            change: 'Komponenten aktiv',
+            title: "Design System",
+            value: "12/12",
+            change: "Komponenten aktiv",
             icon: Award,
-            color: 'from-pink-500 to-pink-600'
-          }
+            color: "from-pink-500 to-pink-600",
+          },
         ].map((metric, index) => (
-          <div key={index} className="card-elevated bg-white rounded-xl p-4 hover:shadow-lg transition-all">
+          <div
+            key={index}
+            className="card-elevated bg-white rounded-xl p-4 hover:shadow-lg transition-all"
+          >
             <div className="flex items-center justify-between mb-3">
-              <div className={cn('w-10 h-10 rounded-lg bg-gradient-to-r flex items-center justify-center shadow-sm', metric.color)}>
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-lg bg-gradient-to-r flex items-center justify-center shadow-sm",
+                  metric.color,
+                )}
+              >
                 <metric.icon className="w-5 h-5 text-white" />
               </div>
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
@@ -246,25 +273,25 @@ export default function DemoCreativeStudio() {
             {/* Tool Navigation */}
             <div className="space-y-2 mb-6">
               {[
-                { key: 'templates', label: 'Templates', icon: Layout },
-                { key: 'colors', label: 'Farben', icon: Palette },
-                { key: 'typography', label: 'Typography', icon: Type },
-                { key: 'images', label: 'Bilder', icon: ImageIcon },
-                { key: 'optimization', label: 'Optimierung', icon: Sparkles }
+                { key: "templates", label: "Templates", icon: Layout },
+                { key: "colors", label: "Farben", icon: Palette },
+                { key: "typography", label: "Typography", icon: Type },
+                { key: "images", label: "Bilder", icon: ImageIcon },
+                { key: "optimization", label: "Optimierung", icon: Sparkles },
               ].map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
                   onClick={() => setActivePanel(key as any)}
                   className={cn(
-                    'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all',
+                    "w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all",
                     activePanel === key
-                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                      : "hover:bg-gray-100 text-gray-700",
                   )}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{label}</span>
-                  {key === 'optimization' && optimizations.length > 0 && (
+                  {key === "optimization" && optimizations.length > 0 && (
                     <div className="ml-auto w-6 h-6 bg-yellow-400 text-yellow-900 rounded-full flex items-center justify-center text-xs font-bold">
                       {optimizations.length}
                     </div>
@@ -276,26 +303,37 @@ export default function DemoCreativeStudio() {
             {/* Panel Content */}
             <div className="space-y-4">
               {/* Templates Panel */}
-              {activePanel === 'templates' && (
+              {activePanel === "templates" && (
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-gray-900">Verfügbare Templates</h4>
+                  <h4 className="text-sm font-medium text-gray-900">
+                    Verfügbare Templates
+                  </h4>
                   {templates.map((template) => (
                     <div
                       key={template.id}
                       onClick={() => setSelectedTemplate(template.id)}
                       className={cn(
-                        'p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md',
+                        "p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md",
                         selectedTemplate === template.id
-                          ? 'border-pink-300 bg-pink-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? "border-pink-300 bg-pink-50"
+                          : "border-gray-200 hover:border-gray-300",
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
-                          <div className={cn('w-12 h-12 rounded-lg', template.preview)} />
+                          <div
+                            className={cn(
+                              "w-12 h-12 rounded-lg",
+                              template.preview,
+                            )}
+                          />
                           <div>
-                            <p className="font-medium text-gray-900">{template.name}</p>
-                            <p className="text-xs text-gray-600">{template.businessTypes.join(', ')}</p>
+                            <p className="font-medium text-gray-900">
+                              {template.name}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {template.businessTypes.join(", ")}
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -307,7 +345,9 @@ export default function DemoCreativeStudio() {
                         </div>
                       </div>
 
-                      <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {template.description}
+                      </p>
 
                       {/* Template Features */}
                       <div className="flex flex-wrap gap-1 mb-3">
@@ -327,7 +367,9 @@ export default function DemoCreativeStudio() {
                         <div className="flex space-x-1">
                           <div
                             className="w-4 h-4 rounded border border-gray-200"
-                            style={{ backgroundColor: template.style.background }}
+                            style={{
+                              backgroundColor: template.style.background,
+                            }}
                           />
                           <div
                             className="w-4 h-4 rounded border border-gray-200"
@@ -345,33 +387,43 @@ export default function DemoCreativeStudio() {
               )}
 
               {/* Optimization Panel */}
-              {activePanel === 'optimization' && (
+              {activePanel === "optimization" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-900">Optimierungsvorschläge ✨</h4>
+                    <h4 className="text-sm font-medium text-gray-900">
+                      Optimierungsvorschläge ✨
+                    </h4>
                     <button className="text-xs text-pink-600 hover:text-pink-700 font-medium">
                       Alle anwenden
                     </button>
                   </div>
 
                   {optimizations.map((optimization) => (
-                    <div key={optimization.id} className="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
+                    <div
+                      key={optimization.id}
+                      className="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <Zap className="w-4 h-4 text-yellow-500" />
                           <span className="text-sm font-medium text-gray-900">
-                            {optimization.type.charAt(0).toUpperCase() + optimization.type.slice(1)}
+                            {optimization.type.charAt(0).toUpperCase() +
+                              optimization.type.slice(1)}
                           </span>
                         </div>
-                        <div className={cn(
-                          'px-2 py-0.5 rounded-full text-xs font-medium border',
-                          getImpactColor(optimization.impact)
-                        )}>
+                        <div
+                          className={cn(
+                            "px-2 py-0.5 rounded-full text-xs font-medium border",
+                            getImpactColor(optimization.impact),
+                          )}
+                        >
                           {optimization.impact.toUpperCase()}
                         </div>
                       </div>
 
-                      <p className="text-sm text-gray-700 mb-2">{optimization.suggestion}</p>
+                      <p className="text-sm text-gray-700 mb-2">
+                        {optimization.suggestion}
+                      </p>
 
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-green-600">
@@ -443,14 +495,17 @@ export default function DemoCreativeStudio() {
               </div>
 
               {/* Optimization Overlay */}
-              {activePanel === 'optimization' && (
+              {activePanel === "optimization" && (
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center rounded-2xl">
                   <div className="bg-white rounded-xl p-6 shadow-2xl max-w-sm">
                     <div className="text-center">
                       <Sparkles className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-                      <h3 className="font-bold text-gray-900 mb-2">Optimierung Aktiv</h3>
+                      <h3 className="font-bold text-gray-900 mb-2">
+                        Optimierung Aktiv
+                      </h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        Analysiere Design-Patterns und optimiere für maximale Conversion-Rate...
+                        Analysiere Design-Patterns und optimiere für maximale
+                        Conversion-Rate...
                       </p>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full w-3/4 animate-pulse"></div>

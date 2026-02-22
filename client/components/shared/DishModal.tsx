@@ -12,9 +12,9 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { memo, useCallback, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, Camera } from "lucide-react";
-import type { MenuItem } from '@/types/domain';
+import type { MenuItem } from "@/types/domain";
 
 // ============================================
 // TYPES
@@ -55,36 +55,36 @@ export interface DishModalProps {
 
 function normalizeImageSrc(img: unknown): string {
   // Null/Undefined
-  if (!img) return '/placeholder.svg';
+  if (!img) return "/placeholder.svg";
 
   // Direkter String
-  if (typeof img === 'string') {
-    if (img.trim() === '') return '/placeholder.svg';
+  if (typeof img === "string") {
+    if (img.trim() === "") return "/placeholder.svg";
     return img;
   }
 
   // Object mit url Property
-  if (typeof img === 'object') {
+  if (typeof img === "object") {
     const imgObj = img as { url?: string; file?: File };
 
     // url Property
-    if (imgObj.url && typeof imgObj.url === 'string') {
+    if (imgObj.url && typeof imgObj.url === "string") {
       return imgObj.url;
     }
 
     // File Object (Browser)
-    if (typeof File !== 'undefined' && imgObj.file instanceof File) {
+    if (typeof File !== "undefined" && imgObj.file instanceof File) {
       try {
         return URL.createObjectURL(imgObj.file);
       } catch (e) {
-        console.error('[normalizeImageSrc] File to URL failed:', e);
+        console.error("[normalizeImageSrc] File to URL failed:", e);
       }
     }
   }
 
   // Fallback
-  console.warn('[normalizeImageSrc] Could not normalize:', img);
-  return '/placeholder.svg';
+  console.warn("[normalizeImageSrc] Could not normalize:", img);
+  return "/placeholder.svg";
 }
 
 // ============================================
@@ -106,33 +106,32 @@ export const DishModal = memo(function DishModal({
   onAddToCart,
   isPreview = false,
 }: DishModalProps) {
-
   // Scroll-Lock wenn Modal offen
   useEffect(() => {
     if (dish) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
     } else {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     };
   }, [dish]);
 
   // ESC-Taste zum Schließen
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && dish) {
+      if (e.key === "Escape" && dish) {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [dish, onClose]);
 
   const handleAddToCart = useCallback(() => {
@@ -156,31 +155,35 @@ export const DishModal = memo(function DishModal({
   // Bilder sammeln
   const images: string[] = [];
 
-// Priorität 1: imageUrl (direkter String)
-  if (dish.imageUrl && typeof dish.imageUrl === 'string' && dish.imageUrl.trim() !== '') {
+  // Priorität 1: imageUrl (direkter String)
+  if (
+    dish.imageUrl &&
+    typeof dish.imageUrl === "string" &&
+    dish.imageUrl.trim() !== ""
+  ) {
     images.push(dish.imageUrl);
   }
 
-// Priorität 2: image (kann Object oder String sein)
+  // Priorität 2: image (kann Object oder String sein)
   if (dish.image) {
     const imgSrc = normalizeImageSrc(dish.image);
-    if (imgSrc && imgSrc !== '/placeholder.svg' && !images.includes(imgSrc)) {
+    if (imgSrc && imgSrc !== "/placeholder.svg" && !images.includes(imgSrc)) {
       images.push(imgSrc);
     }
   }
 
-// Priorität 3: images Array
+  // Priorität 3: images Array
   if (dish.images && Array.isArray(dish.images) && dish.images.length > 0) {
-    dish.images.forEach(img => {
+    dish.images.forEach((img) => {
       const imgSrc = normalizeImageSrc(img);
-      if (imgSrc && imgSrc !== '/placeholder.svg' && !images.includes(imgSrc)) {
+      if (imgSrc && imgSrc !== "/placeholder.svg" && !images.includes(imgSrc)) {
         images.push(imgSrc);
       }
     });
   }
 
-// Debug Log
-  console.log('[DishModal] Images:', {
+  // Debug Log
+  console.log("[DishModal] Images:", {
     dish: dish.name,
     rawImageUrl: dish.imageUrl,
     rawImage: dish.image,
@@ -190,18 +193,19 @@ export const DishModal = memo(function DishModal({
 
   const hasImages = images.length > 0;
   const hasMultipleImages = images.length > 1;
-  const currentImage = images[currentImageIndex] || '/placeholder.svg';
+  const currentImage = images[currentImageIndex] || "/placeholder.svg";
 
-// Preis formatieren
-  const formattedPrice = typeof dish.price === 'number'
-    ? `${dish.price.toFixed(2)}€`
-    : dish.price
-      ? `${dish.price}€`
-      : '';
+  // Preis formatieren
+  const formattedPrice =
+    typeof dish.price === "number"
+      ? `${dish.price.toFixed(2)}€`
+      : dish.price
+        ? `${dish.price}€`
+        : "";
 
-// ============================================
-// RENDER: Modal mit Bildern
-// ============================================
+  // ============================================
+  // RENDER: Modal mit Bildern
+  // ============================================
 
   return (
     <div
@@ -217,9 +221,9 @@ export const DishModal = memo(function DishModal({
         style={{
           backgroundColor,
           color: fontColor,
-          borderTopLeftRadius: 'var(--radius-modal, 24px)',
-          borderTopRightRadius: 'var(--radius-modal, 24px)',
-          boxShadow: 'var(--shadow-modal, 0 -10px 40px rgba(0,0,0,0.2))',
+          borderTopLeftRadius: "var(--radius-modal, 24px)",
+          borderTopRightRadius: "var(--radius-modal, 24px)",
+          boxShadow: "var(--shadow-modal, 0 -10px 40px rgba(0,0,0,0.2))",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -239,8 +243,8 @@ export const DishModal = memo(function DishModal({
               alt={dish.name}
               className="w-full h-full object-cover"
               onError={(e) => {
-                console.error('[DishModal] Image load error:', currentImage);
-                e.currentTarget.src = '/placeholder.svg';
+                console.error("[DishModal] Image load error:", currentImage);
+                e.currentTarget.src = "/placeholder.svg";
               }}
             />
 
@@ -253,8 +257,8 @@ export const DishModal = memo(function DishModal({
               className="absolute top-3 right-3 w-10 h-10 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black/90 transition-colors shadow-xl z-[80]"
               aria-label="Schließen"
               style={{
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
               }}
             >
               <X className="w-5 h-5" />
@@ -298,8 +302,8 @@ export const DishModal = memo(function DishModal({
                       }}
                       className={`h-2 rounded-full transition-all ${
                         idx === currentImageIndex
-                          ? 'bg-white w-4'
-                          : 'bg-white/50 w-2'
+                          ? "bg-white w-4"
+                          : "bg-white/50 w-2"
                       }`}
                       aria-label={`Bild ${idx + 1} von ${images.length}`}
                     />
@@ -313,7 +317,9 @@ export const DishModal = memo(function DishModal({
           <div className="relative w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
             <div className="text-center text-gray-400">
               <Camera className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-medium opacity-50">Kein Bild verfügbar</p>
+              <p className="text-sm font-medium opacity-50">
+                Kein Bild verfügbar
+              </p>
             </div>
 
             {/* ✅ Close Button auch ohne Bild */}
@@ -325,8 +331,8 @@ export const DishModal = memo(function DishModal({
               className="absolute top-3 right-3 w-10 h-10 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black/90 transition-colors shadow-xl z-[80]"
               aria-label="Schließen"
               style={{
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
               }}
             >
               <X className="w-5 h-5" />
@@ -352,11 +358,11 @@ export const DishModal = memo(function DishModal({
                   className="inline-block mt-1 px-2 py-0.5 text-xs font-medium opacity-60"
                   style={{
                     backgroundColor: `${fontColor}10`,
-                    borderRadius: 'var(--radius-button, 4px)',
+                    borderRadius: "var(--radius-button, 4px)",
                   }}
                 >
-                {dish.category}
-              </span>
+                  {dish.category}
+                </span>
               )}
             </div>
 
@@ -364,8 +370,8 @@ export const DishModal = memo(function DishModal({
               className="text-2xl font-bold whitespace-nowrap"
               style={{ color: priceColor }}
             >
-            {formattedPrice}
-          </span>
+              {formattedPrice}
+            </span>
           </div>
 
           {/* Description */}
@@ -383,9 +389,9 @@ export const DishModal = memo(function DishModal({
             <div
               className="px-3 py-2 text-sm font-medium text-center"
               style={{
-                backgroundColor: 'rgba(239,68,68,0.1)',
-                color: '#EF4444',
-                borderRadius: 'var(--radius-button, 8px)',
+                backgroundColor: "rgba(239,68,68,0.1)",
+                color: "#EF4444",
+                borderRadius: "var(--radius-button, 8px)",
               }}
             >
               Dieses Gericht ist aktuell nicht verfügbar
@@ -405,8 +411,8 @@ export const DishModal = memo(function DishModal({
               className="w-full py-3 font-bold text-white shadow-lg mt-4 transition-transform active:scale-[0.98]"
               style={{
                 backgroundColor: primaryColor,
-                borderRadius: 'var(--radius-button, 12px)',
-                boxShadow: 'var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))',
+                borderRadius: "var(--radius-button, 12px)",
+                boxShadow: "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
               }}
             >
               Zum Warenkorb hinzufügen
@@ -423,7 +429,7 @@ export const DishModal = memo(function DishModal({
             style={{
               borderColor: `${fontColor}20`,
               color: fontColor,
-              borderRadius: 'var(--radius-button, 12px)',
+              borderRadius: "var(--radius-button, 12px)",
             }}
           >
             Schließen

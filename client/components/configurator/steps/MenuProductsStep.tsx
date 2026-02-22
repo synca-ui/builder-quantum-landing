@@ -752,7 +752,7 @@ export function MenuProductsStep({
                     checked={(item as any).isHighlight || false}
                     onChange={(e) => {
                       const currentHighlights = menuItems.filter(
-                        (d) => (d as any).isHighlight
+                        (d) => (d as any).isHighlight,
                       ).length;
 
                       // Verhindere mehr als 3 Highlights
@@ -766,7 +766,8 @@ export function MenuProductsStep({
                     }}
                     disabled={
                       !(item as any).isHighlight &&
-                      menuItems.filter((d) => (d as any).isHighlight).length >= 3
+                      menuItems.filter((d) => (d as any).isHighlight).length >=
+                        3
                     }
                     className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
@@ -778,7 +779,8 @@ export function MenuProductsStep({
                       Wird prominent auf der Startseite angezeigt
                     </p>
                   </div>
-                  {menuItems.filter((d) => (d as any).isHighlight).length >= 3 &&
+                  {menuItems.filter((d) => (d as any).isHighlight).length >=
+                    3 &&
                     !(item as any).isHighlight && (
                       <Badge
                         variant="outline"

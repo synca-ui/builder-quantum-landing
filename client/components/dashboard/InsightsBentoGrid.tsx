@@ -3,7 +3,7 @@
  * Real-time analytics dashboard with beautiful card layouts
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   TrendingDown,
   DollarSign,
@@ -14,9 +14,9 @@ import {
   MapPin,
   ArrowUpRight,
   ArrowDownRight,
-  MoreHorizontal
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
+  MoreHorizontal,
+} from "lucide-react";
+import { cn } from "../../lib/utils";
 
 interface MetricCardProps {
   title: string;
@@ -37,20 +37,32 @@ interface InsightData {
   activeTables: number;
 }
 
-function MetricCard({ title, value, change, icon: Icon, gradient, description, className }: MetricCardProps) {
+function MetricCard({
+  title,
+  value,
+  change,
+  icon: Icon,
+  gradient,
+  description,
+  className,
+}: MetricCardProps) {
   const isPositive = change && change > 0;
   const isNegative = change && change < 0;
 
   return (
-    <div className={cn(
-      'card-elevated bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1',
-      className
-    )}>
+    <div
+      className={cn(
+        "card-elevated bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1",
+        className,
+      )}
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className={cn(
-          'w-12 h-12 rounded-xl flex items-center justify-center',
-          `bg-gradient-to-r ${gradient}`
-        )}>
+        <div
+          className={cn(
+            "w-12 h-12 rounded-xl flex items-center justify-center",
+            `bg-gradient-to-r ${gradient}`,
+          )}
+        >
           <Icon className="w-6 h-6 text-white" />
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -59,36 +71,43 @@ function MetricCard({ title, value, change, icon: Icon, gradient, description, c
       </div>
 
       <div className="space-y-2">
-        <h3 className="font-semibold text-gray-600 text-sm uppercase tracking-wider">{title}</h3>
+        <h3 className="font-semibold text-gray-600 text-sm uppercase tracking-wider">
+          {title}
+        </h3>
         <p className="text-3xl font-bold text-gray-900">{value}</p>
 
         {change !== undefined && (
           <div className="flex items-center space-x-2">
-            <div className={cn(
-              'flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium',
-              isPositive && 'bg-emerald-100 text-emerald-700',
-              isNegative && 'bg-red-100 text-red-700',
-              change === 0 && 'bg-gray-100 text-gray-600'
-            )}>
+            <div
+              className={cn(
+                "flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium",
+                isPositive && "bg-emerald-100 text-emerald-700",
+                isNegative && "bg-red-100 text-red-700",
+                change === 0 && "bg-gray-100 text-gray-600",
+              )}
+            >
               {isPositive && <ArrowUpRight className="w-3 h-3" />}
               {isNegative && <ArrowDownRight className="w-3 h-3" />}
               <span>
-                {change > 0 ? '+' : ''}{Math.abs(change).toFixed(1)}%
+                {change > 0 ? "+" : ""}
+                {Math.abs(change).toFixed(1)}%
               </span>
             </div>
             <span className="text-xs text-gray-500">vs. gestern</span>
           </div>
         )}
 
-        {description && (
-          <p className="text-sm text-gray-500">{description}</p>
-        )}
+        {description && <p className="text-sm text-gray-500">{description}</p>}
       </div>
     </div>
   );
 }
 
-export default function InsightsBentoGrid({ businessId }: { businessId?: string }) {
+export default function InsightsBentoGrid({
+  businessId,
+}: {
+  businessId?: string;
+}) {
   const [data, setData] = useState<InsightData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +127,7 @@ export default function InsightsBentoGrid({ businessId }: { businessId?: string 
       // Use demo endpoint if no businessId, otherwise use authenticated endpoint
       const endpoint = businessId
         ? `/api/dashboard/insights/overview?businessId=${businessId}`
-        : '/api/demo/dashboard/insights/overview';
+        : "/api/demo/dashboard/insights/overview";
 
       const response = await fetch(endpoint);
       const result = await response.json();
@@ -116,11 +135,11 @@ export default function InsightsBentoGrid({ businessId }: { businessId?: string 
       if (result.success) {
         setData(result.data);
       } else {
-        setError(result.error || 'Failed to fetch insights');
+        setError(result.error || "Failed to fetch insights");
       }
     } catch (err) {
-      setError('Network error - using offline data');
-      console.error('Error fetching insights:', err);
+      setError("Network error - using offline data");
+      console.error("Error fetching insights:", err);
 
       // Fallback to mock data
       setData({
@@ -140,7 +159,10 @@ export default function InsightsBentoGrid({ businessId }: { businessId?: string 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="card-elevated bg-white rounded-2xl p-6 animate-pulse">
+          <div
+            key={i}
+            className="card-elevated bg-white rounded-2xl p-6 animate-pulse"
+          >
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 rounded-xl bg-gray-200"></div>
               <div className="w-5 h-5 bg-gray-200 rounded"></div>
@@ -163,7 +185,9 @@ export default function InsightsBentoGrid({ businessId }: { businessId?: string 
           <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
             <TrendingDown className="w-6 h-6 text-red-600" />
           </div>
-          <h3 className="font-semibold text-red-900 mb-2">Error Loading Insights</h3>
+          <h3 className="font-semibold text-red-900 mb-2">
+            Error Loading Insights
+          </h3>
           <p className="text-red-700 text-sm mb-4">{error}</p>
           <button
             onClick={fetchInsights}
@@ -246,8 +270,8 @@ export default function InsightsBentoGrid({ businessId }: { businessId?: string 
           <div>
             <h3 className="font-semibold text-lg mb-1">Live Dashboard</h3>
             <p className="text-white/80 text-sm">
-              Daten werden alle 5 Minuten aktualisiert •
-              Letzte Aktualisierung: {new Date().toLocaleTimeString('de-DE')}
+              Daten werden alle 5 Minuten aktualisiert • Letzte Aktualisierung:{" "}
+              {new Date().toLocaleTimeString("de-DE")}
             </p>
           </div>
           <div className="flex items-center space-x-2">

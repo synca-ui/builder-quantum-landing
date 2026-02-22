@@ -3,20 +3,20 @@
  * Handles employee scheduling with conflict detection
  */
 
-import express from 'express';
-import { PrismaClient } from '@prisma/client';
-import { requireAuth } from '../middleware/auth';
-import { z } from 'zod';
+import express from "express";
+import { PrismaClient } from "@prisma/client";
+import { requireAuth } from "../middleware/auth";
+import { z } from "zod";
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Validation schemas
 const employeeSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email'),
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email"),
   phone: z.string().optional(),
-  position: z.enum(['server', 'chef', 'bartender', 'host', 'manager']),
+  position: z.enum(["server", "chef", "bartender", "host", "manager"]),
   avatarUrl: z.string().url().optional(),
   hourlyRate: z.number().positive().optional(),
 });
@@ -24,8 +24,12 @@ const employeeSchema = z.object({
 const shiftSchema = z.object({
   employeeId: z.string().uuid(),
   date: z.string().datetime(),
-  startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
-  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+  startTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"),
+  endTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"),
   position: z.string(),
   notes: z.string().optional(),
 });
@@ -34,7 +38,7 @@ const absenceSchema = z.object({
   employeeId: z.string().uuid(),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  reason: z.enum(['vacation', 'sick', 'personal', 'emergency']),
+  reason: z.enum(["vacation", "sick", "personal", "emergency"]),
   notes: z.string().optional(),
 });
 
@@ -46,7 +50,7 @@ async function checkShiftConflicts(
   date: Date,
   startTime: string,
   endTime: string,
-  excludeShiftId?: string
+  excludeShiftId?: string,
 ): Promise<{ hasConflict: boolean; conflicts: any[] }> {
   const dateStart = new Date(date);
   dateStart.setHours(0, 0, 0, 0);
@@ -62,7 +66,7 @@ async function checkShiftConflicts(
         lt: dateEnd,
       },
       status: {
-        not: 'cancelled',
+        not: "cancelled",
       },
       ...(excludeShiftId && { id: { not: excludeShiftId } }),
     },
@@ -85,8 +89,8 @@ async function checkShiftConflicts(
   return {
     hasConflict: conflicts.length > 0 || absences.length > 0,
     conflicts: [
-      ...conflicts.map((s) => ({ type: 'shift', data: s })),
-      ...absences.map((a) => ({ type: 'absence', data: a })),
+      ...conflicts.map((s) => ({ type: "shift", data: s })),
+      ...absences.map((a) => ({ type: "absence", data: a })),
     ],
   };
 }
@@ -94,7 +98,10 @@ async function checkShiftConflicts(
 /**
  * Utility: Calculate total hours for a date
  */
-async function calculateDailyHours(employeeId: string, date: Date): Promise<number> {
+async function calculateDailyHours(
+  employeeId: string,
+  date: Date,
+): Promise<number> {
   const dateStart = new Date(date);
   dateStart.setHours(0, 0, 0, 0);
   const dateEnd = new Date(dateStart);
@@ -108,16 +115,16 @@ async function calculateDailyHours(employeeId: string, date: Date): Promise<numb
         lt: dateEnd,
       },
       status: {
-        not: 'cancelled',
+        not: "cancelled",
       },
     },
   });
 
   let totalMinutes = 0;
   shifts.forEach((shift) => {
-    const [startHour, startMin] = shift.startTime.split(':').map(Number);
-    const [endHour, endMin] = shift.endTime.split(':').map(Number);
-    const minutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+    const [startHour, startMin] = shift.startTime.split(":").map(Number);
+    const [endHour, endMin] = shift.endTime.split(":").map(Number);
+    const minutes = endHour * 60 + endMin - (startHour * 60 + startMin);
     totalMinutes += minutes;
   });
 
@@ -132,13 +139,13 @@ async function calculateDailyHours(employeeId: string, date: Date): Promise<numb
  * GET /api/dashboard/staff/employees
  * List all employees for a business
  */
-router.get('/employees', requireAuth, async (req, res) => {
+router.get("/employees", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const businessId = req.query.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify access
@@ -150,18 +157,18 @@ router.get('/employees', requireAuth, async (req, res) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     const employees = await prisma.employee.findMany({
       where: { businessId },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
 
     res.json({ success: true, data: employees });
   } catch (error) {
-    console.error('Error fetching employees:', error);
-    res.status(500).json({ error: 'Failed to fetch employees' });
+    console.error("Error fetching employees:", error);
+    res.status(500).json({ error: "Failed to fetch employees" });
   }
 });
 
@@ -169,13 +176,13 @@ router.get('/employees', requireAuth, async (req, res) => {
  * POST /api/dashboard/staff/employees
  * Create a new employee
  */
-router.post('/employees', requireAuth, async (req, res) => {
+router.post("/employees", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const businessId = req.body.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify access
@@ -187,7 +194,7 @@ router.post('/employees', requireAuth, async (req, res) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Validate input
@@ -205,8 +212,8 @@ router.post('/employees', requireAuth, async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error creating employee:', error);
-    res.status(500).json({ error: 'Failed to create employee' });
+    console.error("Error creating employee:", error);
+    res.status(500).json({ error: "Failed to create employee" });
   }
 });
 
@@ -218,7 +225,7 @@ router.post('/employees', requireAuth, async (req, res) => {
  * GET /api/dashboard/staff/shifts
  * Get shifts for a date range
  */
-router.get('/shifts', requireAuth, async (req, res) => {
+router.get("/shifts", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const businessId = req.query.businessId as string;
@@ -226,7 +233,7 @@ router.get('/shifts', requireAuth, async (req, res) => {
     const endDate = req.query.endDate as string;
 
     if (!businessId || !startDate || !endDate) {
-      return res.status(400).json({ error: 'Missing required parameters' });
+      return res.status(400).json({ error: "Missing required parameters" });
     }
 
     // Verify access
@@ -238,7 +245,7 @@ router.get('/shifts', requireAuth, async (req, res) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     const shifts = await prisma.shift.findMany({
@@ -259,13 +266,13 @@ router.get('/shifts', requireAuth, async (req, res) => {
           },
         },
       },
-      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+      orderBy: [{ date: "asc" }, { startTime: "asc" }],
     });
 
     res.json({ success: true, data: shifts });
   } catch (error) {
-    console.error('Error fetching shifts:', error);
-    res.status(500).json({ error: 'Failed to fetch shifts' });
+    console.error("Error fetching shifts:", error);
+    res.status(500).json({ error: "Failed to fetch shifts" });
   }
 });
 
@@ -273,13 +280,13 @@ router.get('/shifts', requireAuth, async (req, res) => {
  * POST /api/dashboard/staff/shifts
  * Create a new shift with conflict checking
  */
-router.post('/shifts', requireAuth, async (req, res) => {
+router.post("/shifts", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const businessId = req.body.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify access
@@ -291,7 +298,7 @@ router.post('/shifts', requireAuth, async (req, res) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Validate input
@@ -303,25 +310,25 @@ router.post('/shifts', requireAuth, async (req, res) => {
       validated.employeeId,
       date,
       validated.startTime,
-      validated.endTime
+      validated.endTime,
     );
 
     if (hasConflict) {
       return res.status(409).json({
-        error: 'Shift conflict detected',
+        error: "Shift conflict detected",
         conflicts,
       });
     }
 
     // Check daily hour limit (max 12 hours)
     const dailyHours = await calculateDailyHours(validated.employeeId, date);
-    const [startHour, startMin] = validated.startTime.split(':').map(Number);
-    const [endHour, endMin] = validated.endTime.split(':').map(Number);
+    const [startHour, startMin] = validated.startTime.split(":").map(Number);
+    const [endHour, endMin] = validated.endTime.split(":").map(Number);
     const shiftHours = (endHour * 60 + endMin - startHour * 60 - startMin) / 60;
 
     if (dailyHours + shiftHours > 12) {
       return res.status(400).json({
-        error: 'Daily hour limit exceeded',
+        error: "Daily hour limit exceeded",
         message: `Employee would work ${(dailyHours + shiftHours).toFixed(1)} hours (max 12)`,
       });
     }
@@ -354,8 +361,8 @@ router.post('/shifts', requireAuth, async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error creating shift:', error);
-    res.status(500).json({ error: 'Failed to create shift' });
+    console.error("Error creating shift:", error);
+    res.status(500).json({ error: "Failed to create shift" });
   }
 });
 
@@ -363,7 +370,7 @@ router.post('/shifts', requireAuth, async (req, res) => {
  * PUT /api/dashboard/staff/shifts/:id
  * Update a shift with conflict checking
  */
-router.put('/shifts/:id', requireAuth, async (req, res) => {
+router.put("/shifts/:id", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const shiftId = req.params.id;
@@ -380,7 +387,7 @@ router.put('/shifts/:id', requireAuth, async (req, res) => {
     });
 
     if (!shift) {
-      return res.status(404).json({ error: 'Shift not found' });
+      return res.status(404).json({ error: "Shift not found" });
     }
 
     // Validate input
@@ -398,12 +405,12 @@ router.put('/shifts/:id', requireAuth, async (req, res) => {
         date,
         startTime,
         endTime,
-        shiftId
+        shiftId,
       );
 
       if (hasConflict) {
         return res.status(409).json({
-          error: 'Shift conflict detected',
+          error: "Shift conflict detected",
           conflicts,
         });
       }
@@ -433,8 +440,8 @@ router.put('/shifts/:id', requireAuth, async (req, res) => {
 
     res.json({ success: true, data: updated });
   } catch (error) {
-    console.error('Error updating shift:', error);
-    res.status(500).json({ error: 'Failed to update shift' });
+    console.error("Error updating shift:", error);
+    res.status(500).json({ error: "Failed to update shift" });
   }
 });
 
@@ -442,7 +449,7 @@ router.put('/shifts/:id', requireAuth, async (req, res) => {
  * DELETE /api/dashboard/staff/shifts/:id
  * Cancel a shift
  */
-router.delete('/shifts/:id', requireAuth, async (req, res) => {
+router.delete("/shifts/:id", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const shiftId = req.params.id;
@@ -458,19 +465,19 @@ router.delete('/shifts/:id', requireAuth, async (req, res) => {
     });
 
     if (!shift) {
-      return res.status(404).json({ error: 'Shift not found' });
+      return res.status(404).json({ error: "Shift not found" });
     }
 
     // Update status to cancelled instead of deleting
     await prisma.shift.update({
       where: { id: shiftId },
-      data: { status: 'cancelled' },
+      data: { status: "cancelled" },
     });
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Error deleting shift:', error);
-    res.status(500).json({ error: 'Failed to delete shift' });
+    console.error("Error deleting shift:", error);
+    res.status(500).json({ error: "Failed to delete shift" });
   }
 });
 
@@ -482,14 +489,14 @@ router.delete('/shifts/:id', requireAuth, async (req, res) => {
  * GET /api/dashboard/staff/absences
  * Get absences for employees
  */
-router.get('/absences', requireAuth, async (req, res) => {
+router.get("/absences", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const businessId = req.query.businessId as string;
     const employeeId = req.query.employeeId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify access
@@ -501,7 +508,7 @@ router.get('/absences', requireAuth, async (req, res) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     const absences = await prisma.absence.findMany({
@@ -520,13 +527,13 @@ router.get('/absences', requireAuth, async (req, res) => {
           },
         },
       },
-      orderBy: { startDate: 'desc' },
+      orderBy: { startDate: "desc" },
     });
 
     res.json({ success: true, data: absences });
   } catch (error) {
-    console.error('Error fetching absences:', error);
-    res.status(500).json({ error: 'Failed to fetch absences' });
+    console.error("Error fetching absences:", error);
+    res.status(500).json({ error: "Failed to fetch absences" });
   }
 });
 
@@ -534,7 +541,7 @@ router.get('/absences', requireAuth, async (req, res) => {
  * POST /api/dashboard/staff/absences
  * Create a new absence
  */
-router.post('/absences', requireAuth, async (req, res) => {
+router.post("/absences", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const businessId = req.body.businessId as string;
@@ -550,7 +557,7 @@ router.post('/absences', requireAuth, async (req, res) => {
     });
 
     if (!employee) {
-      return res.status(404).json({ error: 'Employee not found' });
+      return res.status(404).json({ error: "Employee not found" });
     }
 
     // Validate input
@@ -580,8 +587,8 @@ router.post('/absences', requireAuth, async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error creating absence:', error);
-    res.status(500).json({ error: 'Failed to create absence' });
+    console.error("Error creating absence:", error);
+    res.status(500).json({ error: "Failed to create absence" });
   }
 });
 

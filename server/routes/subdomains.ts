@@ -19,7 +19,7 @@ export async function handleSubdomainRequest(
   next: NextFunction,
 ) {
   try {
-    if (req.path.startsWith('/api')) return next();
+    if (req.path.startsWith("/api")) return next();
 
     const host = req.hostname || req.headers.host?.split(":")[0] || "";
 

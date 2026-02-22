@@ -37,6 +37,8 @@ export async function handleForwardN8n(req: Request, res: Response) {
     }
   } catch (error) {
     console.error("❌ Kritischer Proxy-Fehler:", error);
-    return res.status(500).json({ error: "Proxy failed", details: String(error) });
+    return res
+      .status(500)
+      .json({ error: "Proxy failed", details: String(error) });
   }
 }

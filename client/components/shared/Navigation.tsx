@@ -9,8 +9,16 @@
  * Nutzt CSS-Variablen aus styleInjector.ts
  */
 
-import React, { memo } from 'react';
-import { Menu, X, ShoppingBag, Coffee, Utensils, Wine, Store } from "lucide-react";
+import React, { memo } from "react";
+import {
+  Menu,
+  X,
+  ShoppingBag,
+  Coffee,
+  Utensils,
+  Wine,
+  Store,
+} from "lucide-react";
 
 // ============================================
 // TYPES
@@ -59,17 +67,17 @@ export interface NavigationProps {
 
 function getHeaderFontClass(size: string): string {
   const sizeMap: Record<string, string> = {
-    'xs': 'text-[10px]',
-    'small': 'text-xs',
-    'medium': 'text-sm',
-    'large': 'text-base',
-    'xl': 'text-lg',
-    '2xl': 'text-xl',
-    '3xl': 'text-2xl',
-    '4xl': 'text-[28px]',
-    '5xl': 'text-[32px]',
+    xs: "text-[10px]",
+    small: "text-xs",
+    medium: "text-sm",
+    large: "text-base",
+    xl: "text-lg",
+    "2xl": "text-xl",
+    "3xl": "text-2xl",
+    "4xl": "text-[28px]",
+    "5xl": "text-[32px]",
   };
-  return sizeMap[size] || 'text-sm';
+  return sizeMap[size] || "text-sm";
 }
 
 // ============================================
@@ -83,7 +91,7 @@ export const Navigation = memo(function Navigation({
   headerFontColor,
   headerFontSize,
   headerBackgroundColor,
-  backgroundColor = '#ffffff',
+  backgroundColor = "#ffffff",
   onlineOrdering = false,
   cartCount = 0,
   menuOpen,
@@ -91,7 +99,7 @@ export const Navigation = memo(function Navigation({
   onNavigateHome,
   onCartClick,
   isPreview = false,
-  className = '',
+  className = "",
 }: NavigationProps) {
   const fontClass = getHeaderFontClass(headerFontSize);
 
@@ -116,7 +124,10 @@ export const Navigation = memo(function Navigation({
   };
 
   const getBusinessIcon = () => {
-    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    const iconMap: Record<
+      string,
+      React.ComponentType<{ className?: string }>
+    > = {
       cafe: Coffee,
       restaurant: Utensils,
       bar: Wine,
@@ -127,22 +138,25 @@ export const Navigation = memo(function Navigation({
     return iconMap[businessType?.toLowerCase()] || iconMap.default;
   };
   // Business-Type Icon
-  const BusinessIcon = businessType === 'cafe' ? Coffee : Utensils;
+  const BusinessIcon = businessType === "cafe" ? Coffee : Utensils;
 
   return (
     <nav
-      className={className || `
+      className={
+        className ||
+        `
         absolute top-0 left-0 right-0 z-30 
         px-5 pt-6 pb-4 
         flex items-center justify-between 
         border-b transition-all
-      `}
+      `
+      }
       style={{
-        backgroundColor: headerBackgroundColor || backgroundColor, // Ensure fallback 
+        backgroundColor: headerBackgroundColor || backgroundColor, // Ensure fallback
         color: headerFontColor,
         borderColor: `${headerFontColor}10`,
-        backdropFilter: 'var(--nav-backdrop, blur(8px))', // Ensure blur is active
-        WebkitBackdropFilter: 'var(--nav-backdrop, blur(8px))',
+        backdropFilter: "var(--nav-backdrop, blur(8px))", // Ensure blur is active
+        WebkitBackdropFilter: "var(--nav-backdrop, blur(8px))",
       }}
     >
       {/* Left: Logo + Business Name */}
@@ -153,11 +167,11 @@ export const Navigation = memo(function Navigation({
             src={logo}
             alt={`${businessName} Logo`}
             className="w-8 h-8 shrink-0 object-cover"
-            style={{ borderRadius: 'var(--radius-button, 8px)' }}
+            style={{ borderRadius: "var(--radius-button, 8px)" }}
             onError={(e) => {
-              console.error('[Navigation] Logo load failed:', logo);
+              console.error("[Navigation] Logo load failed:", logo);
               // Fallback auf Icon
-              e.currentTarget.style.display = 'none';
+              e.currentTarget.style.display = "none";
             }}
           />
         ) : (
@@ -166,7 +180,7 @@ export const Navigation = memo(function Navigation({
             className="w-8 h-8 shrink-0 flex items-center justify-center transition-all hover:scale-110"
             style={{
               backgroundColor: `${headerFontColor}15`,
-              borderRadius: 'var(--radius-button, 8px)',
+              borderRadius: "var(--radius-button, 8px)",
             }}
           >
             <BusinessIcon
@@ -181,7 +195,7 @@ export const Navigation = memo(function Navigation({
           onClick={handleHomeClick}
           style={{ color: headerFontColor }}
         >
-          {businessName || 'Mein Restaurant'}
+          {businessName || "Mein Restaurant"}
         </span>
       </div>
 
@@ -202,11 +216,11 @@ export const Navigation = memo(function Navigation({
               <span
                 className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full font-bold"
                 style={{
-                  boxShadow: 'var(--shadow-button, 0 2px 4px rgba(0,0,0,0.1))',
+                  boxShadow: "var(--shadow-button, 0 2px 4px rgba(0,0,0,0.1))",
                   lineHeight: 1,
                 }}
               >
-                {cartCount > 9 ? '9+' : cartCount}
+                {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
           </button>
@@ -216,14 +230,10 @@ export const Navigation = memo(function Navigation({
         <button
           onClick={handleMenuToggle}
           className="p-1 active:scale-90 transition-transform hover:opacity-80"
-          aria-label={menuOpen ? 'Menü schließen' : 'Menü öffnen'}
+          aria-label={menuOpen ? "Menü schließen" : "Menü öffnen"}
           aria-expanded={menuOpen}
         >
-          {menuOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <Menu className="w-6 h-6" />
-          )}
+          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
     </nav>
@@ -231,4 +241,3 @@ export const Navigation = memo(function Navigation({
 });
 
 export default Navigation;
-

@@ -36,7 +36,10 @@ import { CategoryFilter } from "@/components/shared/CategoryFilter";
 
 import { ReservationButton } from "@/components/ui/ReservationButton";
 import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
-import type { MenuItem, OpeningHours as OpeningHoursType } from "@/types/domain";
+import type {
+  MenuItem,
+  OpeningHours as OpeningHoursType,
+} from "@/types/domain";
 
 // ============================================
 // MAIN COMPONENT
@@ -55,7 +58,7 @@ export function TemplatePreviewContent() {
   const location = useConfiguratorStore((s) => s.business.location);
   const slogan = useConfiguratorStore((s) => s.business.slogan);
   const uniqueDescription = useConfiguratorStore(
-    (s) => s.business.uniqueDescription
+    (s) => s.business.uniqueDescription,
   );
   const logo = useConfiguratorStore((s) => s.business.logo);
 
@@ -98,10 +101,10 @@ export function TemplatePreviewContent() {
 
   // Feature fields
   const onlineOrdering = useConfiguratorStore(
-    (s) => s.features.onlineOrderingEnabled
+    (s) => s.features.onlineOrderingEnabled,
   );
   const reservationsEnabled = useConfiguratorStore(
-    (s) => s.features.reservationsEnabled
+    (s) => s.features.reservationsEnabled,
   );
   const reservationButtonColor =
     useConfiguratorStore((s) => s.features.reservationButtonColor) ||
@@ -182,7 +185,7 @@ export function TemplatePreviewContent() {
   });
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [activeMenuCategory, setActiveMenuCategory] = useState<string | null>(
-    null
+    null,
   );
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -221,14 +224,14 @@ export function TemplatePreviewContent() {
   const nextImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex((prev) =>
-      prev < selectedDish.images!.length - 1 ? prev + 1 : 0
+      prev < selectedDish.images!.length - 1 ? prev + 1 : 0,
     );
   }, [selectedDish?.images]);
 
   const prevImage = useCallback(() => {
     if (!selectedDish?.images) return;
     setCurrentImageIndex((prev) =>
-      prev > 0 ? prev - 1 : selectedDish.images!.length - 1
+      prev > 0 ? prev - 1 : selectedDish.images!.length - 1,
     );
   }, [selectedDish?.images]);
 
@@ -326,7 +329,8 @@ export function TemplatePreviewContent() {
                 style={{
                   backgroundColor: primaryColor,
                   borderRadius: "var(--radius-button, 9999px)",
-                  boxShadow: "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
+                  boxShadow:
+                    "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
                 }}
                 onClick={() => navigateToPage("menu")}
               >
@@ -357,7 +361,7 @@ export function TemplatePreviewContent() {
             {(() => {
               // ✅ Smart Highlight-Logik: Zeige markierte Highlights, fülle mit zufälligen auf
               const selectedHighlights = displayItems.filter(
-                (item: MenuItem) => (item as any).isHighlight
+                (item: MenuItem) => (item as any).isHighlight,
               );
 
               const remainingSlots = Math.max(0, 3 - selectedHighlights.length);
@@ -369,7 +373,10 @@ export function TemplatePreviewContent() {
                 .slice(0, remainingSlots);
 
               // Kombiniere und limitiere auf 3
-              const highlightsToShow = [...selectedHighlights, ...randomFiller].slice(0, 3);
+              const highlightsToShow = [
+                ...selectedHighlights,
+                ...randomFiller,
+              ].slice(0, 3);
 
               return highlightsToShow.map((item: MenuItem, i: number) => (
                 <DishCard
@@ -415,11 +422,10 @@ export function TemplatePreviewContent() {
     );
   };
 
-
   // ✅ ORIGINAL MENU PAGE (Fallback)
   const renderMenuPage = () => {
     const filteredItems = activeMenuCategory
-      ? menuItems.filter(item => item.category === activeMenuCategory)
+      ? menuItems.filter((item) => item.category === activeMenuCategory)
       : menuItems;
 
     return (
@@ -434,7 +440,7 @@ export function TemplatePreviewContent() {
               categories={categories}
               activeCategory={activeMenuCategory}
               onCategoryChange={(category) => {
-                console.log('[MenuPage] Category changed:', category);
+                console.log("[MenuPage] Category changed:", category);
                 setActiveMenuCategory(category);
               }}
               fontColor={fontColor}
@@ -451,71 +457,73 @@ export function TemplatePreviewContent() {
           {filteredItems.length > 0 ? (
             <>
               {/* Items nach Kategorie gruppieren (optional) */}
-              {!activeMenuCategory && categories.length > 0 ? (
-                // Gruppierte Ansicht wenn "Alle" ausgewählt
-                categories.map(category => {
-                  const categoryItems = menuItems.filter(item => item.category === category);
-                  if (categoryItems.length === 0) return null;
+              {!activeMenuCategory && categories.length > 0
+                ? // Gruppierte Ansicht wenn "Alle" ausgewählt
+                  categories.map((category) => {
+                    const categoryItems = menuItems.filter(
+                      (item) => item.category === category,
+                    );
+                    if (categoryItems.length === 0) return null;
 
-                  return (
-                    <div key={category} className="space-y-3">
-                      <h3
-                        className="text-lg font-bold mt-6 mb-3 pb-2 border-b"
-                        style={{
-                          color: fontColor,
-                          borderColor: `${fontColor}20`
-                        }}
-                      >
-                        {category}
-                      </h3>
-                      {categoryItems.map((item) => (
-                        <DishCard
-                          key={item.id}
-                          item={item}
-                          fontColor={fontColor}
-                          priceColor={priceColor}
-                          primaryColor={primaryColor}
-                          backgroundColor={backgroundColor}
-                          template={template}
-                          onlineOrdering={onlineOrdering}
-                          showImage={true}
-                          onClick={() => openDishModal(item)}
-                          onAddToCart={addToCart}
-                          isPreview={true}
-                        />
-                      ))}
-                    </div>
-                  );
-                })
-              ) : (
-                // Flache Liste wenn Kategorie ausgewählt
-                filteredItems.map((item) => (
-                  <DishCard
-                    key={item.id}
-                    item={item}
-                    fontColor={fontColor}
-                    priceColor={priceColor}
-                    primaryColor={primaryColor}
-                    backgroundColor={backgroundColor}
-                    template={template}
-                    onlineOrdering={onlineOrdering}
-                    showImage={true}
-                    onClick={() => openDishModal(item)}
-                    onAddToCart={addToCart}
-                    isPreview={true}
-                  />
-                ))
-              )}
+                    return (
+                      <div key={category} className="space-y-3">
+                        <h3
+                          className="text-lg font-bold mt-6 mb-3 pb-2 border-b"
+                          style={{
+                            color: fontColor,
+                            borderColor: `${fontColor}20`,
+                          }}
+                        >
+                          {category}
+                        </h3>
+                        {categoryItems.map((item) => (
+                          <DishCard
+                            key={item.id}
+                            item={item}
+                            fontColor={fontColor}
+                            priceColor={priceColor}
+                            primaryColor={primaryColor}
+                            backgroundColor={backgroundColor}
+                            template={template}
+                            onlineOrdering={onlineOrdering}
+                            showImage={true}
+                            onClick={() => openDishModal(item)}
+                            onAddToCart={addToCart}
+                            isPreview={true}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })
+                : // Flache Liste wenn Kategorie ausgewählt
+                  filteredItems.map((item) => (
+                    <DishCard
+                      key={item.id}
+                      item={item}
+                      fontColor={fontColor}
+                      priceColor={priceColor}
+                      primaryColor={primaryColor}
+                      backgroundColor={backgroundColor}
+                      template={template}
+                      onlineOrdering={onlineOrdering}
+                      showImage={true}
+                      onClick={() => openDishModal(item)}
+                      onAddToCart={addToCart}
+                      isPreview={true}
+                    />
+                  ))}
             </>
           ) : (
             // Empty State
             <div className="text-center py-16 opacity-50">
               <div className="text-5xl mb-4">🍽️</div>
-              <p className="text-base font-medium mb-2" style={{ color: fontColor }}>
+              <p
+                className="text-base font-medium mb-2"
+                style={{ color: fontColor }}
+              >
                 {activeMenuCategory
                   ? `Keine Gerichte in "${activeMenuCategory}"`
-                  : "Noch keine Gerichte hinzugefügt"
-                }
+                  : "Noch keine Gerichte hinzugefügt"}
               </p>
               {activeMenuCategory && (
                 <button
@@ -535,8 +543,12 @@ export function TemplatePreviewContent() {
 
         {/* Item Count Info */}
         {filteredItems.length > 0 && (
-          <div className="text-center text-xs opacity-50 pt-4 border-t" style={{ borderColor: `${fontColor}10` }}>
-            {filteredItems.length} {filteredItems.length === 1 ? 'Gericht' : 'Gerichte'}
+          <div
+            className="text-center text-xs opacity-50 pt-4 border-t"
+            style={{ borderColor: `${fontColor}10` }}
+          >
+            {filteredItems.length}{" "}
+            {filteredItems.length === 1 ? "Gericht" : "Gerichte"}
             {activeMenuCategory && ` in "${activeMenuCategory}"`}
           </div>
         )}
@@ -566,18 +578,20 @@ export function TemplatePreviewContent() {
                 </div>
               </div>
             )}
-            {(contactMethods as unknown as ContactMethodObject[]).map((m, i: number) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="p-2 bg-current/5 rounded-full">
-                  {m.type === "phone" ? (
-                    <Phone className="w-4 h-4" />
-                  ) : (
-                    <Mail className="w-4 h-4" />
-                  )}
+            {(contactMethods as unknown as ContactMethodObject[]).map(
+              (m, i: number) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div className="p-2 bg-current/5 rounded-full">
+                    {m.type === "phone" ? (
+                      <Phone className="w-4 h-4" />
+                    ) : (
+                      <Mail className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className={styles.bodyClass}>{m.value}</div>
                 </div>
-                <div className={styles.bodyClass}>{m.value}</div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
 
@@ -588,21 +602,23 @@ export function TemplatePreviewContent() {
           </h3>
           <div className="space-y-2 opacity-90">
             {Object.keys(openingHours).length > 0 ? (
-              Object.entries(openingHours).map(([day, hours]: [string, any]) => (
-                <div
-                  key={day}
-                  className="flex justify-between text-xs py-2 border-b border-current/5 last:border-0"
-                >
-                  <span className="capitalize opacity-80 font-medium">
-                    {day}
-                  </span>
-                  <span className="font-bold">
-                    {hours.closed
-                      ? "Geschlossen"
-                      : `${hours.open} - ${hours.close}`}
-                  </span>
-                </div>
-              ))
+              Object.entries(openingHours).map(
+                ([day, hours]: [string, any]) => (
+                  <div
+                    key={day}
+                    className="flex justify-between text-xs py-2 border-b border-current/5 last:border-0"
+                  >
+                    <span className="capitalize opacity-80 font-medium">
+                      {day}
+                    </span>
+                    <span className="font-bold">
+                      {hours.closed
+                        ? "Geschlossen"
+                        : `${hours.open} - ${hours.close}`}
+                    </span>
+                  </div>
+                ),
+              )
             ) : (
               <div className="text-xs opacity-60 italic">
                 Keine Zeiten hinterlegt.
@@ -648,7 +664,7 @@ export function TemplatePreviewContent() {
                   </div>
                 )}
               </div>
-            )
+            ),
           )}
         </div>
       </div>
@@ -801,7 +817,9 @@ export function TemplatePreviewContent() {
 
       {/* Menu Overlay - SHARED COMPONENT */}
       <div className="absolute inset-0 z-[110] pointer-events-none">
-        <div className={`${previewState.menuOpen ? "pointer-events-auto" : "pointer-events-none"} h-full w-full`}>
+        <div
+          className={`${previewState.menuOpen ? "pointer-events-auto" : "pointer-events-none"} h-full w-full`}
+        >
           <MenuOverlay
             isOpen={previewState.menuOpen}
             backgroundColor={backgroundColor}
@@ -829,7 +847,9 @@ export function TemplatePreviewContent() {
 
       {/* Dish Modal - SHARED COMPONENT */}
       <div className="absolute inset-0 z-[60] pointer-events-none">
-        <div className={`${selectedDish ? "pointer-events-auto" : "pointer-events-none"} h-full w-full`}>
+        <div
+          className={`${selectedDish ? "pointer-events-auto" : "pointer-events-none"} h-full w-full`}
+        >
           <DishModal
             dish={selectedDish}
             currentImageIndex={currentImageIndex}

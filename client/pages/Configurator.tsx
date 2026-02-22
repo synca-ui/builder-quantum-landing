@@ -232,7 +232,8 @@ export default function Configurator() {
   const getLiveUrl = useCallback(() => {
     if (publishedUrl) return publishedUrl;
 
-    const subdomain = business.domain?.selectedDomain ||
+    const subdomain =
+      business.domain?.selectedDomain ||
       business.name.toLowerCase().replace(/[^a-z0-9]/g, "-") ||
       "site";
 
@@ -254,22 +255,23 @@ export default function Configurator() {
   useEffect(() => {
     // Styles injizieren
     injectGlobalStyles({
-      template: design.template || 'minimalist',
-      primaryColor: design.primaryColor || '#2563EB',
-      secondaryColor: design.secondaryColor || '#7C3AED',
-      backgroundColor: design.backgroundColor || '#FFFFFF',
-      fontColor: design.fontColor || '#111827',
-      priceColor: design.priceColor || '#059669',
-      headerFontColor: design.headerFontColor || '#5e30eb',
-      headerBackgroundColor: design.headerBackgroundColor || '#FFFFFF',
-      headerFontSize: design.headerFontSize || '3xl',
-      reservationButtonColor: features.reservationButtonColor || '#94e3fe',
-      reservationButtonTextColor: features.reservationButtonTextColor || '#000000',
+      template: design.template || "minimalist",
+      primaryColor: design.primaryColor || "#2563EB",
+      secondaryColor: design.secondaryColor || "#7C3AED",
+      backgroundColor: design.backgroundColor || "#FFFFFF",
+      fontColor: design.fontColor || "#111827",
+      priceColor: design.priceColor || "#059669",
+      headerFontColor: design.headerFontColor || "#5e30eb",
+      headerBackgroundColor: design.headerBackgroundColor || "#FFFFFF",
+      headerFontSize: design.headerFontSize || "3xl",
+      reservationButtonColor: features.reservationButtonColor || "#94e3fe",
+      reservationButtonTextColor:
+        features.reservationButtonTextColor || "#000000",
     });
 
     return () => {
       // ID muss exakt mit STYLE_ELEMENT_ID in styleInjector.ts übereinstimmen
-      const styleElement = document.getElementById('maitr-injected-styles');
+      const styleElement = document.getElementById("maitr-injected-styles");
       if (styleElement) styleElement.remove();
     };
   }, [
@@ -283,7 +285,7 @@ export default function Configurator() {
     design.headerFontSize,
     design.priceColor,
     features.reservationButtonColor,
-    features.reservationButtonTextColor
+    features.reservationButtonTextColor,
   ]);
 
   const saveToBackend = useCallback(
@@ -320,7 +322,8 @@ export default function Configurator() {
       const token = await getToken();
       const config = actions.data.getFullConfiguration();
       // Generiere Subdomain aus dem gewählten Namen oder Business-Namen
-      const subdomain = business.domain?.selectedDomain ||
+      const subdomain =
+        business.domain?.selectedDomain ||
         business.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
       const result = await publishWebApp(subdomain, config, token || undefined);
@@ -334,7 +337,14 @@ export default function Configurator() {
       console.error("Publishing failed", e);
       setSaveStatus("idle");
     }
-  }, [isSignedIn, getToken, setPublishedUrl, actions.data, business.domain?.selectedDomain, business.name]);
+  }, [
+    isSignedIn,
+    getToken,
+    setPublishedUrl,
+    actions.data,
+    business.domain?.selectedDomain,
+    business.name,
+  ]);
 
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -345,7 +355,7 @@ export default function Configurator() {
     actions.history.pushHistory(); // Push history before navigation
 
     // Kurze Delay für stabile Transition
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     nextStepStore();
 
@@ -360,7 +370,7 @@ export default function Configurator() {
     actions.history.pushHistory(); // Push history before navigation
 
     // Kurze Delay für stabile Transition
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     prevStepStore();
 
@@ -398,15 +408,21 @@ export default function Configurator() {
         <ShareQRButton url={getLiveUrl()} t={t} />
       </div>
 
-      <div className={`relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-all duration-100 pointer-events-auto ${
-        isTransitioning ? 'opacity-90 scale-[0.745] xl:scale-[0.845]' : 'opacity-100'
-      }`}>
+      <div
+        className={`relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-all duration-100 pointer-events-auto ${
+          isTransitioning
+            ? "opacity-90 scale-[0.745] xl:scale-[0.845]"
+            : "opacity-100"
+        }`}
+      >
         <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/10 to-purple-500/10 blur-3xl rounded-full opacity-30 -z-10" />
         <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
           <PhonePortal>
-            <div className={`transition-opacity duration-100 ${
-              isTransitioning ? 'opacity-50' : 'opacity-100'
-            }`}>
+            <div
+              className={`transition-opacity duration-100 ${
+                isTransitioning ? "opacity-50" : "opacity-100"
+              }`}
+            >
               <TemplatePreviewContent />
             </div>
           </PhonePortal>
@@ -504,7 +520,9 @@ export default function Configurator() {
                   // Push to history before saving
                   actions.history.pushHistory();
                   if (cloudSyncEnabled) {
-                    saveToBackend(actions.data.getFullConfiguration()).then(() => {});
+                    saveToBackend(actions.data.getFullConfiguration()).then(
+                      () => {},
+                    );
                   } else {
                     setSaveStatus("saved");
                     setTimeout(() => setSaveStatus("idle"), 2000);

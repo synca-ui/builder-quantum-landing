@@ -12,9 +12,9 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo } from 'react';
-import { Plus } from 'lucide-react';
-import type { MenuItem } from '@/types/domain';
+import React, { memo } from "react";
+import { Plus } from "lucide-react";
+import type { MenuItem } from "@/types/domain";
 
 // ============================================
 // TYPES
@@ -52,17 +52,17 @@ export interface DishCardProps {
 // ============================================
 
 function normalizeImageSrc(img: unknown): string {
-  if (!img) return '/placeholder.svg';
-  if (typeof img === 'string') return img;
+  if (!img) return "/placeholder.svg";
+  if (typeof img === "string") return img;
 
   const imgObj = img as { url?: string; file?: File };
   if (imgObj.url) return imgObj.url;
 
-  if (typeof File !== 'undefined' && imgObj.file instanceof File) {
+  if (typeof File !== "undefined" && imgObj.file instanceof File) {
     return URL.createObjectURL(imgObj.file);
   }
 
-  return '/placeholder.svg';
+  return "/placeholder.svg";
 }
 
 // ============================================
@@ -71,29 +71,29 @@ function normalizeImageSrc(img: unknown): string {
 
 function getTemplateCardStyle(template: string): React.CSSProperties {
   switch (template) {
-    case 'modern':
+    case "modern":
       return {
-        background: 'rgba(255,255,255,0.1)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.2)',
+        background: "rgba(255,255,255,0.1)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,255,255,0.2)",
       };
-    case 'stylish':
+    case "stylish":
       return {
-        background: '#FFFFFF',
-        border: '1px solid rgba(0,0,0,0.05)',
+        background: "#FFFFFF",
+        border: "1px solid rgba(0,0,0,0.05)",
       };
-    case 'cozy':
+    case "cozy":
       return {
-        background: 'rgba(255,255,255,0.9)',
-        border: '1px solid rgba(245,158,11,0.1)',
+        background: "rgba(255,255,255,0.9)",
+        border: "1px solid rgba(245,158,11,0.1)",
       };
-    case 'minimalist':
+    case "minimalist":
     default:
       return {
-        background: 'transparent',
-        borderBottom: '1px solid currentColor',
-        borderBottomColor: 'rgba(0,0,0,0.1)',
+        background: "transparent",
+        borderBottom: "1px solid currentColor",
+        borderBottomColor: "rgba(0,0,0,0.1)",
       };
   }
 }
@@ -108,15 +108,14 @@ export const DishCard = memo(function DishCard({
   priceColor,
   primaryColor,
   backgroundColor,
-  template = 'minimalist',
+  template = "minimalist",
   onlineOrdering = false,
   showImage = false,
   onClick,
   onAddToCart,
   isPreview = false,
-  className = '',
+  className = "",
 }: DishCardProps) {
-
   const handleClick = () => {
     if (onClick) onClick();
   };
@@ -127,29 +126,33 @@ export const DishCard = memo(function DishCard({
   };
 
   const templateStyle = getTemplateCardStyle(template);
-  const isMinimalist = template === 'minimalist';
+  const isMinimalist = template === "minimalist";
 
   // Preis formatieren
-  const formattedPrice = typeof item.price === 'number'
-    ? `${item.price.toFixed(2)}€`
-    : item.price
-      ? `${item.price}€`
-      : '';
+  const formattedPrice =
+    typeof item.price === "number"
+      ? `${item.price.toFixed(2)}€`
+      : item.price
+        ? `${item.price}€`
+        : "";
 
   // Bild-URL
-  const imageUrl = item.imageUrl || (item.image ? normalizeImageSrc(item.image) : null);
+  const imageUrl =
+    item.imageUrl || (item.image ? normalizeImageSrc(item.image) : null);
 
   return (
     <article
       className={`
         cursor-pointer transition-transform active:scale-[0.98]
-        ${isMinimalist ? 'py-5 last:border-0' : 'p-4 mb-4'}
+        ${isMinimalist ? "py-5 last:border-0" : "p-4 mb-4"}
         ${className}
       `}
       style={{
         ...templateStyle,
-        borderRadius: isMinimalist ? '0' : 'var(--radius-card, 16px)',
-        boxShadow: isMinimalist ? 'none' : 'var(--shadow-card, 0 4px 12px rgba(0,0,0,0.08))',
+        borderRadius: isMinimalist ? "0" : "var(--radius-card, 16px)",
+        boxShadow: isMinimalist
+          ? "none"
+          : "var(--shadow-card, 0 4px 12px rgba(0,0,0,0.08))",
         color: fontColor,
       }}
       onClick={handleClick}
@@ -162,7 +165,7 @@ export const DishCard = memo(function DishCard({
         {showImage && imageUrl && (
           <div
             className="w-16 h-16 shrink-0 overflow-hidden"
-            style={{ borderRadius: 'var(--radius-card, 12px)' }}
+            style={{ borderRadius: "var(--radius-card, 12px)" }}
           >
             <img
               src={imageUrl}
@@ -177,9 +180,7 @@ export const DishCard = memo(function DishCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             {/* Emoji (wenn vorhanden) */}
-            {item.emoji && (
-              <span className="text-lg">{item.emoji}</span>
-            )}
+            {item.emoji && <span className="text-lg">{item.emoji}</span>}
 
             {/* Name */}
             <h3
@@ -206,7 +207,7 @@ export const DishCard = memo(function DishCard({
               className="inline-block mt-2 px-2 py-0.5 text-[10px] font-medium opacity-60"
               style={{
                 backgroundColor: `${fontColor}10`,
-                borderRadius: 'var(--radius-button, 4px)',
+                borderRadius: "var(--radius-button, 4px)",
               }}
             >
               {item.category}
@@ -231,9 +232,9 @@ export const DishCard = memo(function DishCard({
               className="w-8 h-8 flex items-center justify-center transition-transform active:scale-90"
               style={{
                 backgroundColor: primaryColor,
-                color: '#FFFFFF',
-                borderRadius: 'var(--radius-button, 50%)',
-                boxShadow: 'var(--shadow-button, 0 2px 8px rgba(0,0,0,0.15))',
+                color: "#FFFFFF",
+                borderRadius: "var(--radius-button, 50%)",
+                boxShadow: "var(--shadow-button, 0 2px 8px rgba(0,0,0,0.15))",
               }}
               aria-label={`${item.name} zum Warenkorb hinzufügen`}
             >
@@ -248,9 +249,9 @@ export const DishCard = memo(function DishCard({
         <div
           className="mt-2 px-2 py-1 text-xs font-medium text-center"
           style={{
-            backgroundColor: 'rgba(239,68,68,0.1)',
-            color: '#EF4444',
-            borderRadius: 'var(--radius-button, 4px)',
+            backgroundColor: "rgba(239,68,68,0.1)",
+            color: "#EF4444",
+            borderRadius: "var(--radius-button, 4px)",
           }}
         >
           Aktuell nicht verfügbar
@@ -261,4 +262,3 @@ export const DishCard = memo(function DishCard({
 });
 
 export default DishCard;
-

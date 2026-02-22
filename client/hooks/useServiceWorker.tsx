@@ -1,32 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 export function useServiceWorker() {
   useEffect(() => {
     // Register Service Worker only in production and when supported
-    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+    if ("serviceWorker" in navigator && import.meta.env.PROD) {
       // Register after initial page load to avoid blocking
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', {
-          scope: '/',
-          updateViaCache: 'none' // Always check for updates
-        })
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js", {
+            scope: "/",
+            updateViaCache: "none", // Always check for updates
+          })
           .then((registration) => {
             if (import.meta.env.DEV) {
-              console.log('SW registered successfully:', registration.scope);
+              console.log("SW registered successfully:", registration.scope);
             }
 
             // Check for updates periodically
-            registration.addEventListener('updatefound', () => {
+            registration.addEventListener("updatefound", () => {
               const newWorker = registration.installing;
               if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                newWorker.addEventListener("statechange", () => {
+                  if (
+                    newWorker.state === "installed" &&
+                    navigator.serviceWorker.controller
+                  ) {
                     if (import.meta.env.DEV) {
-                      console.log('New SW version available');
+                      console.log("New SW version available");
                     }
                     // Optionally notify user about update
-                    if (confirm('New version available! Reload to update?')) {
-                      newWorker.postMessage({ action: 'skipWaiting' });
+                    if (confirm("New version available! Reload to update?")) {
+                      newWorker.postMessage({ action: "skipWaiting" });
                       window.location.reload();
                     }
                   }
@@ -36,24 +40,24 @@ export function useServiceWorker() {
           })
           .catch((error) => {
             if (import.meta.env.DEV) {
-              console.warn('SW registration failed:', error);
+              console.warn("SW registration failed:", error);
             }
           });
       });
 
       // Listen for SW updates
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (import.meta.env.DEV) {
-          console.log('SW controller changed');
+          console.log("SW controller changed");
         }
       });
     } else if (import.meta.env.DEV) {
-      console.log('SW registration skipped in development');
+      console.log("SW registration skipped in development");
       // Force unregister in dev to prevent stale cache issues
-      navigator.serviceWorker.getRegistrations().then(registrations => {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (let registration of registrations) {
           registration.unregister();
-          console.log('🧹 Existing SW unregistered for dev mode');
+          console.log("🧹 Existing SW unregistered for dev mode");
           window.location.reload(); // Reload once to flush cache
         }
       });
@@ -74,16 +78,19 @@ export function useInstallPrompt() {
     };
 
     const handleAppInstalled = () => {
-      console.log('PWA was installed');
+      console.log("PWA was installed");
       deferredPrompt = null;
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 }

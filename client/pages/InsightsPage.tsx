@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import {
   TrendingUp,
   TrendingDown,
@@ -9,8 +9,8 @@ import {
   QrCode,
   Calendar,
   Eye,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
   Line,
@@ -27,7 +27,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from 'recharts';
+} from "recharts";
 
 interface MetricCardProps {
   title: string;
@@ -37,7 +37,13 @@ interface MetricCardProps {
   description?: string;
 }
 
-function MetricCard({ title, value, change, icon: Icon, description }: MetricCardProps) {
+function MetricCard({
+  title,
+  value,
+  change,
+  icon: Icon,
+  description,
+}: MetricCardProps) {
   const isPositive = change !== undefined && change >= 0;
 
   return (
@@ -62,10 +68,10 @@ function MetricCard({ title, value, change, icon: Icon, description }: MetricCar
             )}
             <span
               className={`text-sm font-medium ${
-                isPositive ? 'text-green-600' : 'text-red-600'
+                isPositive ? "text-green-600" : "text-red-600"
               }`}
             >
-              {isPositive ? '+' : ''}
+              {isPositive ? "+" : ""}
               {change.toFixed(1)}%
             </span>
             <span className="text-xs text-gray-500">vs. gestern</span>
@@ -88,7 +94,7 @@ export default function InsightsPage() {
   const [popularItems, setPopularItems] = useState<any[]>([]);
 
   // TODO: Get businessId from context/state
-  const businessId = 'demo-business-id';
+  const businessId = "demo-business-id";
 
   useEffect(() => {
     loadDashboardData();
@@ -104,7 +110,7 @@ export default function InsightsPage() {
       // Load overview metrics
       const overviewRes = await fetch(
         `/api/dashboard/insights/overview?businessId=${businessId}`,
-        { headers }
+        { headers },
       );
       const overviewData = await overviewRes.json();
       if (overviewData.success) {
@@ -114,7 +120,7 @@ export default function InsightsPage() {
       // Load revenue chart
       const revenueRes = await fetch(
         `/api/dashboard/insights/revenue-chart?businessId=${businessId}&days=30`,
-        { headers }
+        { headers },
       );
       const revenueResult = await revenueRes.json();
       if (revenueResult.success) {
@@ -124,7 +130,7 @@ export default function InsightsPage() {
       // Load traffic sources
       const trafficRes = await fetch(
         `/api/dashboard/insights/traffic-sources?businessId=${businessId}`,
-        { headers }
+        { headers },
       );
       const trafficResult = await trafficRes.json();
       if (trafficResult.success) {
@@ -134,14 +140,14 @@ export default function InsightsPage() {
       // Load popular items
       const itemsRes = await fetch(
         `/api/dashboard/insights/popular-items?businessId=${businessId}&limit=5`,
-        { headers }
+        { headers },
       );
       const itemsResult = await itemsRes.json();
       if (itemsResult.success) {
         setPopularItems(itemsResult.data);
       }
     } catch (error) {
-      console.error('Error loading dashboard:', error);
+      console.error("Error loading dashboard:", error);
     } finally {
       setLoading(false);
     }
@@ -158,7 +164,7 @@ export default function InsightsPage() {
     );
   }
 
-  const COLORS = ['#0d9488', '#7c3aed', '#f59e0b', '#ef4444', '#3b82f6'];
+  const COLORS = ["#0d9488", "#7c3aed", "#f59e0b", "#ef4444", "#3b82f6"];
 
   return (
     <div className="space-y-8">
@@ -206,7 +212,13 @@ export default function InsightsPage() {
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={revenueData}>
                 <defs>
-                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient
+                    id="revenueGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
                     <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
                   </linearGradient>
@@ -224,11 +236,11 @@ export default function InsightsPage() {
                 <YAxis stroke="#6b7280" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
                   }}
-                  formatter={(value: any) => [`€${value}`, 'Umsatz']}
+                  formatter={(value: any) => [`€${value}`, "Umsatz"]}
                 />
                 <Area
                   type="monotone"
@@ -276,8 +288,10 @@ export default function InsightsPage() {
                 <p className="text-2xl font-bold text-gray-900">
                   €
                   {overview?.revenue.current && overview?.orders.current
-                    ? (overview.revenue.current / overview.orders.current).toFixed(2)
-                    : '0.00'}
+                    ? (
+                        overview.revenue.current / overview.orders.current
+                      ).toFixed(2)
+                    : "0.00"}
                 </p>
               </div>
               <DollarSign className="w-8 h-8 text-orange-600" />
@@ -304,10 +318,15 @@ export default function InsightsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={(entry) => `${entry.source}: ${entry.percentage.toFixed(0)}%`}
+                    label={(entry) =>
+                      `${entry.source}: ${entry.percentage.toFixed(0)}%`
+                    }
                   >
                     {trafficSources.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -344,14 +363,24 @@ export default function InsightsPage() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
                     }}
                   />
-                  <Bar dataKey="count" fill="url(#barGradient)" radius={[0, 8, 8, 0]}>
+                  <Bar
+                    dataKey="count"
+                    fill="url(#barGradient)"
+                    radius={[0, 8, 8, 0]}
+                  >
                     <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                      <linearGradient
+                        id="barGradient"
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="0"
+                      >
                         <stop offset="0%" stopColor="#0d9488" />
                         <stop offset="100%" stopColor="#7c3aed" />
                       </linearGradient>

@@ -3,8 +3,8 @@
  * Provides the main layout structure with sidebar navigation and content area
  */
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   BarChart3,
   Users,
@@ -15,9 +15,9 @@ import {
   MapPin,
   TrendingUp,
   Bell,
-  User
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
+  User,
+} from "lucide-react";
+import { cn } from "../../lib/utils";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -26,43 +26,46 @@ interface DashboardLayoutProps {
 
 const navigationItems = [
   {
-    title: 'Insights',
-    href: '/dashboard/insights',
+    title: "Insights",
+    href: "/dashboard/insights",
     icon: BarChart3,
-    description: 'Analytics & Performance',
-    gradient: 'from-teal-500 to-teal-600',
+    description: "Analytics & Performance",
+    gradient: "from-teal-500 to-teal-600",
   },
   {
-    title: 'Mitarbeiter',
-    href: '/dashboard/staff',
+    title: "Mitarbeiter",
+    href: "/dashboard/staff",
     icon: Users,
-    description: 'Staff & Shift Management',
-    gradient: 'from-blue-500 to-blue-600',
+    description: "Staff & Shift Management",
+    gradient: "from-blue-500 to-blue-600",
   },
   {
-    title: 'Mein Lokal',
-    href: '/dashboard/floor-plan',
+    title: "Mein Lokal",
+    href: "/dashboard/floor-plan",
     icon: MapPin,
-    description: 'Floor Plan Editor',
-    gradient: 'from-purple-500 to-purple-600',
+    description: "Floor Plan Editor",
+    gradient: "from-purple-500 to-purple-600",
   },
   {
-    title: 'Creative Studio',
-    href: '/dashboard/creative',
+    title: "Creative Studio",
+    href: "/dashboard/creative",
     icon: Palette,
-    description: 'Templates & Menu Design',
-    gradient: 'from-pink-500 to-pink-600',
+    description: "Templates & Menu Design",
+    gradient: "from-pink-500 to-pink-600",
   },
   {
-    title: 'Admin',
-    href: '/dashboard/admin',
+    title: "Admin",
+    href: "/dashboard/admin",
     icon: Settings,
-    description: 'Reservations & SEO',
-    gradient: 'from-gray-500 to-gray-600',
+    description: "Reservations & SEO",
+    gradient: "from-gray-500 to-gray-600",
   },
 ];
 
-export default function DashboardLayout({ children, businessId }: DashboardLayoutProps) {
+export default function DashboardLayout({
+  children,
+  businessId,
+}: DashboardLayoutProps) {
   const location = useLocation();
 
   return (
@@ -90,37 +93,45 @@ export default function DashboardLayout({ children, businessId }: DashboardLayou
             return (
               <Link
                 key={item.href}
-                to={`${item.href}${businessId ? `?businessId=${businessId}` : ''}`}
+                to={`${item.href}${businessId ? `?businessId=${businessId}` : ""}`}
                 className={cn(
-                  'group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200',
+                  "group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200",
                   isActive
-                    ? 'bg-gradient-to-r text-white shadow-lg transform scale-[1.02]'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                  isActive && `bg-gradient-to-r ${item.gradient}`
+                    ? "bg-gradient-to-r text-white shadow-lg transform scale-[1.02]"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  isActive && `bg-gradient-to-r ${item.gradient}`,
                 )}
               >
-                <div className={cn(
-                  'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
-                  isActive
-                    ? 'bg-white/20'
-                    : 'bg-gray-100 group-hover:bg-gray-200'
-                )}>
-                  <item.icon className={cn(
-                    'w-5 h-5',
-                    isActive ? 'text-white' : 'text-gray-600'
-                  )} />
+                <div
+                  className={cn(
+                    "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                    isActive
+                      ? "bg-white/20"
+                      : "bg-gray-100 group-hover:bg-gray-200",
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      "w-5 h-5",
+                      isActive ? "text-white" : "text-gray-600",
+                    )}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    'font-semibold text-sm',
-                    isActive ? 'text-white' : 'text-gray-900'
-                  )}>
+                  <p
+                    className={cn(
+                      "font-semibold text-sm",
+                      isActive ? "text-white" : "text-gray-900",
+                    )}
+                  >
                     {item.title}
                   </p>
-                  <p className={cn(
-                    'text-xs truncate',
-                    isActive ? 'text-white/80' : 'text-gray-500'
-                  )}>
+                  <p
+                    className={cn(
+                      "text-xs truncate",
+                      isActive ? "text-white/80" : "text-gray-500",
+                    )}
+                  >
                     {item.description}
                   </p>
                 </div>
@@ -136,8 +147,12 @@ export default function DashboardLayout({ children, businessId }: DashboardLayou
               <User className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-gray-900">Restaurant Owner</p>
-              <p className="text-xs text-gray-500 truncate">Manage your business</p>
+              <p className="font-medium text-sm text-gray-900">
+                Restaurant Owner
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                Manage your business
+              </p>
             </div>
           </div>
         </div>
@@ -150,10 +165,12 @@ export default function DashboardLayout({ children, businessId }: DashboardLayou
           <div className="flex items-center space-x-4">
             <div>
               <h2 className="font-bold text-xl text-gray-900">
-                {navigationItems.find(item => item.href === location.pathname)?.title || 'Dashboard'}
+                {navigationItems.find((item) => item.href === location.pathname)
+                  ?.title || "Dashboard"}
               </h2>
               <p className="text-sm text-gray-500">
-                {navigationItems.find(item => item.href === location.pathname)?.description || 'Manage your restaurant'}
+                {navigationItems.find((item) => item.href === location.pathname)
+                  ?.description || "Manage your restaurant"}
               </p>
             </div>
           </div>
@@ -170,9 +187,7 @@ export default function DashboardLayout({ children, businessId }: DashboardLayou
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-8">
-            {children}
-          </div>
+          <div className="p-8">{children}</div>
         </main>
       </div>
     </div>

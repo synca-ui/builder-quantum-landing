@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import {
   Plus,
   Calendar as CalendarIcon,
@@ -8,25 +8,25 @@ import {
   Users,
   Clock,
   AlertTriangle,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 interface Employee {
   id: string;
@@ -47,11 +47,11 @@ interface Shift {
 }
 
 const POSITIONS = [
-  { value: 'server', label: 'Server', color: '#0d9488' },
-  { value: 'chef', label: 'Koch', color: '#f59e0b' },
-  { value: 'bartender', label: 'Barkeeper', color: '#7c3aed' },
-  { value: 'host', label: 'Host', color: '#ef4444' },
-  { value: 'manager', label: 'Manager', color: '#3b82f6' },
+  { value: "server", label: "Server", color: "#0d9488" },
+  { value: "chef", label: "Koch", color: "#f59e0b" },
+  { value: "bartender", label: "Barkeeper", color: "#7c3aed" },
+  { value: "host", label: "Host", color: "#ef4444" },
+  { value: "manager", label: "Manager", color: "#3b82f6" },
 ];
 
 export default function StaffPage() {
@@ -60,13 +60,13 @@ export default function StaffPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [showAddShift, setShowAddShift] = useState(false);
   const [draggedShift, setDraggedShift] = useState<string | null>(null);
 
   // TODO: Get businessId from context
-  const businessId = 'demo-business-id';
+  const businessId = "demo-business-id";
 
   useEffect(() => {
     loadData();
@@ -80,7 +80,7 @@ export default function StaffPage() {
       // Load employees
       const empRes = await fetch(
         `/api/dashboard/staff/employees?businessId=${businessId}`,
-        { headers }
+        { headers },
       );
       const empData = await empRes.json();
       if (empData.success) setEmployees(empData.data);
@@ -89,19 +89,19 @@ export default function StaffPage() {
       const { startDate, endDate } = getDateRange();
       const shiftsRes = await fetch(
         `/api/dashboard/staff/shifts?businessId=${businessId}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
-        { headers }
+        { headers },
       );
       const shiftsData = await shiftsRes.json();
       if (shiftsData.success) setShifts(shiftsData.data);
     } catch (error) {
-      console.error('Error loading staff data:', error);
+      console.error("Error loading staff data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const getDateRange = () => {
-    if (viewMode === 'week') {
+    if (viewMode === "week") {
       // Get current week (Monday to Sunday)
       const start = new Date(currentDate);
       const day = start.getDay();
@@ -116,8 +116,16 @@ export default function StaffPage() {
       return { startDate: start, endDate: end };
     } else {
       // Get current month
-      const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const start = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1,
+      );
+      const end = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+      );
       end.setHours(23, 59, 59, 999);
       return { startDate: start, endDate: end };
     }
@@ -134,18 +142,18 @@ export default function StaffPage() {
     return days;
   };
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
+  const navigateWeek = (direction: "prev" | "next") => {
     const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + (direction === 'prev' ? -7 : 7));
+    newDate.setDate(currentDate.getDate() + (direction === "prev" ? -7 : 7));
     setCurrentDate(newDate);
   };
 
   const getShiftsForDay = (date: Date, employeeId?: string) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split("T")[0];
     return shifts.filter(
       (shift) =>
         shift.date.startsWith(dateStr) &&
-        (!employeeId || shift.employeeId === employeeId)
+        (!employeeId || shift.employeeId === employeeId),
     );
   };
 
@@ -161,32 +169,37 @@ export default function StaffPage() {
       const shift = shifts.find((s) => s.id === draggedShift);
       if (!shift) return;
 
-      const response = await fetch(`/api/dashboard/staff/shifts/${draggedShift}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/dashboard/staff/shifts/${draggedShift}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            businessId,
+            employeeId: targetEmployeeId,
+            date: targetDate.toISOString(),
+          }),
         },
-        body: JSON.stringify({
-          businessId,
-          employeeId: targetEmployeeId,
-          date: targetDate.toISOString(),
-        }),
-      });
+      );
 
       const result = await response.json();
 
       if (result.success) {
         // Update local state
         setShifts((prev) =>
-          prev.map((s) => (s.id === draggedShift ? result.data : s))
+          prev.map((s) => (s.id === draggedShift ? result.data : s)),
         );
       } else if (response.status === 409) {
         // Conflict detected
-        alert(`Konflikt: ${result.error}\n\n${JSON.stringify(result.conflicts, null, 2)}`);
+        alert(
+          `Konflikt: ${result.error}\n\n${JSON.stringify(result.conflicts, null, 2)}`,
+        );
       }
     } catch (error) {
-      console.error('Error moving shift:', error);
+      console.error("Error moving shift:", error);
     } finally {
       setDraggedShift(null);
     }
@@ -195,10 +208,10 @@ export default function StaffPage() {
   const createShift = async (data: any) => {
     try {
       const token = await getToken();
-      const response = await fetch('/api/dashboard/staff/shifts', {
-        method: 'POST',
+      const response = await fetch("/api/dashboard/staff/shifts", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -218,12 +231,12 @@ export default function StaffPage() {
         alert(result.message || result.error);
       }
     } catch (error) {
-      console.error('Error creating shift:', error);
+      console.error("Error creating shift:", error);
     }
   };
 
   const weekDays = getWeekDays();
-  const weekDayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const weekDayNames = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
   if (loading) {
     return (
@@ -241,11 +254,10 @@ export default function StaffPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Schichtplanung
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Schichtplanung</h2>
           <p className="text-gray-600 mt-1">
-            {employees.length} Mitarbeiter · {shifts.length} Schichten diese Woche
+            {employees.length} Mitarbeiter · {shifts.length} Schichten diese
+            Woche
           </p>
         </div>
 
@@ -279,29 +291,31 @@ export default function StaffPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigateWeek('prev')}
+                onClick={() => navigateWeek("prev")}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <div className="text-center">
                 <h3 className="font-semibold text-gray-900">
-                  {weekDays[0].toLocaleDateString('de-DE', {
-                    day: '2-digit',
-                    month: 'long',
-                  })}{' '}
-                  -{' '}
-                  {weekDays[6].toLocaleDateString('de-DE', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
+                  {weekDays[0].toLocaleDateString("de-DE", {
+                    day: "2-digit",
+                    month: "long",
+                  })}{" "}
+                  -{" "}
+                  {weekDays[6].toLocaleDateString("de-DE", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
                   })}
                 </h3>
-                <p className="text-sm text-gray-500">KW {getWeekNumber(weekDays[0])}</p>
+                <p className="text-sm text-gray-500">
+                  KW {getWeekNumber(weekDays[0])}
+                </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigateWeek('next')}
+                onClick={() => navigateWeek("next")}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -377,7 +391,7 @@ export default function StaffPage() {
                       <div className="space-y-1">
                         {dayShifts.map((shift) => {
                           const position = POSITIONS.find(
-                            (p) => p.value === shift.position
+                            (p) => p.value === shift.position,
                           );
                           return (
                             <div
@@ -386,7 +400,7 @@ export default function StaffPage() {
                               onDragStart={() => handleDragStart(shift.id)}
                               className="p-2 rounded-lg text-xs cursor-move hover:shadow-md transition-shadow"
                               style={{
-                                backgroundColor: position?.color + '20',
+                                backgroundColor: position?.color + "20",
                                 borderLeft: `3px solid ${position?.color}`,
                               }}
                             >
@@ -415,7 +429,9 @@ export default function StaffPage() {
       {/* Legend */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Position Legende</CardTitle>
+          <CardTitle className="text-sm font-semibold">
+            Position Legende
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
@@ -445,12 +461,12 @@ function AddShiftForm({
   onCancel: () => void;
 }) {
   const [formData, setFormData] = useState({
-    employeeId: '',
-    date: new Date().toISOString().split('T')[0],
-    startTime: '09:00',
-    endTime: '17:00',
-    position: 'server',
-    notes: '',
+    employeeId: "",
+    date: new Date().toISOString().split("T")[0],
+    startTime: "09:00",
+    endTime: "17:00",
+    position: "server",
+    notes: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {

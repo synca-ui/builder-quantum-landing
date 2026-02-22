@@ -388,7 +388,8 @@ export function PublishStep({
   const displayDomain = useMemo(() => {
     if (getDisplayedDomain) return getDisplayedDomain();
 
-    const name = business.domain?.selectedDomain ||
+    const name =
+      business.domain?.selectedDomain ||
       business.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
     return name.includes(".") ? name : `${name}.maitr.de`;
@@ -477,7 +478,18 @@ export function PublishStep({
         category: "content",
       },
     ],
-    [business.name, business.type, design.template, business.domain?.selectedDomain, business.domain?.domainName, business.location, content.menuItems.length, contact.email, contact.phone, content.gallery.length],
+    [
+      business.name,
+      business.type,
+      design.template,
+      business.domain?.selectedDomain,
+      business.domain?.domainName,
+      business.location,
+      content.menuItems.length,
+      contact.email,
+      contact.phone,
+      content.gallery.length,
+    ],
   );
 
   const requiredItems = checklist.filter((item) => item.required);
@@ -505,10 +517,11 @@ export function PublishStep({
       const token = await getToken();
 
       // 2. Subdomain sauber extrahieren (nur den Teil vor dem Punkt)
-      const rawSubdomain = business.domain?.selectedDomain ||
+      const rawSubdomain =
+        business.domain?.selectedDomain ||
         business.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
-      const subdomain = rawSubdomain.split('.')[0].substring(0, 63);
+      const subdomain = rawSubdomain.split(".")[0].substring(0, 63);
 
       // 3. Deployment starten
       const result = await deploy({
@@ -551,7 +564,9 @@ export function PublishStep({
       }
     } catch (error) {
       console.error("Publishing failed:", error);
-      setPublishError(error instanceof Error ? error.message : "Unbekannter Fehler");
+      setPublishError(
+        error instanceof Error ? error.message : "Unbekannter Fehler",
+      );
       setCurrentStage("error");
     } finally {
       if (!isPublished) {
@@ -561,7 +576,17 @@ export function PublishStep({
       }
     }
     // FIX: Dependency Array aktualisiert
-  }, [getToken, saveToBackend, isPublished, currentStage, actions.data, business.domain.selectedDomain, business.name, actions.publishing, configId]);
+  }, [
+    getToken,
+    saveToBackend,
+    isPublished,
+    currentStage,
+    actions.data,
+    business.domain.selectedDomain,
+    business.name,
+    actions.publishing,
+    configId,
+  ]);
 
   const copyToClipboard = useCallback(async (text: string) => {
     try {

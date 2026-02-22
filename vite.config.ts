@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
       "i18next",
       // Include frequently used dependencies
       "@tanstack/react-query",
-      "react-router-dom"
+      "react-router-dom",
     ],
     exclude: ["lucide-react"], // Dynamically import icons for smaller initial bundle
   },
@@ -45,55 +45,54 @@ export default defineConfig(({ mode }) => ({
         // Manual chunk splitting for better caching
         manualChunks: {
           // Vendor chunk for third-party libraries
-          vendor: [
-            "react",
-            "react-dom",
-            "react-router-dom",
-          ],
+          vendor: ["react", "react-dom", "react-router-dom"],
           // Query chunk for data fetching
-          query: [
-            "@tanstack/react-query"
-          ],
+          query: ["@tanstack/react-query"],
           // Auth chunk for authentication
-          auth: [
-            "@clerk/clerk-react"
-          ],
+          auth: ["@clerk/clerk-react"],
           // UI components chunk
           ui: [
             "@radix-ui/react-toast",
             "@radix-ui/react-tooltip",
             "@radix-ui/react-dialog",
-            "@radix-ui/react-select"
+            "@radix-ui/react-select",
           ],
           // Icons chunk (lazy loaded)
           icons: ["lucide-react"],
           // Utils chunk
-          utils: ["clsx", "tailwind-merge"]
+          utils: ["clsx", "tailwind-merge"],
         },
         // Optimize chunk file names for caching
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId
-            ? chunkInfo.facadeModuleId.split('/').pop()?.replace(/\.(tsx?|jsx?)$/, '') || 'chunk'
-            : 'chunk';
+            ? chunkInfo.facadeModuleId
+                .split("/")
+                .pop()
+                ?.replace(/\.(tsx?|jsx?)$/, "") || "chunk"
+            : "chunk";
           return `js/${facadeModuleId}-[hash].js`;
         },
         assetFileNames: (assetInfo) => {
-          if (!assetInfo.name) return 'assets/[name]-[hash][extname]';
+          if (!assetInfo.name) return "assets/[name]-[hash][extname]";
 
-          const info = assetInfo.name.split('.');
+          const info = assetInfo.name.split(".");
           const extType = info[info.length - 1];
 
           if (/\.(css)$/.test(assetInfo.name)) {
-            return 'css/[name]-[hash][extname]';
-          } else if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp|avif)$/i.test(assetInfo.name)) {
-            return 'images/[name]-[hash][extname]';
+            return "css/[name]-[hash][extname]";
+          } else if (
+            /\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp|avif)$/i.test(
+              assetInfo.name,
+            )
+          ) {
+            return "images/[name]-[hash][extname]";
           } else if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name)) {
-            return 'fonts/[name]-[hash][extname]';
+            return "fonts/[name]-[hash][extname]";
           }
           return `assets/[name]-[hash][extname]`;
-        }
-      }
-    }
+        },
+      },
+    },
   },
   plugins: [
     react(), // Use the React plugin for handling React files with SWC for fast compilation

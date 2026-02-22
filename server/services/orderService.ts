@@ -3,7 +3,7 @@
  * Business logic for order tracking and social proof statistics
  */
 
-import prisma from '../db/prisma';
+import prisma from "../db/prisma";
 
 export interface OrderEvent {
   id: string;
@@ -31,13 +31,13 @@ export interface MenuItemStats {
 export async function createOrderEvent(
   webAppId: string,
   menuItemName: string,
-  orderSource: string = 'manual',
-  additionalData?: Partial<OrderEvent>
+  orderSource: string = "manual",
+  additionalData?: Partial<OrderEvent>,
 ): Promise<OrderEvent | null> {
   try {
     // Validate required fields
     if (!webAppId || !menuItemName) {
-      console.warn('Missing required fields for order event');
+      console.warn("Missing required fields for order event");
       return null;
     }
 
@@ -61,7 +61,7 @@ export async function createOrderEvent(
       createdAt: event.orderedAt,
     };
   } catch (error) {
-    console.error('Error creating order event:', error);
+    console.error("Error creating order event:", error);
     return null;
   }
 }
@@ -69,7 +69,10 @@ export async function createOrderEvent(
 /**
  * Get recent orders for a web app (last 1 hour, max 10)
  */
-export async function getRecentOrders(webAppId: string, maxCount: number = 10): Promise<OrderEvent[]> {
+export async function getRecentOrders(
+  webAppId: string,
+  maxCount: number = 10,
+): Promise<OrderEvent[]> {
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
@@ -81,7 +84,7 @@ export async function getRecentOrders(webAppId: string, maxCount: number = 10): 
         },
       },
       orderBy: {
-        orderedAt: 'desc',
+        orderedAt: "desc",
       },
       take: maxCount,
     });
@@ -96,7 +99,7 @@ export async function getRecentOrders(webAppId: string, maxCount: number = 10): 
       createdAt: event.orderedAt,
     }));
   } catch (error) {
-    console.error('Error fetching recent orders:', error);
+    console.error("Error fetching recent orders:", error);
     return [];
   }
 }
@@ -105,7 +108,9 @@ export async function getRecentOrders(webAppId: string, maxCount: number = 10): 
  * Get menu item statistics
  * Returns per-item stats: last order time, recent count, daily count
  */
-export async function getMenuItemStats(webAppId: string): Promise<Record<string, MenuItemStats>> {
+export async function getMenuItemStats(
+  webAppId: string,
+): Promise<Record<string, MenuItemStats>> {
   try {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
@@ -120,7 +125,7 @@ export async function getMenuItemStats(webAppId: string): Promise<Record<string,
         },
       },
       orderBy: {
-        orderedAt: 'desc',
+        orderedAt: "desc",
       },
     });
 
@@ -145,32 +150,40 @@ export async function getMenuItemStats(webAppId: string): Promise<Record<string,
       }
 
       // Update last ordered time
-      if (!stats[itemKey].lastOrderedAt || event.orderedAt > stats[itemKey].lastOrderedAt!) {
+      if (
+        !stats[itemKey].lastOrderedAt ||
+        event.orderedAt > stats[itemKey].lastOrderedAt!
+      ) {
         stats[itemKey].lastOrderedAt = event.orderedAt;
-        stats[itemKey].userAvatarUrl = event.userAvatarUrl || stats[itemKey].userAvatarUrl;
+        stats[itemKey].userAvatarUrl =
+          event.userAvatarUrl || stats[itemKey].userAvatarUrl;
       }
 
       // Count orders in last hour (recent)
       if (event.orderedAt >= oneHourAgo) {
-        stats[itemKey].recentOrderCount = (stats[itemKey].recentOrderCount || 0) + 1;
+        stats[itemKey].recentOrderCount =
+          (stats[itemKey].recentOrderCount || 0) + 1;
       }
 
       // Count orders in last 24 hours (daily)
-      stats[itemKey].dailyOrderCount = (stats[itemKey].dailyOrderCount || 0) + 1;
+      stats[itemKey].dailyOrderCount =
+        (stats[itemKey].dailyOrderCount || 0) + 1;
     }
 
     // Calculate minutes since last order
     for (const key in stats) {
       if (stats[key].lastOrderedAt) {
         const lastOrderTime = stats[key].lastOrderedAt!.getTime();
-        const minutesAgo = Math.round((currentTime - lastOrderTime) / (1000 * 60));
+        const minutesAgo = Math.round(
+          (currentTime - lastOrderTime) / (1000 * 60),
+        );
         stats[key].lastOrderedMinutesAgo = minutesAgo;
       }
     }
 
     return stats;
   } catch (error) {
-    console.error('Error calculating menu item stats:', error);
+    console.error("Error calculating menu item stats:", error);
     return {};
   }
 }
@@ -179,9 +192,14 @@ export async function getMenuItemStats(webAppId: string): Promise<Record<string,
  * Clear old order events (older than days)
  * Used for cleanup and reducing database size
  */
-export async function clearOldOrders(webAppId: string, olderThanDays: number = 7): Promise<number> {
+export async function clearOldOrders(
+  webAppId: string,
+  olderThanDays: number = 7,
+): Promise<number> {
   try {
-    const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - olderThanDays * 24 * 60 * 60 * 1000,
+    );
 
     const result = await prisma.orderEvent.deleteMany({
       where: {
@@ -192,10 +210,12 @@ export async function clearOldOrders(webAppId: string, olderThanDays: number = 7
       },
     });
 
-    console.log(`Cleared orders older than ${olderThanDays} days for webapp ${webAppId}`);
+    console.log(
+      `Cleared orders older than ${olderThanDays} days for webapp ${webAppId}`,
+    );
     return result.count;
   } catch (error) {
-    console.error('Error clearing old orders:', error);
+    console.error("Error clearing old orders:", error);
     return 0;
   }
 }
@@ -216,7 +236,9 @@ export async function getOrderStatsSummary(webAppId: string) {
       },
     });
 
-    const uniqueItems = new Set(orders.map((o) => o.menuItemId || o.menuItemName)).size;
+    const uniqueItems = new Set(
+      orders.map((o) => o.menuItemId || o.menuItemName),
+    ).size;
 
     // Find top item
     const itemCounts: Record<string, number> = {};
@@ -234,7 +256,7 @@ export async function getOrderStatsSummary(webAppId: string) {
       topItem: topItem ? { name: topItem[0], count: topItem[1] } : null,
     };
   } catch (error) {
-    console.error('Error getting order stats summary:', error);
+    console.error("Error getting order stats summary:", error);
     return {
       totalOrders: 0,
       totalRevenue: 0,
@@ -251,8 +273,11 @@ export async function getOrderStatsSummary(webAppId: string) {
 /**
  * Sanitize string input
  */
-function sanitizeString(str: string | undefined | null, maxLength: number = 255): string {
-  if (!str) return '';
+function sanitizeString(
+  str: string | undefined | null,
+  maxLength: number = 255,
+): string {
+  if (!str) return "";
   return String(str).slice(0, maxLength).trim();
 }
 
@@ -260,9 +285,9 @@ function sanitizeString(str: string | undefined | null, maxLength: number = 255)
  * Validate and sanitize order source
  */
 function sanitizeOrderSource(source: string | undefined): string {
-  const validSources = ['stripe', 'pos_api', 'manual'];
+  const validSources = ["stripe", "pos_api", "manual"];
   if (!source || !validSources.includes(source.toLowerCase())) {
-    return 'manual';
+    return "manual";
   }
   return source.toLowerCase();
 }

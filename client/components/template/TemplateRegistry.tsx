@@ -233,25 +233,25 @@ export const defaultTemplates: Template[] = [
   },
 ];
 export interface TemplateWithIntent extends Template {
-  intent: 'VISUAL' | 'NARRATIVE' | 'COMMERCIAL';
+  intent: "VISUAL" | "NARRATIVE" | "COMMERCIAL";
 }
 
 export const defaultTemplatesWithIntent: TemplateWithIntent[] = [
   {
     ...defaultTemplates[0], // minimalist
-    intent: 'NARRATIVE',
+    intent: "NARRATIVE",
   },
   {
     ...defaultTemplates[1], // modern
-    intent: 'COMMERCIAL',
+    intent: "COMMERCIAL",
   },
   {
     ...defaultTemplates[2], // stylish
-    intent: 'VISUAL',
+    intent: "VISUAL",
   },
   {
     ...defaultTemplates[3], // cozy
-    intent: 'NARRATIVE',
+    intent: "NARRATIVE",
   },
 ];
 

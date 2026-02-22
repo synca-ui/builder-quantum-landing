@@ -8,9 +8,21 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo } from 'react';
-import { MapPin, Phone, Mail, Clock, Instagram, Facebook, Twitter, Globe } from 'lucide-react';
-import type { OpeningHours as OpeningHoursType, ContactInfo } from '@/types/domain';
+import React, { memo } from "react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Instagram,
+  Facebook,
+  Twitter,
+  Globe,
+} from "lucide-react";
+import type {
+  OpeningHours as OpeningHoursType,
+  ContactInfo,
+} from "@/types/domain";
 
 // ============================================
 // TYPES
@@ -44,25 +56,30 @@ export interface ContactSectionProps {
 // ============================================
 
 const DAY_NAMES: Record<string, string> = {
-  monday: 'Montag',
-  tuesday: 'Dienstag',
-  wednesday: 'Mittwoch',
-  thursday: 'Donnerstag',
-  friday: 'Freitag',
-  saturday: 'Samstag',
-  sunday: 'Sonntag',
+  monday: "Montag",
+  tuesday: "Dienstag",
+  wednesday: "Mittwoch",
+  thursday: "Donnerstag",
+  friday: "Freitag",
+  saturday: "Samstag",
+  sunday: "Sonntag",
 };
 
-const SOCIAL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const SOCIAL_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   instagram: Instagram,
   facebook: Facebook,
   twitter: Twitter,
   website: Globe,
 };
 
-function formatDayHours(day: { open: string; close: string; closed: boolean } | undefined): string {
-  if (!day) return 'Keine Angabe';
-  if (day.closed) return 'Geschlossen';
+function formatDayHours(
+  day: { open: string; close: string; closed: boolean } | undefined,
+): string {
+  if (!day) return "Keine Angabe";
+  if (day.closed) return "Geschlossen";
   return `${day.open} - ${day.close}`;
 }
 
@@ -80,9 +97,8 @@ export const ContactSection = memo(function ContactSection({
   fontColor,
   backgroundColor,
   isPreview = false,
-  className = '',
+  className = "",
 }: ContactSectionProps) {
-
   const handlePhoneClick = () => {
     if (!isPreview && phone) {
       window.location.href = `tel:${phone}`;
@@ -97,13 +113,14 @@ export const ContactSection = memo(function ContactSection({
 
   const handleSocialClick = (url: string) => {
     if (!isPreview) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
   const hasOpeningHours = openingHours && Object.keys(openingHours).length > 0;
   const hasSocialMedia = Object.keys(socialMedia).length > 0;
-  const hasContactInfo = location || phone || email || contactMethods.length > 0;
+  const hasContactInfo =
+    location || phone || email || contactMethods.length > 0;
 
   return (
     <section
@@ -115,8 +132,8 @@ export const ContactSection = memo(function ContactSection({
         className="text-3xl font-bold text-center leading-tight"
         style={{
           color: fontColor,
-          fontSize: 'var(--font-h2-size, 1.875rem)',
-          fontWeight: 'var(--font-h2-weight, 700)',
+          fontSize: "var(--font-h2-size, 1.875rem)",
+          fontWeight: "var(--font-h2-weight, 700)",
         }}
       >
         Kontakt
@@ -128,9 +145,9 @@ export const ContactSection = memo(function ContactSection({
           className="p-6 space-y-6 backdrop-blur-sm"
           style={{
             backgroundColor: `${fontColor}05`,
-            borderRadius: 'var(--radius-card, 16px)',
+            borderRadius: "var(--radius-card, 16px)",
             border: `1px solid ${fontColor}10`,
-            boxShadow: 'var(--shadow-card, 0 4px 12px rgba(0,0,0,0.05))',
+            boxShadow: "var(--shadow-card, 0 4px 12px rgba(0,0,0,0.05))",
           }}
         >
           {/* Address */}
@@ -146,7 +163,7 @@ export const ContactSection = memo(function ContactSection({
                 <div className="font-bold text-sm mb-1 opacity-90">Adresse</div>
                 <div
                   className="text-sm opacity-80 leading-relaxed"
-                  style={{ fontSize: 'var(--font-body-size, 0.875rem)' }}
+                  style={{ fontSize: "var(--font-body-size, 0.875rem)" }}
                 >
                   {location}
                 </div>
@@ -168,7 +185,7 @@ export const ContactSection = memo(function ContactSection({
               </div>
               <div
                 className="text-sm"
-                style={{ fontSize: 'var(--font-body-size, 0.875rem)' }}
+                style={{ fontSize: "var(--font-body-size, 0.875rem)" }}
               >
                 {phone}
               </div>
@@ -189,7 +206,7 @@ export const ContactSection = memo(function ContactSection({
               </div>
               <div
                 className="text-sm"
-                style={{ fontSize: 'var(--font-body-size, 0.875rem)' }}
+                style={{ fontSize: "var(--font-body-size, 0.875rem)" }}
               >
                 {email}
               </div>
@@ -203,7 +220,7 @@ export const ContactSection = memo(function ContactSection({
                 className="p-2 rounded-full"
                 style={{ backgroundColor: `${fontColor}08` }}
               >
-                {method.includes('@') ? (
+                {method.includes("@") ? (
                   <Mail className="w-4 h-4" />
                 ) : (
                   <Phone className="w-4 h-4" />
@@ -211,7 +228,7 @@ export const ContactSection = memo(function ContactSection({
               </div>
               <div
                 className="text-sm"
-                style={{ fontSize: 'var(--font-body-size, 0.875rem)' }}
+                style={{ fontSize: "var(--font-body-size, 0.875rem)" }}
               >
                 {method}
               </div>
@@ -239,7 +256,7 @@ export const ContactSection = memo(function ContactSection({
                 </span>
                 <span
                   className="font-bold"
-                  style={{ color: hours?.closed ? '#EF4444' : fontColor }}
+                  style={{ color: hours?.closed ? "#EF4444" : fontColor }}
                 >
                   {formatDayHours(hours)}
                 </span>
@@ -282,4 +299,3 @@ export const ContactSection = memo(function ContactSection({
 });
 
 export default ContactSection;
-

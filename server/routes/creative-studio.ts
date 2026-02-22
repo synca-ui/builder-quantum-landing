@@ -27,25 +27,27 @@ const templateSwitchSchema = z.object({
 
 const menuUpgradeSchema = z.object({
   categoryId: z.string().uuid().optional(),
-  items: z.array(z.object({
-    name: z.string().min(1),
-    description: z.string().optional(),
-    price: z.number().positive(),
-    imageUrl: z.string().url().optional(),
-  })),
+  items: z.array(
+    z.object({
+      name: z.string().min(1),
+      description: z.string().optional(),
+      price: z.number().positive(),
+      imageUrl: z.string().url().optional(),
+    }),
+  ),
 });
 
 /**
  * GET /api/dashboard/creative/templates
  * Get available templates for switching
  */
-router.get('/templates', requireAuth, async (req: Request, res: Response) => {
+router.get("/templates", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.query.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify business ownership
@@ -60,7 +62,7 @@ router.get('/templates', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Get available templates (remove isPublished filter for now since it might not exist in schema)
@@ -76,9 +78,9 @@ router.get('/templates', requireAuth, async (req: Request, res: Response) => {
         downloads: true,
       },
       orderBy: [
-        { isPremium: 'desc' },
-        { avgRating: 'desc' },
-        { downloads: 'desc' },
+        { isPremium: "desc" },
+        { avgRating: "desc" },
+        { downloads: "desc" },
       ],
     });
 
@@ -87,12 +89,12 @@ router.get('/templates', requireAuth, async (req: Request, res: Response) => {
       data: {
         currentTemplate: business.template,
         availableTemplates: templates,
-        categories: ['Modern', 'Stylish', 'Cozy'],
+        categories: ["Modern", "Stylish", "Cozy"],
       },
     });
   } catch (error) {
-    console.error('Error fetching templates:', error);
-    res.status(500).json({ error: 'Failed to fetch templates' });
+    console.error("Error fetching templates:", error);
+    res.status(500).json({ error: "Failed to fetch templates" });
   }
 });
 
@@ -100,81 +102,85 @@ router.get('/templates', requireAuth, async (req: Request, res: Response) => {
  * POST /api/dashboard/creative/templates/switch
  * Switch to a different template
  */
-router.post('/templates/switch', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.userId;
-    const businessId = req.body.businessId;
+router.post(
+  "/templates/switch",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.userId;
+      const businessId = req.body.businessId;
 
-    if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      if (!businessId) {
+        return res.status(400).json({ error: "businessId is required" });
+      }
+
+      // Verify business ownership
+      const business = await prisma.business.findFirst({
+        where: {
+          id: businessId,
+          members: { some: { userId } },
+        },
+      });
+
+      if (!business) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Validate input
+      const validatedData = templateSwitchSchema.parse(req.body);
+
+      // Verify template exists
+      const template = await prisma.template.findUnique({
+        where: { id: validatedData.templateId },
+      });
+
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+
+      // Update business template
+      const updatedBusiness = await prisma.business.update({
+        where: { id: businessId },
+        data: {
+          templateId: validatedData.templateId,
+          updatedAt: new Date(),
+        },
+        include: {
+          template: true,
+        },
+      });
+
+      // If preserveContent is false, we might want to reset certain fields
+      // This would be a more complex operation involving configurations
+
+      res.json({
+        success: true,
+        data: {
+          business: updatedBusiness,
+          message: `Successfully switched to ${template.name} template`,
+        },
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error switching template:", error);
+      res.status(500).json({ error: "Failed to switch template" });
     }
-
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    // Validate input
-    const validatedData = templateSwitchSchema.parse(req.body);
-
-    // Verify template exists
-    const template = await prisma.template.findUnique({
-      where: { id: validatedData.templateId },
-    });
-
-    if (!template) {
-      return res.status(404).json({ error: 'Template not found' });
-    }
-
-    // Update business template
-    const updatedBusiness = await prisma.business.update({
-      where: { id: businessId },
-      data: {
-        templateId: validatedData.templateId,
-        updatedAt: new Date(),
-      },
-      include: {
-        template: true,
-      },
-    });
-
-    // If preserveContent is false, we might want to reset certain fields
-    // This would be a more complex operation involving configurations
-
-    res.json({
-      success: true,
-      data: {
-        business: updatedBusiness,
-        message: `Successfully switched to ${template.name} template`,
-      },
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
-    }
-    console.error('Error switching template:', error);
-    res.status(500).json({ error: 'Failed to switch template' });
-  }
-});
+  },
+);
 
 /**
  * GET /api/dashboard/creative/menu
  * Get current menu structure for editing
  */
-router.get('/menu', requireAuth, async (req: Request, res: Response) => {
+router.get("/menu", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.query.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify business ownership
@@ -186,7 +192,7 @@ router.get('/menu', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Get menu categories with items
@@ -194,13 +200,13 @@ router.get('/menu', requireAuth, async (req: Request, res: Response) => {
       where: { businessId },
       include: {
         items: {
-          orderBy: { name: 'asc' },
+          orderBy: { name: "asc" },
         },
         _count: {
           select: { items: true },
         },
       },
-      orderBy: { sortOrder: 'asc' },
+      orderBy: { sortOrder: "asc" },
     });
 
     // Get menu statistics
@@ -235,8 +241,8 @@ router.get('/menu', requireAuth, async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching menu:', error);
-    res.status(500).json({ error: 'Failed to fetch menu' });
+    console.error("Error fetching menu:", error);
+    res.status(500).json({ error: "Failed to fetch menu" });
   }
 });
 
@@ -244,65 +250,71 @@ router.get('/menu', requireAuth, async (req: Request, res: Response) => {
  * POST /api/dashboard/creative/menu/categories
  * Create a new menu category
  */
-router.post('/menu/categories', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.userId;
-    const { businessId, name } = req.body;
+router.post(
+  "/menu/categories",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.userId;
+      const { businessId, name } = req.body;
 
-    if (!businessId || !name) {
-      return res.status(400).json({ error: 'businessId and name are required' });
-    }
+      if (!businessId || !name) {
+        return res
+          .status(400)
+          .json({ error: "businessId and name are required" });
+      }
 
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    // Get next sort order
-    const lastCategory = await prisma.menuCategory.findFirst({
-      where: { businessId },
-      orderBy: { sortOrder: 'desc' },
-    });
-
-    // Create category
-    const category = await prisma.menuCategory.create({
-      data: {
-        businessId,
-        name,
-        sortOrder: (lastCategory?.sortOrder || 0) + 1,
-      },
-      include: {
-        _count: {
-          select: { items: true },
+      // Verify business ownership
+      const business = await prisma.business.findFirst({
+        where: {
+          id: businessId,
+          members: { some: { userId } },
         },
-      },
-    });
+      });
 
-    res.json({ success: true, data: category });
-  } catch (error) {
-    console.error('Error creating menu category:', error);
-    res.status(500).json({ error: 'Failed to create menu category' });
-  }
-});
+      if (!business) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Get next sort order
+      const lastCategory = await prisma.menuCategory.findFirst({
+        where: { businessId },
+        orderBy: { sortOrder: "desc" },
+      });
+
+      // Create category
+      const category = await prisma.menuCategory.create({
+        data: {
+          businessId,
+          name,
+          sortOrder: (lastCategory?.sortOrder || 0) + 1,
+        },
+        include: {
+          _count: {
+            select: { items: true },
+          },
+        },
+      });
+
+      res.json({ success: true, data: category });
+    } catch (error) {
+      console.error("Error creating menu category:", error);
+      res.status(500).json({ error: "Failed to create menu category" });
+    }
+  },
+);
 
 /**
  * POST /api/dashboard/creative/menu/items
  * Add items to menu category
  */
-router.post('/menu/items', requireAuth, async (req: Request, res: Response) => {
+router.post("/menu/items", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.body.businessId;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify business ownership
@@ -314,7 +326,7 @@ router.post('/menu/items', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Validate input
@@ -326,7 +338,7 @@ router.post('/menu/items', requireAuth, async (req: Request, res: Response) => {
       const defaultCategory = await prisma.menuCategory.create({
         data: {
           businessId,
-          name: 'New Menu Items',
+          name: "New Menu Items",
           sortOrder: 999,
         },
       });
@@ -335,7 +347,7 @@ router.post('/menu/items', requireAuth, async (req: Request, res: Response) => {
 
     // Create menu items
     const items = await Promise.all(
-      validatedData.items.map(item =>
+      validatedData.items.map((item) =>
         prisma.menuItem.create({
           data: {
             categoryId: categoryId!,
@@ -344,8 +356,8 @@ router.post('/menu/items', requireAuth, async (req: Request, res: Response) => {
             price: item.price,
             imageUrl: item.imageUrl,
           },
-        })
-      )
+        }),
+      ),
     );
 
     res.json({
@@ -360,8 +372,8 @@ router.post('/menu/items', requireAuth, async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error adding menu items:', error);
-    res.status(500).json({ error: 'Failed to add menu items' });
+    console.error("Error adding menu items:", error);
+    res.status(500).json({ error: "Failed to add menu items" });
   }
 });
 
@@ -369,78 +381,82 @@ router.post('/menu/items', requireAuth, async (req: Request, res: Response) => {
  * GET /api/dashboard/creative/ai-suggestions
  * Get AI-powered menu and design suggestions
  */
-router.get('/ai-suggestions', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.userId;
-    const businessId = req.query.businessId as string;
+router.get(
+  "/ai-suggestions",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.userId;
+      const businessId = req.query.businessId as string;
 
-    if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      if (!businessId) {
+        return res.status(400).json({ error: "businessId is required" });
+      }
+
+      // Verify business ownership
+      const business = await prisma.business.findFirst({
+        where: {
+          id: businessId,
+          members: { some: { userId } },
+        },
+        include: {
+          template: true,
+        },
+      });
+
+      if (!business) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Generate AI suggestions based on business type and current setup
+      const suggestions = {
+        templateUpgrades: [
+          {
+            templateId: "modern-2024",
+            name: "Modern Minimal",
+            reason: "Increases conversion by 23% for your business type",
+            preview: "/templates/modern-preview.jpg",
+          },
+          {
+            templateId: "stylish-premium",
+            name: "Stylish Premium",
+            reason: "Perfect for upscale dining experiences",
+            preview: "/templates/stylish-preview.jpg",
+          },
+        ],
+        menuImprovements: [
+          {
+            type: "pricing_optimization",
+            title: "Optimize Pricing Strategy",
+            description: "Adjust prices based on local market analysis",
+            impact: "+12% revenue potential",
+          },
+          {
+            type: "category_organization",
+            title: "Reorganize Menu Categories",
+            description: "Group items for better customer flow",
+            impact: "+8% order completion",
+          },
+        ],
+        colorSchemeUpgrades: [
+          {
+            primary: "#0d9488",
+            secondary: "#7c3aed",
+            name: "Maitr Brand Colors",
+            description: "Optimized for trust and appetite appeal",
+          },
+        ],
+      };
+
+      res.json({
+        success: true,
+        data: suggestions,
+      });
+    } catch (error) {
+      console.error("Error fetching AI suggestions:", error);
+      res.status(500).json({ error: "Failed to fetch AI suggestions" });
     }
-
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-      include: {
-        template: true,
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    // Generate AI suggestions based on business type and current setup
-    const suggestions = {
-      templateUpgrades: [
-        {
-          templateId: 'modern-2024',
-          name: 'Modern Minimal',
-          reason: 'Increases conversion by 23% for your business type',
-          preview: '/templates/modern-preview.jpg',
-        },
-        {
-          templateId: 'stylish-premium',
-          name: 'Stylish Premium',
-          reason: 'Perfect for upscale dining experiences',
-          preview: '/templates/stylish-preview.jpg',
-        },
-      ],
-      menuImprovements: [
-        {
-          type: 'pricing_optimization',
-          title: 'Optimize Pricing Strategy',
-          description: 'Adjust prices based on local market analysis',
-          impact: '+12% revenue potential',
-        },
-        {
-          type: 'category_organization',
-          title: 'Reorganize Menu Categories',
-          description: 'Group items for better customer flow',
-          impact: '+8% order completion',
-        },
-      ],
-      colorSchemeUpgrades: [
-        {
-          primary: '#0d9488',
-          secondary: '#7c3aed',
-          name: 'Maitr Brand Colors',
-          description: 'Optimized for trust and appetite appeal',
-        },
-      ],
-    };
-
-    res.json({
-      success: true,
-      data: suggestions,
-    });
-  } catch (error) {
-    console.error('Error fetching AI suggestions:', error);
-    res.status(500).json({ error: 'Failed to fetch AI suggestions' });
-  }
-});
+  },
+);
 
 export default router;

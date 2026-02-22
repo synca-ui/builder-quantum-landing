@@ -7,7 +7,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
 import { ClerkProvider } from "@clerk/clerk-react";
@@ -35,7 +41,9 @@ import RequireAuth from "./components/RequireAuth";
 const InsightsPage = lazy(() => import("./pages/dashboard/InsightsPage"));
 const StaffPage = lazy(() => import("./pages/dashboard/StaffPage"));
 const FloorPlanPage = lazy(() => import("./pages/dashboard/FloorPlanPage"));
-const CreativeStudioPage = lazy(() => import("./pages/dashboard/CreativeStudioPage"));
+const CreativeStudioPage = lazy(
+  () => import("./pages/dashboard/CreativeStudioPage"),
+);
 const AdminPage = lazy(() => import("./pages/dashboard/AdminPage"));
 
 // Demo Dashboard (public, no auth)
@@ -89,15 +97,23 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                  <Suspense fallback={
-                    <div className="min-h-screen flex items-center justify-center">
-                      <div className="loading-spinner"></div>
-                    </div>
-                  }>
+                  <Suspense
+                    fallback={
+                      <div className="min-h-screen flex items-center justify-center">
+                        <div className="loading-spinner"></div>
+                      </div>
+                    }
+                  >
                     <Routes>
                       {/* Demo Dashboard Routes (Public - No Auth Required) */}
-                      <Route path="/demo-dashboard" element={<DemoDashboardHome />} />
-                      <Route path="/demo-dashboard/*" element={<DemoDashboardHome />} />
+                      <Route
+                        path="/demo-dashboard"
+                        element={<DemoDashboardHome />}
+                      />
+                      <Route
+                        path="/demo-dashboard/*"
+                        element={<DemoDashboardHome />}
+                      />
 
                       {/* Check Landing Page Preview (local dev) */}
                       <Route path="/check-landing" element={<CheckLanding />} />
@@ -107,8 +123,14 @@ const App = () => {
                         <Route path="/" element={<HostAwareRoot />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
-                        <Route path="/mode-selection" element={<ModeSelection />} />
-                        <Route path="/configurator" element={<Configurator />} />
+                        <Route
+                          path="/mode-selection"
+                          element={<ModeSelection />}
+                        />
+                        <Route
+                          path="/configurator"
+                          element={<Configurator />}
+                        />
                         <Route
                           path="/configurator/manual"
                           element={<Configurator />}
@@ -170,7 +192,9 @@ const App = () => {
                         />
                         <Route
                           path="/dashboard"
-                          element={<Navigate to="/dashboard/insights" replace />}
+                          element={
+                            <Navigate to="/dashboard/insights" replace />
+                          }
                         />
                       </Route>
 

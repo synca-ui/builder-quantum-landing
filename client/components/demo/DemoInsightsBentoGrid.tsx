@@ -3,7 +3,7 @@
  * Public demo version with realistic mock data
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   TrendingDown,
   DollarSign,
@@ -14,9 +14,9 @@ import {
   MapPin,
   ArrowUpRight,
   ArrowDownRight,
-  MoreHorizontal
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
+  MoreHorizontal,
+} from "lucide-react";
+import { cn } from "../../lib/utils";
 
 interface MetricCardProps {
   title: string;
@@ -37,20 +37,32 @@ interface DemoInsightData {
   activeTables: number;
 }
 
-function MetricCard({ title, value, change, icon: Icon, gradient, description, className }: MetricCardProps) {
+function MetricCard({
+  title,
+  value,
+  change,
+  icon: Icon,
+  gradient,
+  description,
+  className,
+}: MetricCardProps) {
   const isPositive = change && change > 0;
   const isNegative = change && change < 0;
 
   return (
-    <div className={cn(
-      'card-elevated bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1',
-      className
-    )}>
+    <div
+      className={cn(
+        "card-elevated bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1",
+        className,
+      )}
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className={cn(
-          'w-12 h-12 rounded-xl flex items-center justify-center',
-          `bg-gradient-to-r ${gradient}`
-        )}>
+        <div
+          className={cn(
+            "w-12 h-12 rounded-xl flex items-center justify-center",
+            `bg-gradient-to-r ${gradient}`,
+          )}
+        >
           <Icon className="w-6 h-6 text-white" />
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -59,30 +71,33 @@ function MetricCard({ title, value, change, icon: Icon, gradient, description, c
       </div>
 
       <div className="space-y-2">
-        <h3 className="font-semibold text-gray-600 text-sm uppercase tracking-wider">{title}</h3>
+        <h3 className="font-semibold text-gray-600 text-sm uppercase tracking-wider">
+          {title}
+        </h3>
         <p className="text-3xl font-bold text-gray-900">{value}</p>
 
         {change !== undefined && (
           <div className="flex items-center space-x-2">
-            <div className={cn(
-              'flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium',
-              isPositive && 'bg-emerald-100 text-emerald-700',
-              isNegative && 'bg-red-100 text-red-700',
-              change === 0 && 'bg-gray-100 text-gray-600'
-            )}>
+            <div
+              className={cn(
+                "flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium",
+                isPositive && "bg-emerald-100 text-emerald-700",
+                isNegative && "bg-red-100 text-red-700",
+                change === 0 && "bg-gray-100 text-gray-600",
+              )}
+            >
               {isPositive && <ArrowUpRight className="w-3 h-3" />}
               {isNegative && <ArrowDownRight className="w-3 h-3" />}
               <span>
-                {change > 0 ? '+' : ''}{Math.abs(change).toFixed(1)}%
+                {change > 0 ? "+" : ""}
+                {Math.abs(change).toFixed(1)}%
               </span>
             </div>
             <span className="text-xs text-gray-500">vs. gestern</span>
           </div>
         )}
 
-        {description && (
-          <p className="text-sm text-gray-500">{description}</p>
-        )}
+        {description && <p className="text-sm text-gray-500">{description}</p>}
       </div>
     </div>
   );
@@ -113,7 +128,10 @@ export default function DemoInsightsBentoGrid() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="card-elevated bg-white rounded-2xl p-6 animate-pulse">
+          <div
+            key={i}
+            className="card-elevated bg-white rounded-2xl p-6 animate-pulse"
+          >
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 rounded-xl bg-gray-200"></div>
               <div className="w-5 h-5 bg-gray-200 rounded"></div>
@@ -140,9 +158,12 @@ export default function DemoInsightsBentoGrid() {
             <TrendingDown className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900 mb-1">Demo-Analytics Dashboard</h3>
+            <h3 className="font-semibold text-blue-900 mb-1">
+              Demo-Analytics Dashboard
+            </h3>
             <p className="text-blue-700 text-sm">
-              Diese Daten sind Beispieldaten. In der echten Version siehst du die Live-Metriken deines Restaurants.
+              Diese Daten sind Beispieldaten. In der echten Version siehst du
+              die Live-Metriken deines Restaurants.
             </p>
           </div>
         </div>
@@ -216,9 +237,12 @@ export default function DemoInsightsBentoGrid() {
               <DollarSign className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 mb-2">Echtzeit-Umsatz Tracking</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">
+                Echtzeit-Umsatz Tracking
+              </h4>
               <p className="text-sm text-gray-600 mb-3">
-                Verfolge deinen Umsatz live mit detaillierten Aufschlüsselungen nach Zahlungsarten, Tageszeiten und beliebten Gerichten.
+                Verfolge deinen Umsatz live mit detaillierten Aufschlüsselungen
+                nach Zahlungsarten, Tageszeiten und beliebten Gerichten.
               </p>
               <div className="flex items-center space-x-2 text-teal-600 text-sm font-medium">
                 <span>✓ Live-Updates alle 5 Minuten</span>
@@ -233,9 +257,12 @@ export default function DemoInsightsBentoGrid() {
               <QrCode className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 mb-2">QR-Code Analytics</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">
+                QR-Code Analytics
+              </h4>
               <p className="text-sm text-gray-600 mb-3">
-                Analysiere, wie viele Gäste über deine QR-Codes bestellen und optimiere die Platzierung für maximalen Erfolg.
+                Analysiere, wie viele Gäste über deine QR-Codes bestellen und
+                optimiere die Platzierung für maximalen Erfolg.
               </p>
               <div className="flex items-center space-x-2 text-purple-600 text-sm font-medium">
                 <span>✓ Tisch-spezifische QR-Analytics</span>
@@ -251,8 +278,9 @@ export default function DemoInsightsBentoGrid() {
           <div>
             <h3 className="font-semibold text-lg mb-1">Live Demo Dashboard</h3>
             <p className="text-white/80 text-sm">
-              Diese Demo zeigt dir alle Funktionen, die in der echten Version verfügbar sind •
-              Simulierte Echtzeitdaten • Letzte Aktualisierung: {new Date().toLocaleTimeString('de-DE')}
+              Diese Demo zeigt dir alle Funktionen, die in der echten Version
+              verfügbar sind • Simulierte Echtzeitdaten • Letzte Aktualisierung:{" "}
+              {new Date().toLocaleTimeString("de-DE")}
             </p>
           </div>
           <div className="flex items-center space-x-2">

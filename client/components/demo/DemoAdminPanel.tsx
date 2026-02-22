@@ -3,7 +3,7 @@
  * Administrative dashboard for account management and SEO optimization
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Shield,
   Users,
@@ -14,12 +14,12 @@ import {
   Target,
   BarChart3,
   FileText,
-  RefreshCw
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  RefreshCw,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function DemoAdminPanel() {
-  const [selectedRole, setSelectedRole] = useState('ALL');
+  const [selectedRole, setSelectedRole] = useState("ALL");
 
   // SEO Data
   const seoMetrics = {
@@ -27,38 +27,38 @@ export default function DemoAdminPanel() {
     organicTraffic: 1247,
     pageSpeed: 94,
     keywordCount: 23,
-    backlinks: 156
+    backlinks: 156,
   };
 
   // Account management data
   const adminAccounts = [
     {
-      id: '1',
-      name: 'Max Mustermann',
-      email: 'max@restaurant-demo.de',
-      role: 'OWNER',
-      status: 'ACTIVE',
-      lastLogin: '2 Minuten',
-      permissions: ['FULL_ACCESS', 'BILLING', 'USER_MANAGEMENT', 'SEO_TOOLS']
+      id: "1",
+      name: "Max Mustermann",
+      email: "max@restaurant-demo.de",
+      role: "OWNER",
+      status: "ACTIVE",
+      lastLogin: "2 Minuten",
+      permissions: ["FULL_ACCESS", "BILLING", "USER_MANAGEMENT", "SEO_TOOLS"],
     },
     {
-      id: '2',
-      name: 'Sarah Schmidt',
-      email: 'sarah@restaurant-demo.de',
-      role: 'ADMIN',
-      status: 'ACTIVE',
-      lastLogin: '1 Stunde',
-      permissions: ['USER_MANAGEMENT', 'SEO_TOOLS', 'ANALYTICS']
+      id: "2",
+      name: "Sarah Schmidt",
+      email: "sarah@restaurant-demo.de",
+      role: "ADMIN",
+      status: "ACTIVE",
+      lastLogin: "1 Stunde",
+      permissions: ["USER_MANAGEMENT", "SEO_TOOLS", "ANALYTICS"],
     },
     {
-      id: '3',
-      name: 'Tom Weber',
-      email: 'tom@restaurant-demo.de',
-      role: 'SEO_MANAGER',
-      status: 'ACTIVE',
-      lastLogin: '3 Stunden',
-      permissions: ['SEO_TOOLS', 'ANALYTICS', 'CONTENT_MANAGEMENT']
-    }
+      id: "3",
+      name: "Tom Weber",
+      email: "tom@restaurant-demo.de",
+      role: "SEO_MANAGER",
+      status: "ACTIVE",
+      lastLogin: "3 Stunden",
+      permissions: ["SEO_TOOLS", "ANALYTICS", "CONTENT_MANAGEMENT"],
+    },
   ];
 
   return (
@@ -77,7 +77,10 @@ export default function DemoAdminPanel() {
                   SECURE
                 </div>
               </h1>
-              <p className="text-gray-600 mt-1">Account-Verwaltung und SEO-Optimization für maximale Sichtbarkeit</p>
+              <p className="text-gray-600 mt-1">
+                Account-Verwaltung und SEO-Optimization für maximale
+                Sichtbarkeit
+              </p>
             </div>
           </div>
 
@@ -97,44 +100,52 @@ export default function DemoAdminPanel() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         {[
           {
-            title: 'Admin Accounts',
+            title: "Admin Accounts",
             value: adminAccounts.length,
-            change: 'Aktive Benutzer',
+            change: "Aktive Benutzer",
             icon: Users,
-            color: 'from-blue-500 to-blue-600'
+            color: "from-blue-500 to-blue-600",
           },
           {
-            title: 'SEO Score',
+            title: "SEO Score",
             value: `${seoMetrics.pageSpeed}/100`,
-            change: '+8 diese Woche',
+            change: "+8 diese Woche",
             icon: Globe,
-            color: 'from-green-500 to-green-600'
+            color: "from-green-500 to-green-600",
           },
           {
-            title: 'Organischer Traffic',
+            title: "Organischer Traffic",
             value: seoMetrics.organicTraffic,
-            change: '+15% vs. letzten Monat',
+            change: "+15% vs. letzten Monat",
             icon: TrendingUp,
-            color: 'from-purple-500 to-purple-600'
+            color: "from-purple-500 to-purple-600",
           },
           {
-            title: 'Search Ranking',
+            title: "Search Ranking",
             value: `#${seoMetrics.searchRanking}`,
-            change: 'Position verbessert',
+            change: "Position verbessert",
             icon: Target,
-            color: 'from-orange-500 to-orange-600'
+            color: "from-orange-500 to-orange-600",
           },
           {
-            title: 'Security Events',
-            value: '0',
-            change: 'Letzte 24h',
+            title: "Security Events",
+            value: "0",
+            change: "Letzte 24h",
             icon: Lock,
-            color: 'from-emerald-500 to-emerald-600'
-          }
+            color: "from-emerald-500 to-emerald-600",
+          },
         ].map((metric, index) => (
-          <div key={index} className="card-elevated bg-white rounded-xl p-4 hover:shadow-lg transition-all">
+          <div
+            key={index}
+            className="card-elevated bg-white rounded-xl p-4 hover:shadow-lg transition-all"
+          >
             <div className="flex items-center justify-between mb-3">
-              <div className={cn('w-10 h-10 rounded-lg bg-gradient-to-r flex items-center justify-center shadow-sm', metric.color)}>
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-lg bg-gradient-to-r flex items-center justify-center shadow-sm",
+                  metric.color,
+                )}
+              >
                 <metric.icon className="w-5 h-5 text-white" />
               </div>
               <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
@@ -160,8 +171,12 @@ export default function DemoAdminPanel() {
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Admin-Account-Verwaltung</h3>
-                    <p className="text-sm text-gray-500">Benutzer, Rollen und Berechtigungen verwalten</p>
+                    <h3 className="font-semibold text-gray-900">
+                      Admin-Account-Verwaltung
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Benutzer, Rollen und Berechtigungen verwalten
+                    </p>
                   </div>
                 </div>
 
@@ -185,24 +200,36 @@ export default function DemoAdminPanel() {
 
             <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
               {adminAccounts.map((account) => (
-                <div key={account.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div
+                  key={account.id}
+                  className="p-6 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                         <span className="text-white font-bold text-sm">
-                          {account.name.split(' ').map(n => n[0]).join('')}
+                          {account.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </span>
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900">{account.name}</h4>
+                        <h4 className="font-semibold text-gray-900">
+                          {account.name}
+                        </h4>
                         <p className="text-sm text-gray-600">{account.email}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">{account.role}</p>
-                        <p className="text-xs text-gray-500">Letzter Login: {account.lastLogin}</p>
+                        <p className="text-sm font-medium text-gray-900">
+                          {account.role}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Letzter Login: {account.lastLogin}
+                        </p>
                       </div>
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     </div>
@@ -214,7 +241,7 @@ export default function DemoAdminPanel() {
                         key={permission}
                         className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
                       >
-                        {permission.replace('_', ' ')}
+                        {permission.replace("_", " ")}
                       </span>
                     ))}
                   </div>
@@ -245,8 +272,12 @@ export default function DemoAdminPanel() {
                   <Globe className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">SEO-Optimization</h3>
-                  <p className="text-sm text-gray-500">Sichtbarkeit maximieren</p>
+                  <h3 className="font-semibold text-gray-900">
+                    SEO-Optimization
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Sichtbarkeit maximieren
+                  </p>
                 </div>
               </div>
             </div>
@@ -254,8 +285,12 @@ export default function DemoAdminPanel() {
             {/* SEO Health Score */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">SEO Health Score</span>
-                <span className="text-lg font-bold text-green-600">{seoMetrics.pageSpeed}/100</span>
+                <span className="text-sm font-medium text-gray-700">
+                  SEO Health Score
+                </span>
+                <span className="text-lg font-bold text-green-600">
+                  {seoMetrics.pageSpeed}/100
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
@@ -263,48 +298,61 @@ export default function DemoAdminPanel() {
                   style={{ width: `${seoMetrics.pageSpeed}%` }}
                 ></div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Excellent - Keine kritischen Probleme</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Excellent - Keine kritischen Probleme
+              </p>
             </div>
 
             {/* SEO Metrics */}
             <div className="space-y-4 mb-6">
               {[
                 {
-                  title: 'Keywords Ranking',
+                  title: "Keywords Ranking",
                   value: `${seoMetrics.keywordCount} Keywords`,
-                  status: 'Gut',
-                  color: 'text-green-600'
+                  status: "Gut",
+                  color: "text-green-600",
                 },
                 {
-                  title: 'Page Speed',
+                  title: "Page Speed",
                   value: `${seoMetrics.pageSpeed}/100`,
-                  status: 'Hervorragend',
-                  color: 'text-green-600'
+                  status: "Hervorragend",
+                  color: "text-green-600",
                 },
                 {
-                  title: 'Backlinks',
+                  title: "Backlinks",
                   value: `${seoMetrics.backlinks} Links`,
-                  status: 'Wachsend',
-                  color: 'text-blue-600'
+                  status: "Wachsend",
+                  color: "text-blue-600",
                 },
                 {
-                  title: 'Local SEO',
-                  value: 'Position #15',
-                  status: 'Verbessert',
-                  color: 'text-orange-600'
-                }
+                  title: "Local SEO",
+                  value: "Position #15",
+                  status: "Verbessert",
+                  color: "text-orange-600",
+                },
               ].map((metric, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">{metric.title}</p>
+                    <p className="font-medium text-gray-900 text-sm">
+                      {metric.title}
+                    </p>
                     <p className="text-xs text-gray-600">{metric.value}</p>
                   </div>
-                  <span className={cn('text-xs font-medium px-2 py-1 rounded-full',
-                    metric.status === 'Hervorragend' ? 'bg-green-100 text-green-700' :
-                    metric.status === 'Gut' ? 'bg-blue-100 text-blue-700' :
-                    metric.status === 'Wachsend' ? 'bg-purple-100 text-purple-700' :
-                    'bg-orange-100 text-orange-700'
-                  )}>
+                  <span
+                    className={cn(
+                      "text-xs font-medium px-2 py-1 rounded-full",
+                      metric.status === "Hervorragend"
+                        ? "bg-green-100 text-green-700"
+                        : metric.status === "Gut"
+                          ? "bg-blue-100 text-blue-700"
+                          : metric.status === "Wachsend"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-orange-100 text-orange-700",
+                    )}
+                  >
                     {metric.status}
                   </span>
                 </div>
@@ -341,52 +389,61 @@ export default function DemoAdminPanel() {
               <Lock className="w-5 h-5" />
               <span>System Security & Einstellungen</span>
             </h3>
-            <p className="text-sm text-gray-600 mt-1">Sicherheit überwachen und Systemeinstellungen verwalten</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Sicherheit überwachen und Systemeinstellungen verwalten
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {[
             {
-              title: 'Two-Factor Auth',
-              status: 'Aktiviert',
-              description: 'Zusätzlicher Schutz für Admin-Accounts',
+              title: "Two-Factor Auth",
+              status: "Aktiviert",
+              description: "Zusätzlicher Schutz für Admin-Accounts",
               icon: Shield,
-              statusColor: 'text-green-600',
-              bgColor: 'bg-green-50'
+              statusColor: "text-green-600",
+              bgColor: "bg-green-50",
             },
             {
-              title: 'SSL Certificate',
-              status: 'Gültig bis Dez 2026',
-              description: 'HTTPS-Verschlüsselung aktiv',
+              title: "SSL Certificate",
+              status: "Gültig bis Dez 2026",
+              description: "HTTPS-Verschlüsselung aktiv",
               icon: Lock,
-              statusColor: 'text-green-600',
-              bgColor: 'bg-green-50'
+              statusColor: "text-green-600",
+              bgColor: "bg-green-50",
             },
             {
-              title: 'Backup System',
-              status: 'Täglich um 3:00',
-              description: 'Automatische Datensicherung',
+              title: "Backup System",
+              status: "Täglich um 3:00",
+              description: "Automatische Datensicherung",
               icon: Settings,
-              statusColor: 'text-blue-600',
-              bgColor: 'bg-blue-50'
+              statusColor: "text-blue-600",
+              bgColor: "bg-blue-50",
             },
             {
-              title: 'System Updates',
-              status: 'Up to Date',
-              description: 'Letzte Aktualisierung: Gestern',
+              title: "System Updates",
+              status: "Up to Date",
+              description: "Letzte Aktualisierung: Gestern",
               icon: RefreshCw,
-              statusColor: 'text-green-600',
-              bgColor: 'bg-green-50'
-            }
+              statusColor: "text-green-600",
+              bgColor: "bg-green-50",
+            },
           ].map((item, index) => (
-            <div key={index} className={cn('rounded-xl p-4 border', item.bgColor)}>
+            <div
+              key={index}
+              className={cn("rounded-xl p-4 border", item.bgColor)}
+            >
               <div className="flex items-center justify-between mb-3">
-                <item.icon className={cn('w-6 h-6', item.statusColor)} />
-                <span className={cn('text-xs font-medium px-2 py-1 rounded-full',
-                  item.statusColor === 'text-green-600' ? 'bg-green-100 text-green-700' :
-                  'bg-blue-100 text-blue-700'
-                )}>
+                <item.icon className={cn("w-6 h-6", item.statusColor)} />
+                <span
+                  className={cn(
+                    "text-xs font-medium px-2 py-1 rounded-full",
+                    item.statusColor === "text-green-600"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-blue-100 text-blue-700",
+                  )}
+                >
                   {item.status}
                 </span>
               </div>

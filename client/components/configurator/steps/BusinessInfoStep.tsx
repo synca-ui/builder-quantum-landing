@@ -69,7 +69,9 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   // Validation
-  const isValid = Boolean(business.name && business.name.trim().length > 0 && business.type);
+  const isValid = Boolean(
+    business.name && business.name.trim().length > 0 && business.type,
+  );
 
   // Handlers
   const handleNameChange = useCallback(
@@ -219,10 +221,11 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
             {BUSINESS_TYPES.map((type) => (
               <Card
                 key={type.value}
-                className={`cursor-pointer transition-all duration-300 border-2 ${business.type === type.value
-                  ? "border-teal-500 bg-teal-50"
-                  : "border-gray-200 hover:border-teal-300"
-                  }`}
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  business.type === type.value
+                    ? "border-teal-500 bg-teal-50"
+                    : "border-gray-200 hover:border-teal-300"
+                }`}
                 onClick={() => handleBusinessTypeChange(type.value)}
               >
                 <CardContent className="p-3 text-center">

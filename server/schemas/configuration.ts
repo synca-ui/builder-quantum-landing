@@ -98,15 +98,17 @@ export const FeatureFlagsSchema = z.object({
 
 // Contact Info Schema
 export const ContactInfoSchema = z.object({
-  contactMethods: z.array(
-    z.union([
-      z.string(), // Legacy support
-      z.object({
-        type: z.string(),
-        value: z.string(),
-      })
-    ])
-  ).default([]),
+  contactMethods: z
+    .array(
+      z.union([
+        z.string(), // Legacy support
+        z.object({
+          type: z.string(),
+          value: z.string(),
+        }),
+      ]),
+    )
+    .default([]),
   socialMedia: z.record(z.string()).default({}),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -170,7 +172,10 @@ export const ConfigurationSchema = z
     payments: PaymentAndOffersSchema,
     integrations: IntegrationConfigSchema.optional(),
     // Publishing-related fields (flattened for backward compatibility)
-    status: z.enum(["draft", "published", "archived"]).optional().default("draft"),
+    status: z
+      .enum(["draft", "published", "archived"])
+      .optional()
+      .default("draft"),
     publishedUrl: z.string().optional(),
     previewUrl: z.string().optional(),
     publishing: PublishingInfoSchema.optional(),
@@ -202,15 +207,17 @@ export const LegacyConfigurationSchema = z
     reservationsEnabled: z.coerce.boolean().default(false),
     maxGuests: z.coerce.number().default(10),
     notificationMethod: z.string().default("email"),
-    contactMethods: z.array(
-      z.union([
-        z.string(),
-        z.object({
-          type: z.string(),
-          value: z.string(),
-        })
-      ])
-    ).default([]),
+    contactMethods: z
+      .array(
+        z.union([
+          z.string(),
+          z.object({
+            type: z.string(),
+            value: z.string(),
+          }),
+        ]),
+      )
+      .default([]),
     socialMedia: z.record(z.string()).default({}),
     gallery: z.array(z.any()).default([]),
     onlineOrdering: z.coerce.boolean().default(false),
@@ -273,4 +280,3 @@ export function validateLegacyConfiguration(
 export function safeParse(data: unknown) {
   return ConfigurationSchema.safeParse(data);
 }
-

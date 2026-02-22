@@ -42,13 +42,7 @@
     "primaryColor": "#059669",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
-    "selectedPages": [
-      "home",
-      "menu",
-      "gallery",
-      "about",
-      "contact"
-    ],
+    "selectedPages": ["home", "menu", "gallery", "about", "contact"],
     "customPages": [],
     "openingHours": {
       "Monday": {
@@ -372,10 +366,7 @@
       "table": false
     },
     "deliveryAddressRequired": true,
-    "categories": [
-      "Drinks",
-      "Food"
-    ],
+    "categories": ["Drinks", "Food"],
     "showStockLevels": false,
     "discountsEnabled": false,
     "bundlesEnabled": false,
@@ -423,13 +414,7 @@
     "primaryColor": "#059669",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
-    "selectedPages": [
-      "home",
-      "menu",
-      "gallery",
-      "about",
-      "contact"
-    ],
+    "selectedPages": ["home", "menu", "gallery", "about", "contact"],
     "customPages": [],
     "openingHours": {
       "Monday": {
@@ -753,10 +738,7 @@
       "table": false
     },
     "deliveryAddressRequired": true,
-    "categories": [
-      "Drinks",
-      "Food"
-    ],
+    "categories": ["Drinks", "Food"],
     "showStockLevels": false,
     "discountsEnabled": false,
     "bundlesEnabled": false,
@@ -799,13 +781,7 @@
     "primaryColor": "#080808",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
-    "selectedPages": [
-      "home",
-      "menu",
-      "gallery",
-      "about",
-      "contact"
-    ],
+    "selectedPages": ["home", "menu", "gallery", "about", "contact"],
     "customPages": [],
     "openingHours": {
       "Monday": {
@@ -1017,10 +993,7 @@
       "table": false
     },
     "deliveryAddressRequired": true,
-    "categories": [
-      "Drinks",
-      "Food"
-    ],
+    "categories": ["Drinks", "Food"],
     "showStockLevels": false,
     "discountsEnabled": false,
     "bundlesEnabled": false,
@@ -1064,13 +1037,7 @@
     "primaryColor": "#080808",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
-    "selectedPages": [
-      "home",
-      "menu",
-      "gallery",
-      "about",
-      "contact"
-    ],
+    "selectedPages": ["home", "menu", "gallery", "about", "contact"],
     "customPages": [],
     "openingHours": {
       "Monday": {
@@ -1282,10 +1249,7 @@
       "table": false
     },
     "deliveryAddressRequired": true,
-    "categories": [
-      "Drinks",
-      "Food"
-    ],
+    "categories": ["Drinks", "Food"],
     "showStockLevels": false,
     "discountsEnabled": false,
     "bundlesEnabled": false,
@@ -1329,13 +1293,7 @@
     "primaryColor": "#059669",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
-    "selectedPages": [
-      "home",
-      "menu",
-      "gallery",
-      "about",
-      "contact"
-    ],
+    "selectedPages": ["home", "menu", "gallery", "about", "contact"],
     "customPages": [],
     "openingHours": {
       "Monday": {
@@ -1518,10 +1476,7 @@
       "table": false
     },
     "deliveryAddressRequired": true,
-    "categories": [
-      "Drinks",
-      "Food"
-    ],
+    "categories": ["Drinks", "Food"],
     "showStockLevels": false,
     "discountsEnabled": false,
     "bundlesEnabled": false,
@@ -1565,13 +1520,7 @@
     "primaryColor": "#059669",
     "secondaryColor": "#10B981",
     "fontFamily": "sans-serif",
-    "selectedPages": [
-      "home",
-      "menu",
-      "gallery",
-      "about",
-      "contact"
-    ],
+    "selectedPages": ["home", "menu", "gallery", "about", "contact"],
     "customPages": [],
     "openingHours": {
       "Monday": {
@@ -1754,10 +1703,7 @@
       "table": false
     },
     "deliveryAddressRequired": true,
-    "categories": [
-      "Drinks",
-      "Food"
-    ],
+    "categories": ["Drinks", "Food"],
     "showStockLevels": false,
     "discountsEnabled": false,
     "bundlesEnabled": false,

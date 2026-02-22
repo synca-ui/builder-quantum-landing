@@ -36,7 +36,9 @@ const shiftSchema = z.object({
   startTime: z.string().datetime(),
   endTime: z.string().datetime(),
   breakDuration: z.number().min(0).default(0),
-  shiftType: z.enum(['REGULAR', 'OVERTIME', 'HOLIDAY', 'EMERGENCY']).default('REGULAR'),
+  shiftType: z
+    .enum(["REGULAR", "OVERTIME", "HOLIDAY", "EMERGENCY"])
+    .default("REGULAR"),
   position: z.string().optional(),
   notes: z.string().optional(),
   hourlyRate: z.number().positive().optional(),
@@ -46,7 +48,14 @@ const absenceSchema = z.object({
   staffId: z.string().uuid(),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  absenceType: z.enum(['VACATION', 'SICK_LEAVE', 'PERSONAL', 'EMERGENCY', 'TRAINING', 'OTHER']),
+  absenceType: z.enum([
+    "VACATION",
+    "SICK_LEAVE",
+    "PERSONAL",
+    "EMERGENCY",
+    "TRAINING",
+    "OTHER",
+  ]),
   reason: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -55,13 +64,13 @@ const absenceSchema = z.object({
  * GET /api/dashboard/staff
  * Get all staff members for a business
  */
-router.get('/', requireAuth, async (req: Request, res: Response) => {
+router.get("/", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.query.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify business ownership
@@ -73,7 +82,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Get staff with recent shifts and absences
@@ -89,17 +98,17 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
               gte: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
             },
           },
-          orderBy: { date: 'desc' },
+          orderBy: { date: "desc" },
           take: 5,
         },
         absences: {
           where: {
-            status: 'APPROVED',
+            status: "APPROVED",
             endDate: {
               gte: new Date(),
             },
           },
-          orderBy: { startDate: 'asc' },
+          orderBy: { startDate: "asc" },
           take: 3,
         },
         _count: {
@@ -109,16 +118,13 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
           },
         },
       },
-      orderBy: [
-        { position: 'asc' },
-        { firstName: 'asc' },
-      ],
+      orderBy: [{ position: "asc" }, { firstName: "asc" }],
     });
 
     res.json({ success: true, data: staff });
   } catch (error) {
-    console.error('Error fetching staff:', error);
-    res.status(500).json({ error: 'Failed to fetch staff' });
+    console.error("Error fetching staff:", error);
+    res.status(500).json({ error: "Failed to fetch staff" });
   }
 });
 
@@ -126,13 +132,13 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
  * POST /api/dashboard/staff
  * Create new staff member
  */
-router.post('/', requireAuth, async (req: Request, res: Response) => {
+router.post("/", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.body.businessId;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify business ownership
@@ -144,7 +150,7 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Validate input
@@ -164,8 +170,8 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error creating staff:', error);
-    res.status(500).json({ error: 'Failed to create staff member' });
+    console.error("Error creating staff:", error);
+    res.status(500).json({ error: "Failed to create staff member" });
   }
 });
 
@@ -173,7 +179,7 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
  * GET /api/dashboard/staff/shifts
  * Get shifts with optional date range filtering
  */
-router.get('/shifts', requireAuth, async (req: Request, res: Response) => {
+router.get("/shifts", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.query.businessId as string;
@@ -181,7 +187,7 @@ router.get('/shifts', requireAuth, async (req: Request, res: Response) => {
     const endDate = req.query.endDate as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify business ownership
@@ -193,7 +199,7 @@ router.get('/shifts', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Build date filter
@@ -217,16 +223,13 @@ router.get('/shifts', requireAuth, async (req: Request, res: Response) => {
           },
         },
       },
-      orderBy: [
-        { date: 'asc' },
-        { startTime: 'asc' },
-      ],
+      orderBy: [{ date: "asc" }, { startTime: "asc" }],
     });
 
     res.json({ success: true, data: shifts });
   } catch (error) {
-    console.error('Error fetching shifts:', error);
-    res.status(500).json({ error: 'Failed to fetch shifts' });
+    console.error("Error fetching shifts:", error);
+    res.status(500).json({ error: "Failed to fetch shifts" });
   }
 });
 
@@ -234,13 +237,13 @@ router.get('/shifts', requireAuth, async (req: Request, res: Response) => {
  * POST /api/dashboard/staff/shifts
  * Create new shift with conflict detection
  */
-router.post('/shifts', requireAuth, async (req: Request, res: Response) => {
+router.post("/shifts", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.body.businessId;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify business ownership
@@ -252,7 +255,7 @@ router.post('/shifts', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Validate input
@@ -263,12 +266,12 @@ router.post('/shifts', requireAuth, async (req: Request, res: Response) => {
       businessId,
       validatedData.staffId,
       new Date(validatedData.startTime),
-      new Date(validatedData.endTime)
+      new Date(validatedData.endTime),
     );
 
     if (conflicts.length > 0) {
       return res.status(409).json({
-        error: 'Shift conflicts detected',
+        error: "Shift conflicts detected",
         conflicts: conflicts,
       });
     }
@@ -299,8 +302,8 @@ router.post('/shifts', requireAuth, async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error creating shift:', error);
-    res.status(500).json({ error: 'Failed to create shift' });
+    console.error("Error creating shift:", error);
+    res.status(500).json({ error: "Failed to create shift" });
   }
 });
 
@@ -308,46 +311,54 @@ router.post('/shifts', requireAuth, async (req: Request, res: Response) => {
  * POST /api/dashboard/staff/conflicts/check
  * Check for shift conflicts without creating
  */
-router.post('/conflicts/check', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.userId;
-    const { businessId, staffId, startTime, endTime } = req.body;
+router.post(
+  "/conflicts/check",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.userId;
+      const { businessId, staffId, startTime, endTime } = req.body;
 
-    if (!businessId || !staffId || !startTime || !endTime) {
-      return res.status(400).json({ error: 'businessId, staffId, startTime, and endTime are required' });
+      if (!businessId || !staffId || !startTime || !endTime) {
+        return res
+          .status(400)
+          .json({
+            error: "businessId, staffId, startTime, and endTime are required",
+          });
+      }
+
+      // Verify business ownership
+      const business = await prisma.business.findFirst({
+        where: {
+          id: businessId,
+          members: { some: { userId } },
+        },
+      });
+
+      if (!business) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const conflicts = await checkShiftConflicts(
+        businessId,
+        staffId,
+        new Date(startTime),
+        new Date(endTime),
+      );
+
+      res.json({
+        success: true,
+        data: {
+          hasConflicts: conflicts.length > 0,
+          conflicts: conflicts,
+        },
+      });
+    } catch (error) {
+      console.error("Error checking conflicts:", error);
+      res.status(500).json({ error: "Failed to check conflicts" });
     }
-
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const conflicts = await checkShiftConflicts(
-      businessId,
-      staffId,
-      new Date(startTime),
-      new Date(endTime)
-    );
-
-    res.json({
-      success: true,
-      data: {
-        hasConflicts: conflicts.length > 0,
-        conflicts: conflicts,
-      },
-    });
-  } catch (error) {
-    console.error('Error checking conflicts:', error);
-    res.status(500).json({ error: 'Failed to check conflicts' });
-  }
-});
+  },
+);
 
 /**
  * Utility function to check for shift conflicts
@@ -357,7 +368,7 @@ async function checkShiftConflicts(
   staffId: string,
   startTime: Date,
   endTime: Date,
-  excludeShiftId?: string
+  excludeShiftId?: string,
 ): Promise<any[]> {
   const conflicts = [];
 
@@ -375,10 +386,7 @@ async function checkShiftConflicts(
           ],
         },
         {
-          AND: [
-            { startTime: { lt: endTime } },
-            { endTime: { gte: endTime } },
-          ],
+          AND: [{ startTime: { lt: endTime } }, { endTime: { gte: endTime } }],
         },
         {
           AND: [
@@ -400,8 +408,8 @@ async function checkShiftConflicts(
 
   if (overlappingShifts.length > 0) {
     conflicts.push({
-      type: 'shift_overlap',
-      message: 'Staff member already has a shift during this time',
+      type: "shift_overlap",
+      message: "Staff member already has a shift during this time",
       details: overlappingShifts,
     });
   }
@@ -412,7 +420,7 @@ async function checkShiftConflicts(
     where: {
       businessId,
       staffId,
-      status: 'APPROVED',
+      status: "APPROVED",
       startDate: { lte: shiftDate },
       endDate: { gte: shiftDate },
     },
@@ -420,8 +428,8 @@ async function checkShiftConflicts(
 
   if (absences.length > 0) {
     conflicts.push({
-      type: 'absence_conflict',
-      message: 'Staff member has approved absence during this period',
+      type: "absence_conflict",
+      message: "Staff member has approved absence during this period",
       details: absences,
     });
   }

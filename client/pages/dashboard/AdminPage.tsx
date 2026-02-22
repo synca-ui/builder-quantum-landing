@@ -3,8 +3,8 @@
  * System management, reservations, and SEO overview
  */
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Settings,
   Users,
@@ -14,10 +14,10 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  MoreHorizontal
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import DashboardLayout from '../../components/dashboard/DashboardLayout';
+  MoreHorizontal,
+} from "lucide-react";
+import { cn } from "../../lib/utils";
+import DashboardLayout from "../../components/dashboard/DashboardLayout";
 
 interface Reservation {
   id: string;
@@ -25,7 +25,13 @@ interface Reservation {
   guestEmail?: string;
   guestCount: number;
   reservationTime: string;
-  status: 'PENDING' | 'CONFIRMED' | 'ARRIVED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+  status:
+    | "PENDING"
+    | "CONFIRMED"
+    | "ARRIVED"
+    | "COMPLETED"
+    | "CANCELLED"
+    | "NO_SHOW";
   table?: {
     number: string;
     name?: string;
@@ -46,11 +52,11 @@ interface SEOHealth {
 
 export default function AdminPage() {
   const [searchParams] = useSearchParams();
-  const businessId = searchParams.get('businessId') || undefined;
+  const businessId = searchParams.get("businessId") || undefined;
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [seoHealth, setSeoHealth] = useState<SEOHealth | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,38 +70,44 @@ export default function AdminPage() {
       // Mock reservations data
       const mockReservations: Reservation[] = [
         {
-          id: 'res-1',
-          guestName: 'Anna Mueller',
-          guestEmail: 'anna@example.com',
+          id: "res-1",
+          guestName: "Anna Mueller",
+          guestEmail: "anna@example.com",
           guestCount: 4,
-          reservationTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-          status: 'CONFIRMED',
-          table: { number: '5', name: 'Fenster-Tisch' },
+          reservationTime: new Date(
+            Date.now() + 2 * 60 * 60 * 1000,
+          ).toISOString(),
+          status: "CONFIRMED",
+          table: { number: "5", name: "Fenster-Tisch" },
         },
         {
-          id: 'res-2',
-          guestName: 'Marco Schmidt',
+          id: "res-2",
+          guestName: "Marco Schmidt",
           guestCount: 2,
-          reservationTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-          status: 'PENDING',
-          table: { number: '2' },
+          reservationTime: new Date(
+            Date.now() + 4 * 60 * 60 * 1000,
+          ).toISOString(),
+          status: "PENDING",
+          table: { number: "2" },
         },
         {
-          id: 'res-3',
-          guestName: 'Lisa Weber',
-          guestEmail: 'lisa@example.com',
+          id: "res-3",
+          guestName: "Lisa Weber",
+          guestEmail: "lisa@example.com",
           guestCount: 6,
           reservationTime: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-          status: 'ARRIVED',
-          table: { number: '8', name: 'Große Runde' },
+          status: "ARRIVED",
+          table: { number: "8", name: "Große Runde" },
         },
         {
-          id: 'res-4',
-          guestName: 'Tom Fischer',
+          id: "res-4",
+          guestName: "Tom Fischer",
           guestCount: 3,
-          reservationTime: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-          status: 'COMPLETED',
-          table: { number: '3' },
+          reservationTime: new Date(
+            Date.now() - 3 * 60 * 60 * 1000,
+          ).toISOString(),
+          status: "COMPLETED",
+          table: { number: "3" },
         },
       ];
 
@@ -105,87 +117,119 @@ export default function AdminPage() {
         checklist: {
           hasBusinessName: {
             status: true,
-            title: 'Business Name Set',
-            description: 'Essential for search visibility'
+            title: "Business Name Set",
+            description: "Essential for search visibility",
           },
           hasDescription: {
             status: true,
-            title: 'Business Description',
-            description: 'Helps customers understand your restaurant'
+            title: "Business Description",
+            description: "Helps customers understand your restaurant",
           },
           hasLogo: {
             status: false,
-            title: 'Logo Uploaded',
-            description: 'Improves brand recognition'
+            title: "Logo Uploaded",
+            description: "Improves brand recognition",
           },
           hasCuisineType: {
             status: true,
-            title: 'Cuisine Type Specified',
-            description: 'Helps customers find the right food'
+            title: "Cuisine Type Specified",
+            description: "Helps customers find the right food",
           },
           hasOpeningHours: {
             status: false,
-            title: 'Opening Hours Set',
-            description: 'Critical for local search results'
+            title: "Opening Hours Set",
+            description: "Critical for local search results",
           },
         },
         recommendations: [
-          'Logo hochladen für bessere Markenwahrnehmung',
-          'Öffnungszeiten hinzufügen für lokale Suche',
-          'Kontaktinformationen vervollständigen',
+          "Logo hochladen für bessere Markenwahrnehmung",
+          "Öffnungszeiten hinzufügen für lokale Suche",
+          "Kontaktinformationen vervollständigen",
         ],
       };
 
       setReservations(mockReservations);
       setSeoHealth(mockSeoHealth);
     } catch (error) {
-      console.error('Error fetching admin data:', error);
+      console.error("Error fetching admin data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateReservationStatus = async (reservationId: string, newStatus: Reservation['status']) => {
+  const updateReservationStatus = async (
+    reservationId: string,
+    newStatus: Reservation["status"],
+  ) => {
     try {
-      setReservations(prev => prev.map(res =>
-        res.id === reservationId ? { ...res, status: newStatus } : res
-      ));
+      setReservations((prev) =>
+        prev.map((res) =>
+          res.id === reservationId ? { ...res, status: newStatus } : res,
+        ),
+      );
     } catch (error) {
-      console.error('Error updating reservation:', error);
+      console.error("Error updating reservation:", error);
     }
   };
 
-  const getStatusBadge = (status: Reservation['status']) => {
+  const getStatusBadge = (status: Reservation["status"]) => {
     const badges = {
-      PENDING: { color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: Clock },
-      CONFIRMED: { color: 'bg-blue-100 text-blue-700 border-blue-200', icon: CheckCircle },
-      ARRIVED: { color: 'bg-green-100 text-green-700 border-green-200', icon: Users },
-      COMPLETED: { color: 'bg-gray-100 text-gray-700 border-gray-200', icon: CheckCircle },
-      CANCELLED: { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle },
-      NO_SHOW: { color: 'bg-orange-100 text-orange-700 border-orange-200', icon: AlertCircle },
+      PENDING: {
+        color: "bg-yellow-100 text-yellow-700 border-yellow-200",
+        icon: Clock,
+      },
+      CONFIRMED: {
+        color: "bg-blue-100 text-blue-700 border-blue-200",
+        icon: CheckCircle,
+      },
+      ARRIVED: {
+        color: "bg-green-100 text-green-700 border-green-200",
+        icon: Users,
+      },
+      COMPLETED: {
+        color: "bg-gray-100 text-gray-700 border-gray-200",
+        icon: CheckCircle,
+      },
+      CANCELLED: {
+        color: "bg-red-100 text-red-700 border-red-200",
+        icon: XCircle,
+      },
+      NO_SHOW: {
+        color: "bg-orange-100 text-orange-700 border-orange-200",
+        icon: AlertCircle,
+      },
     };
 
     const badge = badges[status];
     const Icon = badge.icon;
 
     return (
-      <span className={cn('inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border', badge.color)}>
+      <span
+        className={cn(
+          "inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border",
+          badge.color,
+        )}
+      >
         <Icon className="w-3 h-3" />
         <span>{status}</span>
       </span>
     );
   };
 
-  const filteredReservations = selectedStatus === 'ALL'
-    ? reservations
-    : reservations.filter(res => res.status === selectedStatus);
+  const filteredReservations =
+    selectedStatus === "ALL"
+      ? reservations
+      : reservations.filter((res) => res.status === selectedStatus);
 
   if (loading) {
     return (
       <DashboardLayout businessId={businessId}>
         <div className="space-y-6">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="card-elevated bg-white rounded-2xl p-8 animate-pulse">
+            <div
+              key={i}
+              className="card-elevated bg-white rounded-2xl p-8 animate-pulse"
+            >
               <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
               <div className="space-y-3">
                 <div className="h-4 bg-gray-200 rounded"></div>
@@ -204,7 +248,9 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin & Verwaltung</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Admin & Verwaltung
+            </h1>
             <p className="text-gray-600 mt-2">
               Systemverwaltung, Reservierungen und SEO-Übersicht
             </p>
@@ -222,8 +268,12 @@ export default function AdminPage() {
                       <Calendar className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Reservierungen</h3>
-                      <p className="text-sm text-gray-500">Live-Übersicht aller Buchungen</p>
+                      <h3 className="font-semibold text-gray-900">
+                        Reservierungen
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Live-Übersicht aller Buchungen
+                      </p>
                     </div>
                   </div>
 
@@ -243,13 +293,40 @@ export default function AdminPage() {
                 {/* Status Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                   {[
-                    { status: 'PENDING', count: reservations.filter(r => r.status === 'PENDING').length, color: 'text-yellow-600' },
-                    { status: 'CONFIRMED', count: reservations.filter(r => r.status === 'CONFIRMED').length, color: 'text-blue-600' },
-                    { status: 'ARRIVED', count: reservations.filter(r => r.status === 'ARRIVED').length, color: 'text-green-600' },
-                    { status: 'COMPLETED', count: reservations.filter(r => r.status === 'COMPLETED').length, color: 'text-gray-600' },
-                  ].map(item => (
-                    <div key={item.status} className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className={cn('text-2xl font-bold', item.color)}>{item.count}</div>
+                    {
+                      status: "PENDING",
+                      count: reservations.filter((r) => r.status === "PENDING")
+                        .length,
+                      color: "text-yellow-600",
+                    },
+                    {
+                      status: "CONFIRMED",
+                      count: reservations.filter(
+                        (r) => r.status === "CONFIRMED",
+                      ).length,
+                      color: "text-blue-600",
+                    },
+                    {
+                      status: "ARRIVED",
+                      count: reservations.filter((r) => r.status === "ARRIVED")
+                        .length,
+                      color: "text-green-600",
+                    },
+                    {
+                      status: "COMPLETED",
+                      count: reservations.filter(
+                        (r) => r.status === "COMPLETED",
+                      ).length,
+                      color: "text-gray-600",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.status}
+                      className="text-center p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className={cn("text-2xl font-bold", item.color)}>
+                        {item.count}
+                      </div>
                       <div className="text-xs text-gray-600">{item.status}</div>
                     </div>
                   ))}
@@ -258,23 +335,30 @@ export default function AdminPage() {
 
               {/* Reservations List */}
               <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-                {filteredReservations.map(reservation => (
-                  <div key={reservation.id} className="p-4 hover:bg-gray-50 transition-colors">
+                {filteredReservations.map((reservation) => (
+                  <div
+                    key={reservation.id}
+                    className="p-4 hover:bg-gray-50 transition-colors"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <h4 className="font-medium text-gray-900">{reservation.guestName}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {reservation.guestName}
+                          </h4>
                           {getStatusBadge(reservation.status)}
                         </div>
 
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <span>{reservation.guestCount} Personen</span>
                           <span>
-                            {new Date(reservation.reservationTime).toLocaleString('de-DE', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
+                            {new Date(
+                              reservation.reservationTime,
+                            ).toLocaleString("de-DE", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
                             })}
                           </span>
                           {reservation.table && (
@@ -284,18 +368,25 @@ export default function AdminPage() {
                       </div>
 
                       <div className="flex items-center space-x-2">
-                        {reservation.status === 'PENDING' && (
+                        {reservation.status === "PENDING" && (
                           <button
-                            onClick={() => updateReservationStatus(reservation.id, 'CONFIRMED')}
+                            onClick={() =>
+                              updateReservationStatus(
+                                reservation.id,
+                                "CONFIRMED",
+                              )
+                            }
                             className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
                           >
                             Bestätigen
                           </button>
                         )}
 
-                        {reservation.status === 'CONFIRMED' && (
+                        {reservation.status === "CONFIRMED" && (
                           <button
-                            onClick={() => updateReservationStatus(reservation.id, 'ARRIVED')}
+                            onClick={() =>
+                              updateReservationStatus(reservation.id, "ARRIVED")
+                            }
                             className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors"
                           >
                             Angekommen
@@ -321,8 +412,12 @@ export default function AdminPage() {
                   <Search className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">SEO-Gesundheit</h3>
-                  <p className="text-sm text-gray-500">Suchmaschinen-Optimierung</p>
+                  <h3 className="font-semibold text-gray-900">
+                    SEO-Gesundheit
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Suchmaschinen-Optimierung
+                  </p>
                 </div>
               </div>
 
@@ -353,7 +448,9 @@ export default function AdminPage() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xl font-bold text-gray-900">{seoHealth.score}%</span>
+                        <span className="text-xl font-bold text-gray-900">
+                          {seoHealth.score}%
+                        </span>
                       </div>
                     </div>
                     <p className="text-sm text-gray-600">SEO Score</p>
@@ -363,10 +460,12 @@ export default function AdminPage() {
                   <div className="space-y-3 mb-6">
                     {Object.entries(seoHealth.checklist).map(([key, item]) => (
                       <div key={key} className="flex items-start space-x-3">
-                        <div className={cn(
-                          'w-5 h-5 rounded-full flex items-center justify-center mt-0.5',
-                          item.status ? 'bg-green-100' : 'bg-gray-100'
-                        )}>
+                        <div
+                          className={cn(
+                            "w-5 h-5 rounded-full flex items-center justify-center mt-0.5",
+                            item.status ? "bg-green-100" : "bg-gray-100",
+                          )}
+                        >
                           {item.status ? (
                             <CheckCircle className="w-3 h-3 text-green-600" />
                           ) : (
@@ -374,8 +473,12 @@ export default function AdminPage() {
                           )}
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                          <p className="text-xs text-gray-500">{item.description}</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {item.title}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {item.description}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -384,10 +487,15 @@ export default function AdminPage() {
                   {/* Recommendations */}
                   {seoHealth.recommendations.length > 0 && (
                     <div className="pt-4 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-900 mb-2 text-sm">Empfehlungen</h4>
+                      <h4 className="font-medium text-gray-900 mb-2 text-sm">
+                        Empfehlungen
+                      </h4>
                       <ul className="space-y-1">
                         {seoHealth.recommendations.map((rec, index) => (
-                          <li key={index} className="text-xs text-gray-600 flex items-start space-x-2">
+                          <li
+                            key={index}
+                            className="text-xs text-gray-600 flex items-start space-x-2"
+                          >
                             <span className="text-teal-500 mt-1">•</span>
                             <span>{rec}</span>
                           </li>
@@ -407,26 +515,55 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">System-Status</h3>
-                  <p className="text-sm text-gray-500">Überwachung & Gesundheit</p>
+                  <p className="text-sm text-gray-500">
+                    Überwachung & Gesundheit
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-3">
                 {[
-                  { label: 'Datenbank', status: 'healthy', message: 'Verbindung aktiv' },
-                  { label: 'API-Endpunkte', status: 'healthy', message: 'Alle Services laufen' },
-                  { label: 'QR-Codes', status: 'healthy', message: '8 QR-Codes aktiv' },
-                  { label: 'Reservierungssystem', status: 'warning', message: 'Maintenance geplant' },
+                  {
+                    label: "Datenbank",
+                    status: "healthy",
+                    message: "Verbindung aktiv",
+                  },
+                  {
+                    label: "API-Endpunkte",
+                    status: "healthy",
+                    message: "Alle Services laufen",
+                  },
+                  {
+                    label: "QR-Codes",
+                    status: "healthy",
+                    message: "8 QR-Codes aktiv",
+                  },
+                  {
+                    label: "Reservierungssystem",
+                    status: "warning",
+                    message: "Maintenance geplant",
+                  },
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center space-x-3">
-                      <div className={cn(
-                        'w-2 h-2 rounded-full',
-                        item.status === 'healthy' ? 'bg-green-500' : 'bg-yellow-500'
-                      )}></div>
-                      <span className="text-sm font-medium text-gray-900">{item.label}</span>
+                      <div
+                        className={cn(
+                          "w-2 h-2 rounded-full",
+                          item.status === "healthy"
+                            ? "bg-green-500"
+                            : "bg-yellow-500",
+                        )}
+                      ></div>
+                      <span className="text-sm font-medium text-gray-900">
+                        {item.label}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-500">{item.message}</span>
+                    <span className="text-xs text-gray-500">
+                      {item.message}
+                    </span>
                   </div>
                 ))}
               </div>

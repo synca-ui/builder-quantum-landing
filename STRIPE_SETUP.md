@@ -75,8 +75,8 @@ curl -X POST http://localhost:3000/api/webhooks/test \
 1. Process a test payment in Stripe Test Mode
 2. Check that order events appear in your database:
    ```sql
-   SELECT * FROM public.order_events 
-   WHERE web_app_id = 'your-web-app-id' 
+   SELECT * FROM public.order_events
+   WHERE web_app_id = 'your-web-app-id'
    ORDER BY created_at DESC;
    ```
 3. Visit your published site and confirm social proof badges appear
@@ -135,11 +135,13 @@ The webhook handler automatically verifies that requests come from Stripe:
 ### "Invalid Signature" Error
 
 **Problem**: Webhook is rejected with invalid signature
+
 - Verify `STRIPE_WEBHOOK_SECRET` is correctly set
 - Check that you're using the signing secret (starts with `whsec_`)
 - Not the secret API key
 
 **Solution**:
+
 1. Get fresh signing secret from Stripe Dashboard
 2. Update `.env` with correct value
 3. Restart your server
@@ -149,6 +151,7 @@ The webhook handler automatically verifies that requests come from Stripe:
 **Problem**: Webhook endpoint never receives events
 
 **Solutions**:
+
 1. Verify endpoint URL is publicly accessible (not localhost)
 2. Check firewall/security group allows inbound traffic
 3. Review Stripe Dashboard → Webhooks → Event log for delivery attempts
@@ -159,6 +162,7 @@ The webhook handler automatically verifies that requests come from Stripe:
 **Problem**: Webhook is received but orders aren't logged
 
 **Solutions**:
+
 1. Verify `webAppId` in metadata matches actual web app ID
 2. Check database connection is working
 3. Review server logs for SQL errors
@@ -179,6 +183,7 @@ The webhook handler automatically verifies that requests come from Stripe:
 ### View Webhook Deliveries
 
 In Stripe Dashboard:
+
 1. Go to **Developers** → **Webhooks**
 2. Click your endpoint
 3. Scroll to **Events** to see delivery history
@@ -187,6 +192,7 @@ In Stripe Dashboard:
 ### Enable Debug Logging
 
 Set environment variable to enable detailed logs:
+
 ```env
 DEBUG=stripe:*
 ```
@@ -228,6 +234,7 @@ After setting up Stripe webhooks:
 ## Support
 
 For issues:
+
 1. Check Stripe Dashboard event logs
 2. Review server application logs
 3. Verify database connection

@@ -1,6 +1,10 @@
 import axios from "axios";
 
-export async function publishWebApp(subdomain: string, config: any, token?: string) {
+export async function publishWebApp(
+  subdomain: string,
+  config: any,
+  token?: string,
+) {
   try {
     const res = await axios.post(
       "/api/apps/publish",

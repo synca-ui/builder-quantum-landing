@@ -41,9 +41,11 @@ export function getPageLabel(pageId: string): string {
 /**
  * Formatiert Öffnungszeiten für einzelnen Tag
  */
-export function formatDayHours(day: { open: string; close: string; closed: boolean } | undefined): string {
-  if (!day) return 'Keine Angabe';
-  if (day.closed) return 'Geschlossen';
+export function formatDayHours(
+  day: { open: string; close: string; closed: boolean } | undefined,
+): string {
+  if (!day) return "Keine Angabe";
+  if (day.closed) return "Geschlossen";
   return `${day.open} - ${day.close}`;
 }
 
@@ -51,13 +53,13 @@ export function formatDayHours(day: { open: string; close: string; closed: boole
  * Deutsche Wochentag-Namen
  */
 export const DAY_NAMES: Record<string, string> = {
-  monday: 'Montag',
-  tuesday: 'Dienstag',
-  wednesday: 'Mittwoch',
-  thursday: 'Donnerstag',
-  friday: 'Freitag',
-  saturday: 'Samstag',
-  sunday: 'Sonntag',
+  monday: "Montag",
+  tuesday: "Dienstag",
+  wednesday: "Mittwoch",
+  thursday: "Donnerstag",
+  friday: "Freitag",
+  saturday: "Samstag",
+  sunday: "Sonntag",
 };
 
 /**
@@ -71,7 +73,7 @@ export function shouldAutoDiscoverPage(
     gallery?: any[];
     openingHours?: any;
     reservationsEnabled?: boolean;
-  }
+  },
 ): boolean {
   switch (pageId) {
     case "menu":
@@ -84,4 +86,3 @@ export function shouldAutoDiscoverPage(
       return false;
   }
 }
-

@@ -22,20 +22,19 @@ import {
   XCircle,
   CheckCircle2,
 } from "lucide-react";
-const MaitrWorkflowAnimation = lazy(() => import("@/components/MaitrWorkflowAnimation"));
+const MaitrWorkflowAnimation = lazy(
+  () => import("@/components/MaitrWorkflowAnimation"),
+);
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
-import {
-  SignInButton,
-  SignUpButton,
-} from "@clerk/clerk-react";
+import { SignInButton, SignUpButton } from "@clerk/clerk-react";
 import {
   useResourcePreloader,
   useLazyCSS,
   usePerformanceObserver,
   useImageOptimization,
-  useDemoDashboardVisibility
+  useDemoDashboardVisibility,
 } from "@/hooks/usePerformanceOptimization";
 
 export default function Index() {
@@ -66,10 +65,13 @@ export default function Index() {
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
   const [isLoadingMagic, setIsLoadingMagic] = useState(false);
-  const [inputError, setInputError] = useState<"invalid_format" | "server_error" | null>(null);
+  const [inputError, setInputError] = useState<
+    "invalid_format" | "server_error" | null
+  >(null);
   const navigate = useNavigate();
 
-  const isMagicLinkValid = (link: string) => /^https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i.test(link.trim());
+  const isMagicLinkValid = (link: string) =>
+    /^https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i.test(link.trim());
 
   const handleMagicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,7 +148,7 @@ export default function Index() {
       features: [
         "Professionelle Web App",
         "QR-Code für Tische",
-        "Automatische Updates"
+        "Automatische Updates",
       ],
       cta: "Kommt bald",
       popular: false,
@@ -161,7 +163,7 @@ export default function Index() {
         "Professionelle Web App",
         "QR-Code für Tische",
         "Reservierungssystem",
-        "Automatische Updates"
+        "Automatische Updates",
       ],
       cta: "Jetzt starten",
       popular: true,
@@ -175,7 +177,7 @@ export default function Index() {
       features: [
         "Multi-Standort Management",
         "Eigene Domain",
-        "Maßgeschneiderte Features"
+        "Maßgeschneiderte Features",
       ],
       cta: "Kommt bald",
       popular: false,
@@ -385,7 +387,6 @@ export default function Index() {
               ))}
 
               <div className="pt-2 border-t border-gray-200/50 space-y-2">
-
                 <SignInButton mode="modal">
                   <Button
                     size="sm"
@@ -422,8 +423,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-
-      </nav >
+      </nav>
     );
   };
 
@@ -468,7 +468,9 @@ export default function Index() {
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
-                Link einfügen, fertig. Maitr erstellt automatisch deine digitale Speisekarte und dein Reservierungssystem – bereit zum Servieren. 🍒
+                Link einfügen, fertig. Maitr erstellt automatisch deine digitale
+                Speisekarte und dein Reservierungssystem – bereit zum Servieren.
+                🍒
               </p>
 
               <div className="w-full max-w-3xl mx-auto mt-6">
@@ -481,7 +483,10 @@ export default function Index() {
                       <LinkIcon className="w-5 h-5 text-gray-500" />
                       <input
                         value={magicLink}
-                        onChange={(e) => { setMagicLink(e.target.value); setInputError(null); }}
+                        onChange={(e) => {
+                          setMagicLink(e.target.value);
+                          setInputError(null);
+                        }}
                         placeholder="Google Maps oder Website-Link einfügen..."
                         className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
                         disabled={isLoadingMagic}
@@ -529,13 +534,20 @@ export default function Index() {
                 {/* ─── INLINE ERROR FEEDBACK ─── */}
                 {inputError && (
                   <div className="w-full mt-3 animate-in slide-in-from-top-2 duration-300">
-                    <div className={`rounded-2xl border p-4 backdrop-blur-sm ${inputError === "invalid_format"
-                        ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
-                        : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
-                      }`}>
+                    <div
+                      className={`rounded-2xl border p-4 backdrop-blur-sm ${
+                        inputError === "invalid_format"
+                          ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
+                          : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
+                      }`}
+                    >
                       <div className="flex items-start gap-3 mb-3">
-                        <div className={`p-1.5 rounded-lg shrink-0 ${inputError === "invalid_format" ? "bg-red-50" : "bg-orange-50"}`}>
-                          <XCircle className={`w-4 h-4 ${inputError === "invalid_format" ? "text-red-500" : "text-orange-500"}`} />
+                        <div
+                          className={`p-1.5 rounded-lg shrink-0 ${inputError === "invalid_format" ? "bg-red-50" : "bg-orange-50"}`}
+                        >
+                          <XCircle
+                            className={`w-4 h-4 ${inputError === "invalid_format" ? "text-red-500" : "text-orange-500"}`}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-gray-900">
@@ -560,30 +572,47 @@ export default function Index() {
 
                       {inputError === "invalid_format" && (
                         <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mb-3">
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Erwartetes Format</p>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            Erwartetes Format
+                          </p>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                              <code className="text-xs text-gray-700 font-mono">https://www.restaurant-name.de</code>
+                              <code className="text-xs text-gray-700 font-mono">
+                                https://www.restaurant-name.de
+                              </code>
                             </div>
                             <div className="flex items-center gap-2">
                               <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                              <code className="text-xs text-gray-700 font-mono">https://maps.google.com/...</code>
+                              <code className="text-xs text-gray-700 font-mono">
+                                https://maps.google.com/...
+                              </code>
                             </div>
                             <div className="flex items-center gap-2">
                               <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                              <code className="text-xs text-gray-400 font-mono line-through">restaurant-name.de</code>
+                              <code className="text-xs text-gray-400 font-mono line-through">
+                                restaurant-name.de
+                              </code>
                             </div>
                             <div className="flex items-center gap-2">
                               <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                              <code className="text-xs text-gray-400 font-mono line-through">Nur ein Name oder Wort</code>
+                              <code className="text-xs text-gray-400 font-mono line-through">
+                                Nur ein Name oder Wort
+                              </code>
                             </div>
                           </div>
                         </div>
                       )}
 
                       <button
-                        onClick={() => { setInputError(null); document.querySelector<HTMLInputElement>('input[aria-label="Link einfügen"]')?.focus(); }}
+                        onClick={() => {
+                          setInputError(null);
+                          document
+                            .querySelector<HTMLInputElement>(
+                              'input[aria-label="Link einfügen"]',
+                            )
+                            ?.focus();
+                        }}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
@@ -599,7 +628,10 @@ export default function Index() {
       </section>
 
       {/* Interactive Workflow Animation Section */}
-      <section id="demo" className="relative py-8 bg-gradient-to-br from-gray-50 via-white to-teal-50 overflow-hidden">
+      <section
+        id="demo"
+        className="relative py-8 bg-gradient-to-br from-gray-50 via-white to-teal-50 overflow-hidden"
+      >
         {/* Subtle background circles */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-br from-teal-400 to-teal-500 rounded-full opacity-5"></div>
@@ -621,15 +653,17 @@ export default function Index() {
           </div>
 
           {/* Workflow Animation */}
-          <Suspense fallback={
-            <div className="w-full max-w-7xl mx-auto h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-8 mb-20 flex items-center justify-center">
-              <Loader2 className="w-10 h-10 animate-spin text-teal-500" />
-            </div>
-          }>
+          <Suspense
+            fallback={
+              <div className="w-full max-w-7xl mx-auto h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-8 mb-20 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 animate-spin text-teal-500" />
+              </div>
+            }
+          >
             <MaitrWorkflowAnimation />
           </Suspense>
         </div>
-      </section >
+      </section>
 
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -712,14 +746,16 @@ export default function Index() {
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-100 to-purple-100 px-6 py-3 rounded-full mb-6">
               <Crown className="w-5 h-5 text-teal-600" />
-              <span className="text-teal-700 font-bold">So funktioniert es</span>
+              <span className="text-teal-700 font-bold">
+                So funktioniert es
+              </span>
             </div>
             <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
               <span className="text-gradient">Drei einfache Schritte</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Von der Idee zur erfolgreichen Online-Präsenz. Unsere Plattform hilft
-              Gastronomen, ihre digitale Präsenz mühelos aufzubauen.
+              Von der Idee zur erfolgreichen Online-Präsenz. Unsere Plattform
+              hilft Gastronomen, ihre digitale Präsenz mühelos aufzubauen.
             </p>
           </div>
 
@@ -775,7 +811,8 @@ export default function Index() {
               <span className="text-gradient">Wähle deinen Plan</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
-              Flexible Preise für Unternehmen jeder Größe. Klein starten, mit dir wachsen.
+              Flexible Preise für Unternehmen jeder Größe. Klein starten, mit
+              dir wachsen.
             </p>
           </div>
 
@@ -783,13 +820,15 @@ export default function Index() {
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl border-2 ${plan.popular
-                  ? "border-purple-200 shadow-purple-100/50"
-                  : "border-gray-200 hover:border-teal-200"
-                  } ${plan.cta === "Kommt bald"
+                className={`group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl border-2 ${
+                  plan.popular
+                    ? "border-purple-200 shadow-purple-100/50"
+                    : "border-gray-200 hover:border-teal-200"
+                } ${
+                  plan.cta === "Kommt bald"
                     ? "opacity-60 pointer-events-none grayscale"
                     : ""
-                  }`}
+                }`}
               >
                 {plan.popular && (
                   <div className="absolute top-0 right-0 bg-gradient-to-r from-teal-500 to-purple-500 text-white px-4 py-1 text-xs font-bold rounded-bl-2xl">
@@ -812,9 +851,7 @@ export default function Index() {
                       <div className="text-6xl font-black text-gray-300 mb-4">
                         Kommt bald
                       </div>
-                      <p className="text-gray-400 text-sm">
-                        Bald verfügbar
-                      </p>
+                      <p className="text-gray-400 text-sm">Bald verfügbar</p>
                     </div>
                   ) : (
                     // Active Plan Display
@@ -823,7 +860,9 @@ export default function Index() {
                         <h3 className="text-2xl font-extrabold text-gray-900 mb-2">
                           {plan.name}
                         </h3>
-                        <p className="text-gray-600 text-sm">{plan.description}</p>
+                        <p className="text-gray-600 text-sm">
+                          {plan.description}
+                        </p>
                       </div>
 
                       <div className="text-center mb-8">
@@ -831,7 +870,9 @@ export default function Index() {
                           <span className="text-5xl font-black bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent">
                             {plan.price}
                           </span>
-                          <span className="text-gray-500 ml-2">{plan.period}</span>
+                          <span className="text-gray-500 ml-2">
+                            {plan.period}
+                          </span>
                         </div>
                       </div>
 
@@ -846,16 +887,19 @@ export default function Index() {
                             >
                               <ChevronRight className="w-3 h-3 text-white" />
                             </div>
-                            <span className="text-sm font-medium">{feature}</span>
+                            <span className="text-sm font-medium">
+                              {feature}
+                            </span>
                           </li>
                         ))}
                       </ul>
 
                       <Button
-                        className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
-                          ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
-                          : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
-                          }`}
+                        className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${
+                          plan.popular
+                            ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+                            : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
+                        }`}
                       >
                         <div className="flex items-center justify-center gap-2">
                           <span>{plan.cta}</span>
@@ -877,22 +921,22 @@ export default function Index() {
             <div>
               <h4 className="text-lg font-bold">Creative Studio</h4>
               <p className="mt-2 text-gray-600">
-                Passe Stil, Farben und Inhalte an. Deine App, deine Marke —
-                mit wunderschönen Standardeinstellungen.
+                Passe Stil, Farben und Inhalte an. Deine App, deine Marke — mit
+                wunderschönen Standardeinstellungen.
               </p>
             </div>
             <div>
               <h4 className="text-lg font-bold">Backstage</h4>
               <p className="mt-2 text-gray-600">
-                Verwalte Menüs, Öffnungszeiten und Bestellungen von einem einfachen Dashboard
-                — gebaut für Gastronomie.
+                Verwalte Menüs, Öffnungszeiten und Bestellungen von einem
+                einfachen Dashboard — gebaut für Gastronomie.
               </p>
             </div>
             <div>
               <h4 className="text-lg font-bold">Concierge</h4>
               <p className="mt-2 text-gray-600">
-                Brauchst du Hilfe? Unser Team kann das Setup für dich fertigstellen oder
-                individuelle Integrationen bereitstellen.
+                Brauchst du Hilfe? Unser Team kann das Setup für dich
+                fertigstellen oder individuelle Integrationen bereitstellen.
               </p>
             </div>
           </div>
@@ -925,6 +969,6 @@ export default function Index() {
           </div>
         </div>
       </footer>
-    </div >
+    </div>
   );
 }

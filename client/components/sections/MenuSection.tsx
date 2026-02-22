@@ -177,9 +177,9 @@ export function MenuSection({
                 className={styles.itemPrice}
                 style={{ color: primaryColor || undefined }}
               >
-                {typeof item.price === 'number'
+                {typeof item.price === "number"
                   ? `${item.price.toFixed(2)}€`
-                  : `${item.price}${item.price?.includes('€') ? '' : '€'}`}
+                  : `${item.price}${item.price?.includes("€") ? "" : "€"}`}
               </span>
 
               {showOrderingButtons && onAddToCart && (

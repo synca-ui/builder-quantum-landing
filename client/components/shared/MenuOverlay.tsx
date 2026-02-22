@@ -8,8 +8,8 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo } from 'react';
-import { ChevronRight } from 'lucide-react';
+import React, { memo } from "react";
+import { ChevronRight } from "lucide-react";
 
 // ============================================
 // TYPES
@@ -46,7 +46,7 @@ export const MenuOverlay = memo(function MenuOverlay({
   onClose,
   onNavigate,
   isPreview = false,
-  menuTitle = 'Menü',
+  menuTitle = "Menü",
 }: MenuOverlayProps) {
   if (!isOpen) return null;
 
@@ -79,7 +79,7 @@ export const MenuOverlay = memo(function MenuOverlay({
         style={{
           backgroundColor,
           color: fontColor,
-          boxShadow: 'var(--shadow-modal, -10px 0 40px rgba(0,0,0,0.2))',
+          boxShadow: "var(--shadow-modal, -10px 0 40px rgba(0,0,0,0.2))",
         }}
         onClick={handlePanelClick}
       >
@@ -104,9 +104,7 @@ export const MenuOverlay = memo(function MenuOverlay({
               onClick={() => handleNavigate(item.id)}
             >
               <span>{item.label}</span>
-              <ChevronRight
-                className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all"
-              />
+              <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </button>
           ))}
         </nav>
@@ -128,4 +126,3 @@ export const MenuOverlay = memo(function MenuOverlay({
 });
 
 export default MenuOverlay;
-

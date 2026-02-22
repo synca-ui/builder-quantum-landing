@@ -15,7 +15,7 @@ export default function HostAwareRoot() {
         "maitr.de",
         "www.maitr.de",
         "localhost",
-        "staging.maitr.de"
+        "staging.maitr.de",
       ];
 
       // Wenn wir auf der Hauptseite oder Netlify-Vorschau sind -> Dashboard zeigen
@@ -23,7 +23,7 @@ export default function HostAwareRoot() {
         return null;
       }
 
-      const parts = host.split('.');
+      const parts = host.split(".");
       return parts.length >= 2 ? parts[0] : null;
     } catch {
       return null;

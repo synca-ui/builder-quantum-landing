@@ -7,7 +7,7 @@ interface UseMaitrScoreReturn {
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
-const POLL_INTERVAL_MS = 3000;   // alle 3s prüfen
+const POLL_INTERVAL_MS = 3000; // alle 3s prüfen
 const POLL_TIMEOUT_MS = 120_000; // nach 2 min aufgeben
 
 /**
@@ -15,9 +15,13 @@ const POLL_TIMEOUT_MS = 120_000; // nach 2 min aufgeben
  * @param websiteUrl – die URL die der User eingegeben hat (= ScraperJob.websiteUrl)
  * @param enabled – nur poller wenn true (z.B. erst nach dem n8n-Webhook-Call)
  */
-export function useMaitrScore(websiteUrl: string | null, enabled: boolean = true): UseMaitrScoreReturn {
+export function useMaitrScore(
+  websiteUrl: string | null,
+  enabled: boolean = true,
+): UseMaitrScoreReturn {
   const [maitrScore, setMaitrScore] = useState<number>(0);
-  const [scoreStatus, setScoreStatus] = useState<UseMaitrScoreReturn["scoreStatus"]>("idle");
+  const [scoreStatus, setScoreStatus] =
+    useState<UseMaitrScoreReturn["scoreStatus"]>("idle");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
 
@@ -33,7 +37,7 @@ export function useMaitrScore(websiteUrl: string | null, enabled: boolean = true
 
     try {
       const res = await fetch(
-        `${API_BASE}/api/scraper-job/score?websiteUrl=${encodeURIComponent(websiteUrl)}`
+        `${API_BASE}/api/scraper-job/score?websiteUrl=${encodeURIComponent(websiteUrl)}`,
       );
 
       if (!res.ok) {
@@ -45,7 +49,11 @@ export function useMaitrScore(websiteUrl: string | null, enabled: boolean = true
       const data = await res.json();
 
       // Workflow noch nicht fertig → weiter poller
-      if (data.status === "pending" || data.status === "not_found" || data.maitrScore === null) {
+      if (
+        data.status === "pending" ||
+        data.status === "not_found" ||
+        data.maitrScore === null
+      ) {
         // Timeout-Check
         if (Date.now() - startTimeRef.current > POLL_TIMEOUT_MS) {
           stopPolling();

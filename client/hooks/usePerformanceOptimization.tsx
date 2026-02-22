@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from "react";
 
 // Hook to ensure demo dashboard button is always visible on first loadd
 export function useDemoDashboardVisibility() {
@@ -7,9 +7,9 @@ export function useDemoDashboardVisibility() {
     const ensureVisibility = () => {
       const demoButton = document.querySelector('a[href="/demo-dashboard"]');
       if (demoButton) {
-        (demoButton as HTMLElement).style.opacity = '1';
-        (demoButton as HTMLElement).style.visibility = 'visible';
-        (demoButton as HTMLElement).style.display = 'inline-flex';
+        (demoButton as HTMLElement).style.opacity = "1";
+        (demoButton as HTMLElement).style.visibility = "visible";
+        (demoButton as HTMLElement).style.display = "inline-flex";
       }
     };
 
@@ -25,48 +25,48 @@ export function useDemoDashboardVisibility() {
 export function useResourcePreloader() {
   const preloadCriticalResources = useCallback(() => {
     // Preload only essential routes, prioritize demo dashboard for instant access
-    const criticalRoutes = ['/demo-dashboard', '/configurator'];
+    const criticalRoutes = ["/demo-dashboard", "/configurator"];
 
     // Use requestIdleCallback if available
     const preloadWhenIdle = () => {
-      criticalRoutes.forEach(route => {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
+      criticalRoutes.forEach((route) => {
+        const link = document.createElement("link");
+        link.rel = "prefetch";
         link.href = route;
-        link.as = 'document';
-        link.crossOrigin = 'anonymous'; // Better caching
+        link.as = "document";
+        link.crossOrigin = "anonymous"; // Better caching
         document.head.appendChild(link);
       });
 
       // Preload demo dashboard API endpoints for instant demo access
       const demoEndpoints = [
-        '/api/demo/dashboard/insights/overview',
-        '/api/demo/dashboard/floor-plan/plans',
-        '/api/demo/dashboard/health'
+        "/api/demo/dashboard/insights/overview",
+        "/api/demo/dashboard/floor-plan/plans",
+        "/api/demo/dashboard/health",
       ];
 
-      demoEndpoints.forEach(endpoint => {
-        fetch(endpoint, { method: 'HEAD' }).catch(() => {
+      demoEndpoints.forEach((endpoint) => {
+        fetch(endpoint, { method: "HEAD" }).catch(() => {
           // Silently handle errors, don't block main thread
         });
       });
 
       // Preload demo dashboard component resources
-      if (window.location.pathname === '/') {
+      if (window.location.pathname === "/") {
         // Specifically preload demo dashboard when on homepage
-        const demoLink = document.createElement('link');
-        demoLink.rel = 'modulepreload';
-        demoLink.href = '/demo-dashboard';
+        const demoLink = document.createElement("link");
+        demoLink.rel = "modulepreload";
+        demoLink.href = "/demo-dashboard";
         document.head.appendChild(demoLink);
       }
 
       // Preload configurator API only when on configurator route
-      if (window.location.pathname.includes('/configurator')) {
-        fetch('/api/templates', { method: 'HEAD' }).catch(() => {});
+      if (window.location.pathname.includes("/configurator")) {
+        fetch("/api/templates", { method: "HEAD" }).catch(() => {});
       }
     };
 
-    if ('requestIdleCallback' in window) {
+    if ("requestIdleCallback" in window) {
       (window as any).requestIdleCallback(preloadWhenIdle, { timeout: 2000 });
     } else {
       // Reduced delay for better demo button responsiveness
@@ -87,7 +87,7 @@ export function useLazyCSS() {
     // Only add CSS loading class indicator, don't try to load specific files
     // Let Vite handle CSS bundling and loading automatically
     const timer = setTimeout(() => {
-      document.documentElement.classList.add('css-loaded');
+      document.documentElement.classList.add("css-loaded");
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -97,34 +97,36 @@ export function useLazyCSS() {
 // Performance observer for monitoring - with LCP focus
 export function usePerformanceObserver() {
   useEffect(() => {
-    if (!('PerformanceObserver' in window)) return;
+    if (!("PerformanceObserver" in window)) return;
 
     const observer = new PerformanceObserver((list) => {
       list.getEntries().forEach((entry) => {
         // Track LCP specifically for regression analysis (only in dev)
-        if (entry.entryType === 'largest-contentful-paint') {
+        if (entry.entryType === "largest-contentful-paint") {
           if (import.meta.env.DEV) {
             console.log(`🎯 LCP: ${entry.startTime}ms`);
             if (entry.startTime > 4000) {
-              console.warn('⚠️ LCP is slow:', entry);
+              console.warn("⚠️ LCP is slow:", entry);
             }
           }
         }
 
         // Log slow operations only in development
         if (import.meta.env.DEV && entry.duration && entry.duration > 100) {
-          console.warn(`Slow operation: ${entry.name} took ${entry.duration}ms`);
+          console.warn(
+            `Slow operation: ${entry.name} took ${entry.duration}ms`,
+          );
         }
       });
     });
 
     try {
       observer.observe({
-        entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift']
+        entryTypes: ["largest-contentful-paint", "first-input", "layout-shift"],
       });
     } catch (e) {
       if (import.meta.env.DEV) {
-        console.warn('Performance observer not fully supported');
+        console.warn("Performance observer not fully supported");
       }
     }
 
@@ -135,33 +137,36 @@ export function usePerformanceObserver() {
 // Image lazy loading optimization - enhanced for LCP
 export function useImageOptimization() {
   useEffect(() => {
-    if (!('IntersectionObserver' in window)) return;
+    if (!("IntersectionObserver" in window)) return;
 
-    const imageObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const img = entry.target as HTMLImageElement;
-          if (img.dataset.src) {
-            // Prioritize above-the-fold images
-            const isAboveFold = entry.intersectionRatio > 0.1;
-            if (isAboveFold) {
-              img.loading = 'eager';
+    const imageObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            if (img.dataset.src) {
+              // Prioritize above-the-fold images
+              const isAboveFold = entry.intersectionRatio > 0.1;
+              if (isAboveFold) {
+                img.loading = "eager";
+              }
+
+              img.src = img.dataset.src;
+              img.removeAttribute("data-src");
+              imageObserver.unobserve(img);
             }
-
-            img.src = img.dataset.src;
-            img.removeAttribute('data-src');
-            imageObserver.unobserve(img);
           }
-        }
-      });
-    }, {
-      rootMargin: '20px 0px', // Reduced margin for better performance
-      threshold: [0.1, 0.5] // Multiple thresholds for better detection
-    });
+        });
+      },
+      {
+        rootMargin: "20px 0px", // Reduced margin for better performance
+        threshold: [0.1, 0.5], // Multiple thresholds for better detection
+      },
+    );
 
     // Observe all lazy images
-    const lazyImages = document.querySelectorAll('img[data-src]');
-    lazyImages.forEach(img => imageObserver.observe(img));
+    const lazyImages = document.querySelectorAll("img[data-src]");
+    lazyImages.forEach((img) => imageObserver.observe(img));
 
     return () => imageObserver.disconnect();
   }, []);

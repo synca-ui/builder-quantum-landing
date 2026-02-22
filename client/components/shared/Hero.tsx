@@ -8,8 +8,8 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo } from 'react';
-import { ArrowRight } from 'lucide-react';
+import React, { memo } from "react";
+import { ArrowRight } from "lucide-react";
 
 // ============================================
 // TYPES
@@ -35,7 +35,7 @@ export interface HeroProps {
   /** Reservierungs-Button Textfarbe */
   reservationButtonTextColor?: string;
   /** Reservierungs-Button Form */
-  reservationButtonShape?: 'rounded' | 'pill' | 'square';
+  reservationButtonShape?: "rounded" | "pill" | "square";
   /** Handler für "Bestellen" Button */
   onOrderClick?: () => void;
   /** Handler für "Reservieren" Button */
@@ -50,12 +50,15 @@ export interface HeroProps {
 // HELPER: Button Shape zu Border-Radius
 // ============================================
 
-function getButtonRadius(shape: 'rounded' | 'pill' | 'square'): string {
+function getButtonRadius(shape: "rounded" | "pill" | "square"): string {
   switch (shape) {
-    case 'pill': return '9999px';
-    case 'square': return '0px';
-    case 'rounded':
-    default: return 'var(--radius-button, 12px)';
+    case "pill":
+      return "9999px";
+    case "square":
+      return "0px";
+    case "rounded":
+    default:
+      return "var(--radius-button, 12px)";
   }
 }
 
@@ -72,14 +75,13 @@ export const Hero = memo(function Hero({
   onlineOrdering = false,
   reservationsEnabled = false,
   reservationButtonColor,
-  reservationButtonTextColor = '#FFFFFF',
-  reservationButtonShape = 'rounded',
+  reservationButtonTextColor = "#FFFFFF",
+  reservationButtonShape = "rounded",
   onOrderClick,
   onReservationClick,
   isPreview = false,
-  className = '',
+  className = "",
 }: HeroProps) {
-
   const handleOrderClick = () => {
     if (onOrderClick) onOrderClick();
   };
@@ -101,12 +103,12 @@ export const Hero = memo(function Hero({
         className="text-3xl font-bold mb-4 leading-tight max-w-[90%]"
         style={{
           color: fontColor,
-          fontSize: 'var(--font-h1-size, 2rem)',
-          fontWeight: 'var(--font-h1-weight, 700)',
-          lineHeight: 'var(--font-h1-line, 1.2)',
+          fontSize: "var(--font-h1-size, 2rem)",
+          fontWeight: "var(--font-h1-weight, 700)",
+          lineHeight: "var(--font-h1-line, 1.2)",
         }}
       >
-        {slogan || 'Willkommen'}
+        {slogan || "Willkommen"}
       </h1>
 
       {/* Description */}
@@ -114,11 +116,11 @@ export const Hero = memo(function Hero({
         className="max-w-[90%] text-center opacity-80 leading-relaxed"
         style={{
           color: fontColor,
-          fontSize: 'var(--font-body-size, 1rem)',
-          lineHeight: 'var(--font-body-line, 1.6)',
+          fontSize: "var(--font-body-size, 1rem)",
+          lineHeight: "var(--font-body-line, 1.6)",
         }}
       >
-        {description || 'Wir bieten beste Qualität und eine tolle Atmosphäre.'}
+        {description || "Wir bieten beste Qualität und eine tolle Atmosphäre."}
       </p>
 
       {/* CTA Buttons */}
@@ -130,8 +132,8 @@ export const Hero = memo(function Hero({
             className="w-full py-3 px-6 font-bold text-base shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
             style={{
               backgroundColor: primaryColor,
-              borderRadius: 'var(--radius-button, 9999px)',
-              boxShadow: 'var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))',
+              borderRadius: "var(--radius-button, 9999px)",
+              boxShadow: "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
             }}
           >
             Jetzt bestellen
@@ -147,7 +149,7 @@ export const Hero = memo(function Hero({
               backgroundColor: effectiveReservationColor,
               color: reservationButtonTextColor,
               borderRadius: buttonRadius,
-              boxShadow: 'var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))',
+              boxShadow: "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
             }}
           >
             Tisch reservieren
@@ -159,4 +161,3 @@ export const Hero = memo(function Hero({
 });
 
 export default Hero;
-

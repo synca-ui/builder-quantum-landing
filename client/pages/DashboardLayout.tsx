@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, UserButton } from '@clerk/clerk-react';
+import { useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth, UserButton } from "@clerk/clerk-react";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -11,39 +11,39 @@ import {
   ChevronLeft,
   Menu,
   LogOut,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const navigation = [
   {
-    name: 'Insights',
-    href: '/dashboard/insights',
+    name: "Insights",
+    href: "/dashboard/insights",
     icon: TrendingUp,
-    description: 'Analytics & Performance',
+    description: "Analytics & Performance",
   },
   {
-    name: 'Mitarbeiter',
-    href: '/dashboard/staff',
+    name: "Mitarbeiter",
+    href: "/dashboard/staff",
     icon: Users,
-    description: 'Shift Management',
+    description: "Shift Management",
   },
   {
-    name: 'Mein Lokal',
-    href: '/dashboard/floor-plan',
+    name: "Mein Lokal",
+    href: "/dashboard/floor-plan",
     icon: Grid3x3,
-    description: 'Table Layout Editor',
+    description: "Table Layout Editor",
   },
   {
-    name: 'Creative Studio',
-    href: '/dashboard/creative',
+    name: "Creative Studio",
+    href: "/dashboard/creative",
     icon: Palette,
-    description: 'Menu & Templates',
+    description: "Menu & Templates",
   },
   {
-    name: 'Admin',
-    href: '/dashboard/admin',
+    name: "Admin",
+    href: "/dashboard/admin",
     icon: Settings,
-    description: 'SEO & Settings',
+    description: "SEO & Settings",
   },
 ];
 
@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
-          sidebarOpen ? 'w-[300px]' : 'w-20'
+          sidebarOpen ? "w-[300px]" : "w-20"
         }`}
       >
         {/* Header */}
@@ -73,7 +73,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Link
               to="/dashboard"
               className="text-2xl font-black bg-gradient-to-r from-teal-500 to-purple-500 bg-clip-text text-transparent"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
             >
               Maitr
             </Link>
@@ -81,7 +81,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarOpen ? (
               <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -103,18 +103,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 to={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   active
-                    ? 'bg-gradient-to-r from-teal-500 to-purple-500 text-white shadow-lg'
-                    : 'text-gray-700 hover:bg-gray-100'
-                } ${!sidebarOpen && 'justify-center'}`}
-                title={!sidebarOpen ? item.name : ''}
+                    ? "bg-gradient-to-r from-teal-500 to-purple-500 text-white shadow-lg"
+                    : "text-gray-700 hover:bg-gray-100"
+                } ${!sidebarOpen && "justify-center"}`}
+                title={!sidebarOpen ? item.name : ""}
               >
-                <Icon className={`${sidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} flex-shrink-0`} />
+                <Icon
+                  className={`${sidebarOpen ? "w-5 h-5" : "w-6 h-6"} flex-shrink-0`}
+                />
                 {sidebarOpen && (
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm">{item.name}</p>
                     <p
                       className={`text-xs mt-0.5 ${
-                        active ? 'text-white/90' : 'text-gray-500'
+                        active ? "text-white/90" : "text-gray-500"
                       }`}
                     >
                       {item.description}
@@ -134,7 +136,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <UserButton
                   appearance={{
                     elements: {
-                      avatarBox: 'w-10 h-10',
+                      avatarBox: "w-10 h-10",
                     },
                   }}
                 />
@@ -148,7 +150,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => signOut(() => navigate('/login'))}
+                onClick={() => signOut(() => navigate("/login"))}
                 className="p-2"
                 title="Abmelden"
               >
@@ -160,7 +162,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <UserButton
                 appearance={{
                   elements: {
-                    avatarBox: 'w-10 h-10',
+                    avatarBox: "w-10 h-10",
                   },
                 }}
               />
@@ -172,7 +174,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main Content */}
       <main
         className={`transition-all duration-300 ${
-          sidebarOpen ? 'ml-[300px]' : 'ml-20'
+          sidebarOpen ? "ml-[300px]" : "ml-20"
         }`}
       >
         {/* Top Bar */}
@@ -181,10 +183,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div>
               <h1
                 className="text-xl font-bold text-gray-900"
-                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                style={{ fontFamily: "Space Grotesk, sans-serif" }}
               >
                 {navigation.find((item) => isActive(item.href))?.name ||
-                  'Dashboard'}
+                  "Dashboard"}
               </h1>
               <p className="text-sm text-gray-500">
                 {navigation.find((item) => isActive(item.href))?.description}
@@ -207,9 +209,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <div className="p-8">
-          {children || <Outlet />}
-        </div>
+        <div className="p-8">{children || <Outlet />}</div>
       </main>
     </div>
   );

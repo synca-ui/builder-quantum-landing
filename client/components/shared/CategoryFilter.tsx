@@ -8,7 +8,7 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo, useRef, useEffect } from 'react';
+import React, { memo, useRef, useEffect } from "react";
 
 // ============================================
 // TYPES
@@ -45,22 +45,24 @@ export const CategoryFilter = memo(function CategoryFilter({
   onCategoryChange,
   fontColor,
   backgroundColor,
-  allLabel = 'Alle',
+  allLabel = "Alle",
   maxVisible = 5,
   isPreview = false,
-  className = '',
+  className = "",
 }: CategoryFilterProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Scroll zur aktiven Kategorie wenn sie sich ändert
   useEffect(() => {
     if (scrollContainerRef.current && activeCategory) {
-      const activeButton = scrollContainerRef.current.querySelector(`[data-category="${activeCategory}"]`);
+      const activeButton = scrollContainerRef.current.querySelector(
+        `[data-category="${activeCategory}"]`,
+      );
       if (activeButton) {
         activeButton.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center'
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
         });
       }
     }
@@ -86,11 +88,11 @@ export const CategoryFilter = memo(function CategoryFilter({
       aria-label="Kategorien filtern"
       style={{
         // Smooth scroll
-        scrollBehavior: 'smooth',
-        WebkitOverflowScrolling: 'touch',
+        scrollBehavior: "smooth",
+        WebkitOverflowScrolling: "touch",
         // Hide scrollbar
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
+        msOverflowStyle: "none",
+        scrollbarWidth: "none",
       }}
     >
       {/* "Alle" Button */}
@@ -98,11 +100,14 @@ export const CategoryFilter = memo(function CategoryFilter({
         onClick={() => handleCategoryClick(null)}
         className={`px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0`}
         style={{
-          backgroundColor: activeCategory === null ? fontColor : 'transparent',
+          backgroundColor: activeCategory === null ? fontColor : "transparent",
           color: activeCategory === null ? backgroundColor : fontColor,
-          borderRadius: 'var(--radius-button, 9999px)',
-          border: activeCategory === null ? 'none' : `1px solid ${fontColor}20`,
-          boxShadow: activeCategory === null ? 'var(--shadow-button, 0 2px 8px rgba(0,0,0,0.1))' : 'none',
+          borderRadius: "var(--radius-button, 9999px)",
+          border: activeCategory === null ? "none" : `1px solid ${fontColor}20`,
+          boxShadow:
+            activeCategory === null
+              ? "var(--shadow-button, 0 2px 8px rgba(0,0,0,0.1))"
+              : "none",
           opacity: activeCategory === null ? 1 : 0.7,
         }}
         role="tab"
@@ -122,11 +127,13 @@ export const CategoryFilter = memo(function CategoryFilter({
             onClick={() => handleCategoryClick(category)}
             className={`px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0`}
             style={{
-              backgroundColor: isActive ? fontColor : 'transparent',
+              backgroundColor: isActive ? fontColor : "transparent",
               color: isActive ? backgroundColor : fontColor,
-              borderRadius: 'var(--radius-button, 9999px)',
-              border: isActive ? 'none' : `1px solid ${fontColor}20`,
-              boxShadow: isActive ? 'var(--shadow-button, 0 2px 8px rgba(0,0,0,0.1))' : 'none',
+              borderRadius: "var(--radius-button, 9999px)",
+              border: isActive ? "none" : `1px solid ${fontColor}20`,
+              boxShadow: isActive
+                ? "var(--shadow-button, 0 2px 8px rgba(0,0,0,0.1))"
+                : "none",
               opacity: isActive ? 1 : 0.7,
             }}
             role="tab"
@@ -152,4 +159,3 @@ export const CategoryFilter = memo(function CategoryFilter({
 });
 
 export default CategoryFilter;
-

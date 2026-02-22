@@ -10,7 +10,7 @@ import { scraperJobRouter } from "./routes/scraperJob";
 import { handleForwardN8n } from "./routes/n8nProxy";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-import scraperJobsRoute from "./routes/scraperJobsRoute"
+import scraperJobsRoute from "./routes/scraperJobsRoute";
 
 import { handleDemo } from "./routes/demo";
 import { handleSubdomainRequest } from "./routes/subdomains";
@@ -48,12 +48,14 @@ export function createServer() {
   const app = express();
 
   // Security Headers (Helmet)
-  // CSP disabled per default to prevent breaking extensive client functionalities 
+  // CSP disabled per default to prevent breaking extensive client functionalities
   // (Clerk, Stripe, Images, etc.) without strict manual config.
-  app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // Global Rate Limiting
   app.use(globalLimiter);

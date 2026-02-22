@@ -22,7 +22,11 @@ import {
   Users,
   CalendarCheck,
 } from "lucide-react";
-import type { Configuration, MenuItem, OpeningHours as OpeningHoursType } from "@/types/domain";
+import type {
+  Configuration,
+  MenuItem,
+  OpeningHours as OpeningHoursType,
+} from "@/types/domain";
 import { injectGlobalStyles } from "@/lib/styleInjector";
 import { normalizeImageSrc, getPageLabel } from "@/lib/helpers";
 import normalizeConfig from "@/lib/normalizeConfig"; // ✅ FIX 1: Import zentrale normalizeConfig
@@ -51,9 +55,12 @@ interface AppRendererProps {
 // MAIN COMPONENT
 // ============================================
 
-export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) => {
+export const AppRenderer: React.FC<AppRendererProps> = ({
+  config: rawConfig,
+}) => {
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
-  const { business, design, content, features, contact, pages, payments } = config;
+  const { business, design, content, features, contact, pages, payments } =
+    config;
 
   // ✅ FIX 3: CSS VARIABLE INJECTION - ALLE Design-Parameter inkl. Header-Styles
   useEffect(() => {
@@ -71,7 +78,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 
     return () => {
       // Cleanup: Remove injected styles on unmount
-      const styleElement = document.getElementById('maitr-injected-styles');
+      const styleElement = document.getElementById("maitr-injected-styles");
       if (styleElement) {
         styleElement.remove();
       }
@@ -96,16 +103,19 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   const [activePage, setActivePage] = useState<string>("home");
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [hoursExpanded, setHoursExpanded] = useState(false);
-  const [activeMenuCategory, setActiveMenuCategory] = useState<string | null>(null);
+  const [activeMenuCategory, setActiveMenuCategory] = useState<string | null>(
+    null,
+  );
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Font Class
-  const fontClass = {
-    "sans-serif": "font-sans",
-    "serif": "font-serif",
-    "monospace": "font-mono",
-  }[design.fontFamily] || "font-sans";
+  const fontClass =
+    {
+      "sans-serif": "font-sans",
+      serif: "font-serif",
+      monospace: "font-mono",
+    }[design.fontFamily] || "font-sans";
 
   // Build deduplicated navigation menu + AUTO-DISCOVERY
   const navigationMenu = useMemo(() => {
@@ -135,7 +145,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       menuSet.add("gallery");
     }
 
-    if ((contact.contactMethods && contact.contactMethods.length > 0) || contact.phone || contact.email || business.location) {
+    if (
+      (contact.contactMethods && contact.contactMethods.length > 0) ||
+      contact.phone ||
+      contact.email ||
+      business.location
+    ) {
       if (!menuSet.has("contact")) {
         menuArray.push({ id: "contact", label: "Kontakt" });
         menuSet.add("contact");
@@ -153,21 +168,31 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     }
 
     return menuArray;
-  }, [pages.selectedPages, features.reservationsEnabled, payments, content.menuItems.length, content.gallery.length, contact.contactMethods, contact.phone, contact.email, business.location]);
+  }, [
+    pages.selectedPages,
+    features.reservationsEnabled,
+    payments,
+    content.menuItems.length,
+    content.gallery.length,
+    contact.contactMethods,
+    contact.phone,
+    contact.email,
+    business.location,
+  ]);
 
   // Handlers
-  const toggleMenu = useCallback(() => setMenuOpen(prev => !prev), []);
+  const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   const navigateToPage = useCallback((page: string) => {
     setActivePage(page);
     setMenuOpen(false);
     // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const addToCart = useCallback((item: any) => {
-    setCartItems(prev => [...prev, item]);
+    setCartItems((prev) => [...prev, item]);
   }, []);
 
   const openDishModal = useCallback((dish: MenuItem) => {
@@ -182,12 +207,16 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 
   const nextImage = useCallback(() => {
     if (!selectedDish?.images) return;
-    setCurrentImageIndex(prev => prev < selectedDish.images!.length - 1 ? prev + 1 : 0);
+    setCurrentImageIndex((prev) =>
+      prev < selectedDish.images!.length - 1 ? prev + 1 : 0,
+    );
   }, [selectedDish?.images]);
 
   const prevImage = useCallback(() => {
     if (!selectedDish?.images) return;
-    setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedDish.images!.length - 1);
+    setCurrentImageIndex((prev) =>
+      prev > 0 ? prev - 1 : selectedDish.images!.length - 1,
+    );
   }, [selectedDish?.images]);
 
   // Kategorien extrahieren
@@ -202,17 +231,25 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
   // Gefilterte Menu Items
   const filteredMenuItems = useMemo(() => {
     if (!activeMenuCategory) return content.menuItems;
-    return content.menuItems.filter((item: any) => item.category === activeMenuCategory);
+    return content.menuItems.filter(
+      (item: any) => item.category === activeMenuCategory,
+    );
   }, [content.menuItems, activeMenuCategory]);
 
   // Template-spezifische Styles mit Desktop-Optimierung
-  const styles = useMemo(() => ({
-    wrapper: { backgroundColor: design.backgroundColor, color: design.fontColor },
-    page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
-    titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
-    bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
-    nav: `fixed top-0 left-0 right-0 z-50 px-5 md:px-8 lg:px-12 py-4 md:py-5 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
-  }), [design.backgroundColor, design.fontColor]);
+  const styles = useMemo(
+    () => ({
+      wrapper: {
+        backgroundColor: design.backgroundColor,
+        color: design.fontColor,
+      },
+      page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
+      titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
+      bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
+      nav: `fixed top-0 left-0 right-0 z-50 px-5 md:px-8 lg:px-12 py-4 md:py-5 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
+    }),
+    [design.backgroundColor, design.fontColor],
+  );
 
   // ============================================
   // RENDER FUNCTIONS
@@ -224,15 +261,19 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     <div className="space-y-8 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* ✅ Hero Component - Ersetzt inline Hero-Section */}
       <Hero
-        slogan={business.slogan && business.slogan.trim() !== "" ? business.slogan : undefined} // ✅ FIX 4: Nur echten Slogan zeigen
-        description={business.uniqueDescription || "Willkommen in unserem Geschäft!"}
+        slogan={
+          business.slogan && business.slogan.trim() !== ""
+            ? business.slogan
+            : undefined
+        } // ✅ FIX 4: Nur echten Slogan zeigen
+        description={
+          business.uniqueDescription || "Willkommen in unserem Geschäft!"
+        }
         primaryColor={design.primaryColor}
         fontColor={design.fontColor}
         backgroundColor={design.backgroundColor}
         onlineOrdering={features.onlineOrderingEnabled}
-
         onOrderClick={() => navigateToPage("menu")}
-
         isPreview={false}
       />
 
@@ -258,7 +299,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
             {(() => {
               // ✅ Smart Highlight-Logik: Zeige markierte Highlights, fülle mit zufälligen auf
               const selectedHighlights = content.menuItems.filter(
-                (item: MenuItem) => (item as any).isHighlight
+                (item: MenuItem) => (item as any).isHighlight,
               );
 
               const remainingSlots = Math.max(0, 3 - selectedHighlights.length);
@@ -270,7 +311,10 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                 .slice(0, remainingSlots);
 
               // Kombiniere und limitiere auf 3
-              const highlightsToShow = [...selectedHighlights, ...randomFiller].slice(0, 3);
+              const highlightsToShow = [
+                ...selectedHighlights,
+                ...randomFiller,
+              ].slice(0, 3);
 
               return highlightsToShow.map((item: MenuItem, i: number) => (
                 <DishCard
@@ -298,9 +342,15 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
           <button
             className="w-full py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
             style={{
-              backgroundColor: features.reservationButtonColor || design.primaryColor,
+              backgroundColor:
+                features.reservationButtonColor || design.primaryColor,
               color: features.reservationButtonTextColor || "#FFFFFF",
-              borderRadius: features.reservationButtonShape === "pill" ? "9999px" : features.reservationButtonShape === "square" ? "0.5rem" : "0.75rem",
+              borderRadius:
+                features.reservationButtonShape === "pill"
+                  ? "9999px"
+                  : features.reservationButtonShape === "square"
+                    ? "0.5rem"
+                    : "0.75rem",
             }}
             onClick={() => navigateToPage("reservations")}
           >
@@ -374,7 +424,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         {/* Linke Spalte: Kontaktdaten */}
         <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm">
-          <h3 className="font-bold text-lg md:text-xl mb-6">Kontaktinformationen</h3>
+          <h3 className="font-bold text-lg md:text-xl mb-6">
+            Kontaktinformationen
+          </h3>
           <div className="space-y-6">
             {business.location && (
               <div className="flex items-start gap-4">
@@ -382,7 +434,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                   <MapPin className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
                 <div>
-                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">Adresse</div>
+                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">
+                    Adresse
+                  </div>
                   <div className={styles.bodyClass}>{business.location}</div>
                 </div>
               </div>
@@ -393,7 +447,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                   <Phone className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
                 <div>
-                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">Telefon</div>
+                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">
+                    Telefon
+                  </div>
                   <div className={styles.bodyClass}>{contact.phone}</div>
                 </div>
               </div>
@@ -404,7 +460,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                   <Mail className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
                 <div>
-                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">E-Mail</div>
+                  <div className="font-bold text-sm md:text-base mb-1 opacity-90">
+                    E-Mail
+                  </div>
                   <div className={styles.bodyClass}>{contact.email}</div>
                 </div>
               </div>
@@ -415,7 +473,8 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         {/* Rechte Spalte: Öffnungszeiten */}
         <div className="p-6 md:p-8 rounded-2xl border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm">
           <h3 className="font-bold text-lg md:text-xl mb-6 flex items-center gap-2">
-            <Clock className="w-5 h-5 md:w-6 md:h-6 opacity-70" /> Öffnungszeiten
+            <Clock className="w-5 h-5 md:w-6 md:h-6 opacity-70" />{" "}
+            Öffnungszeiten
           </h3>
           <div className="space-y-2 md:space-y-3 opacity-90">
             {Object.keys(content.openingHours).length > 0 ? (
@@ -424,14 +483,20 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
                   key={day}
                   className="flex justify-between text-xs md:text-sm py-2 md:py-3 border-b border-current/5 last:border-0"
                 >
-                  <span className="capitalize opacity-80 font-medium">{day}</span>
+                  <span className="capitalize opacity-80 font-medium">
+                    {day}
+                  </span>
                   <span className="font-bold">
-                    {hours.closed ? "Geschlossen" : `${hours.open} - ${hours.close}`}
+                    {hours.closed
+                      ? "Geschlossen"
+                      : `${hours.open} - ${hours.close}`}
                   </span>
                 </div>
               ))
             ) : (
-              <div className="text-xs md:text-sm opacity-60 italic">Keine Zeiten hinterlegt.</div>
+              <div className="text-xs md:text-sm opacity-60 italic">
+                Keine Zeiten hinterlegt.
+              </div>
             )}
           </div>
         </div>
@@ -469,7 +534,10 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300">
       <h2 className={styles.titleClass}>Galerie</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
-        {(content.gallery.length > 0 ? content.gallery : [1, 2, 3, 4, 5, 6, 7, 8]).map((img: any, i: number) => (
+        {(content.gallery.length > 0
+          ? content.gallery
+          : [1, 2, 3, 4, 5, 6, 7, 8]
+        ).map((img: any, i: number) => (
           <div
             key={i}
             className="aspect-square rounded-xl md:rounded-2xl overflow-hidden bg-black/5 relative shadow-sm group hover:shadow-xl transition-shadow duration-300"
@@ -498,15 +566,22 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
           className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-full flex items-center justify-center"
           style={{ backgroundColor: `${design.primaryColor}20` }}
         >
-          <CalendarCheck className="w-8 h-8 md:w-10 md:h-10" style={{ color: design.primaryColor }} />
+          <CalendarCheck
+            className="w-8 h-8 md:w-10 md:h-10"
+            style={{ color: design.primaryColor }}
+          />
         </div>
         <h2 className={styles.titleClass}>Reservierung</h2>
-        <p className={`${styles.bodyClass} opacity-70`}>Buchen Sie Ihren Tisch online</p>
+        <p className={`${styles.bodyClass} opacity-70`}>
+          Buchen Sie Ihren Tisch online
+        </p>
       </div>
 
       <div className="space-y-4 md:space-y-5 p-4 md:p-8 rounded-2xl border border-current/10 bg-white/5">
         <div>
-          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">Datum</label>
+          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">
+            Datum
+          </label>
           <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border border-current/10 bg-white/50">
             <Calendar className="w-4 h-4 md:w-5 md:h-5 opacity-50" />
             <span className="text-sm md:text-base">Datum wählen...</span>
@@ -514,7 +589,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </div>
 
         <div>
-          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">Uhrzeit</label>
+          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">
+            Uhrzeit
+          </label>
           <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border border-current/10 bg-white/50">
             <Clock className="w-4 h-4 md:w-5 md:h-5 opacity-50" />
             <span className="text-sm md:text-base">Zeit wählen...</span>
@@ -522,7 +599,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         </div>
 
         <div>
-          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">Anzahl Gäste</label>
+          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">
+            Anzahl Gäste
+          </label>
           <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border border-current/10 bg-white/50">
             <Users className="w-4 h-4 md:w-5 md:h-5 opacity-50" />
             <span className="text-sm md:text-base">2 Personen</span>
@@ -535,7 +614,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
         style={{
           backgroundColor: features.reservationButtonColor,
           color: features.reservationButtonTextColor,
-          borderRadius: features.reservationButtonShape === "pill" ? "9999px" : features.reservationButtonShape === "square" ? "0.5rem" : "0.75rem",
+          borderRadius:
+            features.reservationButtonShape === "pill"
+              ? "9999px"
+              : features.reservationButtonShape === "square"
+                ? "0.5rem"
+                : "0.75rem",
         }}
       >
         Reservierung anfragen
@@ -553,12 +637,22 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
 
   const renderContent = () => {
     switch (activePage) {
-      case "home": return renderHomePage();
-      case "menu": return renderMenuPage();
-      case "contact": return renderContactPage();
-      case "gallery": return renderGalleryPage();
-      case "reservations": return renderReservationsPage();
-      default: return <div className="p-10 text-center opacity-50 pt-20">404 - Seite nicht gefunden</div>;
+      case "home":
+        return renderHomePage();
+      case "menu":
+        return renderMenuPage();
+      case "contact":
+        return renderContactPage();
+      case "gallery":
+        return renderGalleryPage();
+      case "reservations":
+        return renderReservationsPage();
+      default:
+        return (
+          <div className="p-10 text-center opacity-50 pt-20">
+            404 - Seite nicht gefunden
+          </div>
+        );
     }
   };
 
@@ -596,7 +690,10 @@ export const AppRenderer: React.FC<AppRendererProps> = ({ config: rawConfig }) =
       />
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto scroll-smooth" style={{ WebkitOverflowScrolling: "touch" }}>
+      <main
+        className="flex-1 overflow-y-auto scroll-smooth"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         <div className={styles.page}>{renderContent()}</div>
         <div className="h-12 w-full" />
       </main>

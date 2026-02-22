@@ -3,7 +3,7 @@ import Lottie, { LottieRefCurrentProps } from "lottie-react";
 
 // ── Adjust these import paths to wherever you store your Lottie JSON files ──
 import loaderCatData from "../assets/Loadercat.json";
-import prepareFoodData from "../assets/PrepareFood.json"
+import prepareFoodData from "../assets/PrepareFood.json";
 import CookingPreloader from "../assets/CookingPreloader.json";
 import ChefHat from "../assets/Burger.json";
 
@@ -20,7 +20,11 @@ function randomIndex(exclude?: number): number {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export default function LoadingOverlay({ visible, messages = [], onCancel }: Props) {
+export default function LoadingOverlay({
+  visible,
+  messages = [],
+  onCancel,
+}: Props) {
   const [animIndex, setAnimIndex] = useState<number>(() => randomIndex());
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
@@ -41,7 +45,10 @@ export default function LoadingOverlay({ visible, messages = [], onCancel }: Pro
     let p = 0;
     const progressInterval = setInterval(() => {
       p += Math.random() * 2.5 + 0.4;
-      if (p >= 92) { p = 92; clearInterval(progressInterval); }
+      if (p >= 92) {
+        p = 92;
+        clearInterval(progressInterval);
+      }
       setProgress(p);
     }, 110);
 
@@ -105,17 +112,22 @@ export default function LoadingOverlay({ visible, messages = [], onCancel }: Pro
 
       {/* ── Backdrop ── */}
       <div
-        className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${visible
-          ? "opacity-100 backdrop-blur-sm pointer-events-auto"
-          : "opacity-0 pointer-events-none"
-          }`}
-        style={{ backgroundColor: visible ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0)" }}
+        className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${
+          visible
+            ? "opacity-100 backdrop-blur-sm pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        style={{
+          backgroundColor: visible
+            ? "rgba(255,255,255,0.78)"
+            : "rgba(255,255,255,0)",
+        }}
       >
         <div
-          className={`flex flex-col items-center gap-8 w-80 transition-all duration-500 ${visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
-            }`}
+          className={`flex flex-col items-center gap-8 w-80 transition-all duration-500 ${
+            visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+          }`}
         >
-
           {/* ── Lottie ── */}
           <div
             className="lottie-wrap w-52 h-52 flex items-center justify-center"
@@ -143,18 +155,26 @@ export default function LoadingOverlay({ visible, messages = [], onCancel }: Pro
                 {/* 3-D top highlight */}
                 <div
                   className="absolute top-1 left-2 right-3 h-1.5 rounded-full opacity-35"
-                  style={{ background: "linear-gradient(90deg, rgba(255,255,255,0.95), transparent)" }}
+                  style={{
+                    background:
+                      "linear-gradient(90deg, rgba(255,255,255,0.95), transparent)",
+                  }}
                 />
                 {/* Leading-edge glow cap */}
                 <div
                   className="absolute right-0 top-0 w-5 h-full rounded-full"
-                  style={{ background: "radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, transparent 70%)" }}
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, transparent 70%)",
+                  }}
                 />
               </div>
             </div>
 
             <div className="flex justify-between items-center text-[11px] font-semibold px-0.5">
-              <span className="text-gray-400 tracking-widest uppercase">Analysiere</span>
+              <span className="text-gray-400 tracking-widest uppercase">
+                Analysiere
+              </span>
               <span className="bg-gradient-to-r from-cyan-500 to-orange-400 bg-clip-text text-transparent tabular-nums">
                 {Math.round(progress)}%
               </span>
@@ -182,7 +202,6 @@ export default function LoadingOverlay({ visible, messages = [], onCancel }: Pro
               Cancel
             </button>
           )}
-
         </div>
       </div>
     </>

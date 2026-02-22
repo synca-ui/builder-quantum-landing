@@ -10,9 +10,9 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo, useState, useMemo } from 'react';
-import { Clock, ChevronDown, MapPin } from 'lucide-react';
-import type { OpeningHours as OpeningHoursType } from '@/types/domain';
+import React, { memo, useState, useMemo } from "react";
+import { Clock, ChevronDown, MapPin } from "lucide-react";
+import type { OpeningHours as OpeningHoursType } from "@/types/domain";
 
 // ============================================
 // TYPES
@@ -44,31 +44,49 @@ export interface OpeningHoursProps {
 // ============================================
 
 const DAY_NAMES: Record<string, string> = {
-  monday: 'Montag',
-  tuesday: 'Dienstag',
-  wednesday: 'Mittwoch',
-  thursday: 'Donnerstag',
-  friday: 'Freitag',
-  saturday: 'Samstag',
-  sunday: 'Sonntag',
+  monday: "Montag",
+  tuesday: "Dienstag",
+  wednesday: "Mittwoch",
+  thursday: "Donnerstag",
+  friday: "Freitag",
+  saturday: "Samstag",
+  sunday: "Sonntag",
 };
 
-const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_ORDER = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
 /**
  * Gibt den aktuellen Wochentag zurück (englisch, lowercase)
  */
 function getCurrentDay(): string {
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const days = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
   return days[new Date().getDay()];
 }
 
 /**
  * Formatiert die Öffnungszeiten für einen Tag
  */
-function formatDayHours(day: { open: string; close: string; closed: boolean } | undefined): string {
-  if (!day) return 'Keine Angabe';
-  if (day.closed) return 'Geschlossen';
+function formatDayHours(
+  day: { open: string; close: string; closed: boolean } | undefined,
+): string {
+  if (!day) return "Keine Angabe";
+  if (day.closed) return "Geschlossen";
   return `${day.open} - ${day.close}`;
 }
 
@@ -82,7 +100,7 @@ function isCurrentlyOpen(hours: OpeningHoursType): boolean {
   if (!todayHours || todayHours.closed) return false;
 
   const now = new Date();
-  const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
 
   return currentTime >= todayHours.open && currentTime <= todayHours.close;
 }
@@ -100,13 +118,14 @@ export const OpeningHours = memo(function OpeningHours({
   onExpandChange,
   isPreview = false,
   compact = false,
-  className = '',
+  className = "",
 }: OpeningHoursProps) {
   // Interner State wenn nicht von außen gesteuert
   const [internalExpanded, setInternalExpanded] = useState(initialExpanded);
 
   // Kontrolliert oder unkontrolliert
-  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+  const isExpanded =
+    controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
 
   const toggleExpanded = () => {
     const newValue = !isExpanded;
@@ -140,14 +159,14 @@ export const OpeningHours = memo(function OpeningHours({
       >
         <Clock className="w-4 h-4 opacity-70" />
         <span className="text-sm font-medium">
-          {todayHours?.closed ? 'Heute geschlossen' : todayFormatted}
+          {todayHours?.closed ? "Heute geschlossen" : todayFormatted}
         </span>
         {isOpen && (
           <span
             className="px-2 py-0.5 text-xs font-bold rounded-full"
             style={{
-              backgroundColor: 'rgba(34,197,94,0.15)',
-              color: '#22C55E',
+              backgroundColor: "rgba(34,197,94,0.15)",
+              color: "#22C55E",
             }}
           >
             Geöffnet
@@ -174,7 +193,7 @@ export const OpeningHours = memo(function OpeningHours({
       >
         <Clock className="w-4 h-4 shrink-0" />
         <span className="text-xs font-medium">
-          {isExpanded ? 'Öffnungszeiten' : `Heute: ${todayFormatted}`}
+          {isExpanded ? "Öffnungszeiten" : `Heute: ${todayFormatted}`}
         </span>
 
         {/* Open/Closed Badge */}
@@ -182,16 +201,18 @@ export const OpeningHours = memo(function OpeningHours({
           <span
             className="px-1.5 py-0.5 text-[10px] font-bold rounded-full"
             style={{
-              backgroundColor: isOpen ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-              color: isOpen ? '#22C55E' : '#EF4444',
+              backgroundColor: isOpen
+                ? "rgba(34,197,94,0.15)"
+                : "rgba(239,68,68,0.15)",
+              color: isOpen ? "#22C55E" : "#EF4444",
             }}
           >
-            {isOpen ? 'Offen' : 'Geschlossen'}
+            {isOpen ? "Offen" : "Geschlossen"}
           </span>
         )}
 
         <ChevronDown
-          className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+          className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -209,16 +230,16 @@ export const OpeningHours = memo(function OpeningHours({
               <div
                 key={dayKey}
                 className={`flex justify-between text-xs py-1.5 border-b last:border-0 ${
-                  isToday ? 'font-bold' : 'opacity-80'
+                  isToday ? "font-bold" : "opacity-80"
                 }`}
                 style={{
                   borderColor: `${fontColor}08`,
-                  backgroundColor: isToday ? `${fontColor}05` : 'transparent',
-                  marginLeft: isToday ? '-8px' : '0',
-                  marginRight: isToday ? '-8px' : '0',
-                  paddingLeft: isToday ? '8px' : '0',
-                  paddingRight: isToday ? '8px' : '0',
-                  borderRadius: isToday ? 'var(--radius-button, 4px)' : '0',
+                  backgroundColor: isToday ? `${fontColor}05` : "transparent",
+                  marginLeft: isToday ? "-8px" : "0",
+                  marginRight: isToday ? "-8px" : "0",
+                  paddingLeft: isToday ? "8px" : "0",
+                  paddingRight: isToday ? "8px" : "0",
+                  borderRadius: isToday ? "var(--radius-button, 4px)" : "0",
                 }}
               >
                 <span className="capitalize flex items-center gap-1">
@@ -235,8 +256,8 @@ export const OpeningHours = memo(function OpeningHours({
                   )}
                 </span>
                 <span
-                  className={dayHours?.closed ? 'text-red-500' : ''}
-                  style={{ color: dayHours?.closed ? '#EF4444' : fontColor }}
+                  className={dayHours?.closed ? "text-red-500" : ""}
+                  style={{ color: dayHours?.closed ? "#EF4444" : fontColor }}
                 >
                   {formatDayHours(dayHours)}
                 </span>
@@ -268,4 +289,3 @@ export const OpeningHours = memo(function OpeningHours({
 });
 
 export default OpeningHours;
-

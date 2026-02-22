@@ -1,7 +1,10 @@
 import { Request, Response, Router } from "express";
 import prisma from "../db/prisma";
 import { requireAuth } from "../middleware/auth";
-import { ConfigurationSchema, type Configuration } from "../schemas/configuration";
+import {
+  ConfigurationSchema,
+  type Configuration,
+} from "../schemas/configuration";
 import { createAuditLogger } from "../utils/audit";
 
 const router = Router();
@@ -66,7 +69,10 @@ function generateSubdomain(businessName: string): string {
 /**
  * ✅ Helper: Map nested configuration to flat Prisma structure
  */
-function mapConfigToDatabase(configData: Configuration, selectedTemplate?: string) {
+function mapConfigToDatabase(
+  configData: Configuration,
+  selectedTemplate?: string,
+) {
   return {
     businessName: configData.business.name,
     businessType: configData.business.type,
@@ -346,11 +352,17 @@ export async function deleteConfiguration(req: Request, res: Response) {
     });
 
     if (!existing) {
-      await audit("config_delete_failed", id, false, "Not found or unauthorized");
+      await audit(
+        "config_delete_failed",
+        id,
+        false,
+        "Not found or unauthorized",
+      );
 
       return res.status(403).json({
         error: "Forbidden",
-        message: "Configuration not found or you do not have permission to delete it",
+        message:
+          "Configuration not found or you do not have permission to delete it",
       });
     }
 
@@ -398,7 +410,12 @@ export async function publishConfiguration(req: Request, res: Response) {
     });
 
     if (!configuration) {
-      await audit("config_publish_failed", id, false, "Not found or unauthorized");
+      await audit(
+        "config_publish_failed",
+        id,
+        false,
+        "Not found or unauthorized",
+      );
       return res.status(404).json({
         error: "Not Found",
         message: "Konfiguration wurde nicht gefunden.",
@@ -423,7 +440,9 @@ export async function publishConfiguration(req: Request, res: Response) {
       });
     }
 
-    const subdomain = (configuration as any).selectedDomain || generateSubdomain(configuration.businessName);
+    const subdomain =
+      (configuration as any).selectedDomain ||
+      generateSubdomain(configuration.businessName);
 
     if (!subdomain) {
       return res.status(400).json({
@@ -439,7 +458,8 @@ export async function publishConfiguration(req: Request, res: Response) {
     if (existingWebApp && existingWebApp.configId !== configuration.id) {
       return res.status(400).json({
         error: "Subdomain already taken",
-        message: "Diese Subdomain ist bereits vergeben. Bitte wähle eine andere.",
+        message:
+          "Diese Subdomain ist bereits vergeben. Bitte wähle eine andere.",
       });
     }
 
@@ -534,35 +554,57 @@ export async function getPublishedSite(req: Request, res: Response) {
       businessType: config.business?.type || config.businessType || "",
       location: config.business?.location || config.location || "",
       slogan: config.business?.slogan || config.slogan || "",
-      uniqueDescription: config.business?.uniqueDescription || config.uniqueDescription || "",
+      uniqueDescription:
+        config.business?.uniqueDescription || config.uniqueDescription || "",
       template: config.design?.template || config.template || "modern",
-      primaryColor: config.design?.primaryColor || config.primaryColor || "#111827",
-      secondaryColor: config.design?.secondaryColor || config.secondaryColor || "#6B7280",
+      primaryColor:
+        config.design?.primaryColor || config.primaryColor || "#111827",
+      secondaryColor:
+        config.design?.secondaryColor || config.secondaryColor || "#6B7280",
       priceColor: config.design?.priceColor || config.priceColor || "#059669",
-      headerFontColor: config.design?.headerFontColor || config.headerFontColor || "#5e30eb",
-      headerBackgroundColor: config.design?.headerBackgroundColor || config.headerBackgroundColor || "#FFFFFF",
-      fontFamily: config.design?.fontFamily || config.fontFamily || "sans-serif",
+      headerFontColor:
+        config.design?.headerFontColor || config.headerFontColor || "#5e30eb",
+      headerBackgroundColor:
+        config.design?.headerBackgroundColor ||
+        config.headerBackgroundColor ||
+        "#FFFFFF",
+      fontFamily:
+        config.design?.fontFamily || config.fontFamily || "sans-serif",
       backgroundColor: config.design?.backgroundColor || config.backgroundColor,
       fontColor: config.design?.fontColor || config.fontColor,
-      headerFontSize: config.design?.headerFontSize || config.headerFontSize || 24,
+      headerFontSize:
+        config.design?.headerFontSize || config.headerFontSize || 24,
       logo: config.design?.logo || config.logo,
       selectedPages: config.pages?.selected || config.selectedPages || ["home"],
       customPages: config.pages?.custom || config.customPages || [],
       openingHours: config.content?.openingHours || config.openingHours || {},
       menuItems: config.content?.menuItems || config.menuItems || [],
       gallery: config.content?.gallery || config.gallery || [],
-      reservationsEnabled: config.features?.reservationsEnabled ?? config.reservationsEnabled ?? false,
+      reservationsEnabled:
+        config.features?.reservationsEnabled ??
+        config.reservationsEnabled ??
+        false,
       maxGuests: config.features?.maxGuests || config.maxGuests || 10,
-      onlineOrdering: config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
+      onlineOrdering:
+        config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
       onlineStore: config.features?.onlineStore ?? config.onlineStore ?? false,
       teamArea: config.features?.teamArea ?? config.teamArea ?? false,
       contactMethods: config.contact?.methods || config.contactMethods || [],
       socialMedia: config.contact?.social || config.socialMedia || {},
       offers: config.offers || [],
       offerBanner: config.offerBanner,
-      reservationButtonColor: config.features?.reservationButtonColor || config.reservationButtonColor || "#94e3fe",
-      reservationButtonTextColor: config.features?.reservationButtonTextColor || config.reservationButtonTextColor || "#000000",
-      reservationButtonShape: config.features?.reservationButtonShape || config.reservationButtonShape || "pill",
+      reservationButtonColor:
+        config.features?.reservationButtonColor ||
+        config.reservationButtonColor ||
+        "#94e3fe",
+      reservationButtonTextColor:
+        config.features?.reservationButtonTextColor ||
+        config.reservationButtonTextColor ||
+        "#000000",
+      reservationButtonShape:
+        config.features?.reservationButtonShape ||
+        config.reservationButtonShape ||
+        "pill",
       homepageDishImageVisibility: config.homepageDishImageVisibility,
       themeMode: config.themeMode,
       templateThemes: config.templateThemes,
@@ -633,4 +675,3 @@ router.post("/:id/preview", setPreviewConfig);
 
 export const configurationsRouter = router;
 export default router;
-

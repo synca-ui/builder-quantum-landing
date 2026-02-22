@@ -22,23 +22,26 @@ const router = Router();
 
 // Validation schemas
 const floorPlanSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   width: z.number().int().min(400).max(2000).default(800),
   height: z.number().int().min(300).max(2000).default(600),
   gridSize: z.number().int().min(10).max(50).default(20),
-  bgColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#f8fafc'),
+  bgColor: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .default("#f8fafc"),
   bgImage: z.string().url().optional(),
 });
 
 const tableSchema = z.object({
   floorPlanId: z.string().uuid(),
-  number: z.string().min(1, 'Table number is required'),
+  number: z.string().min(1, "Table number is required"),
   name: z.string().optional(),
   x: z.number(),
   y: z.number(),
   rotation: z.number().min(0).max(360).default(0),
-  shape: z.enum(['round', 'square', 'rectangle']),
+  shape: z.enum(["round", "square", "rectangle"]),
   width: z.number().min(40).max(200).default(80),
   height: z.number().min(40).max(200).default(80),
   minCapacity: z.number().int().min(1).default(2),
@@ -52,29 +55,29 @@ const tableSchema = z.object({
 async function generateTableQRCode(
   businessId: string,
   tableId: string,
-  tableNumber: string
+  tableNumber: string,
 ): Promise<{ qrCode: string; qrCodeImage: string }> {
   // Generate ordering URL
-  const baseUrl = process.env.APP_URL || 'https://maitr.app';
+  const baseUrl = process.env.APP_URL || "https://maitr.app";
   const qrCodeUrl = `${baseUrl}/order/${businessId}/${tableId}`;
 
   try {
     // Generate QR code image as base64 using Node.js qrcode library
     const qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
-      errorCorrectionLevel: 'H',
-      type: 'image/png',
+      errorCorrectionLevel: "H",
+      type: "image/png",
       margin: 1,
       width: 300,
       color: {
-        dark: '#0d9488', // Maitr teal
-        light: '#ffffff',
+        dark: "#0d9488", // Maitr teal
+        light: "#ffffff",
       },
     });
 
     return { qrCode: qrCodeUrl, qrCodeImage };
   } catch (error) {
-    console.error('Error generating QR code:', error);
-    throw new Error('Failed to generate QR code');
+    console.error("Error generating QR code:", error);
+    throw new Error("Failed to generate QR code");
   }
 }
 
@@ -82,9 +85,15 @@ async function generateTableQRCode(
  * Utility: Check table overlap
  */
 function checkTableOverlap(
-  tables: Array<{ x: number; y: number; width: number; height: number; id?: string }>,
+  tables: Array<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    id?: string;
+  }>,
   newTable: { x: number; y: number; width: number; height: number },
-  excludeId?: string
+  excludeId?: string,
 ): boolean {
   return tables.some((table) => {
     if (excludeId && table.id === excludeId) return false;
@@ -107,13 +116,13 @@ function checkTableOverlap(
  * GET /api/dashboard/floor-plan/plans
  * List all floor plans for a business
  */
-router.get('/plans', requireAuth, async (req: Request, res: Response) => {
+router.get("/plans", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.query.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify user owns this business
@@ -129,7 +138,7 @@ router.get('/plans', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Get floor plans with table counts
@@ -157,14 +166,14 @@ router.get('/plans', requireAuth, async (req: Request, res: Response) => {
         },
       },
       orderBy: {
-        sortOrder: 'asc',
+        sortOrder: "asc",
       },
     });
 
     res.json({ success: true, data: floorPlans });
   } catch (error) {
-    console.error('Error fetching floor plans:', error);
-    res.status(500).json({ error: 'Failed to fetch floor plans' });
+    console.error("Error fetching floor plans:", error);
+    res.status(500).json({ error: "Failed to fetch floor plans" });
   }
 });
 
@@ -172,13 +181,13 @@ router.get('/plans', requireAuth, async (req: Request, res: Response) => {
  * POST /api/dashboard/floor-plan/plans
  * Create a new floor plan
  */
-router.post('/plans', requireAuth, async (req: Request, res: Response) => {
+router.post("/plans", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const businessId = req.body.businessId as string;
 
     if (!businessId) {
-      return res.status(400).json({ error: 'businessId is required' });
+      return res.status(400).json({ error: "businessId is required" });
     }
 
     // Verify user owns this business
@@ -194,7 +203,7 @@ router.post('/plans', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: "Access denied" });
     }
 
     // Validate input
@@ -203,7 +212,7 @@ router.post('/plans', requireAuth, async (req: Request, res: Response) => {
     // Get max sort order for this business
     const maxOrder = await prisma.floorPlan.findFirst({
       where: { businessId },
-      orderBy: { sortOrder: 'desc' },
+      orderBy: { sortOrder: "desc" },
       select: { sortOrder: true },
     });
 
@@ -231,8 +240,8 @@ router.post('/plans', requireAuth, async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error creating floor plan:', error);
-    res.status(500).json({ error: 'Failed to create floor plan' });
+    console.error("Error creating floor plan:", error);
+    res.status(500).json({ error: "Failed to create floor plan" });
   }
 });
 
@@ -240,7 +249,7 @@ router.post('/plans', requireAuth, async (req: Request, res: Response) => {
  * PUT /api/dashboard/floor-plan/plans/:id
  * Update a floor plan
  */
-router.put('/plans/:id', requireAuth, async (req: Request, res: Response) => {
+router.put("/plans/:id", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const planId = req.params.id;
@@ -258,8 +267,8 @@ router.put('/plans/:id', requireAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: mockUpdated });
   } catch (error) {
-    console.error('Error updating floor plan:', error);
-    res.status(500).json({ error: 'Failed to update floor plan' });
+    console.error("Error updating floor plan:", error);
+    res.status(500).json({ error: "Failed to update floor plan" });
   }
 });
 
@@ -271,43 +280,43 @@ router.put('/plans/:id', requireAuth, async (req: Request, res: Response) => {
  * GET /api/dashboard/floor-plan/tables
  * Get tables for a floor plan
  */
-router.get('/tables', requireAuth, async (req: Request, res: Response) => {
+router.get("/tables", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const floorPlanId = req.query.floorPlanId as string;
 
     if (!floorPlanId) {
-      return res.status(400).json({ error: 'floorPlanId is required' });
+      return res.status(400).json({ error: "floorPlanId is required" });
     }
 
     // Mock tables data
     const mockTables = [
       {
-        id: 't1',
+        id: "t1",
         floorPlanId,
-        number: '1',
-        name: 'Table 1',
+        number: "1",
+        name: "Table 1",
         x: 100,
         y: 100,
         rotation: 0,
-        shape: 'round',
+        shape: "round",
         width: 80,
         height: 80,
         minCapacity: 2,
         maxCapacity: 4,
         qrEnabled: true,
         qrCode: `https://maitr.app/order/business123/t1`,
-        qrCodeImage: 'data:image/png;base64,mock-qr-code-data',
+        qrCodeImage: "data:image/png;base64,mock-qr-code-data",
       },
       {
-        id: 't2',
+        id: "t2",
         floorPlanId,
-        number: '2',
-        name: 'Table 2',
+        number: "2",
+        name: "Table 2",
         x: 200,
         y: 150,
         rotation: 0,
-        shape: 'square',
+        shape: "square",
         width: 100,
         height: 100,
         minCapacity: 4,
@@ -318,8 +327,8 @@ router.get('/tables', requireAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: mockTables });
   } catch (error) {
-    console.error('Error fetching tables:', error);
-    res.status(500).json({ error: 'Failed to fetch tables' });
+    console.error("Error fetching tables:", error);
+    res.status(500).json({ error: "Failed to fetch tables" });
   }
 });
 
@@ -327,7 +336,7 @@ router.get('/tables', requireAuth, async (req: Request, res: Response) => {
  * POST /api/dashboard/floor-plan/tables
  * Add a new table
  */
-router.post('/tables', requireAuth, async (req: Request, res: Response) => {
+router.post("/tables", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
 
@@ -338,11 +347,15 @@ router.post('/tables', requireAuth, async (req: Request, res: Response) => {
     let qrCodeData = null;
     if (validated.qrEnabled) {
       try {
-        const businessId = 'mock_business_id'; // TODO: Get from proper business lookup
+        const businessId = "mock_business_id"; // TODO: Get from proper business lookup
         const tempId = `table_${Date.now()}`;
-        qrCodeData = await generateTableQRCode(businessId, tempId, validated.number);
+        qrCodeData = await generateTableQRCode(
+          businessId,
+          tempId,
+          validated.number,
+        );
       } catch (error) {
-        console.warn('Failed to generate QR code:', error);
+        console.warn("Failed to generate QR code:", error);
         // Continue without QR code
       }
     }
@@ -362,8 +375,8 @@ router.post('/tables', requireAuth, async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error('Error creating table:', error);
-    res.status(500).json({ error: 'Failed to create table' });
+    console.error("Error creating table:", error);
+    res.status(500).json({ error: "Failed to create table" });
   }
 });
 
@@ -371,7 +384,7 @@ router.post('/tables', requireAuth, async (req: Request, res: Response) => {
  * PUT /api/dashboard/floor-plan/tables/:id
  * Update table position/properties
  */
-router.put('/tables/:id', requireAuth, async (req: Request, res: Response) => {
+router.put("/tables/:id", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const tableId = req.params.id;
@@ -383,10 +396,14 @@ router.put('/tables/:id', requireAuth, async (req: Request, res: Response) => {
     let qrCodeData = null;
     if (validated.qrEnabled === true) {
       try {
-        const businessId = 'mock_business_id'; // TODO: Get from proper business lookup
-        qrCodeData = await generateTableQRCode(businessId, tableId, validated.number || 'Unknown');
+        const businessId = "mock_business_id"; // TODO: Get from proper business lookup
+        qrCodeData = await generateTableQRCode(
+          businessId,
+          tableId,
+          validated.number || "Unknown",
+        );
       } catch (error) {
-        console.warn('Failed to generate QR code:', error);
+        console.warn("Failed to generate QR code:", error);
       }
     }
 
@@ -407,8 +424,8 @@ router.put('/tables/:id', requireAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: mockUpdated });
   } catch (error) {
-    console.error('Error updating table:', error);
-    res.status(500).json({ error: 'Failed to update table' });
+    console.error("Error updating table:", error);
+    res.status(500).json({ error: "Failed to update table" });
   }
 });
 
@@ -416,52 +433,64 @@ router.put('/tables/:id', requireAuth, async (req: Request, res: Response) => {
  * DELETE /api/dashboard/floor-plan/tables/:id
  * Remove a table
  */
-router.delete('/tables/:id', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.userId;
-    const tableId = req.params.id;
+router.delete(
+  "/tables/:id",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.userId;
+      const tableId = req.params.id;
 
-    // For now, just return success
-    // TODO: Implement proper deletion with reservation check when schema is ready
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting table:', error);
-    res.status(500).json({ error: 'Failed to delete table' });
-  }
-});
+      // For now, just return success
+      // TODO: Implement proper deletion with reservation check when schema is ready
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting table:", error);
+      res.status(500).json({ error: "Failed to delete table" });
+    }
+  },
+);
 
 /**
  * POST /api/dashboard/floor-plan/tables/:id/regenerate-qr
  * Regenerate QR code for a table
  */
-router.post('/tables/:id/regenerate-qr', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = req.userId;
-    const tableId = req.params.id;
-
-    // Generate new QR code
+router.post(
+  "/tables/:id/regenerate-qr",
+  requireAuth,
+  async (req: Request, res: Response) => {
     try {
-      const businessId = 'mock_business_id'; // TODO: Get from proper business lookup
-      const tableNumber = req.body.tableNumber || tableId;
-      const qrCodeData = await generateTableQRCode(businessId, tableId, tableNumber);
+      const userId = req.userId;
+      const tableId = req.params.id;
 
-      const mockUpdated = {
-        id: tableId,
-        qrEnabled: true,
-        qrCode: qrCodeData.qrCode,
-        qrCodeImage: qrCodeData.qrCodeImage,
-        updatedAt: new Date(),
-      };
+      // Generate new QR code
+      try {
+        const businessId = "mock_business_id"; // TODO: Get from proper business lookup
+        const tableNumber = req.body.tableNumber || tableId;
+        const qrCodeData = await generateTableQRCode(
+          businessId,
+          tableId,
+          tableNumber,
+        );
 
-      res.json({ success: true, data: mockUpdated });
+        const mockUpdated = {
+          id: tableId,
+          qrEnabled: true,
+          qrCode: qrCodeData.qrCode,
+          qrCodeImage: qrCodeData.qrCodeImage,
+          updatedAt: new Date(),
+        };
+
+        res.json({ success: true, data: mockUpdated });
+      } catch (error) {
+        console.error("Error regenerating QR code:", error);
+        res.status(500).json({ error: "Failed to regenerate QR code" });
+      }
     } catch (error) {
-      console.error('Error regenerating QR code:', error);
-      res.status(500).json({ error: 'Failed to regenerate QR code' });
+      console.error("Error in regenerate QR endpoint:", error);
+      res.status(500).json({ error: "Failed to regenerate QR code" });
     }
-  } catch (error) {
-    console.error('Error in regenerate QR endpoint:', error);
-    res.status(500).json({ error: 'Failed to regenerate QR code' });
-  }
-});
+  },
+);
 
 export default router;

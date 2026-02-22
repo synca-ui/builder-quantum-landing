@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 /**
  * Custom hook for debouncing values to improve performance
@@ -32,7 +32,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 export function useDebounceCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number,
-  deps: React.DependencyList = []
+  deps: React.DependencyList = [],
 ): T {
   const [debouncedCallback, setDebouncedCallback] = useState(() => callback);
 

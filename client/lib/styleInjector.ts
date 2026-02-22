@@ -8,7 +8,12 @@
  * darauf zugreifen kann.
  */
 
-import { getTemplateTokens, getTemplateIntent, hexToRgb, type TemplateIntent } from './templateTokens';
+import {
+  getTemplateTokens,
+  getTemplateIntent,
+  hexToRgb,
+  type TemplateIntent,
+} from "./templateTokens";
 
 export interface UserColorOverrides {
   primaryColor: string;
@@ -28,7 +33,7 @@ export interface UserColorOverrides {
  */
 export function generateGlobalStyles(
   templateId: string,
-  userColors: UserColorOverrides
+  userColors: UserColorOverrides,
 ): string {
   const tokens = getTemplateTokens(templateId);
   const intent = getTemplateIntent(templateId);
@@ -42,9 +47,6 @@ export function generateGlobalStyles(
     price: userColors.priceColor || "#059669", // Fallback
     accent: tokens.colors.accent,
     border: tokens.colors.border,
-
-
-
   };
 
   // RGB-Varianten für Transparenz
@@ -66,11 +68,11 @@ export function generateGlobalStyles(
       --color-background: ${finalColors.background};
       --color-text: ${finalColors.text};
       --color-price: ${finalColors.price};
-      --color-header-font: ${userColors.headerFontColor || '#000000'};
-      --color-header-bg: ${userColors.headerBackgroundColor || 'transparent'};
-      --font-header-size-override: ${userColors.headerFontSize || 'inherit'};
-      --color-res-btn: ${userColors.reservationButtonColor || 'var(--color-primary)'};
-      --color-res-btn-text: ${userColors.reservationButtonTextColor || '#FFFFFF'};
+      --color-header-font: ${userColors.headerFontColor || "#000000"};
+      --color-header-bg: ${userColors.headerBackgroundColor || "transparent"};
+      --font-header-size-override: ${userColors.headerFontSize || "inherit"};
+      --color-res-btn: ${userColors.reservationButtonColor || "var(--color-primary)"};
+      --color-res-btn-text: ${userColors.reservationButtonTextColor || "#FFFFFF"};
       
       /* Template Tokens (aus CSV) */
       --color-accent: ${finalColors.accent};
@@ -203,13 +205,17 @@ export function generateGlobalStyles(
         --spacing-lg: calc(${tokens.spacing.lg} * 0.7);
       }
       
-      ${intent === 'VISUAL' ? `
+      ${
+        intent === "VISUAL"
+          ? `
       .card-glassmorphic,
       .nav-glassmorphic {
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
       }
-      ` : ''}
+      `
+          : ""
+      }
     }
     
     /* ============================================ */
@@ -246,7 +252,7 @@ export function generateGlobalStyles(
  * Intent-spezifische Styles (VISUAL, NARRATIVE, COMMERCIAL)
  */
 function generateIntentSpecificStyles(intent: TemplateIntent): string {
-  if (intent === 'VISUAL') {
+  if (intent === "VISUAL") {
     return `
     /* ============================================ */
     /* VISUAL INTENT - Glassmorphism & Overlays */
@@ -361,7 +367,7 @@ function generateIntentSpecificStyles(intent: TemplateIntent): string {
     `;
   }
 
-  if (intent === 'COMMERCIAL') {
+  if (intent === "COMMERCIAL") {
     return `
     /* ============================================ */
     /* COMMERCIAL INTENT - Bold & CTA-Optimized */
@@ -498,98 +504,99 @@ export interface TemplateDesignTokens {
 const TEMPLATE_DESIGN_TOKENS: Record<string, TemplateDesignTokens> = {
   minimalist: {
     borderRadius: {
-      card: '8px',
-      button: '6px',
-      input: '6px',
-      modal: '12px',
+      card: "8px",
+      button: "6px",
+      input: "6px",
+      modal: "12px",
     },
     boxShadow: {
-      card: '0 1px 3px rgba(0, 0, 0, 0.05)',
-      cardHover: '0 4px 12px rgba(0, 0, 0, 0.08)',
-      button: 'none',
-      modal: '0 20px 60px rgba(0, 0, 0, 0.15)',
+      card: "0 1px 3px rgba(0, 0, 0, 0.05)",
+      cardHover: "0 4px 12px rgba(0, 0, 0, 0.08)",
+      button: "none",
+      modal: "0 20px 60px rgba(0, 0, 0, 0.15)",
     },
     gradients: {
-      background: 'none',
-      hero: 'none',
-      overlay: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.02))',
+      background: "none",
+      hero: "none",
+      overlay: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.02))",
     },
     transitions: {
-      fast: '0.1s ease',
-      normal: '0.2s ease',
-      slow: '0.3s ease',
+      fast: "0.1s ease",
+      normal: "0.2s ease",
+      slow: "0.3s ease",
     },
   },
   modern: {
     borderRadius: {
-      card: '16px',
-      button: '12px',
-      input: '10px',
-      modal: '24px',
+      card: "16px",
+      button: "12px",
+      input: "10px",
+      modal: "24px",
     },
     boxShadow: {
-      card: '0 8px 32px rgba(0, 0, 0, 0.12)',
-      cardHover: '0 16px 48px rgba(0, 0, 0, 0.18)',
-      button: '0 4px 16px rgba(79, 70, 229, 0.3)',
-      modal: '0 32px 80px rgba(0, 0, 0, 0.25)',
+      card: "0 8px 32px rgba(0, 0, 0, 0.12)",
+      cardHover: "0 16px 48px rgba(0, 0, 0, 0.18)",
+      button: "0 4px 16px rgba(79, 70, 229, 0.3)",
+      modal: "0 32px 80px rgba(0, 0, 0, 0.25)",
     },
     gradients: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      hero: 'linear-gradient(135deg, rgba(79,70,229,0.9) 0%, rgba(124,58,237,0.9) 100%)',
-      overlay: 'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6))',
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      hero: "linear-gradient(135deg, rgba(79,70,229,0.9) 0%, rgba(124,58,237,0.9) 100%)",
+      overlay: "linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6))",
     },
     transitions: {
-      fast: '0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-      normal: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      slow: '0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+      fast: "0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+      normal: "0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      slow: "0.5s cubic-bezier(0.4, 0, 0.2, 1)",
     },
   },
   stylish: {
     borderRadius: {
-      card: '20px',
-      button: '16px',
-      input: '12px',
-      modal: '28px',
+      card: "20px",
+      button: "16px",
+      input: "12px",
+      modal: "28px",
     },
     boxShadow: {
-      card: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
-      cardHover: '0 16px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
-      button: '0 4px 20px rgba(5, 150, 105, 0.4)',
-      modal: '0 40px 100px rgba(0, 0, 0, 0.3)',
+      card: "0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255,255,255,0.1)",
+      cardHover:
+        "0 16px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.2)",
+      button: "0 4px 20px rgba(5, 150, 105, 0.4)",
+      modal: "0 40px 100px rgba(0, 0, 0, 0.3)",
     },
     gradients: {
-      background: 'linear-gradient(180deg, #111827 0%, #1f2937 100%)',
-      hero: 'linear-gradient(135deg, rgba(5,150,105,0.2) 0%, transparent 50%)',
-      overlay: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7))',
+      background: "linear-gradient(180deg, #111827 0%, #1f2937 100%)",
+      hero: "linear-gradient(135deg, rgba(5,150,105,0.2) 0%, transparent 50%)",
+      overlay: "linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7))",
     },
     transitions: {
-      fast: '0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-      normal: '0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-      slow: '0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+      fast: "0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+      normal: "0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      slow: "0.6s cubic-bezier(0.4, 0, 0.2, 1)",
     },
   },
   cozy: {
     borderRadius: {
-      card: '24px',
-      button: '20px',
-      input: '14px',
-      modal: '32px',
+      card: "24px",
+      button: "20px",
+      input: "14px",
+      modal: "32px",
     },
     boxShadow: {
-      card: '0 4px 16px rgba(139, 111, 71, 0.08)',
-      cardHover: '0 8px 24px rgba(139, 111, 71, 0.12)',
-      button: '0 2px 8px rgba(234, 88, 12, 0.2)',
-      modal: '0 24px 64px rgba(0, 0, 0, 0.15)',
+      card: "0 4px 16px rgba(139, 111, 71, 0.08)",
+      cardHover: "0 8px 24px rgba(139, 111, 71, 0.12)",
+      button: "0 2px 8px rgba(234, 88, 12, 0.2)",
+      modal: "0 24px 64px rgba(0, 0, 0, 0.15)",
     },
     gradients: {
-      background: 'linear-gradient(180deg, #FFFBF0 0%, #FEF3E2 100%)',
-      hero: 'linear-gradient(135deg, rgba(234,88,12,0.05) 0%, transparent 50%)',
-      overlay: 'linear-gradient(to bottom, transparent, rgba(255,251,240,0.9))',
+      background: "linear-gradient(180deg, #FFFBF0 0%, #FEF3E2 100%)",
+      hero: "linear-gradient(135deg, rgba(234,88,12,0.05) 0%, transparent 50%)",
+      overlay: "linear-gradient(to bottom, transparent, rgba(255,251,240,0.9))",
     },
     transitions: {
-      fast: '0.15s ease-out',
-      normal: '0.25s ease-out',
-      slow: '0.4s ease-out',
+      fast: "0.15s ease-out",
+      normal: "0.25s ease-out",
+      slow: "0.4s ease-out",
     },
   },
 };
@@ -597,8 +604,12 @@ const TEMPLATE_DESIGN_TOKENS: Record<string, TemplateDesignTokens> = {
 /**
  * Gibt Design-Tokens für ein Template zurück
  */
-export function getTemplateDesignTokens(templateId: string): TemplateDesignTokens {
-  return TEMPLATE_DESIGN_TOKENS[templateId] || TEMPLATE_DESIGN_TOKENS.minimalist;
+export function getTemplateDesignTokens(
+  templateId: string,
+): TemplateDesignTokens {
+  return (
+    TEMPLATE_DESIGN_TOKENS[templateId] || TEMPLATE_DESIGN_TOKENS.minimalist
+  );
 }
 
 // ============================================
@@ -606,7 +617,7 @@ export function getTemplateDesignTokens(templateId: string): TemplateDesignToken
 // Injiziert CSS-Variablen in den DOM
 // ============================================
 
-const STYLE_ELEMENT_ID = 'maitr-injected-styles';
+const STYLE_ELEMENT_ID = "maitr-injected-styles";
 
 /**
  * Configuration Interface für injectGlobalStyles
@@ -642,18 +653,18 @@ export interface StyleInjectionConfig {
  */
 export function injectGlobalStyles(
   config: StyleInjectionConfig,
-  targetElement?: HTMLElement
+  targetElement?: HTMLElement,
 ): void {
-  const templateId = config.template || 'minimalist';
+  const templateId = config.template || "minimalist";
   const designTokens = getTemplateDesignTokens(templateId);
 
   // User-Overrides zusammenbauen
   const userColors: UserColorOverrides = {
-    primaryColor: config.primaryColor || '',
-    secondaryColor: config.secondaryColor || '',
-    backgroundColor: config.backgroundColor || '',
-    fontColor: config.fontColor || '',
-    priceColor: config.priceColor || '',
+    primaryColor: config.primaryColor || "",
+    secondaryColor: config.secondaryColor || "",
+    backgroundColor: config.backgroundColor || "",
+    fontColor: config.fontColor || "",
+    priceColor: config.priceColor || "",
     headerFontColor: config.headerFontColor,
     headerBackgroundColor: config.headerBackgroundColor,
     headerFontSize: config.headerFontSize,
@@ -692,12 +703,14 @@ export function injectGlobalStyles(
   `;
 
   // Bestehenden Style-Tag entfernen oder erstellen
-  let styleElement = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null;
+  let styleElement = document.getElementById(
+    STYLE_ELEMENT_ID,
+  ) as HTMLStyleElement | null;
 
   if (!styleElement) {
-    styleElement = document.createElement('style');
+    styleElement = document.createElement("style");
     styleElement.id = STYLE_ELEMENT_ID;
-    styleElement.setAttribute('data-maitr', 'injected');
+    styleElement.setAttribute("data-maitr", "injected");
     document.head.appendChild(styleElement);
   }
 
@@ -707,13 +720,28 @@ export function injectGlobalStyles(
   // Optional: Auf spezifisches Element anwenden (für isolierte Previews)
   if (targetElement) {
     // CSS-Variablen auf Element-Ebene setzen
-    targetElement.style.setProperty('--radius-card', config.borderRadiusCard || designTokens.borderRadius.card);
-    targetElement.style.setProperty('--shadow-card', config.boxShadowCard || designTokens.boxShadow.card);
-    targetElement.style.setProperty('--color-primary', config.primaryColor || '');
-    targetElement.style.setProperty('--color-secondary', config.secondaryColor || '');
-    targetElement.style.setProperty('--color-background', config.backgroundColor || '');
-    targetElement.style.setProperty('--color-text', config.fontColor || '');
-    targetElement.style.setProperty('--color-price', config.priceColor || '');
+    targetElement.style.setProperty(
+      "--radius-card",
+      config.borderRadiusCard || designTokens.borderRadius.card,
+    );
+    targetElement.style.setProperty(
+      "--shadow-card",
+      config.boxShadowCard || designTokens.boxShadow.card,
+    );
+    targetElement.style.setProperty(
+      "--color-primary",
+      config.primaryColor || "",
+    );
+    targetElement.style.setProperty(
+      "--color-secondary",
+      config.secondaryColor || "",
+    );
+    targetElement.style.setProperty(
+      "--color-background",
+      config.backgroundColor || "",
+    );
+    targetElement.style.setProperty("--color-text", config.fontColor || "");
+    targetElement.style.setProperty("--color-price", config.priceColor || "");
   }
 
   console.log(`[StyleInjector] Styles injected for template: ${templateId}`);
@@ -726,7 +754,7 @@ export function removeInjectedStyles(): void {
   const styleElement = document.getElementById(STYLE_ELEMENT_ID);
   if (styleElement) {
     styleElement.remove();
-    console.log('[StyleInjector] Styles removed');
+    console.log("[StyleInjector] Styles removed");
   }
 }
 
@@ -744,7 +772,7 @@ export function removeInjectedStyles(): void {
  */
 export function useStyleInjection(config: StyleInjectionConfig): void {
   // Wird in React-Komponenten mit useEffect verwendet
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     injectGlobalStyles(config);
   }
 }
@@ -753,14 +781,16 @@ export function useStyleInjection(config: StyleInjectionConfig): void {
  * Utility: Extrahiert CSS-Variable aus dem DOM
  */
 export function getCSSVariable(name: string): string {
-  if (typeof window === 'undefined') return '';
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
 }
 
 /**
  * Utility: Setzt CSS-Variable im DOM
  */
 export function setCSSVariable(name: string, value: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   document.documentElement.style.setProperty(name, value);
 }

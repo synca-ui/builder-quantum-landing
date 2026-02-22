@@ -3,8 +3,8 @@
  * Public version of the dashboard layout for demonstration purposes
  */
 
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   Users,
@@ -15,9 +15,9 @@ import {
   Bell,
   User,
   LogIn,
-  ArrowLeft
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
+  ArrowLeft,
+} from "lucide-react";
+import { cn } from "../../lib/utils";
 
 interface DemoDashboardLayoutProps {
   children: React.ReactNode;
@@ -25,50 +25,52 @@ interface DemoDashboardLayoutProps {
 
 const navigationItems = [
   {
-    title: 'Insights',
-    href: '/demo-dashboard/insights',
+    title: "Insights",
+    href: "/demo-dashboard/insights",
     icon: BarChart3,
-    description: 'Analytics & Performance',
-    gradient: 'from-teal-500 to-teal-600',
+    description: "Analytics & Performance",
+    gradient: "from-teal-500 to-teal-600",
   },
   {
-    title: 'Mitarbeiter',
-    href: '/demo-dashboard/staff',
+    title: "Mitarbeiter",
+    href: "/demo-dashboard/staff",
     icon: Users,
-    description: 'Staff & Shift Management',
-    gradient: 'from-blue-500 to-blue-600',
+    description: "Staff & Shift Management",
+    gradient: "from-blue-500 to-blue-600",
   },
   {
-    title: 'Mein Lokal',
-    href: '/demo-dashboard/floor-plan',
+    title: "Mein Lokal",
+    href: "/demo-dashboard/floor-plan",
     icon: MapPin,
-    description: 'Floor Plan Editor',
-    gradient: 'from-purple-500 to-purple-600',
+    description: "Floor Plan Editor",
+    gradient: "from-purple-500 to-purple-600",
   },
   {
-    title: 'Creative Studio',
-    href: '/demo-dashboard/creative',
+    title: "Creative Studio",
+    href: "/demo-dashboard/creative",
     icon: Palette,
-    description: 'Templates & App Design',
-    gradient: 'from-pink-500 to-pink-600',
+    description: "Templates & App Design",
+    gradient: "from-pink-500 to-pink-600",
   },
   {
-    title: 'Reservierungen',
-    href: '/demo-dashboard/reservations',
+    title: "Reservierungen",
+    href: "/demo-dashboard/reservations",
     icon: Calendar,
-    description: 'Booking Management',
-    gradient: 'from-blue-500 to-blue-600',
+    description: "Booking Management",
+    gradient: "from-blue-500 to-blue-600",
   },
   {
-    title: 'Admin-Center',
-    href: '/demo-dashboard/admin',
+    title: "Admin-Center",
+    href: "/demo-dashboard/admin",
     icon: Settings,
-    description: 'Account & SEO Management',
-    gradient: 'from-gray-500 to-gray-600',
+    description: "Account & SEO Management",
+    gradient: "from-gray-500 to-gray-600",
   },
 ];
 
-export default function DemoDashboardLayout({ children }: DemoDashboardLayoutProps) {
+export default function DemoDashboardLayout({
+  children,
+}: DemoDashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -87,12 +89,14 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
               <BarChart3 className="w-4 h-4" />
             </div>
-            <span className="font-medium">🎯 Demo Dashboard - Erlebe die Maitr Restaurant-Verwaltung</span>
+            <span className="font-medium">
+              🎯 Demo Dashboard - Erlebe die Maitr Restaurant-Verwaltung
+            </span>
           </div>
 
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="flex items-center space-x-2 px-3 py-1 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -100,7 +104,7 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
             </button>
 
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               className="flex items-center space-x-2 px-4 py-1 bg-white text-teal-600 rounded-lg hover:bg-gray-100 transition-colors font-medium"
             >
               <LogIn className="w-4 h-4" />
@@ -111,7 +115,10 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
       </div>
 
       {/* Sidebar - with top padding for fixed banner */}
-      <div className="fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-xl" style={{ top: '52px' }}>
+      <div
+        className="fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-xl"
+        style={{ top: "52px" }}
+      >
         {/* Header */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -120,7 +127,9 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
             </div>
             <div>
               <h1 className="font-bold text-lg text-gray-900">Maitr</h1>
-              <p className="text-xs text-teal-600 font-medium">Demo Dashboard</p>
+              <p className="text-xs text-teal-600 font-medium">
+                Demo Dashboard
+              </p>
             </div>
           </div>
         </div>
@@ -128,43 +137,53 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2">
           {navigationItems.map((item) => {
-            const isActive = currentPath.startsWith(item.href) ||
-              (currentPath === '/demo-dashboard' && item.href === '/demo-dashboard/insights');
+            const isActive =
+              currentPath.startsWith(item.href) ||
+              (currentPath === "/demo-dashboard" &&
+                item.href === "/demo-dashboard/insights");
 
             return (
               <button
                 key={item.href}
                 onClick={() => handleNavigation(item.href)}
                 className={cn(
-                  'group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 w-full text-left',
+                  "group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 w-full text-left",
                   isActive
-                    ? 'bg-gradient-to-r text-white shadow-lg transform scale-[1.02]'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                  isActive && `bg-gradient-to-r ${item.gradient}`
+                    ? "bg-gradient-to-r text-white shadow-lg transform scale-[1.02]"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  isActive && `bg-gradient-to-r ${item.gradient}`,
                 )}
               >
-                <div className={cn(
-                  'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors',
-                  isActive
-                    ? 'bg-white/20'
-                    : 'bg-gray-100 group-hover:bg-gray-200'
-                )}>
-                  <item.icon className={cn(
-                    'w-5 h-5',
-                    isActive ? 'text-white' : 'text-gray-600'
-                  )} />
+                <div
+                  className={cn(
+                    "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                    isActive
+                      ? "bg-white/20"
+                      : "bg-gray-100 group-hover:bg-gray-200",
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      "w-5 h-5",
+                      isActive ? "text-white" : "text-gray-600",
+                    )}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    'font-semibold text-sm',
-                    isActive ? 'text-white' : 'text-gray-900'
-                  )}>
+                  <p
+                    className={cn(
+                      "font-semibold text-sm",
+                      isActive ? "text-white" : "text-gray-900",
+                    )}
+                  >
                     {item.title}
                   </p>
-                  <p className={cn(
-                    'text-xs truncate',
-                    isActive ? 'text-white/80' : 'text-gray-500'
-                  )}>
+                  <p
+                    className={cn(
+                      "text-xs truncate",
+                      isActive ? "text-white/80" : "text-gray-500",
+                    )}
+                  >
                     {item.description}
                   </p>
                 </div>
@@ -180,15 +199,21 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
               <User className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-gray-900">Demo Restaurant</p>
-              <p className="text-xs text-gray-500 truncate">Teste alle Funktionen</p>
+              <p className="font-medium text-sm text-gray-900">
+                Demo Restaurant
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                Teste alle Funktionen
+              </p>
             </div>
           </div>
 
           <div className="mt-3 text-center">
-            <p className="text-xs text-gray-600 mb-2">Bereit für dein eigenes Restaurant?</p>
+            <p className="text-xs text-gray-600 mb-2">
+              Bereit für dein eigenes Restaurant?
+            </p>
             <button
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate("/signup")}
               className="w-full px-3 py-2 bg-gradient-to-r from-teal-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-teal-600 hover:to-purple-700 transition-all"
             >
               Kostenlos starten
@@ -198,14 +223,18 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
       </div>
 
       {/* Main Content */}
-      <div className="pl-80" style={{ paddingTop: '52px' }}>
+      <div className="pl-80" style={{ paddingTop: "52px" }}>
         {/* Top Bar */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
           <div className="flex items-center space-x-4">
             <div>
               <h2 className="font-bold text-xl text-gray-900">
-                {navigationItems.find(item => currentPath.startsWith(item.href) ||
-                  (currentPath === '/demo-dashboard' && item.href === '/demo-dashboard/insights'))?.title || 'Dashboard'}
+                {navigationItems.find(
+                  (item) =>
+                    currentPath.startsWith(item.href) ||
+                    (currentPath === "/demo-dashboard" &&
+                      item.href === "/demo-dashboard/insights"),
+                )?.title || "Dashboard"}
               </h2>
               <p className="text-sm text-gray-500">
                 Demo-Modus - Alle Daten sind Beispieldaten
@@ -229,10 +258,11 @@ export default function DemoDashboardLayout({ children }: DemoDashboardLayoutPro
         </header>
 
         {/* Page Content - scrollable */}
-        <main className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 52px)' }}>
-          <div className="p-8">
-            {children}
-          </div>
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{ height: "calc(100vh - 52px)" }}
+        >
+          <div className="p-8">{children}</div>
         </main>
       </div>
     </div>

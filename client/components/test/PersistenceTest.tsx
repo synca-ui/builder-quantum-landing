@@ -18,29 +18,36 @@ export function PersistenceTest() {
   const [logs, setLogs] = useState<string[]>([]);
 
   const addLog = (message: string) => {
-    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    setLogs((prev) => [
+      ...prev,
+      `${new Date().toLocaleTimeString()}: ${message}`,
+    ]);
   };
 
   const testSaveStep = () => {
     stepPersistence.saveStep(
       testData.step,
-      'test',
-      'field_update',
-      { action: 'test_save' },
-      { businessName: testData.businessName, step: testData.step }
+      "test",
+      "field_update",
+      { action: "test_save" },
+      { businessName: testData.businessName, step: testData.step },
     );
-    addLog(`Saved step ${testData.step} with business name: ${testData.businessName}`);
+    addLog(
+      `Saved step ${testData.step} with business name: ${testData.businessName}`,
+    );
   };
 
   const testLoadState = () => {
     const state = stepPersistence.getState();
-    addLog(`Loaded state: ${state.steps.length} steps, current: ${state.currentStep}`);
-    console.log('Full state:', state);
+    addLog(
+      `Loaded state: ${state.steps.length} steps, current: ${state.currentStep}`,
+    );
+    console.log("Full state:", state);
   };
 
   const testClear = () => {
     stepPersistence.clearAll();
-    addLog('Cleared all data');
+    addLog("Cleared all data");
     setLogs([]);
   };
 
@@ -52,23 +59,37 @@ export function PersistenceTest() {
   return (
     <Card className="p-6 max-w-2xl mx-auto">
       <h2 className="text-xl font-bold mb-4">Persistence System Test</h2>
-      
+
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Business Name</label>
+            <label className="block text-sm font-medium mb-1">
+              Business Name
+            </label>
             <Input
               value={testData.businessName}
-              onChange={(e) => setTestData(prev => ({ ...prev, businessName: e.target.value }))}
+              onChange={(e) =>
+                setTestData((prev) => ({
+                  ...prev,
+                  businessName: e.target.value,
+                }))
+              }
               placeholder="Enter business name"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Step Number</label>
+            <label className="block text-sm font-medium mb-1">
+              Step Number
+            </label>
             <Input
               type="number"
               value={testData.step}
-              onChange={(e) => setTestData(prev => ({ ...prev, step: parseInt(e.target.value) || 0 }))}
+              onChange={(e) =>
+                setTestData((prev) => ({
+                  ...prev,
+                  step: parseInt(e.target.value) || 0,
+                }))
+              }
               placeholder="Step number"
             />
           </div>
@@ -105,12 +126,18 @@ export function PersistenceTest() {
         </div>
 
         <div className="bg-blue-50 p-3 rounded">
-          <h4 className="font-semibold text-blue-900 mb-1">Test Instructions:</h4>
+          <h4 className="font-semibold text-blue-900 mb-1">
+            Test Instructions:
+          </h4>
           <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
             <li>Enter a business name and step number</li>
             <li>Click "Save Step" to test persistence</li>
-            <li>Refresh the page and click "Load State" to verify restoration</li>
-            <li>Check browser localStorage for "configurator_persistence" key</li>
+            <li>
+              Refresh the page and click "Load State" to verify restoration
+            </li>
+            <li>
+              Check browser localStorage for "configurator_persistence" key
+            </li>
             <li>Use "Get Summary" to see the fallback message functionality</li>
           </ol>
         </div>

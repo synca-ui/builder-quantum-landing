@@ -3,15 +3,15 @@
  * Main demo dashboard component with enterprise-grade modules
  */
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import DemoDashboardLayout from '../../components/demo/DemoDashboardLayout';
-import DemoInsightsBentoGrid from '../../components/demo/DemoInsightsBentoGrid';
-import DemoStaffCalendar from '../../components/demo/DemoStaffCalendar';
-import DemoFloorPlanEditor from '../../components/demo/DemoFloorPlanEditor';
-import DemoCreativeStudio from '../../components/demo/DemoCreativeStudio';
-import DemoAdminPanel from '../../components/demo/DemoAdminPanel';
-import DemoReservationsDashboard from '../../components/demo/DemoReservationsDashboard';
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import DemoDashboardLayout from "../../components/demo/DemoDashboardLayout";
+import DemoInsightsBentoGrid from "../../components/demo/DemoInsightsBentoGrid";
+import DemoStaffCalendar from "../../components/demo/DemoStaffCalendar";
+import DemoFloorPlanEditor from "../../components/demo/DemoFloorPlanEditor";
+import DemoCreativeStudio from "../../components/demo/DemoCreativeStudio";
+import DemoAdminPanel from "../../components/demo/DemoAdminPanel";
+import DemoReservationsDashboard from "../../components/demo/DemoReservationsDashboard";
 
 // Enterprise-grade demo pages
 function DemoInsightsPage() {
@@ -19,9 +19,12 @@ function DemoInsightsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics & Insights</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Analytics & Insights
+          </h1>
           <p className="text-gray-600 mt-2">
-            Enterprise Dashboard: Echtzeit-Übersicht über Performance und Geschäftskennzahlen
+            Enterprise Dashboard: Echtzeit-Übersicht über Performance und
+            Geschäftskennzahlen
           </p>
         </div>
 
@@ -50,7 +53,8 @@ function DemoStaffPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
           <p className="text-gray-600 mt-2">
-            Enterprise-grade Personalplanung mit intelligenter Optimierung und Echtzeit-Analytics
+            Enterprise-grade Personalplanung mit intelligenter Optimierung und
+            Echtzeit-Analytics
           </p>
         </div>
       </div>
@@ -64,7 +68,9 @@ function DemoFloorPlanPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Floor Plan Editor</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Floor Plan Editor
+          </h1>
           <p className="text-gray-600 mt-2">
             Intelligente Raumplanung mit Drag-and-Drop und Revenue-Analytics
           </p>
@@ -82,7 +88,8 @@ function DemoCreativeStudioPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Creative Studio</h1>
           <p className="text-gray-600 mt-2">
-            Live iPhone Preview mit echten Templates und Mobile-optimiertem Design
+            Live iPhone Preview mit echten Templates und Mobile-optimiertem
+            Design
           </p>
         </div>
       </div>
@@ -98,7 +105,8 @@ function DemoReservationsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Reservierungen</h1>
           <p className="text-gray-600 mt-2">
-            Vollständiges Buchungsmanagement mit Live-Updates und Guest Analytics
+            Vollständiges Buchungsmanagement mit Live-Updates und Guest
+            Analytics
           </p>
         </div>
       </div>
@@ -128,7 +136,10 @@ export default function DemoDashboardHome() {
     <DemoDashboardLayout>
       <Routes>
         {/* Default route redirects to insights */}
-        <Route path="/" element={<Navigate to="/demo-dashboard/insights" replace />} />
+        <Route
+          path="/"
+          element={<Navigate to="/demo-dashboard/insights" replace />}
+        />
         <Route path="/insights" element={<DemoInsightsPage />} />
         <Route path="/staff" element={<DemoStaffPage />} />
         <Route path="/floor-plan" element={<DemoFloorPlanPage />} />
@@ -137,7 +148,10 @@ export default function DemoDashboardHome() {
         <Route path="/admin" element={<DemoAdminPage />} />
 
         {/* Fallback for any unmatched routes */}
-        <Route path="*" element={<Navigate to="/demo-dashboard/insights" replace />} />
+        <Route
+          path="*"
+          element={<Navigate to="/demo-dashboard/insights" replace />}
+        />
       </Routes>
     </DemoDashboardLayout>
   );

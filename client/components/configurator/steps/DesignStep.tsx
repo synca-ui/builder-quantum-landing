@@ -105,7 +105,6 @@ const COLOR_PRESETS = [
   { primary: "#0891B2", secondary: "#06B6D4", bg: "#ECFEFF", name: "Sky" },
 ];
 
-
 // --- COMPONENTS ---
 const ColorInfoIcon = ({ tooltipKey }: { tooltipKey: string }) => (
   <Tooltip>
@@ -131,11 +130,11 @@ interface ColorInputProps {
 }
 
 export const ColorInput = ({
-                             label,
-                             value,
-                             onChange,
-                             tooltipKey,
-                           }: ColorInputProps) => {
+  label,
+  value,
+  onChange,
+  tooltipKey,
+}: ColorInputProps) => {
   const [localValue, setLocalValue] = useState(value);
   const debouncedValue = useDebounce(localValue, 300);
 

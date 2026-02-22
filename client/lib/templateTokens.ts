@@ -1,13 +1,13 @@
 /**
  * Template Tokens Extractor
- * 
+ *
  * Diese Datei extrahiert die Design-Tokens aus der Template.csv
  * und macht sie für den Renderer verfügbar.
- * 
+ *
  * WICHTIG: Diese Daten stammen aus der Template.csv (tokens-Feld)
  */
 
-export type TemplateIntent = 'VISUAL' | 'NARRATIVE' | 'COMMERCIAL';
+export type TemplateIntent = "VISUAL" | "NARRATIVE" | "COMMERCIAL";
 
 export interface TemplateTokens {
   colors: {
@@ -59,7 +59,7 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
       body: { size: "15px", weight: 400, lineHeight: "1.7" },
     },
   },
-  
+
   minimalist: {
     colors: {
       primary: "#000000",
@@ -82,7 +82,7 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
       body: { size: "16px", weight: 400, lineHeight: "1.6" },
     },
   },
-  
+
   modern: {
     colors: {
       primary: "#0066ff",
@@ -105,7 +105,7 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
       body: { size: "16px", weight: 400, lineHeight: "1.5" },
     },
   },
-  
+
   cozy: {
     colors: {
       primary: "#8b6f47",
@@ -134,10 +134,10 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
  * Template Intent Mapping aus CSV (layout.intent-Feld)
  */
 const TEMPLATE_INTENT_MAP: Record<string, TemplateIntent> = {
-  stylish: 'VISUAL',     // intent: "VISUAL" in CSV
-  minimalist: 'NARRATIVE', // intent: "NARRATIVE" in CSV
-  cozy: 'NARRATIVE',      // intent: "NARRATIVE" in CSV
-  modern: 'COMMERCIAL',   // intent: "COMMERCIAL" in CSV
+  stylish: "VISUAL", // intent: "VISUAL" in CSV
+  minimalist: "NARRATIVE", // intent: "NARRATIVE" in CSV
+  cozy: "NARRATIVE", // intent: "NARRATIVE" in CSV
+  modern: "COMMERCIAL", // intent: "COMMERCIAL" in CSV
 };
 
 /**
@@ -151,7 +151,7 @@ export function getTemplateTokens(templateId: string): TemplateTokens {
  * Gibt den Intent eines Templates zurück (VISUAL, NARRATIVE, COMMERCIAL)
  */
 export function getTemplateIntent(templateId: string): TemplateIntent {
-  return TEMPLATE_INTENT_MAP[templateId] || 'NARRATIVE';
+  return TEMPLATE_INTENT_MAP[templateId] || "NARRATIVE";
 }
 
 /**
@@ -171,7 +171,7 @@ export interface VisualConfig {
   glassmorphism: boolean;
   animations: boolean;
   shadows: boolean;
-  borderRadius: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  borderRadius: "sm" | "md" | "lg" | "xl" | "2xl";
   overlays: boolean;
   hoverEffects: boolean;
 }
@@ -181,35 +181,35 @@ export interface VisualConfig {
  */
 export function getVisualConfig(templateId: string): VisualConfig {
   const intent = getTemplateIntent(templateId);
-  
-  if (intent === 'VISUAL') {
+
+  if (intent === "VISUAL") {
     return {
       glassmorphism: true,
       animations: true,
       shadows: true,
-      borderRadius: '2xl',
+      borderRadius: "2xl",
       overlays: true,
       hoverEffects: true,
     };
   }
-  
-  if (intent === 'COMMERCIAL') {
+
+  if (intent === "COMMERCIAL") {
     return {
       glassmorphism: false,
       animations: true,
       shadows: true,
-      borderRadius: 'xl',
+      borderRadius: "xl",
       overlays: false,
       hoverEffects: true,
     };
   }
-  
+
   // NARRATIVE
   return {
     glassmorphism: false,
     animations: false,
     shadows: false,
-    borderRadius: 'md',
+    borderRadius: "md",
     overlays: false,
     hoverEffects: false,
   };

@@ -3,8 +3,8 @@
  * Interactive SVG editor for table management with QR codes
  */
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   MapPin,
   Plus,
@@ -15,10 +15,10 @@ import {
   ZoomIn,
   ZoomOut,
   Download,
-  MoreHorizontal
-} from 'lucide-react';
-import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import { cn } from '../../lib/utils';
+  MoreHorizontal,
+} from "lucide-react";
+import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import { cn } from "../../lib/utils";
 
 interface Table {
   id: string;
@@ -27,13 +27,13 @@ interface Table {
   x: number;
   y: number;
   rotation: number;
-  shape: 'ROUND' | 'SQUARE' | 'RECTANGLE';
+  shape: "ROUND" | "SQUARE" | "RECTANGLE";
   width: number;
   height: number;
   minCapacity: number;
   maxCapacity: number;
   qrEnabled: boolean;
-  status: 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'MAINTENANCE';
+  status: "AVAILABLE" | "OCCUPIED" | "RESERVED" | "MAINTENANCE";
 }
 
 interface FloorPlan {
@@ -49,7 +49,7 @@ interface FloorPlan {
 
 export default function FloorPlanPage() {
   const [searchParams] = useSearchParams();
-  const businessId = searchParams.get('businessId') || undefined;
+  const businessId = searchParams.get("businessId") || undefined;
 
   const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<FloorPlan | null>(null);
@@ -68,58 +68,58 @@ export default function FloorPlanPage() {
 
       // Use demo data for now
       const mockFloorPlan: FloorPlan = {
-        id: 'floor-main-dining',
-        name: 'Hauptbereich',
-        description: 'Hauptessbereich mit 8 Tischen',
+        id: "floor-main-dining",
+        name: "Hauptbereich",
+        description: "Hauptessbereich mit 8 Tischen",
         width: 1000,
         height: 800,
         gridSize: 20,
-        bgColor: '#f8fafc',
+        bgColor: "#f8fafc",
         tables: [
           {
-            id: 'table-1',
-            number: '1',
-            name: 'Tisch 1',
+            id: "table-1",
+            number: "1",
+            name: "Tisch 1",
             x: 100,
             y: 100,
             rotation: 0,
-            shape: 'ROUND',
+            shape: "ROUND",
             width: 80,
             height: 80,
             minCapacity: 2,
             maxCapacity: 4,
             qrEnabled: true,
-            status: 'AVAILABLE',
+            status: "AVAILABLE",
           },
           {
-            id: 'table-2',
-            number: '2',
-            name: 'Tisch 2',
+            id: "table-2",
+            number: "2",
+            name: "Tisch 2",
             x: 300,
             y: 100,
             rotation: 0,
-            shape: 'SQUARE',
+            shape: "SQUARE",
             width: 100,
             height: 100,
             minCapacity: 4,
             maxCapacity: 6,
             qrEnabled: true,
-            status: 'OCCUPIED',
+            status: "OCCUPIED",
           },
           {
-            id: 'table-3',
-            number: '3',
-            name: 'Tisch 3',
+            id: "table-3",
+            number: "3",
+            name: "Tisch 3",
             x: 500,
             y: 200,
             rotation: 0,
-            shape: 'RECTANGLE',
+            shape: "RECTANGLE",
             width: 120,
             height: 80,
             minCapacity: 6,
             maxCapacity: 8,
             qrEnabled: false,
-            status: 'AVAILABLE',
+            status: "AVAILABLE",
           },
         ],
       };
@@ -127,7 +127,7 @@ export default function FloorPlanPage() {
       setFloorPlans([mockFloorPlan]);
       setSelectedPlan(mockFloorPlan);
     } catch (error) {
-      console.error('Error fetching floor plans:', error);
+      console.error("Error fetching floor plans:", error);
     } finally {
       setLoading(false);
     }
@@ -143,13 +143,13 @@ export default function FloorPlanPage() {
       x: 200,
       y: 200,
       rotation: 0,
-      shape: 'ROUND',
+      shape: "ROUND",
       width: 80,
       height: 80,
       minCapacity: 2,
       maxCapacity: 4,
       qrEnabled: false,
-      status: 'AVAILABLE',
+      status: "AVAILABLE",
     };
 
     setSelectedPlan({
@@ -163,17 +163,17 @@ export default function FloorPlanPage() {
 
     setSelectedPlan({
       ...selectedPlan,
-      tables: selectedPlan.tables.filter(t => t.id !== tableId),
+      tables: selectedPlan.tables.filter((t) => t.id !== tableId),
     });
     setSelectedTable(null);
   };
 
-  const getTableStatusColor = (status: Table['status']) => {
+  const getTableStatusColor = (status: Table["status"]) => {
     const colors = {
-      AVAILABLE: 'fill-green-200 stroke-green-600',
-      OCCUPIED: 'fill-red-200 stroke-red-600',
-      RESERVED: 'fill-yellow-200 stroke-yellow-600',
-      MAINTENANCE: 'fill-gray-200 stroke-gray-600',
+      AVAILABLE: "fill-green-200 stroke-green-600",
+      OCCUPIED: "fill-red-200 stroke-red-600",
+      RESERVED: "fill-yellow-200 stroke-yellow-600",
+      MAINTENANCE: "fill-gray-200 stroke-gray-600",
     };
     return colors[status];
   };
@@ -207,10 +207,10 @@ export default function FloorPlanPage() {
             <button
               onClick={() => setShowGrid(!showGrid)}
               className={cn(
-                'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors',
+                "flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors",
                 showGrid
-                  ? 'bg-teal-100 text-teal-700 border border-teal-200'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? "bg-teal-100 text-teal-700 border border-teal-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200",
               )}
             >
               <Grid3X3 className="w-4 h-4" />
@@ -235,7 +235,7 @@ export default function FloorPlanPage() {
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <div className="flex items-center space-x-4">
                   <h3 className="font-semibold text-gray-900">
-                    {selectedPlan?.name || 'Lageplan'}
+                    {selectedPlan?.name || "Lageplan"}
                   </h3>
 
                   <div className="flex items-center space-x-2">
@@ -273,7 +273,10 @@ export default function FloorPlanPage() {
               </div>
 
               {/* SVG Editor */}
-              <div className="relative overflow-auto" style={{ height: '600px' }}>
+              <div
+                className="relative overflow-auto"
+                style={{ height: "600px" }}
+              >
                 {selectedPlan && (
                   <svg
                     width={selectedPlan.width * zoom}
@@ -301,11 +304,7 @@ export default function FloorPlanPage() {
                     )}
 
                     {showGrid && (
-                      <rect
-                        width="100%"
-                        height="100%"
-                        fill="url(#grid)"
-                      />
+                      <rect width="100%" height="100%" fill="url(#grid)" />
                     )}
 
                     {/* Tables */}
@@ -318,21 +317,22 @@ export default function FloorPlanPage() {
                       return (
                         <g key={table.id}>
                           {/* Table Shape */}
-                          {table.shape === 'ROUND' && (
+                          {table.shape === "ROUND" && (
                             <circle
                               cx={x + width / 2}
                               cy={y + height / 2}
                               r={width / 2}
                               className={cn(
-                                'cursor-pointer stroke-2 transition-all hover:stroke-4',
+                                "cursor-pointer stroke-2 transition-all hover:stroke-4",
                                 getTableStatusColor(table.status),
-                                selectedTable?.id === table.id && 'stroke-purple-600 stroke-4'
+                                selectedTable?.id === table.id &&
+                                  "stroke-purple-600 stroke-4",
                               )}
                               onClick={() => setSelectedTable(table)}
                             />
                           )}
 
-                          {table.shape === 'SQUARE' && (
+                          {table.shape === "SQUARE" && (
                             <rect
                               x={x}
                               y={y}
@@ -340,15 +340,16 @@ export default function FloorPlanPage() {
                               height={height}
                               rx="8"
                               className={cn(
-                                'cursor-pointer stroke-2 transition-all hover:stroke-4',
+                                "cursor-pointer stroke-2 transition-all hover:stroke-4",
                                 getTableStatusColor(table.status),
-                                selectedTable?.id === table.id && 'stroke-purple-600 stroke-4'
+                                selectedTable?.id === table.id &&
+                                  "stroke-purple-600 stroke-4",
                               )}
                               onClick={() => setSelectedTable(table)}
                             />
                           )}
 
-                          {table.shape === 'RECTANGLE' && (
+                          {table.shape === "RECTANGLE" && (
                             <rect
                               x={x}
                               y={y}
@@ -356,9 +357,10 @@ export default function FloorPlanPage() {
                               height={height}
                               rx="8"
                               className={cn(
-                                'cursor-pointer stroke-2 transition-all hover:stroke-4',
+                                "cursor-pointer stroke-2 transition-all hover:stroke-4",
                                 getTableStatusColor(table.status),
-                                selectedTable?.id === table.id && 'stroke-purple-600 stroke-4'
+                                selectedTable?.id === table.id &&
+                                  "stroke-purple-600 stroke-4",
                               )}
                               onClick={() => setSelectedTable(table)}
                             />
@@ -400,7 +402,9 @@ export default function FloorPlanPage() {
             {selectedTable ? (
               <div className="card-elevated bg-white rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Tisch Eigenschaften</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Tisch Eigenschaften
+                  </h3>
                   <button
                     onClick={() => deleteTable(selectedTable.id)}
                     className="p-2 text-red-400 hover:text-red-600 transition-colors"
@@ -418,7 +422,12 @@ export default function FloorPlanPage() {
                       type="text"
                       value={selectedTable.number}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                      onChange={(e) => setSelectedTable({ ...selectedTable, number: e.target.value })}
+                      onChange={(e) =>
+                        setSelectedTable({
+                          ...selectedTable,
+                          number: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -429,7 +438,12 @@ export default function FloorPlanPage() {
                     <select
                       value={selectedTable.shape}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                      onChange={(e) => setSelectedTable({ ...selectedTable, shape: e.target.value as Table['shape'] })}
+                      onChange={(e) =>
+                        setSelectedTable({
+                          ...selectedTable,
+                          shape: e.target.value as Table["shape"],
+                        })
+                      }
                     >
                       <option value="ROUND">Rund</option>
                       <option value="SQUARE">Quadrat</option>
@@ -447,7 +461,12 @@ export default function FloorPlanPage() {
                         value={selectedTable.minCapacity}
                         min="1"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        onChange={(e) => setSelectedTable({ ...selectedTable, minCapacity: parseInt(e.target.value) })}
+                        onChange={(e) =>
+                          setSelectedTable({
+                            ...selectedTable,
+                            minCapacity: parseInt(e.target.value),
+                          })
+                        }
                       />
                     </div>
 
@@ -460,7 +479,12 @@ export default function FloorPlanPage() {
                         value={selectedTable.maxCapacity}
                         min="1"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        onChange={(e) => setSelectedTable({ ...selectedTable, maxCapacity: parseInt(e.target.value) })}
+                        onChange={(e) =>
+                          setSelectedTable({
+                            ...selectedTable,
+                            maxCapacity: parseInt(e.target.value),
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -472,7 +496,12 @@ export default function FloorPlanPage() {
                     <select
                       value={selectedTable.status}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                      onChange={(e) => setSelectedTable({ ...selectedTable, status: e.target.value as Table['status'] })}
+                      onChange={(e) =>
+                        setSelectedTable({
+                          ...selectedTable,
+                          status: e.target.value as Table["status"],
+                        })
+                      }
                     >
                       <option value="AVAILABLE">Verfügbar</option>
                       <option value="OCCUPIED">Besetzt</option>
@@ -486,16 +515,23 @@ export default function FloorPlanPage() {
                       QR-Code aktiviert
                     </label>
                     <button
-                      onClick={() => setSelectedTable({ ...selectedTable, qrEnabled: !selectedTable.qrEnabled })}
+                      onClick={() =>
+                        setSelectedTable({
+                          ...selectedTable,
+                          qrEnabled: !selectedTable.qrEnabled,
+                        })
+                      }
                       className={cn(
-                        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                        selectedTable.qrEnabled ? 'bg-teal-600' : 'bg-gray-200'
+                        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                        selectedTable.qrEnabled ? "bg-teal-600" : "bg-gray-200",
                       )}
                     >
                       <span
                         className={cn(
-                          'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                          selectedTable.qrEnabled ? 'translate-x-6' : 'translate-x-1'
+                          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                          selectedTable.qrEnabled
+                            ? "translate-x-6"
+                            : "translate-x-1",
                         )}
                       />
                     </button>
@@ -514,7 +550,9 @@ export default function FloorPlanPage() {
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-gray-400" />
                 </div>
-                <h3 className="font-medium text-gray-900 mb-2">Tisch auswählen</h3>
+                <h3 className="font-medium text-gray-900 mb-2">
+                  Tisch auswählen
+                </h3>
                 <p className="text-sm text-gray-500">
                   Klicken Sie auf einen Tisch, um ihn zu bearbeiten
                 </p>
@@ -523,7 +561,9 @@ export default function FloorPlanPage() {
 
             {/* Plan Stats */}
             <div className="card-elevated bg-white rounded-2xl p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Plan-Statistiken</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">
+                Plan-Statistiken
+              </h3>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -536,21 +576,25 @@ export default function FloorPlanPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Mit QR-Code</span>
                   <span className="font-medium text-gray-900">
-                    {selectedPlan?.tables.filter(t => t.qrEnabled).length || 0}
+                    {selectedPlan?.tables.filter((t) => t.qrEnabled).length ||
+                      0}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Verfügbar</span>
                   <span className="font-medium text-green-600">
-                    {selectedPlan?.tables.filter(t => t.status === 'AVAILABLE').length || 0}
+                    {selectedPlan?.tables.filter(
+                      (t) => t.status === "AVAILABLE",
+                    ).length || 0}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Besetzt</span>
                   <span className="font-medium text-red-600">
-                    {selectedPlan?.tables.filter(t => t.status === 'OCCUPIED').length || 0}
+                    {selectedPlan?.tables.filter((t) => t.status === "OCCUPIED")
+                      .length || 0}
                   </span>
                 </div>
               </div>

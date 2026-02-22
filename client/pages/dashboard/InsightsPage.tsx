@@ -3,14 +3,14 @@
  * Real-time analytics and performance metrics
  */
 
-import React from 'react';
-import { useSearchParams } from 'react-router-dom';
-import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import InsightsBentoGrid from '../../components/dashboard/InsightsBentoGrid';
+import React from "react";
+import { useSearchParams } from "react-router-dom";
+import DashboardLayout from "../../components/dashboard/DashboardLayout";
+import InsightsBentoGrid from "../../components/dashboard/InsightsBentoGrid";
 
 export default function InsightsPage() {
   const [searchParams] = useSearchParams();
-  const businessId = searchParams.get('businessId') || undefined;
+  const businessId = searchParams.get("businessId") || undefined;
 
   return (
     <DashboardLayout businessId={businessId}>
@@ -18,7 +18,9 @@ export default function InsightsPage() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics & Insights</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Analytics & Insights
+            </h1>
             <p className="text-gray-600 mt-2">
               Echtzeit-Übersicht über Performance und Geschäftskennzahlen
             </p>

@@ -46,7 +46,6 @@ interface TemplateStepProps {
   setPreviewTemplateId?: (id: string | null) => void;
 }
 
-
 export function TemplateStep({
   nextStep,
   prevStep,

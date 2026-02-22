@@ -23,7 +23,10 @@ console.log("[Prisma] Connecting to NeonDB", {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error", "warn"],
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error", "warn"],
     errorFormat: "pretty",
   });
 
