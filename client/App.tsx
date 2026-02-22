@@ -19,6 +19,7 @@ import { useServiceWorker, useInstallPrompt } from "@/hooks/useServiceWorker";
 
 import Configurator from "./pages/Configurator";
 import ModeSelection from "./pages/ModeSelection";
+import CheckLanding from "./pages/CheckLanding";
 // Lazy load heavy components for better performance
 const AutoConfigurator = lazy(() => import("./pages/AutoConfigurator"));
 const Site = lazy(() => import("./pages/Site"));
@@ -97,6 +98,9 @@ const App = () => {
                       {/* Demo Dashboard Routes (Public - No Auth Required) */}
                       <Route path="/demo-dashboard" element={<DemoDashboardHome />} />
                       <Route path="/demo-dashboard/*" element={<DemoDashboardHome />} />
+
+                      {/* Check Landing Page Preview (local dev) */}
+                      <Route path="/check-landing" element={<CheckLanding />} />
 
                       {/* CLERK AUTHENTICATED ROUTES */}
                       <Route element={<AuthWrapper />}>

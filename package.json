@@ -16,6 +16,8 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:check": "cd check && vite",
+    "build:check": "cd check && vite build",
     "generate-static": "node scripts/generate-static-app.cjs",
     "postinstall": "prisma generate || true",
     "build": "npm run build:client && npm run build:server",

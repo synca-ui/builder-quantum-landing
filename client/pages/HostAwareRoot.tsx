@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Index from "./Index"; // Deine Landingpage/Dashboard
+import CheckLanding from "./CheckLanding";
 import { Loader2 } from "lucide-react";
 import AppRenderer from "@/components/dynamic/AppRenderer.tsx";
 
@@ -68,6 +69,11 @@ export default function HostAwareRoot() {
         </p>
       </div>
     );
+  }
+
+  // WENN Subdomain "check" -> Check-Landing Page
+  if (subdomain === "check") {
+    return <CheckLanding />;
   }
 
   // WENN Subdomain erkannt UND Daten vorhanden -> Dynamische Website
