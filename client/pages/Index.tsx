@@ -43,11 +43,330 @@ import {
   useDemoDashboardVisibility,
 } from "@/hooks/usePerformanceOptimization";
 
+const features = [
+  {
+    icon: <Zap className="w-8 h-8 text-teal-500" />,
+    title: "Schnelle Einrichtung",
+    description:
+      "Dein Café oder Restaurant in Minuten online. Keine technischen Kenntnisse nötig - einfach Infos eingeben und loslegen.",
+    gradient: "from-teal-400 to-cyan-500",
+  },
+  {
+    icon: <Palette className="w-8 h-8 text-purple-500" />,
+    title: "Lokale Business Vorlagen",
+    description:
+      "Wunderschöne Designs, speziell für Restaurants, Cafés, Bäckereien und lokale Geschäfte.",
+    gradient: "from-purple-400 to-pink-500",
+  },
+  {
+    icon: <Smartphone className="w-8 h-8 text-orange-500" />,
+    title: "Mobile-First Design",
+    description:
+      "Deine Gäste werden es lieben, deine Speisekarte und Infos auf dem Smartphone zu durchstöbern.",
+    gradient: "from-orange-400 to-red-500",
+  },
+  {
+    icon: <Globe className="w-8 h-8 text-teal-500" />,
+    title: "Lokale SEO Ready",
+    description:
+      "Werde von lokalen Kunden gefunden - mit integrierter SEO-Optimierung für deine Nachbarschaft.",
+    gradient: "from-blue-400 to-indigo-500",
+  },
+];
+
+const pricingPlans = [
+  {
+    name: "Starter",
+    price: "€23",
+    period: "/Monat",
+    description: "Kommt bald",
+    features: [
+      "Professionelle Web App",
+      "QR-Code für Tische",
+      "Automatische Updates",
+    ],
+    cta: "Kommt bald",
+    popular: false,
+    gradient: "from-orange-400 to-red-500",
+  },
+  {
+    name: "Business",
+    price: "€39",
+    period: "/Monat",
+    description: "Ideal für Restaurants & Gastronomie",
+    features: [
+      "Professionelle Web App",
+      "QR-Code für Tische",
+      "Reservierungssystem",
+      "Automatische Updates",
+    ],
+    cta: "Jetzt starten",
+    popular: true,
+    gradient: "from-teal-400 to-purple-600",
+  },
+  {
+    name: "Premium",
+    price: "€89",
+    period: "/Monat",
+    description: "Kommt bald",
+    features: [
+      "Multi-Standort Management",
+      "Eigene Domain",
+      "Maßgeschneiderte Features",
+    ],
+    cta: "Kommt bald",
+    popular: false,
+    gradient: "from-purple-400 to-indigo-600",
+  },
+];
+
+const demoTemplates = [
+  {
+    name: "Coffee Shop",
+    preview: "bg-gradient-to-br from-orange-50 to-amber-100",
+    color: "from-orange-500 to-amber-600",
+  },
+  {
+    name: "Restaurant",
+    preview: "bg-gradient-to-br from-red-50 to-rose-100",
+    color: "from-red-500 to-rose-600",
+  },
+  {
+    name: "Local Store",
+    preview: "bg-gradient-to-br from-teal-50 to-emerald-100",
+    color: "from-teal-500 to-emerald-600",
+  },
+];
+
+const Particles = memo(() => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {[...Array(3)].map((_, i) => (
+      <div
+        key={i}
+        className="absolute w-1 h-1 bg-teal-400 rounded-full opacity-30"
+        style={{
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+        }}
+      />
+    ))}
+  </div>
+));
+
+const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 50);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navItems = [
+    {
+      id: "features",
+      label: "Features",
+      icon: <Layers className="w-4 h-4" />,
+      href: "#features",
+    },
+    {
+      id: "demo",
+      label: "Demo",
+      icon: <Play className="w-4 h-4" />,
+      href: "#demo",
+    },
+    {
+      id: "pricing",
+      label: "Preise",
+      icon: <Crown className="w-4 h-4" />,
+      href: "#pricing",
+    },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      href: "/dashboard",
+    },
+  ];
+
+  return (
+    <nav
+      className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <div className="relative group">
+              <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
+                Maitr
+              </h1>
+              <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
+            </div>
+          </div>
+
+          <div className="hidden md:block">
+            <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
+              {navItems
+                .filter((n) => (isSignedIn ? true : n.id !== "dashboard"))
+                .map((item) => (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    className="relative px-4 py-2 text-sm font-bold transition-all duration-500 ease-out rounded-full group"
+                    onMouseEnter={() => setHoveredItem(item.id)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                  >
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20 rounded-full transition-all duration-500 ${hoveredItem === item.id ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+                    ></div>
+                    <div
+                      className={`relative flex items-center space-x-2 transition-all duration-500 ${hoveredItem === item.id ? "text-teal-600 transform translate-y-[-1px]" : "text-gray-700"}`}
+                    >
+                      <div
+                        className={`transition-all duration-500 ${hoveredItem === item.id ? "rotate-12 scale-110" : "rotate-0 scale-100"}`}
+                      >
+                        {item.icon}
+                      </div>
+                      <span>{item.label}</span>
+                    </div>
+                    <div
+                      className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-teal-500 to-purple-500 transition-all duration-500 ${hoveredItem === item.id ? "w-8 -translate-x-1/2" : "w-0 -translate-x-1/2"}`}
+                    ></div>
+                  </a>
+                ))}
+            </div>
+          </div>
+
+          <div className="hidden md:flex items-center space-x-3">
+            <SignInButton mode="modal">
+              <Button variant="outline" size="sm">
+                Log in
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+              >
+                Sign up
+              </Button>
+            </SignUpButton>
+            <a href="/mode-selection">
+              <Button
+                size="sm"
+                className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                <div className="relative flex items-center space-x-2">
+                  <div className="transition-all duration-300 group-hover:rotate-45">
+                    <Settings className="w-4 h-4" />
+                  </div>
+                  <span>Start Building</span>
+                  <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
+                </div>
+              </Button>
+            </a>
+          </div>
+
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="relative p-2 text-gray-700 transition-all duration-300"
+            >
+              <div
+                className={`transition-all duration-300 ${isMenuOpen ? "rotate-90 scale-110" : "rotate-0 scale-100"}`}
+              >
+                {isMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
+              </div>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"}`}
+      >
+        <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
+          <div className="px-4 py-4 space-y-2">
+            {navItems.map((item, index) => (
+              <a
+                key={item.id}
+                href={item.href}
+                className="group flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 font-bold transition-all duration-300"
+                style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                  {item.icon}
+                </div>
+                <span>{item.label}</span>
+                <div className="ml-auto w-0 group-hover:w-2 h-2 bg-gradient-to-r from-teal-500 to-purple-500 rounded-full transition-all duration-300"></div>
+              </a>
+            ))}
+
+            <div className="pt-2 border-t border-gray-200/50 space-y-2">
+              <SignInButton mode="modal">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Log in
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign up
+                </Button>
+              </SignUpButton>
+
+              <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-xl py-3 transition-all duration-300 hover:scale-105"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Settings className="w-4 h-4" />
+                    <span>Jetzt starten</span>
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+
 export default function Index() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Initialize performance optimizations
   useResourcePreloader();
@@ -114,338 +433,9 @@ export default function Index() {
     }
   };
 
-  const features = [
-    {
-      icon: <Zap className="w-8 h-8 text-teal-500" />,
-      title: "Schnelle Einrichtung",
-      description:
-        "Dein Café oder Restaurant in Minuten online. Keine technischen Kenntnisse nötig - einfach Infos eingeben und loslegen.",
-      gradient: "from-teal-400 to-cyan-500",
-    },
-    {
-      icon: <Palette className="w-8 h-8 text-purple-500" />,
-      title: "Lokale Business Vorlagen",
-      description:
-        "Wunderschöne Designs, speziell für Restaurants, Cafés, Bäckereien und lokale Geschäfte.",
-      gradient: "from-purple-400 to-pink-500",
-    },
-    {
-      icon: <Smartphone className="w-8 h-8 text-orange-500" />,
-      title: "Mobile-First Design",
-      description:
-        "Deine Gäste werden es lieben, deine Speisekarte und Infos auf dem Smartphone zu durchstöbern.",
-      gradient: "from-orange-400 to-red-500",
-    },
-    {
-      icon: <Globe className="w-8 h-8 text-teal-500" />,
-      title: "Lokale SEO Ready",
-      description:
-        "Werde von lokalen Kunden gefunden - mit integrierter SEO-Optimierung für deine Nachbarschaft.",
-      gradient: "from-blue-400 to-indigo-500",
-    },
-  ];
-
-  const pricingPlans = [
-    {
-      name: "Starter",
-      price: "€23",
-      period: "/Monat",
-      description: "Kommt bald",
-      features: [
-        "Professionelle Web App",
-        "QR-Code für Tische",
-        "Automatische Updates",
-      ],
-      cta: "Kommt bald",
-      popular: false,
-      gradient: "from-orange-400 to-red-500",
-    },
-    {
-      name: "Business",
-      price: "€39",
-      period: "/Monat",
-      description: "Ideal für Restaurants & Gastronomie",
-      features: [
-        "Professionelle Web App",
-        "QR-Code für Tische",
-        "Reservierungssystem",
-        "Automatische Updates",
-      ],
-      cta: "Jetzt starten",
-      popular: true,
-      gradient: "from-teal-400 to-purple-600",
-    },
-    {
-      name: "Premium",
-      price: "€89",
-      period: "/Monat",
-      description: "Kommt bald",
-      features: [
-        "Multi-Standort Management",
-        "Eigene Domain",
-        "Maßgeschneiderte Features",
-      ],
-      cta: "Kommt bald",
-      popular: false,
-      gradient: "from-purple-400 to-indigo-600",
-    },
-  ];
-
-  const demoTemplates = [
-    {
-      name: "Coffee Shop",
-      preview: "bg-gradient-to-br from-orange-50 to-amber-100",
-      color: "from-orange-500 to-amber-600",
-    },
-    {
-      name: "Restaurant",
-      preview: "bg-gradient-to-br from-red-50 to-rose-100",
-      color: "from-red-500 to-rose-600",
-    },
-    {
-      name: "Local Store",
-      preview: "bg-gradient-to-br from-teal-50 to-emerald-100",
-      color: "from-teal-500 to-emerald-600",
-    },
-  ];
-
-  const Particles = memo(() => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(3)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-teal-400 rounded-full opacity-30"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-        />
-      ))}
-    </div>
-  ));
-
-  const Navigation = () => {
-    const [scrolled, setScrolled] = useState(false);
-    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-
-    useEffect(() => {
-      let ticking = false;
-      const handleScroll = () => {
-        if (!ticking) {
-          requestAnimationFrame(() => {
-            setScrolled(window.scrollY > 50);
-            ticking = false;
-          });
-          ticking = true;
-        }
-      };
-      window.addEventListener("scroll", handleScroll, { passive: true });
-      return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    const navItems = [
-      {
-        id: "features",
-        label: "Features",
-        icon: <Layers className="w-4 h-4" />,
-        href: "#features",
-      },
-      {
-        id: "demo",
-        label: "Demo",
-        icon: <Play className="w-4 h-4" />,
-        href: "#demo",
-      },
-      {
-        id: "pricing",
-        label: "Preise",
-        icon: <Crown className="w-4 h-4" />,
-        href: "#pricing",
-      },
-      {
-        id: "dashboard",
-        label: "Dashboard",
-        icon: <LayoutDashboard className="w-4 h-4" />,
-        href: "/dashboard",
-      },
-    ];
-
-    return (
-      <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="relative group">
-                <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
-                  Maitr
-                </h1>
-                <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
-              </div>
-            </div>
-
-            <div className="hidden md:block">
-              <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
-                {navItems
-                  .filter((n) => (isSignedIn ? true : n.id !== "dashboard"))
-                  .map((item) => (
-                    <a
-                      key={item.id}
-                      href={item.href}
-                      className="relative px-4 py-2 text-sm font-bold transition-all duration-500 ease-out rounded-full group"
-                      onMouseEnter={() => setHoveredItem(item.id)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                    >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20 rounded-full transition-all duration-500 ${hoveredItem === item.id ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
-                      ></div>
-                      <div
-                        className={`relative flex items-center space-x-2 transition-all duration-500 ${hoveredItem === item.id ? "text-teal-600 transform translate-y-[-1px]" : "text-gray-700"}`}
-                      >
-                        <div
-                          className={`transition-all duration-500 ${hoveredItem === item.id ? "rotate-12 scale-110" : "rotate-0 scale-100"}`}
-                        >
-                          {item.icon}
-                        </div>
-                        <span>{item.label}</span>
-                      </div>
-                      <div
-                        className={`absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-teal-500 to-purple-500 transition-all duration-500 ${hoveredItem === item.id ? "w-8 -translate-x-1/2" : "w-0 -translate-x-1/2"}`}
-                      ></div>
-                    </a>
-                  ))}
-              </div>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-3">
-              <SignInButton mode="modal">
-                <Button variant="outline" size="sm">
-                  Log in
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                >
-                  Sign up
-                </Button>
-              </SignUpButton>
-              <a href="/mode-selection">
-                <Button
-                  size="sm"
-                  className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                  <div className="relative flex items-center space-x-2">
-                    <div className="transition-all duration-300 group-hover:rotate-45">
-                      <Settings className="w-4 h-4" />
-                    </div>
-                    <span>Start Building</span>
-                    <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
-                  </div>
-                </Button>
-              </a>
-            </div>
-
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="relative p-2 text-gray-700 transition-all duration-300"
-              >
-                <div
-                  className={`transition-all duration-300 ${isMenuOpen ? "rotate-90 scale-110" : "rotate-0 scale-100"}`}
-                >
-                  {isMenuOpen ? (
-                    <X className="w-6 h-6" />
-                  ) : (
-                    <Menu className="w-6 h-6" />
-                  )}
-                </div>
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"}`}
-        >
-          <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
-            <div className="px-4 py-4 space-y-2">
-              {navItems.map((item, index) => (
-                <a
-                  key={item.id}
-                  href={item.href}
-                  className="group flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 font-bold transition-all duration-300"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
-                    {item.icon}
-                  </div>
-                  <span>{item.label}</span>
-                  <div className="ml-auto w-0 group-hover:w-2 h-2 bg-gradient-to-r from-teal-500 to-purple-500 rounded-full transition-all duration-300"></div>
-                </a>
-              ))}
-
-              <div className="pt-2 border-t border-gray-200/50 space-y-2">
-                <SignInButton mode="modal">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Log in
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button
-                    size="sm"
-                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign up
-                  </Button>
-                </SignUpButton>
-
-                <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
-                  <Button
-                    size="sm"
-                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-xl py-3 transition-all duration-300 hover:scale-105"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Settings className="w-4 h-4" />
-                      <span>Jetzt starten</span>
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-white">
-      <Navigation />
-
-      <div
-        className="fixed w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full pointer-events-none mix-blend-difference opacity-40 z-50"
-        style={{
-          left: mousePosition.x - 6,
-          top: mousePosition.y - 6,
-          transform: `translate3d(0, 0, 0) scale(0.8)`,
-          willChange: "transform",
-        }}
-      />
+    <div className="min-h-screen bg-white relative w-full" style={{ overflowX: "clip" }}>
+      <Navigation isSignedIn={isSignedIn} />
 
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-teal-50 min-h-screen flex items-center">
         <Particles />
@@ -464,7 +454,7 @@ export default function Index() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
                 </div>
               </div>
-              <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
                 <span className="font-display text-gradient">
                   Deine eigene Restaurant-App.
                 </span>
@@ -473,7 +463,7 @@ export default function Index() {
                   In 30 Sekunden.
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed font-medium">
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-10 max-w-4xl mx-auto leading-relaxed font-medium px-2">
                 Link einfügen, fertig. Maitr erstellt automatisch deine digitale
                 Speisekarte und dein Reservierungssystem – bereit zum Servieren.
                 🍒
@@ -483,27 +473,27 @@ export default function Index() {
                 <div className="flex flex-col md:flex-row items-center gap-4">
                   <form
                     onSubmit={handleMagicSubmit}
-                    className={`flex items-center rounded-full bg-white/90 backdrop-blur shadow-2xl p-1.5 flex-1 border transition-colors duration-300 ${inputError ? "border-red-300 shadow-red-100" : "border-white/20"}`}
+                    className={`flex flex-col sm:flex-row items-stretch sm:items-center rounded-3xl sm:rounded-full bg-white/90 backdrop-blur shadow-2xl p-1.5 flex-1 border transition-colors duration-300 ${inputError ? "border-red-300 shadow-red-100" : "border-white/20"}`}
                   >
-                    <div className="flex items-center gap-3 px-4 flex-1">
-                      <LinkIcon className="w-5 h-5 text-gray-500" />
+                    <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 flex-1">
+                      <LinkIcon className="w-5 h-5 text-gray-500 shrink-0" />
                       <input
                         value={magicLink}
                         onChange={(e) => {
                           setMagicLink(e.target.value);
                           setInputError(null);
                         }}
-                        placeholder="Google Maps oder Website-Link einfügen..."
-                        className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-2 py-3"
+                        placeholder="Google Maps oder Website-Link..."
+                        className="bg-transparent outline-none w-full text-gray-800 placeholder-gray-400 px-1 py-3"
                         disabled={isLoadingMagic}
                         aria-label="Link einfügen"
                       />
                     </div>
-                    <div className="px-2">
+                    <div className="px-1 sm:px-2 pb-1 sm:pb-0 mt-2 sm:mt-0">
                       <button
                         type="submit"
                         aria-busy={isLoadingMagic}
-                        className={`inline-flex items-center rounded-full text-white px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
+                        className={`inline-flex items-center justify-center rounded-2xl sm:rounded-full text-white w-full sm:w-auto px-4 sm:px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
                         disabled={
                           isLoadingMagic || !isMagicLinkValid(magicLink)
                         }
@@ -515,9 +505,9 @@ export default function Index() {
                           </>
                         ) : (
                           <>
-                            <Rocket className="mr-3 w-5 h-5" />
+                            <Rocket className="mr-2 sm:mr-3 w-5 h-5" />
                             Jetzt loslegen
-                            <ChevronRight className="ml-3 w-4 h-4" />
+                            <ChevronRight className="ml-2 sm:ml-3 w-4 h-4" />
                           </>
                         )}
                       </button>
@@ -755,7 +745,7 @@ export default function Index() {
                 So funktioniert es
               </span>
             </div>
-            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
               <span className="text-gradient">Drei einfache Schritte</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">
@@ -812,7 +802,7 @@ export default function Index() {
               <Crown className="w-5 h-5 text-purple-600" />
               <span className="text-purple-700 font-bold">Preise</span>
             </div>
-            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-6 font-display">
               <span className="text-gradient">Wähle deinen Plan</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">

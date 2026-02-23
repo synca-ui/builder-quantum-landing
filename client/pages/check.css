@@ -45,6 +45,7 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -53,6 +54,7 @@ body {
   font-family: var(--font-b);
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 .ck-wrap {
@@ -123,6 +125,7 @@ body {
 }
 
 @keyframes ck-logo-anim {
+
   0%,
   100% {
     background-position: 0% 50%;
@@ -134,6 +137,7 @@ body {
 }
 
 @keyframes ck-dot-bounce {
+
   0%,
   100% {
     transform: translateY(0);
@@ -221,6 +225,7 @@ body {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
@@ -606,16 +611,12 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(
-      ellipse at 20% 50%,
+    radial-gradient(ellipse at 20% 50%,
       rgba(20, 184, 166, 0.07) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse at 80% 30%,
+      transparent 60%),
+    radial-gradient(ellipse at 80% 30%,
       rgba(139, 92, 246, 0.05) 0%,
-      transparent 55%
-    );
+      transparent 55%);
   pointer-events: none;
 }
 
@@ -897,6 +898,7 @@ body {
 }
 
 @keyframes ck-float {
+
   0%,
   100% {
     transform: translateY(0);
@@ -1314,6 +1316,7 @@ body {
 }
 
 @keyframes ck-blob-float1 {
+
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -1325,6 +1328,7 @@ body {
 }
 
 @keyframes ck-blob-float2 {
+
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -1336,6 +1340,7 @@ body {
 }
 
 @keyframes ck-blob-float3 {
+
   0%,
   100% {
     transform: translateY(0);
@@ -1361,16 +1366,12 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(
-      ellipse at 70% 30%,
+    radial-gradient(ellipse at 70% 30%,
       rgba(20, 184, 166, 0.09) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at 20% 80%,
+      transparent 55%),
+    radial-gradient(ellipse at 20% 80%,
       rgba(139, 92, 246, 0.06) 0%,
-      transparent 50%
-    );
+      transparent 50%);
   pointer-events: none;
 }
 
@@ -1550,20 +1551,16 @@ body {
    Marquee Animations (Problem 03)
 ───────────────────────────────────────────── */
 .ck-marquee-mask {
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 10%,
-    black 90%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 10%,
-    black 90%,
-    transparent
-  );
+  -webkit-mask-image: linear-gradient(to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent);
+  mask-image: linear-gradient(to right,
+      transparent,
+      black 10%,
+      black 90%,
+      transparent);
   overflow: hidden;
   width: 100%;
   padding: 4px 0;

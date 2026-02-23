@@ -970,7 +970,7 @@ export default function CheckLanding() {
   ];
 
   return (
-    <>
+    <div style={{ overflowX: "clip", width: "100%", position: "relative" }}>
       {/* ── NAV ── */}
       <nav className="ck-nav">
         <div className="ck-nav-inner">
@@ -1623,6 +1623,6 @@ export default function CheckLanding() {
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

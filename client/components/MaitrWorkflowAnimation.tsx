@@ -106,10 +106,10 @@ function InputStage({ onStart }: { onStart: () => void }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5, filter: "blur(20px)" }}
       transition={{ duration: 0.5 }}
-      className="flex items-center gap-3 relative"
+      className="flex flex-col sm:flex-row items-center gap-3 relative w-full px-4 sm:px-0"
     >
       <motion.div
-        className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl px-6 py-4 flex items-center gap-3 min-w-[400px]"
+        className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl px-6 py-4 flex items-center gap-3 w-full sm:min-w-[400px]"
         style={{ willChange: "transform" }}
         whileHover={{ scale: 1.02 }}
       >
@@ -297,7 +297,7 @@ function DataImportStage() {
       </motion.div>
 
       {/* Animated Task List */}
-      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/60 min-w-[500px]">
+      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/60 w-full sm:min-w-[500px]">
         <div className="space-y-4">
           {tasks.map((task, i) => (
             <motion.div
@@ -370,7 +370,7 @@ function PhoneReveal() {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.7, type: "spring" }}
-      className="flex items-center justify-center gap-12 -mt-12"
+      className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 -mt-12 w-full px-4"
     >
       {/* iPhone 14 Pro Mockup - ULTRA REALISTIC */}
       <motion.div
@@ -744,27 +744,27 @@ function CompactStatsSection() {
         </div>
 
         {/* Stats Grid - Glass Morphism on Dark */}
-        <div className="grid grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mb-12">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/20 flex items-center justify-center hover:bg-white/15 transition-all">
-            <div className="text-5xl font-black bg-gradient-to-r from-teal-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent text-center">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-teal-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent text-center">
               Volle Tische
             </div>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/20 flex items-center justify-center hover:bg-white/15 transition-all">
-            <div className="text-5xl font-black bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent text-center">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent text-center">
               5x mehr Buchungen
             </div>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/20 flex items-center justify-center hover:bg-white/15 transition-all">
-            <div className="text-5xl font-black bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent text-center">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent text-center">
               Mehr Umsatz
             </div>
           </div>
         </div>
 
         {/* Box 2: Problem Statement - BORDERED */}
-        <div className="bg-white/5 backdrop-blur-sm border-2 border-white/20 rounded-3xl p-10 hover:bg-white/10 transition-all">
-          <p className="text-4xl font-black text-white mb-5 text-center leading-tight">
+        <div className="bg-white/5 backdrop-blur-sm border-2 border-white/20 rounded-3xl p-6 sm:p-10 hover:bg-white/10 transition-all">
+          <p className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-5 text-center leading-tight">
             Dein Restaurant verdient volle Tische, keine IT-Probleme.
           </p>
           <p className="text-xl text-gray-300 text-center font-medium">
