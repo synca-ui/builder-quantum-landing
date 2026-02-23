@@ -933,12 +933,12 @@ export default function Index() {
             </div>
           </div>
 
-          <div className="mt-10 flex flex-col md:flex-row items-center justify-between">
-            <div className="text-sm text-gray-600">
+          <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-sm text-gray-600 text-center md:text-left">
               © {new Date().getFullYear()} Maitr — Der digitale Gastgeber für
               Gastronomie.
             </div>
-            <div className="mt-4 md:mt-0 flex items-center space-x-4">
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-2">
               <a
                 href="/pricing"
                 className="text-sm font-medium text-gray-700 hover:text-teal-600"
