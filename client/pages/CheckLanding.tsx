@@ -1,5 +1,6 @@
 import "./check.css";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { openCookieSettings } from "@/components/cookie-banner";
 
 const reviews1 = [
   {
@@ -1596,14 +1597,29 @@ export default function CheckLanding() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
       <footer className="ck-footer">
         <div className="ck-footer-inner">
           <span className="ck-footer-copy">© 2026 Maitr · check.maitr.de</span>
           <div className="ck-footer-links">
-            <a href="#">Impressum</a>
-            <a href="#">Datenschutz</a>
+            <a href="/impressum-check">Impressum</a>
+            <a href="/datenschutz-check">Datenschutz</a>
             <a href="https://maitr.de">Hauptseite</a>
+            <button
+              onClick={openCookieSettings}
+              style={{
+                background: "none",
+                border: "none",
+                color: "inherit",
+                font: "inherit",
+                cursor: "pointer",
+                padding: 0,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px"
+              }}
+            >
+              <span>🍪</span> Hinweise
+            </button>
           </div>
         </div>
       </footer>

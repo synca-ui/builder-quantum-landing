@@ -37,6 +37,13 @@ import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import RequireAuth from "./components/RequireAuth";
 
+const Datenschutz = lazy(() => import("./pages/Datenschutz"));
+const Impressum = lazy(() => import("./pages/Impressum"));
+const AGB = lazy(() => import("./pages/AGB"));
+const CheckDatenschutz = lazy(() => import("./pages/CheckDatenschutz"));
+const CheckImpressum = lazy(() => import("./pages/CheckImpressum"));
+import CookieBanner from "./components/cookie-banner";
+
 // Dashboard Pages (lazy loaded)
 const InsightsPage = lazy(() => import("./pages/dashboard/InsightsPage"));
 const StaffPage = lazy(() => import("./pages/dashboard/StaffPage"));
@@ -117,6 +124,13 @@ const App = () => {
 
                       {/* Check Landing Page Preview (local dev) */}
                       <Route path="/check-landing" element={<CheckLanding />} />
+
+                      {/* Legal Pages */}
+                      <Route path="/impressum" element={<Impressum />} />
+                      <Route path="/datenschutz" element={<Datenschutz />} />
+                      <Route path="/agb" element={<AGB />} />
+                      <Route path="/impressum-check" element={<CheckImpressum />} />
+                      <Route path="/datenschutz-check" element={<CheckDatenschutz />} />
 
                       {/* CLERK AUTHENTICATED ROUTES */}
                       <Route element={<AuthWrapper />}>
@@ -208,6 +222,7 @@ const App = () => {
                 </BrowserRouter>
               </TooltipProvider>
             </HelmetProvider>
+            <CookieBanner />
           </QueryClientProvider>
         </I18nextProvider>
       </ErrorBoundary>

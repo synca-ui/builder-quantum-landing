@@ -21,11 +21,17 @@ import {
   AlertCircle,
   XCircle,
   CheckCircle2,
+  Activity,
+  Shield,
+  TrendingUp,
+  Users,
+  ArrowRight
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { openCookieSettings } from "@/components/cookie-banner";
 const MaitrWorkflowAnimation = lazy(
   () => import("@/components/MaitrWorkflowAnimation"),
 );
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
 import { SignInButton, SignUpButton } from "@clerk/clerk-react";
@@ -535,11 +541,10 @@ export default function Index() {
                 {inputError && (
                   <div className="w-full mt-3 animate-in slide-in-from-top-2 duration-300">
                     <div
-                      className={`rounded-2xl border p-4 backdrop-blur-sm ${
-                        inputError === "invalid_format"
-                          ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
-                          : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
-                      }`}
+                      className={`rounded-2xl border p-4 backdrop-blur-sm ${inputError === "invalid_format"
+                        ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
+                        : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
+                        }`}
                     >
                       <div className="flex items-start gap-3 mb-3">
                         <div
@@ -820,15 +825,13 @@ export default function Index() {
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl border-2 ${
-                  plan.popular
-                    ? "border-purple-200 shadow-purple-100/50"
-                    : "border-gray-200 hover:border-teal-200"
-                } ${
-                  plan.cta === "Kommt bald"
+                className={`group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl border-2 ${plan.popular
+                  ? "border-purple-200 shadow-purple-100/50"
+                  : "border-gray-200 hover:border-teal-200"
+                  } ${plan.cta === "Kommt bald"
                     ? "opacity-60 pointer-events-none grayscale"
                     : ""
-                }`}
+                  }`}
               >
                 {plan.popular && (
                   <div className="absolute top-0 right-0 bg-gradient-to-r from-teal-500 to-purple-500 text-white px-4 py-1 text-xs font-bold rounded-bl-2xl">
@@ -895,11 +898,10 @@ export default function Index() {
                       </ul>
 
                       <Button
-                        className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${
-                          plan.popular
-                            ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
-                            : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
-                        }`}
+                        className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
+                          ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+                          : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
+                          }`}
                       >
                         <div className="flex items-center justify-center gap-2">
                           <span>{plan.cta}</span>
@@ -921,7 +923,7 @@ export default function Index() {
             <div>
               <h4 className="text-lg font-bold">Creative Studio</h4>
               <p className="mt-2 text-gray-600">
-                Passe Stil, Farben und Inhalte an. Deine App, deine Marke — mit
+                Passe Stil, Farben und Inhalte an. Deine App, deine Marke mit
                 wunderschönen Standardeinstellungen.
               </p>
             </div>
@@ -929,7 +931,7 @@ export default function Index() {
               <h4 className="text-lg font-bold">Backstage</h4>
               <p className="mt-2 text-gray-600">
                 Verwalte Menüs, Öffnungszeiten und Bestellungen von einem
-                einfachen Dashboard — gebaut für Gastronomie.
+                einfachen Dashboard, gebaut für Gastronomie.
               </p>
             </div>
             <div>
@@ -965,6 +967,22 @@ export default function Index() {
               >
                 Kontakt
               </a>
+              <a href="/impressum" className="text-sm font-medium text-gray-700 hover:text-teal-600">
+                Impressum
+              </a>
+              <a href="/datenschutz" className="text-sm font-medium text-gray-700 hover:text-teal-600">
+                Datenschutz
+              </a>
+              <a href="/agb" className="text-sm font-medium text-gray-700 hover:text-teal-600">
+                AGB
+              </a>
+              <button
+                onClick={openCookieSettings}
+                className="text-sm font-medium text-gray-700 hover:text-teal-600 flex items-center gap-1"
+              >
+                <span>🍪</span>
+                Cookie-Einstellungen
+              </button>
             </div>
           </div>
         </div>
