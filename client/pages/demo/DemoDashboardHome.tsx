@@ -153,6 +153,46 @@ export default function DemoDashboardHome() {
           element={<Navigate to="/demo-dashboard/insights" replace />}
         />
       </Routes>
+
+      {/* Footer with Legal Links & Cookie Banner for Demo Env */}
+      <footer className="mt-12 pt-8 border-t border-gray-200">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-sm text-gray-500 text-center md:text-left">
+            © {new Date().getFullYear()} Maitr — Der digitale Gastgeber für
+            Gastronomie.
+          </div>
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-4 gap-y-2">
+            <a href="/pricing" className="text-sm font-medium text-gray-600 hover:text-teal-600">
+              Preise
+            </a>
+            <a href="/docs" className="text-sm font-medium text-gray-600 hover:text-teal-600">
+              Docs
+            </a>
+            <a href="/contact" className="text-sm font-medium text-gray-600 hover:text-teal-600">
+              Kontakt
+            </a>
+            <a href="/impressum" className="text-sm font-medium text-gray-600 hover:text-teal-600">
+              Impressum
+            </a>
+            <a href="/datenschutz" className="text-sm font-medium text-gray-600 hover:text-teal-600">
+              Datenschutz
+            </a>
+            <a href="/agb" className="text-sm font-medium text-gray-600 hover:text-teal-600">
+              AGB
+            </a>
+            <button
+              onClick={() => {
+                const event = new CustomEvent("open-cookie-settings");
+                window.dispatchEvent(event);
+              }}
+              className="text-sm font-medium text-gray-600 hover:text-teal-600 flex items-center gap-1"
+            >
+              <span>🍪</span>
+              Cookie-Einstellungen
+            </button>
+          </div>
+        </div>
+      </footer>
     </DemoDashboardLayout>
   );
 }
