@@ -32,9 +32,11 @@ import { openCookieSettings } from "@/components/cookie-banner";
 const MaitrWorkflowAnimation = lazy(
   () => import("@/components/MaitrWorkflowAnimation"),
 );
+const LazyClerkModal = lazy(
+  () => import("@/components/LazyClerkModal")
+);
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
-import { SignInButton, SignUpButton } from "@clerk/clerk-react";
 import {
   useResourcePreloader,
   useLazyCSS,
@@ -157,6 +159,7 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [authMode, setAuthMode] = useState<"signIn" | "signUp" | null>(null);
 
   useEffect(() => {
     let ticking = false;
@@ -250,19 +253,16 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <SignInButton mode="modal">
-              <Button variant="outline" size="sm">
-                Log in
-              </Button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-              >
-                Sign up
-              </Button>
-            </SignUpButton>
+            <Button variant="outline" size="sm" onClick={() => setAuthMode('signIn')}>
+              Log in
+            </Button>
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+              onClick={() => setAuthMode('signUp')}
+            >
+              Sign up
+            </Button>
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -323,25 +323,21 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
             ))}
 
             <div className="pt-2 border-t border-gray-200/50 space-y-2">
-              <SignInButton mode="modal">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Log in
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button
-                  size="sm"
-                  className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign up
-                </Button>
-              </SignUpButton>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={() => { setAuthMode('signIn'); setIsMenuOpen(false); }}
+              >
+                Log in
+              </Button>
+              <Button
+                size="sm"
+                className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                onClick={() => { setAuthMode('signUp'); setIsMenuOpen(false); }}
+              >
+                Sign up
+              </Button>
 
               <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                 <Button
@@ -359,6 +355,15 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
           </div>
         </div>
       </div>
+      {authMode && (
+        <Suspense fallback={
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <Loader2 className="w-10 h-10 animate-spin text-white" />
+          </div>
+        }>
+          <LazyClerkModal mode={authMode} onClose={() => setAuthMode(null)} />
+        </Suspense>
+      )}
     </nav>
   );
 };

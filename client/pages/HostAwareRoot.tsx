@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import Index from "./Index"; // Deine Landingpage/Dashboard
-import CheckLanding from "./CheckLanding";
 import { Loader2 } from "lucide-react";
-import AppRenderer from "@/components/dynamic/AppRenderer.tsx";
+
+// Lazy Load heavy components that are only needed for specific subdomains
+const CheckLanding = lazy(() => import("./CheckLanding"));
+const AppRenderer = lazy(() => import("@/components/dynamic/AppRenderer.tsx"));
 
 export default function HostAwareRoot() {
   const [config, setConfig] = useState<any>(null);
@@ -73,12 +75,20 @@ export default function HostAwareRoot() {
 
   // WENN Subdomain "check" -> Check-Landing Page
   if (subdomain === "check") {
-    return <CheckLanding />;
+    return (
+      <Suspense fallback={<div className="h-screen flex items-center justify-center bg-white"><Loader2 className="w-10 h-10 text-orange-500 animate-spin" /></div>}>
+        <CheckLanding />
+      </Suspense>
+    );
   }
 
   // WENN Subdomain erkannt UND Daten vorhanden -> Dynamische Website
   if (subdomain && config) {
-    return <AppRenderer config={config} />;
+    return (
+      <Suspense fallback={<div className="h-screen flex items-center justify-center bg-white"><Loader2 className="w-10 h-10 text-orange-500 animate-spin" /></div>}>
+        <AppRenderer config={config} />
+      </Suspense>
+    );
   }
 
   // ANSONSTEN -> Maitr Homepage / Dashboard

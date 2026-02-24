@@ -69,7 +69,7 @@ export default function CookieBanner() {
     return (
         <>
             <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[9999]" style={{ animation: "fadeIn 0.25s ease" }} />
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[10000] w-full max-w-lg px-4" style={{ animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] w-full max-w-lg px-4 max-h-[90vh] overflow-y-auto" style={{ animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden">
 
                     <div className="px-5 pt-5 pb-4">

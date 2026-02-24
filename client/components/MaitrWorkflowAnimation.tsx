@@ -106,7 +106,7 @@ function InputStage({ onStart }: { onStart: () => void }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5, filter: "blur(20px)" }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col sm:flex-row items-center gap-3 relative w-full px-4 sm:px-0"
+      className="flex flex-col sm:flex-row items-center justify-center gap-3 relative w-full max-w-2xl mx-auto px-4 sm:px-0"
     >
       <motion.div
         className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl px-6 py-4 flex items-center gap-3 w-full sm:min-w-[400px]"
@@ -117,13 +117,14 @@ function InputStage({ onStart }: { onStart: () => void }) {
           type="text"
           value={typedText}
           placeholder={typedText ? "" : "Google Maps Link hier einfügen..."}
+          aria-label="Google Maps Link Eingabefeld für Restaurant"
           className="bg-transparent outline-none text-gray-800 placeholder-gray-400 w-full text-sm font-mono"
           readOnly
         />
       </motion.div>
 
       <motion.button
-        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white rounded-3xl px-8 py-4 shadow-lg flex items-center gap-2 font-medium text-sm relative overflow-hidden"
+        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white rounded-3xl px-8 py-4 shadow-lg flex items-center justify-center gap-2 font-medium text-sm relative overflow-hidden whitespace-nowrap shrink-0"
         style={{ willChange: "transform" }}
         whileHover={{ scale: 1.05 }}
         animate={{
@@ -146,18 +147,18 @@ function InputStage({ onStart }: { onStart: () => void }) {
       {/* Animated Cursor with Click Effect - ENHANCED VISIBILITY */}
       {showCursor && (
         <motion.div
-          className="absolute pointer-events-none z-50"
-          initial={{ x: 0, y: 0, opacity: 0 }}
+          className="absolute pointer-events-none z-50 flex items-center justify-center pointer-events-none"
+          initial={{ left: "50%", top: "150%", opacity: 0 }}
           animate={{
-            x: cursorPos.x,
-            y: cursorPos.y,
+            left: cursorPos.x === 0 ? "50%" : "88%", // 88% is exactly over the button
+            top: cursorPos.y === 0 ? "150%" : "50%", // 50% centers it perfectly vertically
             opacity: 1,
             scale: isClicking ? 0.9 : 1,
           }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
         >
           <MousePointer2
-            className="w-8 h-8 text-gray-900 drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]"
+            className="w-8 h-8 text-gray-900 drop-shadow-[0_0_8px_rgba(0,0,0,0.8)] -translate-x-3 -translate-y-3"
             fill="white"
             strokeWidth={2.5}
           />

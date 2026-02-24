@@ -23,18 +23,18 @@ import i18n from "@/i18n";
 // Import Service Worker Hook
 import { useServiceWorker, useInstallPrompt } from "@/hooks/useServiceWorker";
 
-import Configurator from "./pages/Configurator";
-import ModeSelection from "./pages/ModeSelection";
-import CheckLanding from "./pages/CheckLanding";
+const Configurator = lazy(() => import("./pages/Configurator"));
+const ModeSelection = lazy(() => import("./pages/ModeSelection"));
+const CheckLanding = lazy(() => import("./pages/CheckLanding"));
 // Lazy load heavy components for better performance
 const AutoConfigurator = lazy(() => import("./pages/AutoConfigurator"));
 const Site = lazy(() => import("./pages/Site"));
 const TestSite = lazy(() => import("./pages/TestSite"));
 import NotFound from "./pages/NotFound";
 import HostAwareRoot from "./pages/HostAwareRoot";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Profile from "./pages/Profile";
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Profile = lazy(() => import("./pages/Profile"));
 import RequireAuth from "./components/RequireAuth";
 
 const Datenschutz = lazy(() => import("./pages/Datenschutz"));
@@ -131,10 +131,11 @@ const App = () => {
                       <Route path="/agb" element={<AGB />} />
                       <Route path="/impressum-check" element={<CheckImpressum />} />
                       <Route path="/datenschutz-check" element={<CheckDatenschutz />} />
+                      {/* Public Routes */}
+                      <Route path="/" element={<HostAwareRoot />} />
 
                       {/* CLERK AUTHENTICATED ROUTES */}
                       <Route element={<AuthWrapper />}>
-                        <Route path="/" element={<HostAwareRoot />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route
