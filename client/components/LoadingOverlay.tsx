@@ -112,11 +112,10 @@ export default function LoadingOverlay({
 
       {/* ── Backdrop ── */}
       <div
-        className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${
-          visible
+        className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${visible
             ? "opacity-100 backdrop-blur-sm pointer-events-auto"
             : "opacity-0 pointer-events-none"
-        }`}
+          }`}
         style={{
           backgroundColor: visible
             ? "rgba(255,255,255,0.78)"
@@ -124,9 +123,8 @@ export default function LoadingOverlay({
         }}
       >
         <div
-          className={`flex flex-col items-center gap-8 w-80 transition-all duration-500 ${
-            visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
-          }`}
+          className={`flex flex-col items-center gap-8 w-80 transition-all duration-500 ${visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            }`}
         >
           {/* ── Lottie ── */}
           <div

@@ -266,11 +266,10 @@ export function DomainHostingStep({
       <div className="space-y-8">
         <div className="grid md:grid-cols-2 gap-6">
           <Card
-            className={`cursor-pointer transition-all duration-300 border-2 ${
-              !hasDomain
+            className={`cursor-pointer transition-all duration-300 border-2 ${!hasDomain
                 ? "border-teal-500 bg-teal-50"
                 : "border-gray-200 hover:border-teal-300"
-            }`}
+              }`}
             onClick={() =>
               actions.business.setBusinessInfo({
                 domain: { ...business.domain, hasDomain: false },
@@ -299,11 +298,10 @@ export function DomainHostingStep({
           </Card>
 
           <Card
-            className={`cursor-pointer transition-all duration-300 border-2 ${
-              hasDomain
+            className={`cursor-pointer transition-all duration-300 border-2 ${hasDomain
                 ? "border-teal-500 bg-teal-50"
                 : "border-gray-200 hover:border-teal-300"
-            }`}
+              }`}
             onClick={() =>
               actions.business.setBusinessInfo({
                 domain: { ...business.domain, hasDomain: true },
@@ -338,7 +336,7 @@ export function DomainHostingStep({
         {!hasDomain && (
           <Card className="p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Deine kostenlose Website-URL
+              Deine kostenlose Web-App-URL
             </h3>
 
             {/* Subdomain Input with Validation */}
@@ -364,12 +362,11 @@ export function DomainHostingStep({
               {/* Validation Message */}
               {validationError && (
                 <div
-                  className={`flex items-center gap-2 text-sm ${
-                    validationStatus === "taken" ||
-                    validationStatus === "reserved"
+                  className={`flex items-center gap-2 text-sm ${validationStatus === "taken" ||
+                      validationStatus === "reserved"
                       ? "text-red-600"
                       : "text-orange-600"
-                  }`}
+                    }`}
                 >
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{validationError}</span>
@@ -400,21 +397,20 @@ export function DomainHostingStep({
               {/* Preview URL */}
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                 <p className="text-xs text-gray-500 mb-1">
-                  Deine Website wird verfügbar sein unter:
+                  Deine Web-App wird verfügbar sein unter:
                 </p>
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-teal-500" />
                   <span
-                    className={`font-mono text-sm font-medium ${
-                      validationStatus === "available" ||
-                      validationStatus === "owned"
+                    className={`font-mono text-sm font-medium ${validationStatus === "available" ||
+                        validationStatus === "owned"
                         ? "text-green-700"
                         : validationStatus === "taken" ||
-                            validationStatus === "reserved" ||
-                            validationStatus === "invalid"
+                          validationStatus === "reserved" ||
+                          validationStatus === "invalid"
                           ? "text-red-700"
                           : "text-gray-700"
-                    }`}
+                      }`}
                   >
                     https://{displayDomain}
                   </span>

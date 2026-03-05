@@ -242,7 +242,7 @@ export function SEOOptimizationStep({
                     />
                   </div>
                   <p className="text-xs text-gray-500">
-                    Image that appears when your website is shared on social
+                    Image that appears when your web-app is shared on social
                     media
                   </p>
                 </div>

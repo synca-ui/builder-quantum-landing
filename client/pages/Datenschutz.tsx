@@ -66,8 +66,8 @@ export default function Datenschutz() {
                                     key={s.id}
                                     href={`#${s.id}`}
                                     className={`block px-4 py-2 text-sm transition-all duration-200 -ml-[2px] border-l-2 ${activeSection === s.id
-                                            ? "border-teal-500 text-teal-700 font-semibold bg-teal-50/50"
-                                            : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                                        ? "border-teal-500 text-teal-700 font-semibold bg-teal-50/50"
+                                        : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
                                         }`}
                                 >
                                     {s.label}

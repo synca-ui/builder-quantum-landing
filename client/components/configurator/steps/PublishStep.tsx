@@ -50,32 +50,32 @@ const PUBLISH_STAGES: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-  {
-    stage: "validating",
-    label: "Daten werden versiegelt...",
-    icon: <Database className="w-5 h-5" />,
-  },
-  {
-    stage: "checking_subdomain",
-    label: "Subdomain wird geprüft...",
-    icon: <Globe className="w-5 h-5" />,
-  },
-  {
-    stage: "persisting",
-    label: "Konfiguration wird gespeichert...",
-    icon: <Database className="w-5 h-5" />,
-  },
-  {
-    stage: "routing",
-    label: "Subdomain wird geroutet...",
-    icon: <Route className="w-5 h-5" />,
-  },
-  {
-    stage: "complete",
-    label: "Deine Website geht live!",
-    icon: <Sparkles className="w-5 h-5" />,
-  },
-];
+    {
+      stage: "validating",
+      label: "Daten werden versiegelt...",
+      icon: <Database className="w-5 h-5" />,
+    },
+    {
+      stage: "checking_subdomain",
+      label: "Subdomain wird geprüft...",
+      icon: <Globe className="w-5 h-5" />,
+    },
+    {
+      stage: "persisting",
+      label: "Konfiguration wird gespeichert...",
+      icon: <Database className="w-5 h-5" />,
+    },
+    {
+      stage: "routing",
+      label: "Subdomain wird geroutet...",
+      icon: <Route className="w-5 h-5" />,
+    },
+    {
+      stage: "complete",
+      label: "Deine Web-App geht live!",
+      icon: <Sparkles className="w-5 h-5" />,
+    },
+  ];
 
 // Confetti component
 const Confetti = memo(function Confetti() {
@@ -166,7 +166,7 @@ const PublishingProgress = memo(function PublishingProgress({
         <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-r from-teal-500 to-purple-500 flex items-center justify-center animate-pulse">
           <Rocket className="w-10 h-10 text-white" />
         </div>
-        <h3 className="text-2xl font-bold mb-2">Website wird veröffentlicht</h3>
+        <h3 className="text-2xl font-bold mb-2">Web-App wird veröffentlicht</h3>
         <p className="text-slate-400">Bitte warte einen Moment...</p>
       </div>
 
@@ -180,22 +180,20 @@ const PublishingProgress = memo(function PublishingProgress({
             return (
               <div
                 key={stage.stage}
-                className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-300 ${
-                  isActive
+                className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-300 ${isActive
                     ? "bg-white/10 scale-105"
                     : isComplete
                       ? "bg-green-500/20"
                       : "bg-white/5 opacity-50"
-                }`}
+                  }`}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                    isComplete
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isComplete
                       ? "bg-green-500"
                       : isActive
                         ? "bg-gradient-to-r from-teal-500 to-purple-500 animate-pulse"
                         : "bg-slate-600"
-                  }`}
+                    }`}
                 >
                   {isComplete ? (
                     <Check className="w-5 h-5 text-white" />
@@ -276,14 +274,14 @@ const SuccessView = memo(function SuccessView({
             🎉 Herzlichen Glückwunsch!
           </h3>
           <p className="text-xl text-gray-600">
-            Deine Website ist jetzt online!
+            Deine Web-App ist jetzt online!
           </p>
         </div>
 
         {/* Live URL Card */}
         <Card className="p-8 bg-gradient-to-r from-green-50 via-teal-50 to-purple-50 border-2 border-green-200 max-w-2xl mx-auto shadow-xl">
           <p className="text-sm text-gray-600 mb-4 font-medium">
-            Deine Website ist erreichbar unter:
+            Deine Web-App ist erreichbar unter:
           </p>
           <div className="bg-white rounded-xl p-4 border border-green-200 mb-6">
             <a
@@ -304,7 +302,7 @@ const SuccessView = memo(function SuccessView({
               className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-lg"
             >
               <Eye className="mr-2 w-5 h-5" />
-              Website ansehen
+              Web-App ansehen
             </Button>
             <Button
               onClick={() => onCopy(publishedUrl)}
@@ -676,7 +674,7 @@ export function PublishStep({
               </div>
               <div className="flex-1">
                 <p className="font-bold text-green-900">
-                  Website bereits veröffentlicht
+                  Web-App bereits veröffentlicht
                 </p>
                 <a
                   href={publishing.publishedUrl}
@@ -749,22 +747,20 @@ export function PublishStep({
             {checklist.map((item) => (
               <div
                 key={item.id}
-                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${
-                  item.checked
+                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${item.checked
                     ? "bg-green-50 border-green-200"
                     : item.required
                       ? "bg-orange-50 border-orange-200"
                       : "bg-gray-50 border-gray-200"
-                }`}
+                  }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                    item.checked
+                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${item.checked
                       ? "bg-green-500"
                       : item.required
                         ? "bg-orange-300"
                         : "bg-gray-300"
-                  }`}
+                    }`}
                 >
                   {item.checked && <Check className="w-4 h-4 text-white" />}
                 </div>
@@ -802,11 +798,11 @@ export function PublishStep({
         {/* Preview URL */}
         <Card className="p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
-            Deine Website-URL
+            Deine Web-App-URL
           </h3>
           <div className="bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-xl p-4">
             <p className="text-xs text-gray-500 mb-2">
-              Deine Website wird verfügbar sein unter:
+              Deine Web-App wird verfügbar sein unter:
             </p>
             <div className="flex items-center gap-3">
               <div className="flex-1 font-mono text-lg font-medium text-green-800 break-all">
@@ -834,18 +830,17 @@ export function PublishStep({
             onClick={handlePublish}
             disabled={isPublishing || !canPublish}
             size="lg"
-            className={`px-12 py-6 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${
-              canPublish
+            className={`px-12 py-6 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${canPublish
                 ? "bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 hover:scale-105"
                 : "bg-gray-300 cursor-not-allowed"
-            }`}
+              }`}
           >
             <Rocket className="mr-3 w-6 h-6" />
-            Website veröffentlichen
+            Web-App veröffentlichen
           </Button>
           <p className="text-sm text-gray-500 mt-4">
             {canPublish
-              ? "Deine Website ist in wenigen Sekunden online!"
+              ? "Deine Web-App ist in wenigen Sekunden online!"
               : "Bitte fülle alle Pflichtfelder aus"}
           </p>
         </div>

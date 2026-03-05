@@ -459,59 +459,59 @@ export function TemplatePreviewContent() {
               {/* Items nach Kategorie gruppieren (optional) */}
               {!activeMenuCategory && categories.length > 0
                 ? // Gruppierte Ansicht wenn "Alle" ausgewählt
-                  categories.map((category) => {
-                    const categoryItems = menuItems.filter(
-                      (item) => item.category === category,
-                    );
-                    if (categoryItems.length === 0) return null;
+                categories.map((category) => {
+                  const categoryItems = menuItems.filter(
+                    (item) => item.category === category,
+                  );
+                  if (categoryItems.length === 0) return null;
 
-                    return (
-                      <div key={category} className="space-y-3">
-                        <h3
-                          className="text-lg font-bold mt-6 mb-3 pb-2 border-b"
-                          style={{
-                            color: fontColor,
-                            borderColor: `${fontColor}20`,
-                          }}
-                        >
-                          {category}
-                        </h3>
-                        {categoryItems.map((item) => (
-                          <DishCard
-                            key={item.id}
-                            item={item}
-                            fontColor={fontColor}
-                            priceColor={priceColor}
-                            primaryColor={primaryColor}
-                            backgroundColor={backgroundColor}
-                            template={template}
-                            onlineOrdering={onlineOrdering}
-                            showImage={true}
-                            onClick={() => openDishModal(item)}
-                            onAddToCart={addToCart}
-                            isPreview={true}
-                          />
-                        ))}
-                      </div>
-                    );
-                  })
+                  return (
+                    <div key={category} className="space-y-3">
+                      <h3
+                        className="text-lg font-bold mt-6 mb-3 pb-2 border-b"
+                        style={{
+                          color: fontColor,
+                          borderColor: `${fontColor}20`,
+                        }}
+                      >
+                        {category}
+                      </h3>
+                      {categoryItems.map((item) => (
+                        <DishCard
+                          key={item.id}
+                          item={item}
+                          fontColor={fontColor}
+                          priceColor={priceColor}
+                          primaryColor={primaryColor}
+                          backgroundColor={backgroundColor}
+                          template={template}
+                          onlineOrdering={onlineOrdering}
+                          showImage={true}
+                          onClick={() => openDishModal(item)}
+                          onAddToCart={addToCart}
+                          isPreview={true}
+                        />
+                      ))}
+                    </div>
+                  );
+                })
                 : // Flache Liste wenn Kategorie ausgewählt
-                  filteredItems.map((item) => (
-                    <DishCard
-                      key={item.id}
-                      item={item}
-                      fontColor={fontColor}
-                      priceColor={priceColor}
-                      primaryColor={primaryColor}
-                      backgroundColor={backgroundColor}
-                      template={template}
-                      onlineOrdering={onlineOrdering}
-                      showImage={true}
-                      onClick={() => openDishModal(item)}
-                      onAddToCart={addToCart}
-                      isPreview={true}
-                    />
-                  ))}
+                filteredItems.map((item) => (
+                  <DishCard
+                    key={item.id}
+                    item={item}
+                    fontColor={fontColor}
+                    priceColor={priceColor}
+                    primaryColor={primaryColor}
+                    backgroundColor={backgroundColor}
+                    template={template}
+                    onlineOrdering={onlineOrdering}
+                    showImage={true}
+                    onClick={() => openDishModal(item)}
+                    onAddToCart={addToCart}
+                    isPreview={true}
+                  />
+                ))}
             </>
           ) : (
             // Empty State

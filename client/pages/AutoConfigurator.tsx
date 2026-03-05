@@ -349,11 +349,10 @@ export default function AutoConfigurator() {
                     }}
                     onDragLeave={() => setDragOver(false)}
                     onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all duration-200 ${
-                      dragOver
-                        ? "border-purple-400 bg-purple-50"
-                        : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
-                    }`}
+                    className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all duration-200 ${dragOver
+                      ? "border-purple-400 bg-purple-50"
+                      : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
+                      }`}
                   >
                     <Upload className="w-5 h-5 text-gray-400 mx-auto mb-1.5" />
                     <p className="text-xs text-gray-500">
@@ -501,22 +500,20 @@ export default function AutoConfigurator() {
                     return (
                       <div
                         key={i}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-500 ${
-                          active
-                            ? "bg-purple-50 border border-purple-100"
-                            : done
-                              ? "bg-green-50 border border-green-100 opacity-70"
-                              : "bg-gray-50 border border-transparent opacity-40"
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-500 ${active
+                          ? "bg-purple-50 border border-purple-100"
+                          : done
+                            ? "bg-green-50 border border-green-100 opacity-70"
+                            : "bg-gray-50 border border-transparent opacity-40"
+                          }`}
                       >
                         <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                            active
-                              ? "bg-purple-100"
-                              : done
-                                ? "bg-green-100"
-                                : "bg-gray-100"
-                          }`}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${active
+                            ? "bg-purple-100"
+                            : done
+                              ? "bg-green-100"
+                              : "bg-gray-100"
+                            }`}
                         >
                           {done ? (
                             <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -527,13 +524,12 @@ export default function AutoConfigurator() {
                           )}
                         </div>
                         <span
-                          className={`text-sm font-medium ${
-                            active
-                              ? "text-purple-700"
-                              : done
-                                ? "text-green-700"
-                                : "text-gray-400"
-                          }`}
+                          className={`text-sm font-medium ${active
+                            ? "text-purple-700"
+                            : done
+                              ? "text-green-700"
+                              : "text-gray-400"
+                            }`}
                         >
                           {step.label}
                         </span>

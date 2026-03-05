@@ -148,13 +148,12 @@ function StepIndicator({ current }: { current: number }) {
           <React.Fragment key={i}>
             <div className="flex flex-col items-center gap-1.5">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
-                  done
-                    ? "bg-teal-500 border-teal-500"
-                    : active
-                      ? "bg-white border-teal-500 shadow-md"
-                      : "bg-white border-gray-200"
-                }`}
+                className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${done
+                  ? "bg-teal-500 border-teal-500"
+                  : active
+                    ? "bg-white border-teal-500 shadow-md"
+                    : "bg-white border-gray-200"
+                  }`}
               >
                 {done ? (
                   <Check className="w-4 h-4 text-white" />
@@ -292,7 +291,7 @@ export default function AutoReview() {
           prefill(data.job);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [search]);
 
@@ -566,11 +565,10 @@ export default function AutoReview() {
                 {TEMPLATE_OPTIONS.map((t) => (
                   <Card
                     key={t.id}
-                    className={`cursor-pointer transition-all duration-300 border-2 ${
-                      form.template === t.id
-                        ? "border-teal-500 bg-teal-50 shadow-md"
-                        : "border-gray-200 hover:border-teal-300 hover:shadow-sm"
-                    }`}
+                    className={`cursor-pointer transition-all duration-300 border-2 ${form.template === t.id
+                      ? "border-teal-500 bg-teal-50 shadow-md"
+                      : "border-gray-200 hover:border-teal-300 hover:shadow-sm"
+                      }`}
                     onClick={() => set("template", t.id)}
                   >
                     <CardContent className="p-5 text-center">
@@ -612,11 +610,10 @@ export default function AutoReview() {
                         key={i}
                         onClick={() => set("primaryColor", c)}
                         title={c}
-                        className={`w-10 h-10 rounded-xl border-2 transition-all hover:scale-110 ${
-                          form.primaryColor === c
-                            ? "border-teal-500 shadow-md scale-110"
-                            : "border-white shadow"
-                        }`}
+                        className={`w-10 h-10 rounded-xl border-2 transition-all hover:scale-110 ${form.primaryColor === c
+                          ? "border-teal-500 shadow-md scale-110"
+                          : "border-white shadow"
+                          }`}
                         style={{ background: c }}
                       />
                     ))}
@@ -638,11 +635,10 @@ export default function AutoReview() {
                         set("secondaryColor", preset.secondary);
                         set("backgroundColor", preset.bg);
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                        form.primaryColor === preset.primary
-                          ? "border-teal-500 bg-teal-50 text-teal-700"
-                          : "border-gray-200 text-gray-600 hover:border-teal-300"
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${form.primaryColor === preset.primary
+                        ? "border-teal-500 bg-teal-50 text-teal-700"
+                        : "border-gray-200 text-gray-600 hover:border-teal-300"
+                        }`}
                     >
                       <span
                         className="w-3 h-3 rounded-full inline-block"
@@ -683,11 +679,10 @@ export default function AutoReview() {
                 {FONT_OPTIONS.map((font) => (
                   <Card
                     key={font.id}
-                    className={`cursor-pointer transition-all duration-300 border-2 ${
-                      form.fontFamily === font.id
-                        ? "border-teal-500 bg-teal-50 shadow-md"
-                        : "border-gray-200 hover:border-teal-300 hover:shadow-sm"
-                    }`}
+                    className={`cursor-pointer transition-all duration-300 border-2 ${form.fontFamily === font.id
+                      ? "border-teal-500 bg-teal-50 shadow-md"
+                      : "border-gray-200 hover:border-teal-300 hover:shadow-sm"
+                      }`}
                     onClick={() => set("fontFamily", font.id)}
                   >
                     <CardContent className="p-4 text-center">

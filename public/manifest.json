@@ -1,7 +1,7 @@
 {
-  "name": "Maitr - AI Website Builder",
+  "name": "Maitr - Web-App Builder",
   "short_name": "Maitr Builder",
-  "description": "AI-powered website builder with automatic configuration. Create stunning websites in seconds.",
+  "description": "Web-App builder with automatic configuration. Create stunning web-apps in seconds.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,7 +9,10 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "de",
-  "categories": ["productivity", "business"],
+  "categories": [
+    "productivity",
+    "business"
+  ],
   "icons": [
     {
       "src": "/favicon.ico",
@@ -39,7 +42,7 @@
     {
       "name": "Auto Configurator",
       "short_name": "Auto Config",
-      "description": "Automatically configure your website with AI",
+      "description": "Automatically configure your web-app with Maitr",
       "url": "/auto-configurator",
       "icons": [
         {
@@ -51,7 +54,7 @@
     {
       "name": "Manual Configurator",
       "short_name": "Manual Config",
-      "description": "Configure your website manually",
+      "description": "Configure your web-app manually",
       "url": "/configurator",
       "icons": [
         {
