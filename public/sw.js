@@ -1,68 +1,49 @@
-const CACHE_NAME = "maitr-builder-v3";
-const urlsToCache = ["/", "/manifest.json", "/index.html"];
+const CACHE_NAME = "maitr-builder-v4";
+const OFFLINE_URL = "/offline.html";
+const PRECACHE_URLS = ["/", "/offline.html", "/manifest.json"];
 
 // Install Service Worker
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => {
-        // Cache only essential files first, discover others during runtime
-        return cache.addAll(["/"]).catch((error) => {
-          // Silent fail in production, continue anyway with basic caching
-          return Promise.resolve();
-        });
-      })
-      .then(() => {
-        return self.skipWaiting();
-      }),
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()),
   );
 });
 
-// Activate Service Worker
+// Activate – clean up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cache) => {
-            if (cache !== CACHE_NAME) {
-              return caches.delete(cache);
-            }
-          }),
-        );
-      })
-      .then(() => {
-        return self.clients.claim();
-      }),
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames
+            .filter((name) => name !== CACHE_NAME)
+            .map((name) => caches.delete(name)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
-// Fetch Event - Optimized for performance
+// Fetch – network-first with offline fallback
 self.addEventListener("fetch", (event) => {
-  // Only handle GET requests
+  // Only handle GET requests for same-origin URLs (skip API calls)
   if (event.request.method !== "GET") return;
-
-  // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) return;
-
-  // Skip API calls (let them go to network)
   if (event.request.url.includes("/api/")) return;
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Cache hit - return response
-      if (response) {
-        return response;
-      }
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
 
-      // Clone the request for caching
       const fetchRequest = event.request.clone();
 
       return fetch(fetchRequest)
         .then((response) => {
-          // Check if we received a valid response
+          // Only cache valid same-origin responses
           if (
             !response ||
             response.status !== 200 ||
@@ -71,11 +52,8 @@ self.addEventListener("fetch", (event) => {
             return response;
           }
 
-          // Clone the response for caching
           const responseToCache = response.clone();
-
           caches.open(CACHE_NAME).then((cache) => {
-            // Only cache certain file types
             const url = event.request.url;
             if (
               url.includes(".js") ||
@@ -89,10 +67,22 @@ self.addEventListener("fetch", (event) => {
 
           return response;
         })
-        .catch(() => {
-          // Network failed, try to serve from cache
-          return caches.match("/") || new Response("Offline", { status: 503 });
-        });
+        .catch(() =>
+          // Network failed → serve dedicated offline page
+          caches
+            .match(OFFLINE_URL)
+            .then(
+              (offlinePage) =>
+                offlinePage ||
+                new Response(
+                  "<!doctype html><p>Offline</p>",
+                  {
+                    status: 503,
+                    headers: { "Content-Type": "text/html" },
+                  },
+                ),
+            ),
+        );
     }),
   );
 });

@@ -87,7 +87,7 @@
   <meta property="og:title" content="Maitr — Web-App Builder für Restaurants & Businesses" />
   <meta property="og:description"
     content="Erstelle automatisch konfigurierte Web-Apps mit Maitr. Professionelle Restaurant- und Business-Webapps in 30 Sekunden." />
-  <meta property="og:type" content="web-app" />
+  <meta property="og:type" content="website" />
   <meta property="og:url" content="https://starlit-madeleine-e40b38.netlify.app/" />
   <meta property="og:image" content="https://starlit-madeleine-e40b38.netlify.app/og-image.png" />
   <meta property="og:locale" content="de_DE" />
@@ -109,7 +109,7 @@
   <!-- Favicon and Icons -->
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
 
@@ -157,6 +157,15 @@
 
   <!-- Preload main script for better performance -->
   <script type="module" src="/client/App.tsx"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () { });
+      });
+    }
+  </script>
 </body>
 
 </html>

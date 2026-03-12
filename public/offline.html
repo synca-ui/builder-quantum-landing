@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline – Maitr</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #faf5ff 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #111827;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .card {
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #0d9488, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0 0 8px;
+            color: #111827;
+        }
+
+        p {
+            color: #6b7280;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0 0 28px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #0d9488, #7c3aed);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.88;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="logo">Maitr</div>
+        <span class="icon" role="img" aria-label="Kein Netz"></span>
+        <h1>Du bist offline</h1>
+        <p>Es sieht aus, als hättest du gerade keine Internetverbindung.<br>Überprüfe deine Verbindung und versuch es
+            erneut.</p>
+        <button class="btn" onclick="window.location.reload()">Erneut versuchen</button>
+    </div>
+</body>
+
+</html>

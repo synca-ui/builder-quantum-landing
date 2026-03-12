@@ -1137,7 +1137,7 @@ export default function CheckPage() {
               </h2>
               <p className="ck-section-body">
                 Ein Restaurant in Münster braucht im Schnitt{" "}
-                <strong>8.4 Sekunden</strong>, bis die Seite lädt. Ideal wäre
+                <strong>6.2 Sekunden</strong>, bis die Seite lädt. Ideal wäre
                 unter 1.8 Sekunden. Nach 3 Sekunden verlassen{" "}
                 <strong>53% aller Besucher</strong> die Seite ohne
                 wiederzukommen.

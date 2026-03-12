@@ -205,6 +205,7 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
 
   return (
     <nav
+      aria-label="Hauptnavigation"
       className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -284,6 +285,9 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
             <Button
               variant="ghost"
               size="sm"
+              aria-label={isMenuOpen ? "Menü schließen" : "Menü öffnen"}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="relative p-2 text-gray-700 transition-all duration-300"
             >
@@ -302,6 +306,7 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
       </div>
 
       <div
+        id="mobile-menu"
         className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"}`}
       >
         <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
