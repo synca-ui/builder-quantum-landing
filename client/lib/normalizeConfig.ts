@@ -540,16 +540,15 @@ export function normalizeConfig(
           ? menuItems
           : typeDefaults?.menuItems || DEFAULT_CONTENT_DATA.menuItems,
       gallery: normalizeGallery(contentObj.gallery || flatConfig.gallery),
-      openingHours:
-        Object.keys(
-          normalizeOpeningHours(
-            contentObj.openingHours || flatConfig.openingHours,
-          ),
-        ).length > 0
-          ? normalizeOpeningHours(
-              contentObj.openingHours || flatConfig.openingHours,
-            )
-          : typeDefaults?.openingHours || DEFAULT_CONTENT_DATA.openingHours,
+      // ✅ Fix: normalizeOpeningHours nur einmal aufrufen
+      openingHours: (() => {
+        const normalized = normalizeOpeningHours(
+          contentObj.openingHours || flatConfig.openingHours,
+        );
+        return Object.keys(normalized).length > 0
+          ? normalized
+          : typeDefaults?.openingHours || DEFAULT_CONTENT_DATA.openingHours;
+      })(),
       categories:
         categories.length > 0
           ? categories
@@ -670,10 +669,12 @@ export function normalizeConfig(
       : {},
   };
 
-  console.log(
-    "[normalizeConfig] Successfully normalized config:",
-    normalized.id || "new",
-  );
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      "[normalizeConfig] Successfully normalized config:",
+      normalized.id || "new",
+    );
+  }
   return normalized;
 }
 

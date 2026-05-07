@@ -38,8 +38,9 @@ export default defineConfig(({ mode }) => ({
     outDir: "dist/spa", // Set the output directory for the built files
     sourcemap: false, // Disable sourcemaps for production
     minify: "esbuild", // Use esbuild for faster minification
-    target: "esnext", // Target modern browsers
-    chunkSizeWarningLimit: 1000, // Increase warning limit for larger chunks
+    target: "es2020", // Target modern browsers and ensure good compression
+    chunkSizeWarningLimit: 500, // Lower warning limit for larger chunks
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
         // Manual chunk splitting for better caching
@@ -57,6 +58,12 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-dialog",
             "@radix-ui/react-select",
           ],
+          // i18n chunk
+          i18n: ["i18next", "react-i18next"],
+          // charts chunk
+          charts: ["recharts"],
+          // motion chunk
+          motion: ["framer-motion"],
           // Icons chunk (lazy loaded)
           icons: ["lucide-react"],
           // Utils chunk

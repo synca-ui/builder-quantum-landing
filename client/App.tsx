@@ -82,11 +82,9 @@ if (!CLERK_PUBLISHABLE_KEY) {
 }
 
 const AuthWrapper = () => {
-  return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <Outlet />
-    </ClerkProvider>
-  );
+  // ClerkProvider ist jetzt weiter oben im Baum (um alle Routes) –
+  // AuthWrapper ist nur noch ein Pass-Through für Routen-Struktur
+  return <Outlet />;
 };
 
 const App = () => {
@@ -104,13 +102,8 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                  <Suspense
-                    fallback={
-                      <div className="min-h-screen flex items-center justify-center">
-                        <div className="loading-spinner"></div>
-                      </div>
-                    }
-                  >
+                  <Suspense fallback={<div className="min-h-screen bg-white"></div>}>
+                    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
                     <Routes>
                       {/* Demo Dashboard Routes (Public - No Auth Required) */}
                       <Route
@@ -219,6 +212,7 @@ const App = () => {
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                  </ClerkProvider>
                   </Suspense>
                 </BrowserRouter>
               </TooltipProvider>

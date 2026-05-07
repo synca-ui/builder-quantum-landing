@@ -1,3 +1,4 @@
+import { PageSEO } from "@/components/seo/PageSEO";
 import "./check.css";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { openCookieSettings } from "@/components/cookie-banner";
@@ -107,6 +108,8 @@ function ReviewCard({
 }) {
   return (
     <div className="ck-review-card ck-marquee-card">
+      <PageSEO title="Maitr - Überprüfe dein Restaurant" description="Analysiere deine Online-Präsenz mit Maitr." noindex={false} />
+
       <div className="ck-review-stars">
         {"★★★★★".split("").map((s, i) => (
           <span key={i} style={{ color: i < rating ? "#f59e0b" : "#e5e7eb" }}>

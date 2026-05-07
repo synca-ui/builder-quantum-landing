@@ -93,6 +93,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.2(react@18.3.1))
+      '@netlify/edge-functions':
+        specifier: ^3.0.6
+        version: 3.0.6
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1135,6 +1138,10 @@ packages:
     resolution: {integrity: sha512-grElRK+rTBdYrPsULPKrhcHhrW+fwpDRLPbGByqa6Xrz0fhzcFJ2D9ijxEQ/onFcSVPYHT1u1mI48GhS5bZ/Ag==}
     engines: {node: '>=18.0.0'}
 
+  '@netlify/edge-functions@3.0.6':
+    resolution: {integrity: sha512-xkVcTcpAuQKAY5GXKOjPTIct5Mz53NPHXOasggA+LTAxDDV4ohqSM8BIaXh1SgbcniHZyFhBqhc5hxZ+fFz5bQ==}
+    engines: {node: '>=18.0.0'}
+
   '@netlify/functions-utils@6.2.23':
     resolution: {integrity: sha512-Ed6XfOIk9vtusTffXoubk6YB4+3+pZFuK0z+wLrxRa6g7OBa2OHvyJKhGuQPEWhYZzKr0+JqGaMapfqsK/hm4A==}
     engines: {node: '>=18.14.0'}
@@ -1270,6 +1277,10 @@ packages:
 
   '@netlify/types@2.3.0':
     resolution: {integrity: sha512-5gxMWh/S7wr0uHKSTbMv4bjWmWSpwpeLYvErWeVNAPll5/QNFo9aWimMAUuh8ReLY3/fg92XAroVVu7+z27Snw==}
+    engines: {node: ^18.14.0 || >=20}
+
+  '@netlify/types@2.6.0':
+    resolution: {integrity: sha512-yD20EizHJDQxajJ66Vo8RTwLwR2jMNVxufPG8MHd2AScX8jW4z0VPnnJHArq2GYPFTFZRHmiAhDrXr5m8zof6w==}
     engines: {node: ^18.14.0 || >=20}
 
   '@netlify/zip-it-and-ship-it@14.3.1':
@@ -8285,6 +8296,10 @@ snapshots:
     dependencies:
       '@netlify/types': 2.3.0
 
+  '@netlify/edge-functions@3.0.6':
+    dependencies:
+      '@netlify/types': 2.6.0
+
   '@netlify/functions-utils@6.2.23(rollup@4.59.0)(supports-color@10.2.2)':
     dependencies:
       '@netlify/zip-it-and-ship-it': 14.4.0(rollup@4.59.0)(supports-color@10.2.2)
@@ -8428,6 +8443,8 @@ snapshots:
   '@netlify/serverless-functions-api@2.9.0': {}
 
   '@netlify/types@2.3.0': {}
+
+  '@netlify/types@2.6.0': {}
 
   '@netlify/zip-it-and-ship-it@14.3.1(rollup@4.59.0)(supports-color@10.2.2)':
     dependencies:

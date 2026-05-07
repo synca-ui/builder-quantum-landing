@@ -137,6 +137,13 @@ export function usePerformanceObserver() {
 // Image lazy loading optimization - enhanced for LCP
 export function useImageOptimization() {
   useEffect(() => {
+    // Automatically apply loading="lazy" and decoding="async" to all images
+    const images = document.querySelectorAll("img:not([loading])");
+    images.forEach((img) => {
+      img.setAttribute("loading", "lazy");
+      img.setAttribute("decoding", "async");
+    });
+
     if (!("IntersectionObserver" in window)) return;
 
     const imageObserver = new IntersectionObserver(

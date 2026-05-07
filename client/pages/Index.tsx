@@ -1,5 +1,7 @@
+import { PageSEO } from "@/components/seo/PageSEO";
 import React, { useEffect, useState, memo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth, UserButton } from "@clerk/clerk-react";
 import {
   ChevronRight,
   Play,
@@ -140,16 +142,20 @@ const demoTemplates = [
   },
 ];
 
+// Stabile Positionen – kein Math.random() im Render-Body (verursacht Layout-Shifts)
+const PARTICLE_POSITIONS = [
+  { left: "15%", top: "25%" },
+  { left: "65%", top: "10%" },
+  { left: "80%", top: "70%" },
+];
+
 const Particles = memo(() => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(3)].map((_, i) => (
+    {PARTICLE_POSITIONS.map((pos, i) => (
       <div
         key={i}
         className="absolute w-1 h-1 bg-teal-400 rounded-full opacity-30"
-        style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-        }}
+        style={{ left: pos.left, top: pos.top }}
       />
     ))}
   </div>
@@ -208,6 +214,8 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
       aria-label="Hauptnavigation"
       className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
     >
+      <PageSEO title="Maitr - Web-App Builder für Restaurants" description="Erstelle automatisch konfigurierte Web-Apps mit Maitr in 30 Sekunden." noindex={false} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -254,16 +262,31 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <Button variant="outline" size="sm" onClick={() => setAuthMode('signIn')}>
-              Log in
-            </Button>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-              onClick={() => setAuthMode('signUp')}
-            >
-              Sign up
-            </Button>
+            {isSignedIn ? (
+              // Eingeloggt: Clerk UserButton anzeigen + Dashboard-Link
+              <>
+                <a href="/dashboard">
+                  <Button variant="outline" size="sm">
+                    Dashboard
+                  </Button>
+                </a>
+                <UserButton afterSignOutUrl="/" />
+              </>
+            ) : (
+              // Ausgeloggt: Log in / Sign up Buttons
+              <>
+                <Button variant="outline" size="sm" onClick={() => setAuthMode('signIn')}>
+                  Log in
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                  onClick={() => setAuthMode('signUp')}
+                >
+                  Sign up
+                </Button>
+              </>
+            )}
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -389,13 +412,10 @@ export default function Index() {
     setIsVisible(true);
   }, []);
 
-  // Get auth state but with fallbacks to ensure button visibility
-  // Get auth state but with fallbacks to ensure button visibility
-  // Clerk removed from Landing Page for performance -> Assume Guest
-  const isSignedIn = false;
-  const authLoaded = true;
-  const user = null;
-  const userLoaded = true;
+  // Clerk Auth-State (ClerkProvider ist in App.tsx um alle Routen)
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
+  const user = null; // Nur für Landing Page; vollständige User-Daten auf /dashboard
+  const userLoaded = authLoaded;
 
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
@@ -456,7 +476,7 @@ export default function Index() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
           <div className="text-center">
             <div
-              className={`transition-all duration-1500 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"}`}
+              className={`transition-all duration-700 ease-out will-change-transform ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"}`}
             >
               <div className="flex justify-center mb-6">
                 <div className="relative">

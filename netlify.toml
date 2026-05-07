@@ -1,6 +1,7 @@
 [build]
 command = "bash scripts/netlify-build.sh"
 functions = "netlify/functions"
+edge_functions = "netlify/edge-functions"
 publish = "dist/spa"
 
 [build.environment]
@@ -70,3 +71,10 @@ force = true
 from = "/*"
 to = "/index.html"
 status = 200
+
+# Edge Function: Config-Injection für *.maitr.de Subdomains
+# Läuft am CDN-Edge-Knoten VOR der SPA-Auslieferung.
+# Injiziert window.__MAITR_CONFIG__ direkt ins HTML – kein client-seitiger fetch() nötig.
+[[edge_functions]]
+path = "/*"
+function = "inject-site-config"

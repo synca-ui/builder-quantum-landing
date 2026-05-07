@@ -1,3 +1,4 @@
+import { PageSEO } from "@/components/seo/PageSEO";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Settings, Sparkles, Copy } from "lucide-react";
@@ -170,6 +171,8 @@ export default function ModeSelection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-teal-50/40 to-gray-100">
+      <PageSEO title="Maitr - Modus auswählen" description="Wähle deinen Maitr Modus." noindex={true} />
+
       <Headbar title="Auswahl" />
       <LoadingOverlay
         visible={isLoading}

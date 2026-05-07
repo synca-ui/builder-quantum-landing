@@ -6,6 +6,8 @@ import {
   type Configuration,
 } from "../schemas/configuration";
 import { createAuditLogger } from "../utils/audit";
+import { getCachedSite, setCachedSite } from "../utils/siteCache";
+
 
 const router = Router();
 
@@ -515,11 +517,36 @@ export async function publishConfiguration(req: Request, res: Response) {
 
 /**
  * ✅ GET /api/sites/:subdomain - Get published site (PUBLIC)
+ *
+ * Performance:
+ *   - In-Memory Cache (60s TTL) → eliminiert wiederholte DB-Queries
+ *   - ETag + 304 Not Modified → Client-Browser-Cache
+ *   - Cache-Control: s-maxage=60 → Netlify CDN cacht für 60s
  */
 export async function getPublishedSite(req: Request, res: Response) {
   const { subdomain } = req.params;
 
   try {
+    // ── 1. In-Memory Cache Check (Railway-seitig) ─────────────────────────
+    const cached = getCachedSite(subdomain);
+    if (cached) {
+      // ETag-Check: Client hat bereits aktuelle Version → 304 No Content
+      if (req.headers["if-none-match"] === cached.etag) {
+        return res
+          .set("ETag", cached.etag)
+          .set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
+          .set("X-Cache", "HIT")
+          .status(304)
+          .end();
+      }
+      return res
+        .set("ETag", cached.etag)
+        .set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
+        .set("X-Cache", "HIT")
+        .json({ success: true, data: cached.data });
+    }
+
+    // ── 2. DB-Query (nur bei Cache-Miss) ─────────────────────────────────
     const webApp = await prisma.webApp.findUnique({
       where: { subdomain },
       select: {
@@ -613,10 +640,16 @@ export async function getPublishedSite(req: Request, res: Response) {
       status: "published",
     };
 
-    return res.json({
-      success: true,
-      data: flatConfig,
-    });
+    // ── 3. In Cache schreiben + ETag generieren ───────────────────────────
+    const etag = `"${webApp.id}-${webApp.updatedAt?.getTime() ?? 0}"`;
+    setCachedSite(subdomain, flatConfig, etag);
+
+    return res
+      .set("ETag", etag)
+      .set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
+      .set("X-Cache", "MISS")
+      .json({ success: true, data: flatConfig });
+
   } catch (error) {
     console.error("[Configurations] Get published site error:", error);
     return res.status(500).json({

@@ -8,6 +8,18 @@ import { handleClerkWebhook } from "./webhooks/clerk";
 import { subdomainsRouter } from "./routes/subdomains";
 import { scraperJobRouter } from "./routes/scraperJob";
 import { handleForwardN8n } from "./routes/n8nProxy";
+import rateLimit from "express-rate-limit";
+
+// Rate-Limiter speziell für den öffentlichen Site-Endpoint
+// Verhindert Enumerations-Angriffe (a.maitr.de, b.maitr.de, ...)
+const siteRateLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 60,
+  keyGenerator: (req) => `${req.ip}-${req.params.subdomain}`,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Zu viele Anfragen für diese Seite." },
+});
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import scraperJobsRoute from "./routes/scraperJobsRoute";
@@ -91,8 +103,8 @@ export function createServer() {
   app.delete("/api/configurations/:id", deleteConfiguration);
   app.post("/api/configurations/:id/publish", publishConfiguration);
 
-  // Public site serving
-  app.get("/api/sites/:subdomain", getPublishedSite);
+  // Public site serving – mit Rate-Limiter gegen Enumeration
+  app.get("/api/sites/:subdomain", siteRateLimiter, getPublishedSite);
 
   // Users profile (protected)
   app.use("/api/users", requireAuth, usersRouter);

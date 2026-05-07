@@ -1,3 +1,4 @@
+import { PageSEO } from "@/components/seo/PageSEO";
 import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 
@@ -36,6 +37,8 @@ export default function Datenschutz() {
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-teal-100">
+      <PageSEO title="Maitr - Datenschutz" description="Datenschutzerklärung von Maitr." noindex={false} />
+
             {/* Navbar Minimal */}
             <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
                 <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">

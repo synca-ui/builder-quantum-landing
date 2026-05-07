@@ -5,7 +5,8 @@ export function useServiceWorker() {
     // Register Service Worker only in production and when supported
     if ("serviceWorker" in navigator && import.meta.env.PROD) {
       // Register after initial page load to avoid blocking
-      window.addEventListener("load", () => {
+      // Register after initial page load to avoid blocking
+      const registerSW = () => {
         navigator.serviceWorker
           .register("/sw.js", {
             scope: "/",
@@ -43,7 +44,13 @@ export function useServiceWorker() {
               console.warn("SW registration failed:", error);
             }
           });
-      });
+      };
+
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(registerSW);
+      } else {
+        window.addEventListener("load", registerSW);
+      }
 
       // Listen for SW updates
       navigator.serviceWorker.addEventListener("controllerchange", () => {
