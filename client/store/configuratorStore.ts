@@ -891,24 +891,19 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
 
       getFullConfiguration: () => {
         const state = get();
+        // WICHTIG: Nur die verschachtelten Domain-Objekte senden.
+        // Das Backend-Schema (ConfigurationSchema) ist .strict() und lehnt
+        // alle flachen Legacy-Keys (businessName, template, primaryColor usw.)
+        // als "unrecognized_keys" ab. Außerdem ist `payments` Pflichtfeld.
         return {
-          // 1. Verschachtelte Objekte für den Backend-Validator (Zwingend erforderlich!)
           business: state.business,
           design: state.design,
           content: state.content,
           features: state.features,
           contact: state.contact,
           pages: state.pages,
-
-          // 2. Flache Felder für die direkte Speicherung in der Datenbank (Prisma-Mapping)
-          businessName: state.business.name,
-          businessType: state.business.type,
-          template: state.design.template,
-          primaryColor: state.design.primaryColor,
-          headerFontSize: state.design.headerFontSize,
-          headerFontColor: state.design.headerFontColor,
-          priceColor: state.design.priceColor,
-          userId: state.userId || "published",
+          payments: state.payments,
+          userId: state.userId || "anonymous",
         } as any;
       },
 
