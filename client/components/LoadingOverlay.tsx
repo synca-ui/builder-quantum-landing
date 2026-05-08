@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
 
-// ── Adjust these import paths to wherever you store your Lottie JSON files ──
-import loaderCatData from "../assets/Loadercat.json";
-import prepareFoodData from "../assets/PrepareFood.json";
-import CookingPreloader from "../assets/CookingPreloader.json";
-import ChefHat from "../assets/Burger.json";
+// Dynamically import JSON files to drastically reduce chunk size
+const ANIMATIONS = [
+  () => import("../assets/Loadercat.json"),
+  () => import("../assets/PrepareFood.json"),
+  () => import("../assets/CookingPreloader.json"),
+  () => import("../assets/Burger.json")
+];
 
 interface Props {
   visible: boolean;
   messages?: string[];
   onCancel?: () => void;
 }
-
-const ANIMATIONS = [loaderCatData, prepareFoodData, CookingPreloader, ChefHat];
 
 function randomIndex(exclude?: number): number {
   const pool = ANIMATIONS.map((_, i) => i).filter((i) => i !== exclude);
@@ -26,10 +26,19 @@ export default function LoadingOverlay({
   onCancel,
 }: Props) {
   const [animIndex, setAnimIndex] = useState<number>(() => randomIndex());
+  const [animData, setAnimData] = useState<any>(null);
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [fadeAnim, setFadeAnim] = useState(true);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    ANIMATIONS[animIndex]().then((mod) => {
+      if (isMounted) setAnimData(mod.default);
+    });
+    return () => { isMounted = false; };
+  }, [animIndex]);
 
   useEffect(() => {
     if (!visible) {
@@ -129,16 +138,18 @@ export default function LoadingOverlay({
           {/* ── Lottie ── */}
           <div
             className="lottie-wrap w-52 h-52 flex items-center justify-center"
-            style={{ opacity: fadeAnim ? 1 : 0 }}
+            style={{ opacity: fadeAnim && animData ? 1 : 0 }}
           >
-            <Lottie
-              key={animIndex}
-              lottieRef={lottieRef}
-              animationData={ANIMATIONS[animIndex]}
-              loop
-              autoplay
-              style={{ width: "100%", height: "100%" }}
-            />
+            {animData && (
+              <Lottie
+                key={animIndex}
+                lottieRef={lottieRef}
+                animationData={animData}
+                loop
+                autoplay
+                style={{ width: "100%", height: "100%" }}
+              />
+            )}
           </div>
 
           {/* ── Progress Bar ── */}

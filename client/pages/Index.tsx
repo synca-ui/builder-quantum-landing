@@ -1,7 +1,7 @@
 import { PageSEO } from "@/components/seo/PageSEO";
 import React, { useEffect, useState, memo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth, UserButton } from "@clerk/clerk-react";
+
 import {
   ChevronRight,
   Play,
@@ -34,9 +34,7 @@ import { openCookieSettings } from "@/components/cookie-banner";
 const MaitrWorkflowAnimation = lazy(
   () => import("@/components/MaitrWorkflowAnimation"),
 );
-const LazyClerkModal = lazy(
-  () => import("@/components/LazyClerkModal")
-);
+
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
 import {
@@ -161,11 +159,10 @@ const Particles = memo(() => (
   </div>
 ));
 
-const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
+const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [authMode, setAuthMode] = useState<"signIn" | "signUp" | null>(null);
 
   useEffect(() => {
     let ticking = false;
@@ -231,7 +228,6 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
           <div className="hidden md:block">
             <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
               {navItems
-                .filter((n) => (isSignedIn ? true : n.id !== "dashboard"))
                 .map((item) => (
                   <a
                     key={item.id}
@@ -262,31 +258,21 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            {isSignedIn ? (
-              // Eingeloggt: Clerk UserButton anzeigen + Dashboard-Link
-              <>
-                <a href="/dashboard">
-                  <Button variant="outline" size="sm">
-                    Dashboard
-                  </Button>
-                </a>
-                <UserButton afterSignOutUrl="/" />
-              </>
-            ) : (
-              // Ausgeloggt: Log in / Sign up Buttons
-              <>
-                <Button variant="outline" size="sm" onClick={() => setAuthMode('signIn')}>
+            <>
+              <a href="/login">
+                <Button variant="outline" size="sm">
                   Log in
                 </Button>
+              </a>
+              <a href="/signup">
                 <Button
                   size="sm"
                   className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                  onClick={() => setAuthMode('signUp')}
                 >
                   Sign up
                 </Button>
-              </>
-            )}
+              </a>
+            </>
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -351,21 +337,19 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
             ))}
 
             <div className="pt-2 border-t border-gray-200/50 space-y-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full"
-                onClick={() => { setAuthMode('signIn'); setIsMenuOpen(false); }}
-              >
-                Log in
-              </Button>
-              <Button
-                size="sm"
-                className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                onClick={() => { setAuthMode('signUp'); setIsMenuOpen(false); }}
-              >
-                Sign up
-              </Button>
+              <a href="/login" className="w-full">
+                <Button size="sm" variant="outline" className="w-full">
+                  Log in
+                </Button>
+              </a>
+              <a href="/signup" className="w-full">
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                >
+                  Sign up
+                </Button>
+              </a>
 
               <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                 <Button
@@ -383,15 +367,7 @@ const Navigation = ({ isSignedIn }: { isSignedIn: boolean }) => {
           </div>
         </div>
       </div>
-      {authMode && (
-        <Suspense fallback={
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <Loader2 className="w-10 h-10 animate-spin text-white" />
-          </div>
-        }>
-          <LazyClerkModal mode={authMode} onClose={() => setAuthMode(null)} />
-        </Suspense>
-      )}
+
     </nav>
   );
 };
@@ -412,10 +388,10 @@ export default function Index() {
     setIsVisible(true);
   }, []);
 
-  // Clerk Auth-State (ClerkProvider ist in App.tsx um alle Routen)
-  const { isSignedIn, isLoaded: authLoaded } = useAuth();
-  const user = null; // Nur für Landing Page; vollständige User-Daten auf /dashboard
-  const userLoaded = authLoaded;
+  // Entfernt: Keine Clerk Authentication Checks auf der öffentlichen Homepage
+  const isSignedIn = false;
+  const userLoaded = true;
+  const authLoaded = true;
 
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");
@@ -465,7 +441,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-white relative w-full" style={{ overflowX: "clip" }}>
-      <Navigation isSignedIn={isSignedIn} />
+      <Navigation />
 
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-teal-50 min-h-screen flex items-center">
         <Particles />
@@ -723,21 +699,11 @@ export default function Index() {
           </div>
           <div className="text-center mt-8">
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {/* Login/Dashboard Button - conditional but with loading fallback */}
-              {authLoaded ? (
-                <a href="/login">
-                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                    Log In um Dashboard zu öffnen
-                  </Button>
-                </a>
-              ) : (
-                // Safe Fallback
-                <a href="/login">
-                  <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                    Log In um Dashboard zu öffnen
-                  </Button>
-                </a>
-              )}
+              <a href="/login">
+                <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
+                  Log In um Dashboard zu öffnen
+                </Button>
+              </a>
 
               {/* Demo Dashboard Button - always visible immediately, no auth dependency */}
               <a

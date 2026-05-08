@@ -63,8 +63,8 @@ export default async function handler(req: Request, context: Context) {
       `${RAILWAY_API}/api/sites/${subdomain}`,
       {
         headers: { Accept: "application/json" },
-        // Edge Function Timeout: 10s
-        signal: AbortSignal.timeout(5_000),
+        // Edge Function Timeout: 3s
+        signal: AbortSignal.timeout(3_000),
       },
     );
 

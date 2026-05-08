@@ -1,8 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import de from "./locales/de.json";
-import en from "./locales/en.json";
+import resourcesToBackend from "i18next-resources-to-backend";
 
 // Define available languages
 export const LANGUAGES = {
@@ -17,10 +16,6 @@ export const DEFAULT_LANGUAGE: LanguageCode = "de";
 
 // Configure basic i18n options shared between server and client
 const baseInitOptions = {
-  resources: {
-    de: { translation: de },
-    en: { translation: en },
-  },
   lng: DEFAULT_LANGUAGE, // Set initial language explicitly
   fallbackLng: DEFAULT_LANGUAGE,
   supportedLngs: Object.keys(LANGUAGES),
@@ -32,7 +27,7 @@ const baseInitOptions = {
   ns: ["translation"],
   defaultNS: "translation",
 
-  // React-specific options - useSuspense must be false to avoid issues
+  // React-specific options
   react: {
     useSuspense: false,
     bindI18n: "languageChanged",
@@ -41,7 +36,9 @@ const baseInitOptions = {
 } as const;
 
 // Initialize i18next - use initReactI18next for React binding
-i18n.use(initReactI18next);
+i18n
+  .use(initReactI18next)
+  .use(resourcesToBackend((language: string, namespace: string) => import(`./locales/${language}.json`)));
 
 // Only load browser-specific detector when running in the browser (avoid SSR/build issues)
 if (typeof window !== "undefined") {
