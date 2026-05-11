@@ -33,6 +33,7 @@ import { DishCard } from "@/components/shared/DishCard";
 import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { CategoryFilter } from "@/components/shared/CategoryFilter";
+import ReservationFormModern from "@/components/dynamic/ReservationFormModern";
 
 import { ReservationButton } from "@/components/ui/ReservationButton";
 import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
@@ -114,6 +115,10 @@ export function TemplatePreviewContent() {
     "#FFFFFF";
   const reservationButtonShape =
     useConfiguratorStore((s) => s.features.reservationButtonShape) || "rounded";
+  const reservationFormStyle = 
+    useConfiguratorStore((s) => s.features.reservationFormStyle) || "classic";
+  const maxGuests = 
+    useConfiguratorStore((s) => s.features.maxGuests) || 10;
 
   // Pages fields
   const selectedPages =
@@ -672,6 +677,24 @@ export function TemplatePreviewContent() {
   };
 
   const renderReservationsPage = () => {
+    if (reservationFormStyle === "modern") {
+      return (
+        <div className="w-full max-w-lg mx-auto animate-in fade-in duration-300 px-2 pointer-events-none opacity-80">
+          <ReservationFormModern
+            configId="preview"
+            businessName={businessName}
+            primaryColor={primaryColor}
+            buttonColor={reservationButtonColor || primaryColor}
+            textColor={fontColor}
+            bgColor={backgroundColor}
+            buttonTextColor={reservationButtonTextColor || "#ffffff"}
+            buttonShape={reservationButtonShape as "rounded" | "pill" | "square"}
+            maxGuests={maxGuests}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         <div className="text-center">
