@@ -44,6 +44,7 @@ import {
   useImageOptimization,
   useDemoDashboardVisibility,
 } from "@/hooks/usePerformanceOptimization";
+import { useAuth, UserButton } from "@clerk/clerk-react";
 
 const features = [
   {
@@ -163,6 +164,7 @@ const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
     let ticking = false;
@@ -258,21 +260,25 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <>
-              <a href="/login">
-                <Button variant="outline" size="sm">
-                  Log in
-                </Button>
-              </a>
-              <a href="/signup">
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                >
-                  Sign up
-                </Button>
-              </a>
-            </>
+            {isLoaded && isSignedIn ? (
+              <UserButton afterSignOutUrl="/" />
+            ) : (
+              <>
+                <a href="/login">
+                  <Button variant="outline" size="sm">
+                    Log in
+                  </Button>
+                </a>
+                <a href="/signup">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                  >
+                    Sign up
+                  </Button>
+                </a>
+              </>
+            )}
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -337,19 +343,27 @@ const Navigation = () => {
             ))}
 
             <div className="pt-2 border-t border-gray-200/50 space-y-2">
-              <a href="/login" className="w-full">
-                <Button size="sm" variant="outline" className="w-full">
-                  Log in
-                </Button>
-              </a>
-              <a href="/signup" className="w-full">
-                <Button
-                  size="sm"
-                  className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                >
-                  Sign up
-                </Button>
-              </a>
+              {isLoaded && isSignedIn ? (
+                <div className="flex justify-center py-2">
+                  <UserButton afterSignOutUrl="/" />
+                </div>
+              ) : (
+                <>
+                  <a href="/login" className="w-full">
+                    <Button size="sm" variant="outline" className="w-full">
+                      Log in
+                    </Button>
+                  </a>
+                  <a href="/signup" className="w-full">
+                    <Button
+                      size="sm"
+                      className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                    >
+                      Sign up
+                    </Button>
+                  </a>
+                </>
+              )}
 
               <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                 <Button
@@ -388,10 +402,7 @@ export default function Index() {
     setIsVisible(true);
   }, []);
 
-  // Entfernt: Keine Clerk Authentication Checks auf der öffentlichen Homepage
-  const isSignedIn = false;
-  const userLoaded = true;
-  const authLoaded = true;
+  // Entfernt: Keine Clerk Authentication Checks auf der öffentlichen Homepage (außer in der Navigation)
 
   // Magic Input state
   const [magicLink, setMagicLink] = useState("");

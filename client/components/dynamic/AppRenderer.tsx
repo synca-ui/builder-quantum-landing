@@ -562,7 +562,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
 
   const renderReservationsPage = () => {
     // Modern Tile Form (new style)
-    if ((config as any).reservationFormStyle === "modern" || (rawConfig as any).reservationFormStyle === "modern") {
+    if (features.reservationFormStyle === "modern" || (config as any).reservationFormStyle === "modern" || (rawConfig as any).reservationFormStyle === "modern") {
       return (
         <div className="w-full max-w-lg mx-auto animate-in fade-in duration-300 px-2">
           <ReservationFormModern
