@@ -44,7 +44,7 @@ import {
   useImageOptimization,
   useDemoDashboardVisibility,
 } from "@/hooks/usePerformanceOptimization";
-import { useAuth, UserButton } from "@clerk/clerk-react";
+import { useAuth, UserButton, ClerkProvider } from "@clerk/clerk-react";
 
 const features = [
   {

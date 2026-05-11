@@ -12,11 +12,6 @@ import Index from "./Index";
 import { Loader2 } from "lucide-react";
 import normalizeConfig from "@/lib/normalizeConfig";
 
-// Bundle-Download SOFORT starten (parallel zum fetch, nicht danach)
-const appRendererPromise = import("@/components/dynamic/AppRenderer.tsx");
-const AppRenderer = lazy(() => appRendererPromise);
-const CheckLanding = lazy(() => import("./CheckLanding"));
-
 function detectSubdomain(): string | null {
   try {
     const host = window.location.hostname;
@@ -38,6 +33,17 @@ function detectSubdomain(): string | null {
 
 // Singleton: Subdomain wird einmal pro Session bestimmt
 const SUBDOMAIN = detectSubdomain();
+
+// Bundle-Download NUR auf Subdomains sofort starten, um die Hauptdomain (maitr.de) nicht auszubremsen
+let appRendererPromise: Promise<any> | null = null;
+if (SUBDOMAIN && SUBDOMAIN !== "check") {
+  appRendererPromise = import("@/components/dynamic/AppRenderer.tsx");
+}
+
+const AppRenderer = lazy(() => appRendererPromise || import("@/components/dynamic/AppRenderer.tsx"));
+const CheckLanding = lazy(() => import("./CheckLanding"));
+
+// (verschoben nach oben)
 
 // Config die von der Netlify Edge Function injiziert wurde (window.__MAITR_CONFIG__)
 // Falls vorhanden: kein fetch() nötig – sofort rendern
