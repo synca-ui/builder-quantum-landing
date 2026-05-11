@@ -435,6 +435,11 @@ model Configuration {
   reservationButtonColor      String?
   reservationButtonShape      String?
   reservationButtonTextColor  String?
+  reservationFormStyle        String          @default("classic") // "classic" | "modern"
+  reservationNotificationEmail String?
+  reservationTimeSlotInterval  Int            @default(30) // minutes between slots
+  reservationDaysAhead         Int            @default(7) // how many days ahead guests can book
+  timeSlots                   String[]        @default(["12:00", "13:00", "18:00", "19:00"])
   addOns                      AddOnInstance[]
   business                    Business?       @relation(fields: [businessId], references: [id])
   templateData                Template?       @relation(fields: [selectedTemplate], references: [id])

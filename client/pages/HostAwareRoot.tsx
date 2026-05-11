@@ -60,11 +60,11 @@ export default function HostAwareRoot() {
   );
   const [loading, setLoading] = useState(
     // Kein Loader wenn Config bereits vorhanden (Edge-Injection ODER Session-Cache)
-    !!SUBDOMAIN && !sessionCache?.config && !EDGE_INJECTED_CONFIG,
+    !!SUBDOMAIN && SUBDOMAIN !== "check" && !sessionCache?.config && !EDGE_INJECTED_CONFIG,
   );
 
   useEffect(() => {
-    if (!SUBDOMAIN || config) {
+    if (!SUBDOMAIN || SUBDOMAIN === "check" || config) {
       setLoading(false);
       return;
     }

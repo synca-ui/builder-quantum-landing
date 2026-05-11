@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   Menu,
   LogOut,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +33,12 @@ const navigation = [
     href: "/dashboard/floor-plan",
     icon: Grid3x3,
     description: "Table Layout Editor",
+  },
+  {
+    name: "Reservierungen",
+    href: "/dashboard/reservations",
+    icon: Calendar,
+    description: "Tischbuchungen",
   },
   {
     name: "Creative Studio",

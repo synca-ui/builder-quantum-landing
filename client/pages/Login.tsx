@@ -14,7 +14,7 @@ export default function Login() {
               card: "shadow-lg rounded-xl border border-gray-200",
             },
           }}
-          fallbackRedirectUrl="/dashboard"
+          fallbackRedirectUrl="/mode-selection"
           signUpUrl="/signup"
         />
       </div>

@@ -177,6 +177,12 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   reservationButtonColor: "#2563EB",
   reservationButtonTextColor: "#FFFFFF",
   reservationButtonShape: "rounded",
+  reservationEmail: "",
+  reservationFormStyle: "classic",
+  reservationNotificationEmail: "",
+  reservationTimeSlotInterval: 30,
+  reservationDaysAhead: 7,
+  timeSlots: ["12:00", "13:00", "18:00", "19:00"],
   onlineOrderingEnabled: false,
   onlineStoreEnabled: false,
   teamAreaEnabled: false,
@@ -587,6 +593,30 @@ export function normalizeConfig(
         featuresObj.reservationButtonShape ||
         (flatConfig.reservationButtonShape as "rounded" | "pill" | "square") ||
         DEFAULT_FEATURE_FLAGS.reservationButtonShape,
+      reservationEmail:
+        featuresObj.reservationEmail ||
+        flatConfig.reservationEmail ||
+        DEFAULT_FEATURE_FLAGS.reservationEmail,
+      reservationFormStyle:
+        featuresObj.reservationFormStyle ||
+        (flatConfig.reservationFormStyle as "classic" | "modern") ||
+        DEFAULT_FEATURE_FLAGS.reservationFormStyle,
+      reservationNotificationEmail:
+        featuresObj.reservationNotificationEmail ||
+        flatConfig.reservationNotificationEmail ||
+        DEFAULT_FEATURE_FLAGS.reservationNotificationEmail,
+      reservationTimeSlotInterval:
+        featuresObj.reservationTimeSlotInterval ??
+        flatConfig.reservationTimeSlotInterval ??
+        DEFAULT_FEATURE_FLAGS.reservationTimeSlotInterval,
+      reservationDaysAhead:
+        featuresObj.reservationDaysAhead ??
+        flatConfig.reservationDaysAhead ??
+        DEFAULT_FEATURE_FLAGS.reservationDaysAhead,
+      timeSlots:
+        featuresObj.timeSlots ||
+        flatConfig.timeSlots ||
+        DEFAULT_FEATURE_FLAGS.timeSlots,
       onlineOrderingEnabled:
         featuresObj.onlineOrderingEnabled ??
         flatConfig.onlineOrdering ??
@@ -751,6 +781,12 @@ export function denormalizeConfig(config: Configuration): FlatDatabaseConfig {
     reservationButtonColor: config.features.reservationButtonColor,
     reservationButtonTextColor: config.features.reservationButtonTextColor,
     reservationButtonShape: config.features.reservationButtonShape,
+    reservationEmail: config.features.reservationEmail,
+    reservationFormStyle: config.features.reservationFormStyle,
+    reservationNotificationEmail: config.features.reservationNotificationEmail,
+    reservationTimeSlotInterval: config.features.reservationTimeSlotInterval,
+    reservationDaysAhead: config.features.reservationDaysAhead,
+    timeSlots: config.features.timeSlots,
     onlineOrdering: config.features.onlineOrderingEnabled,
     onlineStore: config.features.onlineStoreEnabled,
     teamArea: config.features.teamAreaEnabled,

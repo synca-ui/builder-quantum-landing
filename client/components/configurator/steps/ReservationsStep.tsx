@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronRight, Calendar } from "lucide-react";
+import { ArrowLeft, ChevronRight, Calendar, Mail } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,11 @@ export function ReservationsStep({
   const notificationMethod = useConfiguratorStore(
     (s) => s.features.notificationMethod,
   );
+  const rawReservationEmail = useConfiguratorStore(
+    (s) => s.features.reservationEmail,
+  );
+  const { user } = useUser();
+  const reservationEmail = rawReservationEmail || user?.primaryEmailAddress?.emailAddress || "";
 
   // Reservierungsbutton-Einstellungen aus Store laden
   const reservationButtonColor = useConfiguratorStore(
@@ -41,6 +47,12 @@ export function ReservationsStep({
   const reservationButtonShape = useConfiguratorStore(
     (s) => s.features.reservationButtonShape,
   );
+  const reservationFormStyle = useConfiguratorStore(
+    (s) => s.features.reservationFormStyle || "classic",
+  );
+  const reservationDaysAhead = useConfiguratorStore(
+    (s) => s.features.reservationDaysAhead || 7,
+  );
 
   const actions = useConfiguratorActions();
 
@@ -51,11 +63,11 @@ export function ReservationsStep({
   });
 
   // FIX: Sichere Selektion der TimeSlots ohne neues Array-Objekt
-  const rawSlots = useConfiguratorStore((s) => (s.features as any).timeSlots);
+  const rawSlots = useConfiguratorStore((s) => s.features.timeSlots);
   const selectedTimeSlots = Array.isArray(rawSlots) ? rawSlots : DEFAULT_SLOTS;
 
   const updateTimeSlots = (slots: string[]) => {
-    actions.features.updateFeatureFlags({ timeSlots: slots } as any);
+    actions.features.updateFeatureFlags({ timeSlots: slots });
   };
 
   const updateButtonColor = (color: string) => {
@@ -67,7 +79,7 @@ export function ReservationsStep({
   };
 
   const updateButtonShape = (shape: string) => {
-    actions.features.updateFeatureFlags({ reservationButtonShape: shape });
+    actions.features.updateFeatureFlags({ reservationButtonShape: shape as "rounded" | "pill" | "square" });
   };
 
   return (
@@ -108,6 +120,30 @@ export function ReservationsStep({
 
         {reservationsEnabled && (
           <>
+            {/* Form Style Selector */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Formular-Stil</h3>
+              <p className="text-gray-500 text-sm mb-4">Wähle das Design für das Reservierungsformular auf deiner Website.</p>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { id: "classic", label: "Klassisch", desc: "Einfaches Formular mit Eingabefeldern" },
+                  { id: "modern", label: "Modern (Kacheln)", desc: "Personen → Datum → Uhrzeit als Kacheln" },
+                ].map((style) => (
+                  <button
+                    key={style.id}
+                    onClick={() => actions.features.updateFeatureFlags({ reservationFormStyle: style.id as "classic" | "modern" })}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      reservationFormStyle === style.id
+                        ? "border-teal-500 bg-teal-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <p className="font-bold text-sm text-gray-900">{style.label}</p>
+                    <p className="text-xs text-gray-500 mt-1">{style.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </Card>
             <Card className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
                 {t("reservations.bookingSettings")}
@@ -146,6 +182,47 @@ export function ReservationsStep({
                     <option value="email">Email</option>
                     <option value="phone">Phone</option>
                     <option value="both">Email & Phone</option>
+                  </select>
+                </div>
+                {notificationMethod !== "phone" && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Benachrichtigungs-E-Mail (für neue Reservierungen)
+                    </label>
+                    <Input
+                      type="email"
+                      value={reservationEmail}
+                      onChange={(e) =>
+                        actions.features.updateFeatureFlags({
+                          reservationEmail: e.target.value,
+                        })
+                      }
+                      placeholder={user?.primaryEmailAddress?.emailAddress || "email@beispiel.de"}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      An diese E-Mail-Adresse werden Benachrichtigungen über neue Reservierungen gesendet. Standardmäßig wird die E-Mail deines Kontos verwendet.
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Vorausbuchungs-Zeitraum (Tage)
+                  </label>
+                  <select
+                    value={reservationDaysAhead}
+                    onChange={(e) =>
+                      actions.features.updateFeatureFlags({
+                        reservationDaysAhead: parseInt(e.target.value),
+                      })
+                    }
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  >
+                    <option value={7}>7 Tage</option>
+                    <option value={14}>14 Tage</option>
+                    <option value={30}>30 Tage</option>
+                    <option value={90}>90 Tage</option>
                   </select>
                 </div>
               </div>

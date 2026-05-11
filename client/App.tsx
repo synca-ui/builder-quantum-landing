@@ -42,11 +42,13 @@ const Impressum = lazy(() => import("./pages/Impressum"));
 const AGB = lazy(() => import("./pages/AGB"));
 const CheckDatenschutz = lazy(() => import("./pages/CheckDatenschutz"));
 const CheckImpressum = lazy(() => import("./pages/CheckImpressum"));
+const ManageReservation = lazy(() => import("./pages/ManageReservation"));
 import CookieBanner from "./components/cookie-banner";
 
 // Dashboard Pages (lazy loaded)
 const InsightsPage = lazy(() => import("./pages/dashboard/InsightsPage"));
 const StaffPage = lazy(() => import("./pages/dashboard/StaffPage"));
+const ReservationsDashboard = lazy(() => import("./pages/dashboard/ReservationsDashboard"));
 const FloorPlanPage = lazy(() => import("./pages/dashboard/FloorPlanPage"));
 const CreativeStudioPage = lazy(
   () => import("./pages/dashboard/CreativeStudioPage"),
@@ -127,6 +129,7 @@ const App = () => {
                       <Route path="/datenschutz-check" element={<CheckDatenschutz />} />
                       {/* Public Routes */}
                       <Route path="/" element={<HostAwareRoot />} />
+                      <Route path="/r/:id" element={<ManageReservation />} />
 
                       {/* CLERK AUTHENTICATED ROUTES */}
                       <Route element={<AuthWrapper />}>
@@ -163,6 +166,14 @@ const App = () => {
                           element={
                             <RequireAuth>
                               <StaffPage />
+                            </RequireAuth>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/reservations"
+                          element={
+                            <RequireAuth>
+                              <ReservationsDashboard />
                             </RequireAuth>
                           }
                         />

@@ -41,6 +41,7 @@ import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
 import { CategoryFilter } from "@/components/shared/CategoryFilter"; // ✅ CategoryFilter Component
+import ReservationFormModern from "./ReservationFormModern";
 
 interface AppRendererProps {
   config: any; // Akzeptiert flache DB-Daten oder verschachtelte Configuration
@@ -559,7 +560,28 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     </div>
   );
 
-  const renderReservationsPage = () => (
+  const renderReservationsPage = () => {
+    // Modern Tile Form (new style)
+    if ((config as any).reservationFormStyle === "modern" || (rawConfig as any).reservationFormStyle === "modern") {
+      return (
+        <div className="w-full max-w-lg mx-auto animate-in fade-in duration-300 px-2">
+          <ReservationFormModern
+            configId={(rawConfig as any).id || ""}
+            businessName={business.name}
+            primaryColor={design.primaryColor}
+            buttonColor={features.reservationButtonColor || design.primaryColor}
+            textColor={design.fontColor}
+            bgColor={design.backgroundColor}
+            buttonTextColor={features.reservationButtonTextColor || "#ffffff"}
+            buttonShape={(features.reservationButtonShape as any) || "rounded"}
+            maxGuests={features.maxGuests}
+          />
+        </div>
+      );
+    }
+
+    // Classic Form (original)
+    return (
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300 max-w-2xl mx-auto">
       <div className="text-center">
         <div
@@ -633,7 +655,8 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         </p>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     switch (activePage) {

@@ -102,12 +102,18 @@ export interface FeatureFlags {
   reservationsEnabled: boolean;
   maxGuests?: number;
   notificationMethod?: string;
+  reservationEmail?: string;
   reservationButtonColor?: string;
   reservationButtonTextColor?: string;
   reservationButtonShape?: "rounded" | "pill" | "square";
   onlineOrderingEnabled: boolean;
   onlineStoreEnabled: boolean;
   teamAreaEnabled: boolean;
+  reservationFormStyle?: "classic" | "modern";
+  reservationNotificationEmail?: string;
+  reservationTimeSlotInterval?: number;
+  reservationDaysAhead?: number;
+  timeSlots?: string[];
 }
 
 /**

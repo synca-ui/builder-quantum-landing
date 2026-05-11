@@ -91,6 +91,12 @@ export const FeatureFlagsSchema = z.object({
   reservationButtonColor: z.string().optional(),
   reservationButtonTextColor: z.string().optional(),
   reservationButtonShape: z.string().optional(),
+  reservationEmail: z.string().optional(),
+  reservationFormStyle: z.enum(["classic", "modern"]).optional().default("classic"),
+  reservationNotificationEmail: z.string().optional(),
+  reservationTimeSlotInterval: z.number().optional().default(30),
+  reservationDaysAhead: z.number().optional().default(7),
+  timeSlots: z.array(z.string()).optional(),
   onlineOrderingEnabled: z.boolean().default(false),
   onlineStoreEnabled: z.boolean().default(false),
   teamAreaEnabled: z.boolean().default(false),
@@ -246,6 +252,12 @@ export const LegacyConfigurationSchema = z
     reservationButtonColor: z.string().optional(),
     reservationButtonTextColor: z.string().optional(),
     reservationButtonShape: z.string().optional(),
+    reservationEmail: z.string().optional(),
+    reservationFormStyle: z.string().optional().default("classic"),
+    reservationNotificationEmail: z.string().optional(),
+    reservationTimeSlotInterval: z.coerce.number().optional().default(30),
+    reservationDaysAhead: z.coerce.number().optional().default(7),
+    timeSlots: z.array(z.string()).optional(),
   })
   .strict();
 

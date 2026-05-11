@@ -14,6 +14,8 @@ import floorPlanRouter from "./floor-plan";
 import staffRouter from "./staff";
 import creativeStudioRouter from "./creative-studio";
 import adminRouter from "./admin";
+import reservationsRouter from "./reservations";
+import publicReservationsRouter from "./publicReservations";
 
 // Inline Demo Dashboard Router (to avoid build issues)
 const demoDashboardRouter = Router();
@@ -156,9 +158,13 @@ apiRouter.use("/dashboard/floor-plan", floorPlanRouter);
 apiRouter.use("/dashboard/staff", staffRouter);
 apiRouter.use("/dashboard/creative", creativeStudioRouter);
 apiRouter.use("/dashboard/admin", adminRouter);
+apiRouter.use("/dashboard/reservations", reservationsRouter);
 
 // Demo Dashboard API routes (no auth required)
 apiRouter.use("/demo/dashboard", demoDashboardRouter);
+
+// Public reservation routes (no auth required)
+apiRouter.use("/public/reservations", publicReservationsRouter);
 
 // Standalone configuration routes (for backward compatibility)
 apiRouter.get("/config/:slug", getConfigBySlug);
