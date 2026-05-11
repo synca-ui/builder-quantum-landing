@@ -1,6 +1,5 @@
 import { PageSEO } from "@/components/seo/PageSEO";
 import React, { useEffect, useState, memo, lazy, Suspense } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -45,7 +44,8 @@ import {
   useImageOptimization,
   useDemoDashboardVisibility,
 } from "@/hooks/usePerformanceOptimization";
-import { useAuth, UserButton, ClerkProvider } from "@clerk/clerk-react";
+// Clerk removed from landing page for performance (~700KB JS saving)
+// Auth UI is only loaded on /login, /signup, /dashboard etc.
 
 const features = [
   {
@@ -165,7 +165,6 @@ const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
     let ticking = false;
@@ -261,25 +260,19 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            {isLoaded && isSignedIn ? (
-              <UserButton afterSignOutUrl="/" />
-            ) : (
-              <>
-                <a href="/login">
-                  <Button variant="outline" size="sm">
-                    Log in
-                  </Button>
-                </a>
-                <a href="/signup">
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                  >
-                    Sign up
-                  </Button>
-                </a>
-              </>
-            )}
+              <a href="/login">
+                <Button variant="outline" size="sm">
+                  Log in
+                </Button>
+              </a>
+              <a href="/signup">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                >
+                  Sign up
+                </Button>
+              </a>
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -344,27 +337,19 @@ const Navigation = () => {
             ))}
 
             <div className="pt-2 border-t border-gray-200/50 space-y-2">
-              {isLoaded && isSignedIn ? (
-                <div className="flex justify-center py-2">
-                  <UserButton afterSignOutUrl="/" />
-                </div>
-              ) : (
-                <>
-                  <a href="/login" className="w-full">
-                    <Button size="sm" variant="outline" className="w-full">
-                      Log in
-                    </Button>
-                  </a>
-                  <a href="/signup" className="w-full">
-                    <Button
-                      size="sm"
-                      className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                    >
-                      Sign up
-                    </Button>
-                  </a>
-                </>
-              )}
+                <a href="/login" className="w-full">
+                  <Button size="sm" variant="outline" className="w-full">
+                    Log in
+                  </Button>
+                </a>
+                <a href="/signup" className="w-full">
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
+                  >
+                    Sign up
+                  </Button>
+                </a>
 
               <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                 <Button
@@ -462,23 +447,9 @@ function IndexContent() {
           <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full opacity-5"></div>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
-          <motion.div 
-            className="text-center"
-            initial="hidden"
-            animate={isVisible ? "visible" : "hidden"}
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.15, delayChildren: 0.1 }
-              }
-            }}
-          >
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-              }}
+          <div className="text-center">
+            <div
+              className={`transition-all duration-700 ease-out will-change-transform ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"}`}
             >
               <div className="flex justify-center mb-6">
                 <div className="relative">
@@ -486,15 +457,8 @@ function IndexContent() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
                 </div>
               </div>
-            </motion.div>
             
-            <motion.h1 
-              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight"
-              variants={{
-                hidden: { opacity: 0, y: 30 },
-                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 200, damping: 20 } }
-              }}
-            >
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
               <span className="font-display text-gradient">
                 Deine eigene Restaurant-App.
               </span>
@@ -502,27 +466,15 @@ function IndexContent() {
               <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent inline-block mt-2 sm:mt-0">
                 In 30 Sekunden.
               </span>
-            </motion.h1>
+            </h1>
             
-            <motion.p 
-              className="text-base sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed font-medium px-4 sm:px-2"
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-              }}
-            >
+            <p className="text-base sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed font-medium px-4 sm:px-2">
                 Link einfügen, fertig. Maitr erstellt automatisch deine digitale
                 Speisekarte und dein Reservierungssystem – bereit zum Servieren.
                 🍒
-            </motion.p>
+            </p>
 
-            <motion.div 
-              className="w-full max-w-3xl mx-auto mt-6"
-              variants={{
-                hidden: { opacity: 0, y: 30, scale: 0.95 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 250, damping: 25 } }
-              }}
-            >
+            <div className="w-full max-w-3xl mx-auto mt-6">
               <div className="flex flex-col md:flex-row items-center gap-4">
                   <form
                     onSubmit={handleMagicSubmit}
@@ -670,8 +622,8 @@ function IndexContent() {
                   </div>
                 )}
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1025,13 +977,5 @@ function IndexContent() {
 }
 
 export default function Index() {
-  const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  if (!CLERK_PUBLISHABLE_KEY) {
-    return <IndexContent />;
-  }
-  return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <IndexContent />
-    </ClerkProvider>
-  );
+  return <IndexContent />;
 }

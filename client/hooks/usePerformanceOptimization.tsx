@@ -38,26 +38,16 @@ export function useResourcePreloader() {
         document.head.appendChild(link);
       });
 
-      // Preload demo dashboard API endpoints for instant demo access
-      const demoEndpoints = [
-        "/api/demo/dashboard/insights/overview",
-        "/api/demo/dashboard/floor-plan/plans",
-        "/api/demo/dashboard/health",
-      ];
+      // Only preload demo endpoints when user is actually on/near the demo page
+      if (window.location.pathname.startsWith("/demo-dashboard")) {
+        const demoEndpoints = [
+          "/api/demo/dashboard/insights/overview",
+          "/api/demo/dashboard/floor-plan/plans",
+        ];
 
-      demoEndpoints.forEach((endpoint) => {
-        fetch(endpoint, { method: "HEAD" }).catch(() => {
-          // Silently handle errors, don't block main thread
+        demoEndpoints.forEach((endpoint) => {
+          fetch(endpoint, { method: "HEAD" }).catch(() => {});
         });
-      });
-
-      // Preload demo dashboard component resources
-      if (window.location.pathname === "/") {
-        // Specifically preload demo dashboard when on homepage
-        const demoLink = document.createElement("link");
-        demoLink.rel = "modulepreload";
-        demoLink.href = "/demo-dashboard";
-        document.head.appendChild(demoLink);
       }
 
       // Preload configurator API only when on configurator route

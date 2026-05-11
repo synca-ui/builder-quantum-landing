@@ -1,6 +1,6 @@
 import "./global.css";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,11 +12,10 @@ import {
   Routes,
   Route,
   Navigate,
-  Outlet,
 } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
-import { ClerkProvider } from "@clerk/clerk-react";
+// Clerk is lazy-loaded via LazyAuthWrapper — NOT imported at top level
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
 
@@ -43,7 +42,7 @@ const AGB = lazy(() => import("./pages/AGB"));
 const CheckDatenschutz = lazy(() => import("./pages/CheckDatenschutz"));
 const CheckImpressum = lazy(() => import("./pages/CheckImpressum"));
 const ManageReservation = lazy(() => import("./pages/ManageReservation"));
-import CookieBanner from "./components/cookie-banner";
+const CookieBanner = lazy(() => import("./components/cookie-banner"));
 
 // Dashboard Pages (lazy loaded)
 const InsightsPage = lazy(() => import("./pages/dashboard/InsightsPage"));
@@ -77,24 +76,24 @@ const queryClient = new QueryClient({
   },
 });
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!CLERK_PUBLISHABLE_KEY) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
-}
-
-const AuthWrapper = () => {
-  return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <Outlet />
-    </ClerkProvider>
-  );
-};
+// Clerk is lazy-loaded: ~700KB JS only downloaded on auth routes
+const AuthWrapper = lazy(() => import("./components/LazyAuthWrapper"));
 
 const App = () => {
   // Register Service Worker and PWA functionality
   useServiceWorker();
   useInstallPrompt();
+
+  // Defer cookie banner until browser is idle (non-render-blocking)
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
+  useEffect(() => {
+    const show = () => setShowCookieBanner(true);
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(show, { timeout: 3000 });
+    } else {
+      setTimeout(show, 1500);
+    }
+  }, []);
 
   return (
     <PerformanceErrorBoundary>
@@ -228,7 +227,11 @@ const App = () => {
                 </BrowserRouter>
               </TooltipProvider>
             </HelmetProvider>
-            <CookieBanner />
+            {showCookieBanner && (
+              <Suspense fallback={null}>
+                <CookieBanner />
+              </Suspense>
+            )}
           </QueryClientProvider>
         </I18nextProvider>
       </ErrorBoundary>
