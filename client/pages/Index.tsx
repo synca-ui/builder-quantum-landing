@@ -387,7 +387,7 @@ const Navigation = () => {
 };
 
 
-export default function Index() {
+function IndexContent() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
 
@@ -985,5 +985,17 @@ export default function Index() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function Index() {
+  const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  if (!CLERK_PUBLISHABLE_KEY) {
+    return <IndexContent />;
+  }
+  return (
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      <IndexContent />
+    </ClerkProvider>
   );
 }
