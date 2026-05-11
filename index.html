@@ -155,7 +155,49 @@
   </noscript>
 
   <div id="root">
-    <div class="loading-spinner"></div>
+    <div class="loading-spinner" id="fallback-spinner"></div>
+    <script>
+      (function() {
+        try {
+          var host = window.location.hostname;
+          var isMainDomain = host === 'maitr.de' || host === 'www.maitr.de' || host === 'localhost' || host === '127.0.0.1';
+          
+          if (isMainDomain && window.location.pathname === '/') {
+            document.getElementById('root').innerHTML = `
+              <div style="min-height: 100vh; font-family: 'Space Grotesk', system-ui, sans-serif; background: #ffffff;">
+                <header style="height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 5%; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                  <div style="font-size: 24px; font-weight: 900; background: linear-gradient(to right, #0d9488, #9333ea); -webkit-background-clip: text; color: transparent;">Maitr</div>
+                  <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="width: 80px; height: 32px; border-radius: 9999px; background: #f3f4f6;"></div>
+                    <div style="width: 140px; height: 36px; border-radius: 9999px; background: linear-gradient(to right, #14b8a6, #a855f7);"></div>
+                  </div>
+                </header>
+                <main style="max-width: 1200px; margin: 0 auto; padding: 80px 20px 60px; text-center;">
+                  <h1 style="font-size: clamp(2.5rem, 6vw, 5.5rem); font-weight: 900; line-height: 1.1; color: #111827; margin-bottom: 1.5rem; letter-spacing: -0.02em;">
+                    Deine eigene Restaurant-App.<br/>
+                    <span style="background: linear-gradient(to right, #0d9488, #9333ea, #ea580c); -webkit-background-clip: text; color: transparent;">In 30 Sekunden.</span>
+                  </h1>
+                  <p style="font-size: clamp(1rem, 2vw, 1.25rem); color: #4b5563; max-width: 48rem; margin: 0 auto 2.5rem; font-family: 'Poppins', sans-serif;">
+                    Link einfügen, fertig. Maitr erstellt automatisch deine digitale Speisekarte und dein Reservierungssystem – bereit zum Servieren. 🍒
+                  </p>
+                  
+                  <div style="max-width: 48rem; margin: 0 auto; background: white; border-radius: 9999px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); padding: 8px; display: flex; border: 1px solid rgba(0,0,0,0.05); height: 60px;">
+                    <div style="flex: 1; display: flex; align-items: center; padding-left: 16px;">
+                      <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #9ca3af;"></div>
+                      <div style="width: 60%; max-width: 300px; height: 16px; background: #f3f4f6; border-radius: 4px; margin-left: 12px;"></div>
+                    </div>
+                    <div style="width: 160px; background: linear-gradient(to right, #14b8a6, #a855f7, #f97316); border-radius: 9999px;"></div>
+                  </div>
+                  
+                  <!-- Inner Loading Spinner -->
+                  <div style="width: 32px; height: 32px; border: 3px solid #f3f4f6; border-top: 3px solid #14b8a6; border-radius: 50%; animation: spin 1s linear infinite; margin: 80px auto;"></div>
+                </main>
+              </div>
+            `;
+          }
+        } catch (e) {}
+      })();
+    </script>
   </div>
 
   <!-- Preload main script for better performance -->

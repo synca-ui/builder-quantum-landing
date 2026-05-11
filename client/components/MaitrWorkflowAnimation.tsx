@@ -26,9 +26,8 @@ export default function MaitrWorkflowAnimation() {
 
   return (
     <div className="relative w-full">
-      {/* Main Animation - TALLER for smoother transitions */}
       <div
-        className="relative w-full max-w-7xl mx-auto h-[850px] flex items-start justify-center overflow-hidden pt-40 bg-gray-50 rounded-3xl border border-gray-200 mt-8 mb-20"
+        className="relative w-full max-w-7xl mx-auto h-[850px] md:h-[850px] flex items-start justify-center overflow-hidden pt-20 md:pt-40 bg-gray-50 rounded-3xl border border-gray-200 mt-4 md:mt-8 mb-10 md:mb-20"
         style={{
           backgroundImage:
             "radial-gradient(circle, #d1d5db 1px, transparent 1px)",
@@ -109,7 +108,7 @@ function InputStage({ onStart }: { onStart: () => void }) {
       className="flex flex-col sm:flex-row items-center justify-center gap-3 relative w-full max-w-2xl mx-auto px-4 sm:px-0"
     >
       <motion.div
-        className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl px-6 py-4 flex items-center gap-3 w-full sm:min-w-[400px]"
+        className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl px-4 sm:px-6 py-4 flex items-center gap-2 sm:gap-3 w-full max-w-[90%] sm:max-w-none sm:min-w-[400px]"
         style={{ willChange: "transform" }}
         whileHover={{ scale: 1.02 }}
       >
@@ -124,7 +123,7 @@ function InputStage({ onStart }: { onStart: () => void }) {
       </motion.div>
 
       <motion.button
-        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white rounded-3xl px-8 py-4 shadow-lg flex items-center justify-center gap-2 font-medium text-sm relative overflow-hidden whitespace-nowrap shrink-0"
+        className="bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-white rounded-3xl px-6 sm:px-8 py-4 shadow-lg flex items-center justify-center gap-2 font-medium text-sm relative overflow-hidden whitespace-nowrap shrink-0 mt-2 sm:mt-0"
         style={{ willChange: "transform" }}
         whileHover={{ scale: 1.05 }}
         animate={{
@@ -366,16 +365,16 @@ function DataImportStage() {
 // Phase 3: Large Phone Reveal with Bella Content
 function PhoneReveal() {
   return (
-    <motion.div
+      <motion.div
       initial={{ opacity: 0, x: 100 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.7, type: "spring" }}
-      className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 -mt-12 w-full px-4"
+      className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12 -mt-8 lg:-mt-12 w-full px-4"
     >
-      {/* iPhone 14 Pro Mockup - ULTRA REALISTIC */}
+      {/* iPhone 14 Pro Mockup - SCALED ON MOBILE */}
       <motion.div
-        className="relative"
+        className="relative transform scale-75 sm:scale-90 md:scale-100 origin-top"
         initial={{ scale: 0.8, rotate: -5 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ delay: 0.3, type: "spring" }}

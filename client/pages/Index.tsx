@@ -1,5 +1,6 @@
 import { PageSEO } from "@/components/seo/PageSEO";
 import React, { useEffect, useState, memo, lazy, Suspense } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -461,9 +462,23 @@ function IndexContent() {
           <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full opacity-5"></div>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
-          <div className="text-center">
-            <div
-              className={`transition-all duration-700 ease-out will-change-transform ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"}`}
+          <motion.div 
+            className="text-center"
+            initial="hidden"
+            animate={isVisible ? "visible" : "hidden"}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.15, delayChildren: 0.1 }
+              }
+            }}
+          >
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+              }}
             >
               <div className="flex justify-center mb-6">
                 <div className="relative">
@@ -471,23 +486,44 @@ function IndexContent() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
                 </div>
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 mb-6 leading-tight tracking-tight">
-                <span className="font-display text-gradient">
-                  Deine eigene Restaurant-App.
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent">
-                  In 30 Sekunden.
-                </span>
-              </h1>
-              <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-10 max-w-4xl mx-auto leading-relaxed font-medium px-2">
+            </motion.div>
+            
+            <motion.h1 
+              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight"
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 200, damping: 20 } }
+              }}
+            >
+              <span className="font-display text-gradient">
+                Deine eigene Restaurant-App.
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent inline-block mt-2 sm:mt-0">
+                In 30 Sekunden.
+              </span>
+            </motion.h1>
+            
+            <motion.p 
+              className="text-base sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed font-medium px-4 sm:px-2"
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+              }}
+            >
                 Link einfügen, fertig. Maitr erstellt automatisch deine digitale
                 Speisekarte und dein Reservierungssystem – bereit zum Servieren.
                 🍒
-              </p>
+            </motion.p>
 
-              <div className="w-full max-w-3xl mx-auto mt-6">
-                <div className="flex flex-col md:flex-row items-center gap-4">
+            <motion.div 
+              className="w-full max-w-3xl mx-auto mt-6"
+              variants={{
+                hidden: { opacity: 0, y: 30, scale: 0.95 },
+                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 250, damping: 25 } }
+              }}
+            >
+              <div className="flex flex-col md:flex-row items-center gap-4">
                   <form
                     onSubmit={handleMagicSubmit}
                     className={`flex flex-col sm:flex-row items-stretch sm:items-center rounded-3xl sm:rounded-full bg-white/90 backdrop-blur shadow-2xl p-1.5 flex-1 border transition-colors duration-300 ${inputError ? "border-red-300 shadow-red-100" : "border-white/20"}`}
@@ -634,8 +670,8 @@ function IndexContent() {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -667,7 +703,7 @@ function IndexContent() {
           {/* Workflow Animation */}
           <Suspense
             fallback={
-              <div className="w-full max-w-7xl mx-auto h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-8 mb-20 flex items-center justify-center">
+              <div className="w-full max-w-7xl mx-auto min-h-[700px] md:h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-4 md:mt-8 mb-10 md:mb-20 flex items-center justify-center">
                 <Loader2 className="w-10 h-10 animate-spin text-teal-500" />
               </div>
             }
@@ -677,11 +713,11 @@ function IndexContent() {
         </div>
       </section>
 
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-4xl font-black">Beispiel Dashboard</h2>
-            <p className="text-gray-600 mt-2">
+          <div className="text-center mb-8 md:mb-10">
+            <h2 className="text-3xl md:text-4xl font-black">Beispiel Dashboard</h2>
+            <p className="text-gray-600 mt-2 text-sm md:text-base px-4">
               Ein kurzer Vorgeschmack auf das, was dich nach dem Login erwartet.
             </p>
           </div>

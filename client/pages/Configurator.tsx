@@ -13,6 +13,8 @@ import {
   Save,
   Loader2,
   Undo2,
+  Monitor,
+  Smartphone,
 } from "lucide-react";
 
 import {
@@ -670,8 +672,8 @@ export default function Configurator() {
       <NavigationHeader />
 
       <div className="pt-24 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* items-start sorgt dafür, dass die sticky Spalte nicht gestreckt wird */}
-        <div className="grid lg:grid-cols-12 gap-8 items-start relative">
+        {/* DESKTOP LAYOUT */}
+        <div className="hidden lg:grid lg:grid-cols-12 gap-8 items-start relative">
           {/* LINKES PANEL */}
           <div
             className={`${isFullWidthStep ? "lg:col-span-12" : "lg:col-span-7 xl:col-span-8"} order-2 lg:order-1`}
@@ -689,6 +691,50 @@ export default function Configurator() {
           {!isFullWidthStep && currentStep !== -1 && (
             <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2 sticky top-32 self-start">
               <LivePreview />
+            </div>
+          )}
+        </div>
+
+        {/* MOBILE LAYOUT */}
+        <div className="block lg:hidden">
+          {currentStep === -1 ? (
+            // Show Dashboard/Welcome Page on Mobile
+            renderMainContent()
+          ) : (
+            <div className="flex flex-col items-center max-w-md mx-auto space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-orange-200 p-6 text-center w-full relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-orange-400"></div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Monitor className="w-6 h-6 text-orange-600" />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900 mb-2">Desktop benötigt</h2>
+                <p className="text-gray-600 text-sm mb-6">
+                  Die Website-Konfiguration ist für größere Bildschirme optimiert. Bitte wechsle an einen Computer oder ein Tablet, um deine Seite zu bearbeiten.
+                </p>
+                <Button 
+                  onClick={() => setCurrentStep(-1)} 
+                  variant="outline" 
+                  className="w-full text-sm font-medium border-gray-300"
+                >
+                  Zurück zum Dashboard
+                </Button>
+              </div>
+
+              <div className="w-full">
+                <div className="flex items-center justify-center space-x-2 mb-4 opacity-60">
+                  <Smartphone className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Aktuelle Live-Vorschau</span>
+                </div>
+                
+                {/* Embedded Template Preview Content directly without the LivePreview component wrapping, scaled appropriately */}
+                <div className="bg-white border-[6px] border-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden relative mx-auto" style={{ width: '320px', height: '650px' }}>
+                  {/* Fake Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+                  <div className="w-full h-full bg-white relative z-10 overflow-y-auto">
+                    <TemplatePreviewContent />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
