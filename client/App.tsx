@@ -250,6 +250,18 @@ declare global {
 const rootElement = document.getElementById("root");
 if (rootElement) {
   if (!window.__APP_ROOT__) {
+    // Global error handler for chunk loading issues (e.g., after a new deployment)
+    window.addEventListener("unhandledrejection", (event) => {
+      if (event.reason && (
+        event.reason.name === "ChunkLoadError" || 
+        event.reason.message?.includes("MIME type") ||
+        event.reason.message?.includes("Loading chunk")
+      )) {
+        console.warn("🔄 Chunk load error detected, forcing reload to get latest version...");
+        window.location.reload();
+      }
+    });
+
     window.__APP_ROOT__ = createRoot(rootElement);
   }
   window.__APP_ROOT__.render(<App />);

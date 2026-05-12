@@ -11,7 +11,7 @@
  *  während die neue Version im Hintergrund geladen wird.
  */
 
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 const STATIC_CACHE = `maitr-static-${CACHE_VERSION}`;
 const SITE_CONFIG_CACHE = `maitr-site-config-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
