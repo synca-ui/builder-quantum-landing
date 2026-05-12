@@ -3,9 +3,6 @@ import Lottie, { LottieRefCurrentProps } from "lottie-react";
 
 // Dynamically import JSON files to drastically reduce chunk size
 const ANIMATIONS = [
-  () => import("../assets/Loadercat.json"),
-  () => import("../assets/PrepareFood.json"),
-  () => import("../assets/CookingPreloader.json"),
   () => import("../assets/Burger.json")
 ];
 

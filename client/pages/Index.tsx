@@ -34,6 +34,7 @@ import { openCookieSettings } from "@/components/cookie-banner";
 const MaitrWorkflowAnimation = lazy(
   () => import("@/components/MaitrWorkflowAnimation"),
 );
+const LazyAuthSection = lazy(() => import("@/components/LazyAuthSection"));
 
 import { Card, CardContent } from "@/components/ui/card";
 import { sessionApi } from "@/lib/api";
@@ -260,19 +261,9 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-              <a href="/login">
-                <Button variant="outline" size="sm">
-                  Log in
-                </Button>
-              </a>
-              <a href="/signup">
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                >
-                  Sign up
-                </Button>
-              </a>
+            <Suspense fallback={<div className="w-32 h-9 bg-gray-100 animate-pulse rounded-lg"></div>}>
+              <LazyAuthSection />
+            </Suspense>
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -337,19 +328,9 @@ const Navigation = () => {
             ))}
 
             <div className="pt-2 border-t border-gray-200/50 space-y-2">
-                <a href="/login" className="w-full">
-                  <Button size="sm" variant="outline" className="w-full">
-                    Log in
-                  </Button>
-                </a>
-                <a href="/signup" className="w-full">
-                  <Button
-                    size="sm"
-                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 text-white"
-                  >
-                    Sign up
-                  </Button>
-                </a>
+              <Suspense fallback={null}>
+                <LazyAuthSection />
+              </Suspense>
 
               <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                 <Button

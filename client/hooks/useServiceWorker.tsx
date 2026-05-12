@@ -59,13 +59,13 @@ export function useServiceWorker() {
         }
       });
     } else if (import.meta.env.DEV) {
-      console.log("SW registration skipped in development");
-      // Force unregister in dev to prevent stale cache issues
+      // In development, we usually want to make sure no service worker is active
+      // to avoid stale cache issues, but we should do it silently without reloading
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (let registration of registrations) {
-          registration.unregister();
-          console.log("🧹 Existing SW unregistered for dev mode");
-          window.location.reload(); // Reload once to flush cache
+          registration.unregister().then(() => {
+            console.log("🧹 Existing SW unregistered for dev mode");
+          });
         }
       });
     }
