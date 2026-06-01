@@ -25,6 +25,7 @@ import { useServiceWorker, useInstallPrompt } from "@/hooks/useServiceWorker";
 const Configurator = lazy(() => import("./pages/Configurator"));
 const ModeSelection = lazy(() => import("./pages/ModeSelection"));
 const CheckLanding = lazy(() => import("./pages/CheckLanding"));
+const JulianPortfolio = lazy(() => import("./pages/JulianPortfolio"));
 // Lazy load heavy components for better performance
 const AutoConfigurator = lazy(() => import("./pages/AutoConfigurator"));
 const Site = lazy(() => import("./pages/Site"));
@@ -119,6 +120,7 @@ const App = () => {
 
                       {/* Check Landing Page Preview (local dev) */}
                       <Route path="/check-landing" element={<CheckLanding />} />
+                      <Route path="/julian-preview" element={<JulianPortfolio />} />
 
                       {/* Legal Pages */}
                       <Route path="/impressum" element={<Impressum />} />

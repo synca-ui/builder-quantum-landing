@@ -42,6 +42,7 @@ if (SUBDOMAIN && SUBDOMAIN !== "check") {
 
 const AppRenderer = lazy(() => appRendererPromise || import("@/components/dynamic/AppRenderer.tsx"));
 const CheckLanding = lazy(() => import("./CheckLanding"));
+const JulianPortfolio = lazy(() => import("./JulianPortfolio"));
 
 // (verschoben nach oben)
 
@@ -66,11 +67,11 @@ export default function HostAwareRoot() {
   );
   const [loading, setLoading] = useState(
     // Kein Loader wenn Config bereits vorhanden (Edge-Injection ODER Session-Cache)
-    !!SUBDOMAIN && SUBDOMAIN !== "check" && !sessionCache?.config && !EDGE_INJECTED_CONFIG,
+    !!SUBDOMAIN && SUBDOMAIN !== "check" && SUBDOMAIN !== "julianheinrich" && !sessionCache?.config && !EDGE_INJECTED_CONFIG,
   );
 
   useEffect(() => {
-    if (!SUBDOMAIN || SUBDOMAIN === "check" || config) {
+    if (!SUBDOMAIN || SUBDOMAIN === "check" || SUBDOMAIN === "julianheinrich" || config) {
       setLoading(false);
       return;
     }
@@ -132,14 +133,17 @@ export default function HostAwareRoot() {
   // check.maitr.de → Check-Landing Page
   if (SUBDOMAIN === "check") {
     return (
-      <Suspense
-        fallback={
-          <div className="h-screen flex items-center justify-center bg-white">
-            <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
-          </div>
-        }
-      >
+      <Suspense fallback={<div className="h-screen flex items-center justify-center bg-white"><Loader2 className="w-10 h-10 text-orange-500 animate-spin" /></div>}>
         <CheckLanding />
+      </Suspense>
+    );
+  }
+
+  // julianheinrich.maitr.de → Personal Portfolio
+  if (SUBDOMAIN === "julianheinrich") {
+    return (
+      <Suspense fallback={<div className="h-screen flex items-center justify-center bg-[#0a0a0a]"><Loader2 className="w-10 h-10 text-violet-500 animate-spin" /></div>}>
+        <JulianPortfolio />
       </Suspense>
     );
   }
