@@ -13,6 +13,9 @@ import {
   setSourceLink,
 } from "@/data/analysisStore";
 import { useMaitrScore } from "@/hooks/useMaitrScore";
+import { useAuth } from "@clerk/clerk-react";
+import { AuthGateModal } from "@/components/AuthGateModal";
+import { ComingSoonModal } from "@/components/ComingSoonModal";
 
 interface ScraperJobData {
   id: string;
@@ -40,7 +43,10 @@ export default function ModeSelection() {
   const urlSource = params.get("sourceLink");
 
   const { isLoading, n8nData } = useAnalysis();
+  const { isSignedIn } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const [scraperData, setScraperData] = useState<ScraperJobData | null>(null);
   const [scraperLoading, setScraperLoading] = useState(false);
 
@@ -148,6 +154,15 @@ export default function ModeSelection() {
     }
   }
 
+  /** Guard: open auth modal if not signed in, otherwise navigate directly */
+  const handleManualConfiguratorClick = () => {
+    if (isSignedIn) {
+      navigate("/configurator/manual");
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(decodedUrl || "");
@@ -171,6 +186,21 @@ export default function ModeSelection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-teal-50/40 to-gray-100">
+      <AuthGateModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onContinueWithout={() => {
+          setShowAuthModal(false);
+          navigate("/configurator/manual");
+        }}
+        headline="Jetzt einloggen – kostenlos starten"
+        subline="Erstelle ein kostenloses Konto, um deine Konfiguration zu speichern und deine Website live zu schalten. Du kannst auch erst einmal ohne Account stöbern."
+        redirectUrl="/configurator/manual"
+      />
+      <ComingSoonModal
+        open={showComingSoon}
+        onClose={() => setShowComingSoon(false)}
+      />
       <PageSEO title="Maitr - Modus auswählen" description="Wähle deinen Maitr Modus." noindex={true} />
 
       <Headbar title="Auswahl" />
@@ -238,11 +268,7 @@ export default function ModeSelection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  navigate(
-                    `/configurator/auto?sourceLink=${encodeURIComponent(decodedUrl || "")}`,
-                  )
-                }
+                onClick={() => setShowComingSoon(true)}
                 className="text-xs font-semibold"
               >
                 Automatisch starten
@@ -294,7 +320,7 @@ export default function ModeSelection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate("/configurator/manual")}
+                onClick={handleManualConfiguratorClick}
                 className="w-full text-xs font-semibold"
               >
                 Zum manuellen Konfigurator
@@ -339,11 +365,7 @@ export default function ModeSelection() {
             </ul>
             <div className="mt-auto flex items-center gap-2">
               <Button
-                onClick={() =>
-                  navigate(
-                    `/configurator/auto${urlSource ? `?sourceLink=${urlSource}` : ""}`,
-                  )
-                }
+                onClick={() => setShowComingSoon(true)}
                 size="sm"
                 className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${highScore ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200" : "bg-gradient-to-r from-purple-500 to-orange-500"}`}
               >
@@ -352,7 +374,7 @@ export default function ModeSelection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate("/configurator/manual")}
+                onClick={handleManualConfiguratorClick}
                 className="text-xs font-semibold text-gray-500 shrink-0"
               >
                 Nachher bearbeiten

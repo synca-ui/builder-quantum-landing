@@ -17,6 +17,7 @@ import {
   PartyPopper,
 } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
+import { AuthGateModal } from "@/components/AuthGateModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -362,11 +363,12 @@ export function PublishStep({
   configId,
 }: PublishStepProps) {
   const { t } = useTranslation();
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentStage, setCurrentStage] =
     useState<DeploymentStage>("validating");
   const [publishError, setPublishError] = useState<string | undefined>();
@@ -827,7 +829,13 @@ export function PublishStep({
         {/* Publish Button */}
         <div className="text-center pt-4">
           <Button
-            onClick={handlePublish}
+            onClick={() => {
+              if (!isSignedIn) {
+                setShowAuthModal(true);
+              } else {
+                handlePublish();
+              }
+            }}
             disabled={isPublishing || !canPublish}
             size="lg"
             className={`px-12 py-6 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${canPublish
@@ -845,6 +853,15 @@ export function PublishStep({
           </p>
         </div>
       </div>
+
+      {/* Auth Gate Modal – shown when unauthenticated user tries to publish */}
+      <AuthGateModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        headline="Login erforderlich zum Veröffentlichen"
+        subline="Erstelle ein kostenloses Konto oder melde dich an, um deine Web-App live zu schalten und dauerhaft zu speichern."
+        redirectUrl={window.location.pathname}
+      />
 
       <div className="flex justify-between mt-8">
         <Button
