@@ -16,6 +16,7 @@ import {
   Route,
   PartyPopper,
   Smartphone,
+  X,
 } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { AuthGateModal } from "@/components/AuthGateModal";
@@ -241,7 +242,158 @@ const PublishingProgress = memo(function PublishingProgress({
   );
 });
 
-// Success view component – compact one-pager, no scroll needed
+// ── QR Modal: glassmorphism bubble, auto-appears 1.5s after success ──────────
+const QRModal = memo(function QRModal({
+  publishedUrl,
+  onClose,
+}: {
+  publishedUrl: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 sm:p-6"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* ── Immersive gradient backdrop ── */}
+      <div
+        className="absolute inset-0 animate-in fade-in duration-400"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(20,184,166,0.35) 0%, rgba(168,85,247,0.30) 45%, rgba(15,15,25,0.92) 100%)",
+          backdropFilter: "blur(12px)",
+        }}
+        onClick={onClose}
+      />
+
+      {/* ── Floating ambient orbs (decorative, behind card) ── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Teal orb */}
+        <div
+          className="absolute rounded-full animate-pulse"
+          style={{
+            width: 220, height: 220,
+            top: "10%", left: "5%",
+            background: "radial-gradient(circle, rgba(20,184,166,0.25) 0%, transparent 70%)",
+            filter: "blur(40px)",
+            animationDuration: "4s",
+          }}
+        />
+        {/* Purple orb */}
+        <div
+          className="absolute rounded-full animate-pulse"
+          style={{
+            width: 280, height: 280,
+            top: "30%", right: "0%",
+            background: "radial-gradient(circle, rgba(168,85,247,0.22) 0%, transparent 70%)",
+            filter: "blur(50px)",
+            animationDuration: "5.5s",
+            animationDelay: "1s",
+          }}
+        />
+        {/* Orange orb */}
+        <div
+          className="absolute rounded-full animate-pulse"
+          style={{
+            width: 160, height: 160,
+            bottom: "15%", left: "25%",
+            background: "radial-gradient(circle, rgba(249,115,22,0.20) 0%, transparent 70%)",
+            filter: "blur(35px)",
+            animationDuration: "3.5s",
+            animationDelay: "0.5s",
+          }}
+        />
+      </div>
+
+      {/* ── Glass bubble card ── */}
+      <div
+        className="relative z-10 w-full max-w-[300px] rounded-[2rem] overflow-hidden animate-in zoom-in-50 fade-in duration-500"
+        style={{
+          background: "rgba(255,255,255,0.08)",
+          backdropFilter: "blur(32px) saturate(180%)",
+          WebkitBackdropFilter: "blur(32px) saturate(180%)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          boxShadow:
+            "0 8px 60px rgba(20,184,166,0.25), 0 2px 20px rgba(168,85,247,0.20), inset 0 1px 0 rgba(255,255,255,0.25)",
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          aria-label="Schließen"
+          className="absolute top-3 right-3 z-20 p-1.5 rounded-full transition-colors"
+          style={{
+            background: "rgba(255,255,255,0.12)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            color: "rgba(255,255,255,0.7)",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.22)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Header text */}
+        <div className="px-6 pt-7 pb-3 text-center">
+          {/* Gradient icon bubble */}
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"
+            style={{
+              background: "linear-gradient(135deg, #14b8a6 0%, #a855f7 60%, #f97316 100%)",
+              boxShadow: "0 4px 24px rgba(168,85,247,0.4)",
+            }}
+          >
+            <Smartphone className="w-7 h-7 text-white" />
+          </div>
+          <p className="text-white font-bold text-base leading-tight">
+            Live auf dem Handy
+          </p>
+          <p className="text-white/50 text-xs mt-0.5">
+            Scanne & erlebe deine App
+          </p>
+        </div>
+
+        {/* QR Code – pure white inset glass */}
+        <div className="flex justify-center px-6 pb-2">
+          <div
+            className="p-3 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.92)",
+              boxShadow: "inset 0 1px 3px rgba(0,0,0,0.08), 0 4px 20px rgba(0,0,0,0.25)",
+            }}
+          >
+            <QRCode value={publishedUrl} size={172} />
+          </div>
+        </div>
+
+        {/* URL + close */}
+        <div className="px-5 pt-3 pb-6 text-center flex flex-col gap-3">
+          <p
+            className="font-mono text-xs font-semibold break-all"
+            style={{
+              background: "linear-gradient(90deg, #5eead4, #c084fc)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {publishedUrl}
+          </p>
+          <button
+            onClick={onClose}
+            className="text-xs font-medium transition-colors"
+            style={{ color: "rgba(255,255,255,0.35)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+          >
+            Schließen
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// ── Success view ──────────────────────────────────────────────────────────────
 const SuccessView = memo(function SuccessView({
   publishedUrl,
   businessName,
@@ -254,111 +406,115 @@ const SuccessView = memo(function SuccessView({
   copied: boolean;
 }) {
   const [showConfetti, setShowConfetti] = useState(true);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowConfetti(false), 4000);
-    return () => clearTimeout(timer);
+    // Confetti fades out after 4s
+    const t1 = setTimeout(() => setShowConfetti(false), 4000);
+    // QR modal pops up after 1.5s
+    const t2 = setTimeout(() => setShowQRModal(true), 1500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
     <>
       {showConfetti && <Confetti />}
+      {showQRModal && (
+        <QRModal publishedUrl={publishedUrl} onClose={() => setShowQRModal(false)} />
+      )}
 
-      <div className="animate-in fade-in zoom-in duration-500 flex flex-col gap-5 py-4">
-        {/* ── Compact Header Row ── */}
-        <div className="flex items-center gap-4">
-          <div className="relative shrink-0">
-            <div className="w-14 h-14 bg-gradient-to-r from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/20">
-              <PartyPopper className="w-7 h-7 text-white" />
-            </div>
-            <div className="absolute inset-0 w-14 h-14 bg-green-400/30 rounded-full animate-ping" />
+      <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
+        {/* Icon */}
+        <div className="relative">
+          <div className="w-32 h-32 mx-auto bg-gradient-to-r from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/30">
+            <PartyPopper className="w-16 h-16 text-white" />
           </div>
-          <div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-green-500 via-teal-500 to-purple-500 bg-clip-text text-transparent leading-tight">
-              🎉 Herzlichen Glückwunsch!
-            </h3>
-            <p className="text-sm text-gray-500 mt-0.5">Deine Web-App ist jetzt live!</p>
-          </div>
+          <div className="absolute inset-0 w-32 h-32 mx-auto bg-green-400/30 rounded-full animate-ping" />
         </div>
 
-        {/* ── Two-column body: URL+Actions left · QR right ── */}
-        <div className="grid grid-cols-[1fr_auto] gap-5 items-start">
+        <div className="space-y-2">
+          <h3 className="text-4xl font-bold bg-gradient-to-r from-green-500 via-teal-500 to-purple-500 bg-clip-text text-transparent">
+            🎉 Herzlichen Glückwunsch!
+          </h3>
+          <p className="text-xl text-gray-600">Deine Web-App ist jetzt online!</p>
+        </div>
 
-          {/* Left: URL box + action buttons + dashboard link */}
-          <div className="flex flex-col gap-3">
-            <div className="bg-gradient-to-r from-green-50 via-teal-50 to-purple-50 border-2 border-green-200 rounded-xl p-4 shadow-sm">
-              <p className="text-xs text-gray-500 mb-1.5 font-medium">Erreichbar unter:</p>
-              <a
-                href={publishedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-base font-bold text-green-700 hover:text-green-800 hover:underline flex items-center gap-1.5 break-all"
-              >
-                {publishedUrl}
-                <ExternalLink className="w-4 h-4 shrink-0" />
-              </a>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => window.open(publishedUrl, "_blank")}
-                size="sm"
-                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md font-semibold"
-              >
-                <Eye className="mr-1.5 w-4 h-4" />
-                Web-App ansehen
-              </Button>
-              <Button
-                onClick={() => onCopy(publishedUrl)}
-                variant="outline"
-                size="sm"
-                className="border-2 font-semibold"
-              >
-                {copied ? (
-                  <Check className="mr-1.5 w-4 h-4 text-green-500" />
-                ) : (
-                  <Copy className="mr-1.5 w-4 h-4" />
-                )}
-                {copied ? "Kopiert!" : "Link kopieren"}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({ title: businessName, url: publishedUrl });
-                  } else {
-                    onCopy(publishedUrl);
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                className="border-2 font-semibold"
-              >
-                <Share2 className="mr-1.5 w-4 h-4" />
-                Teilen
-              </Button>
-            </div>
-
-            <Button
-              onClick={() => (window.location.href = "/")}
-              variant="ghost"
-              size="sm"
-              className="text-gray-400 hover:text-gray-700 w-fit pl-0"
+        {/* Live URL Card */}
+        <Card className="p-8 bg-gradient-to-r from-green-50 via-teal-50 to-purple-50 border-2 border-green-200 max-w-2xl mx-auto shadow-xl">
+          <p className="text-sm text-gray-600 mb-4 font-medium">
+            Deine Web-App ist erreichbar unter:
+          </p>
+          <div className="bg-white rounded-xl p-4 border border-green-200 mb-6">
+            <a
+              href={publishedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-xl md:text-2xl font-bold text-green-700 hover:text-green-800 hover:underline flex items-center justify-center gap-2"
             >
-              <Home className="mr-1.5 w-4 h-4" />
-              Zum Dashboard
+              {publishedUrl}
+              <ExternalLink className="w-5 h-5" />
+            </a>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button
+              onClick={() => window.open(publishedUrl, "_blank")}
+              size="lg"
+              className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-lg"
+            >
+              <Eye className="mr-2 w-5 h-5" />
+              Web-App ansehen
+            </Button>
+            <Button
+              onClick={() => onCopy(publishedUrl)}
+              variant="outline"
+              size="lg"
+              className="border-2"
+            >
+              {copied ? (
+                <Check className="mr-2 w-5 h-5 text-green-500" />
+              ) : (
+                <Copy className="mr-2 w-5 h-5" />
+              )}
+              {copied ? "Kopiert!" : "Link kopieren"}
+            </Button>
+            <Button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: businessName, url: publishedUrl });
+                } else {
+                  onCopy(publishedUrl);
+                }
+              }}
+              variant="outline"
+              size="lg"
+              className="border-2"
+            >
+              <Share2 className="mr-2 w-5 h-5" />
+              Teilen
             </Button>
           </div>
 
-          {/* Right: QR Code */}
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-50 to-purple-50 border border-gray-100 shadow-inner">
-              <QRCode value={publishedUrl} size={148} />
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-              <Smartphone className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-              Mit Handy scannen
-            </div>
-          </div>
+          {/* Re-open QR hint */}
+          <button
+            onClick={() => setShowQRModal(true)}
+            className="mt-5 flex items-center justify-center gap-1.5 mx-auto text-xs text-gray-400 hover:text-teal-600 transition-colors"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            QR-Code anzeigen
+          </button>
+        </Card>
+
+        <div className="pt-2">
+          <Button
+            onClick={() => (window.location.href = "/")}
+            variant="ghost"
+            size="lg"
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <Home className="mr-2 w-5 h-5" />
+            Zum Dashboard
+          </Button>
         </div>
       </div>
     </>
