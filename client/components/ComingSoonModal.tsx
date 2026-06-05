@@ -11,29 +11,31 @@ export function ComingSoonModal({ open, onClose }: ComingSoonModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[200] flex items-start justify-center pt-16 pb-8 px-4 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-300">
 
         {/* Close */}
         <button
           onClick={onClose}
           aria-label="Schließen"
-          className="absolute top-3 right-3 z-20 p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 z-20 p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Animated gradient header */}
-        <div className="relative h-36 bg-gradient-to-br from-purple-500 via-violet-500 to-orange-400 flex items-center justify-center overflow-hidden">
-          {/* decorative blobs */}
+        <div className="relative h-36 bg-gradient-to-br from-purple-500 via-violet-500 to-orange-400 flex items-center justify-center overflow-hidden rounded-t-2xl">
           <div className="absolute -top-6 -left-6 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
           <div className="absolute -bottom-4 -right-4 w-28 h-28 rounded-full bg-orange-300/30 blur-2xl" />
 
@@ -57,8 +59,7 @@ export function ComingSoonModal({ open, onClose }: ComingSoonModalProps) {
             eingeben — und Maitr erledigt den Rest für dich.
           </p>
 
-          {/* Feature teaser */}
-          <ul className="space-y-2.5 mb-6">
+          <ul className="space-y-2.5 mb-5">
             {[
               "Automatische Extraktion von Name, Adresse & Öffnungszeiten",
               "KI-generiertes Design auf Basis deiner Marke",
@@ -73,7 +74,6 @@ export function ComingSoonModal({ open, onClose }: ComingSoonModalProps) {
             ))}
           </ul>
 
-          {/* ETD badge */}
           <div className="flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-4 py-2.5 mb-5">
             <Clock className="w-4 h-4 text-purple-500 shrink-0" />
             <span className="text-xs text-purple-700 font-medium">
@@ -85,10 +85,7 @@ export function ComingSoonModal({ open, onClose }: ComingSoonModalProps) {
             <Button
               size="sm"
               className="w-full bg-gradient-to-r from-purple-500 to-orange-500 hover:from-purple-600 hover:to-orange-600 text-white font-bold rounded-xl"
-              onClick={() => {
-                // Could wire up a waitlist email form later
-                onClose();
-              }}
+              onClick={onClose}
             >
               <Bell className="w-3.5 h-3.5 mr-1.5" />
               Benachrichtigung erhalten

@@ -15,9 +15,11 @@ import {
   Database,
   Route,
   PartyPopper,
+  Smartphone,
 } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { AuthGateModal } from "@/components/AuthGateModal";
+import QRCode from "@/components/qr/QRCode";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -337,6 +339,24 @@ const SuccessView = memo(function SuccessView({
               Teilen
             </Button>
           </div>
+        </Card>
+
+        {/* QR Code – scan with phone */}
+        <Card className="p-6 max-w-xs mx-auto shadow-lg border border-gray-100 bg-white">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Smartphone className="w-4 h-4 text-teal-500" />
+            <p className="text-sm font-semibold text-gray-700">
+              Direkt mit dem Handy scannen
+            </p>
+          </div>
+          <div className="flex items-center justify-center">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-50 to-purple-50 border border-gray-100 shadow-inner">
+              <QRCode value={publishedUrl} size={180} />
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-3 leading-relaxed">
+            Scanne den Code und erlebe deine Web-App live auf dem Smartphone.
+          </p>
         </Card>
 
         <div className="pt-4">
