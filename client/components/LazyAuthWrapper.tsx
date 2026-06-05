@@ -1,26 +1,12 @@
 /**
  * LazyAuthWrapper.tsx
- * 
- * This wrapper lazy-loads ClerkProvider so that the ~700KB Clerk bundle
- * is ONLY downloaded when the user navigates to an authenticated route
- * (/login, /signup, /dashboard, /configurator, etc.)
- * 
- * On the landing page (maitr.de), Clerk is never loaded.
+ *
+ * Previously wrapped auth routes in their own ClerkProvider.
+ * Now that ClerkProvider lives at the App root (App.tsx), this component
+ * is a simple passthrough — kept for potential future middleware logic.
  */
-import { ClerkProvider } from "@clerk/clerk-react";
 import { Outlet } from "react-router-dom";
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
 export default function LazyAuthWrapper() {
-  if (!CLERK_PUBLISHABLE_KEY) {
-    console.error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
-    return <Outlet />;
-  }
-  
-  return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <Outlet />
-    </ClerkProvider>
-  );
+  return <Outlet />;
 }

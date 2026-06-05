@@ -15,7 +15,7 @@ import {
 } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
-// Clerk is lazy-loaded via LazyAuthWrapper — NOT imported at top level
+import { ClerkProvider } from "@clerk/clerk-react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
 
@@ -77,8 +77,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Clerk is lazy-loaded: ~700KB JS only downloaded on auth routes
-const AuthWrapper = lazy(() => import("./components/LazyAuthWrapper"));
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
 
 const App = () => {
   // Register Service Worker and PWA functionality
@@ -97,6 +96,7 @@ const App = () => {
   }, []);
 
   return (
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
     <PerformanceErrorBoundary>
       <ErrorBoundary>
         <I18nextProvider i18n={i18n}>
@@ -133,7 +133,7 @@ const App = () => {
                       <Route path="/r/:id" element={<ManageReservation />} />
 
                       {/* CLERK AUTHENTICATED ROUTES */}
-                      <Route element={<AuthWrapper />}>
+                      <Route>
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route
@@ -238,6 +238,7 @@ const App = () => {
         </I18nextProvider>
       </ErrorBoundary>
     </PerformanceErrorBoundary>
+    </ClerkProvider>
   );
 };
 
