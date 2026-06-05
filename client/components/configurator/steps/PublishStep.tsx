@@ -255,135 +255,60 @@ const QRModal = memo(function QRModal({
       className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 sm:p-6"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* ── Immersive gradient backdrop ── */}
+      {/* ── Subtle light glass backdrop ── */}
       <div
-        className="absolute inset-0 animate-in fade-in duration-400"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(20,184,166,0.35) 0%, rgba(168,85,247,0.30) 45%, rgba(15,15,25,0.92) 100%)",
-          backdropFilter: "blur(12px)",
-        }}
+        className="absolute inset-0 animate-in fade-in duration-400 bg-white/60 backdrop-blur-md"
         onClick={onClose}
       />
 
-      {/* ── Floating ambient orbs (decorative, behind card) ── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Teal orb */}
-        <div
-          className="absolute rounded-full animate-pulse"
-          style={{
-            width: 220, height: 220,
-            top: "10%", left: "5%",
-            background: "radial-gradient(circle, rgba(20,184,166,0.25) 0%, transparent 70%)",
-            filter: "blur(40px)",
-            animationDuration: "4s",
-          }}
-        />
-        {/* Purple orb */}
-        <div
-          className="absolute rounded-full animate-pulse"
-          style={{
-            width: 280, height: 280,
-            top: "30%", right: "0%",
-            background: "radial-gradient(circle, rgba(168,85,247,0.22) 0%, transparent 70%)",
-            filter: "blur(50px)",
-            animationDuration: "5.5s",
-            animationDelay: "1s",
-          }}
-        />
-        {/* Orange orb */}
-        <div
-          className="absolute rounded-full animate-pulse"
-          style={{
-            width: 160, height: 160,
-            bottom: "15%", left: "25%",
-            background: "radial-gradient(circle, rgba(249,115,22,0.20) 0%, transparent 70%)",
-            filter: "blur(35px)",
-            animationDuration: "3.5s",
-            animationDelay: "0.5s",
-          }}
-        />
-      </div>
-
       {/* ── Glass bubble card ── */}
       <div
-        className="relative z-10 w-full max-w-[300px] rounded-[2rem] overflow-hidden animate-in zoom-in-50 fade-in duration-500"
+        className="relative z-10 w-full max-w-[360px] rounded-[2.5rem] overflow-hidden animate-in zoom-in-50 fade-in duration-500 shadow-[0_20px_60px_-15px_rgba(20,184,166,0.2)]"
         style={{
-          background: "rgba(255,255,255,0.08)",
-          backdropFilter: "blur(32px) saturate(180%)",
-          WebkitBackdropFilter: "blur(32px) saturate(180%)",
-          border: "1px solid rgba(255,255,255,0.18)",
-          boxShadow:
-            "0 8px 60px rgba(20,184,166,0.25), 0 2px 20px rgba(168,85,247,0.20), inset 0 1px 0 rgba(255,255,255,0.25)",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(24px) saturate(150%)",
+          WebkitBackdropFilter: "blur(24px) saturate(150%)",
+          border: "1px solid rgba(20, 184, 166, 0.15)",
         }}
       >
         {/* Close button */}
         <button
           onClick={onClose}
           aria-label="Schließen"
-          className="absolute top-3 right-3 z-20 p-1.5 rounded-full transition-colors"
-          style={{
-            background: "rgba(255,255,255,0.12)",
-            border: "1px solid rgba(255,255,255,0.18)",
-            color: "rgba(255,255,255,0.7)",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.22)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
+          className="absolute top-4 right-4 z-20 p-2 rounded-full transition-colors bg-teal-50/50 hover:bg-teal-100 text-teal-600/60 hover:text-teal-600"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
 
         {/* Header text */}
-        <div className="px-6 pt-7 pb-3 text-center">
-          {/* Gradient icon bubble */}
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"
-            style={{
-              background: "linear-gradient(135deg, #14b8a6 0%, #a855f7 60%, #f97316 100%)",
-              boxShadow: "0 4px 24px rgba(168,85,247,0.4)",
-            }}
-          >
-            <Smartphone className="w-7 h-7 text-white" />
-          </div>
-          <p className="text-white font-bold text-base leading-tight">
+        <div className="px-8 pt-10 pb-4 text-center">
+          <p className="text-slate-800 font-bold text-xl tracking-tight leading-tight">
             Live auf dem Handy
           </p>
-          <p className="text-white/50 text-xs mt-0.5">
+          <p className="text-slate-500 text-sm mt-1">
             Scanne & erlebe deine App
           </p>
         </div>
 
         {/* QR Code – pure white inset glass */}
-        <div className="flex justify-center px-6 pb-2">
+        <div className="flex justify-center px-8 pb-4">
           <div
-            className="p-3 rounded-2xl"
-            style={{
-              background: "rgba(255,255,255,0.92)",
-              boxShadow: "inset 0 1px 3px rgba(0,0,0,0.08), 0 4px 20px rgba(0,0,0,0.25)",
-            }}
+            className="p-4 rounded-3xl bg-white shadow-[inset_0_1px_3px_rgba(0,0,0,0.05),0_8px_30px_rgba(0,0,0,0.08)]"
           >
-            <QRCode value={publishedUrl} size={172} />
+            <QRCode value={publishedUrl} size={200} />
           </div>
         </div>
 
         {/* URL + close */}
-        <div className="px-5 pt-3 pb-6 text-center flex flex-col gap-3">
+        <div className="px-8 pt-2 pb-8 text-center flex flex-col gap-4">
           <p
-            className="font-mono text-xs font-semibold break-all"
-            style={{
-              background: "linear-gradient(90deg, #5eead4, #c084fc)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
+            className="font-mono text-sm font-semibold break-all bg-gradient-to-r from-teal-600 to-purple-600 bg-clip-text text-transparent"
           >
             {publishedUrl}
           </p>
           <button
             onClick={onClose}
-            className="text-xs font-medium transition-colors"
-            style={{ color: "rgba(255,255,255,0.35)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+            className="text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors"
           >
             Schließen
           </button>
