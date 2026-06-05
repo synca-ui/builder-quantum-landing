@@ -7,7 +7,8 @@ export default function Login() {
     <AuthLayout mode="login">
       <PageSEO title="Maitr - Anmelden" description="Melde dich bei Maitr an." noindex={true} />
       <SignIn
-        routing="virtual"
+        routing="path"
+        path="/login"
         fallbackRedirectUrl="/"
         signUpUrl="/signup"
         appearance={{
@@ -17,10 +18,8 @@ export default function Login() {
           },
           elements: {
             rootBox: "w-full",
-            card: [
-              "w-full shadow-2xl border-0 rounded-3xl",
-              "!bg-white/80 backdrop-blur-xl",
-            ].join(" "),
+            card: "w-full shadow-none border-0 bg-transparent p-0",
+            header: "hidden", // Hide the Clerk header since we have our own in AuthLayout!
             headerTitle: "text-xl font-black text-gray-900",
             headerSubtitle: "text-sm text-gray-500",
             socialButtonsBlockButton: [

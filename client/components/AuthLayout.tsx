@@ -16,75 +16,20 @@ export function AuthLayout({
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#E6EFEC] overflow-hidden font-sans">
       
-      {/* ══ LEFT: Dynamic Photo & Stats Grid ═════════════════════════════════════ */}
-      <div className="relative hidden lg:flex w-1/2 p-6 xl:p-10 h-screen overflow-hidden items-center justify-center">
+      {/* ══ LEFT: Clean Brand Image Panel ═════════════════════════════════════ */}
+      <div className="relative hidden lg:flex w-1/2 p-10 h-screen overflow-hidden items-center justify-center bg-[#E6EFEC]">
         
         {/* Background gradient hint */}
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-purple-500/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 via-transparent to-purple-500/5 pointer-events-none" />
 
-        {/* CSS Grid for masonry-style layout */}
-        <div className="relative w-full max-w-[700px] aspect-[4/3] grid grid-cols-3 grid-rows-3 gap-3 xl:gap-4 z-10">
-          
-          {/* Top Left: Stat Block (Orange) */}
-          <div className="col-span-1 row-span-1 rounded-2xl p-6 flex flex-col justify-center bg-[#f97316] text-white shadow-md transform transition-transform hover:scale-[1.02]">
-            <h3 className="text-4xl xl:text-5xl font-bold tracking-tight mb-2">5 Min</h3>
-            <p className="text-xs xl:text-sm font-medium opacity-90 leading-snug">
-              bis deine fertige Web-App live und für Kunden erreichbar ist.
-            </p>
-          </div>
-
-          {/* Top Middle: Image 1 */}
-          <div className="col-span-1 row-span-2 rounded-2xl overflow-hidden shadow-md group">
-            <img 
-              src="/images/auth/kitchen_1.jpg" 
-              alt="Restaurant Interior Isometric" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          </div>
-
-          {/* Top Right: Image 2 */}
-          <div className="col-span-1 row-span-1 rounded-2xl overflow-hidden shadow-md group">
-            <img 
-              src="/images/auth/kitchen_2.jpg" 
-              alt="Kitchen Isometric" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          </div>
-
-          {/* Middle Left: Image 3 (Large) */}
-          <div className="col-span-1 row-span-2 rounded-2xl overflow-hidden shadow-md group">
-            <img 
-              src="/images/auth/kitchen_3.png" 
-              alt="Chef Isometric" 
-              className="w-full h-full object-cover object-left transition-transform duration-700 group-hover:scale-110"
-            />
-          </div>
-
-          {/* Middle Right: Stat Block (Green) */}
-          <div className="col-span-1 row-span-1 rounded-2xl p-6 flex flex-col justify-center bg-[#10b981] text-white shadow-md transform transition-transform hover:scale-[1.02]">
-            <h3 className="text-4xl xl:text-5xl font-bold tracking-tight mb-2">100%</h3>
-            <p className="text-xs xl:text-sm font-medium opacity-90 leading-snug">
-              No-Code. Maitr übernimmt Design, Technik und Hosting komplett.
-            </p>
-          </div>
-
-          {/* Bottom Middle: Stat Block (Dark) */}
-          <div className="col-span-1 row-span-1 rounded-2xl p-6 flex flex-col justify-center bg-slate-900 text-white shadow-md transform transition-transform hover:scale-[1.02]">
-            <h3 className="text-3xl xl:text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-teal-400 to-purple-400 bg-clip-text text-transparent">Zero</h3>
-            <p className="text-xs xl:text-sm font-medium opacity-90 leading-snug">
-              Vorkenntnisse benötigt. Sag uns einfach wer du bist.
-            </p>
-          </div>
-
-          {/* Bottom Right: Image 4 */}
-          <div className="col-span-1 row-span-1 rounded-2xl overflow-hidden shadow-md group">
-            <img 
-              src="/images/auth/kitchen_4.jpg" 
-              alt="Detailed Kitchen" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          </div>
-
+        {/* Clean central image container */}
+        <div className="relative w-full max-w-[620px] aspect-[4/3] rounded-3xl overflow-hidden shadow-[0_20px_50px_-20px_rgba(0,0,0,0.15)] bg-white p-4 animate-in fade-in zoom-in-95 duration-700">
+          <img 
+            src={mode === "login" ? "/images/auth/login_hero.png" : "/images/auth/signup_hero.jpg"} 
+            alt={mode === "login" ? "Maitr Login Dashboard" : "Maitr Restaurant Web-App Builder"} 
+            className="w-full h-full object-cover rounded-2xl select-none"
+            draggable="false"
+          />
         </div>
       </div>
 
@@ -119,7 +64,7 @@ export function AuthLayout({
         <div className="w-full max-w-md relative z-10 flex flex-col pt-12 lg:pt-0">
           
           {/* Header text for the form area */}
-          <div className="mb-8 text-center lg:text-left hidden lg:block">
+          <div className="mb-8 text-center lg:text-left block">
             <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
               {mode === "login" ? "Willkommen zurück" : "Starte jetzt"}
             </h1>

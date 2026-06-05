@@ -32,8 +32,8 @@ const Site = lazy(() => import("./pages/Site"));
 const TestSite = lazy(() => import("./pages/TestSite"));
 import NotFound from "./pages/NotFound";
 import HostAwareRoot from "./pages/HostAwareRoot";
-const Login = lazy(() => import("./pages/Login"));
-const Signup = lazy(() => import("./pages/Signup"));
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 const Profile = lazy(() => import("./pages/Profile"));
 import RequireAuth from "./components/RequireAuth";
 
