@@ -241,7 +241,7 @@ const PublishingProgress = memo(function PublishingProgress({
   );
 });
 
-// Success view component
+// Success view component – compact one-pager, no scroll needed
 const SuccessView = memo(function SuccessView({
   publishedUrl,
   businessName,
@@ -264,116 +264,107 @@ const SuccessView = memo(function SuccessView({
     <>
       {showConfetti && <Confetti />}
 
-      <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
-        <div className="relative">
-          <div className="w-32 h-32 mx-auto bg-gradient-to-r from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/30">
-            <PartyPopper className="w-16 h-16 text-white" />
+      <div className="animate-in fade-in zoom-in duration-500 flex flex-col gap-5 py-4">
+        {/* ── Compact Header Row ── */}
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <div className="w-14 h-14 bg-gradient-to-r from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/20">
+              <PartyPopper className="w-7 h-7 text-white" />
+            </div>
+            <div className="absolute inset-0 w-14 h-14 bg-green-400/30 rounded-full animate-ping" />
           </div>
-          <div className="absolute inset-0 w-32 h-32 mx-auto bg-green-400/30 rounded-full animate-ping" />
+          <div>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-green-500 via-teal-500 to-purple-500 bg-clip-text text-transparent leading-tight">
+              🎉 Herzlichen Glückwunsch!
+            </h3>
+            <p className="text-sm text-gray-500 mt-0.5">Deine Web-App ist jetzt live!</p>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-4xl font-bold bg-gradient-to-r from-green-500 via-teal-500 to-purple-500 bg-clip-text text-transparent">
-            🎉 Herzlichen Glückwunsch!
-          </h3>
-          <p className="text-xl text-gray-600">
-            Deine Web-App ist jetzt online!
-          </p>
-        </div>
+        {/* ── Two-column body: URL+Actions left · QR right ── */}
+        <div className="grid grid-cols-[1fr_auto] gap-5 items-start">
 
-        {/* Live URL Card */}
-        <Card className="p-8 bg-gradient-to-r from-green-50 via-teal-50 to-purple-50 border-2 border-green-200 max-w-2xl mx-auto shadow-xl">
-          <p className="text-sm text-gray-600 mb-4 font-medium">
-            Deine Web-App ist erreichbar unter:
-          </p>
-          <div className="bg-white rounded-xl p-4 border border-green-200 mb-6">
-            <a
-              href={publishedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-xl md:text-2xl font-bold text-green-700 hover:text-green-800 hover:underline flex items-center justify-center gap-2"
+          {/* Left: URL box + action buttons + dashboard link */}
+          <div className="flex flex-col gap-3">
+            <div className="bg-gradient-to-r from-green-50 via-teal-50 to-purple-50 border-2 border-green-200 rounded-xl p-4 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1.5 font-medium">Erreichbar unter:</p>
+              <a
+                href={publishedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-base font-bold text-green-700 hover:text-green-800 hover:underline flex items-center gap-1.5 break-all"
+              >
+                {publishedUrl}
+                <ExternalLink className="w-4 h-4 shrink-0" />
+              </a>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => window.open(publishedUrl, "_blank")}
+                size="sm"
+                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md font-semibold"
+              >
+                <Eye className="mr-1.5 w-4 h-4" />
+                Web-App ansehen
+              </Button>
+              <Button
+                onClick={() => onCopy(publishedUrl)}
+                variant="outline"
+                size="sm"
+                className="border-2 font-semibold"
+              >
+                {copied ? (
+                  <Check className="mr-1.5 w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="mr-1.5 w-4 h-4" />
+                )}
+                {copied ? "Kopiert!" : "Link kopieren"}
+              </Button>
+              <Button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: businessName, url: publishedUrl });
+                  } else {
+                    onCopy(publishedUrl);
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="border-2 font-semibold"
+              >
+                <Share2 className="mr-1.5 w-4 h-4" />
+                Teilen
+              </Button>
+            </div>
+
+            <Button
+              onClick={() => (window.location.href = "/")}
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-gray-700 w-fit pl-0"
             >
-              {publishedUrl}
-              <ExternalLink className="w-5 h-5" />
-            </a>
+              <Home className="mr-1.5 w-4 h-4" />
+              Zum Dashboard
+            </Button>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button
-              onClick={() => window.open(publishedUrl, "_blank")}
-              size="lg"
-              className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-lg"
-            >
-              <Eye className="mr-2 w-5 h-5" />
-              Web-App ansehen
-            </Button>
-            <Button
-              onClick={() => onCopy(publishedUrl)}
-              variant="outline"
-              size="lg"
-              className="border-2"
-            >
-              {copied ? (
-                <Check className="mr-2 w-5 h-5 text-green-500" />
-              ) : (
-                <Copy className="mr-2 w-5 h-5" />
-              )}
-              {copied ? "Kopiert!" : "Link kopieren"}
-            </Button>
-            <Button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: businessName,
-                    url: publishedUrl,
-                  });
-                } else {
-                  onCopy(publishedUrl);
-                }
-              }}
-              variant="outline"
-              size="lg"
-              className="border-2"
-            >
-              <Share2 className="mr-2 w-5 h-5" />
-              Teilen
-            </Button>
-          </div>
-        </Card>
-
-        {/* QR Code – scan with phone */}
-        <Card className="p-6 max-w-xs mx-auto shadow-lg border border-gray-100 bg-white">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Smartphone className="w-4 h-4 text-teal-500" />
-            <p className="text-sm font-semibold text-gray-700">
-              Direkt mit dem Handy scannen
-            </p>
-          </div>
-          <div className="flex items-center justify-center">
+          {/* Right: QR Code */}
+          <div className="flex flex-col items-center gap-2 shrink-0">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-teal-50 to-purple-50 border border-gray-100 shadow-inner">
-              <QRCode value={publishedUrl} size={180} />
+              <QRCode value={publishedUrl} size={148} />
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+              <Smartphone className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+              Mit Handy scannen
             </div>
           </div>
-          <p className="text-xs text-gray-400 text-center mt-3 leading-relaxed">
-            Scanne den Code und erlebe deine Web-App live auf dem Smartphone.
-          </p>
-        </Card>
-
-        <div className="pt-4">
-          <Button
-            onClick={() => (window.location.href = "/")}
-            variant="ghost"
-            size="lg"
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <Home className="mr-2 w-5 h-5" />
-            Zum Dashboard
-          </Button>
         </div>
       </div>
     </>
   );
 });
+
 
 export function PublishStep({
   prevStep,
