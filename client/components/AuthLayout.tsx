@@ -16,10 +16,11 @@ export function AuthLayout({
   mode: "login" | "signup";
 }) {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden font-sans" style={{ background: "#d4b896" }}>
+    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden font-sans" style={{ background: "#1a0e05" }}>
 
-      {/* ══ LEFT: Video Brand Panel ═════════════════════════════════════════════ */}
-      <div className="relative hidden lg:flex w-[52%] h-screen overflow-hidden items-end justify-start">
+      {/* ══ LEFT: Video Brand Panel ════════════════════════════════════════════════════════ */}
+      {/* Extend to 60% width so the right panel can overlap it */}
+      <div className="relative hidden lg:flex w-[60%] h-screen overflow-hidden items-end justify-start flex-shrink-0">
 
         {/* Autoplay video – covers the entire left panel */}
         <video
@@ -75,26 +76,24 @@ export function AuthLayout({
       </div>
 
       {/* ══ RIGHT: Auth form panel ══════════════════════════════════════════════ */}
+      {/* -ml-16 overlaps the video; glass effect lets the video bleed through */}
       <div
-        className="flex-1 flex flex-col items-center justify-center min-h-screen px-6 py-12 relative z-20 lg:rounded-l-[2rem]"
+        className="flex-1 flex flex-col items-center justify-center min-h-screen px-8 py-12 relative z-20 lg:-ml-16 lg:rounded-l-[2.5rem]"
         style={{
-          background: "linear-gradient(135deg, #e8d5bb 0%, #dfc9a8 30%, #d4b896 60%, #c9a87e 100%)",
-          boxShadow: "-40px 0 80px -10px rgba(0,0,0,0.35), inset 40px 0 60px -20px rgba(255,255,255,0.25)",
+          background: "rgba(255, 248, 235, 0.30)",
+          backdropFilter: "blur(32px) saturate(160%) brightness(1.05)",
+          WebkitBackdropFilter: "blur(32px) saturate(160%) brightness(1.05)",
+          boxShadow: "-30px 0 80px rgba(0,0,0,0.25), inset 1px 0 0 rgba(255,255,255,0.25)",
+          borderLeft: "1px solid rgba(255,255,255,0.20)",
         }}
       >
 
-        {/* Depth layers for 3D feel */}
+        {/* Subtle top-highlight shimmer */}
         <div
-          className="absolute inset-0 pointer-events-none lg:rounded-l-[2rem]"
+          className="absolute inset-0 pointer-events-none lg:rounded-l-[2.5rem]"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.08) 25%, transparent 55%, rgba(0,0,0,0.10) 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 pointer-events-none lg:rounded-l-[2rem]"
-          style={{
-            background: "linear-gradient(to right, rgba(255,255,255,0.18) 0%, transparent 30%)",
+              "linear-gradient(160deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 30%, transparent 60%)",
           }}
         />
 
@@ -119,10 +118,10 @@ export function AuthLayout({
 
           {/* Page header */}
           <div className="mb-8 text-center lg:text-left">
-            <h1 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: "#2d1f0e" }}>
+            <h1 className="text-3xl font-bold mb-2 tracking-tight text-white drop-shadow-sm">
               {mode === "login" ? "Willkommen zurück" : "Starte jetzt"}
             </h1>
-            <p className="text-sm" style={{ color: "rgba(45,31,14,0.55)" }}>
+            <p className="text-sm text-white/65">
               {mode === "login"
                 ? "Melde dich an, um deine Web-App zu verwalten."
                 : "Erstelle dein Konto und sei in 5 Minuten online."}
@@ -135,27 +134,11 @@ export function AuthLayout({
         </div>
 
         {/* Footer */}
-        <p className="absolute bottom-8 text-xs text-center w-full max-w-sm" style={{ color: "rgba(45,31,14,0.45)" }}>
+        <p className="absolute bottom-8 text-xs text-center w-full max-w-sm text-white/50">
           Mit der Anmeldung akzeptierst du unsere{" "}
-          <Link
-            to="/agb"
-            className="underline transition-colors"
-            style={{ color: "rgba(45,31,14,0.6)" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#92400e")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(45,31,14,0.6)")}
-          >
-            AGB
-          </Link>
+          <Link to="/agb" className="underline text-white/65 hover:text-white transition-colors">AGB</Link>
           {" & "}
-          <Link
-            to="/datenschutz"
-            className="underline transition-colors"
-            style={{ color: "rgba(45,31,14,0.6)" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#92400e")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(45,31,14,0.6)")}
-          >
-            Datenschutz
-          </Link>
+          <Link to="/datenschutz" className="underline text-white/65 hover:text-white transition-colors">Datenschutz</Link>
         </p>
 
       </div>

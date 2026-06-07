@@ -20,7 +20,9 @@ export default function Signup() {
             rootBox: "w-full",
             card: [
               "w-full rounded-3xl p-6",
-              "shadow-[0_8px_40px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.6)]",
+              "bg-white/20 backdrop-blur-2xl",
+              "border border-white/30",
+              "shadow-[0_8px_40px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(255,255,255,0.50)]",
             ].join(" "),
             cardBox: "w-full",
             header: "hidden",
