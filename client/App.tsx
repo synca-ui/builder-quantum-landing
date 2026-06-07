@@ -134,8 +134,8 @@ const App = () => {
 
                       {/* CLERK AUTHENTICATED ROUTES */}
                       <Route>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/login/*" element={<Login />} />
+                        <Route path="/signup/*" element={<Signup />} />
                         <Route
                           path="/mode-selection"
                           element={<ModeSelection />}
