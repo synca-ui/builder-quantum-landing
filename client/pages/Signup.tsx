@@ -58,6 +58,11 @@ export default function Signup() {
             footerActionLink: "text-teal-600 hover:text-teal-700 font-semibold",
             identityPreviewEditButton: "text-teal-600",
             formResendCodeLink: "text-teal-600 hover:text-teal-700 font-semibold",
+            footer: [
+              "mt-2 rounded-b-3xl rounded-t-2xl overflow-hidden",
+              "bg-stone-50 border border-stone-100",
+              "shadow-[0_8px_24px_rgba(0,0,0,0.10)]",
+            ].join(" "),
           },
         }}
       />
