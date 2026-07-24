@@ -1,10 +1,6 @@
 import { Webhook } from "svix";
-// WICHTIG: Wir importieren die Klasse direkt, nicht die Instanz aus ../db/prisma
-import { PrismaClient } from "@prisma/client";
+import prisma from "../db/prisma";
 import type { WebhookEvent } from "@clerk/clerk-sdk-node";
-
-// Wir erstellen hier eine eigene Instanz für den Webhook, um Import-Probleme zu umgehen
-const prisma = new PrismaClient();
 
 export async function handleClerkWebhook(req: any, res: any) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;

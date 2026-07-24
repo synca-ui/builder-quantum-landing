@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import crypto from "crypto";
 import Stripe from "stripe";
 import prisma from "../db/prisma";
 
@@ -26,35 +25,7 @@ const PLAN_MAP: Record<
 // SIGNATURE VERIFICATION
 // ============================================
 
-/**
- * ✅ Verify Stripe webhook signature
- * Critical for security: ensures webhook comes from Stripe
- */
-function verifyStripeSignature(
-  rawBody: string,
-  signature: string | undefined,
-  secret: string,
-): boolean {
-  if (!signature) {
-    console.error("[Stripe] Missing signature header");
-    return false;
-  }
 
-  try {
-    const hash = crypto
-      .createHmac("sha256", secret)
-      .update(rawBody)
-      .digest("hex");
-
-    const expectedSignature = `t=${Date.now()},v1=${hash}`;
-
-    // Simple comparison (production should use constant-time comparison)
-    return signature.includes(hash);
-  } catch (error) {
-    console.error("[Stripe] Signature verification error:", error);
-    return false;
-  }
-}
 
 // ============================================
 // EVENT HANDLERS
@@ -69,6 +40,11 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 
   if (!customerId) {
     console.error("[Stripe] No customerId in subscription");
+    return;
+  }
+
+  if (!stripe) {
+    console.error("[Stripe] Stripe not initialized");
     return;
   }
 
@@ -143,6 +119,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
 
   if (!customerId) return;
+
+  if (!stripe) {
+    console.error("[Stripe] Stripe not initialized");
+    return;
+  }
 
   try {
     const customer = await stripe.customers.retrieve(customerId);

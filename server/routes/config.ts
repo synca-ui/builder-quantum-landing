@@ -24,9 +24,16 @@ async function loadFromFile(slug: string) {
   }
 }
 
+/** Validate schema names to prevent SQL injection via interpolation */
+function assertSafeSchemaName(name: string): void {
+  if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+    throw new Error(`Invalid schema name: ${name}`);
+  }
+}
+
 export async function getConfigBySlug(req: Request, res: Response) {
   try {
-    const { slug } = req.params;
+    const slug = req.params.slug as string;
     if (!slug) return res.status(400).json({ error: "Missing slug" });
 
     // Try Netlify Neon first (uses NETLIFY_DATABASE_URL)
@@ -36,6 +43,7 @@ export async function getConfigBySlug(req: Request, res: Response) {
           await neonSql`SELECT schema_name, restaurant_id FROM public.tenants WHERE tenant_slug = ${slug} LIMIT 1`;
         const mapping = mapRes && mapRes[0];
         if (mapping?.schema_name && mapping?.restaurant_id) {
+          assertSafeSchemaName(mapping.schema_name);
           // Switch search_path so we can query unqualified table names safely
           await neonSql`SET search_path TO ${mapping.schema_name}`;
           const cfgRes =
@@ -72,7 +80,8 @@ export async function getConfigBySlug(req: Request, res: Response) {
         );
         const mapping = mapRes.rows[0];
         if (mapping?.schema_name && mapping?.restaurant_id) {
-          await client.query(`SET search_path TO ${mapping.schema_name};`);
+          assertSafeSchemaName(mapping.schema_name);
+          await client.query(`SET search_path TO "${mapping.schema_name}"`);
           const cfgRes = await client.query(
             `SELECT config_json FROM restaurants WHERE id = $1 LIMIT 1`,
             [mapping.restaurant_id],

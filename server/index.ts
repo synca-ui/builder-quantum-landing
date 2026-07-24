@@ -3,12 +3,27 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import helmet from "helmet";
-import { globalLimiter, strictLimiter } from "./middleware/rateLimit";
-import { handleClerkWebhook } from "./webhooks/clerk";
-import { subdomainsRouter } from "./routes/subdomains";
-import { scraperJobRouter } from "./routes/scraperJob";
-import { handleForwardN8n } from "./routes/n8nProxy";
 import rateLimit from "express-rate-limit";
+import { globalLimiter, strictLimiter } from "./middleware/rateLimit";
+import { requireAuth } from "./middleware/auth";
+import { apiRouter } from "./routes";
+import { scraperJobRouter } from "./routes/scraperJob";
+import scraperJobsRoute from "./routes/scraperJobsRoute";
+import { handleSubdomainRequest } from "./routes/subdomains";
+import { getPublishedSite, setPreviewConfig } from "./routes/configurations";
+import { handleForwardN8n } from "./routes/n8nProxy";
+import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
+import { handleAutogen } from "./routes/autogen";
+import { usersRouter } from "./routes/users";
+import { handleClerkWebhook } from "./webhooks/clerk";
+import {
+  handleCreateOrder,
+  handleGetRecentOrders,
+  handleGetMenuStats,
+  handleClearOldOrders,
+} from "./routes/orders";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Rate-Limiter speziell für den öffentlichen Site-Endpoint
 // Verhindert Enumerations-Angriffe (a.maitr.de, b.maitr.de, ...)
@@ -21,39 +36,29 @@ const siteRateLimiter = rateLimit({
   message: { error: "Zu viele Anfragen für diese Seite." },
 });
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-import scraperJobsRoute from "./routes/scraperJobsRoute";
+// Rate-Limiter für öffentliche Reservierungen (Anti-Spam)
+const reservationLimiter = rateLimit({
+  windowMs: 5 * 60_000, // 5 Minuten
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Zu viele Reservierungsanfragen. Bitte warte einen Moment." },
+});
 
-import { handleDemo } from "./routes/demo";
-import { handleSubdomainRequest } from "./routes/subdomains";
-import router, {
-  saveConfiguration,
-  getConfigurations,
-  getConfiguration,
-  deleteConfiguration,
-  publishConfiguration,
-  getPublishedSite,
-} from "./routes/configurations";
-import { fetchInstagramPhotos } from "./routes/instagram";
-import { setPreviewConfig } from "./routes/configurations";
-import { webAppsRouter, publicAppsRouter } from "./routes/webapps";
-import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
-import { handleStripeWebhook, handleWebhookTest } from "./webhooks/stripe";
-import { apiRouter } from "./routes";
-import { requireAuth } from "./middleware/auth";
-import { usersRouter } from "./routes/users";
-import { handleAutogen } from "./routes/autogen";
-import { getConfigBySlug } from "./routes/config";
-import {
-  handleCreateOrder,
-  handleGetRecentOrders,
-  handleGetMenuStats,
-  handleClearOldOrders,
-} from "./routes/orders";
-
-// Middleware to fix Buffer-body issues (Netlify edge cases)
-const rawBodyMiddleware = (req: any, _res: any, next: any) => {
-  // ...
+/** Allowed CORS origins: maitr.de + all subdomains, and localhost in dev */
+const allowedOrigin = (
+  origin: string | undefined,
+  cb: (err: Error | null, allow?: boolean) => void,
+) => {
+  if (
+    !origin ||
+    /^https?:\/\/(.*\.)?maitr\.de$/.test(origin) ||
+    /^https?:\/\/localhost(:\d+)?$/.test(origin)
+  ) {
+    cb(null, true);
+  } else {
+    cb(new Error(`CORS policy: origin ${origin} is not allowed`));
+  }
 };
 
 export function createServer() {
@@ -72,71 +77,53 @@ export function createServer() {
   // Global Rate Limiting
   app.use(globalLimiter);
 
-  // Middleware
-  app.use(cors());
+  // CORS – restricted to maitr.de and localhost (dev)
+  app.use(cors({ origin: allowedOrigin, credentials: true }));
 
   // Parse JSON request bodies with size limits
   app.use(express.json({ limit: "5mb" }));
   app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
-  // ✅ WICHTIG: n8n Proxy Route VOR dem apiRouter definieren
-  // Protected with Strict Rate Limiting
+  // n8n Proxy – strict rate limit, before apiRouter
   app.post("/api/forward-to-n8n", strictLimiter, handleForwardN8n);
 
-  // ✅ Scraper Job Router
+  // Clerk Webhook (must use raw body for svix signature verification)
+  app.post("/api/webhooks/clerk", express.raw({ type: "*/*" }), handleClerkWebhook);
+
+  // Scraper Job Routers
   app.use("/api/scraper-job", scraperJobRouter);
   app.use("/api/scraper-jobs", scraperJobsRoute);
 
-  // Use aggregated API router
+  // Aggregated API router (configurations, webapps, templates, scraper,
+  // subscriptions, subdomains, dashboard, demo, instagram, n8n, etc.)
+  // Public reservations get their own rate-limiter here before the router handles them
+  app.use("/api/public/reservations", reservationLimiter);
   app.use("/api", apiRouter);
-  app.use("/api/subdomains", subdomainsRouter);
 
-  // Additional explicit routes / routers
-  app.use("/api", webAppsRouter);
-  app.use("/api", publicAppsRouter);
-
-  // Configuration API routes (protected)
-  app.use("/api/configurations", requireAuth);
-  app.post("/api/configurations", saveConfiguration);
-  app.get("/api/configurations", getConfigurations);
-  app.get("/api/configurations/:id", getConfiguration);
-  app.delete("/api/configurations/:id", deleteConfiguration);
-  app.post("/api/configurations/:id/publish", publishConfiguration);
-
-  // Public site serving – mit Rate-Limiter gegen Enumeration
+  // Public site serving – rate-limited against enumeration attacks
   app.get("/api/sites/:subdomain", siteRateLimiter, getPublishedSite);
 
   // Users profile (protected)
   app.use("/api/users", requireAuth, usersRouter);
 
-  // Preview config injection
+  // Preview config injection (session-scoped, no auth needed)
   app.post("/api/preview/:session", setPreviewConfig);
 
-  // Auto-generation endpoint
-  app.post("/api/autogen", handleAutogen);
+  // Auto-generation endpoint (rate-limited to prevent abuse)
+  app.post("/api/autogen", strictLimiter, handleAutogen);
 
-  // Config JSON proxy
-  app.get("/api/config/:slug", getConfigBySlug);
-
-  // Instagram scraping
-  app.get("/api/instagram", fetchInstagramPhotos);
-
-  // Schema.org
+  // Schema.org generation & validation
   app.post("/api/schema/generate", handleGenerateSchema);
   app.post("/api/schema/validate", handleValidateSchema);
 
   // Orders API
-  app.post("/api/orders/create", handleCreateOrder);
+  app.post("/api/orders/create", strictLimiter, handleCreateOrder);
   app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
-  app.post("/api/orders/:webAppId/clear-old", handleClearOldOrders);
+  app.post("/api/orders/:webAppId/clear-old", requireAuth, handleClearOldOrders);
 
-  // Demo endpoint
-  app.get("/api/demo", handleDemo);
-
-  // --- SUBDOMAIN ROUTING (GANZ AM ENDE) ---
-  // Erst wenn keine API-Route gepasst hat, prüfen wir auf Subdomains.
-  // Das verhindert, dass API-Calls blockiert werden oder Timeouts werfen.
+  // --- SUBDOMAIN ROUTING (must be last) ---
+  // Only reached if no API route matched — prevents API call timeouts.
   app.use(handleSubdomainRequest);
 
   return app;

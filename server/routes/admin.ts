@@ -8,14 +8,6 @@ import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { z } from "zod";
 
-// Extend Request interface for TypeScript
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: string;
-    }
-  }
-}
 
 const router = Router();
 

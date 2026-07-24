@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import prisma from "../db/prisma";
+import { getCachedSite, setCachedSite } from "../utils/siteCache";
+
 
 export const subdomainsRouter = Router();
 
@@ -48,6 +50,14 @@ export async function handleSubdomainRequest(
       return next();
     }
 
+    // Check LRU cache first — avoids DB round-trip for repeated subdomain requests
+    const cached = getCachedSite(subdomain);
+    if (cached) {
+      (req as any).subdomainConfig = cached.data;
+      (req as any).subdomain = subdomain;
+      return next();
+    }
+
     // Look up the WebApp for this subdomain
     const webApp = await prisma.webApp.findUnique({
       where: { subdomain },
@@ -61,12 +71,11 @@ export async function handleSubdomainRequest(
 
     if (!webApp) {
       // Subdomain not found - let the frontend handle 404
-      console.log(`[Subdomains] No WebApp found for subdomain: ${subdomain}`);
       return next();
     }
 
-    // Log successful subdomain resolution
-    console.log(`[Subdomains] Resolved ${subdomain} -> WebApp ${webApp.id}`);
+    // Store in cache for subsequent requests
+    setCachedSite(subdomain, webApp.configData, webApp.id);
 
     // Attach the config to the request for potential SSR or API use
     (req as any).subdomainConfig = webApp.configData;

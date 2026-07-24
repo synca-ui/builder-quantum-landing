@@ -61,9 +61,8 @@ const DemoDashboardHome = lazy(() => import("./pages/demo/DemoDashboardHome"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Add error handling for React Query
+      // Don't retry network errors more than once
       retry: (failureCount, error) => {
-        // Don't retry network errors more than once
         if (
           error instanceof Error &&
           error.message.includes("Failed to fetch")
@@ -72,7 +71,8 @@ const queryClient = new QueryClient({
         }
         return failureCount < 3;
       },
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,  // 5 minutes — data considered fresh
+      gcTime: 10 * 60 * 1000,    // 10 minutes — keep in cache before GC
     },
   },
 });
