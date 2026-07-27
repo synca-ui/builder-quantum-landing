@@ -637,7 +637,10 @@ function IndexContent() {
           {/* Workflow Animation */}
           <Suspense
             fallback={
-              <div className="w-full max-w-7xl mx-auto min-h-[700px] md:h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-4 md:mt-8 mb-10 md:mb-20 flex items-center justify-center">
+              // Höhe muss exakt der des geladenen MaitrWorkflowAnimation
+              // entsprechen (h-[850px] md:h-[850px]), sonst springt das Layout
+              // beim Nachladen um 150px – siehe CLS-Messung.
+              <div className="w-full max-w-7xl mx-auto h-[850px] md:h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-4 md:mt-8 mb-10 md:mb-20 flex items-center justify-center">
                 <Loader2 className="w-10 h-10 animate-spin text-teal-500" />
               </div>
             }
