@@ -37,6 +37,7 @@ const MaitrWorkflowAnimation = lazy(
 const LazyAuthSection = lazy(() => import("@/components/LazyAuthSection"));
 
 import { Card, CardContent } from "@/components/ui/card";
+import GoogleProfileSection from "@/components/sections/GoogleProfileSection";
 import { sessionApi } from "@/lib/api";
 import {
   useResourcePreloader,
@@ -214,7 +215,10 @@ const Navigation = () => {
       aria-label="Hauptnavigation"
       className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
     >
-      <PageSEO title="Maitr - Web-App Builder für Restaurants" description="Erstelle automatisch konfigurierte Web-Apps mit Maitr in 30 Sekunden." noindex={false} />
+      {/* Hinweis: react-helmet-async überschreibt zur Laufzeit die description aus
+          index.html. Der Google-Unternehmensprofil-Satz steht deshalb hier ebenfalls –
+          sonst sähe der JS-rendernde Googlebot ihn im <head> nicht. Nur ergänzt. */}
+      <PageSEO title="Maitr - Web-App Builder für Restaurants" description="Erstelle automatisch konfigurierte Web-Apps mit Maitr in 30 Sekunden. Maitr hilft Cafés und Restaurants außerdem, ihr Google Unternehmensprofil aktuell zu halten – mit ausdrücklicher Zustimmung des Inhabers." noindex={false} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -882,6 +886,10 @@ function IndexContent() {
           </div>
         </div>
       </section>
+
+      {/* Separate Maitr-App: Verwaltung des Google Unternehmensprofils.
+          Wortlaut ist mit Google abgestimmt – siehe shared/googleProfileCopy.ts */}
+      <GoogleProfileSection />
 
       <footer className="bg-gradient-to-t from-gray-50 to-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
