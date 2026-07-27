@@ -102,6 +102,21 @@ export default function AGB() {
                         <p className="text-slate-500">
                             Stand: {STAND} · maitr.de
                         </p>
+
+                        {/* Ehrlicher Hinweis, solange die Zahlungsabwicklung nicht aktiv
+                            ist: §§ 6-8 beschreiben zahlungspflichtige Abos, die derzeit
+                            nicht abgeschlossen werden koennen. Entfernen, sobald der
+                            Stripe-Checkout live ist. */}
+                        <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                            <p className="text-sm text-amber-900">
+                                <strong>Hinweis zum aktuellen Stand:</strong> Zahlungspflichtige
+                                Abonnements sind derzeit <strong>nicht aktiv</strong> — es kann kein
+                                kostenpflichtiger Vertrag abgeschlossen werden. Die Nutzung erfolgt
+                                im kostenlosen Umfang. Die Regelungen zu Preisen, Zahlung, Laufzeit
+                                und Widerruf (§§ 6–8) gelten erst, sobald die Zahlungsabwicklung
+                                freigeschaltet ist.
+                            </p>
+                        </div>
                     </div>
 
                     <div className="space-y-16 text-slate-700 leading-relaxed max-w-none prose prose-slate prose-a:text-teal-600 hover:prose-a:text-teal-700">

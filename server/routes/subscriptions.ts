@@ -231,32 +231,34 @@ export async function createCheckoutSession(req: Request, res: Response) {
       });
     }
 
-    // TODO: Create Stripe checkout session
+    // NOT IMPLEMENTED. Billing is deliberately switched off until the Stripe
+    // integration is finished end-to-end. What is still missing:
+    //   1. real Price-IDs (SUBSCRIPTION_PLANS still carries "price_basic"/"price_pro"),
+    //   2. stripe.checkout.sessions.create() below,
+    //   3. handleStripeWebhook (server/webhooks/stripe.ts) mounted with
+    //      express.raw() BEFORE express.json() - it is currently never registered,
+    //   4. cancelSubscription actually calling Stripe.
+    //
+    // Until then this endpoint answers honestly instead of returning
+    // `success: true` with `checkoutUrl: null`, which made callers believe a
+    // checkout had been created and logged a successful "checkout_initiated".
+    //
     // const session = await stripe.checkout.sessions.create({
     //   customer_email: user.email,
     //   payment_method_types: ["card"],
-    //   line_items: [
-    //     {
-    //       price: plan.stripePriceId,
-    //       quantity: 1,
-    //     },
-    //   ],
+    //   line_items: [{ price: plan.stripePriceId, quantity: 1 }],
     //   mode: "subscription",
     //   success_url: successUrl || `${process.env.SITE_URL}/dashboard/billing?session_id={CHECKOUT_SESSION_ID}`,
     //   cancel_url: cancelUrl || `${process.env.SITE_URL}/dashboard/billing`,
-    //   metadata: {
-    //     userId,
-    //   },
+    //   metadata: { userId },
     // });
+    await audit("checkout_unavailable", planId, false, "Billing not enabled");
 
-    // For now, return a placeholder response
-    await audit("checkout_initiated", planId, true);
-
-    return res.json({
-      success: true,
-      message: "Checkout session created",
-      // checkoutUrl: session.url,
-      checkoutUrl: null, // TODO: Update when Stripe is configured
+    return res.status(501).json({
+      success: false,
+      error: "Billing not enabled",
+      message:
+        "Zahlungspflichtige Abos sind derzeit nicht aktiv. Alle Funktionen laufen im kostenlosen Plan.",
     });
   } catch (error) {
     console.error("[Subscriptions] Checkout error:", error);
@@ -311,10 +313,23 @@ export async function cancelSubscription(req: Request, res: Response) {
       });
     }
 
-    // TODO: Cancel Stripe subscription
+    // Safety guard while billing is switched off: if a Stripe subscription exists,
+    // we must NOT flip the local record to "free". That would stop access locally
+    // while Stripe keeps charging the customer - the worst possible failure mode.
+    // Re-enable together with the checkout (see createCheckoutSession).
     // if (subscription.stripeSubscriptionId) {
     //   await stripe.subscriptions.del(subscription.stripeSubscriptionId);
     // }
+    if (subscription.stripeSubscriptionId) {
+      await audit("subscription_cancel_blocked", subscription.id, false, "Stripe not wired");
+
+      return res.status(501).json({
+        success: false,
+        error: "Cancellation not available",
+        message:
+          "Dieses Abo liegt bei Stripe. Die Kündigung ist noch nicht angebunden - bitte manuell im Stripe-Dashboard stornieren, sonst läuft die Abrechnung weiter.",
+      });
+    }
 
     // Update local subscription record
     const updated = await prisma.subscription.update({

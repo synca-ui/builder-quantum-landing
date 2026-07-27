@@ -825,6 +825,12 @@ function IndexContent() {
               Flexible Preise für Unternehmen jeder Größe. Klein starten, mit
               dir wachsen.
             </p>
+            {/* Solange der Stripe-Checkout nicht live ist: ehrlich benennen, dass
+                noch nichts abgerechnet wird. Entfernen, sobald Billing aktiv ist. */}
+            <p className="mt-6 inline-block rounded-full bg-amber-50 border border-amber-200 px-5 py-2 text-sm font-semibold text-amber-900">
+              Die Abrechnung ist noch nicht freigeschaltet — aktuell nutzt du Maitr
+              kostenlos.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -903,17 +909,21 @@ function IndexContent() {
                         ))}
                       </ul>
 
-                      <Button
-                        className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
-                          ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
-                          : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
-                          }`}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <span>{plan.cta}</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </div>
-                      </Button>
+                      {/* Fuehrt zum echten Produkteinstieg (wie der Hero-CTA). Vorher
+                          war der Button ohne onClick/href komplett wirkungslos. */}
+                      <a href="/mode-selection" className="block">
+                        <Button
+                          className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
+                            ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+                            : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
+                            }`}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span>{plan.cta}</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </div>
+                        </Button>
+                      </a>
                     </>
                   )}
                 </CardContent>
