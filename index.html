@@ -81,8 +81,13 @@
   <link rel="canonical" href="https://www.maitr.de/" />
 
   <!-- SEO Meta Tags -->
+  <!--
+    Die Beschreibung deckt bewusst BEIDE Produkte ab und wiederholt den Kernsatz
+    des Abschnitts "google-profil" – als zusätzliche Absicherung für die
+    Google-OAuth-Prüfung, falls ein Prüf-Werkzeug nur die Meta-Tags ausliest.
+  -->
   <meta name="description"
-    content="Erstelle automatisch konfigurierte Web-Apps mit Maitr. Professionelle Restaurant- und Business-Web-Apps in 30 Sekunden. Keine Vorkenntnisse erforderlich." />
+    content="Maitr ist der digitale Gastgeber für Gastronomie: Web-App-Builder für Restaurants in 30 Sekunden – und eine App, die mit ausdrücklicher Zustimmung des Inhabers das Google Unternehmensprofil pflegt, Bewertungen beantwortet und Beiträge veröffentlicht." />
   <meta name="keywords"
     content="web-app builder, restaurant web-app, business web-app, automatisch, konfiguration, web-app erstellen, Web-App, Web-App Builder" />
   <meta name="author" content="Maitr" />
@@ -148,12 +153,34 @@
 </head>
 
 <body>
-  <!-- Loading indicator -->
+  <!--
+    Ohne JavaScript ausgelieferter Inhalt.
+
+    Der Abschnitt "google-profil" ist Grundlage der Google-OAuth-Prüfung für den
+    Scope "business.manage": Der Text muss im rohen HTML stehen, also bevor
+    JavaScript ausgeführt wurde. Überschrift und Fließtext sind mit Google
+    abgestimmt und wortgleich mit
+    client/components/sections/GoogleProfileSection.tsx – beide Fassungen müssen
+    synchron bleiben.
+  -->
   <noscript>
-    <div style="text-align: center; margin-top: 50px">
-      <h1>JavaScript required</h1>
-      <p>This app requires JavaScript to run.</p>
-    </div>
+    <section id="google-profil-noscript" aria-labelledby="google-profil-noscript-titel"
+      style="max-width: 56rem; margin: 0 auto; padding: 4rem 1.5rem; font-family: system-ui, -apple-system, sans-serif; color: #1f2937;">
+      <h1 id="google-profil-noscript-titel"
+        style="font-size: 2rem; line-height: 1.2; font-weight: 800; text-align: center; margin: 0 0 1.5rem;">
+        Maitr – dein digitaler Gastgeber für Google
+      </h1>
+      <p style="font-size: 1.125rem; line-height: 1.7; text-align: center; margin: 0 auto; max-width: 48rem;">
+        Maitr hilft Cafés und Restaurants, ihr Google Unternehmensprofil aktuell zu halten.
+        Mit ausdrücklicher Zustimmung des Inhabers beantwortet Maitr Google-Bewertungen,
+        veröffentlicht Beiträge auf dem Profil und pflegt Öffnungszeiten und Kontaktdaten.
+        Jede Aktion wird vor der Veröffentlichung vom Inhaber freigegeben.
+      </p>
+      <p style="margin-top: 3rem; text-align: center; color: #4b5563;">
+        Maitr ist außerdem ein Web-App-Builder für Restaurants. Für den interaktiven Teil
+        dieser Seite wird JavaScript benötigt.
+      </p>
+    </section>
   </noscript>
 
   <div id="root">
