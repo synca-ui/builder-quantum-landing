@@ -29,9 +29,7 @@ dist-ssr
 # Lokale Claude-Code-Konfiguration (maschinenspezifisch, u. a. settings.local.json)
 .claude/
 
-# PP Frama liegt hier als "Free for Personal Use"-Version (Pangram Pangram).
-# Dieses Repo ist oeffentlich -> die OTF-Dateien duerfen nicht mitverteilt werden.
-# Fuer Builds lokal ablegen; ohne sie faellt die App auf die System-Grotesk zurueck
-# (siehe mobile/src/theme/fonts.ts, EXPO_PUBLIC_BRAND_FONT=off).
-mobile/assets/fonts/*.otf
-mobile/assets/fonts/*.ttf
+# PP Frama (Pangram Pangram, "Free for Personal Use") darf nicht ins oeffentliche
+# Repo. Die Markenschrift ist jetzt Familjen Grotesk (SIL OFL, .ttf) und wird
+# committet; nur die PPFrama-OTFs bleiben ausgeschlossen.
+mobile/assets/fonts/PPFrama*.otf

@@ -3,16 +3,17 @@ import { Platform, type TextStyle } from "react-native";
 /**
  * Typografie aus dem Design-System.
  *
- * Zwei Schnitte: "PP Frama" für Display/Labels, "PP Frama Text" für Fließtext.
- * Solange die OTF-Dateien nicht in `assets/fonts/` liegen (siehe `fonts.ts`), fällt
- * alles auf die Systemschrift zurück - die App läuft, nur die Anmutung fehlt.
+ * Ein Schnitt in zwei Stilen: Familjen Grotesk Regular + Italic (SIL OFL). Familjen
+ * hat keine separaten optischen Größen, daher nutzen Display und Fließtext denselben
+ * Regular- bzw. Italic-Schnitt (nur andere Größen/Laufweiten). Ohne geladene Dateien
+ * fällt alles auf die Systemschrift zurück - die App läuft, nur die Anmutung fehlt.
  */
 
 export const fontFamily = {
-  display: "PPFrama-Regular",
-  displayItalic: "PPFrama-RegularItalic",
-  text: "PPFramaText-Regular",
-  textItalic: "PPFramaText-RegularItalic",
+  display: "FamiljenGrotesk-Regular",
+  displayItalic: "FamiljenGrotesk-Italic",
+  text: "FamiljenGrotesk-Regular",
+  textItalic: "FamiljenGrotesk-Italic",
 } as const;
 
 const systemFallback = Platform.select({
