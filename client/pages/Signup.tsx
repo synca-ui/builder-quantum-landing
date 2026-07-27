@@ -1,11 +1,12 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 import { SignUp } from "@clerk/clerk-react";
 import { AuthLayout } from "@/components/AuthLayout";
 
 export default function Signup() {
   return (
     <AuthLayout mode="signup">
-      <PageSEO title="Maitr - Konto erstellen" description="Erstelle dein kostenloses Maitr-Konto." noindex={true} />
+      <PageSEO {...SEO.signup} />
       <SignUp
         routing="path"
         path="/signup"

@@ -1,11 +1,12 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 import { SignIn } from "@clerk/clerk-react";
 import { AuthLayout } from "@/components/AuthLayout";
 
 export default function Login() {
   return (
     <AuthLayout mode="login">
-      <PageSEO title="Maitr - Anmelden" description="Melde dich bei Maitr an." noindex={true} />
+      <PageSEO {...SEO.login} />
       <SignIn
         routing="path"
         path="/login"

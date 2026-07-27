@@ -1,4 +1,5 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 /**
  * Demo Dashboard Home Component
  * Main demo dashboard component with enterprise-grade modules
@@ -18,7 +19,7 @@ import DemoReservationsDashboard from "../../components/demo/DemoReservationsDas
 function DemoInsightsPage() {
   return (
     <div className="space-y-8">
-      <PageSEO title="Maitr - Demo Dashboard" description="Entdecke das Maitr Demo Dashboard." noindex={false} />
+      <PageSEO {...SEO.demoDashboard} />
 
       <div className="flex items-center justify-between">
         <div>

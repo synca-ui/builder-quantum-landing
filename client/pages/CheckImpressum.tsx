@@ -1,4 +1,5 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 import React from "react";
 import "./check.css"; // We use the check styling
 
@@ -11,7 +12,7 @@ export default function CheckImpressum() {
             fontFamily: "system-ui, sans-serif",
             padding: "0",
         }}>
-      <PageSEO title="Maitr - Impressum (Check)" description="Impressum von Maitr." noindex={false} />
+      <PageSEO {...SEO.checkImpressum} />
 
             {/* ── NAV ── */}
             <nav className="ck-nav">

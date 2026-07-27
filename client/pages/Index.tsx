@@ -1,4 +1,5 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 import React, { useEffect, useState, memo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -204,9 +205,9 @@ const Navigation = () => {
     },
     {
       id: "dashboard",
-      label: "Dashboard",
+      label: "Maitr App",
       icon: <LayoutDashboard className="w-4 h-4" />,
-      href: "/dashboard",
+      href: "#google-profil",
     },
   ];
 
@@ -215,15 +216,18 @@ const Navigation = () => {
       aria-label="Hauptnavigation"
       className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
     >
-      <PageSEO title="Maitr - Web-App Builder für Restaurants" description="Erstelle automatisch konfigurierte Web-Apps mit Maitr in 30 Sekunden." noindex={false} />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="relative group">
-              <h1 className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
+              {/* Wortmarke, keine Seitenüberschrift: das <h1> der Seite ist die
+                  Hero-Headline weiter unten. Zwei <h1> pro Seite sind ein
+                  Fehler in der Dokumentstruktur. <div> statt <h1> ändert die
+                  Darstellung nicht (Tailwind Preflight setzt Heading-Margins
+                  ohnehin auf 0). */}
+              <div className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
                 Maitr
-              </h1>
+              </div>
               <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
             </div>
@@ -420,6 +424,10 @@ function IndexContent() {
 
   return (
     <div className="min-h-screen bg-white relative w-full" style={{ overflowX: "clip" }}>
+      {/* Auf Seitenebene, nicht in <nav>: dorthin hatte inject-seo.cjs das
+          Element ursprünglich eingesetzt. */}
+      <PageSEO {...SEO.home} />
+
       <Navigation />
 
       <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-teal-50 min-h-screen flex items-center">
@@ -650,63 +658,7 @@ function IndexContent() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 md:mb-10">
-            <h2 className="text-3xl md:text-4xl font-black">Beispiel Dashboard</h2>
-            <p className="text-gray-600 mt-2 text-sm md:text-base px-4">
-              Ein kurzer Vorgeschmack auf das, was dich nach dem Login erwartet.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="rounded-2xl border p-6 bg-gradient-to-br from-teal-50 to-white">
-              <div className="text-sm font-semibold text-teal-700">Traffic</div>
-              <div className="mt-2 text-3xl font-bold">1,284</div>
-              <div className="text-xs text-gray-500 mt-1">
-                Besuche letzte 7 Tage
-              </div>
-            </div>
-            <div className="rounded-2xl border p-6 bg-gradient-to-br from-purple-50 to-white">
-              <div className="text-sm font-semibold text-purple-700">
-                Bestellungen
-              </div>
-              <div className="mt-2 text-3xl font-bold">76</div>
-              <div className="text-xs text-gray-500 mt-1">diese Woche</div>
-            </div>
-            <div className="rounded-2xl border p-6 bg-gradient-to-br from-orange-50 to-white">
-              <div className="text-sm font-semibold text-orange-700">
-                Bewertungen
-              </div>
-              <div className="mt-2 text-3xl font-bold">4.8</div>
-              <div className="text-xs text-gray-500 mt-1">Durchschnitt</div>
-            </div>
-          </div>
-          <div className="text-center mt-8">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a href="/login">
-                <Button className="bg-gradient-to-r from-teal-500 to-purple-500 text-white px-8 py-3">
-                  Log In um Dashboard zu öffnen
-                </Button>
-              </a>
 
-              {/* Demo Dashboard Button - always visible immediately, no auth dependency */}
-              <a
-                href="/demo-dashboard"
-                className="inline-flex"
-                aria-label="Try Dashboard Demo"
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-600 px-4 py-2 bg-white/60 backdrop-blur-sm border border-white/20 hover:bg-white/80 transition-all duration-300 rounded-full"
-                >
-                  <BarChart3 className="mr-2 w-4 h-4" /> Dashboard Demo
-                </Button>
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section
         id="features"
@@ -767,9 +719,11 @@ function IndexContent() {
         </div>
       </section>
 
+      <GoogleProfileSection />
+
       <section
         id="pricing"
-        className="py-32 bg-gradient-to-br from-gray-50 via-white to-purple-50 relative overflow-hidden"
+        className="pt-12 pb-24 md:pt-16 md:pb-32 bg-gradient-to-br from-gray-50 via-white to-purple-50 relative overflow-hidden"
       >
         <div
           className={
@@ -887,27 +841,25 @@ function IndexContent() {
         </div>
       </section>
 
-      <GoogleProfileSection />
-
       <footer className="bg-gradient-to-t from-gray-50 to-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h4 className="text-lg font-bold">Creative Studio</h4>
+              <h3 className="text-lg font-bold">Creative Studio</h3>
               <p className="mt-2 text-gray-600">
                 Passe Stil, Farben und Inhalte an. Deine App, deine Marke mit
                 wunderschönen Standardeinstellungen.
               </p>
             </div>
             <div>
-              <h4 className="text-lg font-bold">Backstage</h4>
+              <h3 className="text-lg font-bold">Backstage</h3>
               <p className="mt-2 text-gray-600">
                 Verwalte Menüs, Öffnungszeiten und Bestellungen von einem
                 einfachen Dashboard, gebaut für Gastronomie.
               </p>
             </div>
             <div>
-              <h4 className="text-lg font-bold">Concierge</h4>
+              <h3 className="text-lg font-bold">Concierge</h3>
               <p className="mt-2 text-gray-600">
                 Brauchst du Hilfe? Unser Team kann das Setup für dich
                 fertigstellen oder individuelle Integrationen bereitstellen.

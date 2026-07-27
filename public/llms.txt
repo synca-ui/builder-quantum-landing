@@ -1,0 +1,45 @@
+# Maitr
+
+> Maitr ist der digitale Gastgeber für Gastronomie. Unter maitr.de laufen zwei
+> getrennte Produkte: ein Web-App-Builder, der Restaurants und Cafés aus einem
+> einzigen Link eine fertige Web-App erstellt, und eine Mobile-App, die mit
+> ausdrücklicher Zustimmung des Inhabers dessen Google Unternehmensprofil pflegt.
+
+Maitr richtet sich an Cafés, Restaurants, Bäckereien und andere lokale
+Gastronomiebetriebe im deutschsprachigen Raum. Die Oberfläche ist deutsch.
+
+## Web-App-Builder
+
+Der Builder ist das Produkt auf der Startseite. Der Betreiber fügt einen
+Google-Maps- oder Website-Link ein; daraus erzeugt Maitr automatisch eine
+Web-App mit digitaler Speisekarte, Öffnungszeiten und Reservierungssystem.
+Fertige Web-Apps laufen auf einer eigenen Subdomain unter `*.maitr.de`.
+
+- [Startseite](https://www.maitr.de/): Produktübersicht, Funktionsweise, Preise
+- [Demo-Dashboard](https://www.maitr.de/demo-dashboard): Dashboard mit Beispieldaten, ohne Anmeldung
+- [Maitr Check](https://check.maitr.de/): kostenlose Analyse der Online-Präsenz eines Betriebs
+
+## Verwaltung des Google Unternehmensprofils
+
+Dies ist ein eigenständiges Produkt, eine Mobile-App, und NICHT Teil des
+Builders. Maitr hilft Cafés und Restaurants, ihr Google Unternehmensprofil
+aktuell zu halten. Mit ausdrücklicher Zustimmung des Inhabers beantwortet Maitr
+Google-Bewertungen, veröffentlicht Beiträge auf dem Profil und pflegt
+Öffnungszeiten und Kontaktdaten. Jede Aktion wird vor der Veröffentlichung vom
+Inhaber freigegeben.
+
+Der Zugriff erfolgt über die Google-OAuth-Berechtigung `business.manage`, die
+der Inhaber selbst erteilt und jederzeit widerrufen kann.
+
+- [Abschnitt auf der Startseite](https://www.maitr.de/#google-profil): Beschreibung des Produkts
+
+## Rechtliches
+
+- [Impressum](https://www.maitr.de/impressum)
+- [Datenschutzerklärung](https://www.maitr.de/datenschutz)
+- [AGB](https://www.maitr.de/agb)
+
+## Optional
+
+- [Impressum Maitr Check](https://www.maitr.de/impressum-check)
+- [Datenschutz Maitr Check](https://www.maitr.de/datenschutz-check)

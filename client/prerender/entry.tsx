@@ -20,11 +20,11 @@
  */
 import { renderToString } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
-import { HelmetProvider } from "react-helmet-async";
+import { HelmetProvider, type HelmetServerState } from "react-helmet-async";
 import Index from "../pages/Index";
 
 export function render(url = "/") {
-  const helmetContext: { helmet?: Record<string, { toString(): string }> } = {};
+  const helmetContext: { helmet?: HelmetServerState } = {};
 
   const html = renderToString(
     <HelmetProvider context={helmetContext}>

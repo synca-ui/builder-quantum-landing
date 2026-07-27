@@ -1,4 +1,5 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 
@@ -44,7 +45,7 @@ export default function AGB() {
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-teal-100">
-      <PageSEO title="Maitr - AGB" description="Allgemeine Geschäftsbedingungen von Maitr." noindex={false} />
+      <PageSEO {...SEO.agb} />
 
             {/* Navbar Minimal */}
             <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">

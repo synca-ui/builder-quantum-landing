@@ -1,4 +1,5 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 import React, { useState } from "react";
 import "./check.css"; // We use the check styling
 
@@ -20,7 +21,7 @@ export default function CheckDatenschutz() {
             color: "#e2e8f0",
             fontFamily: "system-ui, sans-serif",
         }}>
-      <PageSEO title="Maitr - Datenschutz (Check)" description="Datenschutzerklärung von Maitr." noindex={false} />
+      <PageSEO {...SEO.checkDatenschutz} />
 
             {/* ── NAV ── */}
             <nav className="ck-nav">

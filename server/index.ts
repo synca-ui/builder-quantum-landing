@@ -30,7 +30,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteRateLimiter = rateLimit({
   windowMs: 60_000,
   limit: 60,
-  keyGenerator: (req) => `${req.ip}-${req.params.subdomain}`,
+  // Normalize IPv6 addresses (strip brackets) to avoid ERR_ERL_KEY_GEN_IPV6
+  keyGenerator: (req) => {
+    const ip = (req.ip ?? "").replace(/^\[|\]$/g, "");
+    return `${ip}-${req.params.subdomain ?? ""}`;
+  },
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Zu viele Anfragen für diese Seite." },

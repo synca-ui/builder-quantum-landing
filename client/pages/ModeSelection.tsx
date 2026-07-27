@@ -1,4 +1,5 @@
 import { PageSEO } from "@/components/seo/PageSEO";
+import { SEO } from "@/lib/seo";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Settings, Sparkles, Copy } from "lucide-react";
@@ -201,7 +202,7 @@ export default function ModeSelection() {
         open={showComingSoon}
         onClose={() => setShowComingSoon(false)}
       />
-      <PageSEO title="Maitr - Modus auswählen" description="Wähle deinen Maitr Modus." noindex={true} />
+      <PageSEO {...SEO.modeSelection} />
 
       <Headbar title="Auswahl" />
       <LoadingOverlay

@@ -1,32 +1,34 @@
+# robots.txt für https://www.maitr.de
+#
+# Hinweis zur vorherigen Fassung: Dort standen unterhalb der *-Gruppe weitere
+# Gruppen "User-agent: Googlebot / Allow: /", "User-agent: Bingbot / Allow: /"
+# usw. Nach dem Robots-Exclusion-Standard wertet ein Crawler NUR die am besten
+# passende Gruppe aus, nicht mehrere zusammen. Für Googlebot war das die
+# Googlebot-Gruppe – und die enthielt ausschließlich "Allow: /". Die
+# Disallow-Regeln der *-Gruppe galten für Googlebot dadurch nicht, /dashboard/,
+# /login, /signup, /profile und /mode-selection waren für Google also crawlbar.
+# Das "Crawl-delay: 1" am Dateiende gehörte aus demselben Grund zur letzten
+# Gruppe (facebookexternalhit) statt zu allen Crawlern.
+#
+# Deshalb jetzt eine einzige Gruppe für alle Crawler. Gesperrt wird nur, was
+# ohnehin auf noindex steht oder hinter der Anmeldung liegt; die öffentlichen
+# Seiten inklusive Startseite mit dem Abschnitt #google-profil bleiben frei.
+
 User-agent: *
 Allow: /
 
-# Block specific paths
+Disallow: /dashboard
 Disallow: /dashboard/
+Disallow: /configurator
 Disallow: /configurator/
 Disallow: /profile
 Disallow: /login
 Disallow: /signup
 Disallow: /mode-selection
+Disallow: /test-site
+Disallow: /r/
 
-# Allow all major search engines
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-# Sitemap location
-Sitemap: https://www.maitr.de/sitemap.xml
-
-# Crawl-delay for polite crawling
+# Wird von Googlebot ignoriert, bremst aber andere Crawler.
 Crawl-delay: 1
+
+Sitemap: https://www.maitr.de/sitemap.xml
