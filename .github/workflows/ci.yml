@@ -1,0 +1,70 @@
+name: CI
+
+# Minimales Qualitätsnetz (Audit 27.07.2026): vorher lief weder CI noch ein
+# Pre-Commit-Hook, Netlify baut ohne Typecheck. Diese Pipeline gatet genau die
+# Dinge, die HEUTE grün sind, damit sie es bleiben – und macht den (noch roten)
+# Root-Typecheck sichtbar, ohne PRs zu blockieren.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Pflicht: die Web-Plattform muss sich bauen lassen (client + server).
+  web-build:
+    name: Web-Build (client + server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      # postinstall macht bereits `prisma generate || true` – kein extra Schritt nötig,
+      # und keiner, der die CI härter macht als den lokal grünen Build.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+  # Pflicht: die Mobile-App muss typprüfen (braucht keine Assets/Fonts).
+  mobile-typecheck:
+    name: Mobile Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Mobile-Abhängigkeiten
+        working-directory: mobile
+        run: npm ci
+      - name: tsc --noEmit
+        working-directory: mobile
+        run: npx tsc --noEmit
+
+  # Informativ (nicht blockierend): Root-Typecheck. Stand 27.07.2026 = 115 Fehler,
+  # davon ~83 in live verdrahtetem Servercode. Sobald abgearbeitet, dieses
+  # `continue-on-error` entfernen, dann ist der Root-Typecheck ebenfalls Pflicht.
+  root-typecheck:
+    name: Root Typecheck (informativ)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: tsc (darf noch rot sein)
+        run: pnpm run typecheck
