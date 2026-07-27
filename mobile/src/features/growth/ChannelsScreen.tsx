@@ -7,6 +7,7 @@ import { ListCard, ListRow } from "../../components/ui/ListCard";
 import { NavHeader } from "../../components/ui/NavHeader";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -22,6 +23,7 @@ export function ChannelsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { channels } = useStore();
 
   const connectedCount = CHANNELS.filter((c) => channels[c.id]).length;
@@ -32,14 +34,19 @@ export function ChannelsScreen() {
 
       <View>
         <Text variant="screenTitle" accessibilityRole="header" style={{ fontSize: 33, lineHeight: 36 }}>
-          Deine Kanäle
+          {t({ de: "Deine Kanäle", en: "Your channels" })}
         </Text>
         <Text variant="body" tone="secondary" style={{ marginTop: 6 }}>
-          Ein Ort, Maitr hält alles andere synchron.
+          {t({ de: "Ein Ort, Maitr hält alles andere synchron.", en: "One place — Maitr keeps everything else in sync." })}
         </Text>
       </View>
 
-      <Eyebrow>{connectedCount} von {CHANNELS.length} verbunden</Eyebrow>
+      <Eyebrow>
+        {t({
+          de: `${connectedCount} von ${CHANNELS.length} verbunden`,
+          en: `${connectedCount} of ${CHANNELS.length} connected`,
+        })}
+      </Eyebrow>
 
       <ListCard>
         {CHANNELS.map((channel) => {
@@ -53,10 +60,10 @@ export function ChannelsScreen() {
               onPress={() => router.push({ pathname: "/kanal/[id]", params: { id: channel.id } })}
               trailing={
                 connected ? (
-                  <StatusLabel label="Verbunden" color={theme.colors.success} />
+                  <StatusLabel label={t({ de: "Verbunden", en: "Connected" })} color={theme.colors.success} />
                 ) : (
                   <Text variant="numeric" tone="accent" style={{ fontSize: 14 }}>
-                    Verbinden ›
+                    {t({ de: "Verbinden ›", en: "Connect ›" })}
                   </Text>
                 )
               }
@@ -66,13 +73,13 @@ export function ChannelsScreen() {
       </ListCard>
 
       <Eyebrow tone="faint" style={{ textAlign: "center", marginTop: theme.spacing.sm }}>
-        Plattform fehlt?{" "}
+        {t({ de: "Plattform fehlt?", en: "Missing a platform?" })}{" "}
         <Eyebrow
           tone="accent"
           style={{ textDecorationLine: "underline" }}
-          onPress={() => toast.show("Wunsch gesendet — danke!")}
+          onPress={() => toast.show(t({ de: "Wunsch gesendet — danke!", en: "Request sent — thanks!" }))}
         >
-          Wunsch senden
+          {t({ de: "Wunsch senden", en: "Send a request" })}
         </Eyebrow>
       </Eyebrow>
     </Screen>

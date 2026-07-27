@@ -14,6 +14,7 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT, type Localized } from "../../lib/i18n";
 import { useVenueDataset } from "../../lib/analytics";
 import { useStore, type Guest, type GuestStatus } from "../../lib/store";
 import { useToast } from "../../lib/toast";
@@ -33,6 +34,7 @@ export function GuestsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { guests, reactivateGuest } = useStore();
   const dataset = useVenueDataset();
   const [filter, setFilter] = useState<Filter>("alle");
@@ -50,7 +52,7 @@ export function GuestsScreen() {
 
   const reactivateAll = () => {
     inactive.forEach((g) => reactivateGuest(g.id, g.name));
-    toast.show(`${inactive.length} Gäste zurückgeholt`);
+    toast.show(t({ de: `${inactive.length} Gäste zurückgeholt`, en: `${inactive.length} guests brought back` }));
   };
 
   return (
@@ -59,14 +61,17 @@ export function GuestsScreen() {
 
       <View>
         <Text variant="screenTitle" accessibilityRole="header" style={{ fontSize: 33, lineHeight: 36 }}>
-          Gäste
+          {t({ de: "Gäste", en: "Guests" })}
         </Text>
         <Text variant="body" tone="secondary" style={{ marginTop: 6 }}>
-          {guests.length} Gäste · {regulars} Stammgäste · deine Beziehung, nicht die der Plattform.
+          {t({
+            de: `${guests.length} Gäste · ${regulars} Stammgäste · deine Beziehung, nicht die der Plattform.`,
+            en: `${guests.length} guests · ${regulars} regulars · your relationship, not the platform's.`,
+          })}
         </Text>
         <View style={{ flexDirection: "row", marginTop: 8 }}>
           <PillButton
-            label="Stammgast-Pass ›"
+            label={t({ de: "Stammgast-Pass ›", en: "Loyalty pass ›" })}
             variant="ghost"
             size="compact"
             labelSize={14}
@@ -78,16 +83,21 @@ export function GuestsScreen() {
 
       {inactive.length > 0 ? (
         <DarkPanel style={{ gap: theme.spacing.sm }}>
-          <Eyebrow color={onDarkPanel.accent}>Copilot-Vorschlag</Eyebrow>
+          <Eyebrow color={onDarkPanel.accent}>{t({ de: "Copilot-Vorschlag", en: "Copilot suggestion" })}</Eyebrow>
           <Text variant="sectionTitle" color={onDarkPanel.title} style={{ fontSize: 19 }}>
-            {inactive.length}{" "}
-            {inactive.length === 1 ? "Gast war" : "Gäste waren"} länger nicht da
+            {t({
+              de: `${inactive.length} ${inactive.length === 1 ? "Gast war" : "Gäste waren"} länger nicht da`,
+              en: `${inactive.length} ${inactive.length === 1 ? "guest hasn't" : "guests haven't"} been in for a while`,
+            })}
           </Text>
           <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 14 }}>
-            Eine freundliche Nachricht bringt sie oft zurück - Maitr formuliert und sendet.
+            {t({
+              de: "Eine freundliche Nachricht bringt sie oft zurück - Maitr formuliert und sendet.",
+              en: "A friendly message often brings them back — Maitr writes and sends it.",
+            })}
           </Text>
           <PillButton
-            label="Alle zurückholen"
+            label={t({ de: "Alle zurückholen", en: "Bring all back" })}
             size="compact"
             labelColor={onDarkPanel.onAccent}
             onPress={reactivateAll}
@@ -97,19 +107,29 @@ export function GuestsScreen() {
       ) : null}
 
       <View style={{ flexDirection: "row", gap: 9 }}>
-        <Chip label="Alle" selected={filter === "alle"} onPress={() => setFilter("alle")} />
-        <Chip label="Stammgäste" selected={filter === "stammgast"} onPress={() => setFilter("stammgast")} />
-        <Chip label="Inaktiv" selected={filter === "inaktiv"} onPress={() => setFilter("inaktiv")} />
+        <Chip label={t({ de: "Alle", en: "All" })} selected={filter === "alle"} onPress={() => setFilter("alle")} />
+        <Chip label={t({ de: "Stammgäste", en: "Regulars" })} selected={filter === "stammgast"} onPress={() => setFilter("stammgast")} />
+        <Chip label={t({ de: "Inaktiv", en: "Inactive" })} selected={filter === "inaktiv"} onPress={() => setFilter("inaktiv")} />
       </View>
 
       <View style={{ gap: theme.spacing.md }}>
         {shown.length === 0 ? (
           <EmptyState
-            title={filter === "inaktiv" ? "Keine inaktiven Gäste" : "Keine Gäste in dieser Ansicht"}
+            title={
+              filter === "inaktiv"
+                ? t({ de: "Keine inaktiven Gäste", en: "No inactive guests" })
+                : t({ de: "Keine Gäste in dieser Ansicht", en: "No guests in this view" })
+            }
             message={
               filter === "inaktiv"
-                ? "Alle Stammgäste waren zuletzt da — Maitr hält sie warm."
-                : "Sobald jemand reserviert, taucht er hier auf."
+                ? t({
+                    de: "Alle Stammgäste waren zuletzt da — Maitr hält sie warm.",
+                    en: "All your regulars have been in recently — Maitr keeps them warm.",
+                  })
+                : t({
+                    de: "Sobald jemand reserviert, taucht er hier auf.",
+                    en: "As soon as someone books, they'll show up here.",
+                  })
             }
           />
         ) : (
@@ -120,7 +140,7 @@ export function GuestsScreen() {
               insight={insightById.get(guest.id)}
               onReactivate={() => {
                 reactivateGuest(guest.id, guest.name);
-                toast.show(`Nachricht an ${guest.name} gesendet`);
+                toast.show(t({ de: `Nachricht an ${guest.name} gesendet`, en: `Message sent to ${guest.name}` }));
               }}
             />
           ))
@@ -130,10 +150,10 @@ export function GuestsScreen() {
   );
 }
 
-const STATUS: Record<GuestStatus, { label: string; color: (t: ReturnType<typeof useTheme>) => string }> = {
-  stammgast: { label: "Stammgast", color: (t) => t.colors.success },
-  neu: { label: "Neu", color: (t) => t.colors.primary },
-  inaktiv: { label: "Inaktiv", color: (t) => t.colors.textMuted },
+const STATUS: Record<GuestStatus, { label: Localized; color: (t: ReturnType<typeof useTheme>) => string }> = {
+  stammgast: { label: { de: "Stammgast", en: "Regular" }, color: (t) => t.colors.success },
+  neu: { label: { de: "Neu", en: "New" }, color: (t) => t.colors.primary },
+  inaktiv: { label: { de: "Inaktiv", en: "Inactive" }, color: (t) => t.colors.textMuted },
 };
 
 function GuestCard({
@@ -146,6 +166,7 @@ function GuestCard({
   onReactivate: () => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const status = STATUS[guest.status];
   const euro = (v: number) => `${Math.round(v).toLocaleString("de-DE")} €`;
   // No-Show-Risiko zeigen, sobald es eine Historie gibt - dann ist die (geglättete)
@@ -161,11 +182,14 @@ function GuestCard({
             {guest.name}
           </Text>
           <Eyebrow style={{ marginTop: 2 }}>
-            {guest.visits} Besuche · zuletzt {guest.lastVisit}
+            {t({
+              de: `${guest.visits} Besuche · zuletzt ${guest.lastVisit}`,
+              en: `${guest.visits} visits · last ${guest.lastVisit}`,
+            })}
             {guest.noShows > 0 ? ` · ${guest.noShows} No-Show` : ""}
           </Eyebrow>
         </View>
-        <StatusLabel label={status.label} color={status.color(theme)} />
+        <StatusLabel label={t(status.label)} color={status.color(theme)} />
       </View>
 
       {insight ? (
@@ -178,10 +202,10 @@ function GuestCard({
             borderTopColor: theme.colors.borderSoft,
           }}
         >
-          <GuestMetric label="Wert" value={`≈ ${euro(insight.lifetimeValue)}`} />
+          <GuestMetric label={t({ de: "Wert", en: "Value" })} value={`≈ ${euro(insight.lifetimeValue)}`} />
           {showRisk ? (
             <GuestMetric
-              label="No-Show-Risiko"
+              label={t({ de: "No-Show-Risiko", en: "No-show risk" })}
               value={`${Math.round(insight.noShowRisk * 100)} %`}
               tone={insight.noShowRisk >= 0.4 ? "warn" : "normal"}
             />
@@ -196,7 +220,7 @@ function GuestCard({
           ))}
           {guest.status === "inaktiv" ? (
             <PillButton
-              label="Zurückholen"
+              label={t({ de: "Zurückholen", en: "Bring back" })}
               size="compact"
               variant="outline"
               labelSize={14}

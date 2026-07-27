@@ -5,6 +5,7 @@ import { Card } from "../../../components/ui/Card";
 import { Eyebrow } from "../../../components/ui/Eyebrow";
 import { LinkAction, PillButton } from "../../../components/ui/PillButton";
 import { Text } from "../../../components/ui/Text";
+import { useT } from "../../../lib/i18n";
 import { useTheme } from "../../../theme";
 
 export interface TaskCardProps {
@@ -19,6 +20,7 @@ export interface TaskCardProps {
  */
 export function ReviewTaskCard({ task, onPrimary, onSecondary }: TaskCardProps) {
   const theme = useTheme();
+  const t = useT();
 
   return (
     <Card emphasis="default" padding={0} style={styles.reviewCard}>
@@ -28,7 +30,7 @@ export function ReviewTaskCard({ task, onPrimary, onSecondary }: TaskCardProps) 
           <Text
             color={theme.colors.textSecondary}
             style={styles.stars}
-            accessibilityLabel={`${task.rating} von 5 Sternen`}
+            accessibilityLabel={t({ de: `${task.rating} von 5 Sternen`, en: `${task.rating} of 5 stars` })}
           >
             {"★".repeat(task.rating)}
           </Text>
@@ -50,13 +52,13 @@ export function ReviewTaskCard({ task, onPrimary, onSecondary }: TaskCardProps) 
           label={task.primaryAction.label}
           onPress={() => onPrimary?.(task)}
           style={styles.grow}
-          accessibilityHint={`Aufgabe „${task.title}“ freigeben`}
+          accessibilityHint={t({ de: `Aufgabe „${task.title}“ freigeben`, en: `Approve task “${task.title}”` })}
         />
         {task.secondaryAction ? (
           <LinkAction
             label={task.secondaryAction.label}
             onPress={() => onSecondary?.(task)}
-            accessibilityHint={`Entwurf zu „${task.title}“ bearbeiten`}
+            accessibilityHint={t({ de: `Entwurf zu „${task.title}“ bearbeiten`, en: `Edit draft for “${task.title}”` })}
           />
         ) : null}
       </View>
@@ -74,6 +76,7 @@ export function CompactTaskCard({
   variant = "ink",
 }: TaskCardProps & { variant?: "ink" | "outline" }) {
   const theme = useTheme();
+  const t = useT();
 
   return (
     <Card
@@ -96,7 +99,7 @@ export function CompactTaskCard({
         variant={variant}
         size="compact"
         onPress={() => onPrimary?.(task)}
-        accessibilityHint={`Aufgabe „${task.title}“ ausführen`}
+        accessibilityHint={t({ de: `Aufgabe „${task.title}“ ausführen`, en: `Run task “${task.title}”` })}
       />
     </Card>
   );

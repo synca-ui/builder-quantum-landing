@@ -2,6 +2,7 @@ import { Pressable, View } from "react-native";
 import { useRouter, type Href } from "expo-router";
 
 import { useTheme } from "../../theme";
+import { useT } from "../../lib/i18n";
 import { Text } from "./Text";
 
 export interface NavHeaderProps {
@@ -30,6 +31,7 @@ export interface NavHeaderProps {
 export function NavHeader({ title, onBack, trailing, fallback }: NavHeaderProps) {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
 
   const handleBack = () => {
     if (onBack) return onBack();
@@ -49,7 +51,7 @@ export function NavHeader({ title, onBack, trailing, fallback }: NavHeaderProps)
       <Pressable
         onPress={handleBack}
         accessibilityRole="button"
-        accessibilityLabel="Zurück"
+        accessibilityLabel={t({ de: "Zurück", en: "Back" })}
         hitSlop={12}
         style={({ pressed }) => ({
           width: 40,

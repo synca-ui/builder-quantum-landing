@@ -12,6 +12,7 @@ import { SwipeToDelete } from "../../components/ui/SwipeToDelete";
 import { Eyebrow } from "../../components/ui/Eyebrow";
 import { Text } from "../../components/ui/Text";
 import { useAppearance } from "../../lib/appearance";
+import { useLang, useT, type Lang } from "../../lib/i18n";
 import { computeProfileScore } from "../growth/profileScore";
 import { useStore } from "../../lib/store";
 import { useTheme } from "../../theme";
@@ -37,10 +38,12 @@ const VENUE_ID = "venue_goldstueck";
 export function StartScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
+  const lang = useLang();
   const insets = useSafeAreaInsets();
   const { nightMode, toggleNightMode } = useAppearance();
   const { taskDone, completeTask, unreadCount, profileDone } = useStore();
-  const { briefing, source } = useDailyBriefing(VENUE_ID);
+  const { briefing } = useDailyBriefing(VENUE_ID);
   const pending = usePendingCommit();
   // Per Wisch entfernte Aufgaben (Session): fallen aus der Liste UND aus dem Zähler.
   const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
@@ -63,12 +66,14 @@ export function StartScreen() {
       pending.start({
         taskId: task.id,
         kind: task.kind,
-        label: isPublic ? `Antwort an ${who} geht raus` : "Beitrag wird eingeplant",
+        label: isPublic
+          ? t({ de: `Antwort an ${who} geht raus`, en: `Reply to ${who} is going out` })
+          : t({ de: "Beitrag wird eingeplant", en: "Post is being scheduled" }),
         durationMs,
         commit: () => completeTask(task.id),
       });
     },
-    [pending, completeTask, router, theme.accessible],
+    [pending, completeTask, router, theme.accessible, t],
   );
 
   const handleSecondary = useCallback(
@@ -84,12 +89,12 @@ export function StartScreen() {
       pending.start({
         taskId: task.id,
         kind: "delete",
-        label: "Aufgabe wird gelöscht",
+        label: t({ de: "Aufgabe wird gelöscht", en: "Task is being deleted" }),
         durationMs: theme.accessible ? 15000 : 7000,
         commit: () => setDismissed((d) => ({ ...d, [task.id]: true })),
       });
     },
-    [pending, theme.accessible],
+    [pending, theme.accessible, t],
   );
 
   // Nachtbar an heißt: Abendfassung statt Tagesbriefing (Screen 16). Der Zweig steht
@@ -112,7 +117,7 @@ export function StartScreen() {
     // Tabbar (Clearance liegt im Scroll-Inhalt, nicht am äußeren Container → kein toter Raum).
     <Screen surface="canvas" scroll={false} contentStyle={{ paddingBottom: 0 }}>
       <GreetingHeader
-        dateLabel={formatDateLabel(briefing.now, briefing.venue.timezone)}
+        dateLabel={formatDateLabel(briefing.now, briefing.venue.timezone, lang)}
         greeting={briefing.greeting}
         venueName={briefing.venue.name}
         subline={briefing.subline}
@@ -172,18 +177,18 @@ export function StartScreen() {
           {pending.history.length > 0 ? (
             <View style={{ marginTop: theme.spacing.md, gap: 7 }}>
               <Eyebrow tone="faint" style={{ marginBottom: 2 }}>
-                Erledigt heute
+                {t({ de: "Erledigt heute", en: "Done today" })}
               </Eyebrow>
               {pending.history.map((entry) =>
                 entry.kind === "delete" ? (
                   // Gelöschtes wandert ausgegraut in die Historie.
-                  <DoneRow key={`${entry.taskId}-${entry.time}`} label="Gelöscht" time={entry.time} muted />
+                  <DoneRow key={`${entry.taskId}-${entry.time}`} label={t({ de: "Gelöscht", en: "Deleted" })} time={entry.time} muted />
                 ) : (
                   <DoneRow
                     key={`${entry.taskId}-${entry.time}`}
-                    label="Veröffentlicht"
+                    label={t({ de: "Veröffentlicht", en: "Published" })}
                     time={entry.time}
-                    actionLabel={entry.kind === "review" ? "Bearbeiten" : "Ansehen"}
+                    actionLabel={entry.kind === "review" ? t({ de: "Bearbeiten", en: "Edit" }) : t({ de: "Ansehen", en: "View" })}
                     onAction={() =>
                       entry.kind === "review"
                         ? router.push({ pathname: "/aufgabe/[id]", params: { id: entry.taskId } })
@@ -195,11 +200,6 @@ export function StartScreen() {
             </View>
           ) : null}
 
-          {source === "fixture" ? (
-            <Eyebrow tone="faint" style={{ marginTop: theme.spacing.md, textAlign: "center" }}>
-              Beispieldaten · API nicht verbunden
-            </Eyebrow>
-          ) : null}
         </ScrollView>
 
         {/* Weicher Fade am unteren Rand: die nächste Karte scheint durch, statt hart
@@ -227,10 +227,14 @@ export function StartScreen() {
  */
 function ProgressHeader({ done, total }: { done: number; total: number }) {
   const theme = useTheme();
+  const t = useT();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: theme.spacing.md }}>
       <Eyebrow>
-        Heute · {total} {total === 1 ? "Entscheidung" : "Entscheidungen"}
+        {t({
+          de: `Heute · ${total} ${total === 1 ? "Entscheidung" : "Entscheidungen"}`,
+          en: `Today · ${total} ${total === 1 ? "decision" : "decisions"}`,
+        })}
       </Eyebrow>
       <View style={{ flexDirection: "row", gap: 5 }}>
         {Array.from({ length: total }).map((_, i) => (
@@ -252,6 +256,7 @@ function ProgressHeader({ done, total }: { done: number; total: number }) {
 /** Erscheint, wenn alle drei Entscheidungen des Tages getroffen sind. */
 function AllClear() {
   const theme = useTheme();
+  const t = useT();
   return (
     <Card
       emphasis="default"
@@ -270,21 +275,24 @@ function AllClear() {
         <CheckIcon size={26} color={theme.colors.success} strokeWidth={2.4} />
       </View>
       <Text variant="cardTitle" style={{ textAlign: "center" }}>
-        Du hast alles im Griff
+        {t({ de: "Du hast alles im Griff", en: "You're all caught up" })}
         <Text variant="cardTitle" tone="accent">
           .
         </Text>
       </Text>
       <Text variant="bodySm" tone="secondary" style={{ textAlign: "center", fontSize: 14.5 }}>
-        Maitr macht den Rest. Morgen früh warten die nächsten Entscheidungen.
+        {t({
+          de: "Maitr macht den Rest. Morgen früh warten die nächsten Entscheidungen.",
+          en: "Maitr handles the rest. Tomorrow morning the next decisions will be waiting.",
+        })}
       </Text>
     </Card>
   );
 }
 
-/** „Mittwoch, 16. Juli" - Wochentag und Datum ohne Jahr, wie im Design. */
-function formatDateLabel(iso: string, timeZone: string): string {
-  return new Date(iso).toLocaleDateString("de-DE", {
+/** „Mittwoch, 16. Juli" / „Wednesday, July 16" - Wochentag und Datum ohne Jahr. */
+function formatDateLabel(iso: string, timeZone: string, lang: Lang): string {
+  return new Date(iso).toLocaleDateString(lang === "en" ? "en-US" : "de-DE", {
     weekday: "long",
     day: "numeric",
     month: "long",

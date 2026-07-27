@@ -1,25 +1,31 @@
 /**
  * Schriftdateien der App.
  *
- * Markenschrift: **Familjen Grotesk** (SIL Open Font License 1.1, kommerziell frei) -
- * eine charaktervolle Grotesk mit echtem Kursiv. Die OFL erlaubt das Mitliefern im
- * (öffentlichen) Repo; die Lizenz liegt neben den Dateien: `FamiljenGrotesk-OFL.txt`.
+ * Markenschrift (aktuell in Erprobung): **Bricolage Grotesque** (SIL Open Font
+ * License 1.1, kommerziell frei) - eine charaktervolle Grotesk mit echten optischen
+ * Größen. Aus der Variable-Font-Quelle wurden zwei statische Schnitte instanziert:
+ *   - „Text" (opsz 14) für Fließtext
+ *   - „Display" (opsz 36) für Überschriften - engere, ausdrucksstärkere Formen
+ * beide im Gewicht 400. Die OFL erlaubt das Mitliefern im (öffentlichen) Repo; die
+ * Lizenz liegt daneben: `BricolageGrotesque-OFL.txt`.
  *
- * Zuvor: PP Frama (Pangram Pangram, „Free for Personal Use") - durfte NICHT ins
- * öffentliche Repo und hatte kein frei nutzbares Embedding. Ersetzt am 27.07.2026.
+ * Kursiv (Hybrid): Bricolage Grotesque hat KEINE eigene Kursive (keine ital-Achse) und
+ * iOS neigt Custom-Fonts nicht synthetisch. Damit die Signatur-Schrägstellung erhalten
+ * bleibt („Café Goldstück", zitierte KI-Entwürfe), nutzen die kursiven Rollen weiterhin
+ * **Familjen Grotesk Italic** (echte Kursive, SIL OFL). Aufrechte Rollen = Bricolage.
  *
- * Familjen Grotesk hat keine separaten optischen Größen (Display/Text), daher zeigen
- * in `typography.ts` sowohl `display` als auch `text` auf denselben Regular-Schnitt,
- * `displayItalic`/`textItalic` auf denselben Italic-Schnitt.
+ * Familjen-Regular bleibt zum kompletten Zurückwechseln im Repo (`FamiljenGrotesk-*.ttf`).
+ * Davor PP Frama (nur „Free for Personal Use", NICHT ins öffentliche Repo).
  */
 export const fontAssets = {
-  "FamiljenGrotesk-Regular": require("../../assets/fonts/FamiljenGrotesk-Regular.ttf"),
+  "BricolageGrotesque-Display": require("../../assets/fonts/BricolageGrotesque-Display.ttf"),
+  "BricolageGrotesque-Text": require("../../assets/fonts/BricolageGrotesque-Text.ttf"),
   "FamiljenGrotesk-Italic": require("../../assets/fonts/FamiljenGrotesk-Italic.ttf"),
 } as const;
 
 /**
  * Schalter für die Markenschrift. Steht `EXPO_PUBLIC_BRAND_FONT` auf `"off"`, lädt die
- * App Familjen Grotesk NICHT und nutzt die System-Grotesk (iOS: SF Pro, Android:
+ * App die Markenschrift NICHT und nutzt die System-Grotesk (iOS: SF Pro, Android:
  * Roboto). Nützlich für Tests/Barrierefreiheit; ein Wort in `.env`, kein Code-Umbau.
  */
 export const BRAND_FONT_ENABLED = process.env.EXPO_PUBLIC_BRAND_FONT !== "off";

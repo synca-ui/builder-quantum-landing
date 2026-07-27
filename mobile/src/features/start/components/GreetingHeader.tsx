@@ -4,6 +4,7 @@ import { MaitrWordmark } from "../../../components/MaitrWordmark";
 import { BellIcon, MoonIcon } from "../../../components/icons";
 import { Eyebrow } from "../../../components/ui/Eyebrow";
 import { Emphasis, Text } from "../../../components/ui/Text";
+import { useT } from "../../../lib/i18n";
 import { useTheme } from "../../../theme";
 
 export interface GreetingHeaderProps {
@@ -28,6 +29,7 @@ export function GreetingHeader({
   onToggleNightMode,
 }: GreetingHeaderProps) {
   const theme = useTheme();
+  const t = useT();
 
   const circle = {
     width: 40,
@@ -49,7 +51,9 @@ export function GreetingHeader({
             onPress={onOpenInbox}
             accessibilityRole="button"
             accessibilityLabel={
-              unread > 0 ? `Posteingang, ${unread} ungelesen` : "Posteingang"
+              unread > 0
+                ? t({ de: `Posteingang, ${unread} ungelesen`, en: `Inbox, ${unread} unread` })
+                : t({ de: "Posteingang", en: "Inbox" })
             }
             hitSlop={8}
             style={({ pressed }) => [circle, { opacity: pressed ? 0.7 : 1 }]}
@@ -66,7 +70,7 @@ export function GreetingHeader({
           <Pressable
             onPress={onToggleNightMode}
             accessibilityRole="button"
-            accessibilityLabel="Nachtbar Modus umschalten"
+            accessibilityLabel={t({ de: "Nachtbar Modus umschalten", en: "Toggle night mode" })}
             hitSlop={8}
             style={({ pressed }) => [circle, { opacity: pressed ? 0.7 : 1 }]}
           >

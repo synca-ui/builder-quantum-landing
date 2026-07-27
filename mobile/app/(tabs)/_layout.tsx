@@ -3,6 +3,7 @@
 import { Tabs } from "expo-router/js-tabs";
 
 import { MaitrTabBar } from "../../src/components/MaitrTabBar";
+import { useT } from "../../src/lib/i18n";
 
 export const unstable_settings = {
   initialRouteName: "start",
@@ -20,6 +21,8 @@ export const unstable_settings = {
  * und State, damit die schwebende Pille pixelgenau dem Design folgen kann.
  */
 export default function TabsLayout() {
+  const t = useT();
+
   return (
     <Tabs
       tabBar={(props) => <MaitrTabBar {...props} />}
@@ -27,11 +30,11 @@ export default function TabsLayout() {
     >
       {/* Kein Tab-Badge: die ungelesenen Nachrichten zeigt allein die Glocke im
           Start-Header. Ein zweites Badge (und dessen dunkler Kreis) wäre Redundanz. */}
-      <Tabs.Screen name="start" options={{ title: "Start" }} />
-      <Tabs.Screen name="tische" options={{ title: "Tische" }} />
-      <Tabs.Screen name="beitraege" options={{ title: "Beiträge" }} />
-      <Tabs.Screen name="wachstum" options={{ title: "Wachstum" }} />
-      <Tabs.Screen name="konto" options={{ title: "Konto" }} />
+      <Tabs.Screen name="start" options={{ title: t({ de: "Start", en: "Home" }) }} />
+      <Tabs.Screen name="tische" options={{ title: t({ de: "Tische", en: "Tables" }) }} />
+      <Tabs.Screen name="beitraege" options={{ title: t({ de: "Beiträge", en: "Posts" }) }} />
+      <Tabs.Screen name="wachstum" options={{ title: t({ de: "Wachstum", en: "Growth" }) }} />
+      <Tabs.Screen name="konto" options={{ title: t({ de: "Konto", en: "Account" }) }} />
 
       <Tabs.Screen name="profil-check" options={{ href: null }} />
       <Tabs.Screen name="kanaele" options={{ href: null }} />

@@ -1,6 +1,7 @@
 import { View } from "react-native";
 
 import { useTheme } from "../../theme";
+import { useT } from "../../lib/i18n";
 import { Text } from "./Text";
 
 export interface StepDotsProps {
@@ -13,13 +14,14 @@ export interface StepDotsProps {
 /** Segmentierte Fortschrittsleiste der Journey - ein Balken pro Schritt. */
 export function StepDots({ current, total, showCounter = true }: StepDotsProps) {
   const theme = useTheme();
+  const t = useT();
 
   return (
     <View
       style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 1, max: total, now: current }}
-      accessibilityLabel={`Schritt ${current} von ${total}`}
+      accessibilityLabel={t({ de: `Schritt ${current} von ${total}`, en: `Step ${current} of ${total}` })}
     >
       <View style={{ flex: 1, flexDirection: "row", gap: 5 }}>
         {Array.from({ length: total }, (_, index) => (

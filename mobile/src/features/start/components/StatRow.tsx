@@ -5,6 +5,7 @@ import type { PresenceStats } from "@maitr/core";
 import { EyeIcon, ReviewIcon, TargetIcon } from "../../../components/icons";
 import { Card } from "../../../components/ui/Card";
 import { Text } from "../../../components/ui/Text";
+import { useT } from "../../../lib/i18n";
 import { useTheme } from "../../../theme";
 
 export interface StatRowProps {
@@ -24,29 +25,40 @@ type IconComponent = ComponentType<{ size?: number; color?: string }>;
  * ist, wofür jede Zahl steht.
  */
 export function StatRow({ stats, onRating, onScore, onImpressions }: StatRowProps) {
+  const t = useT();
+
   return (
     <View style={styles.row}>
       <StatTile
         onPress={onRating}
         Icon={ReviewIcon}
         value={formatRating(stats.rating)}
-        label="Bewertung"
-        accessibilityLabel={`Bewertung ${formatRating(stats.rating)}, öffnet Bewertungen`}
+        label={t({ de: "Bewertung", en: "Rating" })}
+        accessibilityLabel={t({
+          de: `Bewertung ${formatRating(stats.rating)}, öffnet Bewertungen`,
+          en: `Rating ${formatRating(stats.rating)}, opens reviews`,
+        })}
       />
       <StatTile
         onPress={onScore}
         Icon={TargetIcon}
         value={String(stats.score)}
         suffix="/ 100"
-        label="Präsenz"
-        accessibilityLabel={`Präsenzscore ${stats.score} von 100, öffnet Profil-Check`}
+        label={t({ de: "Präsenz", en: "Presence" })}
+        accessibilityLabel={t({
+          de: `Präsenzscore ${stats.score} von 100, öffnet Profil-Check`,
+          en: `Presence score ${stats.score} of 100, opens profile check`,
+        })}
       />
       <StatTile
         onPress={onImpressions}
         Icon={EyeIcon}
         value={formatCount(stats.impressions)}
-        label="Aufrufe"
-        accessibilityLabel={`${stats.impressions} Profilaufrufe, öffnet Wachstum`}
+        label={t({ de: "Aufrufe", en: "Views" })}
+        accessibilityLabel={t({
+          de: `${stats.impressions} Profilaufrufe, öffnet Wachstum`,
+          en: `${stats.impressions} profile views, opens growth`,
+        })}
       />
     </View>
   );

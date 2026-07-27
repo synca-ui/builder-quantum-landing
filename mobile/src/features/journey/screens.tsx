@@ -11,6 +11,7 @@ import { ListCard, ListRow } from "../../components/ui/ListCard";
 import { AddPhotoTile, Banner, PhotoTile } from "../../components/ui/Media";
 import { Emphasis, Text } from "../../components/ui/Text";
 import { Toggle } from "../../components/ui/Toggle";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -19,21 +20,22 @@ import { JourneyFrame } from "./JourneyFrame";
 /* ── 18 · Willkommen ─────────────────────────────────────────────────────── */
 
 const promises = [
-  { id: "found", icon: TargetIcon, label: "Bei Google gefunden werden" },
-  { id: "tables", icon: TableIcon, label: "Tische ohne Provision füllen" },
-  { id: "reviews", icon: StarIcon, label: "Bewertungen in Minuten beantworten" },
+  { id: "found", icon: TargetIcon, label: { de: "Bei Google gefunden werden", en: "Get found on Google" } },
+  { id: "tables", icon: TableIcon, label: { de: "Tische ohne Provision füllen", en: "Fill tables without commission" } },
+  { id: "reviews", icon: StarIcon, label: { de: "Bewertungen in Minuten beantworten", en: "Reply to reviews in minutes" } },
 ];
 
 export function JourneyWelcome() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
 
   return (
     <JourneyFrame
       step={1}
       surface="deep"
-      primaryAction={{ label: "Einrichtung starten", onPress: () => router.push("/journey/betrieb") }}
-      footnote="Dauert etwa vier Minuten"
+      primaryAction={{ label: t({ de: "Einrichtung starten", en: "Start setup" }), onPress: () => router.push("/journey/betrieb") }}
+      footnote={t({ de: "Dauert etwa vier Minuten", en: "Takes about four minutes" })}
     >
       <View style={{ marginTop: 44 }}>
         <View
@@ -59,20 +61,22 @@ export function JourneyWelcome() {
           accessibilityRole="header"
           style={{ fontSize: 40, lineHeight: 42, marginTop: 22 }}
         >
-          Willkommen bei Maitr
+          {t({ de: "Willkommen bei Maitr", en: "Welcome to Maitr" })}
           <Text variant="heroTitle" tone="accent" style={{ fontSize: 40 }}>
             .
           </Text>
         </Text>
         <Text variant="body" tone="secondary" style={{ fontSize: 17, lineHeight: 25.5, marginTop: 12 }}>
-          In sieben ruhigen Schritten steht deine Präsenz. Wir richten alles gemeinsam ein, du
-          tippst nur.
+          {t({
+            de: "In sieben ruhigen Schritten steht deine Präsenz. Wir richten alles gemeinsam ein, du tippst nur.",
+            en: "Your presence is ready in seven calm steps. We set everything up together, you just tap.",
+          })}
         </Text>
       </View>
 
       <ListCard>
         {promises.map(({ id, icon: Icon, label }) => (
-          <ListRow key={id} title={label} leading={<Icon size={22} color={theme.colors.primary} />} />
+          <ListRow key={id} title={t(label)} leading={<Icon size={22} color={theme.colors.primary} />} />
         ))}
       </ListCard>
     </JourneyFrame>
@@ -85,14 +89,18 @@ export function JourneyVenue() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
 
   return (
     <JourneyFrame
       step={2}
-      title="Ist das dein Betrieb?"
-      subtitle="Wir haben dich in den Google Daten gefunden. Stimmt das?"
-      primaryAction={{ label: "Ja, das sind wir", onPress: () => router.push("/journey/google") }}
-      secondaryAction={{ label: "Anderen Betrieb suchen", onPress: () => toast.show("Betriebssuche") }}
+      title={t({ de: "Ist das dein Betrieb?", en: "Is this your business?" })}
+      subtitle={t({
+        de: "Wir haben dich in den Google Daten gefunden. Stimmt das?",
+        en: "We found you in Google's data. Is that right?",
+      })}
+      primaryAction={{ label: t({ de: "Ja, das sind wir", en: "Yes, that's us" }), onPress: () => router.push("/journey/google") }}
+      secondaryAction={{ label: t({ de: "Anderen Betrieb suchen", en: "Search for another business" }), onPress: () => toast.show(t({ de: "Betriebssuche", en: "Business search" })) }}
     >
       <Card emphasis="strong" padding={theme.spacing.xl} style={{ borderRadius: 22, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
@@ -126,7 +134,7 @@ export function JourneyVenue() {
         >
           <CheckIcon size={16} color={theme.colors.success} />
           <Eyebrow color={theme.colors.success} style={{ fontSize: 12 }}>
-            Aus Google übernommen
+            {t({ de: "Aus Google übernommen", en: "Imported from Google" })}
           </Eyebrow>
         </View>
       </Card>
@@ -137,29 +145,33 @@ export function JourneyVenue() {
 /* ── 20 · Google verbinden ───────────────────────────────────────────────── */
 
 const googleScopes = [
-  "Bewertungen lesen und beantworten",
-  "Öffnungszeiten aktuell halten",
-  "Beiträge veröffentlichen",
+  { de: "Bewertungen lesen und beantworten", en: "Read and reply to reviews" },
+  { de: "Öffnungszeiten aktuell halten", en: "Keep opening hours up to date" },
+  { de: "Beiträge veröffentlichen", en: "Publish posts" },
 ];
 
 export function JourneyGoogle() {
   const theme = useTheme();
   const router = useRouter();
   const { connectChannel } = useStore();
+  const t = useT();
 
   return (
     <JourneyFrame
       step={3}
-      title={"Verbinde dein\nGoogle Profil"}
-      subtitle="Damit Maitr Bewertungen, Zeiten und Beiträge für dich pflegen kann."
+      title={t({ de: "Verbinde dein\nGoogle Profil", en: "Connect your\nGoogle profile" })}
+      subtitle={t({
+        de: "Damit Maitr Bewertungen, Zeiten und Beiträge für dich pflegen kann.",
+        en: "So Maitr can look after reviews, hours and posts for you.",
+      })}
       primaryAction={{
-        label: "Mit Google verbinden",
+        label: t({ de: "Mit Google verbinden", en: "Connect with Google" }),
         onPress: () => {
           connectChannel("google");
           router.push("/journey/zeiten");
         },
       }}
-      footnote="Jederzeit widerrufbar"
+      footnote={t({ de: "Jederzeit widerrufbar", en: "Revoke anytime" })}
     >
       <Card emphasis="default" padding={theme.spacing.xl} style={{ borderRadius: 22, gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
@@ -168,17 +180,19 @@ export function JourneyGoogle() {
             <Text variant="cardTitleSm" style={{ fontSize: 18 }}>
               Google Business
             </Text>
-            <Eyebrow style={{ fontSize: 10, marginTop: 1 }}>Sofia Brandt · Inhaberin</Eyebrow>
+            <Eyebrow style={{ fontSize: 10, marginTop: 1 }}>
+              {t({ de: "Sofia Brandt · Inhaberin", en: "Sofia Brandt · Owner" })}
+            </Eyebrow>
           </View>
         </View>
 
         <View style={{ height: 1, backgroundColor: theme.colors.surfaceSunken }} />
 
         {googleScopes.map((scope) => (
-          <View key={scope} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View key={scope.de} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <CheckIcon size={17} color={theme.colors.success} />
             <Text variant="bodySm" color={theme.colors.textOnSunken} style={{ fontSize: 15 }}>
-              {scope}
+              {t(scope)}
             </Text>
           </View>
         ))}
@@ -193,14 +207,18 @@ export function JourneyHours() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
 
   return (
     <JourneyFrame
       step={4}
-      title="Stimmen deine Zeiten?"
-      subtitle="Falsche Zeiten sind Grund Nummer eins für schlechte Bewertungen. Kurz prüfen."
-      primaryAction={{ label: "Zeiten übernehmen", onPress: () => router.push("/journey/tische") }}
-      secondaryAction={{ label: "Bearbeiten", onPress: () => toast.show("Zeiten bearbeiten") }}
+      title={t({ de: "Stimmen deine Zeiten?", en: "Are your hours right?" })}
+      subtitle={t({
+        de: "Falsche Zeiten sind Grund Nummer eins für schlechte Bewertungen. Kurz prüfen.",
+        en: "Wrong hours are the number one reason for bad reviews. Take a quick look.",
+      })}
+      primaryAction={{ label: t({ de: "Zeiten übernehmen", en: "Apply hours" }), onPress: () => router.push("/journey/tische") }}
+      secondaryAction={{ label: t({ de: "Bearbeiten", en: "Edit" }), onPress: () => toast.show(t({ de: "Zeiten bearbeiten", en: "Edit hours" })) }}
     >
       <ListCard>
         <ListRow title="Mo bis Fr" value="8:00 bis 18:00" />
@@ -217,14 +235,19 @@ export function JourneyHours() {
               }}
             >
               <Text variant="numeric" tone="faint" style={{ fontSize: 15 }}>
-                Geschlossen
+                {t({ de: "Geschlossen", en: "Closed" })}
               </Text>
             </View>
           }
         />
       </ListCard>
 
-      <Banner>Feiertage pflegt Maitr automatisch und fragt dich vorher.</Banner>
+      <Banner>
+        {t({
+          de: "Feiertage pflegt Maitr automatisch und fragt dich vorher.",
+          en: "Maitr keeps holidays up to date automatically and asks you first.",
+        })}
+      </Banner>
     </JourneyFrame>
   );
 }
@@ -236,6 +259,7 @@ const SEAT_OPTIONS = [16, 24, 32, 40];
 export function JourneyTables() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
 
   const [tables, setTables] = useState(8);
   const [seats, setSeats] = useState(24);
@@ -243,18 +267,21 @@ export function JourneyTables() {
   return (
     <JourneyFrame
       step={5}
-      title="Wie viele Tische?"
-      subtitle="So kann Maitr Reservierungen und Puffer automatisch verwalten."
-      primaryAction={{ label: "Weiter", onPress: () => router.push("/journey/kanaele") }}
+      title={t({ de: "Wie viele Tische?", en: "How many tables?" })}
+      subtitle={t({
+        de: "So kann Maitr Reservierungen und Puffer automatisch verwalten.",
+        en: "So Maitr can manage reservations and buffers automatically.",
+      })}
+      primaryAction={{ label: t({ de: "Weiter", en: "Continue" }), onPress: () => router.push("/journey/kanaele") }}
     >
       <Card emphasis="default" padding={theme.spacing.xl} style={{ gap: theme.spacing.lg }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text variant="body">Tische im Lokal</Text>
+          <Text variant="body">{t({ de: "Tische im Lokal", en: "Tables in the venue" })}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.lg }}>
             <StepperButton
               label="–"
               onPress={() => setTables((n) => Math.max(1, n - 1))}
-              accessibilityLabel="Ein Tisch weniger"
+              accessibilityLabel={t({ de: "Ein Tisch weniger", en: "One table fewer" })}
             />
             <Text
               variant="numeric"
@@ -266,14 +293,14 @@ export function JourneyTables() {
               label="+"
               filled
               onPress={() => setTables((n) => n + 1)}
-              accessibilityLabel="Ein Tisch mehr"
+              accessibilityLabel={t({ de: "Ein Tisch mehr", en: "One more table" })}
             />
           </View>
         </View>
 
         <View style={{ height: 1, backgroundColor: theme.colors.surfaceSunken }} />
 
-        <Eyebrow>Plätze pro Service</Eyebrow>
+        <Eyebrow>{t({ de: "Plätze pro Service", en: "Seats per service" })}</Eyebrow>
         <View style={{ flexDirection: "row", gap: 9 }}>
           {SEAT_OPTIONS.map((option) => (
             <Pressable
@@ -281,7 +308,7 @@ export function JourneyTables() {
               onPress={() => setSeats(option)}
               accessibilityRole="button"
               accessibilityState={{ selected: seats === option }}
-              accessibilityLabel={`${option} Plätze`}
+              accessibilityLabel={t({ de: `${option} Plätze`, en: `${option} seats` })}
               style={{
                 borderRadius: theme.radius.chip,
                 paddingVertical: 12,
@@ -315,10 +342,10 @@ export function JourneyTables() {
         }}
       >
         <Text variant="bodySm" style={{ fontSize: 15 }}>
-          Puffer zwischen Gästen
+          {t({ de: "Puffer zwischen Gästen", en: "Buffer between guests" })}
         </Text>
         <Text variant="numeric" tone="accent" style={{ fontSize: 15 }}>
-          15 Min
+          {t({ de: "15 Min", en: "15 min" })}
         </Text>
       </View>
     </JourneyFrame>
@@ -370,9 +397,9 @@ function StepperButton({
 /* ── 23 · Kanäle verbinden ───────────────────────────────────────────────── */
 
 const journeyChannels = [
-  { id: "instagram", name: "Instagram", initials: "Ig", color: "#C13584", meta: "Beiträge automatisch teilen", on: true },
-  { id: "facebook", name: "Facebook", initials: "f", color: "#1877F2", meta: "Seite und Empfehlungen", on: false },
-  { id: "thefork", name: "TheFork", initials: "Tf", color: "#1F7A72", meta: "Reservierungen bündeln", on: false },
+  { id: "instagram", name: "Instagram", initials: "Ig", color: "#C13584", meta: { de: "Beiträge automatisch teilen", en: "Share posts automatically" }, on: true },
+  { id: "facebook", name: "Facebook", initials: "f", color: "#1877F2", meta: { de: "Seite und Empfehlungen", en: "Page and recommendations" }, on: false },
+  { id: "thefork", name: "TheFork", initials: "Tf", color: "#1F7A72", meta: { de: "Reservierungen bündeln", en: "Bundle reservations" }, on: false },
 ];
 
 export function JourneyChannels() {
@@ -380,27 +407,31 @@ export function JourneyChannels() {
   // Die Auswahl schreibt direkt in den Store - was hier an ist, ist später in
   // „Deine Kanäle" (Screen 11) verbunden.
   const { channels, setChannel } = useStore();
+  const t = useT();
 
   return (
     <JourneyFrame
       step={6}
-      title="Wo bist du noch?"
-      subtitle="Maitr hält alles synchron. Du pflegst nur einen Ort."
-      primaryAction={{ label: "Weiter", onPress: () => router.push("/journey/medien") }}
-      secondaryAction={{ label: "Später verbinden", onPress: () => router.push("/journey/medien") }}
+      title={t({ de: "Wo bist du noch?", en: "Where else are you?" })}
+      subtitle={t({
+        de: "Maitr hält alles synchron. Du pflegst nur einen Ort.",
+        en: "Maitr keeps everything in sync. You only manage one place.",
+      })}
+      primaryAction={{ label: t({ de: "Weiter", en: "Continue" }), onPress: () => router.push("/journey/medien") }}
+      secondaryAction={{ label: t({ de: "Später verbinden", en: "Connect later" }), onPress: () => router.push("/journey/medien") }}
     >
       <ListCard>
         {journeyChannels.map((channel) => (
           <ListRow
             key={channel.id}
             title={channel.name}
-            meta={channel.meta}
+            meta={t(channel.meta)}
             leading={<Avatar initials={channel.initials} size={42} color={channel.color} />}
             trailing={
               <Toggle
                 value={Boolean(channels[channel.id])}
                 onValueChange={(value) => setChannel(channel.id, value)}
-                accessibilityLabel={`${channel.name} verbinden`}
+                accessibilityLabel={t({ de: `${channel.name} verbinden`, en: `Connect ${channel.name}` })}
               />
             }
           />
@@ -412,25 +443,34 @@ export function JourneyChannels() {
 
 /* ── 24 · Fotos und Ton ──────────────────────────────────────────────────── */
 
-const TONE_OPTIONS = ["Warmherzig", "Kurz", "Formell"];
+// `value` bleibt kanonisch deutsch (nur lokaler UI-State/Vergleich); angezeigt wird `label`.
+const TONE_OPTIONS = [
+  { value: "Warmherzig", label: { de: "Warmherzig", en: "Warm" } },
+  { value: "Kurz", label: { de: "Kurz", en: "Concise" } },
+  { value: "Formell", label: { de: "Formell", en: "Formal" } },
+];
 
 export function JourneyMedia() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const [tone, setTone] = useState("Warmherzig");
 
   return (
     <JourneyFrame
       step={7}
-      title="Der letzte Schliff"
-      subtitle="Drei Fotos und ein Ton, dann klingt Maitr wie du."
+      title={t({ de: "Der letzte Schliff", en: "The finishing touch" })}
+      subtitle={t({
+        de: "Drei Fotos und ein Ton, dann klingt Maitr wie du.",
+        en: "Three photos and a tone, then Maitr sounds like you.",
+      })}
       primaryAction={{
-        label: "Einrichtung abschließen",
+        label: t({ de: "Einrichtung abschließen", en: "Finish setup" }),
         onPress: () => router.push("/journey/fertig"),
       }}
     >
       <Card emphasis="default" padding={18} style={{ gap: theme.spacing.md }}>
-        <Eyebrow>Fotos</Eyebrow>
+        <Eyebrow>{t({ de: "Fotos", en: "Photos" })}</Eyebrow>
         <View style={{ flexDirection: "row", gap: 10 }}>
           <PhotoTile tone="warm" fill style={{ aspectRatio: 1, borderRadius: theme.radius.control }} />
           <PhotoTile tone="honey" fill style={{ aspectRatio: 1, borderRadius: theme.radius.control }} />
@@ -439,30 +479,30 @@ export function JourneyMedia() {
       </Card>
 
       <Card emphasis="subtle" padding={18} style={{ gap: theme.spacing.md }}>
-        <Eyebrow>Ton der Antworten</Eyebrow>
+        <Eyebrow>{t({ de: "Ton der Antworten", en: "Tone of replies" })}</Eyebrow>
         <View style={{ flexDirection: "row", gap: 9, flexWrap: "wrap" }}>
           {TONE_OPTIONS.map((option) => (
             <Pressable
-              key={option}
-              onPress={() => setTone(option)}
+              key={option.value}
+              onPress={() => setTone(option.value)}
               accessibilityRole="button"
-              accessibilityState={{ selected: tone === option }}
-              accessibilityLabel={`Ton ${option}`}
+              accessibilityState={{ selected: tone === option.value }}
+              accessibilityLabel={t({ de: `Ton ${option.label.de}`, en: `Tone ${option.label.en}` })}
               style={{
                 borderRadius: theme.radius.pill,
                 paddingVertical: 11,
                 paddingHorizontal: 18,
-                backgroundColor: tone === option ? theme.colors.primary : "transparent",
-                borderWidth: tone === option ? 0 : 1,
+                backgroundColor: tone === option.value ? theme.colors.primary : "transparent",
+                borderWidth: tone === option.value ? 0 : 1,
                 borderColor: theme.colors.border,
               }}
             >
               <Text
                 variant="numeric"
-                color={tone === option ? theme.colors.onPrimary : theme.colors.textPrimary}
+                color={tone === option.value ? theme.colors.onPrimary : theme.colors.textPrimary}
                 style={{ fontSize: 15 }}
               >
-                {option}
+                {t(option.label)}
               </Text>
             </Pressable>
           ))}
@@ -475,21 +515,22 @@ export function JourneyMedia() {
 /* ── 25 · Fertig ─────────────────────────────────────────────────────────── */
 
 const liveChecks = [
-  "Google verbunden und synchron",
-  "8 Tische bereit für Reservierungen",
-  "Instagram teilt deine Beiträge",
+  { de: "Google verbunden und synchron", en: "Google connected and in sync" },
+  { de: "8 Tische bereit für Reservierungen", en: "8 tables ready for reservations" },
+  { de: "Instagram teilt deine Beiträge", en: "Instagram shares your posts" },
 ];
 
 export function JourneyDone() {
   const theme = useTheme();
   const router = useRouter();
   const { signIn } = useStore();
+  const t = useT();
 
   return (
     <JourneyFrame
       surface="deep"
       primaryAction={{
-        label: "Zum Start",
+        label: t({ de: "Zum Start", en: "Go to home" }),
         onPress: () => {
           // Wer die Journey als neuer Betrieb durchläuft, ist danach angemeldet.
           signIn();
@@ -516,7 +557,7 @@ export function JourneyDone() {
           accessibilityRole="header"
           style={{ fontSize: 38, lineHeight: 40, textAlign: "center" }}
         >
-          Deine Präsenz{"\n"}ist live
+          {t({ de: "Deine Präsenz", en: "Your presence" })}{"\n"}{t({ de: "ist live", en: "is live" })}
           <Text variant="heroTitle" tone="accent" style={{ fontSize: 38 }}>
             .
           </Text>
@@ -527,16 +568,18 @@ export function JourneyDone() {
           tone="secondary"
           style={{ fontSize: 17, lineHeight: 25.5, textAlign: "center", maxWidth: 300 }}
         >
-          Gäste finden dich jetzt bei Google, können reservieren und Maitr kümmert sich um den
-          Rest.
+          {t({
+            de: "Gäste finden dich jetzt bei Google, können reservieren und Maitr kümmert sich um den Rest.",
+            en: "Guests can now find you on Google, reserve a table, and Maitr takes care of the rest.",
+          })}
         </Text>
       </View>
 
       <ListCard style={{ marginTop: 6 }}>
         {liveChecks.map((check) => (
           <ListRow
-            key={check}
-            title={check}
+            key={check.de}
+            title={t(check)}
             leading={<CheckIcon size={18} color={theme.colors.success} />}
           />
         ))}

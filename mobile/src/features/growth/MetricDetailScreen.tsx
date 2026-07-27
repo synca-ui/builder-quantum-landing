@@ -7,6 +7,7 @@ import { ListCard, ListRow } from "../../components/ui/ListCard";
 import { NavHeader } from "../../components/ui/NavHeader";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useTheme } from "../../theme";
 
@@ -18,6 +19,7 @@ const MONTHS = ["Feb", "Mär", "Apr", "Mai", "Jun", "Jul"];
  */
 export function MetricDetailScreen({ metricKey }: { metricKey?: string }) {
   const theme = useTheme();
+  const t = useT();
   const { growthMetrics } = useStore();
   const metric = growthMetrics.find((m) => m.key === metricKey) ?? growthMetrics[0];
 
@@ -47,9 +49,9 @@ export function MetricDetailScreen({ metricKey }: { metricKey?: string }) {
       <Card padding={theme.spacing.xl} style={{ borderRadius: 18, gap: 14 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
           <Text variant="numeric" style={{ fontSize: 17 }}>
-            {metric.label} · 6 Monate
+            {t({ de: `${metric.label} · 6 Monate`, en: `${metric.label} · 6 months` })}
           </Text>
-          <Eyebrow>Jul aktueller Monat</Eyebrow>
+          <Eyebrow>{t({ de: "Jul aktueller Monat", en: "Jul current month" })}</Eyebrow>
         </View>
         <BarChart
           data={metric.series.map((value, i) => ({ label: MONTHS[i][0], value }))}
@@ -59,7 +61,7 @@ export function MetricDetailScreen({ metricKey }: { metricKey?: string }) {
       </Card>
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Eyebrow>Nach Monat</Eyebrow>
+        <Eyebrow>{t({ de: "Nach Monat", en: "By month" })}</Eyebrow>
         <ListCard>
           {rows.map((r) => (
             <ListRow

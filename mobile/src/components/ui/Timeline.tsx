@@ -1,6 +1,7 @@
 import { View } from "react-native";
 
 import { useTheme } from "../../theme";
+import { useT } from "../../lib/i18n";
 import { Eyebrow } from "./Eyebrow";
 import { Hatch } from "./Hatch";
 import { Text } from "./Text";
@@ -50,6 +51,7 @@ export function Timeline({
   showLegend = true,
 }: TimelineProps) {
   const theme = useTheme();
+  const t = useT();
   const span = Math.max(1, toHour - fromHour);
   const percent = (hour: number) => ((hour - fromHour) / span) * 100;
 
@@ -95,7 +97,9 @@ export function Timeline({
               color={table.blockedReason ? theme.colors.destructive : theme.colors.textMuted}
               style={{ fontSize: 10 }}
             >
-              {table.blockedReason ? "Gesperrt" : `${table.seats} Pers`}
+              {table.blockedReason
+                ? t({ de: "Gesperrt", en: "Blocked" })
+                : t({ de: `${table.seats} Pers`, en: `${table.seats} seats` })}
             </Eyebrow>
           </View>
 
@@ -142,7 +146,7 @@ export function Timeline({
                       numberOfLines={1}
                       style={{ fontSize: 13, lineHeight: 16 }}
                     >
-                      {booking.guest} · {booking.partySize} P
+                      {booking.guest} · {booking.partySize} {t({ de: "P", en: "ppl" })}
                     </Text>
                     <Text
                       variant="bodySm"
@@ -183,10 +187,10 @@ export function Timeline({
             flexWrap: "wrap",
           }}
         >
-          <LegendItem label="Reserviert" color={theme.colors.primary} />
-          <LegendItem label="Frei" color={theme.colors.surfaceTrack} />
+          <LegendItem label={t({ de: "Reserviert", en: "Reserved" })} color={theme.colors.primary} />
+          <LegendItem label={t({ de: "Frei", en: "Free" })} color={theme.colors.surfaceTrack} />
           {bufferMinutes > 0 ? (
-            <LegendItem label={`Puffer ${bufferMinutes} Min`} hatched />
+            <LegendItem label={t({ de: `Puffer ${bufferMinutes} Min`, en: `Buffer ${bufferMinutes} min` })} hatched />
           ) : null}
         </View>
       ) : null}

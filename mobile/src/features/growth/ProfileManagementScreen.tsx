@@ -11,6 +11,7 @@ import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Toggle } from "../../components/ui/Toggle";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -27,6 +28,7 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { venueProfile, updateVenueProfile, updateHour } = useStore();
 
   const [name, setName] = useState(venueProfile.name);
@@ -36,7 +38,7 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
 
   const save = () => {
     updateVenueProfile({ name, tagline, bio, instagramBio });
-    toast.show("Profil gespeichert");
+    toast.show(t({ de: "Profil gespeichert", en: "Profile saved" }));
     router.back();
   };
 
@@ -51,13 +53,13 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Profil verwalten" />
+      <NavHeader title={t({ de: "Profil verwalten", en: "Manage profile" })} />
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <Avatar initials="G" size={38} color="#4285F4" />
         <Avatar initials="Ig" size={38} color="#C13584" />
         <Text variant="bodySm" tone="secondary" style={{ flex: 1, fontSize: 14 }}>
-          Änderungen gehen an alle verbundenen Kanäle.
+          {t({ de: "Änderungen gehen an alle verbundenen Kanäle.", en: "Changes go to all connected channels." })}
         </Text>
       </View>
 
@@ -73,35 +75,35 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
 
         <View style={{ gap: 6 }}>
           <Eyebrow>Name</Eyebrow>
-          <TextInput value={name} onChangeText={setName} style={[theme.text.body, field]} accessibilityLabel="Betriebsname" />
+          <TextInput value={name} onChangeText={setName} style={[theme.text.body, field]} accessibilityLabel={t({ de: "Betriebsname", en: "Business name" })} />
         </View>
 
         <View style={{ gap: 6 }}>
-          <Eyebrow>Kurzbeschreibung</Eyebrow>
-          <TextInput value={tagline} onChangeText={setTagline} style={[theme.text.body, field]} accessibilityLabel="Kurzbeschreibung" />
+          <Eyebrow>{t({ de: "Kurzbeschreibung", en: "Tagline" })}</Eyebrow>
+          <TextInput value={tagline} onChangeText={setTagline} style={[theme.text.body, field]} accessibilityLabel={t({ de: "Kurzbeschreibung", en: "Tagline" })} />
         </View>
 
         <View style={{ gap: 6 }}>
-          <Eyebrow>Beschreibung</Eyebrow>
+          <Eyebrow>{t({ de: "Beschreibung", en: "Description" })}</Eyebrow>
           <TextInput
             value={bio}
             onChangeText={setBio}
             multiline
             style={[theme.text.body, field, { minHeight: 92, textAlignVertical: "top" }]}
-            accessibilityLabel="Beschreibung"
+            accessibilityLabel={t({ de: "Beschreibung", en: "Description" })}
           />
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-          {venueProfile.tags.map((t) => (
-            <Tag key={t} label={t} />
+          {venueProfile.tags.map((tag) => (
+            <Tag key={tag} label={tag} />
           ))}
         </View>
       </Card>
 
       {/* Öffnungszeiten */}
       <Card padding={theme.spacing.lg} style={{ gap: theme.spacing.md }}>
-        <Eyebrow>Öffnungszeiten</Eyebrow>
+        <Eyebrow>{t({ de: "Öffnungszeiten", en: "Opening hours" })}</Eyebrow>
         {venueProfile.hours.map((h) => (
           <HourRow key={h.id} id={h.id} label={h.label} value={h.value} closed={h.closed} onChange={updateHour} />
         ))}
@@ -115,7 +117,7 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
           ...(focus === "instagram" ? { borderWidth: 2, borderColor: theme.colors.primary } : {}),
         }}
       >
-        <Eyebrow tone={focus === "instagram" ? "accent" : "muted"}>Instagram-Bio</Eyebrow>
+        <Eyebrow tone={focus === "instagram" ? "accent" : "muted"}>{t({ de: "Instagram-Bio", en: "Instagram bio" })}</Eyebrow>
         <TextInput
           value={instagramBio}
           onChangeText={setInstagramBio}
@@ -125,12 +127,12 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
           accessibilityLabel="Instagram-Bio"
         />
         <Eyebrow tone="faint" style={{ textTransform: "none" }}>
-          {instagramBio.length} / 150 Zeichen
+          {t({ de: `${instagramBio.length} / 150 Zeichen`, en: `${instagramBio.length} / 150 characters` })}
         </Eyebrow>
       </Card>
 
       <View style={{ marginTop: theme.spacing.sm }}>
-        <PillButton label="Profil speichern" onPress={save} />
+        <PillButton label={t({ de: "Profil speichern", en: "Save profile" })} onPress={save} />
       </View>
     </Screen>
   );
@@ -151,6 +153,7 @@ function HourRow({
   onChange: (id: string, value: string, closed?: boolean) => void;
 }) {
   const theme = useTheme();
+  const t = useT();
   const [text, setText] = useState(closed ? "" : value);
 
   return (
@@ -173,7 +176,7 @@ function HourRow({
           }}
           placeholder="8:00 – 18:00"
           placeholderTextColor={theme.colors.textFaint}
-          accessibilityLabel={`Öffnungszeit ${label}`}
+          accessibilityLabel={t({ de: `Öffnungszeit ${label}`, en: `Opening hours ${label}` })}
           style={[
             theme.text.body,
             {
@@ -190,7 +193,7 @@ function HourRow({
       <Toggle
         value={!closed}
         onValueChange={(open) => onChange(id, open ? value || "9:00 – 17:00" : "Geschlossen", !open)}
-        accessibilityLabel={`${label} geöffnet`}
+        accessibilityLabel={t({ de: `${label} geöffnet`, en: `${label} open` })}
       />
     </View>
   );

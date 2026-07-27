@@ -10,6 +10,7 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore, type Guest } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -28,6 +29,7 @@ export function LoyaltyScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { guests, logActivity } = useStore();
   const [sent, setSent] = useState<string | null>(null);
 
@@ -42,26 +44,28 @@ export function LoyaltyScreen() {
       auto: true,
     });
     setSent(g.id);
-    toast.show(`Belohnung für ${g.name} gesendet`);
+    toast.show(t({ de: `Belohnung für ${g.name} gesendet`, en: `Reward sent to ${g.name}` }));
   };
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Stammgast-Pass" onBack={() => router.back()} />
+      <NavHeader title={t({ de: "Stammgast-Pass", en: "Loyalty pass" })} onBack={() => router.back()} />
 
       <DarkPanel style={{ gap: 4 }}>
-        <Eyebrow color={onDarkPanel.accent}>Treue ohne Extra-App</Eyebrow>
+        <Eyebrow color={onDarkPanel.accent}>{t({ de: "Treue ohne Extra-App", en: "Loyalty without an extra app" })}</Eyebrow>
         <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 34 }}>
-          {totalRewards} Freikaffees
+          {t({ de: `${totalRewards} Freikaffees`, en: `${totalRewards} free coffees` })}
         </Text>
         <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
-          Der Pass lebt in deinem Gäste-Graph, nicht in einer weiteren App. Maitr meldet jede
-          fällige Belohnung — du bestätigst mit einem Tap.
+          {t({
+            de: "Der Pass lebt in deinem Gäste-Graph, nicht in einer weiteren App. Maitr meldet jede fällige Belohnung — du bestätigst mit einem Tap.",
+            en: "The pass lives in your guest graph, not in yet another app. Maitr flags every reward that's due — you confirm with a tap.",
+          })}
         </Text>
       </DarkPanel>
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Eyebrow>Deine Stammgäste</Eyebrow>
+        <Eyebrow>{t({ de: "Deine Stammgäste", en: "Your regulars" })}</Eyebrow>
         {members.map((g) => {
           const progress = g.visits % REWARD_EVERY;
           const toNext = REWARD_EVERY - progress;
@@ -74,12 +78,15 @@ export function LoyaltyScreen() {
                     {g.name}
                   </Text>
                   <Eyebrow style={{ marginTop: 1 }}>
-                    {Math.floor(g.visits / REWARD_EVERY)} Freikaffees · noch {toNext} bis zur nächsten
+                    {t({
+                      de: `${Math.floor(g.visits / REWARD_EVERY)} Freikaffees · noch ${toNext} bis zur nächsten`,
+                      en: `${Math.floor(g.visits / REWARD_EVERY)} free coffees · ${toNext} more to the next`,
+                    })}
                   </Eyebrow>
                 </View>
                 {toNext <= 2 ? (
                   <PillButton
-                    label={sent === g.id ? "Gesendet ✓" : "Belohnen"}
+                    label={sent === g.id ? t({ de: "Gesendet ✓", en: "Sent ✓" }) : t({ de: "Belohnen", en: "Reward" })}
                     size="compact"
                     variant={sent === g.id ? "outline" : "primary"}
                     labelSize={13}
@@ -89,7 +96,7 @@ export function LoyaltyScreen() {
               </View>
               <View
                 accessibilityRole="progressbar"
-                accessibilityLabel="Fortschritt zur nächsten Belohnung"
+                accessibilityLabel={t({ de: "Fortschritt zur nächsten Belohnung", en: "Progress to next reward" })}
                 accessibilityValue={{ min: 0, max: REWARD_EVERY, now: progress }}
                 style={{
                   height: 6,
@@ -112,7 +119,10 @@ export function LoyaltyScreen() {
       </View>
 
       <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-        Kein Punktesammeln fürs Handy — der Gast merkt nur die Belohnung.
+        {t({
+          de: "Kein Punktesammeln fürs Handy — der Gast merkt nur die Belohnung.",
+          en: "No points to collect on a phone — the guest just enjoys the reward.",
+        })}
       </Eyebrow>
     </Screen>
   );

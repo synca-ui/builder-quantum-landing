@@ -1,6 +1,7 @@
 import { Pressable, View } from "react-native";
 
 import { useTheme } from "../../theme";
+import { useT } from "../../lib/i18n";
 import { Text } from "./Text";
 
 export interface ScreenHeaderProps {
@@ -82,13 +83,14 @@ function Arrow({
   onPress?: () => void;
 }) {
   const theme = useTheme();
+  const t = useT();
 
   return (
     <Pressable
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
-      accessibilityLabel={direction === "previous" ? "Zurück" : "Weiter"}
+      accessibilityLabel={direction === "previous" ? t({ de: "Zurück", en: "Back" }) : t({ de: "Weiter", en: "Next" })}
       hitSlop={8}
       style={({ pressed }) => ({
         width: 26,

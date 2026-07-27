@@ -9,6 +9,7 @@ import { LinkAction, PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { ScreenHeader } from "../../components/ui/ScreenHeader";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore, type Post } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -24,20 +25,21 @@ export function PostsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { posts, schedulePost, publishPost } = useStore();
   const [week, setWeek] = useState(29);
 
   return (
     <Screen withTabBar contentStyle={{ gap: theme.spacing.lg }}>
       <ScreenHeader
-        title="Beiträge"
-        period={`KW ${week}`}
+        title={t({ de: "Beiträge", en: "Posts" })}
+        period={t({ de: `KW ${week}`, en: `Week ${week}` })}
         onPrevious={() => setWeek((w) => w - 1)}
         onNext={() => setWeek((w) => w + 1)}
       />
 
       <PillButton
-        label="Schnell posten"
+        label={t({ de: "Schnell posten", en: "Quick post" })}
         variant="outline"
         size="compact"
         onPress={() => router.push("/schnell-posten")}
@@ -49,18 +51,21 @@ export function PostsScreen() {
           post={post}
           onPlan={() => {
             schedulePost(post.id);
-            toast.show("Beitrag eingeplant");
+            toast.show(t({ de: "Beitrag eingeplant", en: "Post scheduled" }));
           }}
           onPublish={() => {
             publishPost(post.id);
-            toast.show("Beitrag veröffentlicht");
+            toast.show(t({ de: "Beitrag veröffentlicht", en: "Post published" }));
           }}
           onEdit={() => router.push({ pathname: "/beitrag/[id]", params: { id: post.id } })}
         />
       ))}
 
       <Eyebrow tone="faint" style={{ textAlign: "center", marginTop: theme.spacing.sm }}>
-        Maitr schlägt jede Woche 3 Beiträge aus deinen Fotos vor
+        {t({
+          de: "Maitr schlägt jede Woche 3 Beiträge aus deinen Fotos vor",
+          en: "Maitr suggests 3 posts from your photos every week",
+        })}
       </Eyebrow>
     </Screen>
   );
@@ -78,15 +83,16 @@ function PostCard({
   onEdit: () => void;
 }) {
   const theme = useTheme();
+  const t = useT();
 
   const slotColor = post.state === "suggestion" ? theme.colors.primary : theme.colors.textMuted;
   const channels = post.channels.join(" + ");
   const slot =
     post.state === "suggestion"
-      ? `Vorschlag · ${post.when} · ${channels}`
+      ? t({ de: `Vorschlag · ${post.when} · ${channels}`, en: `Suggestion · ${post.when} · ${channels}` })
       : post.state === "live"
-        ? `Live · ${post.when} · ${channels}`
-        : `Eingeplant · ${post.when} · ${channels}`;
+        ? t({ de: `Live · ${post.when} · ${channels}`, en: `Live · ${post.when} · ${channels}` })
+        : t({ de: `Eingeplant · ${post.when} · ${channels}`, en: `Scheduled · ${post.when} · ${channels}` });
 
   return (
     <Card
@@ -95,7 +101,7 @@ function PostCard({
       style={{ gap: theme.spacing.md, opacity: post.state === "suggestion" ? 1 : 0.96 }}
     >
       <View style={{ flexDirection: "row", gap: 14, alignItems: "flex-start" }}>
-        <PhotoTile tone={post.tone} size={74} caption="foto" />
+        <PhotoTile tone={post.tone} size={74} caption={t({ de: "foto", en: "photo" })} />
 
         <View style={{ flex: 1, gap: 5 }}>
           <Eyebrow color={slotColor}>{slot}</Eyebrow>
@@ -110,21 +116,26 @@ function PostCard({
         <>
           {post.note ? <Eyebrow>{post.note}</Eyebrow> : null}
           <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.lg }}>
-            <PillButton label="Einplanen" size="compact" style={{ flex: 1 }} onPress={onPlan} />
-            <LinkAction label="Bearbeiten" onPress={onEdit} />
+            <PillButton
+              label={t({ de: "Einplanen", en: "Schedule" })}
+              size="compact"
+              style={{ flex: 1 }}
+              onPress={onPlan}
+            />
+            <LinkAction label={t({ de: "Bearbeiten", en: "Edit" })} onPress={onEdit} />
           </View>
         </>
       ) : post.state === "scheduled" ? (
         // Nach dem Einplanen: veröffentlichen oder verschieben (Editor).
         <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.lg }}>
           <PillButton
-            label="Jetzt veröffentlichen"
+            label={t({ de: "Jetzt veröffentlichen", en: "Publish now" })}
             size="compact"
             variant="ink"
             style={{ flex: 1 }}
             onPress={onPublish}
           />
-          <LinkAction label="Verschieben" onPress={onEdit} />
+          <LinkAction label={t({ de: "Verschieben", en: "Reschedule" })} onPress={onEdit} />
         </View>
       ) : null}
     </Card>

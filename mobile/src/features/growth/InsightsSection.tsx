@@ -10,6 +10,7 @@ import { ListCard, ListRow } from "../../components/ui/ListCard";
 import { SwipeToDelete } from "../../components/ui/SwipeToDelete";
 import { Text } from "../../components/ui/Text";
 import { useVenueDataset } from "../../lib/analytics";
+import { useT } from "../../lib/i18n";
 import { useTheme } from "../../theme";
 
 /**
@@ -22,6 +23,7 @@ import { useTheme } from "../../theme";
 export function InsightsSection({ limit = 4 }: { limit?: number }) {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const dataset = useVenueDataset();
   const [collapsed, setCollapsed] = useState(false);
   const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
@@ -38,8 +40,8 @@ export function InsightsSection({ limit = 4 }: { limit?: number }) {
           Beschreibung, was Erkenntnisse sind, und Chevron zum Ein-/Ausklappen. */}
       <ListCard>
         <ListRow
-          title="Erkenntnisse"
-          meta="Was deine Zahlen dir gerade raten"
+          title={t({ de: "Erkenntnisse", en: "Insights" })}
+          meta={t({ de: "Was deine Zahlen dir gerade raten", en: "What your numbers are telling you" })}
           onPress={() => setCollapsed((c) => !c)}
           trailing={
             <Text

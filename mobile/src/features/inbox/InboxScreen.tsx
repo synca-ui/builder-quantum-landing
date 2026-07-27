@@ -9,6 +9,7 @@ import { LinkAction } from "../../components/ui/PillButton";
 import { NavHeader } from "../../components/ui/NavHeader";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore, type InboxItem, type InboxKind } from "../../lib/store";
 import { useTheme } from "../../theme";
 
@@ -31,6 +32,7 @@ const KIND_ICON: Record<InboxKind, (p: IconProps) => ReactElement> = {
 export function InboxScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const { inbox, inboxRead, unreadCount, markInboxRead, markAllInboxRead } = useStore();
 
   const open = (item: InboxItem) => {
@@ -41,12 +43,18 @@ export function InboxScreen() {
   return (
     <Screen contentStyle={{ gap: theme.spacing.lg }}>
       <NavHeader
-        title="Posteingang"
-        trailing={unreadCount > 0 ? <LinkAction label="Alle gelesen" onPress={markAllInboxRead} /> : undefined}
+        title={t({ de: "Posteingang", en: "Inbox" })}
+        trailing={
+          unreadCount > 0 ? (
+            <LinkAction label={t({ de: "Alle gelesen", en: "Mark all read" })} onPress={markAllInboxRead} />
+          ) : undefined
+        }
       />
 
       <Eyebrow>
-        {unreadCount > 0 ? `${unreadCount} ungelesen` : "Alles gelesen"}
+        {unreadCount > 0
+          ? t({ de: `${unreadCount} ungelesen`, en: `${unreadCount} unread` })
+          : t({ de: "Alles gelesen", en: "All read" })}
       </Eyebrow>
 
       <View style={{ gap: theme.spacing.md }}>
@@ -101,7 +109,7 @@ export function InboxScreen() {
                   <Eyebrow tone="faint" style={{ fontSize: 10 }}>
                     {item.time}
                   </Eyebrow>
-                  <LinkAction label="Öffnen" labelSize={14} onPress={() => open(item)} />
+                  <LinkAction label={t({ de: "Öffnen", en: "Open" })} labelSize={14} onPress={() => open(item)} />
                 </View>
               </View>
             </Card>
@@ -113,7 +121,7 @@ export function InboxScreen() {
       <View style={{ alignItems: "center", marginTop: theme.spacing.sm }}>
         <BellIcon size={18} color={theme.colors.textFaint} />
         <Eyebrow tone="faint" style={{ marginTop: theme.spacing.xs, textAlign: "center" }}>
-          Maitr sammelt hier, was dein Betrieb braucht
+          {t({ de: "Maitr sammelt hier, was dein Betrieb braucht", en: "Maitr collects everything your business needs here" })}
         </Eyebrow>
       </View>
     </Screen>

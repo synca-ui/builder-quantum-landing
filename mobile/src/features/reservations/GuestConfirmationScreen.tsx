@@ -8,6 +8,7 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Emphasis, Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useToast } from "../../lib/toast";
 import { useStore } from "../../lib/store";
 import { useTheme } from "../../theme";
@@ -24,6 +25,7 @@ export function GuestConfirmationScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { lastBooking, days } = useStore();
 
   const firstName = lastBooking?.guest.split(" ")[0] ?? fixture.guestFirstName;
@@ -61,13 +63,16 @@ export function GuestConfirmationScreen() {
         </View>
 
         <Text variant="screenTitle" accessibilityRole="header" style={{ fontSize: 30, lineHeight: 34 }}>
-          Tisch reserviert
+          {t({ de: "Tisch reserviert", en: "Table booked" })}
           <Text variant="screenTitle" tone="accent" style={{ fontSize: 30 }}>
             .
           </Text>
         </Text>
         <Text variant="body" tone="secondary" style={{ marginTop: -6 }}>
-          Wir freuen uns auf dich, {firstName}!
+          {t({
+            de: `Wir freuen uns auf dich, ${firstName}!`,
+            en: `We can't wait to see you, ${firstName}!`,
+          })}
         </Text>
 
         <View
@@ -81,9 +86,9 @@ export function GuestConfirmationScreen() {
             marginTop: 2,
           }}
         >
-          <DetailRow label="Wann" value={when} />
-          <DetailRow label="Personen" value={String(partySize)} />
-          <DetailRow label="Wo" venue={fixture.venueName} value={fixture.where} />
+          <DetailRow label={t({ de: "Wann", en: "When" })} value={when} />
+          <DetailRow label={t({ de: "Personen", en: "People" })} value={String(partySize)} />
+          <DetailRow label={t({ de: "Wo", en: "Where" })} venue={fixture.venueName} value={fixture.where} />
         </View>
 
         <Text
@@ -95,10 +100,10 @@ export function GuestConfirmationScreen() {
         </Text>
 
         <PillButton
-          label="Zum Kalender hinzufügen"
+          label={t({ de: "Zum Kalender hinzufügen", en: "Add to calendar" })}
           variant="outline"
           style={{ width: "100%" }}
-          onPress={() => toast.show("Zum Kalender hinzugefügt")}
+          onPress={() => toast.show(t({ de: "Zum Kalender hinzugefügt", en: "Added to calendar" }))}
         />
       </Card>
 
@@ -121,16 +126,20 @@ export function GuestConfirmationScreen() {
             label={fixture.fullDaySuggestion.action}
             size="compact"
             labelSize={14.5}
-            onPress={() => toast.show("Alternative gewählt")}
+            onPress={() => toast.show(t({ de: "Alternative gewählt", en: "Alternative selected" }))}
             style={{ marginTop: 4, paddingHorizontal: theme.spacing.md }}
           />
         </Card>
       ) : null}
 
-      <PillButton label="Fertig" variant="ghost" onPress={() => router.replace("/gast/profil")} />
+      <PillButton
+        label={t({ de: "Fertig", en: "Done" })}
+        variant="ghost"
+        onPress={() => router.replace("/gast/profil")}
+      />
 
       <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-        Provisionsfrei über Maitr
+        {t({ de: "Provisionsfrei über Maitr", en: "Commission-free via Maitr" })}
       </Eyebrow>
     </Screen>
   );

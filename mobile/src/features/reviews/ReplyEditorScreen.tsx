@@ -10,6 +10,7 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -39,6 +40,7 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { answerReview } = useStore();
 
   const review = useMemo(
@@ -57,7 +59,7 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
 
   const publish = () => {
     answerReview(review.id);
-    toast.show("Auf Google veröffentlicht");
+    toast.show(t({ de: "Auf Google veröffentlicht", en: "Published to Google" }));
     router.back();
   };
 
@@ -65,7 +67,7 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
 
   return (
     <Screen contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title={`Antwort an ${firstName}`} />
+      <NavHeader title={t({ de: `Antwort an ${firstName}`, en: `Reply to ${firstName}` })} />
 
       <View
         style={{
@@ -81,7 +83,7 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
         </Text>
       </View>
 
-      <Eyebrow>Ton wählen</Eyebrow>
+      <Eyebrow>{t({ de: "Ton wählen", en: "Choose a tone" })}</Eyebrow>
       <View style={{ flexDirection: "row", gap: 9, flexWrap: "wrap" }}>
         {Object.keys(TONES).map((name) => (
           <Pressable
@@ -89,7 +91,7 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
             onPress={() => applyTone(name)}
             accessibilityRole="button"
             accessibilityState={{ selected: tone === name }}
-            accessibilityLabel={`Ton ${name}`}
+            accessibilityLabel={t({ de: `Ton ${name}`, en: `Tone ${name}` })}
             style={({ pressed }) => ({
               borderRadius: theme.radius.pill,
               paddingVertical: 10,
@@ -125,7 +127,7 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
           }}
           multiline
           maxLength={MAX_CHARS}
-          accessibilityLabel="Antworttext"
+          accessibilityLabel={t({ de: "Antworttext", en: "Reply text" })}
           style={[
             theme.text.body,
             { color: theme.colors.textPrimary, lineHeight: 25.6, flex: 1, textAlignVertical: "top" },
@@ -141,7 +143,7 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
           }}
         >
           <Eyebrow style={{ textTransform: "none" }}>
-            {draft.length} / {MAX_CHARS} Zeichen
+            {draft.length} / {MAX_CHARS} {t({ de: "Zeichen", en: "characters" })}
           </Eyebrow>
           <Pressable
             onPress={() => {
@@ -149,20 +151,26 @@ export function ReplyEditorScreen({ reviewId }: { reviewId?: string }) {
               setEdited(false);
             }}
             accessibilityRole="button"
-            accessibilityLabel="Neuen Vorschlag erzeugen"
+            accessibilityLabel={t({ de: "Neuen Vorschlag erzeugen", en: "Generate a new suggestion" })}
             hitSlop={8}
             style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
           >
             <RefreshIcon size={15} color={theme.colors.primary} />
-            <Eyebrow tone="accent">Neu vorschlagen</Eyebrow>
+            <Eyebrow tone="accent">{t({ de: "Neu vorschlagen", en: "Suggest again" })}</Eyebrow>
           </Pressable>
         </View>
       </Card>
 
       <View style={{ gap: theme.spacing.md }}>
-        <PillButton label="Auf Google veröffentlichen" onPress={publish} />
+        <PillButton
+          label={t({ de: "Auf Google veröffentlichen", en: "Publish to Google" })}
+          onPress={publish}
+        />
         <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-          Wird öffentlich unter deinem Profil angezeigt
+          {t({
+            de: "Wird öffentlich unter deinem Profil angezeigt",
+            en: "Shown publicly on your profile",
+          })}
         </Eyebrow>
       </View>
     </Screen>

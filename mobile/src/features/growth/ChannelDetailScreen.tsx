@@ -11,6 +11,7 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -29,6 +30,7 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { channels, channelMeta, connectChannelAs, disconnectChannel } = useStore();
 
   const channel = findChannel(channelId);
@@ -42,7 +44,7 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
     setTimeout(() => {
       connectChannelAs(channel.id, channel.suggestedAccount);
       setPhase("done");
-      toast.show(`${channel.name} verbunden`);
+      toast.show(t({ de: `${channel.name} verbunden`, en: `${channel.name} connected` }));
     }, 1100);
   };
 
@@ -63,12 +65,12 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
               <Eyebrow style={{ marginTop: 2 }}>{channel.purpose}</Eyebrow>
             )}
           </View>
-          {connected ? <StatusLabel label="Verbunden" color={theme.colors.success} /> : null}
+          {connected ? <StatusLabel label={t({ de: "Verbunden", en: "Connected" })} color={theme.colors.success} /> : null}
         </View>
 
         <View style={{ height: 1, backgroundColor: theme.colors.surfaceSunken }} />
 
-        <Eyebrow>Maitr darf</Eyebrow>
+        <Eyebrow>{t({ de: "Maitr darf", en: "Maitr can" })}</Eyebrow>
         {channel.scopes.map((scope) => (
           <View key={scope} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <CheckIcon size={17} color={theme.colors.success} />
@@ -81,12 +83,16 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
 
       {connected && meta ? (
         <ListCard>
-          <ListRow title="Verbundenes Konto" meta={meta.account} value="" />
-          <ListRow title="Synchronisation" meta={meta.since} value="" />
+          <ListRow title={t({ de: "Verbundenes Konto", en: "Connected account" })} meta={meta.account} value="" />
+          <ListRow title={t({ de: "Synchronisation", en: "Sync" })} meta={meta.since} value="" />
           {channel.managesProfile ? (
             <ListRow
-              title={channel.managesProfile === "google" ? "Profil & Öffnungszeiten" : "Bio bearbeiten"}
-              meta="Pflege Name, Bio, Zeiten"
+              title={
+                channel.managesProfile === "google"
+                  ? t({ de: "Profil & Öffnungszeiten", en: "Profile & hours" })
+                  : t({ de: "Bio bearbeiten", en: "Edit bio" })
+              }
+              meta={t({ de: "Pflege Name, Bio, Zeiten", en: "Edit name, bio, hours" })}
               onPress={() =>
                 router.push({ pathname: "/profil", params: { focus: channel.managesProfile! } })
               }
@@ -103,12 +109,12 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
       <View style={{ marginTop: theme.spacing.sm, gap: theme.spacing.md }}>
         {connected ? (
           <PillButton
-            label="Verbindung trennen"
+            label={t({ de: "Verbindung trennen", en: "Disconnect" })}
             variant="outline"
             onPress={() => {
               disconnectChannel(channel.id);
               setPhase("idle");
-              toast.show(`${channel.name} getrennt`);
+              toast.show(t({ de: `${channel.name} getrennt`, en: `${channel.name} disconnected` }));
             }}
           />
         ) : phase === "connecting" ? (
@@ -123,16 +129,19 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
           >
             <ActivityIndicator color={theme.colors.primary} />
             <Text variant="action" tone="secondary">
-              Verbinde mit {channel.name} …
+              {t({ de: `Verbinde mit ${channel.name} …`, en: `Connecting to ${channel.name} …` })}
             </Text>
           </View>
         ) : (
-          <PillButton label={`Mit ${channel.name} verbinden`} onPress={connect} />
+          <PillButton
+            label={t({ de: `Mit ${channel.name} verbinden`, en: `Connect ${channel.name}` })}
+            onPress={connect}
+          />
         )}
 
         {!connected ? (
           <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-            Jederzeit widerrufbar
+            {t({ de: "Jederzeit widerrufbar", en: "Revoke anytime" })}
           </Eyebrow>
         ) : null}
       </View>

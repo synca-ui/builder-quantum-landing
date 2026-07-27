@@ -9,6 +9,7 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Emphasis, Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { parseClock, useStore } from "../../lib/store";
 import { useTheme } from "../../theme";
 import { guestBooking } from "./fixtures";
@@ -29,6 +30,7 @@ const DAY_TO_SERVICE: Record<string, string> = { wed: "day_wed", sat: "day_sat" 
 export function GuestBookingScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const { addReservation, setLastBooking } = useStore();
 
   const [day, setDay] = useState("wed");
@@ -63,11 +65,12 @@ export function GuestBookingScreen() {
           {guestBooking.venueLocation}
         </Text>
         <Text variant="screenTitle" accessibilityRole="header" style={{ fontSize: 30, lineHeight: 34 }}>
-          Tisch <Emphasis variant="screenTitle">reservieren</Emphasis>
+          {t({ de: "Tisch ", en: "Book a " })}
+          <Emphasis variant="screenTitle">{t({ de: "reservieren", en: "table" })}</Emphasis>
         </Text>
       </View>
 
-      <Step label="1 · Wann?">
+      <Step label={t({ de: "1 · Wann?", en: "1 · When?" })}>
         <View style={{ flexDirection: "row", gap: 9 }}>
           {guestBooking.days.map((entry) => (
             <Chip
@@ -83,7 +86,7 @@ export function GuestBookingScreen() {
         </View>
       </Step>
 
-      <Step label="2 · Wie viele?">
+      <Step label={t({ de: "2 · Wie viele?", en: "2 · How many?" })}>
         <View style={{ flexDirection: "row", gap: 8 }}>
           {guestBooking.partySizes.map((size) => (
             <Chip
@@ -97,7 +100,10 @@ export function GuestBookingScreen() {
         </View>
       </Step>
 
-      <Step label="3 · Um wie viel Uhr?" hint="Nur freie Zeiten">
+      <Step
+        label={t({ de: "3 · Um wie viel Uhr?", en: "3 · What time?" })}
+        hint={t({ de: "Nur freie Zeiten", en: "Available times only" })}
+      >
         <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
           {guestBooking.times.map((slot) => (
             <Chip
@@ -115,7 +121,7 @@ export function GuestBookingScreen() {
         <TextInput
           value={name}
           onChangeText={setName}
-          placeholder="Dein Name"
+          placeholder={t({ de: "Dein Name", en: "Your name" })}
           placeholderTextColor={theme.colors.textFaint}
           accessibilityLabel="Name"
           style={[
@@ -129,15 +135,23 @@ export function GuestBookingScreen() {
 
       <View style={{ gap: theme.spacing.md, marginTop: theme.spacing.sm }}>
         <PillButton
-          label={`Reservieren · ${selectedDay.weekday}, ${time} · ${partySize} ${
-            partySize === 1 ? "Person" : "Personen"
-          }`}
+          label={t({
+            de: `Reservieren · ${selectedDay.weekday}, ${time} · ${partySize} ${
+              partySize === 1 ? "Person" : "Personen"
+            }`,
+            en: `Book · ${selectedDay.weekday}, ${time} · ${partySize} ${
+              partySize === 1 ? "person" : "people"
+            }`,
+          })}
           labelSize={15}
           onPress={reserve}
           style={{ paddingHorizontal: theme.spacing.md }}
         />
         <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-          Provisionsfrei über Maitr · Keine Anzahlung
+          {t({
+            de: "Provisionsfrei über Maitr · Keine Anzahlung",
+            en: "Commission-free via Maitr · No deposit",
+          })}
         </Eyebrow>
       </View>
     </Screen>

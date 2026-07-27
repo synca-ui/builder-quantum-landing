@@ -9,28 +9,34 @@ import { PillButton } from "../../components/ui/PillButton";
 import { ProgressBar } from "../../components/ui/Progress";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT, type Localized } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 
 interface Step {
   id: string;
-  title: string;
+  title: Localized<string>;
   /** Warum der Schritt sich lohnt - nur bei offenen Schritten sichtbar. */
-  reason?: string;
+  reason?: Localized<string>;
   state: "done" | "current" | "open";
 }
 
 const steps: Step[] = [
-  { id: "google", title: "Google Business verbunden", state: "done" },
-  { id: "hours", title: "Öffnungszeiten übernommen", state: "done" },
+  { id: "google", title: { de: "Google Business verbunden", en: "Google Business connected" }, state: "done" },
+  { id: "hours", title: { de: "Öffnungszeiten übernommen", en: "Opening hours imported" }, state: "done" },
   {
     id: "instagram",
-    title: "Instagram verbinden",
-    reason: "Für automatische Beiträge",
+    title: { de: "Instagram verbinden", en: "Connect Instagram" },
+    reason: { de: "Für automatische Beiträge", en: "For automatic posts" },
     state: "current",
   },
-  { id: "photos", title: "3 Fotos hochladen", reason: "Macht das Profil lebendig", state: "open" },
+  {
+    id: "photos",
+    title: { de: "3 Fotos hochladen", en: "Upload 3 photos" },
+    reason: { de: "Macht das Profil lebendig", en: "Brings your profile to life" },
+    state: "open",
+  },
 ];
 
 /**
@@ -44,10 +50,11 @@ export function OnboardingScreen() {
   const router = useRouter();
   const toast = useToast();
   const { connectChannel } = useStore();
+  const t = useT();
 
   const connectInstagram = () => {
     connectChannel("instagram");
-    toast.show("Instagram verbunden");
+    toast.show(t({ de: "Instagram verbunden", en: "Instagram connected" }));
     router.push("/kanaele");
   };
 
@@ -60,21 +67,23 @@ export function OnboardingScreen() {
 
       <View style={{ marginTop: 70 }}>
         <Eyebrow tone="accent" variant="eyebrowLg">
-          Fast fertig, Sofia
+          {t({ de: "Fast fertig, Sofia", en: "Almost done, Sofia" })}
         </Eyebrow>
         <Text
           variant="heroTitle"
           accessibilityRole="header"
           style={{ fontSize: 40, lineHeight: 42, marginTop: 10 }}
         >
-          Deine Gäste finden dich ab jetzt
+          {t({ de: "Deine Gäste finden dich ab jetzt", en: "Your guests can find you from now on" })}
           <Text variant="heroTitle" tone="accent" style={{ fontSize: 40 }}>
             .
           </Text>
         </Text>
         <Text variant="body" tone="secondary" style={{ fontSize: 17, lineHeight: 25, marginTop: 14 }}>
-          Wir haben dein Google Profil verbunden. Zwei Dinge fehlen noch, dann läuft alles von
-          selbst.
+          {t({
+            de: "Wir haben dein Google Profil verbunden. Zwei Dinge fehlen noch, dann läuft alles von selbst.",
+            en: "We've connected your Google profile. Two things are still missing, then everything runs on its own.",
+          })}
         </Text>
       </View>
 
@@ -85,14 +94,14 @@ export function OnboardingScreen() {
       </View>
 
       <View style={{ marginTop: theme.spacing.xxl, gap: theme.spacing.md }}>
-        <PillButton label="Instagram verbinden" onPress={connectInstagram} />
+        <PillButton label={t({ de: "Instagram verbinden", en: "Connect Instagram" })} onPress={connectInstagram} />
         <Text
           variant="bodySm"
           tone="secondary"
           style={{ fontSize: 15, textAlign: "center" }}
           onPress={() => router.replace("/start")}
         >
-          Später erledigen
+          {t({ de: "Später erledigen", en: "Do this later" })}
         </Text>
       </View>
     </Screen>
@@ -101,6 +110,7 @@ export function OnboardingScreen() {
 
 function StepCard({ step }: { step: Step }) {
   const theme = useTheme();
+  const t = useT();
   const done = step.state === "done";
   const current = step.state === "current";
 
@@ -139,9 +149,9 @@ function StepCard({ step }: { step: Step }) {
           tone={done ? "faint" : "primary"}
           style={{ fontSize: 16, textDecorationLine: done ? "line-through" : "none" }}
         >
-          {step.title}
+          {t(step.title)}
         </Text>
-        {step.reason ? <Eyebrow style={{ marginTop: 1 }}>{step.reason}</Eyebrow> : null}
+        {step.reason ? <Eyebrow style={{ marginTop: 1 }}>{t(step.reason)}</Eyebrow> : null}
       </View>
     </Card>
   );

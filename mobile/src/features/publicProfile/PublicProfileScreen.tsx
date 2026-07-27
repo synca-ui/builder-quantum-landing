@@ -10,6 +10,7 @@ import { Eyebrow } from "../../components/ui/Eyebrow";
 import { PhotoTile } from "../../components/ui/Media";
 import { PillButton } from "../../components/ui/PillButton";
 import { Emphasis, Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -25,6 +26,7 @@ export function PublicProfileScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const insets = useSafeAreaInsets();
   const { venueProfile } = useStore();
 
@@ -33,7 +35,7 @@ export function PublicProfileScreen() {
     tagline: `${venueProfile.tagline} · ${venueProfile.city.replace(/^\d+\s/, "")}`,
     rating: "★ 4,8 · 128",
     tags: venueProfile.tags.slice(0, 3),
-    openUntil: "bis 22:00",
+    openUntil: t({ de: "bis 22:00", en: "until 22:00" }),
   };
 
   return (
@@ -44,7 +46,7 @@ export function PublicProfileScreen() {
         tone="cool"
         size={246}
         radius={0}
-        caption="Titelbild"
+        caption={t({ de: "Titelbild", en: "Cover photo" })}
         style={{ width: "100%", height: 246, alignSelf: "stretch" }}
       />
 
@@ -53,7 +55,7 @@ export function PublicProfileScreen() {
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="Zurück"
+          accessibilityLabel={t({ de: "Zurück", en: "Back" })}
           hitSlop={10}
           style={({ pressed }) => ({
             position: "absolute",
@@ -114,7 +116,7 @@ export function PublicProfileScreen() {
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <StatusLabel label="Jetzt geöffnet" color={theme.colors.success} />
+            <StatusLabel label={t({ de: "Jetzt geöffnet", en: "Open now" })} color={theme.colors.success} />
             <Text variant="bodySm" tone="muted" style={{ fontSize: 14 }}>
               · {profile.openUntil}
             </Text>
@@ -123,12 +125,12 @@ export function PublicProfileScreen() {
 
         <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
           <QuickAction
-            label="Route"
+            label={t({ de: "Route", en: "Directions" })}
             icon={<PinIcon size={22} color={theme.colors.primary} />}
-            onPress={() => toast.show("Route in Karten öffnen")}
+            onPress={() => toast.show(t({ de: "Route in Karten öffnen", en: "Open route in Maps" }))}
           />
           <QuickAction
-            label="Speisekarte"
+            label={t({ de: "Speisekarte", en: "Menu" })}
             icon={<CalendarIcon size={22} color={theme.colors.primary} />}
             onPress={() => router.push("/speisekarte")}
           />
@@ -144,11 +146,11 @@ export function PublicProfileScreen() {
         }}
       >
         <PillButton
-          label="Tisch reservieren"
+          label={t({ de: "Tisch reservieren", en: "Reserve a table" })}
           onPress={() => router.push("/gast/reservieren")}
         />
         <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-          Provisionsfrei über Maitr
+          {t({ de: "Provisionsfrei über Maitr", en: "Commission-free via Maitr" })}
         </Eyebrow>
       </View>
     </View>

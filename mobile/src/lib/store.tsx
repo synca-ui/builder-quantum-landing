@@ -345,6 +345,35 @@ export interface MenuItem {
 
 const MENU_SEED: MenuItem[] = [];
 
+/** Persist-Schlüssel der Demo (AsyncStorage). Modul-scope, damit die Effekte UND
+ *  `resetDemo` exakt denselben Schlüssel nutzen. */
+const PERSIST_KEY = "maitr.demo.state.v1";
+
+/* ── Ausgangszustände, die (noch) keine eigene *_SEED-Konstante hatten ───────
+   Zentral definiert, damit „Demo zurücksetzen" GENAU den Startzustand eines
+   frischen Installs herstellt - so laufen useState-Defaults und Reset nie
+   auseinander. */
+const CHANNELS_SEED: Record<string, boolean> = {
+  google: true,
+  instagram: true,
+  yelp: false,
+  thefork: false,
+  facebook: false,
+};
+const PROFILE_DONE_SEED: Record<string, boolean> = { photos: true };
+const REVIEW_ANSWERED_SEED: Record<string, boolean> = { rev_tobias: true };
+const CHANNEL_META_SEED: Record<string, { account: string; since: string }> = {
+  google: { account: "Sofia Brandt · Inhaberin", since: "verbunden vor 4 Min" },
+  instagram: { account: "@cafegoldstueck", since: "verbunden vor 12 Min" },
+};
+const AUTOPILOT_SEED: Record<AutopilotCategory, boolean> = {
+  reviews: false,
+  winback: false,
+  posts: false,
+};
+/** Tiefe Kopie eines Seeds - Bearbeitungen dürfen die Konstante nie mutieren. */
+const cloneSeed = <T,>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
+
 /* ── Store-Form ──────────────────────────────────────────────────────────── */
 
 interface StoreValue {
@@ -438,6 +467,9 @@ interface StoreValue {
 
   /** Erst nach dem Laden aus dem Speicher wird die App gerendert. */
   hydrated: boolean;
+
+  /** Demo auf den Auslieferungszustand zurücksetzen (fürs Vorführen). */
+  resetDemo: () => void;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -477,35 +509,26 @@ function uid(prefix: string): string {
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
-  const [channels, setChannels] = useState<Record<string, boolean>>({
-    google: true,
-    instagram: true,
-    yelp: false,
-    thefork: false,
-    facebook: false,
-  });
-  const [profileDone, setProfileDone] = useState<Record<string, boolean>>({ photos: true });
+  const [channels, setChannels] = useState<Record<string, boolean>>(() => ({ ...CHANNELS_SEED }));
+  const [profileDone, setProfileDone] = useState<Record<string, boolean>>(() => ({ ...PROFILE_DONE_SEED }));
   const [taskDone, setTaskDone] = useState<Record<string, boolean>>({});
-  const [reviewAnswered, setReviewAnswered] = useState<Record<string, boolean>>({
-    rev_tobias: true,
-  });
+  const [reviewAnswered, setReviewAnswered] = useState<Record<string, boolean>>(() => ({
+    ...REVIEW_ANSWERED_SEED,
+  }));
   const [posts, setPosts] = useState<Post[]>(POSTS_SEED);
   const [venueProfile, setVenueProfile] = useState<VenueProfile>(VENUE_PROFILE_SEED);
-  const [channelMeta, setChannelMeta] = useState<Record<string, { account: string; since: string }>>({
-    google: { account: "Sofia Brandt · Inhaberin", since: "verbunden vor 4 Min" },
-    instagram: { account: "@cafegoldstueck", since: "verbunden vor 12 Min" },
-  });
+  const [channelMeta, setChannelMeta] = useState<Record<string, { account: string; since: string }>>(
+    () => cloneSeed(CHANNEL_META_SEED),
+  );
   const [days, setDays] = useState<ServiceDayState[]>(seedServiceDays);
   const [lastBooking, setLastBookingState] = useState<GuestBookingResult | null>(null);
   const [inboxRead, setInboxRead] = useState<Record<string, boolean>>({});
   const [guests, setGuests] = useState<Guest[]>(GUESTS_SEED);
   const [menu, setMenu] = useState<MenuItem[]>(MENU_SEED);
   const [activityLog, setActivityLog] = useState<ActivityItem[]>(ACTIVITY_SEED);
-  const [autopilot, setAutopilotState] = useState<Record<AutopilotCategory, boolean>>({
-    reviews: false,
-    winback: false,
-    posts: false,
-  });
+  const [autopilot, setAutopilotState] = useState<Record<AutopilotCategory, boolean>>(() => ({
+    ...AUTOPILOT_SEED,
+  }));
   const [currentPlan, setCurrentPlan] = useState<PlanId>("pro");
   const [hydrated, setHydrated] = useState(false);
 
@@ -860,7 +883,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   /* ── Persistenz: hydrieren beim Start, Snapshot bei jeder Änderung ──────── */
 
-  const PERSIST_KEY = "maitr.demo.state.v1";
   const hydratedRef = useRef(false);
 
   useEffect(() => {
@@ -951,6 +973,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     );
   }, [menu]);
 
+  /* ── Demo zurücksetzen ────────────────────────────────────────────────────
+     Stellt den Auslieferungszustand wieder her - die drei Entscheidungen auf der
+     Startseite, Kennzahlen, Kanäle, leere Speisekarte usw. Unverzichtbar fürs
+     Vorführen: sind die Aufgaben einmal abgearbeitet (auch auf dem echten Gerät),
+     holt ein Tap sie zurück, ohne die App neu zu installieren. Setzt jeden State
+     auf seinen Seed UND löscht den persistierten Snapshot; kein Neustart nötig. */
+  const resetDemo = useCallback(() => {
+    // Vorführzustand ist ANGEMELDET direkt auf der Startseite (nicht der Login-
+    // Auslieferungszustand) - der Reset dient dem Zeigen, nicht dem Erstlauf.
+    setSignedIn(true);
+    setChannels({ ...CHANNELS_SEED });
+    setChannelMeta(cloneSeed(CHANNEL_META_SEED));
+    setProfileDone({ ...PROFILE_DONE_SEED });
+    setTaskDone({});
+    setReviewAnswered({ ...REVIEW_ANSWERED_SEED });
+    setPosts(cloneSeed(POSTS_SEED));
+    setVenueProfile(cloneSeed(VENUE_PROFILE_SEED));
+    setInboxRead({});
+    setDays(seedServiceDays());
+    setLastBookingState(null);
+    setGuests(cloneSeed(GUESTS_SEED));
+    setMenu([]);
+    setActivityLog(cloneSeed(ACTIVITY_SEED));
+    setAutopilotState({ ...AUTOPILOT_SEED });
+    setCurrentPlan("pro");
+    AsyncStorage.removeItem(PERSIST_KEY).catch(() => {});
+  }, []);
+
   const value = useMemo<StoreValue>(
     () => ({
       signedIn,
@@ -1003,6 +1053,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addMenuItem,
       removeMenuItem,
       hydrated,
+      resetDemo,
     }),
     [
       signedIn,
@@ -1052,6 +1103,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addMenuItem,
       removeMenuItem,
       hydrated,
+      resetDemo,
     ],
   );
 

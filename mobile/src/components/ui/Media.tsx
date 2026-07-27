@@ -3,6 +3,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 import { PlusIcon } from "../icons";
 import { useTheme } from "../../theme";
+import { useT } from "../../lib/i18n";
 import { Text } from "./Text";
 
 /**
@@ -83,12 +84,13 @@ export function PhotoTile({
 /** Gestrichelter Rahmen mit Plus - "Foto hinzufügen" (Screen 24). */
 export function AddPhotoTile({ onPress }: { onPress?: () => void }) {
   const theme = useTheme();
+  const t = useT();
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel="Foto hinzufügen"
+      accessibilityLabel={t({ de: "Foto hinzufügen", en: "Add photo" })}
       style={({ pressed }) => ({
         flex: 1,
         aspectRatio: 1,

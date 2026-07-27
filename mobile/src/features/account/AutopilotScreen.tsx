@@ -9,13 +9,26 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
 import { Toggle } from "../../components/ui/Toggle";
+import { useT, type Localized } from "../../lib/i18n";
 import { useStore, type ActivityItem, type AutopilotCategory } from "../../lib/store";
 import { useTheme } from "../../theme";
 
-const CATEGORIES: { key: AutopilotCategory; title: string; meta: string }[] = [
-  { key: "reviews", title: "Bewertungsantworten", meta: "5★-Bewertungen sofort warm beantworten" },
-  { key: "winback", title: "Rückhol-Nachrichten", meta: "Inaktive Stammgäste automatisch einladen" },
-  { key: "posts", title: "Beiträge", meta: "Zur stärksten Stunde von selbst posten" },
+const CATEGORIES: { key: AutopilotCategory; title: Localized; meta: Localized }[] = [
+  {
+    key: "reviews",
+    title: { de: "Bewertungsantworten", en: "Review replies" },
+    meta: { de: "5★-Bewertungen sofort warm beantworten", en: "Reply warmly to 5★ reviews instantly" },
+  },
+  {
+    key: "winback",
+    title: { de: "Rückhol-Nachrichten", en: "Win-back messages" },
+    meta: { de: "Inaktive Stammgäste automatisch einladen", en: "Automatically invite inactive regulars" },
+  },
+  {
+    key: "posts",
+    title: { de: "Beiträge", en: "Posts" },
+    meta: { de: "Zur stärksten Stunde von selbst posten", en: "Post automatically at your peak hour" },
+  },
 ];
 
 /**
@@ -28,6 +41,7 @@ const CATEGORIES: { key: AutopilotCategory; title: string; meta: string }[] = [
 export function AutopilotScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const { activityLog, autopilot, setAutopilot, guests, reactivateGuest } = useStore();
   const autoCount = activityLog.filter((a) => a.auto).length;
 
@@ -45,28 +59,31 @@ export function AutopilotScreen() {
       <NavHeader title="Autopilot" onBack={() => router.back()} />
 
       <DarkPanel style={{ gap: 6 }}>
-        <Eyebrow color={onDarkPanel.accent}>Von Maitr erledigt</Eyebrow>
+        <Eyebrow color={onDarkPanel.accent}>{t({ de: "Von Maitr erledigt", en: "Done by Maitr" })}</Eyebrow>
         <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 34 }}>
-          {autoCount} {autoCount === 1 ? "Aufgabe" : "Aufgaben"}
+          {autoCount} {autoCount === 1 ? t({ de: "Aufgabe", en: "task" }) : t({ de: "Aufgaben", en: "tasks" })}
         </Text>
         <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
-          Ohne dass du etwas tun musstest. Schalte mehr frei — Maitr lernt aus deinen Freigaben.
+          {t({
+            de: "Ohne dass du etwas tun musstest. Schalte mehr frei — Maitr lernt aus deinen Freigaben.",
+            en: "Without you having to do a thing. Unlock more — Maitr learns from your approvals.",
+          })}
         </Text>
       </DarkPanel>
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Eyebrow>Was Maitr selbst erledigen darf</Eyebrow>
+        <Eyebrow>{t({ de: "Was Maitr selbst erledigen darf", en: "What Maitr may handle itself" })}</Eyebrow>
         <ListCard style={{ borderRadius: 18 }}>
           {CATEGORIES.map((c) => (
             <ListRow
               key={c.key}
-              title={c.title}
-              meta={c.meta}
+              title={t(c.title)}
+              meta={t(c.meta)}
               trailing={
                 <Toggle
                   value={autopilot[c.key]}
                   onValueChange={(v) => handleToggle(c.key, v)}
-                  accessibilityLabel={`Autopilot: ${c.title}`}
+                  accessibilityLabel={`Autopilot: ${t(c.title)}`}
                 />
               }
             />
@@ -75,7 +92,7 @@ export function AutopilotScreen() {
       </View>
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Eyebrow>Zuletzt erledigt</Eyebrow>
+        <Eyebrow>{t({ de: "Zuletzt erledigt", en: "Recently done" })}</Eyebrow>
         <View style={{ gap: theme.spacing.md }}>
           {activityLog.map((a) => (
             <ActivityRow key={a.id} item={a} />
@@ -88,6 +105,7 @@ export function AutopilotScreen() {
 
 function ActivityRow({ item }: { item: ActivityItem }) {
   const theme = useTheme();
+  const t = useT();
   return (
     <Card emphasis="subtle" padding={16} style={{ borderRadius: 16, gap: 4 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -104,7 +122,7 @@ function ActivityRow({ item }: { item: ActivityItem }) {
             }}
           >
             <Eyebrow color={theme.colors.success} style={{ fontSize: 9 }}>
-              Automatisch
+              {t({ de: "Automatisch", en: "Automatic" })}
             </Eyebrow>
           </View>
         ) : null}

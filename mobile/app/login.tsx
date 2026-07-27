@@ -8,6 +8,7 @@ import { Eyebrow } from "../src/components/ui/Eyebrow";
 import { PillButton } from "../src/components/ui/PillButton";
 import { Screen } from "../src/components/ui/Screen";
 import { Text } from "../src/components/ui/Text";
+import { useT } from "../src/lib/i18n";
 import { useStore } from "../src/lib/store";
 import { useTheme } from "../src/theme";
 
@@ -21,6 +22,7 @@ import { useTheme } from "../src/theme";
 export default function LoginScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const { signIn } = useStore();
   const [email, setEmail] = useState("");
 
@@ -33,29 +35,33 @@ export default function LoginScreen() {
     <Screen surface="deep" scroll={false} contentStyle={styles.container}>
       <View style={{ marginTop: 120 }}>
         <Text variant="heroTitle" accessibilityRole="header">
-          Schön, dass du wieder da bist
+          {t({ de: "Schön, dass du wieder da bist", en: "Great to have you back" })}
           <Text variant="heroTitle" color={theme.colors.accent}>
             .
           </Text>
         </Text>
         <Text variant="body" tone="secondary" style={{ fontSize: 17, marginTop: 14 }}>
-          Anmelden, deine Aufgaben warten schon.
+          {t({ de: "Anmelden, deine Aufgaben warten schon.", en: "Sign in, your tasks are already waiting." })}
         </Text>
       </View>
 
       <Card emphasis="strong" padding={0} style={styles.card}>
         <PillButton
-          label="Weiter mit Google"
+          label={t({ de: "Weiter mit Google", en: "Continue with Google" })}
           variant="outline"
           icon={<GoogleMark size={16} />}
           onPress={enter}
         />
-        <PillButton label="Weiter mit Apple" variant="outline" onPress={enter} />
+        <PillButton
+          label={t({ de: "Weiter mit Apple", en: "Continue with Apple" })}
+          variant="outline"
+          onPress={enter}
+        />
 
         <View style={styles.divider}>
           <View style={[styles.rule, { backgroundColor: theme.colors.border }]} />
           <Eyebrow tone="faint" style={{ letterSpacing: 0.53 }}>
-            oder
+            {t({ de: "oder", en: "or" })}
           </Eyebrow>
           <View style={[styles.rule, { backgroundColor: theme.colors.border }]} />
         </View>
@@ -68,7 +74,7 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          accessibilityLabel="E-Mail-Adresse"
+          accessibilityLabel={t({ de: "E-Mail-Adresse", en: "Email address" })}
           onSubmitEditing={enter}
           style={[
             theme.text.body,
@@ -77,22 +83,24 @@ export default function LoginScreen() {
           ]}
         />
 
-        <PillButton label="Weiter" onPress={enter} />
+        <PillButton label={t({ de: "Weiter", en: "Continue" })} onPress={enter} />
 
         <Text variant="bodySm" tone="secondary" style={styles.signupLine}>
-          Neu hier?{" "}
+          {t({ de: "Neu hier?", en: "New here?" })}{" "}
           <Text
             variant="bodySm"
             tone="accent"
             style={{ textDecorationLine: "underline" }}
             onPress={() => router.push("/journey/willkommen")}
           >
-            Konto erstellen
+            {t({ de: "Konto erstellen", en: "Create account" })}
           </Text>
         </Text>
       </Card>
 
-      <Eyebrow style={styles.footnote}>Geschützt durch Clerk · Magic Link & MFA</Eyebrow>
+      <Eyebrow style={styles.footnote}>
+        {t({ de: "Geschützt durch Clerk · Magic Link & MFA", en: "Protected by Clerk · Magic Link & MFA" })}
+      </Eyebrow>
     </Screen>
   );
 }

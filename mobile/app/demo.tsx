@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 import { useRouter, type Href } from "expo-router";
 
 import { Eyebrow } from "../src/components/ui/Eyebrow";
@@ -8,6 +8,8 @@ import { NavHeader } from "../src/components/ui/NavHeader";
 import { Screen } from "../src/components/ui/Screen";
 import { Text } from "../src/components/ui/Text";
 import { useAppearance } from "../src/lib/appearance";
+import { useLanguageControls } from "../src/lib/i18n";
+import { useStore } from "../src/lib/store";
 import { Toggle } from "../src/components/ui/Toggle";
 import { useTheme } from "../src/theme";
 
@@ -89,8 +91,28 @@ export default function DemoIndex() {
   const theme = useTheme();
   const router = useRouter();
   const { nightMode, toggleNightMode } = useAppearance();
+  const { lang, toggleLang } = useLanguageControls();
+  const { resetDemo } = useStore();
 
   const total = sections.reduce((sum, section) => sum + section.entries.length, 0);
+
+  const confirmReset = () => {
+    Alert.alert(
+      "Demo zurücksetzen?",
+      "Holt die drei Entscheidungen auf der Startseite und alle Kennzahlen zurück - so, wie beim ersten Start. Erledigte Aufgaben und Änderungen dieser Sitzung gehen verloren.",
+      [
+        { text: "Abbrechen", style: "cancel" },
+        {
+          text: "Zurücksetzen",
+          style: "destructive",
+          onPress: () => {
+            resetDemo();
+            router.replace("/start");
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <Screen contentStyle={{ gap: theme.spacing.xl }}>
@@ -107,6 +129,18 @@ export default function DemoIndex() {
 
       <ListCard>
         <ListRow
+          title={lang === "en" ? "Language · English" : "Sprache · Deutsch"}
+          meta={lang === "en" ? "Tap to switch the demo to German" : "Tippen, um die Demo auf Englisch zu stellen"}
+          onPress={toggleLang}
+          trailing={
+            <Toggle
+              value={lang === "en"}
+              onValueChange={toggleLang}
+              accessibilityLabel="English"
+            />
+          }
+        />
+        <ListRow
           title="Nachtbar Modus"
           meta="Schaltet Palette und Start-Screen auf Abend"
           trailing={
@@ -115,6 +149,16 @@ export default function DemoIndex() {
               onValueChange={toggleNightMode}
               accessibilityLabel="Nachtbar Modus"
             />
+          }
+        />
+        <ListRow
+          title="Demo zurücksetzen"
+          meta="Holt die drei Aufgaben & Kennzahlen zurück"
+          onPress={confirmReset}
+          trailing={
+            <Text variant="numeric" tone="accent" style={{ fontSize: 20 }}>
+              ↺
+            </Text>
           }
         />
       </ListCard>

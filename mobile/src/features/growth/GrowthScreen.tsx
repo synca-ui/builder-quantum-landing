@@ -12,6 +12,7 @@ import { Screen } from "../../components/ui/Screen";
 import { ScreenHeader } from "../../components/ui/ScreenHeader";
 import { Text } from "../../components/ui/Text";
 import { useVenueDataset } from "../../lib/analytics";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -32,6 +33,7 @@ export function GrowthScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { profileDone, channels, growthMetrics } = useStore();
   const dataset = useVenueDataset();
   const [year, setYear] = useState(2026);
@@ -54,7 +56,7 @@ export function GrowthScreen() {
   return (
     <Screen withTabBar contentStyle={{ gap: 14 }}>
       <ScreenHeader
-        title="Dein Juli"
+        title={t({ de: "Dein Juli", en: "Your July" })}
         period={String(year)}
         onPrevious={() => setYear((y) => y - 1)}
         onNext={() => setYear((y) => y + 1)}
@@ -92,15 +94,15 @@ export function GrowthScreen() {
       <Pressable
         onPress={() => openMetric("aufrufe")}
         accessibilityRole="button"
-        accessibilityLabel="Aufrufe-Verlauf öffnen"
+        accessibilityLabel={t({ de: "Aufrufe-Verlauf öffnen", en: "Open views history" })}
         style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
       >
         <Card padding={theme.spacing.xl} style={{ borderRadius: 18, gap: 14 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
             <Text variant="numeric" style={{ fontSize: 17 }}>
-              Aufrufe · 6 Monate
+              {t({ de: "Aufrufe · 6 Monate", en: "Views · 6 months" })}
             </Text>
-            <Eyebrow>Ø +15 %/Monat</Eyebrow>
+            <Eyebrow>{t({ de: "Ø +15 %/Monat", en: "Ø +15%/month" })}</Eyebrow>
           </View>
           <BarChart
             data={aufrufe.series.map((value, i) => ({ label: MONTHS[i], value }))}
@@ -110,18 +112,20 @@ export function GrowthScreen() {
       </Pressable>
 
       <DarkPanel style={{ gap: 6 }}>
-        <Eyebrow color={onDarkPanel.meta}>Provisionsfrei über Maitr</Eyebrow>
+        <Eyebrow color={onDarkPanel.meta}>{t({ de: "Provisionsfrei über Maitr", en: "Commission-free via Maitr" })}</Eyebrow>
         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10 }}>
           <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 34 }}>
             {euro(roi.savedCommission)}
           </Text>
           <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13 }}>
-            gespart diesen Monat
+            {t({ de: "gespart diesen Monat", en: "saved this month" })}
           </Text>
         </View>
         <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
-          {roi.reservations} Reservierungen · {roi.covers} Gäste · {euro(roi.revenue)} vermittelt.
-          Hochgerechnet {euro(roi.savedCommissionAnnualized)} im Jahr, die nicht an Plattformen gehen.
+          {t({
+            de: `${roi.reservations} Reservierungen · ${roi.covers} Gäste · ${euro(roi.revenue)} vermittelt. Hochgerechnet ${euro(roi.savedCommissionAnnualized)} im Jahr, die nicht an Plattformen gehen.`,
+            en: `${roi.reservations} reservations · ${roi.covers} guests · ${euro(roi.revenue)} generated. Projected ${euro(roi.savedCommissionAnnualized)} a year that won't go to platforms.`,
+          })}
         </Text>
       </DarkPanel>
 
@@ -129,32 +133,34 @@ export function GrowthScreen() {
 
       <ListCard>
         <ListRow
-          title="Profil Check"
+          title={t({ de: "Profil Check", en: "Profile check" })}
           meta={
-            openPoints > 0 ? `Score ${score} · +${openPoints} Punkte offen` : `Score ${score} · komplett`
+            openPoints > 0
+              ? t({ de: `Score ${score} · +${openPoints} Punkte offen`, en: `Score ${score} · +${openPoints} points open` })
+              : t({ de: `Score ${score} · komplett`, en: `Score ${score} · complete` })
           }
           onPress={() => router.push("/profil-check")}
           trailing={<Chevron />}
         />
         <ListRow
-          title="Deine Kanäle"
+          title={t({ de: "Deine Kanäle", en: "Your channels" })}
           meta={
             openChannels > 0
-              ? `${connectedCount} verbunden · ${openChannels} offen`
-              : `${connectedCount} verbunden`
+              ? t({ de: `${connectedCount} verbunden · ${openChannels} offen`, en: `${connectedCount} connected · ${openChannels} open` })
+              : t({ de: `${connectedCount} verbunden`, en: `${connectedCount} connected` })
           }
           onPress={() => router.push("/kanaele")}
           trailing={<Chevron />}
         />
         <ListRow
-          title="Auslastung füllen"
-          meta="Ruhige Zeiten mit Stammgästen füllen"
+          title={t({ de: "Auslastung füllen", en: "Fill capacity" })}
+          meta={t({ de: "Ruhige Zeiten mit Stammgästen füllen", en: "Fill quiet times with regulars" })}
           onPress={() => router.push("/kampagne")}
           trailing={<Chevron />}
         />
         <ListRow
-          title="Köln-Index"
-          meta="Besser als 58 % der Cafés in Köln"
+          title={t({ de: "Köln-Index", en: "Cologne Index" })}
+          meta={t({ de: "Besser als 58 % der Cafés in Köln", en: "Better than 58% of cafés in Cologne" })}
           onPress={() => router.push("/benchmark")}
           trailing={<Chevron />}
         />
@@ -162,19 +168,22 @@ export function GrowthScreen() {
 
       <DarkPanel style={{ gap: theme.spacing.sm }}>
         <Text variant="sectionTitle" color={onDarkPanel.title} style={{ fontSize: 20 }}>
-          Kolleg:innen empfehlen
+          {t({ de: "Kolleg:innen empfehlen", en: "Refer colleagues" })}
           <Text variant="sectionTitle" color={onDarkPanel.accent} style={{ fontSize: 20 }}>
             .
           </Text>
         </Text>
         <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 14 }}>
-          1 Monat geschenkt, für dich und den Betrieb, den du einlädst.
+          {t({
+            de: "1 Monat geschenkt, für dich und den Betrieb, den du einlädst.",
+            en: "One month free — for you and the business you invite.",
+          })}
         </Text>
         <PillButton
-          label="Einladung teilen"
+          label={t({ de: "Einladung teilen", en: "Share invite" })}
           size="compact"
           labelColor={onDarkPanel.onAccent}
-          onPress={() => toast.show("Einladungslink kopiert")}
+          onPress={() => toast.show(t({ de: "Einladungslink kopiert", en: "Invite link copied" }))}
           style={{ marginTop: theme.spacing.sm, backgroundColor: onDarkPanel.accent }}
         />
       </DarkPanel>

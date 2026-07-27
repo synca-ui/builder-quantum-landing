@@ -8,6 +8,7 @@ import { Eyebrow } from "../../components/ui/Eyebrow";
 import { NavHeader } from "../../components/ui/NavHeader";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useTheme } from "../../theme";
 import {
@@ -29,6 +30,7 @@ type CheckItem = ProfileCheckItem;
 export function ProfileCheckScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
   const { profileDone, toggleProfileItem } = useStore();
 
   const isDone = (id: string) => Boolean(profileDone[id]);
@@ -40,18 +42,20 @@ export function ProfileCheckScreen() {
       <NavHeader fallback="/wachstum" />
 
       <Text variant="screenTitle" accessibilityRole="header" style={{ fontSize: 33, lineHeight: 36 }}>
-        Profil Check
+        {t({ de: "Profil Check", en: "Profile check" })}
       </Text>
 
       <View style={{ alignItems: "center", gap: 10 }}>
         <ScoreRing score={score} />
-        <Eyebrow variant="eyebrowLg">Besser als 58 % der Cafés in Köln</Eyebrow>
+        <Eyebrow variant="eyebrowLg">
+          {t({ de: "Besser als 58 % der Cafés in Köln", en: "Better than 58% of cafés in Cologne" })}
+        </Eyebrow>
       </View>
 
       <Text variant="body" tone="secondary">
-        Offen · bringt dir{" "}
+        {t({ de: "Offen · bringt dir", en: "Open · earns you" })}{" "}
         <Text variant="body" tone="accent">
-          +{openPoints} Punkte
+          {t({ de: `+${openPoints} Punkte`, en: `+${openPoints} points` })}
         </Text>
       </Text>
 
@@ -82,13 +86,14 @@ function CheckRow({
   onToggle: () => void;
 }) {
   const theme = useTheme();
+  const t = useT();
 
   const row = (
     <Pressable
       onPress={onToggle}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: done }}
-      accessibilityLabel={`${item.title}, ${item.points} Punkte`}
+      accessibilityLabel={t({ de: `${item.title}, ${item.points} Punkte`, en: `${item.title}, ${item.points} points` })}
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",

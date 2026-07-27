@@ -58,3 +58,59 @@ export const briefingFixture: DailyBriefing = {
     },
   ],
 };
+
+/**
+ * Englische Fassung desselben Briefings für den DE/EN-Umschalter. Die `id`s sind
+ * absichtlich identisch mit der deutschen Fixture - der Store schlüsselt Aufgaben-Status
+ * darüber (`taskDone[id]`, `reviewAnswered[id]`), also darf sich nur der Anzeigetext
+ * ändern, nicht die IDs. Nicht-Anzeige-Felder (now, daypart, stats, ids) bleiben gleich.
+ */
+export const briefingFixtureEn: DailyBriefing = {
+  venue: {
+    id: "venue_goldstueck",
+    name: "Café Goldstück",
+    tagline: "Specialty coffee & house-made pastries",
+    city: "Cologne",
+    district: "Ehrenfeld",
+    street: "Körnerstr. 27",
+    timezone: "Europe/Berlin",
+    tags: ["Outdoor seating", "Vegan", "Wi-Fi"],
+  },
+  now: "2025-07-16T09:41:00+02:00",
+  daypart: "morning",
+  greeting: "Good morning,",
+  subline: "Three decisions, 6 minutes, then Maitr takes over.",
+  stats: { rating: 4.8, score: 64, impressions: 4812 },
+  tasks: [
+    {
+      id: "task_review_marion",
+      kind: "review",
+      eyebrow: "Review · 2 min",
+      title: "Marion is raving about the flat white — your reply is ready.",
+      draft:
+        "“Dear Marion, thank you so much! On Saturdays we bake an extra batch of cinnamon rolls …”",
+      impact: "+35% profile views",
+      estimatedMinutes: 2,
+      rating: 5,
+      primaryAction: { label: "Approve" },
+      secondaryAction: { label: "Edit" },
+    },
+    {
+      id: "task_post_zimtschnecken",
+      kind: "post",
+      eyebrow: "Post · 1 min",
+      title: "“Cinnamon rolls” · Thu 9:00",
+      impact: "Thu 9–11 am: +41% reach",
+      estimatedMinutes: 1,
+      primaryAction: { label: "Schedule" },
+    },
+    {
+      id: "task_profile_menu",
+      kind: "profile",
+      eyebrow: "Profile · +12 pts",
+      title: "Add your menu",
+      estimatedMinutes: 3,
+      primaryAction: { label: "Open" },
+    },
+  ],
+};

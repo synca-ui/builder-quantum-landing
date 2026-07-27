@@ -10,6 +10,7 @@ import { PhotoTile } from "../../components/ui/Media";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { POST_SLOTS, useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -27,6 +28,7 @@ export function PostEditorScreen({ postId }: { postId?: string }) {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { posts, updatePost, schedulePost } = useStore();
 
   const post = useMemo(() => posts.find((p) => p.id === postId) ?? posts[0], [posts, postId]);
@@ -41,20 +43,20 @@ export function PostEditorScreen({ postId }: { postId?: string }) {
   const save = () => {
     updatePost(post.id, { title: title.trim() || post.title, channels, when });
     schedulePost(post.id);
-    toast.show("Beitrag gespeichert & eingeplant");
+    toast.show(t({ de: "Beitrag gespeichert & eingeplant", en: "Post saved & scheduled" }));
     router.back();
   };
 
   return (
     <Screen contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Beitrag" />
+      <NavHeader title={t({ de: "Beitrag", en: "Post" })} />
 
       <Card padding={theme.spacing.lg} style={{ flexDirection: "row", gap: 14, alignItems: "center" }}>
-        <PhotoTile tone={post.tone} size={64} caption="foto" />
+        <PhotoTile tone={post.tone} size={64} caption={t({ de: "foto", en: "photo" })} />
         <View style={{ flex: 1 }}>
-          <Eyebrow>Vorschau</Eyebrow>
+          <Eyebrow>{t({ de: "Vorschau", en: "Preview" })}</Eyebrow>
           <Text variant="cardTitleSm" numberOfLines={2} style={{ marginTop: 2 }}>
-            {title || "Ohne Titel"}
+            {title || t({ de: "Ohne Titel", en: "Untitled" })}
           </Text>
         </View>
       </Card>
@@ -66,9 +68,9 @@ export function PostEditorScreen({ postId }: { postId?: string }) {
             value={title}
             onChangeText={setTitle}
             multiline
-            placeholder="Worum geht es?"
+            placeholder={t({ de: "Worum geht es?", en: "What's it about?" })}
             placeholderTextColor={theme.colors.textFaint}
-            accessibilityLabel="Beitragstext"
+            accessibilityLabel={t({ de: "Beitragstext", en: "Post text" })}
             style={[
               theme.text.body,
               { color: theme.colors.textPrimary, minHeight: 88, textAlignVertical: "top" },
@@ -78,7 +80,7 @@ export function PostEditorScreen({ postId }: { postId?: string }) {
       </View>
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Eyebrow>Kanäle</Eyebrow>
+        <Eyebrow>{t({ de: "Kanäle", en: "Channels" })}</Eyebrow>
         <View style={{ flexDirection: "row", gap: 9, flexWrap: "wrap" }}>
           {ALL_CHANNELS.map((c) => (
             <Chip
@@ -92,7 +94,7 @@ export function PostEditorScreen({ postId }: { postId?: string }) {
       </View>
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Eyebrow>Zeitpunkt</Eyebrow>
+        <Eyebrow>{t({ de: "Zeitpunkt", en: "Time" })}</Eyebrow>
         <View style={{ flexDirection: "row", gap: 9, flexWrap: "wrap" }}>
           {POST_SLOTS.map((slot) => (
             <Chip key={slot} label={slot} selected={when === slot} onPress={() => setWhen(slot)} />
@@ -101,7 +103,7 @@ export function PostEditorScreen({ postId }: { postId?: string }) {
       </View>
 
       <View style={{ marginTop: theme.spacing.sm }}>
-        <PillButton label="Speichern & einplanen" onPress={save} />
+        <PillButton label={t({ de: "Speichern & einplanen", en: "Save & schedule" })} onPress={save} />
       </View>
     </Screen>
   );

@@ -2,6 +2,7 @@ import { View, type ViewStyle } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
 import { useTheme } from "../../theme";
+import { useT } from "../../lib/i18n";
 import { Card } from "./Card";
 import { Eyebrow } from "./Eyebrow";
 import { Text } from "./Text";
@@ -101,6 +102,7 @@ export interface ScoreRingProps {
  */
 export function ScoreRing({ score, max = 100, size = 186 }: ScoreRingProps) {
   const theme = useTheme();
+  const t = useT();
 
   const strokeWidth = 13;
   const radius = size / 2 - strokeWidth / 2 - 8;
@@ -111,7 +113,7 @@ export function ScoreRing({ score, max = 100, size = 186 }: ScoreRingProps) {
     <View
       style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}
       accessibilityRole="progressbar"
-      accessibilityLabel={`Präsenzscore ${score} von ${max}`}
+      accessibilityLabel={t({ de: `Präsenzscore ${score} von ${max}`, en: `Presence score ${score} of ${max}` })}
       accessibilityValue={{ min: 0, max, now: score }}
     >
       <Svg width={size} height={size} style={{ position: "absolute" }}>
@@ -140,7 +142,7 @@ export function ScoreRing({ score, max = 100, size = 186 }: ScoreRingProps) {
         {score}
       </Text>
       <Eyebrow variant="eyebrowLg" style={{ marginTop: 2 }}>
-        von {max}
+        {t({ de: "von", en: "of" })} {max}
       </Eyebrow>
     </View>
   );
@@ -159,12 +161,13 @@ export function Stars({
   color?: string;
 }) {
   const theme = useTheme();
+  const t = useT();
   const filled = Math.round(rating);
 
   return (
     <Text
       style={{ fontSize: size, letterSpacing: 2 }}
-      accessibilityLabel={`${rating} von ${max} Sternen`}
+      accessibilityLabel={t({ de: `${rating} von ${max} Sternen`, en: `${rating} of ${max} stars` })}
     >
       <Text color={color ?? theme.colors.accent} style={{ fontSize: size, letterSpacing: 2 }}>
         {"★".repeat(filled)}

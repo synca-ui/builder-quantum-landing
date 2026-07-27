@@ -8,6 +8,7 @@ import { LinkAction, PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Emphasis, Text } from "../../components/ui/Text";
 import { useAppearance } from "../../lib/appearance";
+import { useT } from "../../lib/i18n";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 
@@ -33,6 +34,7 @@ export const eveningBriefing = {
  */
 export function EveningScreen() {
   const theme = useTheme();
+  const t = useT();
   const toast = useToast();
   const { toggleNightMode } = useAppearance();
   const [planned, setPlanned] = useState(false);
@@ -48,40 +50,60 @@ export function EveningScreen() {
           accessibilityRole="header"
           style={{ fontSize: 30, lineHeight: 33, marginTop: 2 }}
         >
-          Guten Abend, <Emphasis variant="screenTitle" style={{ fontSize: 30 }}>{eveningBriefing.venueName}</Emphasis>
+          {t({ de: "Guten Abend, ", en: "Good evening, " })}
+          <Emphasis variant="screenTitle" style={{ fontSize: 30 }}>{eveningBriefing.venueName}</Emphasis>
         </Text>
       </View>
 
       <Card variant="sunken" padding={theme.spacing.xl} style={{ gap: 14 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text variant="cardTitleSm" style={{ fontSize: 18 }}>
-            Heute Abend
+            {t({ de: "Heute Abend", en: "Tonight" })}
           </Text>
-          <Eyebrow>{eveningBriefing.tablesLabel}</Eyebrow>
+          <Eyebrow>{t({ de: eveningBriefing.tablesLabel, en: "3 of 8 tables" })}</Eyebrow>
         </View>
 
         <View style={{ flexDirection: "row", gap: theme.spacing.lg }}>
           <Metric
             value={eveningBriefing.nextArrival.time}
-            label={eveningBriefing.nextArrival.label}
+            label={t({ de: eveningBriefing.nextArrival.label, en: "Next arrival · M. Weber" })}
             highlight
           />
-          <Metric value={String(eveningBriefing.walkIns.count)} label={eveningBriefing.walkIns.label} />
+          <Metric
+            value={String(eveningBriefing.walkIns.count)}
+            label={t({ de: eveningBriefing.walkIns.label, en: "Walk-ins open" })}
+          />
         </View>
       </Card>
 
       <Card variant="sunken" padding={theme.spacing.xl} style={{ gap: 10 }}>
-        <Eyebrow tone="accent">{eveningBriefing.quietMoment.eyebrow}</Eyebrow>
-        <Text variant="cardTitle">{eveningBriefing.quietMoment.title}</Text>
+        <Eyebrow tone="accent">
+          {t({ de: eveningBriefing.quietMoment.eyebrow, en: "Quiet moment · 1 min" })}
+        </Eyebrow>
+        <Text variant="cardTitle">
+          {t({
+            de: eveningBriefing.quietMoment.title,
+            en: `Approve the “Zimtschnecken” post for tomorrow 9:00`,
+          })}
+        </Text>
         <PillButton
-          label={planned ? "Eingeplant ✓" : eveningBriefing.quietMoment.action}
+          label={
+            planned
+              ? t({ de: "Eingeplant ✓", en: "Scheduled ✓" })
+              : t({ de: eveningBriefing.quietMoment.action, en: "Approve" })
+          }
           variant={planned ? "outline" : "primary"}
           onPress={
             planned
               ? undefined
               : () => {
                   setPlanned(true);
-                  toast.show("Beitrag für morgen 9:00 eingeplant");
+                  toast.show(
+                    t({
+                      de: "Beitrag für morgen 9:00 eingeplant",
+                      en: "Post scheduled for tomorrow 9:00",
+                    }),
+                  );
                 }
           }
           style={{ borderRadius: theme.radius.control, marginTop: 2 }}
@@ -107,13 +129,17 @@ export function EveningScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <Text variant="numeric" style={{ fontSize: 16 }}>
-            Nachtbar Modus aktiv
+            {t({ de: "Nachtbar Modus aktiv", en: "Night mode active" })}
           </Text>
           <Text variant="bodySm" tone="secondary" style={{ fontSize: 13, marginTop: 1 }}>
-            Schaltet abends automatisch um.
+            {t({ de: "Schaltet abends automatisch um.", en: "Switches on automatically in the evening." })}
           </Text>
         </View>
-        <LinkAction label="Ausschalten" labelSize={14} onPress={toggleNightMode} />
+        <LinkAction
+          label={t({ de: "Ausschalten", en: "Turn off" })}
+          labelSize={14}
+          onPress={toggleNightMode}
+        />
       </Card>
     </Screen>
   );

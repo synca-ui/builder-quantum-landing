@@ -10,6 +10,7 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -27,6 +28,7 @@ export function MenuScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { menu, addMenuItem, removeMenuItem } = useStore();
 
   const [name, setName] = useState("");
@@ -36,7 +38,7 @@ export function MenuScreen() {
   const add = () => {
     if (!name.trim()) return;
     addMenuItem({ name: name.trim(), price: price.trim() || "—", category });
-    toast.show("Gericht hinzugefügt");
+    toast.show(t({ de: "Gericht hinzugefügt", en: "Dish added" }));
     setName("");
     setPrice("");
   };
@@ -56,16 +58,18 @@ export function MenuScreen() {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Speisekarte" />
+      <NavHeader title={t({ de: "Speisekarte", en: "Menu" })} />
 
       {menu.length === 0 ? (
         <Card emphasis="subtle" padding={theme.spacing.xl} style={{ alignItems: "center", gap: theme.spacing.sm }}>
           <Text variant="cardTitle" style={{ textAlign: "center" }}>
-            Noch keine Gerichte
+            {t({ de: "Noch keine Gerichte", en: "No dishes yet" })}
           </Text>
           <Text variant="bodySm" tone="secondary" style={{ textAlign: "center", fontSize: 14.5 }}>
-            53 % der Gäste schauen vorab. Leg dein erstes Gericht an - das bringt +12 Punkte im
-            Präsenzscore.
+            {t({
+              de: "53 % der Gäste schauen vorab. Leg dein erstes Gericht an - das bringt +12 Punkte im Präsenzscore.",
+              en: "53% of guests check first. Add your first dish - it earns +12 points on your presence score.",
+            })}
           </Text>
         </Card>
       ) : (
@@ -94,7 +98,7 @@ export function MenuScreen() {
                   <Pressable
                     onPress={() => removeMenuItem(item.id)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${item.name} entfernen`}
+                    accessibilityLabel={t({ de: `${item.name} entfernen`, en: `Remove ${item.name}` })}
                     hitSlop={10}
                   >
                     <Text variant="numeric" tone="faint" style={{ fontSize: 20 }}>
@@ -110,14 +114,14 @@ export function MenuScreen() {
 
       {/* Neues Gericht */}
       <Card padding={theme.spacing.lg} style={{ gap: theme.spacing.md }}>
-        <Eyebrow>Neues Gericht</Eyebrow>
+        <Eyebrow>{t({ de: "Neues Gericht", en: "New dish" })}</Eyebrow>
         <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="Name (z. B. Flat White)"
+            placeholder={t({ de: "Name (z. B. Flat White)", en: "Name (e.g. Flat White)" })}
             placeholderTextColor={theme.colors.textFaint}
-            accessibilityLabel="Name des Gerichts"
+            accessibilityLabel={t({ de: "Name des Gerichts", en: "Dish name" })}
             style={[theme.text.body, field, { flex: 1 }]}
           />
           <TextInput
@@ -125,7 +129,7 @@ export function MenuScreen() {
             onChangeText={setPrice}
             placeholder="4,20 €"
             placeholderTextColor={theme.colors.textFaint}
-            accessibilityLabel="Preis"
+            accessibilityLabel={t({ de: "Preis", en: "Price" })}
             style={[theme.text.body, field, { width: 96 }]}
           />
         </View>
@@ -135,14 +139,18 @@ export function MenuScreen() {
           ))}
         </View>
         <PillButton
-          label="Gericht hinzufügen"
+          label={t({ de: "Gericht hinzufügen", en: "Add dish" })}
           variant="ink"
           icon={<PlusIcon size={18} color={theme.colors.onInkAction} />}
           onPress={add}
         />
       </Card>
 
-      <PillButton label="Fertig" variant="outline" onPress={() => router.back()} />
+      <PillButton
+        label={t({ de: "Fertig", en: "Done" })}
+        variant="outline"
+        onPress={() => router.back()}
+      />
     </Screen>
   );
 }

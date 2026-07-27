@@ -3,16 +3,19 @@ import { Platform, type TextStyle } from "react-native";
 /**
  * Typografie aus dem Design-System.
  *
- * Ein Schnitt in zwei Stilen: Familjen Grotesk Regular + Italic (SIL OFL). Familjen
- * hat keine separaten optischen Größen, daher nutzen Display und Fließtext denselben
- * Regular- bzw. Italic-Schnitt (nur andere Größen/Laufweiten). Ohne geladene Dateien
- * fällt alles auf die Systemschrift zurück - die App läuft, nur die Anmutung fehlt.
+ * Markenschrift (in Erprobung, Hybrid): Bricolage Grotesque (SIL OFL) mit echten
+ * optischen Größen für alle AUFRECHTEN Rollen - Überschriften „Display" (opsz 36),
+ * Fließtext „Text" (opsz 14). Bricolage hat keine eigene Kursive, daher nutzen die
+ * KURSIVEN Rollen weiterhin Familjen Grotesk Italic (echte Kursive), damit die
+ * Signatur-Schrägstellung („Café Goldstück", Zitate) erhalten bleibt. Ohne geladene
+ * Dateien fällt alles auf die Systemschrift zurück. (Zurück zu Familjen: alle vier
+ * Namen unten auf `FamiljenGrotesk-Regular`/`-Italic`.)
  */
 
 export const fontFamily = {
-  display: "FamiljenGrotesk-Regular",
+  display: "BricolageGrotesque-Display",
   displayItalic: "FamiljenGrotesk-Italic",
-  text: "FamiljenGrotesk-Regular",
+  text: "BricolageGrotesque-Text",
   textItalic: "FamiljenGrotesk-Italic",
 } as const;
 

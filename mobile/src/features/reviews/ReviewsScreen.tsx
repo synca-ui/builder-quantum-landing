@@ -10,6 +10,7 @@ import { LinkAction, PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { ScreenHeader } from "../../components/ui/ScreenHeader";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -64,6 +65,7 @@ export function ReviewsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const { reviewAnswered, answerReview } = useStore();
 
   const isAnswered = (r: Review) => Boolean(reviewAnswered[r.id]);
@@ -71,14 +73,14 @@ export function ReviewsScreen() {
 
   const release = (review: Review) => {
     answerReview(review.id, review.author);
-    toast.show("Antwort veröffentlicht");
+    toast.show(t({ de: "Antwort veröffentlicht", en: "Reply published" }));
   };
 
   return (
     <Screen withTabBar contentStyle={{ gap: theme.spacing.lg }}>
       <NavHeader fallback="/start" />
       <ScreenHeader
-        title="Bewertungen"
+        title={t({ de: "Bewertungen", en: "Reviews" })}
         trailing={
           <View style={{ alignItems: "flex-end" }}>
             {/* lineHeight muss mitwachsen, sonst wird die große Zahl oben abgeschnitten. */}
@@ -102,10 +104,13 @@ export function ReviewsScreen() {
       >
         <View>
           <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 17 }}>
-            {open} wartet auf Antwort
+            {t({ de: `${open} wartet auf Antwort`, en: `${open} awaiting a reply` })}
           </Text>
           <Eyebrow color={onDarkPanel.meta} style={{ marginTop: 2 }}>
-            Ø Antwortzeit 3 Std · Top 10 % in Köln
+            {t({
+              de: "Ø Antwortzeit 3 Std · Top 10 % in Köln",
+              en: "Avg. reply time 3 hrs · Top 10% in Cologne",
+            })}
           </Eyebrow>
         </View>
         <View
@@ -149,6 +154,7 @@ function ReviewCard({
   onEdit: () => void;
 }) {
   const theme = useTheme();
+  const t = useT();
 
   return (
     <Card
@@ -197,7 +203,7 @@ function ReviewCard({
           }}
         >
           <Eyebrow tone="accent" style={{ fontSize: 10 }}>
-            Maitr Vorschlag · {review.suggestion.tone}
+            {t({ de: "Maitr Vorschlag", en: "Maitr suggestion" })} · {review.suggestion.tone}
           </Eyebrow>
           <Text variant="quote" tone="secondary" style={{ fontSize: 14 }}>
             {review.suggestion.text}
@@ -207,8 +213,13 @@ function ReviewCard({
 
       {!answered ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          <PillButton label="Freigeben" size="compact" style={{ flex: 1 }} onPress={onRelease} />
-          <LinkAction label="Anpassen" onPress={onEdit} />
+          <PillButton
+            label={t({ de: "Freigeben", en: "Approve" })}
+            size="compact"
+            style={{ flex: 1 }}
+            onPress={onRelease}
+          />
+          <LinkAction label={t({ de: "Anpassen", en: "Adjust" })} onPress={onEdit} />
         </View>
       ) : null}
     </Card>

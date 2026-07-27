@@ -11,15 +11,16 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT, type Localized } from "../../lib/i18n";
 import { useVenueDataset } from "../../lib/analytics";
 import { useStore, type MediaTone } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 
-const TONES: { key: MediaTone; label: string }[] = [
-  { key: "warm", label: "Warm" },
-  { key: "honey", label: "Honig" },
-  { key: "cool", label: "Kühl" },
+const TONES: { key: MediaTone; label: Localized }[] = [
+  { key: "warm", label: { de: "Warm", en: "Warm" } },
+  { key: "honey", label: { de: "Honig", en: "Honey" } },
+  { key: "cool", label: { de: "Kühl", en: "Cool" } },
 ];
 
 /** Ein-Tap-Starter statt leerem Blatt - „diktieren" ohne Tastatur. */
@@ -40,6 +41,7 @@ export function QuickPostScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const dataset = useVenueDataset();
   const { createQuickPost } = useStore();
   const [tone, setTone] = useState<MediaTone>("warm");
@@ -53,34 +55,37 @@ export function QuickPostScreen() {
   const plan = () => {
     const text = note.trim() || STARTERS[0];
     createQuickPost({ note: text, tone, when, channels });
-    toast.show(`Beitrag für ${when} geplant`);
+    toast.show(t({ de: `Beitrag für ${when} geplant`, en: `Post scheduled for ${when}` }));
     router.back();
   };
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Schnell posten" onBack={() => router.back()} />
+      <NavHeader title={t({ de: "Schnell posten", en: "Quick post" })} onBack={() => router.back()} />
 
       <Text variant="body" tone="secondary" style={{ fontSize: 15, lineHeight: 22 }}>
-        Foto-Stimmung wählen, ein, zwei Worte — Maitr textet und plant zur stärksten Stunde.
+        {t({
+          de: "Foto-Stimmung wählen, ein, zwei Worte — Maitr textet und plant zur stärksten Stunde.",
+          en: "Pick a photo mood, add a word or two — Maitr writes the copy and schedules it for your peak hour.",
+        })}
       </Text>
 
       <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
-        {TONES.map((t) => (
+        {TONES.map((option) => (
           <Pressable
-            key={t.key}
-            onPress={() => setTone(t.key)}
+            key={option.key}
+            onPress={() => setTone(option.key)}
             accessibilityRole="button"
-            accessibilityLabel={`Foto-Stimmung ${t.label}`}
+            accessibilityLabel={`${t({ de: "Foto-Stimmung", en: "Photo mood" })} ${t(option.label)}`}
             style={{ flex: 1, alignItems: "center", gap: 6 }}
           >
             <PhotoTile
-              tone={t.key}
+              tone={option.key}
               size={96}
               radius={theme.radius.tile}
-              style={tone === t.key ? { borderWidth: 2, borderColor: theme.colors.primary } : {}}
+              style={tone === option.key ? { borderWidth: 2, borderColor: theme.colors.primary } : {}}
             />
-            <Eyebrow tone={tone === t.key ? "accent" : "muted"}>{t.label}</Eyebrow>
+            <Eyebrow tone={tone === option.key ? "accent" : "muted"}>{t(option.label)}</Eyebrow>
           </Pressable>
         ))}
       </View>
@@ -88,9 +93,9 @@ export function QuickPostScreen() {
       <TextInput
         value={note}
         onChangeText={setNote}
-        placeholder="Was gibt's Neues?"
+        placeholder={t({ de: "Was gibt's Neues?", en: "What's new?" })}
         placeholderTextColor={theme.colors.textFaint}
-        accessibilityLabel="Beitragstext"
+        accessibilityLabel={t({ de: "Beitragstext", en: "Post text" })}
         maxFontSizeMultiplier={1.8}
         multiline
         style={[
@@ -108,7 +113,7 @@ export function QuickPostScreen() {
       />
 
       <View style={{ gap: 8 }}>
-        <Eyebrow>Vorschläge zum Antippen</Eyebrow>
+        <Eyebrow>{t({ de: "Vorschläge zum Antippen", en: "Tap to use a suggestion" })}</Eyebrow>
         {STARTERS.map((s) => (
           <Pressable key={s} onPress={() => setNote(s)} accessibilityRole="button">
             <Card
@@ -128,16 +133,17 @@ export function QuickPostScreen() {
       </View>
 
       <DarkPanel style={{ gap: 4 }}>
-        <Eyebrow color={onDarkPanel.accent}>Maitr plant</Eyebrow>
+        <Eyebrow color={onDarkPanel.accent}>{t({ de: "Maitr plant", en: "Maitr schedules" })}</Eyebrow>
         <Text variant="bodySm" color={onDarkPanel.title} style={{ fontSize: 15 }}>
           {when} · {channels.join(" + ")}
         </Text>
         <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13 }}>
-          Deine stärkste Stunde{uplift ? ` · +${uplift} % Reichweite` : ""}.
+          {t({ de: "Deine stärkste Stunde", en: "Your peak hour" })}
+          {uplift ? ` · +${uplift} % ${t({ de: "Reichweite", en: "reach" })}` : ""}.
         </Text>
       </DarkPanel>
 
-      <PillButton label="Beitrag planen" onPress={plan} />
+      <PillButton label={t({ de: "Beitrag planen", en: "Schedule post" })} onPress={plan} />
     </Screen>
   );
 }

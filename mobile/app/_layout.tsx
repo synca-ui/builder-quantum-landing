@@ -9,6 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { OpeningAnimation } from "../src/components/OpeningAnimation";
 import { AppearanceProvider, useAppearance } from "../src/lib/appearance";
+import { LanguageProvider } from "../src/lib/i18n";
 import { bootstrapCore } from "../src/lib/bootstrap";
 import { AppStateProvider, useStore } from "../src/lib/store";
 import { ToastProvider } from "../src/lib/toast";
@@ -38,11 +39,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AppStateProvider>
-          <AppearanceProvider>
-            <ThemedApp fontsLoaded={brandFontActive} />
-          </AppearanceProvider>
-        </AppStateProvider>
+        <LanguageProvider>
+          <AppStateProvider>
+            <AppearanceProvider>
+              <ThemedApp fontsLoaded={brandFontActive} />
+            </AppearanceProvider>
+          </AppStateProvider>
+        </LanguageProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

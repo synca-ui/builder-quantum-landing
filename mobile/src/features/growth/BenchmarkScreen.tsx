@@ -7,10 +7,11 @@ import { Eyebrow } from "../../components/ui/Eyebrow";
 import { NavHeader } from "../../components/ui/NavHeader";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useT } from "../../lib/i18n";
 import { useTheme } from "../../theme";
 
 interface Row {
-  label: string;
+  label: { de: string; en: string };
   you: string;
   peer: string;
   /** 0-100, Position im Viertel. */
@@ -18,10 +19,10 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { label: "Bewertung", you: "4,8", peer: "4,3", percentile: 88 },
-  { label: "Antwortquote", you: "100 %", peer: "61 %", percentile: 92 },
-  { label: "Aufrufe / Monat", you: "4.812", peer: "3.100", percentile: 74 },
-  { label: "Reservierungen", you: "61", peer: "38", percentile: 81 },
+  { label: { de: "Bewertung", en: "Rating" }, you: "4,8", peer: "4,3", percentile: 88 },
+  { label: { de: "Antwortquote", en: "Response rate" }, you: "100 %", peer: "61 %", percentile: 92 },
+  { label: { de: "Aufrufe / Monat", en: "Views / month" }, you: "4.812", peer: "3.100", percentile: 74 },
+  { label: { de: "Reservierungen", en: "Reservations" }, you: "61", peer: "38", percentile: 81 },
 ];
 
 /**
@@ -34,29 +35,32 @@ const ROWS: Row[] = [
 export function BenchmarkScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const t = useT();
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Köln-Index" onBack={() => router.back()} />
+      <NavHeader title={t({ de: "Köln-Index", en: "Cologne Index" })} onBack={() => router.back()} />
 
       <DarkPanel style={{ gap: 4 }}>
-        <Eyebrow color={onDarkPanel.accent}>Ehrenfeld · anonymer Vergleich</Eyebrow>
+        <Eyebrow color={onDarkPanel.accent}>{t({ de: "Ehrenfeld · anonymer Vergleich", en: "Ehrenfeld · anonymous comparison" })}</Eyebrow>
         <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 34 }}>
           Top 12 %
         </Text>
         <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
-          Besser als 58 % der Cafés in Köln. Diese Woche +14 % Nachfrage im Viertel — richte
-          Einkauf &amp; Personal danach aus.
+          {t({
+            de: "Besser als 58 % der Cafés in Köln. Diese Woche +14 % Nachfrage im Viertel — richte Einkauf & Personal danach aus.",
+            en: "Better than 58% of cafés in Cologne. Demand in the neighborhood is +14% this week — plan buying & staffing around it.",
+          })}
         </Text>
       </DarkPanel>
 
       <View style={{ gap: theme.spacing.sm }}>
-        <Eyebrow>Du vs. Nachbarschaft</Eyebrow>
+        <Eyebrow>{t({ de: "Du vs. Nachbarschaft", en: "You vs. neighborhood" })}</Eyebrow>
         {ROWS.map((r) => (
-          <Card key={r.label} emphasis="subtle" padding={14} style={{ gap: 8, borderRadius: 14 }}>
+          <Card key={r.label.de} emphasis="subtle" padding={14} style={{ gap: 8, borderRadius: 14 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
               <Text variant="cardTitleSm" style={{ fontSize: 15 }}>
-                {r.label}
+                {t(r.label)}
               </Text>
               <Text variant="numeric" tone="accent" style={{ fontSize: 14 }}>
                 {r.you}{" "}
@@ -67,7 +71,7 @@ export function BenchmarkScreen() {
             </View>
             <View
               accessibilityRole="progressbar"
-              accessibilityLabel={`${r.label} im Viertel-Vergleich`}
+              accessibilityLabel={t({ de: `${t(r.label)} im Viertel-Vergleich`, en: `${t(r.label)} vs. the neighborhood` })}
               accessibilityValue={{ min: 0, max: 100, now: r.percentile }}
               style={{
                 height: 6,
@@ -85,7 +89,10 @@ export function BenchmarkScreen() {
       </View>
 
       <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-        Anonymisiert &amp; aggregiert — nie an Plattformen verkauft.
+        {t({
+          de: "Anonymisiert & aggregiert — nie an Plattformen verkauft.",
+          en: "Anonymized & aggregated — never sold to platforms.",
+        })}
       </Eyebrow>
     </Screen>
   );

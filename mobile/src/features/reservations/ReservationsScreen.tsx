@@ -11,6 +11,7 @@ import { ScreenHeader } from "../../components/ui/ScreenHeader";
 import { Emphasis, Text } from "../../components/ui/Text";
 import { Timeline } from "../../components/ui/Timeline";
 import { ClockIcon } from "../../components/icons";
+import { useT } from "../../lib/i18n";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -26,6 +27,7 @@ export function ReservationsScreen() {
   const theme = useTheme();
   const toast = useToast();
   const router = useRouter();
+  const t = useT();
   const { days, addReservation, toggleTableBlock, markReservationNoShow } = useStore();
   const [index, setIndex] = useState(0);
   const day = days[index];
@@ -37,7 +39,7 @@ export function ReservationsScreen() {
     // Walk-in zur nächsten vollen Stunde im Servicefenster, 2 Personen.
     const from = Math.min(day.serviceFrom + 1, day.serviceTo - 1);
     addReservation({ dayId: day.id, guest: "Walk in", partySize: 2, from });
-    toast.show("Walk in eingetragen");
+    toast.show(t({ de: "Walk in eingetragen", en: "Walk-in added" }));
   };
 
   const toggleBlock = () => {
@@ -45,20 +47,28 @@ export function ReservationsScreen() {
     const blocked = day.tables.find((t) => t.blockedReason);
     const target = blocked ?? day.tables[day.tables.length - 1];
     toggleTableBlock(day.id, target.id);
-    toast.show(blocked ? "Tisch entsperrt" : "Tisch gesperrt");
+    toast.show(
+      blocked
+        ? t({ de: "Tisch entsperrt", en: "Table unblocked" })
+        : t({ de: "Tisch gesperrt", en: "Table blocked" }),
+    );
   };
 
   return (
     <Screen withTabBar contentStyle={{ gap: theme.spacing.lg }}>
       <ScreenHeader
-        title="Reservierung"
+        title={t({ de: "Reservierung", en: "Reservations" })}
         period={day.label.toUpperCase()}
         onPrevious={() => step(-1)}
         onNext={() => step(1)}
       />
 
       <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: -theme.spacing.sm }}>
-        <LinkAction label="Gäste verwalten ›" labelSize={14} onPress={() => router.push("/gaeste")} />
+        <LinkAction
+          label={t({ de: "Gäste verwalten ›", en: "Manage guests ›" })}
+          labelSize={14}
+          onPress={() => router.push("/gaeste")}
+        />
       </View>
 
       {day.state === "full" ? (
@@ -72,17 +82,23 @@ export function ReservationsScreen() {
             }}
           >
             <Eyebrow color={theme.colors.onInkAction} style={{ fontSize: 13 }}>
-              Ausgebucht
+              {t({ de: "Ausgebucht", en: "Fully booked" })}
             </Eyebrow>
           </View>
           <Text variant="body" tone="secondary">
-            {day.seatsReserved} von {day.seatsTotal} Plätzen reserviert
+            {t({
+              de: `${day.seatsReserved} von ${day.seatsTotal} Plätzen reserviert`,
+              en: `${day.seatsReserved} of ${day.seatsTotal} seats reserved`,
+            })}
           </Text>
         </View>
       ) : day.state === "partial" ? (
         <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.lg }}>
           <Text variant="sectionTitle" style={{ fontSize: 20, lineHeight: 24 }}>
-            {day.seatsReserved} von {day.seatsTotal} Plätzen{"\n"}heute reserviert
+            {t({
+              de: `${day.seatsReserved} von ${day.seatsTotal} Plätzen\nheute reserviert`,
+              en: `${day.seatsReserved} of ${day.seatsTotal} seats\nreserved today`,
+            })}
           </Text>
           <Eyebrow style={{ textAlign: "right", maxWidth: 110 }}>{day.serviceLabel}</Eyebrow>
         </View>
@@ -103,7 +119,7 @@ export function ReservationsScreen() {
       ) : (
         <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
           <PillButton
-            label="+ Walk in eintragen"
+            label={t({ de: "+ Walk in eintragen", en: "+ Add walk-in" })}
             variant="outline"
             size="compact"
             labelSize={14}
@@ -111,7 +127,11 @@ export function ReservationsScreen() {
             style={{ flex: 1, paddingHorizontal: theme.spacing.sm }}
           />
           <PillButton
-            label={day.tables.some((t) => t.blockedReason) ? "Tisch entsperren" : "Tisch sperren"}
+            label={
+              day.tables.some((tbl) => tbl.blockedReason)
+                ? t({ de: "Tisch entsperren", en: "Unblock table" })
+                : t({ de: "Tisch sperren", en: "Block table" })
+            }
             variant="outline"
             size="compact"
             labelSize={14}
@@ -136,7 +156,9 @@ export function ReservationsScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text variant="bodySm" style={{ fontSize: 15 }}>
-              Nächste Ankunft: <Emphasis variant="bodySm">{day.nextArrival.guest}</Emphasis> um{" "}
+              {t({ de: "Nächste Ankunft: ", en: "Next arrival: " })}
+              <Emphasis variant="bodySm">{day.nextArrival.guest}</Emphasis>
+              {t({ de: " um", en: " at" })}{" "}
               {day.nextArrival.time}
             </Text>
             <Eyebrow style={{ marginTop: 3 }}>{day.nextArrival.meta}</Eyebrow>
@@ -148,7 +170,7 @@ export function ReservationsScreen() {
             onPress={() => {
               const guest = day.nextArrival!.guest;
               markReservationNoShow(day.id, guest);
-              toast.show(`${guest}: Tisch wieder frei`);
+              toast.show(t({ de: `${guest}: Tisch wieder frei`, en: `${guest}: table free again` }));
             }}
           />
         </Card>
@@ -161,6 +183,7 @@ export function ReservationsScreen() {
 function EmptyDay() {
   const theme = useTheme();
   const toast = useToast();
+  const t = useT();
 
   return (
     <View style={{ alignItems: "center", gap: theme.spacing.lg, paddingVertical: theme.spacing.xl }}>
@@ -180,7 +203,7 @@ function EmptyDay() {
       </View>
 
       <Text variant="screenTitle" style={{ fontSize: 27, lineHeight: 31, textAlign: "center" }}>
-        Noch keine{"\n"}Reservierungen
+        {t({ de: `Noch keine\nReservierungen`, en: `No reservations\nyet` })}
       </Text>
 
       <Text
@@ -188,14 +211,16 @@ function EmptyDay() {
         tone="secondary"
         style={{ fontSize: 15.5, lineHeight: 23, textAlign: "center", maxWidth: 300 }}
       >
-        Dienstag ist ruhig, dein Buchungslink ist aktiv. Teile ihn im Google Profil und auf
-        Instagram, Maitr trägt Buchungen automatisch ein.
+        {t({
+          de: "Dienstag ist ruhig, dein Buchungslink ist aktiv. Teile ihn im Google Profil und auf Instagram, Maitr trägt Buchungen automatisch ein.",
+          en: "Tuesday is quiet and your booking link is live. Share it on your Google profile and Instagram, and Maitr adds bookings automatically.",
+        })}
       </Text>
 
       <PillButton
-        label="Buchungslink teilen"
+        label={t({ de: "Buchungslink teilen", en: "Share booking link" })}
         style={{ paddingHorizontal: 34 }}
-        onPress={() => toast.show("Buchungslink kopiert")}
+        onPress={() => toast.show(t({ de: "Buchungslink kopiert", en: "Booking link copied" }))}
       />
     </View>
   );
