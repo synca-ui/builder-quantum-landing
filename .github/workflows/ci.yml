@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Kein `version:` — die pnpm-Version kommt aus dem `packageManager`-Feld in
+      # package.json. Beides zugleich anzugeben bricht mit "Multiple versions of pnpm".
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.14.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -58,9 +58,9 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      # Kein `version:` — die pnpm-Version kommt aus dem `packageManager`-Feld in
+      # package.json. Beides zugleich anzugeben bricht mit "Multiple versions of pnpm".
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.14.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22

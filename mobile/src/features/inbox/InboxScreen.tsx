@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter, type Href } from "expo-router";
 
@@ -12,7 +13,7 @@ import { useStore, type InboxItem, type InboxKind } from "../../lib/store";
 import { useTheme } from "../../theme";
 
 /** Icon je Ereignistyp - dieselbe Sprache wie die Tabbar. */
-const KIND_ICON: Record<InboxKind, (p: IconProps) => JSX.Element> = {
+const KIND_ICON: Record<InboxKind, (p: IconProps) => ReactElement> = {
   review: StarIcon,
   reservation: TableIcon,
   post: PostIcon,
