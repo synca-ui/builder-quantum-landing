@@ -43,6 +43,11 @@ model Business {
   socialLinks        Json?
   contactInfo        Json?
   maitrScore         Int                 @default(0)
+  // Maitr-Präsenz-Felder (füttern @maitr/core/analytics)
+  timezone           String              @default("Europe/Berlin")
+  averageCheck       Float               @default(9)
+  tags               String[]            @default([])
+  profileSignals     Json?
   originalPdfUrl     String?
   status             BusinessStatus      @default(DRAFT)
   createdAt          DateTime            @default(now())
@@ -56,6 +61,13 @@ model Business {
   orders             Order[]
   reservations       Reservation[]
   tables             Table[]
+
+  // Maitr Presence Relations (NEW)
+  maitrGuests        MaitrGuest[]
+  maitrReviews       MaitrReview[]
+  engagementPoints   MaitrEngagementPoint[]
+  channelConnections ChannelConnection[]
+  insightsCaches     InsightsCache[]
 
   // Staff Management Relations (NEW)
   staff              Staff[]
@@ -691,4 +703,101 @@ enum OrderType {
   DINE_IN
   TAKEOUT
   DELIVERY
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Maitr Presence & Analytics
+//
+// Diese Tabellen füttern @maitr/core/analytics. Sie sind bewusst quellenneutral
+// (source-Feld) und mandantengebunden (businessId) - jede Zeile gehört genau
+// einem Betrieb; die API erzwingt das über requireVenueAccess.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ChannelProvider {
+  GOOGLE
+  META
+}
+
+enum ConnectionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+/// Dem Betrieb gehörende Gästebeziehung (der verteidigbare Kern). → GuestRecord
+model MaitrGuest {
+  id         String   @id @default(uuid())
+  businessId String
+  name       String
+  phone      String?
+  firstVisit DateTime
+  lastVisit  DateTime
+  visits     Int      @default(1)
+  noShows    Int      @default(0)
+  tags       String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, lastVisit])
+}
+
+/// Normalisierte Bewertung aus Google/Meta. externalId = Idempotenz beim Sync. → ReviewRecord
+model MaitrReview {
+  id         String   @id @default(uuid())
+  businessId String
+  source     String
+  externalId String
+  rating     Int
+  text       String
+  createdAtSource DateTime
+  repliedAt  DateTime?
+  createdAt  DateTime @default(now())
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Mandantengebunden: dieselbe externe Review-ID darf pro Betrieb existieren, ohne
+  // dass der Sync eines Betriebs die Zeile eines anderen überschreibt (geteilte Konten).
+  @@unique([businessId, source, externalId])
+  @@index([businessId, createdAtSource])
+}
+
+/// Stündliche Reichweite/Interaktion aus den Insights-APIs. → EngagementPoint
+model MaitrEngagementPoint {
+  id          String   @id @default(uuid())
+  businessId  String
+  source      String
+  at          DateTime
+  impressions Int      @default(0)
+  actions     Int      @default(0)
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, source, at])
+  @@index([businessId, at])
+}
+
+/// Verbundener Kanal. Tokens NUR verschlüsselt (AES-256-GCM), nie im Klartext. → ConnectionTokens
+model ChannelConnection {
+  id              String           @id @default(uuid())
+  businessId      String
+  provider        ChannelProvider
+  accountId       String
+  encAccessToken  String
+  encRefreshToken String?
+  expiresAt       DateTime
+  scopes          String[]         @default([])
+  status          ConnectionStatus @default(ACTIVE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, provider])
+}
+
+/// Gecachtes Analytics-Ergebnis, damit /briefing/today nicht bei jedem Aufruf neu rechnet.
+model InsightsCache {
+  id         String   @id @default(uuid())
+  businessId String   @unique
+  computedAt DateTime @default(now())
+  result     Json
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 }

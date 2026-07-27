@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["client/*"],
+      "@shared/*": ["shared/*"],
+      "@maitr/core": ["packages/core/src/index.ts"],
+      "@maitr/core/*": ["packages/core/src/*"]
+    }
+  },
+  "include": ["./**/*", "../../packages/core/src/**/*"]
+}

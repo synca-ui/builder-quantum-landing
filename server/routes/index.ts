@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { webAppsRouter, publicAppsRouter } from "./webapps";
-import { configurationsRouter, getPublishedSite } from "./configurations";
+import { configurationsRouter } from "./configurations";
 import { getConfigBySlug } from "./config";
 import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
@@ -8,7 +8,6 @@ import templatesRouter from "./templates";
 import scraperRouter from "./scraper";
 import subscriptionsRouter from "./subscriptions";
 import { subdomainsRouter } from "./subdomains";
-import { handleForwardN8n } from "./n8nProxy";
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
 import staffRouter from "./staff";
@@ -168,14 +167,17 @@ apiRouter.use("/public/reservations", publicReservationsRouter);
 
 // Standalone configuration routes (for backward compatibility)
 apiRouter.get("/config/:slug", getConfigBySlug);
-apiRouter.get("/sites/:subdomain", getPublishedSite);
+// NOTE: "/sites/:subdomain" is deliberately NOT registered here. The apiRouter is
+// mounted on /api before the rate-limited registration in server/index.ts, so a copy
+// here would shadow it and serve every request without the anti-enumeration limiter.
+// Single source of truth: app.get("/api/sites/:subdomain", siteRateLimiter, …).
 
 // Other routes
 apiRouter.get("/demo", handleDemo);
 apiRouter.get("/instagram", fetchInstagramPhotos);
 
-//N8N
-apiRouter.post("/forward-to-n8n", handleForwardN8n);
+// NOTE: "/forward-to-n8n" is likewise registered only in server/index.ts – there with
+// strictLimiter. A copy here would shadow the limiter (same reason as above).
 
 // Health-Check
 apiRouter.get("/ping", (_req, res) => {

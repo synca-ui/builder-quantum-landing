@@ -80,15 +80,19 @@ export function createServer() {
   // CORS – restricted to maitr.de and localhost (dev)
   app.use(cors({ origin: allowedOrigin, credentials: true }));
 
+  // Clerk Webhook – MUST stay above express.json(): svix verifies the signature over
+  // the raw body. Registered after the JSON parser, body-parser would already have
+  // consumed the stream (req._body = true), express.raw() would be skipped, and
+  // handleClerkWebhook's req.body.toString() would yield "[object Object]" – every
+  // signature check would fail and no user would ever be synced.
+  app.post("/api/webhooks/clerk", express.raw({ type: "*/*" }), handleClerkWebhook);
+
   // Parse JSON request bodies with size limits
   app.use(express.json({ limit: "5mb" }));
   app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
   // n8n Proxy – strict rate limit, before apiRouter
   app.post("/api/forward-to-n8n", strictLimiter, handleForwardN8n);
-
-  // Clerk Webhook (must use raw body for svix signature verification)
-  app.post("/api/webhooks/clerk", express.raw({ type: "*/*" }), handleClerkWebhook);
 
   // Scraper Job Routers
   app.use("/api/scraper-job", scraperJobRouter);
