@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import multer from "multer";
 import { requireAuth } from "../middleware/auth";
-import { uploadImageToStorage } from "../services/supabaseStorage";
+import {
+  storageConfigured,
+  uploadImageToStorage,
+} from "../services/supabaseStorage";
 
 /**
  * POST /api/media/upload — nimmt EIN Bild als multipart/form-data (Feld "file")
@@ -27,6 +30,20 @@ const upload = multer({
 });
 
 export const mediaRouter = Router();
+
+/**
+ * GET /api/media/health — sagt NUR, ob der Storage konfiguriert ist.
+ *
+ * Bewusst ohne Auth: Der Upload selbst prüft zuerst das Token, ein
+ * fehlgeschlagener Upload sieht deshalb identisch aus, egal ob der Storage
+ * fehlt oder das Token. Ohne diesen Endpunkt ist die Ursache von außen nicht
+ * unterscheidbar. Es werden weder URL noch Key noch Bucket-Name preisgegeben —
+ * nur ein Boolean, das ein Angreifer mit einem Gratis-Account ohnehin durch
+ * einen Upload-Versuch erführe.
+ */
+mediaRouter.get("/health", (_req: Request, res: Response) => {
+  res.json({ configured: storageConfigured() });
+});
 
 mediaRouter.post(
   "/upload",

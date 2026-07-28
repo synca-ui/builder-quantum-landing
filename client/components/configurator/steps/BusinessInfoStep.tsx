@@ -206,8 +206,16 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                           }
                         } catch (err) {
                           console.error("[Logo] Upload fehlgeschlagen:", err);
+                          // Grund mit anzeigen — eine reine "hat nicht
+                          // geklappt"-Meldung zwingt sonst jedes Mal in die
+                          // Browser-Konsole.
                           toast.error(
                             "Logo konnte nicht hochgeladen werden — es erscheint nicht auf der veröffentlichten Website.",
+                            {
+                              description:
+                                err instanceof Error ? err.message : String(err),
+                              duration: 12000,
+                            },
                           );
                         }
                       })();

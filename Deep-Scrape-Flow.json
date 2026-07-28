@@ -1,0 +1,1041 @@
+{
+  "name": "Deep-Scrape-Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deep-scrape",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1344,
+        1536
+      ],
+      "id": "a3636625-b735-482d-9d73-c1fefc1b80a3",
+      "name": "Webhook: Deep Scrape",
+      "webhookId": "deep-scrape-trigger-001"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.websiteUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; Maitr-Bot/1.0)"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1136,
+        1536
+      ],
+      "id": "554a12ef-c644-440a-9271-7174b38176a2",
+      "name": "Fetch: Website HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html=$input.item.json.data||'';\nconst wd=$('Webhook: Deep Scrape').item.json.body;\nconst wsUrl=wd.websiteUrl||'';\nlet origin='https://example.com';\ntry{origin=new URL(wsUrl).origin;}catch(e){}\nconst baseUrl=wsUrl.replace(/\\/[^/]*$/,'').replace(/\\/$/,'');\n\n// ── JSON-LD ────────────────────────────────────────────────────\nconst jldBlocks=[...html.matchAll(/<script[^>]+type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi)];\nlet jld={},menuItems=[],openingHours={},address='',lat=null,lng=null,ratingValue=null,reviewCount=null;\nfor(const block of jldBlocks){try{const parsed=JSON.parse(block[1].trim());for(const item of(Array.isArray(parsed)?parsed:[parsed])){if(['Restaurant','FoodEstablishment','Bakery','CafeOrCoffeeShop','BarOrPub','FastFoodRestaurant'].includes(item['@type'])){jld={...jld,...item};if(item.address)address=typeof item.address==='string'?item.address:[item.address.streetAddress,item.address.addressLocality].filter(Boolean).join(', ');if(item.geo){lat=item.geo.latitude;lng=item.geo.longitude;}if(item.aggregateRating){ratingValue=item.aggregateRating.ratingValue;reviewCount=item.aggregateRating.reviewCount;}const oh=item.openingHoursSpecification||item.openingHours;if(Array.isArray(oh)){const dm={Mo:'monday',Tu:'tuesday',We:'wednesday',Th:'thursday',Fr:'friday',Sa:'saturday',Su:'sunday',Monday:'monday',Tuesday:'tuesday',Wednesday:'wednesday',Thursday:'thursday',Friday:'friday',Saturday:'saturday',Sunday:'sunday'};if(typeof oh[0]==='string'){for(const o of oh){const m=o.match(/(Mo|Tu|We|Th|Fr|Sa|Su)(?:-(Mo|Tu|We|Th|Fr|Sa|Su))?\\s+(\\d{2}:\\d{2})-(\\d{2}:\\d{2})/);if(m&&dm[m[1]])openingHours[dm[m[1]]]={open:m[3],close:m[4],closed:false};}}else{for(const o of oh){for(const day of(Array.isArray(o.dayOfWeek)?o.dayOfWeek:[o.dayOfWeek])){const k=dm[day]||dm[day?.replace('http://schema.org/','')];if(k)openingHours[k]={open:o.opens||'12:00',close:o.closes||'22:00',closed:false};}}}}}if(item['@type']==='Menu'){for(const s of(item.hasMenuSection||[])){const cat=s.name||'Hauptgerichte';for(const e of(s.hasMenuItem||s.hasMenuSection||[])){if(e.name){const o=e.offers||e.offer||{};menuItems.push({id:`ld-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name:e.name,description:e.description||'',category:cat,price:o.price?String(o.price):''});}}}}}}catch(e){}}\n\n// ── Meta ──────────────────────────────────────────────────────\nconst gm=n=>{const m=html.match(new RegExp(`<meta[^>]+(?:property|name)=[\"']${n}[\"'][^>]+content=[\"']([^\"']+)[\"']`,'i'))||html.match(new RegExp(`<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"']${n}[\"']`,'i'));return m?m[1].trim():null;};\nconst ogTitle=gm('og:title')||gm('title'),ogDesc=gm('og:description')||gm('description'),ogImage=gm('og:image'),themeColor=gm('theme-color');\n\n// ── Farben aus Inline-CSS ─────────────────────────────────────\nconst allCss=(html.match(/<style[^>]*>([\\s\\S]*?)<\\/style>/gi)||[]).join('')+(html.match(/style=[\"']([^\"']*)[\"']/gi)||[]).join('');\nconst cf={};let hm;const hRex=/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\\b/g;\nwhile((hm=hRex.exec(allCss))!==null){let c=hm[0].toLowerCase();if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16),mx=Math.max(r,g,b),mn=Math.min(r,g,b),lt=(mx+mn)/2/255,sat=mx===mn?0:(mx-mn)/(mx+mn<255?mx+mn:510-mx-mn);if(lt>0.1&&lt<0.95&&sat>0.2)cf[c]=(cf[c]||0)+1;}\nconst sortedColors=Object.entries(cf).sort((a,b)=>b[1]-a[1]).slice(0,6).map(e=>e[0]);\nif(themeColor&&!sortedColors.includes(themeColor))sortedColors.unshift(themeColor);\n\n// ── CSS Links ─────────────────────────────────────────────────\nconst cssLinks=[...html.matchAll(/<link[^>]+rel=[\"']stylesheet[\"'][^>]+href=[\"']([^\"']+)[\"']/gi)].map(m=>{let h=m[1];if(h.startsWith('//'))h='https:'+h;else if(h.startsWith('/'))h=origin+h;else if(!h.startsWith('http'))h=baseUrl+'/'+h;return h;}).filter(u=>!u.includes('font')&&!u.includes('bootstrap')&&!u.includes('fontawesome')).slice(0,2);\n\n// ── Bilder ────────────────────────────────────────────────────\nconst imgUrls=[];if(ogImage)imgUrls.push(ogImage);\nfor(const img of html.matchAll(/<img[^>]+src=[\"']([^\"']+)[\"'][^>]*>/gi)){let s=img[1];if(!s.startsWith('data:')&&!s.includes('icon')&&!s.includes('logo')&&!s.includes('svg')){if(s.startsWith('/'))s=origin+s;else if(!s.startsWith('http'))s=baseUrl+'/'+s;if(!imgUrls.includes(s))imgUrls.push(s);}}\n\n// ── Kontakt ───────────────────────────────────────────────────\nconst emailM=html.match(/[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}/i);\nconst phoneM=html.match(/(?:tel:|\\+49|0049|0)(?:\\s?[\\d-]){7,14}/);\nconst businessName=wd.businessName||ogTitle||'';\nconst typeRaw=(jld['@type']||'').toLowerCase();\nlet businessType=wd.businessType||'restaurant';\nif(typeRaw.includes('bakery'))businessType='bakery';else if(typeRaw.includes('cafe'))businessType='cafe';else if(typeRaw.includes('bar'))businessType='bar';else if(typeRaw.includes('pizza'))businessType='pizzeria';\n\n// ── menuUrl bereinigen (gefixt für Arrays) ─────────────────────\nlet rawMenu = wd.menuUrl || '';\nif (Array.isArray(rawMenu)) {\n    rawMenu = rawMenu[0] || ''; \n}\nrawMenu = String(rawMenu); \n\nconst menuUrl = rawMenu.replace(/^[{\\['\"|]+|[}\\]'\"|]+$/g,'').split(',')[0].trim();\nconst menuExt = (menuUrl.split('?')[0].split('#')[0].split('.').pop()||'').toLowerCase();\nconst isMenuImage = ['jpg','jpeg','png','webp','gif','bmp','tiff','tif'].includes(menuExt);\nconst isMenuPdf = menuExt === 'pdf';\nconst isMenuPage = ['html','htm','php','asp','aspx'].includes(menuExt)||(!menuExt||menuExt.length>5);\n\nreturn{businessName,businessType,slogan:(jld.slogan||'').slice(0,120),description:(ogDesc||jld.description||'').slice(0,500),email:wd.email||(emailM?emailM[0]:null),phone:wd.phone||(phoneM?phoneM[0].replace(/^tel:/,'').trim():null),address,latitude:lat,longitude:lng,ratingValue,reviewCount,gallery:imgUrls.slice(0,15),menuItems,openingHours,colorsFromHtml:sortedColors,cssLinks,instagramUrl:wd.instagramUrl||null,menuUrl:menuUrl||null,isMenuImage,isMenuPdf,isMenuPage,websiteUrl:wsUrl,googleSearchQuery:wd.googleSearchQuery||`${businessName} Restaurant`,ogImage};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -944,
+        1536
+      ],
+      "id": "c81d90e2-bd8d-460b-9672-e9eb755f2978",
+      "name": "Code: Parse HTML"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.cssLinks && $json.cssLinks.length > 0 ? $json.cssLinks[0] : 'https://example.com/skip' }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -736,
+        1424
+      ],
+      "id": "1fd13b9e-f595-457d-8562-bb436e3009fb",
+      "name": "Fetch: Stylesheet"
+    },
+    {
+      "parameters": {
+        "jsCode": "const css=$input.item.json.data||'';\nconst d=$('Code: Parse HTML').item.json;\nconst cf={};let m;const hRex=/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\\b/g;\nwhile((m=hRex.exec(css))!==null){let c=m[0].toLowerCase();if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16),mx=Math.max(r,g,b),mn=Math.min(r,g,b),lt=(mx+mn)/2/255,sat=mx===mn?0:(mx-mn)/(mx+mn<255?mx+mn:510-mx-mn);if(lt>0.08&&lt<0.96&&sat>0.15)cf[c]=(cf[c]||0)+1;}\nconst vars=[...css.matchAll(/--[a-z-]*color[^:]*:\\s*(#[0-9a-fA-F]{3,6})/gi)].map(m2=>m2[1].toLowerCase());\nconst cssColors=[...vars,...Object.entries(cf).sort((a,b)=>b[1]-a[1]).slice(0,8).map(e=>e[0])].filter((c,i,arr)=>arr.indexOf(c)===i).slice(0,8);\nconst allColors=[...new Set([...d.colorsFromHtml,...cssColors])].slice(0,6);\nconst sorted=allColors.slice().sort((a,b)=>{const lum=c=>{c=c.replace('#','');return 0.2126*parseInt(c.slice(0,2),16)+0.7152*parseInt(c.slice(2,4),16)+0.0722*parseInt(c.slice(4,6),16);};return lum(a)-lum(b);});\nreturn{...d,colors:allColors,primaryColor:sorted[0]||'#1a1a2e',secondaryColor:sorted[Math.floor(sorted.length/2)]||'#e94560',backgroundColor:sorted[sorted.length-1]||'#f5f5f5',fontFamily:css.includes('serif')&&!css.includes('sans-serif')?'serif':'sans-serif',template:'minimalist'};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        1424
+      ],
+      "id": "40db2068-230e-4c96-82a5-f10dbd03a401",
+      "name": "Code: CSS Farben"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "has-menu",
+              "leftValue": "={{ $json.menuUrl }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "5041002c-3b3d-4619-accd-d150dc78c9bb",
+              "leftValue": "=={{ $json.menuUrl }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        1424
+      ],
+      "id": "17174d9d-3337-4df9-a43e-49a9c75bb89f",
+      "name": "IF: Hat Menü-URL?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "is-img",
+              "leftValue": "={{ $json.isMenuImage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        1280
+      ],
+      "id": "687d86c4-dd9a-434d-b377-bf9a17a7b8fa",
+      "name": "IF: Ist Bild?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "is-page",
+              "leftValue": "={{ $json.isMenuPage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        1600
+      ],
+      "id": "e8c1e095-efe8-4037-bda3-7d6326501392",
+      "name": "IF: Ist Webseite?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.menuUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; Maitr-Bot/1.0)"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "arraybuffer"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        64,
+        1232
+      ],
+      "id": "a619f08c-2264-43ce-b71e-127796285d3c",
+      "name": "Fetch: Bild Binary"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw=$input.item.json;\nconst d=$('IF: Ist Bild?').item.json;\nlet b64='';\ntry{b64=Buffer.from(raw.data,'binary').toString('base64');}catch(e){}\nconst ext=(d.menuUrl.split('?')[0].split('.').pop()||'').toLowerCase();\nconst mime={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',tiff:'image/tiff',tif:'image/tiff'};\nreturn{...d,imageBase64:b64,imageMimeType:mime[ext]||'image/jpeg'};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        1232
+      ],
+      "id": "2e81aeb1-c45b-4f0b-a713-11517944f7de",
+      "name": "Code: Bild → Base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://vision.googleapis.com/v1/images:annotate?key={{ $env.GOOGLE_VISION_API_KEY }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 25000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        464,
+        1232
+      ],
+      "id": "d62e2a83-a326-4689-a539-34d2909af1f1",
+      "name": "Vision: OCR Bild"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vr=$input.item.json;\nconst d=$('Code: Bild → Base64').item.json;\nconst txt=vr.responses?.[0]?.fullTextAnnotation?.text||'';\nconst items=txt?parseMenu(txt):[];\nreturn{...d,menuItems:items.length?items:(d.menuItems||[]),menuSource:items.length?'image_ocr':(txt?'image_ocr_no_menu':'image_ocr_failed')};\nfunction parseMenu(text){const items=[],lines=text.split(/\\n|\\r/);let cat='Hauptgerichte';const cats=[[/Vorspeise|Antipasti|Starter|Kleinigkeiten/i,'Vorspeisen'],[/Suppe|Soup|Eintopf/i,'Suppen'],[/Salat|Salad/i,'Salate'],[/Haupt|Main|Fleisch|Fisch|Geflügel|Grill/i,'Hauptgerichte'],[/Pizza/i,'Pizza'],[/Pasta|Nudel|Spaghetti/i,'Pasta'],[/Burger/i,'Burger'],[/Sandwich|Wrap|Toast/i,'Sandwiches'],[/Dessert|Nachspeise|Kuchen|Eis/i,'Desserts'],[/Getränk|Drink|Wein|Bier|Kaffee|Cocktail/i,'Getränke'],[/Frühstück|Breakfast/i,'Frühstück'],[/Snack|Beilage/i,'Snacks']];const pRx=/(\\d{1,3}[,.]\\d{2})\\s*€?|€\\s*(\\d{1,3}[,.]\\d{2})/;for(let i=0;i<lines.length;i++){const l=lines[i].trim();if(!l||l.length<2)continue;if(l.length<45&&!pRx.test(l))for(const[rx,c]of cats)if(rx.test(l)){cat=c;break;}const pm=l.match(pRx);if(!pm)continue;const price=(pm[1]||pm[2]).replace(',','.');if(parseFloat(price)<=0||parseFloat(price)>300)continue;let name=l.slice(0,pm.index).replace(/€/g,'').replace(/^[.\\-–—|*#]+|[.\\-–—|*#]+$/g,'').replace(/\\s*\\([A-Z,\\d\\s]{1,20}\\)\\s*$/,'').trim();if(name.length<2||name.length>80)continue;const nl=(lines[i+1]||'').trim();let desc='';if(nl&&!pRx.test(nl)&&nl.length>3&&nl.length<120){desc=nl;i++;}items.push({id:`img-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name,description:desc,category:cat,price});}return items;}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        1232
+      ],
+      "id": "f32c9cf1-ca0f-4bb8-847c-a558695e0ee7",
+      "name": "Code: Bild-OCR → Menü"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.menuUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; Maitr-Bot/1.0)"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        160,
+        1552
+      ],
+      "id": "b5cd093b-5013-4b7e-ab73-a770271c9955",
+      "name": "Fetch: Menü-Webseite"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html=$input.item.json.data||'';\nconst d=$('IF: Ist Webseite?').item.json;\nconst items=[];\nfor(const block of html.matchAll(/<script[^>]+type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi)){try{const p=JSON.parse(block[1].trim());for(const item of(Array.isArray(p)?p:[p])){if(item['@type']==='Menu'){for(const s of(item.hasMenuSection||[])){const cat=s.name||'Hauptgerichte';for(const e of(s.hasMenuItem||[])){if(e.name){const o=e.offers||{};items.push({id:`wp-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name:e.name,description:e.description||'',category:cat,price:o.price?String(o.price):''});}}}}}}catch(e){}}\nif(items.length===0){const text=html.replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi,'').replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ').replace(/&auml;/g,'ä').replace(/&ouml;/g,'ö').replace(/&uuml;/g,'ü').replace(/&szlig;/g,'ß').replace(/\\s{2,}/g,'\\n').trim();\nconst cats=[[/Vorspeise|Antipasti|Starter/i,'Vorspeisen'],[/Suppe|Soup/i,'Suppen'],[/Salat|Salad/i,'Salate'],[/Haupt|Main|Fleisch|Fisch|Geflügel/i,'Hauptgerichte'],[/Pizza/i,'Pizza'],[/Pasta|Nudel/i,'Pasta'],[/Burger/i,'Burger'],[/Dessert|Nachspeise|Kuchen/i,'Desserts'],[/Getränk|Drink|Wein|Bier/i,'Getränke']];const pRx=/(\\d{1,3}[,.]\\d{2})\\s*€?|€\\s*(\\d{1,3}[,.]\\d{2})/;let cat='Hauptgerichte';const lines=text.split('\\n');\nfor(let i=0;i<lines.length;i++){const l=lines[i].trim();if(!l||l.length<2)continue;if(l.length<45&&!pRx.test(l))for(const[rx,c]of cats)if(rx.test(l)){cat=c;break;}const pm=l.match(pRx);if(!pm)continue;const price=(pm[1]||pm[2]).replace(',','.');if(parseFloat(price)<=0||parseFloat(price)>300)continue;let name=l.slice(0,pm.index).replace(/€/g,'').replace(/^[.\\-–—|*]+|[.\\-–—|*]+$/g,'').replace(/\\s*\\([A-Z,\\d\\s]{1,20}\\)\\s*$/,'').trim();if(name.length<2||name.length>80)continue;const nl=(lines[i+1]||'').trim();let desc='';if(nl&&!pRx.test(nl)&&nl.length>3&&nl.length<120){desc=nl;i++;}items.push({id:`wp-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name,description:desc,category:cat,price});}}\nreturn{...d,menuItems:items.length?items:(d.menuItems||[]),menuSource:items.length?'webpage':'webpage_none'};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        1408
+      ],
+      "id": "a122ff15-8424-4c78-a647-f7edf579a070",
+      "name": "Code: Webseite → Menü"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.menuUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; Maitr-Bot/1.0)"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "arraybuffer"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        64,
+        1696
+      ],
+      "id": "b0c5f063-405a-4bb8-a956-2b67a326cc87",
+      "name": "Fetch: PDF Binary"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$('IF: Ist Webseite?').item.json;\nlet pdfText='';\ntry{\n  const raw=Buffer.from($input.item.json.data,'binary').toString('latin1');\n  const chunks=[];\n  for(const block of raw.matchAll(/BT([\\s\\S]*?)ET/g)){const c=block[1];chunks.push(...[...c.matchAll(/\\(([^)]{1,300})\\)\\s*Tj/g)].map(m=>m[1]));chunks.push(...[...c.matchAll(/\\[([^\\]]+)\\]\\s*TJ/g)].map(m=>m[1].replace(/\\([^)]*\\)|\\d+/g,s=>s.startsWith('(')?s.slice(1,-1):' ')));}\n  pdfText=chunks.join(' ').replace(/\\\\n|\\\\r/g,'\\n').replace(/\\\\([0-9]{3})/g,(_,o)=>String.fromCharCode(parseInt(o,8))).trim();\n  if(pdfText.length<80){const streams=raw.match(/stream([\\s\\S]{10,8000}?)endstream/g)||[];for(const s of streams){const r=s.replace(/[^\\x20-\\x7Eäöüÿ\\n\\r\\t]/g,'').trim();if(r.length>pdfText.length)pdfText=r;}}\n}catch(e){pdfText='';}\nconst isText=pdfText.length>100&&(pdfText.match(/(\\d{1,3}[,.]\\d{2})/g)||[]).length>0;\nreturn{...d,pdfRawText:pdfText,isTextPdf:isText,needsOcr:!isText};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        1696
+      ],
+      "id": "f3980c4c-3386-45ac-848e-81beb6e7b923",
+      "name": "Code: PDF lesen"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "needs-ocr",
+              "leftValue": "={{ $json.needsOcr }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        464,
+        1696
+      ],
+      "id": "7e192aa8-fc7c-4920-9f58-23efb2587f2e",
+      "name": "IF: PDF braucht OCR?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://vision.googleapis.com/v1/images:annotate?key={{ $env.GOOGLE_VISION_API_KEY }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 25000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        1776
+      ],
+      "id": "fadfb7f4-0b74-471f-8018-8e82e5f0fd94",
+      "name": "Vision: OCR Bild-PDF"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vr=$input.item.json;\nconst d=$('Code: PDF lesen').item.json;\nconst txt=vr.responses?.[0]?.fullTextAnnotation?.text||'';\nconst items=txt?parseMenu(txt):[];\nreturn{...d,menuItems:items.length?items:(d.menuItems||[]),menuSource:items.length?'pdf_ocr':'pdf_ocr_failed'};\nfunction parseMenu(text){const items=[],lines=text.split(/\\n|\\r/);let cat='Hauptgerichte';const cats=[[/Vorspeise|Antipasti|Starter|Kleinigkeiten/i,'Vorspeisen'],[/Suppe|Soup|Eintopf/i,'Suppen'],[/Salat|Salad/i,'Salate'],[/Haupt|Main|Fleisch|Fisch|Geflügel|Grill/i,'Hauptgerichte'],[/Pizza/i,'Pizza'],[/Pasta|Nudel|Spaghetti/i,'Pasta'],[/Burger/i,'Burger'],[/Sandwich|Wrap|Toast/i,'Sandwiches'],[/Dessert|Nachspeise|Kuchen|Eis/i,'Desserts'],[/Getränk|Drink|Wein|Bier|Kaffee|Cocktail/i,'Getränke'],[/Frühstück|Breakfast/i,'Frühstück'],[/Snack|Beilage/i,'Snacks']];const pRx=/(\\d{1,3}[,.]\\d{2})\\s*€?|€\\s*(\\d{1,3}[,.]\\d{2})/;for(let i=0;i<lines.length;i++){const l=lines[i].trim();if(!l||l.length<2)continue;if(l.length<45&&!pRx.test(l))for(const[rx,c]of cats)if(rx.test(l)){cat=c;break;}const pm=l.match(pRx);if(!pm)continue;const price=(pm[1]||pm[2]).replace(',','.');if(parseFloat(price)<=0||parseFloat(price)>300)continue;let name=l.slice(0,pm.index).replace(/€/g,'').replace(/^[.\\-–—|*#]+|[.\\-–—|*#]+$/g,'').replace(/\\s*\\([A-Z,\\d\\s]{1,20}\\)\\s*$/,'').trim();if(name.length<2||name.length>80)continue;const nl=(lines[i+1]||'').trim();let desc='';if(nl&&!pRx.test(nl)&&nl.length>3&&nl.length<120){desc=nl;i++;}items.push({id:`pocr-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name,description:desc,category:cat,price});}return items;}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        1776
+      ],
+      "id": "2ade66ad-4075-445a-b8ac-e03275b0528f",
+      "name": "Code: Bild-PDF OCR → Menü"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$input.item.json;\nconst items=parseMenu(d.pdfRawText||'');\nreturn{...d,menuItems:items.length?items:(d.menuItems||[]),menuSource:items.length?'pdf_text':'pdf_no_menu'};\nfunction parseMenu(text){const items=[],lines=text.split(/\\n|\\r/);let cat='Hauptgerichte';const cats=[[/Vorspeise|Antipasti|Starter|Kleinigkeiten/i,'Vorspeisen'],[/Suppe|Soup|Eintopf/i,'Suppen'],[/Salat|Salad/i,'Salate'],[/Haupt|Main|Fleisch|Fisch|Geflügel|Grill/i,'Hauptgerichte'],[/Pizza/i,'Pizza'],[/Pasta|Nudel|Spaghetti/i,'Pasta'],[/Burger/i,'Burger'],[/Sandwich|Wrap|Toast/i,'Sandwiches'],[/Dessert|Nachspeise|Kuchen|Eis/i,'Desserts'],[/Getränk|Drink|Wein|Bier|Kaffee|Cocktail/i,'Getränke'],[/Frühstück|Breakfast/i,'Frühstück'],[/Snack|Beilage/i,'Snacks']];const pRx=/(\\d{1,3}[,.]\\d{2})\\s*€?|€\\s*(\\d{1,3}[,.]\\d{2})/;for(let i=0;i<lines.length;i++){const l=lines[i].trim();if(!l||l.length<2)continue;if(l.length<45&&!pRx.test(l))for(const[rx,c]of cats)if(rx.test(l)){cat=c;break;}const pm=l.match(pRx);if(!pm)continue;const price=(pm[1]||pm[2]).replace(',','.');if(parseFloat(price)<=0||parseFloat(price)>300)continue;let name=l.slice(0,pm.index).replace(/€/g,'').replace(/^[.\\-–—|*#]+|[.\\-–—|*#]+$/g,'').replace(/\\s*\\([A-Z,\\d\\s]{1,20}\\)\\s*$/,'').trim();if(name.length<2||name.length>80)continue;const nl=(lines[i+1]||'').trim();let desc='';if(nl&&!pRx.test(nl)&&nl.length>3&&nl.length<120){desc=nl;i++;}items.push({id:`ptxt-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,name,description:desc,category:cat,price});}return items;}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        1616
+      ],
+      "id": "bc676172-d378-41d6-aa6d-7609ebcf7f4d",
+      "name": "Code: Text-PDF → Menü"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1072,
+        1536
+      ],
+      "id": "f25a210a-2a78-4db8-9583-aa71788a8c41",
+      "name": "Merge: Menu"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "has-ig",
+              "leftValue": "={{ $json.instagramUrl }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        1424
+      ],
+      "id": "1e3eb25b-c7d7-48c3-bc4a-b9d7f98a2efc",
+      "name": "IF: Hat Instagram?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.instagramUrl.replace(/\\/$/, '') + '/' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "de-DE,de;q=0.9"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1472,
+        1312
+      ],
+      "id": "648c7f6a-ba45-4a3b-9678-38bdcaf55041",
+      "name": "Fetch: Instagram"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html=$input.item.json.data||'';\nconst base=$('Merge: Menu').item.json;\nconst gm=p=>{const m=html.match(new RegExp(`<meta[^>]+(?:property|name)=[\"']${p}[\"'][^>]+content=[\"']([^\"']+)[\"']`,'i'))||html.match(new RegExp(`<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+(?:property|name)=[\"']${p}[\"']`,'i'));return m?m[1]:null;};\nconst igDesc=gm('og:description'),igImage=gm('og:image');\nconst fm=igDesc?.match(/(\\d[\\d.,]*k?)\\s*Follower/i);\nconst bParts=igDesc?.split(' - ');\nconst bio=bParts&&bParts.length>1?bParts[bParts.length-1].trim():null;\nconst igImages=[igImage].filter(Boolean);\ntry{const sd=html.match(/window\\._sharedData\\s*=\\s*({[\\s\\S]*?});/);if(sd){const u=JSON.parse(sd[1])?.entry_data?.ProfilePage?.[0]?.graphql?.user;if(u)for(const e of(u.edge_owner_to_timeline_media?.edges?.slice(0,9)||[])){const url=e.node?.display_url||e.node?.thumbnail_src;if(url&&!igImages.includes(url))igImages.push(url);}}}catch(e){}\nreturn{...base,instagramBio:bio||base.description,instagramFollowers:fm?fm[1]:null,instagramImages:igImages,gallery:[...new Set([...base.gallery,...igImages])].slice(0,20)};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        1312
+      ],
+      "id": "5d026ff4-8792-43f6-a872-0b74d1214445",
+      "name": "Code: Instagram parsen"
+    },
+    {
+      "parameters": {
+        "url": "=https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={{ encodeURIComponent($json.googleSearchQuery) }}&inputtype=textquery&fields=name,formatted_address,geometry,rating,user_ratings_total,opening_hours,photos,formatted_phone_number&key={{ $env.GOOGLE_PLACES_API_KEY }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1456,
+        1616
+      ],
+      "id": "283d928a-8f63-4d27-b65e-321b22dc49c8",
+      "name": "Fetch: Google Places"
+    },
+    {
+      "parameters": {
+        "jsCode": "const gd=$input.item.json;\nconst prev=$('Merge: Menu').item.json;\nlet gmaps={};\ntry{const c=gd.candidates?.[0]||gd.result||{};\nlet oh=prev.openingHours||{};\nif(c.opening_hours?.periods&&Object.keys(oh).length===0){const dn=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];for(const p of c.opening_hours.periods){const d=dn[p.open?.day];if(d){const o=(p.open?.time||'1200').replace(/(\\d{2})(\\d{2})/,'$1:$2'),cl=(p.close?.time||'2200').replace(/(\\d{2})(\\d{2})/,'$1:$2');oh[d]={open:o,close:cl,closed:false};}}for(const d of['monday','tuesday','wednesday','thursday','friday','saturday','sunday'])if(!oh[d])oh[d]={open:'12:00',close:'22:00',closed:true};}\nconst gp=(c.photos||[]).slice(0,5).map(p=>`https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${p.photo_reference}&key=${$env.GOOGLE_PLACES_API_KEY}`);\ngmaps={gmapsRating:c.rating||prev.ratingValue,gmapsReviewCount:c.user_ratings_total||prev.reviewCount,gmapsAddress:c.formatted_address||prev.address,gmapsPhone:c.formatted_phone_number||prev.phone,gmapsPhotos:gp,openingHours:oh,latitude:c.geometry?.location?.lat||prev.latitude,longitude:c.geometry?.location?.lng||prev.longitude};\n}catch(e){gmaps={};}\nreturn{...prev,...gmaps,gallery:[...new Set([...prev.gallery,...(gmaps.gmapsPhotos||[])])].slice(0,20)};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        1616
+      ],
+      "id": "9e05c5c4-4a2d-45b1-a9d5-a568d0950c97",
+      "name": "Code: Google Maps parsen"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1872,
+        1536
+      ],
+      "id": "32d71e82-971f-474b-8efd-666cf55d46d0",
+      "name": "Merge: Alle Daten"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items=$input.all();\nconst m=Object.assign({},...items.map(i=>i.json));\nconst pc=m.primaryColor||'#1a1a2e',sc=m.secondaryColor||'#e94560',bc=m.backgroundColor||'#f8f8f8';\nconst days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];\nconst oh={};\nfor(const d of days)oh[d]=m.openingHours?.[d]||{open:'12:00',close:'22:00',closed:d==='sunday'};\nconst seen=new Set();\nconst menuItems=(m.menuItems||[]).filter(item=>{const k=item.name?.toLowerCase().trim();if(!k||seen.has(k))return false;seen.add(k);return true;});\nlet template='minimalist';\nif(['bar','steakhouse'].includes(m.businessType))template='bold';\nelse if(m.businessType==='restaurant'&&m.gmapsRating>=4.5)template='classic';\nconst suggestedConfig={businessName:m.businessName||'',businessType:m.businessType||'restaurant',slogan:m.slogan||'',description:m.instagramBio||m.description||'',location:m.gmapsAddress||m.address||'',phone:m.gmapsPhone||m.phone||'',email:m.email||'',primaryColor:pc,secondaryColor:sc,backgroundColor:bc,colors:m.colors||[pc,sc,bc],fontFamily:m.fontFamily||'sans-serif',template,menuItems,gallery:(m.gallery||[]).filter(u=>u&&u.startsWith('http')).slice(0,15),openingHours:oh,rating:m.gmapsRating||m.ratingValue||null,reviewCount:m.gmapsReviewCount||m.reviewCount||null,latitude:m.latitude||null,longitude:m.longitude||null,instagramFollowers:m.instagramFollowers||null,menuSource:m.menuSource||'html',scrapedAt:new Date().toISOString()};\nlet score=40;\nif(menuItems.length>=5)score+=25;else if(menuItems.length>0)score+=15;\nif(suggestedConfig.gallery.length>=3)score+=15;\nif(Object.values(oh).filter(d=>!d.closed).length>0)score+=10;\nif(suggestedConfig.rating)score+=5;\nif(suggestedConfig.description.length>50)score+=5;\nreturn{websiteUrl:m.websiteUrl,suggestedConfig,deepMaitrScore:Math.min(score,100),menuItemsCount:menuItems.length,galleryCount:suggestedConfig.gallery.length,menuSource:m.menuSource||'html',deepStatus:'completed'};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        1536
+      ],
+      "id": "82164b63-64d9-4c3d-9d5c-0c1b63d5b8c5",
+      "name": "Code: suggestedConfig bauen"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "ScraperJob",
+          "mode": "list",
+          "cachedResultName": "ScraperJob"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "suggestedConfig": "={{ JSON.stringify($json.suggestedConfig) }}",
+            "maitrScore": "={{ $json.deepMaitrScore }}",
+            "status": "completed",
+            "completedAt": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "websiteUrl"
+          ],
+          "schema": [
+            {
+              "id": "websiteUrl",
+              "displayName": "websiteUrl",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "suggestedConfig",
+              "displayName": "suggestedConfig",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "maitrScore",
+              "displayName": "maitrScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "completedAt",
+              "displayName": "completedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2272,
+        1536
+      ],
+      "id": "4b454798-8b30-45b2-ac56-a238ff35c1be",
+      "name": "DB: Update ScraperJob",
+      "credentials": {
+        "postgres": {
+          "id": "uXGM6hq76wwGqf9V",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: Deep Scrape": {
+      "main": [
+        [
+          {
+            "node": "Fetch: Website HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch: Website HTML": {
+      "main": [
+        [
+          {
+            "node": "Code: Parse HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Parse HTML": {
+      "main": [
+        [
+          {
+            "node": "Fetch: Stylesheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch: Stylesheet": {
+      "main": [
+        [
+          {
+            "node": "Code: CSS Farben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: CSS Farben": {
+      "main": [
+        [
+          {
+            "node": "IF: Hat Menü-URL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Hat Menü-URL?": {
+      "main": [
+        [
+          {
+            "node": "IF: Ist Bild?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge: Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Ist Bild?": {
+      "main": [
+        [
+          {
+            "node": "Fetch: Bild Binary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Ist Webseite?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch: Bild Binary": {
+      "main": [
+        [
+          {
+            "node": "Code: Bild → Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Bild → Base64": {
+      "main": [
+        [
+          {
+            "node": "Vision: OCR Bild",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vision: OCR Bild": {
+      "main": [
+        [
+          {
+            "node": "Code: Bild-OCR → Menü",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Bild-OCR → Menü": {
+      "main": [
+        [
+          {
+            "node": "Merge: Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Ist Webseite?": {
+      "main": [
+        [
+          {
+            "node": "Fetch: Menü-Webseite",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch: PDF Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch: Menü-Webseite": {
+      "main": [
+        [
+          {
+            "node": "Code: Webseite → Menü",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Webseite → Menü": {
+      "main": [
+        [
+          {
+            "node": "Merge: Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch: PDF Binary": {
+      "main": [
+        [
+          {
+            "node": "Code: PDF lesen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: PDF lesen": {
+      "main": [
+        [
+          {
+            "node": "IF: PDF braucht OCR?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: PDF braucht OCR?": {
+      "main": [
+        [
+          {
+            "node": "Vision: OCR Bild-PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Text-PDF → Menü",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vision: OCR Bild-PDF": {
+      "main": [
+        [
+          {
+            "node": "Code: Bild-PDF OCR → Menü",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Bild-PDF OCR → Menü": {
+      "main": [
+        [
+          {
+            "node": "Merge: Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Text-PDF → Menü": {
+      "main": [
+        [
+          {
+            "node": "Merge: Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge: Menu": {
+      "main": [
+        [
+          {
+            "node": "IF: Hat Instagram?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch: Google Places",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Hat Instagram?": {
+      "main": [
+        [
+          {
+            "node": "Fetch: Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge: Alle Daten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch: Instagram": {
+      "main": [
+        [
+          {
+            "node": "Code: Instagram parsen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Instagram parsen": {
+      "main": [
+        [
+          {
+            "node": "Merge: Alle Daten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch: Google Places": {
+      "main": [
+        [
+          {
+            "node": "Code: Google Maps parsen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Google Maps parsen": {
+      "main": [
+        [
+          {
+            "node": "Merge: Alle Daten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge: Alle Daten": {
+      "main": [
+        [
+          {
+            "node": "Code: suggestedConfig bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: suggestedConfig bauen": {
+      "main": [
+        [
+          {
+            "node": "DB: Update ScraperJob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Update ScraperJob": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6b977ed6-dd10-4b43-9d97-5393e2d0e2fe",
+  "meta": {
+    "instanceId": "a6a863f55081b8b89107e36125235cd408a4518acf152ef999f738ff608daffe"
+  },
+  "nodeGroups": [],
+  "id": "BzpIIM6woZ0RWnwjRkgpU",
+  "tags": []
+}

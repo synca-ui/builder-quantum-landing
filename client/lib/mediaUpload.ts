@@ -21,9 +21,23 @@ export async function uploadImageFile(
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
-  const data = await res.json().catch(() => ({}) as any);
+  // Die Antwort roh lesen: Bei einem Proxy- oder Infrastrukturfehler kommt HTML
+  // statt JSON zurück, und ein blindes res.json() verschluckt genau die
+  // Information, die man zur Diagnose braucht.
+  const raw = await res.text();
+  let data: any = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    data = {};
+  }
+
   if (!res.ok || !data?.url) {
-    throw new Error(data?.error || `Upload fehlgeschlagen (HTTP ${res.status})`);
+    const detail =
+      data?.error ||
+      (raw ? `${raw.slice(0, 160)}` : "leere Antwort") ||
+      "unbekannt";
+    throw new Error(`HTTP ${res.status}: ${detail}`);
   }
   return data.url as string;
 }
