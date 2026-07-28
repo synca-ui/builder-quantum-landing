@@ -196,7 +196,7 @@ export async function getDeploymentStatus(webAppId: string): Promise<{
   url?: string;
 }> {
   try {
-    const res = await axios.get(`/api/apps/${webAppId}`);
+    const res = await axios.get(API_PATHS.appById(webAppId));
     return {
       status: res.data?.publishedAt ? "ready" : "pending",
       url: res.data?.publishedUrl,

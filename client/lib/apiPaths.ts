@@ -24,4 +24,6 @@ export const API_PATHS = {
   publishApp: "/api/webapps/apps/publish",
   /** GET – listet die Web-Apps des angemeldeten Nutzers */
   listApps: "/api/webapps/apps",
+  /** GET/PUT – eine einzelne Web-App des angemeldeten Nutzers */
+  appById: (id: string) => `/api/webapps/apps/${encodeURIComponent(id)}`,
 } as const;

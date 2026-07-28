@@ -44,7 +44,7 @@ export async function listMyApps(token?: string) {
 
 export async function getMyApp(id: string, token?: string) {
   try {
-    const res = await axios.get(`/api/apps/${id}`, {
+    const res = await axios.get(API_PATHS.appById(id), {
       baseURL: "",
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export async function getMyApp(id: string, token?: string) {
 export async function updateMyApp(id: string, config: any, token?: string) {
   try {
     const res = await axios.put(
-      `/api/apps/${id}`,
+      API_PATHS.appById(id),
       { config },
       {
         baseURL: "",

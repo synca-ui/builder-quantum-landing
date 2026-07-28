@@ -53,7 +53,19 @@ describe("API-Vertrag zwischen Client und Server", () => {
     expect(routes.length).toBeGreaterThan(10);
   });
 
-  it.each(Object.entries(API_PATHS))(
+  it.each(
+    Object.entries(API_PATHS).map(([name, value]) => {
+      // Parametrisierte Pfade sind Funktionen (z.B. appById). Mit einem Marker
+      // aufrufen, der encodeURIComponent unverändert übersteht, und ihn aufs
+      // Express-Muster ":id" abbilden – so bleibt der Vergleich ein
+      // String-Vergleich gegen die echte Routing-Tabelle.
+      const clientPath =
+        typeof value === "function"
+          ? value("__id__").replace("__id__", ":id")
+          : value;
+      return [name, clientPath] as const;
+    }),
+  )(
     "%s (%s) existiert serverseitig",
     (_name, clientPath) => {
       // Die Clients rufen mit /api-Präfix auf, die App mountet den Router darunter.
