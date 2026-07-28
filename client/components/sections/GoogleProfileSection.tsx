@@ -3,7 +3,7 @@ import { Sparkles, MessageSquare, Megaphone, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const GOOGLE_SECTION_HEADING =
-  "Dein digitaler Gastgeber";
+  "Maitr – dein digitaler Gastgeber für Google";
 
 export const GOOGLE_SECTION_BODY =
   "Maitr hilft Cafés und Restaurants, ihr Google Unternehmensprofil, Instagram & Co. aktuell zu halten. Mit ausdrücklicher Zustimmung des Inhabers beantwortet Maitr Bewertungen, veröffentlicht Beiträge und pflegt Öffnungszeiten. Jede Aktion wird vor der Veröffentlichung vom Inhaber freigegeben.";
@@ -83,6 +83,10 @@ export default function GoogleProfileSection() {
                   Deinem Gastgeber
                 </span>
               </h2>
+
+              <p className="text-xl font-semibold text-teal-700">
+                {GOOGLE_SECTION_HEADING}
+              </p>
 
               <p className="text-lg text-gray-600 font-medium leading-relaxed max-w-xl">
                 {GOOGLE_SECTION_BODY}
