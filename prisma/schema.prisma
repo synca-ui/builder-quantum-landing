@@ -552,6 +552,19 @@ model ScraperJob {
   websiteUrl        String    @unique
   status            String    @default("pending")
   extractedData     Json?
+  // Vom Deep-Scrape-Flow in n8n geschrieben ("DB: Update ScraperJob"), zusammen
+  // mit maitrScore, status und completedAt. Enthält die fertig gebaute
+  // Konfiguration: businessName, businessType, slogan, description, location,
+  // phone, email, primaryColor, secondaryColor, backgroundColor, colors,
+  // fontFamily, template, menuItems, gallery, openingHours, rating,
+  // reviewCount, latitude, longitude, instagramFollowers, menuSource.
+  //
+  // Die Spalte EXISTIERT in der Datenbank bereits – n8n listet sie über seine
+  // Schema-Introspektion (websiteUrl, suggestedConfig, maitrScore, status,
+  // completedAt). Sie fehlte nur hier im Modell, weshalb Prisma sie nie lesen
+  // konnte und das Scrape-Ergebnis nie beim Client ankam.
+  // ACHTUNG: Deshalb KEINE Migration erzeugen, die die Spalte neu anlegt.
+  suggestedConfig   Json?
   userId            String?
   createdAt         DateTime  @default(now())
   startedAt         DateTime?

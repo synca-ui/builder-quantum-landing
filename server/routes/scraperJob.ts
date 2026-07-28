@@ -75,6 +75,7 @@ router.get("/full", async (req, res) => {
         startedAt: true,
         completedAt: true,
         extractedData: true,
+        suggestedConfig: true,
       },
     });
 
@@ -86,6 +87,27 @@ router.get("/full", async (req, res) => {
 
     // extractedData als JSON-Fallback (n8n schreibt manchmal nur dort hin)
     const ex = (job.extractedData as Record<string, any>) ?? {};
+
+    /**
+     * Der Deep-Scrape-Flow schreibt die Spalte per
+     * `JSON.stringify($json.suggestedConfig)`. Ob dabei ein Objekt oder ein
+     * String in der Spalte landet, hängt an deren Typ (jsonb parst, text nicht).
+     * Beides wird hier behandelt, damit der Client immer ein Objekt bekommt.
+     */
+    const parseMaybeJson = (value: unknown): Record<string, any> | null => {
+      if (!value) return null;
+      if (typeof value === "object") return value as Record<string, any>;
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          return parsed && typeof parsed === "object" ? parsed : null;
+        } catch {
+          console.warn("[ScraperJob] suggestedConfig ist kein gültiges JSON");
+          return null;
+        }
+      }
+      return null;
+    };
 
     const merged = {
       id: job.id,
@@ -104,6 +126,16 @@ router.get("/full", async (req, res) => {
       createdAt: job.createdAt,
       startedAt: job.startedAt,
       completedAt: job.completedAt,
+
+      // Das eigentliche Ergebnis des Deep-Scrape: die fertig gebaute
+      // Konfiguration (Farben, Speisekarte, Galerie, Öffnungszeiten, …).
+      // Sie wurde bisher weder selektiert noch ausgeliefert – der Flow hat sie
+      // also erzeugt, und niemand hat sie je zu sehen bekommen.
+      suggestedConfig: parseMaybeJson(job.suggestedConfig),
+
+      // Rohdaten des Entry-Flows. Wurden oben schon selektiert, aber bislang
+      // nur intern als Fallback benutzt und nie mitgeschickt.
+      extractedData: ex,
     };
 
     res.json({ job: merged });
