@@ -20,10 +20,11 @@ describe("ModeSelection", () => {
       </MemoryRouter>,
     );
 
-    expect(
-      screen.getByText(/How would you like Maitr to help\?/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Guided \(Manual\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Automatic \(Zero-Input\)/i)).toBeInTheDocument();
+    // Die Zusagen standen auf Englisch ("How would you like Maitr to help?",
+    // "Guided (Manual)", "Automatic (Zero-Input)"). Die Seite ist längst
+    // deutsch – der Test prüfte also Text, den es seit einer Weile nicht mehr
+    // gibt. Er konnte das nur nicht melden, weil die Suite insgesamt nicht lief.
+    expect(screen.getByText(/Manuelle Konfiguration/i)).toBeInTheDocument();
+    expect(screen.getByText(/Automatisch \(Zero-Input\)/i)).toBeInTheDocument();
   });
 });

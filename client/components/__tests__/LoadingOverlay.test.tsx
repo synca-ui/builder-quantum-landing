@@ -12,10 +12,25 @@ describe("LoadingOverlay", () => {
     expect(screen.getByText("One")).toBeInTheDocument();
   });
 
-  test("does not render when not visible", () => {
+  test("is hidden from assistive technology when not visible", () => {
+    // Die Komponente bleibt bewusst IMMER im DOM: Sie blendet über eine
+    // CSS-Transition aus, ein `return null` würde die Ausblend-Animation
+    // verschlucken.
+    //
+    // Der ursprüngliche Test erwartete hier einen leeren Container und schlug
+    // deshalb immer fehl – er beschrieb eine Absicht, die die Komponente nie
+    // umgesetzt hat. Geprüft wird jetzt, worauf es tatsächlich ankommt: im
+    // unsichtbaren Zustand darf sie weder angesagt noch anklickbar sein.
     const { container } = render(
       <LoadingOverlay visible={false} messages={["x"]} />,
     );
-    expect(container).toBeEmptyDOMElement();
+
+    // aria-hidden -> für Screenreader nicht mehr auffindbar
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    const backdrop = container.querySelector('[aria-hidden="true"]');
+    expect(backdrop).toBeTruthy();
+    expect(backdrop).toHaveAttribute("aria-busy", "false");
+    expect(backdrop?.className).toContain("pointer-events-none");
   });
 });

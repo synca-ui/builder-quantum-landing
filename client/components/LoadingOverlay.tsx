@@ -117,7 +117,18 @@ export default function LoadingOverlay({
       `}</style>
 
       {/* ── Backdrop ── */}
+      {/*
+        role="status" + aria-live: Ein Ladezustand muss angesagt werden, sonst
+        bekommen Screenreader-Nutzer nichts davon mit. aria-hidden im
+        unsichtbaren Zustand ist nötig, weil die Komponente bewusst IMMER im DOM
+        bleibt (sie blendet nur per Opacity aus, damit die Animation läuft) –
+        ohne das würde ein unsichtbares Overlay vorgelesen.
+      */}
       <div
+        role="status"
+        aria-live="polite"
+        aria-busy={visible}
+        aria-hidden={!visible}
         className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${visible
             ? "opacity-100 backdrop-blur-sm pointer-events-auto"
             : "opacity-0 pointer-events-none"
