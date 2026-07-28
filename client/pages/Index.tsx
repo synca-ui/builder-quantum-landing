@@ -360,7 +360,6 @@ const Navigation = () => {
 
 
 function IndexContent() {
-  const [isVisible, setIsVisible] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
 
   // Initialize performance optimizations
@@ -369,10 +368,6 @@ function IndexContent() {
   usePerformanceObserver();
   useImageOptimization();
   useDemoDashboardVisibility(); // Ensure demo button is always visiblee
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
 
   // Entfernt: Keine Clerk Authentication Checks auf der öffentlichen Homepage (außer in der Navigation)
 
@@ -438,9 +433,13 @@ function IndexContent() {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 z-10">
           <div className="text-center">
-            <div
-              className={`transition-all duration-700 ease-out will-change-transform ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"}`}
-            >
+            {/* Bewusst OHNE Einblend-Animation: Der Hero enthält das
+                LCP-Element. Vorher startete diese Hülle mit opacity-0 und
+                wurde erst nach dem Mount per useEffect sichtbar geschaltet.
+                Chrome zählt Elemente mit Deckkraft 0 nicht als LCP-Kandidaten,
+                dadurch begann die LCP-Messung trotz Prerendering erst nach dem
+                Hydrieren – gemessen 3969 ms "Render Delay", 83 % des LCP. */}
+            <div>
               <div className="flex justify-center mb-6">
                 <div className="relative">
                   <Sparkles className="w-8 h-8 text-teal-500" />

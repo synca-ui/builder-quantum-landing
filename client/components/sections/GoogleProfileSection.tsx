@@ -147,17 +147,20 @@ export default function GoogleProfileSection() {
                   Quelle ist eine auf 1600px skalierte WebP-Fassung (74 KB statt
                   1727 KB); dargestellt wird das Bild nie breiter als ~1260px. */}
               <img
-                src="/maitr-app-mockup.webp"
+                src="/maitr-app-mockup-1200.webp"
+                srcSet="/maitr-app-mockup-800.webp 800w, /maitr-app-mockup-1200.webp 1200w, /maitr-app-mockup-1600.webp 1600w"
+                sizes="(min-width: 1024px) 1150px, 140vw"
                 alt="Zwei iPhones zeigen die Maitr-App: links die Bewertungsübersicht mit einer vorbereiteten Antwort und der Schaltfläche „Freigeben“, rechts die Tagesübersicht mit Kennzahlen des Google Unternehmensprofils"
                 width={1600}
                 height={1200}
                 loading="lazy"
                 decoding="async"
                 className="w-[140%] h-auto max-w-none object-contain drop-shadow-2xl"
-                style={{
-                  filter: 'drop-shadow(0 45px 55px rgba(0,0,0,0.35))',
-                  imageRendering: 'high-quality'
-                }}
+                // imageRendering: 'high-quality' entfernt – der Wert steht nicht
+                // in den React-Typen (Typfehler) und ist hier wirkungslos:
+                // srcset liefert das Bild bereits nahe seiner Darstellungsgröße,
+                // dort rendert der Browser ohnehin mit voller Qualität.
+                style={{ filter: 'drop-shadow(0 45px 55px rgba(0,0,0,0.35))' }}
               />
             </div>
           </div>
