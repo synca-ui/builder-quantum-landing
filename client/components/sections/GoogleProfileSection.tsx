@@ -141,11 +141,20 @@ export default function GoogleProfileSection() {
             <div 
               className="relative w-full max-w-[900px] flex items-center justify-center z-20"
             >
+              {/* width/height entsprechen dem Seitenverhältnis der Datei (4:3).
+                  Zusammen mit h-auto reserviert der Browser den Platz, bevor das
+                  Bild geladen ist – ohne die Angaben entsteht ein Layout-Shift.
+                  Quelle ist eine auf 1600px skalierte WebP-Fassung (74 KB statt
+                  1727 KB); dargestellt wird das Bild nie breiter als ~1260px. */}
               <img
-                src="/iPhone 16.png"
-                alt="Maitr App Mockups"
+                src="/maitr-app-mockup.webp"
+                alt="Zwei iPhones zeigen die Maitr-App: links die Bewertungsübersicht mit einer vorbereiteten Antwort und der Schaltfläche „Freigeben“, rechts die Tagesübersicht mit Kennzahlen des Google Unternehmensprofils"
+                width={1600}
+                height={1200}
+                loading="lazy"
+                decoding="async"
                 className="w-[140%] h-auto max-w-none object-contain drop-shadow-2xl"
-                style={{ 
+                style={{
                   filter: 'drop-shadow(0 45px 55px rgba(0,0,0,0.35))',
                   imageRendering: 'high-quality'
                 }}
