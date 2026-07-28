@@ -6,8 +6,12 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
+        // Nur noch ein Ziel: Die API läuft auf Railway. Der zweite Entry
+        // "netlify" baute eine serverless-Variante für netlify/functions/api.ts
+        // — die Function war nie lauffähig (serverless-http fehlte als
+        // Dependency, /.netlify/functions/api antwortete 502) und /api/*
+        // wird per Redirect ohnehin an Railway geleitet.
         "node-build": path.resolve(__dirname, "server/node-build.ts"),
-        netlify: path.resolve(__dirname, "server/netlify.ts"),
       },
       formats: ["es"],
     },

@@ -15,32 +15,46 @@ const distPath = path.join(__dirname, "../spa");
  */
 function validateEnvironment() {
   const errors: string[] = [];
+  const warnings: string[] = [];
 
-  // Check N8N_WEBHOOK_URL
+  // Ohne DB läuft nichts — harter Abbruch.
+  if (!process.env.DATABASE_URL) {
+    errors.push(
+      "❌ DATABASE_URL is not set (required for data persistence)",
+    );
+  }
+
+  // Ohne gültigen Clerk-Key schlägt JEDE authentifizierte Anfrage fehl
+  // (server/utils/clerk.ts wirft dann "CLERK_SECRET_KEY not configured",
+  // die Middleware macht daraus pauschal 401). Lieber beim Start auffallen
+  // als später als rätselhaftes "Invalid token" beim Nutzer.
+  if (!process.env.CLERK_SECRET_KEY) {
+    errors.push(
+      "❌ CLERK_SECRET_KEY is not set (required to verify Clerk sessions)",
+    );
+  }
+
+  // n8n ist ein optionales Feature (server/routes/n8nProxy.ts). Ein fehlender
+  // Webhook darf den kompletten Serverstart nicht verhindern — vorher tat er
+  // genau das.
   if (!process.env.N8N_WEBHOOK_URL) {
-    errors.push(
-      "❌ N8N_WEBHOOK_URL is not set (required for n8n analysis flow)",
+    warnings.push(
+      "⚠️  N8N_WEBHOOK_URL is not set — the n8n analysis flow will be unavailable",
     );
   }
 
-  // Check DATABASE_URL or NETLIFY_DATABASE_URL
-  const hasDatabase =
-    process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
-  if (!hasDatabase) {
-    errors.push(
-      "❌ DATABASE_URL or NETLIFY_DATABASE_URL is not set (required for data persistence)",
-    );
-  }
-
-  // Check JWT_SECRET
+  // Bild-Uploads brauchen Supabase Storage (server/services/supabaseStorage.ts).
+  // Fehlt die Konfiguration, antwortet /api/media/upload mit 503.
   if (
-    !process.env.JWT_SECRET ||
-    process.env.JWT_SECRET === "dev-secret-change-me"
+    !(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
   ) {
-    errors.push(
-      "❌ JWT_SECRET is not set or using dev default (required for authentication security)",
+    warnings.push(
+      "⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing — image uploads will return 503",
     );
   }
+
+  warnings.forEach((w) => console.warn(w));
 
   // If any errors, log them and exit
   if (errors.length > 0) {

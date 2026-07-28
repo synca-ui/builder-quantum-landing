@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { webAppsRouter, publicAppsRouter } from "./webapps";
 import { configurationsRouter, getPublishedSite } from "./configurations";
-import { getConfigBySlug } from "./config";
 import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
@@ -168,8 +167,14 @@ apiRouter.use("/demo/dashboard", demoDashboardRouter);
 // Public reservation routes (no auth required)
 apiRouter.use("/public/reservations", publicReservationsRouter);
 
-// Standalone configuration routes (for backward compatibility)
-apiRouter.get("/config/:slug", getConfigBySlug);
+// GET /config/:slug ist entfernt: Die Route fragte per rohem SQL nach
+// public.tenants / restaurants mit Spalten tenant_slug, schema_name,
+// config_json — das aktuelle Prisma-Schema erzeugt aber Tenant/Restaurant mit
+// slug, schemaName, configJson. Die Abfrage konnte nie treffen, der Fehler
+// wurde verschluckt, die Route lieferte immer 404 (gegen Produktion gemessen).
+// Kein Client rief sie auf. Mit ihr fallen server/routes/config.ts,
+// server/sql.ts und server/db.ts weg — und damit der einzige Konsument von
+// NETLIFY_DATABASE_URL.
 apiRouter.get("/sites/:subdomain", getPublishedSite);
 
 // Other routes

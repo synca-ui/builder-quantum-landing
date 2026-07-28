@@ -1,6 +1,8 @@
 [build]
 command = "bash scripts/netlify-build.sh"
-functions = "netlify/functions"
+# Kein functions-Verzeichnis mehr: Die einzige Function war eine zweite,
+# nie lauffähige Kopie der Express-API. Die API läuft auf Railway (siehe
+# den /api/*-Redirect weiter unten).
 edge_functions = "netlify/edge-functions"
 publish = "dist/spa"
 
