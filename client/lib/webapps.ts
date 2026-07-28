@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_PATHS } from "@/lib/apiPaths";
 
 export async function publishWebApp(
   subdomain: string,
@@ -7,7 +8,7 @@ export async function publishWebApp(
 ) {
   try {
     const res = await axios.post(
-      "/api/apps/publish",
+      API_PATHS.publishApp,
       // WICHTIG: Sende ein Objekt mit den Keys 'subdomain' und 'config'
       { subdomain, config },
       {
@@ -27,7 +28,7 @@ export async function publishWebApp(
 
 export async function listMyApps(token?: string) {
   try {
-    const res = await axios.get("/api/apps", {
+    const res = await axios.get(API_PATHS.listApps, {
       baseURL: "",
       headers: {
         "Content-Type": "application/json",

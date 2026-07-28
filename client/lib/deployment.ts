@@ -4,6 +4,7 @@
  */
 
 import axios from "axios";
+import { API_PATHS } from "@/lib/apiPaths";
 
 export type DeploymentStage =
   | "validating"
@@ -84,7 +85,7 @@ async function publishInternal(
 
     // Make the actual API call
     const res = await axios.post(
-      "/api/apps/publish",
+      API_PATHS.publishApp,
       {
         subdomain: config.subdomain,
         config: config.config,
