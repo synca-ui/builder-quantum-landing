@@ -23,7 +23,17 @@ interface ValidationResult {
   warnings: string[];
 }
 
-function validatePublishData(config: any, subdomain: string): ValidationResult {
+/**
+ * Exportiert allein für den Test: Der automatische Modus baut seine
+ * Konfiguration im Client zusammen (shared/autoPublish.ts) und erfährt erst
+ * hier, ob sie durchgeht. Ohne einen Test, der beide Seiten gegeneinander
+ * hält, fiele ein Auseinanderlaufen erst dem Nutzer auf – am Ende einer
+ * minutenlangen Analyse.
+ */
+export function validatePublishData(
+  config: any,
+  subdomain: string,
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
