@@ -13,8 +13,18 @@
 
 import { Router, Request, Response } from "express";
 import prisma from "../db/prisma";
+import { Prisma } from "@prisma/client";
 import { requireAuth } from "../middleware/auth";
 import { createAuditLogger } from "../utils/audit";
+// Bewusst relativ statt über den "@shared"-Alias: vite.config.ts zieht den
+// Server-Baum über `await import("./server")` in die Auflösung der Config, und
+// dort ist der Alias nicht bekannt. Ein reiner Typ-Import (wie @shared/api in
+// demo.ts) fällt nicht auf, weil er wegkompiliert wird – dies hier ist ein
+// Wert-Import und muss zur Laufzeit auflösbar sein.
+import {
+  suggestedConfigToDraft,
+  type SuggestedConfig,
+} from "../../shared/suggestedConfig";
 
 const router = Router();
 
@@ -170,7 +180,9 @@ export async function createScraperJob(req: Request, res: Response) {
  */
 export async function getScraperJob(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    // @types/express (v5) typisiert Params als string | string[], das Projekt
+    // nutzt aber express v4. String() macht die Absicht explizit.
+    const id = String(req.params.id);
 
     // Auf den Besitzer eingegrenzt. Vorher stand hier findUnique({ where: { id } })
     // ohne requireAuth und ohne Besitzprüfung, und die Antwort enthielt
@@ -267,7 +279,7 @@ export async function listScraperJobs(req: Request, res: Response) {
  */
 export async function applyScrapedData(req: Request, res: Response) {
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = String(req.params.id);
   const { configId } = req.body;
   const audit = getAuditLogger(req);
 
@@ -300,7 +312,28 @@ export async function applyScrapedData(req: Request, res: Response) {
       });
     }
 
-    const suggestedConfig = job.suggestedConfig as any;
+    // Gemeinsame Abbildung mit dem Client (shared/suggestedConfig.ts), damit
+    // Vorbefüllen und automatisches Anlegen nicht auseinanderlaufen.
+    //
+    // Die vorherige Fassung las hier direkt aus suggestedConfig und griff dabei
+    // dreimal daneben:
+    //  - contactMethods und socialMedia kommen im Deep-Scrape-Flow überhaupt
+    //    nicht vor (0 Treffer im gesamten Workflow) – Telefon und E-Mail, die
+    //    als phone/email geliefert werden, gingen also immer verloren.
+    //  - Farben, Schrift und Vorlage wurden gar nicht übernommen, obwohl der
+    //    Flow sie aus dem Stylesheet der Website ermittelt.
+    //  - menuItems und gallery wurden roh durchgereicht, ohne die vom
+    //    Konfigurator geforderten ids; gallery liefert reine Strings, erwartet
+    //    werden Objekte { id, url }.
+    const draft = suggestedConfigToDraft(job.suggestedConfig as SuggestedConfig);
+
+    if (!draft) {
+      return res.status(400).json({
+        success: false,
+        error: "No usable configuration data",
+        message: "suggestedConfig enthielt keine verwertbaren Felder",
+      });
+    }
 
     if (configId) {
       // Update existing configuration
@@ -321,24 +354,23 @@ export async function applyScrapedData(req: Request, res: Response) {
       const updated = await prisma.configuration.update({
         where: { id: configId },
         data: {
-          businessName: suggestedConfig.businessName || existing.businessName,
-          businessType: suggestedConfig.businessType || existing.businessType,
-          location: suggestedConfig.location || existing.location,
-          slogan: suggestedConfig.slogan || existing.slogan,
+          businessName: draft.business.name || existing.businessName,
+          businessType: draft.business.type || existing.businessType,
+          location: draft.business.location || existing.location,
+          slogan: draft.business.slogan || existing.slogan,
           uniqueDescription:
-            suggestedConfig.description || existing.uniqueDescription,
-          menuItems: suggestedConfig.menuItems || existing.menuItems,
-          gallery: suggestedConfig.gallery || existing.gallery,
+            draft.business.uniqueDescription || existing.uniqueDescription,
+          template: draft.design.template || existing.template,
+          primaryColor: draft.design.primaryColor || existing.primaryColor,
+          secondaryColor: draft.design.secondaryColor || existing.secondaryColor,
+          fontFamily: draft.design.fontFamily || existing.fontFamily,
+          menuItems: draft.content.menuItems ?? (existing.menuItems as object),
+          gallery: draft.content.gallery ?? (existing.gallery as object),
           contactMethods:
-            suggestedConfig.contactMethods || existing.contactMethods,
-          socialMedia: suggestedConfig.socialMedia || existing.socialMedia,
-          openingHours: suggestedConfig.openingHours || existing.openingHours,
+            draft.contact.contactMethods ?? (existing.contactMethods as object),
+          openingHours:
+            draft.content.openingHours ?? (existing.openingHours as object),
         },
-      });
-
-      await prisma.scraperJob.update({
-        where: { id },
-        data: { linkedConfigId: configId },
       });
 
       await audit("scraper_config_applied", configId, true);
@@ -354,23 +386,32 @@ export async function applyScrapedData(req: Request, res: Response) {
       const newConfig = await prisma.configuration.create({
         data: {
           userId,
-          businessName: suggestedConfig.businessName || "",
-          businessType: suggestedConfig.businessType || "",
-          location: suggestedConfig.location,
-          slogan: suggestedConfig.slogan,
-          uniqueDescription: suggestedConfig.description,
-          menuItems: suggestedConfig.menuItems || [],
-          gallery: suggestedConfig.gallery || [],
-          contactMethods: suggestedConfig.contactMethods || [],
-          socialMedia: suggestedConfig.socialMedia || {},
-          openingHours: suggestedConfig.openingHours || {},
+          businessName: draft.business.name || "",
+          businessType: draft.business.type || "",
+          location: draft.business.location,
+          slogan: draft.business.slogan,
+          uniqueDescription: draft.business.uniqueDescription,
+          ...(draft.design.template ? { template: draft.design.template } : {}),
+          ...(draft.design.primaryColor
+            ? { primaryColor: draft.design.primaryColor }
+            : {}),
+          ...(draft.design.secondaryColor
+            ? { secondaryColor: draft.design.secondaryColor }
+            : {}),
+          ...(draft.design.fontFamily
+            ? { fontFamily: draft.design.fontFamily }
+            : {}),
+          // Prismas Json-Eingabetyp lässt optionale Felder (string | undefined)
+          // nicht zu, obwohl die Abbildung undefined-Schlüssel gar nicht erst
+          // setzt. Deshalb hier bewusst umtypisiert statt die Werte zu
+          // verändern – der Inhalt ist geprüft und serialisierbar.
+          menuItems: (draft.content.menuItems ?? []) as unknown as Prisma.InputJsonValue,
+          gallery: (draft.content.gallery ?? []) as unknown as Prisma.InputJsonValue,
+          contactMethods: (draft.contact.contactMethods ??
+            []) as unknown as Prisma.InputJsonValue,
+          openingHours: (draft.content.openingHours ?? {}) as unknown as Prisma.InputJsonValue,
           status: "draft",
         },
-      });
-
-      await prisma.scraperJob.update({
-        where: { id },
-        data: { linkedConfigId: newConfig.id },
       });
 
       await audit("scraper_config_created", newConfig.id, true);
