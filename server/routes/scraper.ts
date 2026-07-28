@@ -172,17 +172,23 @@ export async function getScraperJob(req: Request, res: Response) {
   try {
     const { id } = req.params;
 
-    const job = await prisma.scraperJob.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            fullName: true,
-          },
-        },
-      },
+    // Auf den Besitzer eingegrenzt. Vorher stand hier findUnique({ where: { id } })
+    // ohne requireAuth und ohne Besitzprüfung, und die Antwort enthielt
+    // zusätzlich user: { email, fullName }. Damit gab jede bekannte Job-ID die
+    // E-Mail-Adresse und den Namen des Besitzers heraus – an beliebige Aufrufer.
+    // Die Nutzerdaten sind ganz entfallen: Wer den Job abruft, IST der Besitzer,
+    // die eigenen Kontaktdaten muss ihm der Endpunkt nicht zurückspiegeln.
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized",
+      });
+    }
+
+    const job = await prisma.scraperJob.findFirst({
+      where: { id, userId },
     });
 
     if (!job) {
@@ -399,7 +405,7 @@ export async function applyScrapedData(req: Request, res: Response) {
 
 router.post("/", requireAuth, createScraperJob);
 router.get("/", requireAuth, listScraperJobs);
-router.get("/:id", getScraperJob);
+router.get("/:id", requireAuth, getScraperJob);
 router.post("/:id/apply", requireAuth, applyScrapedData);
 
 export default router;
