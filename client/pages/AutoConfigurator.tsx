@@ -191,9 +191,25 @@ export default function AutoConfigurator() {
 
         if (!job) return;
 
-        if (job.status === "completed") {
+        // Vorhandene Zwischenergebnisse sofort anzeigen, statt den Nutzer bis
+        // zum Abschluss vor einem leeren Bildschirm warten zu lassen.
+        setResult(job);
+
+        // FERTIG ist der Vorgang erst, wenn suggestedConfig da ist – nicht bei
+        // status === "completed".
+        //
+        // Grund: Es gibt zwei n8n-Flows. Der Entry-Flow legt die Zeile an und
+        // setzt dabei bereits status: "completed" (fest verdrahtet in seinem
+        // Code-Knoten, ebenso isDeepScrapeReady: true), BEVOR er den
+        // Deep-Scrape-Flow überhaupt anstößt. Erst dieser zweite Flow ermittelt
+        // Speisekarte, Galerie, Farben und Öffnungszeiten und schreibt sie als
+        // suggestedConfig weg.
+        //
+        // Auf status zu warten hieß also, auf das flache Ergebnis des ersten
+        // Flows zu reagieren – die eigentlichen Daten waren dann noch gar nicht
+        // erhoben. isDeepScrapeReady taugt aus demselben Grund nicht als Signal.
+        if (job.suggestedConfig) {
           clearInterval(pollRef.current!);
-          setResult(job);
           setGenStatus("done");
           toast({
             title: "Fertig! 🎉",
