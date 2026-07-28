@@ -1,0 +1,423 @@
+{
+  "name": "Entry-Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "={{ $json.body.link }}",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        64,
+        -48
+      ],
+      "id": "e0fdbef3-f41c-427a-8384-7874386a19bf",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -48
+      ],
+      "id": "3eb970ae-0fad-46f2-b23d-a3c9c3d064dc",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "entry",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -48
+      ],
+      "id": "c84675b0-118b-4f11-b8ad-d7c4a6194122",
+      "name": "Webhook1",
+      "webhookId": "b1a76bcf-936c-4ac0-9f8e-6f3cb31bf646"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "ScraperJob",
+          "mode": "list",
+          "cachedResultName": "ScraperJob"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "businessName": "={{ $json.businessName }}",
+            "status": "completed",
+            "websiteUrl": "={{ $('Webhook1').item.json.body.link }}",
+            "createdAt": "={{ $now }}",
+            "startedAt": "={{ $json.extractedData.analysis_timestamp }}",
+            "completedAt": "={{ $now }}",
+            "extractedData": "={{ $json }}",
+            "businessType": "={{ $json.businessType }}",
+            "maitrScore": "={{ $json.maitrScore }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "instagramUrl": "={{ $json.instagramUrl }}",
+            "menuUrl": "={{ $json.menuUrl }}",
+            "hasReservation": "={{ $json.hasReservation }}",
+            "googleSearchQuery": "={{ $json.googleSearchQuery }}",
+            "analysisFeedback": "={{ $json.analysisFeedback }}",
+            "isDeepScrapeReady": "={{ $json.isDeepScrapeReady }}"
+          },
+          "matchingColumns": [
+            "websiteUrl"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "businessName",
+              "displayName": "businessName",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "businessType",
+              "displayName": "businessType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "websiteUrl",
+              "displayName": "websiteUrl",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "extractedData",
+              "displayName": "extractedData",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "startedAt",
+              "displayName": "startedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "completedAt",
+              "displayName": "completedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "maitrScore",
+              "displayName": "maitrScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "instagramUrl",
+              "displayName": "instagramUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "menuUrl",
+              "displayName": "menuUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "hasReservation",
+              "displayName": "hasReservation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "googleSearchQuery",
+              "displayName": "googleSearchQuery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "analysisFeedback",
+              "displayName": "analysisFeedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "isDeepScrapeReady",
+              "displayName": "isDeepScrapeReady",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        656,
+        -48
+      ],
+      "id": "5df8fa03-04e4-4372-9805-ee2db349d298",
+      "name": "Insert or update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "uXGM6hq76wwGqf9V",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. DATEN-ZUGRIFF (Korrektur: Greift direkt auf Webhook zu für SSL-Check)\nconst url = $(\"Webhook1\").item.json.body?.link || $(\"Webhook1\").item.json.link || \"\"; \nconst content = $input.item.json.data || \"\"; \n\n// 2. PATTERNS & PROVIDER (State-of-the-Art 2026)\nconst resProviders = /opentable|resmio|quandoo|sevenrooms|book-a-table|thefork|discoeat|formitable|superbexperience|shore\\.com|eatsms|tablecheck|covermanager|booku|reservation|booking|appointment|termin/i;\nconst resKeywords = /(?:tisch|online|jetzt|hier)\\s*(?:reservieren|buchen|reservierung|anfrage)/i;\n\n// 3. EXTRAKTION\nconst email = (content.match(/[\\w.-]+@[\\w.-]+\\.[a-z]{2,}/i) || [])[0] || null;\nconst phone = (content.match(/(?:\\+49|0049|0)(?:\\s?\\d){7,12}/) || [])[0] || null;\nconst instagram = (content.match(/https?:\\/\\/(www\\.)?instagram\\.com\\/[^\\s)\\]]+/i) || [])[0] || null;\n\n// Menü-Erkennung (Priorisiert PDF vor Markdown-Links)\nconst menuUrl = (content.match(/https?:\\/\\/[^\\s)\\]]+\\.pdf/i) || [])[0] || content.match(/\\[.*?(?:Karte|Menu|Speisen|Getränke).*?\\]\\((.*?)\\)/i)?.[1] || null;\n\n// 4. INTELLIGENTE LOGIK-CHECKS\nconst isSsl = url.toLowerCase().startsWith(\"https\"); // SSL-Fix\nconst hasRes = resProviders.test(content) || (resKeywords.test(content) && content.includes('http'));\nconst hasHours = /(?:Mo|Di|Mi|Do|Fr|Sa|So|Öffnungszeiten).*?\\d{1,2}[:.]\\d{2}/i.test(content);\nconst businessName = (content.match(/^#\\s+(.*)/m)?.[1] || \"Restaurant\").trim().substring(0, 100);\n\n// 5. MAITR-SCORE BERECHNUNG (Gewichtet)\nlet score = 0;\nif (isSsl) score += 10;\nif (email && /impressum/i.test(content)) score += 20; // Vertrauen\nif (menuUrl) score += 30;                            // UX (Speisekarte)\nif (hasHours) score += 15;                           // Information\nif (instagram) score += 15;                          // Social\nif (hasRes) score += 10;                             // Conversion\n\nconst maitrScore = Math.min(score, 100);\n\n// 6. OUTPUT FÜR NEONDB (Flaches Format für Spalten-Mapping)\nreturn {\n    businessName,\n    businessType: /pizz/i.test(content) ? \"pizzeria\" : /café|kaffee/i.test(content) ? \"cafe\" : \"restaurant\",\n    maitrScore,\n    email,\n    phone,\n    instagramUrl: instagram,\n    menuUrl,\n    hasReservation: hasRes,\n    googleSearchQuery: `${businessName} ${phone || \"\"} Gastro`, // Vorbereitung Maps-Scrape\n    analysisFeedback: maitrScore > 80 ? \"Exzellent!\" : \"Potenzial vorhanden.\",\n    status: \"completed\",\n    isDeepScrapeReady: true,\n    extractedData: {\n        analysis_timestamp: new Date().toISOString(),\n        ssl_detected: isSsl,\n        raw_snippet: content.substring(0, 200)\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -48
+      ],
+      "id": "d2b172a2-9ef6-4273-997a-abb042739ed4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://n8n-production-1508.up.railway.app/webhook/deep-scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  websiteUrl: $('Webhook1').item.json.body.link,\n  businessName: $('Code in JavaScript').item.json.businessName,\n  businessType: $('Code in JavaScript').item.json.businessType,\n  email: $('Code in JavaScript').item.json.email,\n  phone: $('Code in JavaScript').item.json.phone,\n  instagramUrl: $('Code in JavaScript').item.json.instagramUrl,\n  menuUrl: $('Code in JavaScript').item.json.menuUrl,\n  googleSearchQuery: $('Code in JavaScript').item.json.googleSearchQuery\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        896,
+        -48
+      ],
+      "id": "9ae49606-062b-49b8-9107-664641b50bcf",
+      "name": "Trigger Deep-Scrape-Flow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert or update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Trigger Deep-Scrape-Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "dac0c3de-6dc6-4bba-829f-d3853060847c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a6a863f55081b8b89107e36125235cd408a4518acf152ef999f738ff608daffe"
+  },
+  "nodeGroups": [],
+  "id": "kf3SnFEBL7TAdfe6",
+  "tags": []
+}
