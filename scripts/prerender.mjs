@@ -45,9 +45,44 @@ for (const [label, p] of [
 
 const { render, ROUTE_PATHS } = await import(pathToFileURL(ENTRY_PATH).href);
 
+/**
+ * Setzt eine bereits vorgerenderte index.html auf die Ausgangshülle zurück.
+ *
+ * Ohne das ist das Skript nicht idempotent: Läuft `build:prerender` ohne
+ * vorheriges `vite build`, ist dist/spa/index.html schon die vorgerenderte
+ * Startseite. Die würde dann als Vorlage dienen und das Markup verschachtelte
+ * sich bei jedem Lauf weiter (beobachtet: /demo-dashboard wuchs von 24,8 KB auf
+ * 146,6 KB). Im normalen Build fällt das nicht auf, weil `vite build` die Datei
+ * vorher neu schreibt – verlassen sollte man sich darauf aber nicht.
+ */
+const ROOT_OPEN = '<div id="root">';
+// Endanker bewusst der Service-Worker-Kommentar und nicht das schliessende
+// </div>: Das vorgerenderte Markup enthält beliebig verschachtelte <div> und
+// zusätzlich die <!-- --> Trennmarken, die React beim SSR zwischen Text und
+// Ausdruck setzt. Ein Regex über </div> oder <!-- trifft dort die falsche
+// Stelle. Der Kommentar kommt im App-Markup nicht vor.
+const ROOT_END = "<!-- Service Worker Registration -->";
+
+function rootBounds(html) {
+  const start = html.indexOf(ROOT_OPEN);
+  const end = html.indexOf(ROOT_END);
+  if (start === -1 || end === -1 || end < start) return null;
+  return { start, end };
+}
+
+function pristine(html) {
+  const b = rootBounds(html);
+  if (!b) return html;
+  return (
+    html.slice(0, b.start) +
+    `${ROOT_OPEN}\n    <div class="loading-spinner"></div>\n  </div>\n\n  ` +
+    html.slice(b.end)
+  );
+}
+
 // Vorlage EINMAL lesen, bevor irgendetwas geschrieben wird – sonst würde die
 // zweite Route auf dem bereits injizierten Markup der ersten aufsetzen.
-const TEMPLATE = readFileSync(HTML_PATH, "utf8");
+const TEMPLATE = pristine(readFileSync(HTML_PATH, "utf8"));
 
 const plain = (s) =>
   s.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
@@ -58,8 +93,12 @@ const plain = (s) =>
  * die von Helmet für DIESE Route erzeugten Tags.
  */
 function baseTemplateFor(route) {
+  // \b[^>]* statt nur "<title>": Helmet gibt <title data-rh="true"> aus. Ohne
+  // die Attribut-Behandlung bliebe dessen Tag stehen und bei jedem weiteren
+  // Lauf käme ein zusätzliches <title> hinzu. Global, damit auch mehrere
+  // Altbestände verschwinden.
   let html = TEMPLATE.replace(/<(?:meta|link)\b[^>]*data-rh="true"[^>]*>\s*/g, "")
-    .replace(/<title>[\s\S]*?<\/title>\s*/, "");
+    .replace(/<title\b[^>]*>[\s\S]*?<\/title>\s*/g, "");
 
   // Der <noscript>-Block beschreibt den Google-Abschnitt und gehört nur auf die
   // Startseite. Auf Unterseiten stünde er sonst zusätzlich zum echten Inhalt.
@@ -85,7 +124,6 @@ const guardFor = (route) =>
 const outPathFor = (route) =>
   route === "/" ? HTML_PATH : path.join(SPA_DIR, route.replace(/^\//, ""), "index.html");
 
-const rootRe = /<div id="root">[\s\S]*?<\/div>\s*(?=<!--|<script)/;
 
 function buildRoute(route) {
   const { html: appHtml, head } = render(route);
@@ -94,13 +132,19 @@ function buildRoute(route) {
     throw new Error(`Ergebnis unplausibel kurz (${appHtml?.length ?? 0} Zeichen)`);
   }
 
-  let html = baseTemplateFor(route);
-  if (!rootRe.test(html)) {
-    throw new Error('<div id="root"> nicht wie erwartet in index.html gefunden');
+  // Reihenfolge beachten: Erst den <head> ergänzen, DANN die Anker suchen –
+  // die Ersetzung verschiebt sonst alle nachfolgenden Indizes.
+  let html = baseTemplateFor(route).replace("</head>", `  ${head}\n</head>`);
+
+  const b = rootBounds(html);
+  if (!b) {
+    throw new Error(`Anker ${ROOT_OPEN} / ${ROOT_END} nicht in index.html gefunden`);
   }
 
-  html = html.replace("</head>", `  ${head}\n</head>`);
-  html = html.replace(rootRe, `<div id="root">${appHtml}</div>\n  ${guardFor(route)}\n  `);
+  html =
+    html.slice(0, b.start) +
+    `${ROOT_OPEN}${appHtml}</div>\n  ${guardFor(route)}\n\n  ` +
+    html.slice(b.end);
 
   const out = outPathFor(route);
   mkdirSync(path.dirname(out), { recursive: true });
@@ -169,6 +213,44 @@ for (const route of ROUTE_PATHS.filter((r) => r !== "/")) {
   } catch (err) {
     skipped.push({ route, reason: err.message });
   }
+}
+
+// ── Abgleich mit netlify.toml und sitemap.xml ────────────────────────────────
+// Die Routenliste steht an drei Stellen: hier (über entry.tsx), in netlify.toml
+// und in public/sitemap.xml. Läuft sie auseinander, fällt das sonst erst in der
+// Search Console auf – deshalb hart im Build prüfen.
+const built = ROUTE_PATHS.filter((r) => !skipped.some((s) => s.route === r));
+const problems = [];
+
+const netlifyToml = readFileSync(path.join(ROOT, "netlify.toml"), "utf8");
+for (const route of built.filter((r) => r !== "/")) {
+  if (!netlifyToml.includes(`from = "${route}"`)) {
+    problems.push(
+      `netlify.toml: Regel für "${route}" fehlt. Netlify antwortet sonst mit 301 auf ` +
+        `"${route}/" – Sitemap und Canonical zeigen aber auf die Fassung ohne Schrägstrich.`,
+    );
+  }
+}
+
+const sitemap = readFileSync(path.join(ROOT, "public/sitemap.xml"), "utf8");
+const sitemapPaths = [...sitemap.matchAll(/<loc>https:\/\/www\.maitr\.de(\/[^<]*)?<\/loc>/g)].map(
+  (m) => (m[1] || "/").replace(/\/$/, "") || "/",
+);
+for (const route of built) {
+  if (!sitemapPaths.includes(route)) {
+    problems.push(`public/sitemap.xml: "${route}" wird vorgerendert, fehlt aber in der Sitemap.`);
+  }
+}
+for (const p of sitemapPaths) {
+  if (!built.includes(p)) {
+    problems.push(`public/sitemap.xml: "${p}" steht in der Sitemap, wird aber nicht vorgerendert.`);
+  }
+}
+
+if (problems.length) {
+  console.error("\n[prerender] Routenlisten laufen auseinander:");
+  for (const p of problems) console.error(`  - ${p}`);
+  process.exit(1);
 }
 
 if (skipped.length) {

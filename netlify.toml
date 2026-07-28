@@ -74,6 +74,54 @@ to = "https://builder-quantum-landing-production.up.railway.app/api/:splat"
 status = 200
 force = true
 
+# Vorgerenderte Seiten ohne Schrägstrich am Ende ausliefern.
+#
+# scripts/prerender.mjs legt sie als <pfad>/index.html ab. Netlify beantwortet
+# eine Verzeichnis-URL ohne Schrägstrich sonst mit 301 auf die Fassung MIT
+# Schrägstrich – dann führen sämtliche Sitemap-Einträge und jeder Canonical
+# (beide ohne Schrägstrich) über eine Weiterleitung, und der Canonical zeigt auf
+# eine URL, die selbst weiterleitet. Diese Regeln liefern den Inhalt direkt mit
+# Status 200 aus, sodass URL, Canonical und Sitemap übereinstimmen.
+#
+# Bewusst einzeln aufgeführt statt per Platzhalter: Nur diese Pfade werden
+# vorgerendert, alles andere muss weiterhin in den SPA-Fallback laufen.
+# Reihenfolge ist wichtig – Netlify wertet Regeln von oben nach unten aus,
+# diese müssen also vor dem catch-all stehen.
+[[redirects]]
+from = "/impressum"
+to = "/impressum/index.html"
+status = 200
+
+[[redirects]]
+from = "/datenschutz"
+to = "/datenschutz/index.html"
+status = 200
+
+[[redirects]]
+from = "/agb"
+to = "/agb/index.html"
+status = 200
+
+[[redirects]]
+from = "/impressum-check"
+to = "/impressum-check/index.html"
+status = 200
+
+[[redirects]]
+from = "/datenschutz-check"
+to = "/datenschutz-check/index.html"
+status = 200
+
+[[redirects]]
+from = "/check-landing"
+to = "/check-landing/index.html"
+status = 200
+
+[[redirects]]
+from = "/demo-dashboard"
+to = "/demo-dashboard/index.html"
+status = 200
+
 # Fallback für Single-Page-Application
 [[redirects]]
 from = "/*"
