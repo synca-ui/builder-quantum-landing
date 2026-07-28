@@ -157,6 +157,13 @@ export const Navigation = memo(function Navigation({
         borderColor: `${headerFontColor}10`,
         backdropFilter: "var(--nav-backdrop, blur(8px))", // Ensure blur is active
         WebkitBackdropFilter: "var(--nav-backdrop, blur(8px))",
+        // Auf der echten Site (viewport-fit=cover) zieht sich der Header unter
+        // die Notch: Padding um die Safe-Area aufstocken, damit die Header-
+        // Farbe die Statusleiste füllt. In der Konfigurator-Vorschau gibt es
+        // keine echte Notch — dort bleibt das Padding der className maßgeblich.
+        ...(isPreview
+          ? {}
+          : { paddingTop: "calc(1rem + env(safe-area-inset-top, 0px))" }),
       }}
     >
       {/* Left: Logo + Business Name */}

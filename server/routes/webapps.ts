@@ -294,6 +294,19 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       fontFamily:
         config?.design?.fontFamily || config?.fontFamily || "sans-serif",
       headerFontSize: config?.design?.headerFontSize || 24,
+      // Diese fünf fehlten hier komplett — der Konfigurator speicherte sie,
+      // aber die veröffentlichte Site bekam sie nie zu sehen und fiel auf
+      // Defaults zurück (flacher weißer Hintergrund, weißer Header).
+      backgroundColor:
+        config?.design?.backgroundColor || config?.backgroundColor || undefined,
+      fontColor: config?.design?.fontColor || config?.fontColor || undefined,
+      priceColor: config?.design?.priceColor || config?.priceColor || undefined,
+      headerFontColor:
+        config?.design?.headerFontColor || config?.headerFontColor || undefined,
+      headerBackgroundColor:
+        config?.design?.headerBackgroundColor ||
+        config?.headerBackgroundColor ||
+        undefined,
 
       // Content
       menuItems: config?.content?.menuItems || config?.menuItems || [],
@@ -312,16 +325,31 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
         config?.features?.onlineStore ?? config?.onlineStore ?? false,
       teamArea: config?.features?.teamArea ?? config?.teamArea ?? false,
 
-      // Contact
+      // Contact — der Client-Store heißt die Felder contactMethods/socialMedia
+      // (client/types/domain.ts ContactInfo); die alten Schlüssel methods/
+      // social griffen nie und alles fiel auf leere Defaults.
       email: config?.contact?.email || "",
       phone: config?.contact?.phone || "",
-      contactMethods: config?.contact?.methods || config?.contactMethods || [],
-      socialMedia: config?.contact?.social || config?.socialMedia || {},
+      contactMethods:
+        config?.contact?.contactMethods ||
+        config?.contact?.methods ||
+        config?.contactMethods ||
+        [],
+      socialMedia:
+        config?.contact?.socialMedia ||
+        config?.contact?.social ||
+        config?.socialMedia ||
+        {},
 
-      // Pages
-      selectedPages: config?.pages?.selected ||
+      // Pages — Store-Form ist pages.selectedPages/customPages (PageManagement)
+      selectedPages: config?.pages?.selectedPages ||
+        config?.pages?.selected ||
         config?.selectedPages || ["home"],
-      customPages: config?.pages?.custom || config?.customPages || [],
+      customPages:
+        config?.pages?.customPages ||
+        config?.pages?.custom ||
+        config?.customPages ||
+        [],
 
       // SEO
       seoTitle: config?.seo?.title || "",

@@ -607,9 +607,18 @@ export async function getPublishedSite(req: Request, res: Response) {
       fontColor: config.design?.fontColor || config.fontColor,
       headerFontSize:
         config.design?.headerFontSize || config.headerFontSize || 24,
-      logo: config.design?.logo || config.logo,
-      selectedPages: config.pages?.selected || config.selectedPages || ["home"],
-      customPages: config.pages?.custom || config.customPages || [],
+      logo: config.design?.logo || config.business?.logo?.url || config.logo,
+      // Store-Form ist pages.selectedPages/customPages — die alten Schlüssel
+      // pages.selected/custom griffen nie, jede Site zeigte nur "home".
+      selectedPages:
+        config.pages?.selectedPages ||
+        config.pages?.selected ||
+        config.selectedPages || ["home"],
+      customPages:
+        config.pages?.customPages ||
+        config.pages?.custom ||
+        config.customPages ||
+        [],
       openingHours: config.content?.openingHours || config.openingHours || {},
       menuItems: config.content?.menuItems || config.menuItems || [],
       gallery: config.content?.gallery || config.gallery || [],
@@ -622,8 +631,18 @@ export async function getPublishedSite(req: Request, res: Response) {
         config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
       onlineStore: config.features?.onlineStore ?? config.onlineStore ?? false,
       teamArea: config.features?.teamArea ?? config.teamArea ?? false,
-      contactMethods: config.contact?.methods || config.contactMethods || [],
-      socialMedia: config.contact?.social || config.socialMedia || {},
+      contactMethods:
+        config.contact?.contactMethods ||
+        config.contact?.methods ||
+        config.contactMethods ||
+        [],
+      socialMedia:
+        config.contact?.socialMedia ||
+        config.contact?.social ||
+        config.socialMedia ||
+        {},
+      email: config.contact?.email || config.email || "",
+      phone: config.contact?.phone || config.phone || "",
       offers: config.offers || [],
       offerBanner: config.offerBanner,
       reservationButtonColor:

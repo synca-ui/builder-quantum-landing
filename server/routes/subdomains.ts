@@ -147,12 +147,25 @@ subdomainsRouter.get("/:subdomain/config", async (req, res) => {
         backgroundColor:
           config.design?.backgroundColor || config.backgroundColor,
         fontColor: config.design?.fontColor || config.fontColor,
+        priceColor: config.design?.priceColor || config.priceColor,
+        headerFontColor:
+          config.design?.headerFontColor || config.headerFontColor,
+        headerBackgroundColor:
+          config.design?.headerBackgroundColor || config.headerBackgroundColor,
         headerFontSize:
           config.design?.headerFontSize || config.headerFontSize || 24,
-        logo: config.design?.logo || config.logo,
-        selectedPages: config.pages?.selected ||
+        logo: config.design?.logo || config.business?.logo?.url || config.logo,
+        // Store-Form ist pages.selectedPages/customPages (siehe
+        // client/types/domain.ts PageManagement) — alte Schlüssel als Fallback.
+        selectedPages:
+          config.pages?.selectedPages ||
+          config.pages?.selected ||
           config.selectedPages || ["home"],
-        customPages: config.pages?.custom || config.customPages || [],
+        customPages:
+          config.pages?.customPages ||
+          config.pages?.custom ||
+          config.customPages ||
+          [],
         openingHours: config.content?.openingHours || config.openingHours || {},
         menuItems: config.content?.menuItems || config.menuItems || [],
         gallery: config.content?.gallery || config.gallery || [],
@@ -166,8 +179,18 @@ subdomainsRouter.get("/:subdomain/config", async (req, res) => {
         onlineStore:
           config.features?.onlineStore ?? config.onlineStore ?? false,
         teamArea: config.features?.teamArea ?? config.teamArea ?? false,
-        contactMethods: config.contact?.methods || config.contactMethods || [],
-        socialMedia: config.contact?.social || config.socialMedia || {},
+        contactMethods:
+          config.contact?.contactMethods ||
+          config.contact?.methods ||
+          config.contactMethods ||
+          [],
+        socialMedia:
+          config.contact?.socialMedia ||
+          config.contact?.social ||
+          config.socialMedia ||
+          {},
+        email: config.contact?.email || config.email || "",
+        phone: config.contact?.phone || config.phone || "",
         offers: config.offers || [],
         offerBanner: config.offerBanner,
         reservationButtonColor: config.reservationButtonColor,

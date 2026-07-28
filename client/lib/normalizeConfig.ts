@@ -436,6 +436,18 @@ export function normalizeConfig(
   const pagesObj = (flatConfig as any).pages || {};
   const paymentsObj = (flatConfig as any).payments || {};
 
+  // Aufgelöste Grundfarben vorab, damit die Header-Fallbacks darauf aufsetzen
+  // können. Die Konfigurator-Vorschau fällt bei fehlendem headerBackgroundColor/
+  // headerFontColor auf backgroundColor/fontColor zurück — die veröffentlichte
+  // Seite fiel dagegen auf hartes Weiß/Schwarz und sah anders aus als die
+  // Vorschau (z.B. weißer Header über dunklem Seitenhintergrund).
+  const resolvedBackgroundColor =
+    designObj.backgroundColor ||
+    flatConfig.backgroundColor ||
+    DEFAULT_DESIGN_CONFIG.backgroundColor;
+  const resolvedFontColor =
+    designObj.fontColor || flatConfig.fontColor || DEFAULT_DESIGN_CONFIG.fontColor;
+
   // Menu Items normalisieren (prüfe beide Stellen)
   const menuItems = normalizeMenuItems(
     contentObj.menuItems || flatConfig.menuItems,
@@ -499,14 +511,8 @@ export function normalizeConfig(
         designObj.secondaryColor ||
         flatConfig.secondaryColor ||
         DEFAULT_DESIGN_CONFIG.secondaryColor,
-      backgroundColor:
-        designObj.backgroundColor ||
-        flatConfig.backgroundColor ||
-        DEFAULT_DESIGN_CONFIG.backgroundColor,
-      fontColor:
-        designObj.fontColor ||
-        flatConfig.fontColor ||
-        DEFAULT_DESIGN_CONFIG.fontColor,
+      backgroundColor: resolvedBackgroundColor,
+      fontColor: resolvedFontColor,
       priceColor:
         designObj.priceColor ||
         flatConfig.priceColor ||
@@ -522,7 +528,7 @@ export function normalizeConfig(
       headerFontColor:
         designObj.headerFontColor ||
         flatConfig.headerFontColor ||
-        DEFAULT_DESIGN_CONFIG.headerFontColor,
+        resolvedFontColor,
       headerFontSize:
         designObj.headerFontSize ||
         flatConfig.headerFontSize ||
@@ -530,7 +536,7 @@ export function normalizeConfig(
       headerBackgroundColor:
         designObj.headerBackgroundColor ||
         flatConfig.headerBackgroundColor ||
-        DEFAULT_DESIGN_CONFIG.headerBackgroundColor,
+        resolvedBackgroundColor,
       backgroundImage:
         designObj.backgroundImage ?? flatConfig.backgroundImage ?? null,
       backgroundType:

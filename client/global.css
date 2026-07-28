@@ -137,6 +137,20 @@
 }
 
 @layer utilities {
+  /* Veröffentlichte Seite (AppRenderer): Der fixe Header wächst auf Geräten
+     mit Notch um env(safe-area-inset-top) — der Seiteninhalt muss denselben
+     Versatz bekommen, sonst verschwindet er hinter der Navigation.
+     !important, weil pt-24/md:pt-28 aus der className sonst gewinnen. */
+  .published-safe-top {
+    padding-top: calc(6rem + env(safe-area-inset-top, 0px)) !important;
+  }
+
+  @media (min-width: 768px) {
+    .published-safe-top {
+      padding-top: calc(7rem + env(safe-area-inset-top, 0px)) !important;
+    }
+  }
+
   /* Optimized Animations for Performance */
   @keyframes subtle-float {
     0%,

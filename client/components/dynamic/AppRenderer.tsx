@@ -40,6 +40,7 @@ import { DishCard } from "@/components/shared/DishCard";
 import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
+import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
 import { CategoryFilter } from "@/components/shared/CategoryFilter"; // ✅ CategoryFilter Component
 import ReservationFormModern from "./ReservationFormModern";
 
@@ -98,6 +99,30 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     features.reservationButtonTextColor,
     features.reservationButtonShape,
   ]);
+
+  // Browser-Chrome an die Site anpassen: theme-color färbt auf iOS/Android
+  // die Statusleiste bzw. den Bereich unter der Notch. index.html liefert
+  // statisch das Maitr-Teal (#0d9488) — auf einer veröffentlichten Kunden-
+  // Seite muss dort die Header-Farbe der Site stehen.
+  useEffect(() => {
+    const headerColor = design.headerBackgroundColor || design.backgroundColor;
+    let meta = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
+    const previous = meta?.getAttribute("content") ?? null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", headerColor);
+
+    return () => {
+      if (previous !== null) {
+        meta?.setAttribute("content", previous);
+      }
+    };
+  }, [design.headerBackgroundColor, design.backgroundColor]);
 
   // Local State
   const [menuOpen, setMenuOpen] = useState(false);
@@ -237,19 +262,29 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     );
   }, [content.menuItems, activeMenuCategory]);
 
-  // Template-spezifische Styles mit Desktop-Optimierung
+  // Template-spezifische Styles mit Desktop-Optimierung.
+  // Wrapper aus dem geteilten Helper — vorher fehlte hier der
+  // Modern-Gradient der Vorschau und veröffentlichte Seiten waren flach.
+  // published-safe-top polstert den Content um die Safe-Area (Notch) auf.
   const styles = useMemo(
     () => ({
-      wrapper: {
+      wrapper: getTemplateWrapperStyle(design.template, {
         backgroundColor: design.backgroundColor,
-        color: design.fontColor,
-      },
-      page: `px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
+        secondaryColor: design.secondaryColor,
+        fontColor: design.fontColor,
+      }),
+      page: `published-safe-top px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
       titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
       bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
       nav: `fixed top-0 left-0 right-0 z-50 px-5 md:px-8 lg:px-12 py-4 md:py-5 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
     }),
-    [design.backgroundColor, design.fontColor],
+    [
+      design.template,
+      design.backgroundColor,
+      design.secondaryColor,
+      design.fontColor,
+      fontClass,
+    ],
   );
 
   // ============================================

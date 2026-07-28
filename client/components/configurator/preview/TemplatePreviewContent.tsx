@@ -25,6 +25,7 @@ import {
 
 // ✅ Helper-Import aus zentraler Datei
 import { normalizeImageSrc, getPageLabel } from "@/lib/helpers";
+import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
 
 // Shared Components - werden im Editor UND auf der Live-Seite verwendet
 import { Navigation } from "@/components/shared/Navigation";
@@ -275,31 +276,22 @@ export function TemplatePreviewContent() {
         ? "font-mono"
         : "font-sans";
 
-  // Memoized styles
-  const styles = useMemo(() => {
-    const base = {
-      wrapper: { backgroundColor, color: fontColor },
+  // Memoized styles — Wrapper kommt aus dem geteilten Helper, damit Vorschau
+  // und veröffentlichte Seite (AppRenderer) identisch rendern.
+  const styles = useMemo(
+    () => ({
+      wrapper: getTemplateWrapperStyle(template, {
+        backgroundColor,
+        secondaryColor,
+        fontColor,
+      }),
       page: `px-5 pt-10 pb-20 min-h-full ${fontClass}`, // Increased pt-2 to pt-10
       titleClass: `text-3xl font-bold mb-2 text-center leading-tight`,
       bodyClass: `text-sm opacity-90 leading-relaxed`,
       nav: `!sticky !top-0 w-full z-[100] px-5 pt-12 pb-3 flex items-center justify-between border-b border-black/5 transition-all bg-white backdrop-blur-md shadow-sm`, // Forced sticky with !important
-    };
-
-    switch (template) {
-      case "modern":
-        return {
-          ...base,
-          wrapper: {
-            background: `linear-gradient(135deg, ${backgroundColor} 0%, ${secondaryColor} 100%)`,
-            color: fontColor,
-          },
-        };
-      case "stylish":
-      case "cozy":
-      default:
-        return base;
-    }
-  }, [backgroundColor, fontColor, secondaryColor, template, fontFamily]);
+    }),
+    [backgroundColor, fontColor, secondaryColor, template, fontFamily],
+  );
 
   // ==========================================
   // CONTENT RENDERERS
