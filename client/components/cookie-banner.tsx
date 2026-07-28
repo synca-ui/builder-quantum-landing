@@ -81,7 +81,7 @@ export default function CookieBanner() {
                                 <h3 className="font-semibold text-slate-800 text-sm font-display">Deine Cookie-Einstellungen</h3>
                                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                                     Wir verwenden Cookies für den Betrieb der Website. Technisch notwendige Cookies können nicht deaktiviert werden.{" "}
-                                    <a href="/datenschutz" className="text-teal-600 hover:text-teal-700 underline underline-offset-2 transition-colors">Datenschutzerklärung</a>
+                                    <a href="/datenschutz" className="text-teal-700 hover:text-teal-800 underline underline-offset-2 transition-colors">Datenschutzerklärung</a>
                                 </p>
                             </div>
                         </div>
@@ -93,7 +93,7 @@ export default function CookieBanner() {
                                 <div>
                                     <p className="text-xs font-semibold text-slate-700">
                                         Technisch notwendig
-                                        <span className="ml-2 text-xs font-normal text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">Immer aktiv</span>
+                                        <span className="ml-2 text-xs font-normal text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded">Immer aktiv</span>
                                     </p>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">Session-Cookies, Authentifizierung (Clerk). Zwingend erforderlich.</p>
                                 </div>
@@ -121,20 +121,20 @@ export default function CookieBanner() {
                         {!showDetails ? (
                             <>
                                 <div className="flex gap-2">
-                                    <button onClick={() => save(true)} className="flex-1 h-9 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold transition-colors">Alle akzeptieren</button>
+                                    <button onClick={() => save(true)} className="flex-1 h-9 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold transition-colors">Alle akzeptieren</button>
                                     <button onClick={() => save(false)} className="flex-1 h-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium transition-colors">Nur notwendige</button>
                                 </div>
-                                <button onClick={() => setShowDetails(true)} className="flex items-center justify-center gap-1 text-xs text-slate-400 hover:text-teal-600 transition-colors py-1">
+                                <button onClick={() => setShowDetails(true)} className="flex items-center justify-center gap-1 text-xs text-slate-500 hover:text-teal-700 transition-colors py-1">
                                     Einstellungen anpassen <ChevronDown className="w-3 h-3" />
                                 </button>
                             </>
                         ) : (
                             <>
                                 <div className="flex gap-2">
-                                    <button onClick={() => save(analyticsEnabled)} className="flex-1 h-9 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold transition-colors">Auswahl speichern</button>
+                                    <button onClick={() => save(analyticsEnabled)} className="flex-1 h-9 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold transition-colors">Auswahl speichern</button>
                                     <button onClick={() => save(true)} className="flex-1 h-9 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium transition-colors">Alle akzeptieren</button>
                                 </div>
-                                <button onClick={() => setShowDetails(false)} className="flex items-center justify-center gap-1 text-xs text-slate-400 hover:text-teal-600 transition-colors py-1">
+                                <button onClick={() => setShowDetails(false)} className="flex items-center justify-center gap-1 text-xs text-slate-500 hover:text-teal-700 transition-colors py-1">
                                     Weniger anzeigen <ChevronUp className="w-3 h-3" />
                                 </button>
                             </>
