@@ -55,7 +55,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Läuft ohne Datenbank: Der API-Vertragstest baut die Express-App nur, um
       # ihre Routing-Tabelle auszulesen, und stellt keine Verbindung her.
+      # server/db/prisma.ts verlangt DATABASE_URL aber schon beim Import –
+      # ein Dummy-Wert genügt, eine Verbindung wird nie aufgebaut.
       - run: pnpm test
+        env:
+          DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
 
   # Informativ, blockiert (noch) nicht: Der Root-Typecheck ist historisch rot.
   # Stand 28.07.2026: 98 Fehler, ausschließlich in Altbestand. Sobald bei 0,
