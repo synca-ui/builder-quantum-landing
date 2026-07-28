@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +18,14 @@ import {
   type ConfiguratorDraft,
   type SuggestedConfig,
 } from "@shared/suggestedConfig";
+import { buildPublishConfig, countExternalImages } from "@shared/autoPublish";
+import {
+  suggestSubdomain,
+  nextSubdomainCandidate,
+  normalizeSubdomain,
+  validateSubdomain,
+} from "@shared/subdomain";
+import { API_PATHS } from "@/lib/apiPaths";
 import {
   Sparkles,
   Upload,
@@ -28,10 +42,23 @@ import {
   Camera,
   Zap,
   Search,
+  Rocket,
+  ExternalLink,
 } from "lucide-react";
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
 type GenStatus = "idle" | "loading" | "done" | "error";
+
+/** Zustand des Veröffentlichens, unabhängig vom Zustand der Analyse. */
+type PublishStatus = "idle" | "publishing" | "published" | "error";
+
+/**
+ * Wie oft bei belegter Subdomain ein Zähler angehängt wird, bevor der Nutzer
+ * selbst einen Namen wählen muss. Der Publish-Endpunkt kennt keine
+ * Verfügbarkeitsabfrage – jeder Versuch ist ein echter Aufruf, deshalb eine
+ * kleine Zahl.
+ */
+const MAX_SUBDOMAIN_ATTEMPTS = 5;
 
 interface ScraperJob {
   id?: string;
@@ -292,6 +319,12 @@ export default function AutoConfigurator() {
   // Ergebnis der Übersetzung Scrape -> Konfigurator
   const [draft, setDraft] = useState<ConfiguratorDraft | null>(null);
 
+  // Direkt veröffentlichen (ohne den manuellen Konfigurator)
+  const [subdomain, setSubdomain] = useState("");
+  const [publishStatus, setPublishStatus] = useState<PublishStatus>("idle");
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [publishError, setPublishError] = useState<string | null>(null);
+
   // Konfigurator-Zustand: nur was für die Warnung und das Übernehmen nötig ist.
   const applyScrapedDraft = useConfiguratorStore((s) => s.applyScrapedDraft);
   const pushHistory = useConfiguratorStore((s) => s.pushHistory);
@@ -309,6 +342,20 @@ export default function AutoConfigurator() {
     existingGalleryCount > 0;
 
   const draftLines = describeDraft(draft);
+
+  // Was beim direkten Veröffentlichen herauskäme. useMemo, weil das Ergebnis
+  // in mehrere Stellen der Anzeige einfließt und der Entwurf sich nur beim
+  // Abschluss der Analyse ändert.
+  const publishPlan = useMemo(() => buildPublishConfig(draft), [draft]);
+  const externalImageCount = useMemo(() => countExternalImages(draft), [draft]);
+  const subdomainCheck = useMemo(
+    () => validateSubdomain(subdomain),
+    [subdomain],
+  );
+  const canPublish =
+    Boolean(publishPlan.config) &&
+    subdomainCheck.valid &&
+    publishStatus !== "publishing";
 
   // Clerk gibt getToken bei jedem Render als neue Funktion heraus. Direkt in
   // Abhängigkeitslisten benutzt, würde der Vorlade-Effekt unten bei jedem
@@ -507,6 +554,11 @@ export default function AutoConfigurator() {
                 return;
               }
               setDraft(nextDraft);
+              // Subdomain aus dem gefundenen Namen vorschlagen. Schlägt das
+              // fehl (kein Name, oder nach dem Bereinigen zu kurz), bleibt das
+              // Feld leer und die Oberfläche verlangt eine Eingabe – besser
+              // als unter einem unbrauchbaren Namen zu veröffentlichen.
+              setSubdomain(suggestSubdomain(nextDraft.business.name) ?? "");
               setGenStatus("done");
               toast({
                 title: "Analyse fertig",
@@ -582,6 +634,102 @@ export default function AutoConfigurator() {
     getAuthToken,
     isSignedIn,
   ]);
+
+  // ── Direkt veröffentlichen ────────────────────────────────────────────────
+
+  /**
+   * Veröffentlicht den Entwurf unter einer Subdomain, ohne Umweg über den
+   * manuellen Konfigurator.
+   *
+   * Die Kollisionsbehandlung steckt hier und nicht im Server: Der
+   * Publish-Endpunkt hat keine Verfügbarkeitsabfrage, er antwortet erst beim
+   * Schreiben mit 409. Statt den Nutzer raten zu lassen, wird der Name
+   * durchnummeriert – aber nur ein paar Mal, denn jeder Versuch ist ein
+   * echter Schreibvorgang.
+   *
+   * Wichtig: Ein 409 kommt NUR, wenn die Subdomain jemand anderem gehört.
+   * Gehört sie dem Aufrufer selbst, aktualisiert der Endpunkt sie – erneutes
+   * Veröffentlichen derselben Seite überschreibt also die eigene und legt
+   * keine Kopie an.
+   */
+  const publishDirectly = useCallback(async () => {
+    const config = publishPlan.config;
+    if (!config) return;
+
+    const base = normalizeSubdomain(subdomain);
+    const check = validateSubdomain(base);
+    if (!check.valid) {
+      setPublishError(check.reason ?? "Subdomain ist ungültig");
+      setPublishStatus("error");
+      return;
+    }
+
+    setPublishStatus("publishing");
+    setPublishError(null);
+
+    const token = await getAuthToken();
+    if (!token) {
+      setPublishStatus("error");
+      setPublishError("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.");
+      return;
+    }
+
+    for (let attempt = 0; attempt < MAX_SUBDOMAIN_ATTEMPTS; attempt++) {
+      const candidate = nextSubdomainCandidate(base, attempt);
+      try {
+        const res = await fetch(API_PATHS.publishApp, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ subdomain: candidate, config }),
+        });
+        const payload = await res.json().catch(() => null);
+
+        if (res.status === 409) {
+          // Vergeben – nächsten Namen probieren, ohne den Nutzer zu fragen.
+          continue;
+        }
+
+        if (!res.ok || !payload?.success) {
+          setPublishStatus("error");
+          // errors[] enthält die einzelnen Validierungsgründe; sie sind
+          // aussagekräftiger als das pauschale "Validierung fehlgeschlagen".
+          setPublishError(
+            Array.isArray(payload?.errors) && payload.errors.length
+              ? payload.errors.join(" · ")
+              : (payload?.error ??
+                `Veröffentlichen fehlgeschlagen (HTTP ${res.status}).`),
+          );
+          return;
+        }
+
+        setSubdomain(candidate);
+        setPublishedUrl(
+          payload.publishedUrl ?? `https://${candidate}.maitr.de`,
+        );
+        setPublishStatus("published");
+        toast({
+          title: "Web-App ist live",
+          description: `Erreichbar unter ${candidate}.maitr.de`,
+        });
+        return;
+      } catch (err) {
+        console.error("[AutoKonfigurator] Veröffentlichen fehlgeschlagen", err);
+        setPublishStatus("error");
+        setPublishError(
+          "Veröffentlichen fehlgeschlagen — bitte prüfe deine Verbindung.",
+        );
+        return;
+      }
+    }
+
+    setPublishStatus("error");
+    setPublishError(
+      `„${base}" und die nächsten ${MAX_SUBDOMAIN_ATTEMPTS - 1} Varianten sind vergeben. Bitte wähle selbst einen Namen.`,
+    );
+  }, [publishPlan.config, subdomain, getAuthToken, toast]);
 
   // ── Entwurf übernehmen → Konfigurator ─────────────────────────────────────
   const applyDraftAndOpenConfigurator = useCallback(() => {
@@ -987,6 +1135,58 @@ export default function AutoConfigurator() {
                     </p>
                   </div>
 
+                  {/* Was NICHT aus dem Scrape stammt, sondern angenommen wurde.
+                      Ohne diesen Hinweis veröffentlicht jemand einen
+                      angenommenen Geschäftstyp, ohne es zu merken. */}
+                  {publishPlan.defaulted.length > 0 && (
+                    <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
+                      <p className="text-xs font-semibold text-gray-700 mb-1.5">
+                        Nicht gefunden — wir haben angenommen
+                      </p>
+                      <ul className="space-y-1">
+                        {publishPlan.defaulted.map((line) => (
+                          <li key={line} className="text-xs text-gray-600">
+                            {line}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Fremd gehostete Bilder: siehe countExternalImages. */}
+                  {externalImageCount > 0 && (
+                    <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2">
+                      <ImageIcon className="w-4 h-4 text-amber-500 shrink-0 mt-px" />
+                      <p className="text-xs text-amber-800 leading-relaxed">
+                        {externalImageCount === 1
+                          ? "Ein Bild liegt noch"
+                          : `${externalImageCount} Bilder liegen noch`}{" "}
+                        auf dem Server der analysierten Website. Sie
+                        verschwinden, sobald sie dort ausgetauscht werden — lade
+                        sie im Konfigurator als eigene Bilder hoch.
+                      </p>
+                    </div>
+                  )}
+
+                  {publishPlan.blocking.length > 0 && (
+                    <div className="p-3.5 bg-red-50 rounded-xl border border-red-200 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-px" />
+                      <div>
+                        <p className="text-xs font-semibold text-red-900 mb-0.5">
+                          Direkt veröffentlichen geht nicht
+                        </p>
+                        {publishPlan.blocking.map((line) => (
+                          <p
+                            key={line}
+                            className="text-xs text-red-800 leading-relaxed"
+                          >
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {hasExistingData && (
                     <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-px" />
@@ -1060,23 +1260,122 @@ export default function AutoConfigurator() {
                   )}
                 </div>
 
-                {/* Footer-CTA */}
-                <div className="p-5 border-t border-gray-100 space-y-2">
-                  <Button
-                    onClick={applyDraftAndOpenConfigurator}
-                    className="w-full bg-gradient-to-r from-purple-500 to-orange-500 text-white text-sm font-bold h-11 rounded-xl shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    {hasExistingData
-                      ? "Übernehmen & Entwurf ersetzen"
-                      : "Daten übernehmen & anpassen"}
-                    <ChevronRight className="w-4 h-4 ml-1.5" />
-                  </Button>
-                  <button
-                    onClick={() => navigate("/configurator/manual")}
-                    className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors py-1"
-                  >
-                    Ohne Übernahme zum Konfigurator
-                  </button>
+                {/* Footer: veröffentlichen oder anpassen */}
+                <div className="p-5 border-t border-gray-100 space-y-3">
+                  {publishStatus === "published" && publishedUrl ? (
+                    // Fertig – ab hier ist die Adresse das Einzige, was zählt.
+                    <div className="space-y-2.5">
+                      <div className="p-3.5 bg-green-50 rounded-xl border border-green-200">
+                        <p className="text-xs font-semibold text-green-900 mb-1.5">
+                          Deine Web-App ist live
+                        </p>
+                        <a
+                          href={publishedUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-bold text-green-700 underline break-all hover:text-green-900"
+                        >
+                          {publishedUrl.replace(/^https?:\/\//, "")}
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                        </a>
+                      </div>
+                      <button
+                        onClick={applyDraftAndOpenConfigurator}
+                        className="w-full text-xs text-gray-500 hover:text-gray-800 transition-colors py-1 underline"
+                      >
+                        Inhalte noch anpassen
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Subdomain – vorgeschlagen, aber änderbar */}
+                      <div>
+                        <label
+                          htmlFor="auto-subdomain"
+                          className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5"
+                        >
+                          Adresse deiner Web-App
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            id="auto-subdomain"
+                            value={subdomain}
+                            onChange={(e) =>
+                              setSubdomain(
+                                normalizeSubdomain(e.target.value),
+                              )
+                            }
+                            placeholder="mein-restaurant"
+                            className="rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-100 text-sm"
+                          />
+                          <span className="text-sm text-gray-400 shrink-0">
+                            .maitr.de
+                          </span>
+                        </div>
+                        {subdomain && !subdomainCheck.valid && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {subdomainCheck.reason}
+                          </p>
+                        )}
+                      </div>
+
+                      {publishStatus === "error" && publishError && (
+                        <div className="p-3 bg-red-50 rounded-xl border border-red-200 flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-px" />
+                          <p className="text-xs text-red-800 leading-relaxed">
+                            {publishError}
+                          </p>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={publishDirectly}
+                        disabled={!canPublish}
+                        className="w-full bg-gradient-to-r from-purple-500 to-orange-500 text-white text-sm font-bold h-11 rounded-xl shadow-sm hover:shadow-md transition-shadow disabled:opacity-50"
+                      >
+                        {publishStatus === "publishing" ? (
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="animate-spin h-4 w-4 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                              />
+                            </svg>
+                            Wird veröffentlicht…
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <Rocket className="w-4 h-4" />
+                            Jetzt veröffentlichen
+                          </span>
+                        )}
+                      </Button>
+
+                      <button
+                        onClick={applyDraftAndOpenConfigurator}
+                        className="w-full text-xs text-gray-500 hover:text-gray-800 transition-colors py-1"
+                      >
+                        {hasExistingData
+                          ? "Lieber erst anpassen (ersetzt deinen Entwurf)"
+                          : "Lieber erst anpassen"}
+                        <ChevronRight className="w-3.5 h-3.5 ml-1 inline" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             )}

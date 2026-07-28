@@ -139,7 +139,13 @@ const TEMPLATE_MAP: Record<string, string> = {
   cozy: "cozy",
 };
 
-const FALLBACK_TEMPLATE = "modern";
+/**
+ * Greift, wenn der Flow einen unbekannten Vorlagennamen liefert – und im
+ * automatischen Veröffentlichen, wenn er gar keinen liefert. Exportiert, damit
+ * shared/autoPublish.ts denselben Wert benutzt und nicht ein zweiter Standard
+ * daneben entsteht.
+ */
+export const FALLBACK_TEMPLATE = "modern";
 
 const DAYS = [
   "monday",
