@@ -55,6 +55,35 @@ if (!appHtml || appHtml.length < 1000) {
   process.exit(1);
 }
 
+let html = readFileSync(HTML_PATH, "utf8");
+
+// Sichtbaren Text mit Markup-Rauschen entfernen, damit sich der gerenderte
+// Abschnitt und der <noscript>-Block in index.html vergleichen lassen.
+const plain = (s) =>
+  s
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const renderedText = plain(appHtml);
+
+// Bewusst die QUELL-index.html lesen, nicht dist/spa/index.html: Letztere
+// enthält nach der Injektion bereits das gerenderte Markup, der Vergleich fände
+// dann seinen eigenen Text wieder und ginge immer gut aus. Zusätzlich nur den
+// <noscript>-Block betrachten, nicht die ganze Datei.
+const srcHtml = readFileSync(path.join(ROOT, "index.html"), "utf8");
+const googleNoscript = [...srcHtml.matchAll(/<noscript>([\s\S]*?)<\/noscript>/g)]
+  .map((m) => m[1])
+  .find((b) => b.includes("google-profil"));
+
+if (!googleNoscript) {
+  console.error("[prerender] Kein <noscript>-Block mit google-profil in index.html gefunden.");
+  process.exit(1);
+}
+const noscriptText = plain(googleNoscript);
+
 // Pflichttexte für die Google-OAuth-Prüfung. Bricht der Build hier ab, ist der
 // Abschnitt aus dem Markup verschwunden – das darf nicht unbemerkt passieren.
 const REQUIRED = [
@@ -69,9 +98,29 @@ for (const needle of REQUIRED) {
   }
 }
 
-const GUARD = `<script>(function(){if(location.pathname!=="/"){var r=document.getElementById("root");if(r)r.innerHTML='<div class="loading-spinner"></div>';}})();</script>`;
+// Der <noscript>-Block in index.html ist die Fassung, die ein Abruf OHNE
+// JavaScript zu sehen bekommt – etwa bei der Google-OAuth-Prüfung. Läuft sie
+// gegen den sichtbaren Abschnitt auseinander, steht in der HTML-Quelle etwas
+// anderes als auf der gerenderten Seite. Das sieht nach Cloaking aus, auch wenn
+// es nur Unachtsamkeit war. Deshalb hier hart absichern statt dokumentieren.
+const bodyMatch = renderedText.match(
+  /Maitr hilft Cafés und Restaurants.*?vom Inhaber freigegeben\./,
+);
+if (!bodyMatch) {
+  console.error("[prerender] Fließtext des Google-Abschnitts im Markup nicht gefunden.");
+  process.exit(1);
+}
+if (!noscriptText.includes(bodyMatch[0])) {
+  console.error(
+    "[prerender] <noscript> in index.html weicht vom sichtbaren Abschnitt ab.\n" +
+      `  gerendert  : ${bodyMatch[0]}\n` +
+      `  <noscript> : ${noscriptText}\n` +
+      "  Bitte den <noscript>-Block in index.html wortgleich nachziehen.",
+  );
+  process.exit(1);
+}
 
-let html = readFileSync(HTML_PATH, "utf8");
+const GUARD = `<script>(function(){if(location.pathname!=="/"){var r=document.getElementById("root");if(r)r.innerHTML='<div class="loading-spinner"></div>';}})();</script>`;
 
 const rootRe = /<div id="root">[\s\S]*?<\/div>\s*(?=<!--|<script)/;
 if (!rootRe.test(html)) {

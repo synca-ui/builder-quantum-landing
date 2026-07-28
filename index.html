@@ -94,7 +94,7 @@
   <meta data-rh="true" name="robots" content="index, follow" />
 
   <!-- Open Graph Meta Tags -->
-  <meta property="og:title" content="Maitr — Web-App Builder für Restaurants & Businesses" />
+  <meta data-rh="true" property="og:title" content="Maitr – Restaurant-Web-App in 30 Sekunden &amp; Google-Profil-Pflege" />
   <meta data-rh="true" property="og:description"
     content="Maitr ist der digitale Gastgeber für Gastronomie: Web-App-Builder für Restaurants in 30 Sekunden – und eine App, die mit ausdrücklicher Zustimmung des Inhabers das Google Unternehmensprofil pflegt, Bewertungen beantwortet und Beiträge veröffentlicht." />
   <meta data-rh="true" property="og:type" content="website" />
@@ -185,7 +185,7 @@
           "@type": "SoftwareApplication",
           "@id": "https://www.maitr.de/#google-profil-app",
           "name": "Maitr – digitaler Gastgeber für Google",
-          "description": "Maitr hilft Cafés und Restaurants, ihr Google Unternehmensprofil aktuell zu halten. Mit ausdrücklicher Zustimmung des Inhabers beantwortet Maitr Google-Bewertungen, veröffentlicht Beiträge auf dem Profil und pflegt Öffnungszeiten und Kontaktdaten. Jede Aktion wird vor der Veröffentlichung vom Inhaber freigegeben.",
+          "description": "Maitr hilft Cafés und Restaurants, ihr Google Unternehmensprofil, Instagram & Co. aktuell zu halten. Mit ausdrücklicher Zustimmung des Inhabers beantwortet Maitr Bewertungen, veröffentlicht Beiträge und pflegt Öffnungszeiten. Jede Aktion wird vor der Veröffentlichung vom Inhaber freigegeben.",
           "applicationCategory": "BusinessApplication",
           "operatingSystem": "iOS, Android",
           "inLanguage": "de-DE",
@@ -206,9 +206,9 @@
     Der Abschnitt "google-profil" ist Grundlage der Google-OAuth-Prüfung für den
     Scope "business.manage": Der Text muss im rohen HTML stehen, also bevor
     JavaScript ausgeführt wurde. Überschrift und Fließtext sind mit Google
-    abgestimmt und wortgleich mit
-    client/components/sections/GoogleProfileSection.tsx – beide Fassungen müssen
-    synchron bleiben.
+    wortgleich mit GOOGLE_SECTION_BODY in
+    client/components/sections/GoogleProfileSection.tsx. scripts/prerender.mjs
+    bricht den Build ab, sobald die beiden Fassungen auseinanderlaufen.
   -->
   <noscript>
     <section id="google-profil-noscript" aria-labelledby="google-profil-noscript-titel"
@@ -218,10 +218,10 @@
         Maitr – dein digitaler Gastgeber für Google
       </h1>
       <p style="font-size: 1.125rem; line-height: 1.7; text-align: center; margin: 0 auto; max-width: 48rem;">
-        Maitr hilft Cafés und Restaurants, ihr Google Unternehmensprofil aktuell zu halten.
-        Mit ausdrücklicher Zustimmung des Inhabers beantwortet Maitr Google-Bewertungen,
-        veröffentlicht Beiträge auf dem Profil und pflegt Öffnungszeiten und Kontaktdaten.
-        Jede Aktion wird vor der Veröffentlichung vom Inhaber freigegeben.
+        Maitr hilft Cafés und Restaurants, ihr Google Unternehmensprofil, Instagram &amp; Co.
+        aktuell zu halten. Mit ausdrücklicher Zustimmung des Inhabers beantwortet Maitr
+        Bewertungen, veröffentlicht Beiträge und pflegt Öffnungszeiten. Jede Aktion wird vor
+        der Veröffentlichung vom Inhaber freigegeben.
       </p>
       <p style="margin-top: 3rem; text-align: center; color: #4b5563;">
         Maitr ist außerdem ein Web-App-Builder für Restaurants. Für den interaktiven Teil
