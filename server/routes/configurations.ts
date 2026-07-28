@@ -697,12 +697,23 @@ export async function setPreviewConfig(req: Request, res: Response) {
   const { id } = req.params;
   const userId = req.user?.id;
 
+  // Vorher stand hier `where: { id, ...(userId ? { userId } : {}) }`. Ohne
+  // requireAuth war userId immer undefined, und über den Alias
+  // POST /api/preview/:session war auch id immer undefined (der Parameter
+  // heißt dort anders) — der Filter kollabierte zu findFirst({ where: {} })
+  // und lieferte JEDEM Anfragenden die erste Konfiguration der Tabelle,
+  // inklusive userId, Kontaktdaten und Reservierungs-Benachrichtigungsadresse.
+  // Beides ist jetzt Pflicht, und die Route verlangt Auth.
+  if (!id) {
+    return res.status(400).json({ error: "Configuration id is required" });
+  }
+  if (!userId) {
+    return res.status(401).json({ error: "Missing token" });
+  }
+
   try {
     const configuration = await prisma.configuration.findFirst({
-      where: {
-        id,
-        ...(userId ? { userId } : {}),
-      },
+      where: { id, userId },
     });
 
     if (!configuration) {
@@ -731,7 +742,7 @@ router.get("/", requireAuth, getConfigurations);
 router.get("/:id", requireAuth, getConfiguration);
 router.delete("/:id", requireAuth, deleteConfiguration);
 router.post("/:id/publish", requireAuth, publishConfiguration);
-router.post("/:id/preview", setPreviewConfig);
+router.post("/:id/preview", requireAuth, setPreviewConfig);
 
 // ============================================
 // EXPORTS

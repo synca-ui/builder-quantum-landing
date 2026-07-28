@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import prisma from "../db/prisma";
+import { requireAuth } from "../middleware/auth";
 import { getCachedSite, setCachedSite } from "../utils/siteCache";
 
 
@@ -412,14 +413,21 @@ subdomainsRouter.post("/validate", async (req, res) => {
  * POST /api/subdomains/reserve
  * Reserve a subdomain for a user (called during publish)
  */
-subdomainsRouter.post("/reserve", async (req, res) => {
+// requireAuth ist hier Pflicht: Die Route nahm die userId früher aus dem
+// Request-Body entgegen — der Angreifer bestimmte also selbst, als wer er
+// auftritt. Die Besitzprüfung unten verglich gegen genau diesen Body-Wert und
+// war damit wirkungslos; das abschließende configuration.update lief ohne
+// jeden userId-Filter auf eine beliebige fremde Konfiguration.
+subdomainsRouter.post("/reserve", requireAuth, async (req, res) => {
   try {
-    const { subdomain, userId, configId } = req.body;
+    const { subdomain, configId } = req.body;
+    // Identität kommt ausschließlich aus dem verifizierten Token.
+    const userId = req.user!.id;
 
-    if (!subdomain || !userId || !configId) {
+    if (!subdomain || !configId) {
       return res.status(400).json({
         success: false,
-        error: "subdomain, userId und configId sind erforderlich",
+        error: "subdomain und configId sind erforderlich",
       });
     }
 
@@ -454,11 +462,21 @@ subdomainsRouter.post("/reserve", async (req, res) => {
       });
     }
 
-    // Update configuration with reserved subdomain
-    await prisma.configuration.update({
-      where: { id: configId },
+    // updateMany statt update: Der userId-Filter gehört in die where-Klausel,
+    // sonst schreibt die Route in jede beliebige fremde Konfiguration.
+    // count === 0 heißt "gibt es nicht ODER gehört dir nicht" — bewusst
+    // dieselbe Antwort, damit die Route kein Existenz-Orakel wird.
+    const updated = await prisma.configuration.updateMany({
+      where: { id: configId, userId },
       data: { selectedDomain: normalizedSubdomain },
     });
+
+    if (updated.count === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "Konfiguration nicht gefunden",
+      });
+    }
 
     return res.json({
       success: true,

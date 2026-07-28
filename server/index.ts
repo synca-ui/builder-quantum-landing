@@ -110,8 +110,13 @@ export function createServer() {
   // Users profile (protected)
   app.use("/api/users", requireAuth, usersRouter);
 
-  // Preview config injection (session-scoped, no auth needed)
-  app.post("/api/preview/:session", setPreviewConfig);
+  // Preview config injection.
+  // Der Kommentar hier lautete "session-scoped, no auth needed" — es gab aber
+  // nie ein Session-Scoping im Handler: der Parameter hieß :session, gelesen
+  // wurde req.params.id, also undefined. Zusammen mit dem fehlenden requireAuth
+  // gab die Route jedem Anfragenden eine fremde Konfiguration heraus.
+  // Jetzt :id (passend zum Handler) und authentifiziert.
+  app.post("/api/preview/:id", requireAuth, setPreviewConfig);
 
   // Auto-generation endpoint (rate-limited to prevent abuse)
   app.post("/api/autogen", strictLimiter, handleAutogen);

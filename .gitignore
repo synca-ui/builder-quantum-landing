@@ -31,3 +31,6 @@ dist-ssr
 .mcp.json
 maitr-promo.mp4
 rec.mov
+
+# DB-Exporte mit echten Kundendaten — gehören nie ins (öffentliche) Repo
+WebApp.json
