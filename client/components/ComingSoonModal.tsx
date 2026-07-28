@@ -76,8 +76,13 @@ export function ComingSoonModal({ open, onClose }: ComingSoonModalProps) {
 
           <div className="flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-4 py-2.5 mb-5">
             <Clock className="w-4 h-4 text-purple-500 shrink-0" />
+            {/* Ohne konkretes Quartal: Hier stand "Q3 2025", also ein seit über
+                einem Jahr verstrichener Termin – gezeigt bei jedem Klick auf
+                "Automatisch starten". Ein fester Termin veraltet still; wenn
+                wieder einer genannt werden soll, gehört er an eine Stelle, die
+                beim Verstreichen auffällt. */}
             <span className="text-xs text-purple-700 font-medium">
-              Verfügbar in Kürze · Q3 2025
+              Verfügbar in Kürze
             </span>
           </div>
 

@@ -385,7 +385,16 @@ function IndexContent() {
   const handleMagicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setInputError(null);
-    if (!isMagicLinkValid(magicLink)) {
+
+    // EINMAL trimmen und ab hier ausschließlich diesen Wert verwenden.
+    // Vorher wurde nur zur Prüfung getrimmt, gesendet und in die URL gehängt
+    // aber der Rohwert. Der spätere Abgleich in der Datenbank ist ein exakter
+    // String-Vergleich (server/routes/scraperJob.ts: where: { websiteUrl }) –
+    // ein eingefügtes Leerzeichen am Ende hätte also gereicht, damit das
+    // Polling den Job nie findet und stumm in den 6-Minuten-Timeout läuft.
+    const link = magicLink.trim();
+
+    if (!isMagicLinkValid(link)) {
       setInputError("invalid_format");
       return;
     }
@@ -395,7 +404,7 @@ function IndexContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          link: magicLink,
+          link,
           timestamp: new Date().toISOString(),
         }),
       });
@@ -408,8 +417,7 @@ function IndexContent() {
         return;
       }
 
-      const encoded = encodeURIComponent(magicLink);
-      navigate(`/mode-selection?sourceLink=${encoded}`);
+      navigate(`/mode-selection?sourceLink=${encodeURIComponent(link)}`);
     } catch (err) {
       console.error("Magic submit error:", err);
       setInputError("server_error");
@@ -488,9 +496,16 @@ function IndexContent() {
                         type="submit"
                         aria-busy={isLoadingMagic}
                         className={`inline-flex items-center justify-center rounded-2xl sm:rounded-full text-white w-full sm:w-auto px-4 sm:px-6 py-3 font-bold shadow-lg ${isLoadingMagic ? "opacity-80 cursor-wait" : ""} bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500`}
-                        disabled={
-                          isLoadingMagic || !isMagicLinkValid(magicLink)
-                        }
+                        // Nur während des Absendens gesperrt, NICHT bei
+                        // ungültiger Eingabe. Vorher war der Button auch dann
+                        // deaktiviert – ohne jede optische Kennzeichnung, denn
+                        // die className reagiert nur auf isLoadingMagic. Auf dem
+                        // Farbverlauf sah er unverändert aktiv aus: Wer
+                        // "restaurant.de" einfügte, klickte ins Leere, ohne
+                        // Hinweis. Die dafür gebaute Fehlerkarte "Hast du den
+                        // Link richtig eingegeben?" war damit gar nicht
+                        // erreichbar – sie wird erst beim Absenden gesetzt.
+                        disabled={isLoadingMagic}
                       >
                         {isLoadingMagic ? (
                           <>
