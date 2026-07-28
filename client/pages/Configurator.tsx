@@ -397,8 +397,14 @@ export default function Configurator() {
     return stepId === "preview-adjustments";
   }, [currentStep]);
 
-  // --- LIVE PREVIEW COMPONENT ---
-  const LivePreview = () => (
+  // --- LIVE PREVIEW ---
+  // Bewusst eine render-Funktion und KEINE Komponente: eine im Body von
+  // Configurator definierte Komponente bekommt bei jedem Render eine neue
+  // Funktionsidentität. React sieht dann einen anderen Elementtyp, wirft den
+  // kompletten Teilbaum weg und baut ihn neu auf – bei jedem Tastendruck in
+  // einem Formularfeld. Genau das ließ die Vorschau flackern und setzte ihren
+  // State (aktive Seite, Warenkorb, Scrollposition) zurück.
+  const renderLivePreview = () => (
     <div className="flex flex-col items-center justify-start pt-2">
       <div className="w-[280px] xl:w-[320px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
         <div className="flex items-center gap-2">
@@ -690,7 +696,7 @@ export default function Configurator() {
           {/* RECHTES PANEL: Sticky Live Preview */}
           {!isFullWidthStep && currentStep !== -1 && (
             <div className="hidden lg:block lg:col-span-5 xl:col-span-4 order-1 lg:order-2 sticky top-32 self-start">
-              <LivePreview />
+              {renderLivePreview()}
             </div>
           )}
         </div>

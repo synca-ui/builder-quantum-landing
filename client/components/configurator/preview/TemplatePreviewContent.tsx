@@ -371,17 +371,21 @@ export function TemplatePreviewContent() {
 
               const remainingSlots = Math.max(0, 3 - selectedHighlights.length);
 
-              // Zufällige Gerichte zum Auffüllen
-              const randomFiller = displayItems
+              // Auffüller in Menü-Reihenfolge. Früher stand hier ein
+              // .sort(() => 0.5 - Math.random()) – das lief bei JEDEM Render
+              // neu und ließ die Gerichte in der Vorschau bei jeder Eingabe
+              // die Plätze tauschen. In einer Live-Vorschau soll stehen, was
+              // der Nutzer konfiguriert hat, nicht bei jedem Frame etwas
+              // anderes.
+              const filler = displayItems
                 .filter((item: MenuItem) => !(item as any).isHighlight)
-                .sort(() => 0.5 - Math.random())
                 .slice(0, remainingSlots);
 
               // Kombiniere und limitiere auf 3
-              const highlightsToShow = [
-                ...selectedHighlights,
-                ...randomFiller,
-              ].slice(0, 3);
+              const highlightsToShow = [...selectedHighlights, ...filler].slice(
+                0,
+                3,
+              );
 
               return highlightsToShow.map((item: MenuItem, i: number) => (
                 <DishCard

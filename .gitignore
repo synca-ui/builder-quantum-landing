@@ -25,3 +25,9 @@ dist-ssr
 
 .config/
 .env
+
+# MCP-Server-Konfiguration: enthält den n8n-API-Schlüssel.
+# Dieses Repo ist öffentlich – die Datei darf NIE eingecheckt werden.
+.mcp.json
+maitr-promo.mp4
+rec.mov

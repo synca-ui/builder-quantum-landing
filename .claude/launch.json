@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "spa-preview", "runtimeExecutable": "npx", "runtimeArgs": ["vite", "preview", "--port", "4319", "--outDir", "dist/spa"], "port": 4319 }
+    { "name": "spa-preview", "runtimeExecutable": "npx", "runtimeArgs": ["vite", "preview", "--port", "4319", "--outDir", "dist/spa"], "port": 4319 },
+    { "name": "dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "--port", "5177"], "port": 5177 }
   ]
 }
