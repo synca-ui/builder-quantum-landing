@@ -27,7 +27,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   useConfiguratorBusiness,
   useConfiguratorActions,
+  useConfiguratorStore,
 } from "@/store/configuratorStore";
+import { uploadImageFile } from "@/lib/mediaUpload";
+import { useAuth } from "@clerk/clerk-react";
+import { toast } from "sonner";
 
 // Business type options matching the original Configurator
 const BUSINESS_TYPES = [
@@ -61,6 +65,7 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
 
   // Get state from store
   const business = useConfiguratorBusiness();
+  const { getToken } = useAuth();
 
   // Get actions from store
   const { business: businessActions } = useConfiguratorActions();
@@ -177,10 +182,35 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const url = URL.createObjectURL(file);
+                      // Lokale Vorschau sofort; echte URL nach dem Upload —
+                      // nur die überlebt Reload und Veröffentlichung.
+                      const localUrl = URL.createObjectURL(file);
                       businessActions.setBusinessInfo({
-                        logo: { url, file },
+                        logo: { url: localUrl, file },
                       });
+
+                      void (async () => {
+                        try {
+                          const url = await uploadImageFile(
+                            file,
+                            await getToken(),
+                          );
+                          // Nur ersetzen, wenn der Nutzer das Logo nicht
+                          // inzwischen erneut gewechselt hat.
+                          const current =
+                            useConfiguratorStore.getState().business.logo;
+                          if (current?.url === localUrl) {
+                            businessActions.setBusinessInfo({
+                              logo: { url },
+                            });
+                          }
+                        } catch (err) {
+                          console.error("[Logo] Upload fehlgeschlagen:", err);
+                          toast.error(
+                            "Logo konnte nicht hochgeladen werden — es erscheint nicht auf der veröffentlichten Website.",
+                          );
+                        }
+                      })();
                     }
                   }}
                 />

@@ -123,6 +123,7 @@ interface ConfiguratorState {
   removeMenuItem: (id: string) => void;
   updateMenuItem: (id: string, updates: Partial<MenuItem>) => void;
   addGalleryImage: (image: GalleryImage) => void;
+  updateGalleryImage: (id: string, updates: Partial<GalleryImage>) => void;
   removeGalleryImage: (id: string) => void;
   updateOpeningHours: (hours: OpeningHours) => void;
   setCategories: (categories: string[]) => void;
@@ -612,6 +613,24 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }));
       },
 
+      // Nach erfolgreichem Upload wird die lokale blob:-Vorschau durch die
+      // dauerhafte Storage-URL ersetzt (siehe client/lib/mediaUpload.ts).
+      updateGalleryImage: (id, updates) => {
+        checkThrottleGuard("updateGalleryImage");
+        set((state) => ({
+          content: {
+            ...state.content,
+            gallery: state.content.gallery.map((img) =>
+              img.id === id ? { ...img, ...updates } : img,
+            ),
+          },
+          publishing: {
+            ...state.publishing,
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+      },
+
       removeGalleryImage: (id) => {
         checkThrottleGuard("removeGalleryImage");
         set((state) => ({
@@ -1042,6 +1061,7 @@ export const useConfiguratorActions = () => {
         removeMenuItem: store.removeMenuItem,
         updateMenuItem: store.updateMenuItem,
         addGalleryImage: store.addGalleryImage,
+        updateGalleryImage: store.updateGalleryImage,
         removeGalleryImage: store.removeGalleryImage,
         updateOpeningHours: store.updateOpeningHours,
         setCategories: store.setCategories,

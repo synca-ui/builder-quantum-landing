@@ -8,6 +8,7 @@ import templatesRouter from "./templates";
 import scraperRouter from "./scraper";
 import subscriptionsRouter from "./subscriptions";
 import { subdomainsRouter } from "./subdomains";
+import { mediaRouter } from "./media";
 import { handleForwardN8n } from "./n8nProxy";
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
@@ -151,6 +152,7 @@ apiRouter.use("/templates", templatesRouter);
 apiRouter.use("/scraper", scraperRouter);
 apiRouter.use("/subscriptions", subscriptionsRouter);
 apiRouter.use("/subdomains", subdomainsRouter);
+apiRouter.use("/media", mediaRouter);
 
 // Dashboard API routes (authenticated)
 apiRouter.use("/dashboard/insights", insightsRouter);

@@ -26,4 +26,6 @@ export const API_PATHS = {
   listApps: "/api/webapps/apps",
   /** GET/PUT – eine einzelne Web-App des angemeldeten Nutzers */
   appById: (id: string) => `/api/webapps/apps/${encodeURIComponent(id)}`,
+  /** POST – lädt ein Bild hoch (multipart, Feld "file") und liefert die URL */
+  uploadMedia: "/api/media/upload",
 } as const;

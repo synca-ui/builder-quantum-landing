@@ -8,6 +8,9 @@ import {
   useConfiguratorActions,
 } from "@/store/configuratorStore";
 import { normalizeImageSrc } from "@/lib/configurator-data";
+import { uploadImageFile } from "@/lib/mediaUpload";
+import { useAuth } from "@clerk/clerk-react";
+import { toast } from "sonner";
 import type { GalleryImage } from "@/types/domain";
 
 interface MediaGalleryStepProps {
@@ -20,6 +23,7 @@ export function MediaGalleryStep({
   prevStep,
 }: MediaGalleryStepProps) {
   const { t } = useTranslation();
+  const { getToken } = useAuth();
   const gallery = useConfiguratorStore((s) => s.content.gallery);
   const actions = useConfiguratorActions();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -30,13 +34,28 @@ export function MediaGalleryStep({
       setSelectedFiles((prev) => [...prev, ...newFiles]);
 
       newFiles.forEach((file) => {
-        const newImage: GalleryImage = {
-          id: `${Date.now()}-${Math.random()}`,
+        const id = `${Date.now()}-${Math.random()}`;
+        // Sofortige lokale Vorschau; die blob:-URL überlebt aber weder Reload
+        // noch Veröffentlichung — deshalb direkt im Hintergrund hochladen und
+        // die URL durch die dauerhafte Storage-URL ersetzen.
+        actions.content.addGalleryImage({
+          id,
           url: URL.createObjectURL(file),
           alt: file.name,
           file: file,
-        };
-        actions.content.addGalleryImage(newImage);
+        } as GalleryImage);
+
+        void (async () => {
+          try {
+            const url = await uploadImageFile(file, await getToken());
+            actions.content.updateGalleryImage(id, { url, file: undefined });
+          } catch (e) {
+            console.error("[Gallery] Upload fehlgeschlagen:", e);
+            toast.error(
+              `„${file.name}" konnte nicht hochgeladen werden — das Bild erscheint nicht auf der veröffentlichten Website.`,
+            );
+          }
+        })();
       });
     }
   };

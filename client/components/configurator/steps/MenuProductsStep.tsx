@@ -21,6 +21,9 @@ import {
   useConfiguratorActions,
 } from "@/store/configuratorStore";
 import { normalizeImageSrc } from "@/lib/configurator-data";
+import { uploadImageFile } from "@/lib/mediaUpload";
+import { useAuth } from "@clerk/clerk-react";
+import { toast } from "sonner";
 import type { MenuItem } from "@/types/domain";
 
 interface MenuProductsStepProps {
@@ -74,6 +77,7 @@ export function MenuProductsStep({
   const menuItems = useConfiguratorStore((s) => s.content.menuItems);
   const categories = useConfiguratorStore((s) => s.content.categories) || [];
   const actions = useConfiguratorActions();
+  const { getToken } = useAuth();
 
   const [newItem, setNewItem] = useState({
     name: "",
@@ -157,32 +161,76 @@ export function MenuProductsStep({
     actions.content.removeMenuItem(id);
   };
 
+  // Lokale blob:-Vorschau sofort, dauerhafte Storage-URL nach dem Upload —
+  // nur die überlebt Reload und Veröffentlichung.
+  const uploadAndReplace = (
+    file: File,
+    localUrl: string,
+    replace: (permanentUrl: string) => void,
+  ) => {
+    void (async () => {
+      try {
+        const url = await uploadImageFile(file, await getToken());
+        replace(url);
+      } catch (e) {
+        console.error("[MenuItem] Upload fehlgeschlagen:", e);
+        toast.error(
+          `„${file.name}" konnte nicht hochgeladen werden — das Bild erscheint nicht auf der veröffentlichten Website.`,
+        );
+      }
+    })();
+    return localUrl;
+  };
+
   const handleUploadImagesForItem = (index: number, files: FileList | null) => {
     if (!files) return;
-    const images = Array.from(files).map((file) => ({
-      url: URL.createObjectURL(file),
-      alt: file.name,
-      file,
-    }));
-
     const item = menuItems[index];
-    if (item) {
-      const prevImages = Array.isArray(item.images) ? item.images : [];
-      const newImages = [...prevImages, ...images];
-      actions.content.updateMenuItem(item.id, {
-        images: newImages,
-        image: newImages[0],
+    if (!item) return;
+
+    const images = Array.from(files).map((file) => {
+      const localUrl = URL.createObjectURL(file);
+      uploadAndReplace(file, localUrl, (permanentUrl) => {
+        const current = useConfiguratorStore
+          .getState()
+          .content.menuItems.find((i) => i.id === item.id);
+        if (!current) return;
+        const updated = (current.images || []).map((img) =>
+          img.url === localUrl
+            ? { ...img, url: permanentUrl, file: undefined }
+            : img,
+        );
+        actions.content.updateMenuItem(item.id, {
+          images: updated,
+          image: updated[0],
+        });
       });
-    }
+      return { url: localUrl, alt: file.name, file };
+    });
+
+    const prevImages = Array.isArray(item.images) ? item.images : [];
+    const newImages = [...prevImages, ...images];
+    actions.content.updateMenuItem(item.id, {
+      images: newImages,
+      image: newImages[0],
+    });
   };
 
   const handleUploadImagesForNew = (files: FileList | null) => {
     if (!files) return;
-    const images = Array.from(files).map((file) => ({
-      url: URL.createObjectURL(file),
-      alt: file.name,
-      file,
-    }));
+    const images = Array.from(files).map((file) => {
+      const localUrl = URL.createObjectURL(file);
+      uploadAndReplace(file, localUrl, (permanentUrl) => {
+        setNewItem((prev) => ({
+          ...prev,
+          images: prev.images.map((img) =>
+            img.url === localUrl
+              ? { ...img, url: permanentUrl, file: undefined }
+              : img,
+          ),
+        }));
+      });
+      return { url: localUrl, alt: file.name, file };
+    });
     setNewItem((prev) => ({ ...prev, images: [...prev.images, ...images] }));
   };
 
