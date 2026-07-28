@@ -3,6 +3,11 @@ import { SEO } from "@/lib/seo";
 import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 
+// Letztes inhaltliches Änderungsdatum. Bewusst fest hinterlegt statt
+// new Date(): Die Seite wird zur Build-Zeit vorgerendert, ein berechnetes
+// Datum würde sonst den Deploy-Tag als Änderungsdatum ausweisen.
+const STAND = "Juli 2026";
+
 const sections = [
     { id: "geltungsbereich", label: "§ 1 Geltungsbereich" },
     { id: "vertragsgegenstand", label: "§ 2 Vertragsgegenstand" },
@@ -95,7 +100,7 @@ export default function AGB() {
                             Allgemeine Geschäftsbedingungen
                         </h1>
                         <p className="text-slate-500">
-                            Stand: {new Date().toLocaleDateString("de-DE")} · maitr.de
+                            Stand: {STAND} · maitr.de
                         </p>
                     </div>
 
@@ -310,7 +315,7 @@ export default function AGB() {
 
                     <div className="mt-20 pt-8 border-t border-slate-200 text-sm text-slate-500">
                         <p>
-                            Stand: {new Date().toLocaleDateString("de-DE")} · Julian Heinrich · Hansaring 37, 48155 Münster
+                            Stand: {STAND} · Julian Heinrich · Hansaring 37, 48155 Münster
                         </p>
                     </div>
                 </main>

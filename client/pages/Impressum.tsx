@@ -3,6 +3,11 @@ import { SEO } from "@/lib/seo";
 import React, { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 
+// Letztes inhaltliches Änderungsdatum. Bewusst fest hinterlegt statt
+// new Date(): Die Seite wird zur Build-Zeit vorgerendert, ein berechnetes
+// Datum würde sonst den Deploy-Tag als Änderungsdatum ausweisen.
+const STAND = "Juli 2026";
+
 export default function Impressum() {
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -34,7 +39,7 @@ export default function Impressum() {
                     <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4">
                         Impressum
                     </h1>
-                    <p className="text-slate-500">Stand: {new Date().toLocaleDateString("de-DE")}</p>
+                    <p className="text-slate-500">Stand: {STAND}</p>
                 </div>
 
                 <div className="space-y-12 text-slate-700 leading-relaxed">

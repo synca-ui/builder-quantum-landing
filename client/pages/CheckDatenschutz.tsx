@@ -3,6 +3,11 @@ import { SEO } from "@/lib/seo";
 import React, { useState } from "react";
 import "./check.css"; // We use the check styling
 
+// Letztes inhaltliches Änderungsdatum. Bewusst fest hinterlegt statt
+// new Date(): Die Seite wird zur Build-Zeit vorgerendert, ein berechnetes
+// Datum würde sonst den Deploy-Tag als Änderungsdatum ausweisen.
+const STAND = "Juli 2026";
+
 export default function CheckDatenschutz() {
     const [activeSection, setActiveSection] = useState("ueberblick");
 
@@ -180,7 +185,7 @@ export default function CheckDatenschutz() {
                             Quelle:{" "}
                             <a href="https://www.e-recht24.de" target="_blank" rel="noreferrer" style={{ color: "#64748b" }}>
                                 e-recht24.de
-                            </a>{" "}· Zuletzt aktualisiert: {new Date().toLocaleDateString("de-DE")}
+                            </a>{" "}· Zuletzt aktualisiert: {STAND}
                         </p>
                     </div>
                 </div>
