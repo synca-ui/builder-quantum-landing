@@ -148,9 +148,21 @@ const App = () => {
                           path="/configurator/manual"
                           element={<Configurator />}
                         />
+                        {/*
+                          Anders als der manuelle Konfigurator braucht der
+                          automatische zwingend eine Anmeldung: Er legt den
+                          Scraper-Job unter der userId an und fragt ihn
+                          besitzgebunden wieder ab. Ohne Schranke würde ein
+                          nicht angemeldeter Besucher eine Analyse starten, die
+                          er anschließend nie abrufen kann.
+                        */}
                         <Route
                           path="/configurator/auto"
-                          element={<AutoConfigurator />}
+                          element={
+                            <RequireAuth>
+                              <AutoConfigurator />
+                            </RequireAuth>
+                          }
                         />
 
                         {/* Dashboard Routes */}

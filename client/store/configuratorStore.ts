@@ -23,6 +23,7 @@ import type {
   Configuration,
 } from "@/types/domain";
 import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
+import type { ConfiguratorDraft } from "@shared/suggestedConfig";
 
 // ============================================
 // EMERGENCY THROTTLE GUARD (to detect infinite loops)
@@ -171,6 +172,7 @@ interface ConfiguratorState {
   resetConfig: () => void;
   getFullConfiguration: () => any;
   loadConfiguration: (config: Partial<Configuration>) => void;
+  applyScrapedDraft: (draft: ConfiguratorDraft) => void;
   clearAllData: () => void;
 }
 
@@ -454,19 +456,24 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           );
 
           return {
-            // Apply menu items: replace defaults, keep user custom items
+            // Eigene bzw. gescrapte Einträge haben Vorrang vor den Vorgaben des
+            // Geschäftstyps. Vorher wurden die Standard-Gerichte VORANGESTELLT
+            // und openingHours/categories BEDINGUNGSLOS überschrieben — ein
+            // Klick auf "Restaurant" im Schritt "Dein Geschäft" hat damit die
+            // gerade übernommenen Scrape-Daten wieder zerstört. Genau dort
+            // landet der Nutzer nach dem automatischen Konfigurator.
             content: {
               ...state.content,
               menuItems: hasUserCustomItems
-                ? [
-                    ...defaults.menuItems,
-                    ...state.content.menuItems.filter(
-                      (item) => !item.id.startsWith("default-"),
-                    ),
-                  ]
+                ? state.content.menuItems
                 : defaults.menuItems,
-              openingHours: defaults.openingHours,
-              categories: defaults.categories,
+              openingHours: hasUserCustomItems
+                ? state.content.openingHours
+                : defaults.openingHours,
+              categories:
+                hasUserCustomItems && state.content.categories.length > 0
+                  ? state.content.categories
+                  : defaults.categories,
             },
             // Always apply features for the business type
             features: {
@@ -948,6 +955,53 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         set((state) => ({ ...state, ...updates }));
       },
 
+      /**
+       * Übernimmt einen gescrapten Entwurf (siehe shared/suggestedConfig.ts) in
+       * einem einzigen Zustandswechsel.
+       *
+       * Warum als eigene Aktion und nicht über die vorhandenen Einzelaktionen:
+       * Der Entwurf ersetzt ganze Listen (Gerichte, Galerie). Dafür gäbe es nur
+       * addMenuItem/removeMenuItem/addGalleryImage – also eine Schleife mit einem
+       * set() pro Eintrag. Bei einer Speisekarte mit 40 Gerichten plus Galerie
+       * schlägt dabei die Schutzbremse checkThrottleGuard zu (>50 Updates pro
+       * Sekunde) und wirft. Ein set() ist außerdem atomar: Die Vorschau sieht nie
+       * einen halb übernommenen Stand.
+       *
+       * Es wird bewusst überschrieben, nicht zusammengeführt – der Aufrufer holt
+       * vorher die Bestätigung des Nutzers ein. Leere Abschnitte des Entwurfs
+       * lassen den bisherigen Wert stehen.
+       */
+      applyScrapedDraft: (draft) => {
+        checkThrottleGuard("applyScrapedDraft");
+        set((state) => ({
+          business: { ...state.business, ...draft.business },
+          design: { ...state.design, ...draft.design },
+          content: {
+            ...state.content,
+            ...(draft.content.menuItems?.length
+              ? { menuItems: draft.content.menuItems }
+              : {}),
+            ...(draft.content.gallery?.length
+              ? { gallery: draft.content.gallery }
+              : {}),
+            ...(draft.content.categories?.length
+              ? { categories: draft.content.categories }
+              : {}),
+            // Tage, für die der Scrape keine Zeiten geliefert hat, behalten den
+            // Standard – sonst stünde die Woche danach halb leer da.
+            openingHours: {
+              ...state.content.openingHours,
+              ...(draft.content.openingHours ?? {}),
+            },
+          },
+          contact: { ...state.contact, ...draft.contact },
+          publishing: {
+            ...state.publishing,
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+      },
+
       clearAllData: () => {
         checkThrottleGuard("clearAllData");
 
@@ -1111,6 +1165,7 @@ export const useConfiguratorActions = () => {
         resetConfig: store.resetConfig,
         getFullConfiguration: store.getFullConfiguration,
         loadConfiguration: store.loadConfiguration,
+        applyScrapedDraft: store.applyScrapedDraft,
         clearAllData: store.clearAllData,
       },
     }),

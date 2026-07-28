@@ -109,17 +109,20 @@ export default function ModeSelection() {
   async function fetchFullScraperJob(url: string) {
     try {
       setScraperLoading(true);
+      // /score statt /full: Diese Seite zeigt nur Kennzahl, Status und Dauer.
+      // /full verlangt inzwischen Anmeldung und Besitz — hier ist aber noch
+      // niemand angemeldet, und die Karte braucht die enthaltenen Kontaktdaten
+      // ohnehin nicht.
       const res = await fetch(
-        `/api/scraper-job/full?websiteUrl=${encodeURIComponent(url)}`,
+        `/api/scraper-job/score?websiteUrl=${encodeURIComponent(url)}`,
       );
       if (!res.ok) {
-        console.warn("[ModeSelection] /full Status:", res.status);
+        console.warn("[ModeSelection] /score Status:", res.status);
         return;
       }
       const data = await res.json();
-      if (data.job) {
-        console.log("[ModeSelection] Job geladen:", data.job);
-        setScraperData(data.job);
+      if (data && data.status !== "not_found") {
+        setScraperData(data);
       }
     } catch (err) {
       console.error("[ModeSelection] Fetch-Fehler:", err);

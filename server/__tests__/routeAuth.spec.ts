@@ -30,6 +30,12 @@ const PROTECTED = [
   { method: "post" as const, path: "/api/webapps/apps/publish" },
   { method: "get" as const, path: "/api/webapps/apps" },
   { method: "post" as const, path: "/api/media/upload" },
+  // Scraper: Diese drei gaben zu jeder bekannten URL E-Mail, Telefon und die
+  // vollständige Analyse heraus — ohne jede Anmeldung.
+  { method: "get" as const, path: "/api/scraper-job/full?websiteUrl=https://x.de" },
+  { method: "get" as const, path: "/api/scraper-jobs/some-id" },
+  { method: "post" as const, path: "/api/scraper" },
+  { method: "get" as const, path: "/api/scraper/some-id" },
 ];
 
 describe("Zugriffskontrolle: keine Route gibt ohne Token Daten heraus", () => {
@@ -41,6 +47,17 @@ describe("Zugriffskontrolle: keine Route gibt ohne Token Daten heraus", () => {
       `${method.toUpperCase()} ${path} antwortete ${res.status} statt 401. ` +
         `Body: ${JSON.stringify(res.body).slice(0, 300)}`,
     ).toBe(401);
+  });
+
+  it("der Score bleibt bewusst öffentlich — die Landingpage braucht ihn vor der Anmeldung", async () => {
+    // Gegenprobe zur Liste oben: Hier ist 401 das FALSCHE Ergebnis. Der
+    // Endpunkt liefert ausschließlich Kennzahl, Status und Zeitstempel, keine
+    // Kontakt- oder Analysedaten.
+    const res = await request(app).get(
+      "/api/scraper-job/score?websiteUrl=https://example.de",
+    );
+
+    expect(res.status).not.toBe(401);
   });
 
   it("die Preview-Route verrät auch mit Body-userId nichts", async () => {

@@ -1,9 +1,17 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import Headbar from "@/components/Headbar";
+import { useConfiguratorStore } from "@/store/configuratorStore";
+import {
+  suggestedConfigToDraft,
+  describeDraft,
+  type ConfiguratorDraft,
+  type SuggestedConfig,
+} from "@shared/suggestedConfig";
 import {
   Sparkles,
   Upload,
@@ -38,9 +46,192 @@ interface ScraperJob {
   hasReservation?: boolean;
   analysisFeedback?: string | null;
   maitrScore?: number | null;
-  suggestedConfig?: any;
+  suggestedConfig?: SuggestedConfig | null;
   photos?: string[];
   extractedData?: any;
+}
+
+/**
+ * Woran der Job beim Abfragen erkannt wird.
+ *
+ * "id"  -> GET /api/scraper/:id, angemeldet und auf den Besitzer eingegrenzt.
+ * "websiteUrl" -> GET /api/scraper-job/full, ohne Anmeldung. Dieser Weg gibt zu
+ * jeder bekannten URL die Kontaktdaten des Betriebs heraus, auch fremde. Er ist
+ * nur der Übergangsweg, bis die Zeile von der App selbst angelegt wird und wir
+ * eine jobId haben.
+ */
+/**
+ * Abgefragt wird ausschließlich über die Job-ID gegen den besitzgebundenen
+ * GET /api/scraper/:id. Der frühere Weg über die websiteUrl lief gegen
+ * /api/scraper-job/full — einen unauthentifizierten Endpunkt, der die
+ * Kontaktdaten jedes gescrapten Betriebs herausgab. Der ist jetzt geschlossen.
+ */
+type JobLookup = { kind: "id"; jobId: string };
+
+type PollOutcome =
+  /** Zeile gefunden – kann trotzdem noch unvollständig sein. */
+  | { kind: "job"; job: ScraperJob }
+  /** Noch nichts da oder Netz-Aussetzer – weiter versuchen. */
+  | { kind: "pending" }
+  /** Zeile existiert nicht (mehr) – nach ein paar Versuchen abbrechen. */
+  | { kind: "missing" }
+  /** Abbruch: nicht angemeldet oder der Job gehört jemand anderem. */
+  | { kind: "denied"; reason: "unauthenticated" | "foreign" };
+
+// Der Deep-Scrape braucht üblicherweise 1–3 Minuten. Danach hängt er, und ewiges
+// Warten hilft niemandem.
+const POLL_INTERVAL_MS = 3000;
+const POLL_TIMEOUT_MS = 6 * 60 * 1000;
+const SLOW_HINT_AFTER_MS = 100 * 1000;
+
+/**
+ * Index von "business-info" in CONFIGURATOR_STEPS_CONFIG (client/pages/Configurator.tsx).
+ * Dorthin springen wir nach dem Übernehmen: Dort stehen genau die Felder, die der
+ * Scrape gefüllt hat, und die Vorschau daneben zeigt den echten Namen statt
+ * "Dein Geschäft".
+ */
+const STEP_BUSINESS_INFO = 1;
+
+/**
+ * Die Spalte suggestedConfig ist mal ein Objekt, mal ein JSON-String – der
+ * Deep-Scrape-Flow schreibt sie per JSON.stringify, und ob das beim Lesen
+ * geparst zurückkommt, hängt am Spaltentyp. /api/scraper-job/full räumt das
+ * bereits auf, /api/scraper/:id reicht die Prisma-Zeile roh durch.
+ */
+function parseSuggested(value: unknown): SuggestedConfig | null {
+  if (!value) return null;
+  if (typeof value === "object") return value as SuggestedConfig;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object"
+        ? (parsed as SuggestedConfig)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function normalizeJob(raw: any): ScraperJob | null {
+  if (!raw || typeof raw !== "object") return null;
+  return { ...raw, suggestedConfig: parseSuggested(raw.suggestedConfig) };
+}
+
+/**
+ * Eine einzelne Abfrage des Jobs. Beide Wege liefern dieselbe Form, damit der
+ * Wechsel vom unauthentifizierten auf den authentifizierten Endpunkt nur die
+ * Wahl des JobLookup betrifft und nicht die Schleife darüber.
+ */
+async function fetchScraperJob(
+  lookup: JobLookup,
+  getToken: () => Promise<string | null>,
+  signal: AbortSignal,
+): Promise<PollOutcome> {
+  const token = await getToken();
+
+  // Ohne Token braucht die Anfrage gar nicht erst rauszugehen: Der Endpunkt
+  // verlangt Anmeldung, und ein 401 würde sonst als "gehört einem anderen
+  // Konto" gedeutet – die falsche Ursache.
+  if (!token) return { kind: "denied", reason: "unauthenticated" };
+
+  const res = await fetch(`/api/scraper/${encodeURIComponent(lookup.jobId)}`, {
+    signal,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    return { kind: "denied", reason: "foreign" };
+  }
+  // 404 heißt hier nicht "noch nicht fertig": Die Zeile wurde soeben angelegt,
+  // sie MUSS existieren. Ein paar Versuche Toleranz für Replikationsverzug,
+  // danach abbrechen statt den Nutzer die volle Zeit warten zu lassen.
+  if (res.status === 404) return { kind: "missing" };
+  if (!res.ok) return { kind: "pending" };
+
+  const payload = await res.json();
+  const job = normalizeJob(payload?.data);
+  return job ? { kind: "job", job } : { kind: "pending" };
+}
+
+type TriggerResult =
+  | { kind: "ok"; lookup: JobLookup }
+  | { kind: "error"; message: string };
+
+/**
+ * Stößt die Analyse an und sagt, worüber danach abgefragt wird.
+ *
+ * Beide Wege stehen hier vollständig; welcher genommen wird, entscheidet
+ * USE_OWNED_SCRAPER_JOB (siehe dort).
+ */
+async function triggerScrape(params: {
+  link: string;
+  mapsLink: string;
+  businessName: string;
+  menuFile: { name: string; base64: string } | null;
+  getToken: () => Promise<string | null>;
+  isSignedIn: boolean;
+}): Promise<TriggerResult> {
+  const { link, mapsLink, businessName, menuFile, getToken, isSignedIn } =
+    params;
+
+  if (!isSignedIn) {
+    return {
+      kind: "error",
+      message:
+        "Bitte melde dich an — die Analyse wird deinem Konto zugeordnet, damit nur du sie abrufen kannst.",
+    };
+  }
+
+  const token = await getToken();
+  if (!token) {
+    return {
+      kind: "error",
+      message: "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+    };
+  }
+
+  try {
+    // Ein einziger Weg: Die App legt die Zeile mit userId an und stößt n8n an.
+    // Der Entry-Flow upsertet danach auf websiteUrl, ohne userId zu schreiben —
+    // der Besitzer bleibt also erhalten, und nur er kann das Ergebnis abrufen.
+    const res = await fetch("/api/scraper", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        websiteUrl: link,
+        businessName: businessName || undefined,
+        mapsLink: mapsLink || undefined,
+        menuFile: menuFile
+          ? { name: menuFile.name, base64: menuFile.base64 }
+          : undefined,
+      }),
+    });
+    const payload = await res.json().catch(() => null);
+
+    if (res.ok && typeof payload?.jobId === "string") {
+      return { kind: "ok", lookup: { kind: "id", jobId: payload.jobId } };
+    }
+
+    return {
+      kind: "error",
+      message:
+        payload?.message ||
+        payload?.error ||
+        `Die Analyse konnte nicht gestartet werden (HTTP ${res.status}).`,
+    };
+  } catch (err) {
+    console.error("[AutoKonfigurator] POST /api/scraper fehlgeschlagen", err);
+    return {
+      kind: "error",
+      message:
+        "Die Analyse konnte nicht gestartet werden — bitte prüfe deine Verbindung.",
+    };
+  }
 }
 
 // ─── Schritt-Definitionen für Loading-Animation ───────────────────────────────
@@ -76,8 +267,10 @@ export default function AutoConfigurator() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { toast } = useToast();
+  const { getToken, isSignedIn } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  /** Beendet die laufende Abfrage-Schleife (Timer + offener Request). */
+  const stopPollRef = useRef<(() => void) | null>(null);
 
   // Formular-Felder
   const [url, setUrl] = useState("");
@@ -93,7 +286,39 @@ export default function AutoConfigurator() {
   const [genStatus, setGenStatus] = useState<GenStatus>("idle");
   const [activeStep, setActiveStep] = useState(0);
   const [result, setResult] = useState<ScraperJob | null>(null);
-  const [jobUrl, setJobUrl] = useState<string | null>(null);
+  const [slowHint, setSlowHint] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Ergebnis der Übersetzung Scrape -> Konfigurator
+  const [draft, setDraft] = useState<ConfiguratorDraft | null>(null);
+
+  // Konfigurator-Zustand: nur was für die Warnung und das Übernehmen nötig ist.
+  const applyScrapedDraft = useConfiguratorStore((s) => s.applyScrapedDraft);
+  const pushHistory = useConfiguratorStore((s) => s.pushHistory);
+  const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
+  const existingBusinessName = useConfiguratorStore((s) => s.business.name);
+  const existingMenuCount = useConfiguratorStore(
+    (s) => s.content.menuItems.length,
+  );
+  const existingGalleryCount = useConfiguratorStore(
+    (s) => s.content.gallery.length,
+  );
+  const hasExistingData =
+    Boolean(existingBusinessName?.trim()) ||
+    existingMenuCount > 0 ||
+    existingGalleryCount > 0;
+
+  const draftLines = describeDraft(draft);
+
+  // Clerk gibt getToken bei jedem Render als neue Funktion heraus. Direkt in
+  // Abhängigkeitslisten benutzt, würde der Vorlade-Effekt unten bei jedem
+  // Render erneut laufen – und weil er setBusinessName aufruft, wäre das eine
+  // Schleife. Über die Ref bleibt der Zugriff stabil.
+  const getTokenRef = useRef(getToken);
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
+  const getAuthToken = useCallback(() => getTokenRef.current(), []);
 
   // ── URL-Params auslesen + ScraperJob pre-fill ────────────────────────────
   useEffect(() => {
@@ -104,23 +329,17 @@ export default function AutoConfigurator() {
     if (/maps/i.test(decoded)) setMapsLink(decoded);
     else setUrl(decoded);
 
-    // Gespeicherte Scraper-Daten vorladen
-    fetch(`/api/scraper-job/full?websiteUrl=${encodeURIComponent(decoded)}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        const job: ScraperJob | null = data?.job ?? null;
-        if (!job) return;
-        if (job.businessName) setBusinessName(job.businessName);
-      })
-      .catch(() => {
-        /* still */
-      });
+    // Früher wurde hier über die websiteUrl der Betriebsname vorgeladen. Das
+    // lief gegen /api/scraper-job/full — unauthentifiziert und für jede fremde
+    // URL abfragbar. Ohne jobId gibt es keinen besitzgebundenen Weg dorthin,
+    // und der Name ist ein optionales Feld, das der Nutzer ohnehin tippt.
+    // Deshalb ersatzlos gestrichen statt durch einen 401-Aufruf ersetzt.
   }, [search]);
 
   // ── Cleanup ──────────────────────────────────────────────────────────────
   useEffect(() => {
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      stopPollRef.current?.();
     };
   }, []);
 
@@ -165,70 +384,158 @@ export default function AutoConfigurator() {
   }
 
   // ── Polling für Job-Abschluss ─────────────────────────────────────────────
-  function startPolling(websiteUrl: string) {
-    let attempts = 0;
-    const MAX = 120; // 120 × 3s = 6 Minuten max
+  const failWith = useCallback(
+    (title: string, description: string) => {
+      setGenStatus("error");
+      setErrorMessage(description);
+      toast({ title, description, variant: "destructive" });
+    },
+    [toast],
+  );
 
-    pollRef.current = setInterval(async () => {
-      attempts++;
-      if (attempts > MAX) {
-        clearInterval(pollRef.current!);
-        setGenStatus("error");
-        toast({
-          title: "Timeout",
-          description: "Der Workflow hat zu lange gebraucht.",
-          variant: "destructive",
-        });
-        return;
-      }
+  /**
+   * Fragt den Job bis zum Ergebnis ab.
+   *
+   * Bewusst eine Kette aus setTimeout statt setInterval: Bei einer langsamen
+   * Antwort würde setInterval den nächsten Aufruf starten, bevor der vorige
+   * durch ist – Antworten überholen sich dann gegenseitig. Die Abbruchgrenze
+   * hängt außerdem an der Uhr und nicht an der Zahl der Versuche, sonst
+   * verschiebt sie sich mit jeder langsamen Antwort.
+   */
+  const startPolling = useCallback(
+    (lookup: JobLookup) => {
+      stopPollRef.current?.();
 
-      try {
-        const res = await fetch(
-          `/api/scraper-job/full?websiteUrl=${encodeURIComponent(websiteUrl)}`,
-        );
-        const data = await res.json();
-        const job: ScraperJob | null = data?.job ?? null;
+      let cancelled = false;
+      let timer: ReturnType<typeof setTimeout> | null = null;
+      let missingCount = 0;
+      const controller = new AbortController();
+      const deadline = Date.now() + POLL_TIMEOUT_MS;
 
-        if (!job) return;
+      const hintTimer = setTimeout(() => setSlowHint(true), SLOW_HINT_AFTER_MS);
 
-        // Vorhandene Zwischenergebnisse sofort anzeigen, statt den Nutzer bis
-        // zum Abschluss vor einem leeren Bildschirm warten zu lassen.
-        setResult(job);
+      const stop = () => {
+        cancelled = true;
+        if (timer) clearTimeout(timer);
+        clearTimeout(hintTimer);
+        controller.abort();
+        // Nur die eigene Anmeldung zurücknehmen – sonst würde ein spät
+        // eintreffendes stop() einen bereits gestarteten neuen Lauf abmelden.
+        if (stopPollRef.current === stop) stopPollRef.current = null;
+      };
+      stopPollRef.current = stop;
 
-        // FERTIG ist der Vorgang erst, wenn suggestedConfig da ist – nicht bei
-        // status === "completed".
-        //
-        // Grund: Es gibt zwei n8n-Flows. Der Entry-Flow legt die Zeile an und
-        // setzt dabei bereits status: "completed" (fest verdrahtet in seinem
-        // Code-Knoten, ebenso isDeepScrapeReady: true), BEVOR er den
-        // Deep-Scrape-Flow überhaupt anstößt. Erst dieser zweite Flow ermittelt
-        // Speisekarte, Galerie, Farben und Öffnungszeiten und schreibt sie als
-        // suggestedConfig weg.
-        //
-        // Auf status zu warten hieß also, auf das flache Ergebnis des ersten
-        // Flows zu reagieren – die eigentlichen Daten waren dann noch gar nicht
-        // erhoben. isDeepScrapeReady taugt aus demselben Grund nicht als Signal.
-        if (job.suggestedConfig) {
-          clearInterval(pollRef.current!);
-          setGenStatus("done");
-          toast({
-            title: "Fertig! 🎉",
-            description: "Deine Website-Konfiguration ist bereit.",
-          });
-        } else if (job.status === "failed") {
-          clearInterval(pollRef.current!);
-          setGenStatus("error");
-          toast({
-            title: "Fehler",
-            description: "Der Scraper-Job ist fehlgeschlagen.",
-            variant: "destructive",
-          });
+      const tick = async () => {
+        if (cancelled) return;
+
+        if (Date.now() > deadline) {
+          stop();
+          failWith(
+            "Zeitüberschreitung",
+            "Die Analyse läuft seit über sechs Minuten ohne Ergebnis. Der Scraper hängt vermutlich – bitte versuche es später noch einmal.",
+          );
+          return;
         }
-      } catch {
-        /* retry */
-      }
-    }, 3000);
-  }
+
+        try {
+          const outcome = await fetchScraperJob(
+            lookup,
+            getAuthToken,
+            controller.signal,
+          );
+          if (cancelled) return;
+
+          if (outcome.kind === "denied") {
+            stop();
+            failWith(
+              "Kein Zugriff",
+              outcome.reason === "unauthenticated"
+                ? "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an."
+                : "Diese Analyse gehört zu einem anderen Konto. Bitte melde dich mit dem richtigen Konto an.",
+            );
+            return;
+          }
+
+          // Die Zeile wurde soeben angelegt — ein 404 ist also ein echter
+          // Fehler, kein "noch nicht fertig". Ein paar Versuche Toleranz für
+          // Replikationsverzug, dann abbrechen statt sechs Minuten warten.
+          if (outcome.kind === "missing") {
+            missingCount += 1;
+            if (missingCount >= 3) {
+              stop();
+              failWith(
+                "Analyse nicht gefunden",
+                "Die gestartete Analyse ist nicht mehr auffindbar. Bitte versuche es erneut.",
+              );
+              return;
+            }
+          } else {
+            missingCount = 0;
+          }
+
+          if (outcome.kind === "job") {
+            const job = outcome.job;
+
+            // Zwischenergebnisse sofort anzeigen, statt den Nutzer bis zum
+            // Abschluss vor einem leeren Bildschirm warten zu lassen.
+            setResult(job);
+
+            // FERTIG ist der Vorgang erst, wenn suggestedConfig da ist – nicht
+            // bei status === "completed".
+            //
+            // Grund: Es gibt zwei n8n-Flows. Der Entry-Flow legt die Zeile an
+            // und setzt dabei bereits status: "completed" (fest verdrahtet in
+            // seinem Code-Knoten, ebenso isDeepScrapeReady: true), BEVOR er den
+            // Deep-Scrape-Flow überhaupt anstößt. Erst dieser zweite Flow
+            // ermittelt Speisekarte, Galerie, Farben und Öffnungszeiten und
+            // schreibt sie als suggestedConfig weg.
+            //
+            // Auf status zu warten hieß also, auf das flache Ergebnis des ersten
+            // Flows zu reagieren – die eigentlichen Daten waren dann noch gar
+            // nicht erhoben. isDeepScrapeReady taugt aus demselben Grund nicht
+            // als Signal.
+            if (job.suggestedConfig) {
+              stop();
+              const nextDraft = suggestedConfigToDraft(job.suggestedConfig);
+              if (!nextDraft) {
+                // Ehrlich bleiben: Die Analyse ist durchgelaufen, hat aber
+                // nichts geliefert, womit sich ein Entwurf füllen ließe.
+                failWith(
+                  "Nichts Verwertbares gefunden",
+                  "Die Analyse ist durchgelaufen, konnte der Seite aber keine brauchbaren Daten entnehmen. Der manuelle Konfigurator führt hier schneller zum Ziel.",
+                );
+                return;
+              }
+              setDraft(nextDraft);
+              setGenStatus("done");
+              toast({
+                title: "Analyse fertig",
+                description: "Schau dir an, was wir gefunden haben.",
+              });
+              return;
+            }
+
+            if (job.status === "failed") {
+              stop();
+              failWith(
+                "Analyse fehlgeschlagen",
+                "Der Scraper konnte die Seite nicht auswerten. Bitte prüfe die URL.",
+              );
+              return;
+            }
+          }
+        } catch {
+          // Netz-Aussetzer oder abgebrochener Request: einfach weiter versuchen.
+        }
+
+        if (cancelled) return;
+        timer = setTimeout(tick, POLL_INTERVAL_MS);
+      };
+
+      void tick();
+    },
+    [failWith, getAuthToken, toast],
+  );
 
   // ── Generierung starten ───────────────────────────────────────────────────
   const generate = useCallback(async () => {
@@ -244,46 +551,54 @@ export default function AutoConfigurator() {
 
     setGenStatus("loading");
     setResult(null);
-    setJobUrl(link);
+    setDraft(null);
+    setErrorMessage(null);
+    setSlowHint(false);
     startStepAnimation();
 
-    try {
-      const res = await fetch("/api/forward-to-n8n", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          link,
-          mapsLink: mapsLink || null,
-          businessName: businessName || null,
-          deepScrape: true,
-          menuFile: fileInfo
-            ? { name: fileInfo.name, base64: fileInfo.base64 }
-            : null,
-          timestamp: new Date().toISOString(),
-        }),
-      });
+    const trigger = await triggerScrape({
+      link,
+      mapsLink,
+      businessName,
+      menuFile: fileInfo,
+      getToken: getAuthToken,
+      isSignedIn: Boolean(isSignedIn),
+    });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const payload = await res.json();
-      if (!payload?.success) throw new Error("n8n hat keinen Erfolg gemeldet");
-
-      // Polling starten
-      startPolling(link);
-    } catch (err) {
-      console.error(err);
-      // Trotzdem pollen — Job könnte schon in der DB sein
-      startPolling(link);
+    if (trigger.kind === "error") {
+      failWith("Analyse nicht möglich", trigger.message);
+      return;
     }
-  }, [url, mapsLink, businessName, fileInfo, toast]);
 
-  // ── Konfiguration verwenden → Review-Seite ────────────────────────────────
-  const goToReview = () => {
-    if (!result) return;
-    // Job-Daten für Review in sessionStorage cachen
-    sessionStorage.setItem("autoReviewJob", JSON.stringify(result));
-    navigate(`/configurator/review?url=${encodeURIComponent(jobUrl ?? url)}`);
-  };
+    startPolling(trigger.lookup);
+  }, [
+    url,
+    mapsLink,
+    businessName,
+    fileInfo,
+    toast,
+    startPolling,
+    failWith,
+    getAuthToken,
+    isSignedIn,
+  ]);
+
+  // ── Entwurf übernehmen → Konfigurator ─────────────────────────────────────
+  const applyDraftAndOpenConfigurator = useCallback(() => {
+    if (!draft) return;
+
+    // Erst sichern, dann überschreiben: Im Konfigurator holt "Rückgängig" den
+    // vorherigen Stand zurück, falls der Scrape danebenlag.
+    pushHistory();
+    applyScrapedDraft(draft);
+    setCurrentStep(STEP_BUSINESS_INFO);
+
+    toast({
+      title: "Daten übernommen",
+      description: "Prüfe die Angaben und passe an, was nicht stimmt.",
+    });
+    navigate("/configurator/manual");
+  }, [draft, pushHistory, applyScrapedDraft, setCurrentStep, toast, navigate]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
   return (
@@ -581,6 +896,13 @@ export default function AutoConfigurator() {
                 <p className="text-xs text-gray-400 text-center mt-6">
                   Bitte warte — dies kann 1–3 Minuten dauern.
                 </p>
+
+                {slowHint && (
+                  <p className="text-xs text-amber-600 text-center mt-2">
+                    Das dauert diesmal länger als üblich. Wir warten noch bis zu
+                    sechs Minuten, danach brechen wir ab.
+                  </p>
+                )}
               </div>
             )}
 
@@ -593,22 +915,34 @@ export default function AutoConfigurator() {
                 <p className="text-sm font-semibold text-gray-700">
                   Analyse fehlgeschlagen
                 </p>
-                <p className="text-xs text-gray-400 max-w-[220px]">
-                  Bitte überprüfe die URL und versuche es erneut.
+                <p className="text-xs text-gray-500 max-w-[260px] leading-relaxed">
+                  {errorMessage ??
+                    "Bitte überprüfe die URL und versuche es erneut."}
                 </p>
-                <Button
-                  onClick={() => setGenStatus("idle")}
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 text-xs"
-                >
-                  Nochmal versuchen
-                </Button>
+                <div className="flex flex-col items-center gap-2 mt-2">
+                  <Button
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setGenStatus("idle");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Nochmal versuchen
+                  </Button>
+                  <button
+                    onClick={() => navigate("/configurator/manual")}
+                    className="text-xs text-gray-400 underline hover:text-gray-600 transition-colors"
+                  >
+                    Stattdessen manuell konfigurieren
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Done-Zustand: Ergebnis-Preview */}
-            {genStatus === "done" && result && (
+            {/* Done-Zustand: gefundene Daten zeigen und bestätigen lassen */}
+            {genStatus === "done" && draft && (
               <div className="flex-1 flex flex-col">
                 {/* Header */}
                 <div className="px-6 pt-5 pb-3 border-b border-gray-100">
@@ -624,64 +958,125 @@ export default function AutoConfigurator() {
 
                 {/* Extrahierte Daten */}
                 <div className="flex-1 overflow-auto p-5 space-y-3">
-                  <ResultRow
-                    icon={<Globe />}
-                    label="Name"
-                    value={result.businessName}
-                  />
-                  <ResultRow
-                    icon={<Utensils />}
-                    label="Typ"
-                    value={result.businessType}
-                  />
-                  <ResultRow
-                    icon={<Globe />}
-                    label="E-Mail"
-                    value={result.email}
-                  />
-                  <ResultRow
-                    icon={<Globe />}
-                    label="Telefon"
-                    value={result.phone}
-                  />
-                  <ResultRow
-                    icon={<Globe />}
-                    label="Instagram"
-                    value={result.instagramUrl ? "Gefunden" : undefined}
-                  />
-                  <ResultRow
-                    icon={<Utensils />}
-                    label="Speisekarte"
-                    value={result.menuUrl ? "Online verfügbar" : undefined}
-                  />
-                  <ResultRow
-                    icon={<Globe />}
-                    label="Score"
-                    value={
-                      result.maitrScore ? `${result.maitrScore}/100` : undefined
-                    }
-                  />
-                  {result.analysisFeedback && (
-                    <div className="p-3 bg-purple-50 rounded-xl border border-purple-100">
-                      <p className="text-xs text-gray-500 font-medium mb-1">
-                        KI-Feedback
+                  {/* Was übernommen wird – ein Scrape kann danebenliegen,
+                      deshalb erst zeigen, dann übernehmen. */}
+                  <div className="p-3.5 bg-teal-50/70 rounded-xl border border-teal-100">
+                    <p className="text-xs font-semibold text-teal-800 mb-2">
+                      Das übernehmen wir in deine Konfiguration
+                    </p>
+                    {draftLines.length > 0 ? (
+                      <ul className="space-y-1">
+                        {draftLines.map((line) => (
+                          <li
+                            key={line}
+                            className="flex items-start gap-2 text-xs text-gray-700"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0 mt-px" />
+                            <span>{line}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-gray-600">
+                        Nur Basisdaten — Farben, Bilder und Speisekarte konnten
+                        wir auf der Seite nicht finden.
                       </p>
-                      <p className="text-xs text-gray-700 leading-relaxed">
-                        {result.analysisFeedback}
-                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                      Alles lässt sich danach im Konfigurator ändern.
+                    </p>
+                  </div>
+
+                  {hasExistingData && (
+                    <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-px" />
+                      <div>
+                        <p className="text-xs font-semibold text-amber-900 mb-0.5">
+                          Dein bisheriger Entwurf wird ersetzt
+                        </p>
+                        <p className="text-xs text-amber-800 leading-relaxed">
+                          {existingBusinessName?.trim()
+                            ? `„${existingBusinessName}“ und die bereits erfassten Inhalte werden überschrieben.`
+                            : "Die bereits erfassten Inhalte werden überschrieben."}{" "}
+                          Im Konfigurator kannst du das mit „Rückgängig“
+                          zurückholen.
+                        </p>
+                      </div>
                     </div>
+                  )}
+
+                  {result && (
+                    <>
+                      <ResultRow
+                        icon={<Globe />}
+                        label="Name"
+                        value={result.businessName}
+                      />
+                      <ResultRow
+                        icon={<Utensils />}
+                        label="Typ"
+                        value={result.businessType}
+                      />
+                      <ResultRow
+                        icon={<Globe />}
+                        label="E-Mail"
+                        value={result.email}
+                      />
+                      <ResultRow
+                        icon={<Globe />}
+                        label="Telefon"
+                        value={result.phone}
+                      />
+                      <ResultRow
+                        icon={<Globe />}
+                        label="Instagram"
+                        value={result.instagramUrl ? "Gefunden" : undefined}
+                      />
+                      <ResultRow
+                        icon={<Utensils />}
+                        label="Speisekarte"
+                        value={result.menuUrl ? "Online verfügbar" : undefined}
+                      />
+                      <ResultRow
+                        icon={<Globe />}
+                        label="Score"
+                        value={
+                          result.maitrScore
+                            ? `${result.maitrScore}/100`
+                            : undefined
+                        }
+                      />
+                      {result.analysisFeedback && (
+                        <div className="p-3 bg-purple-50 rounded-xl border border-purple-100">
+                          <p className="text-xs text-gray-500 font-medium mb-1">
+                            KI-Feedback
+                          </p>
+                          <p className="text-xs text-gray-700 leading-relaxed">
+                            {result.analysisFeedback}
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
                 {/* Footer-CTA */}
-                <div className="p-5 border-t border-gray-100">
+                <div className="p-5 border-t border-gray-100 space-y-2">
                   <Button
-                    onClick={goToReview}
+                    onClick={applyDraftAndOpenConfigurator}
                     className="w-full bg-gradient-to-r from-purple-500 to-orange-500 text-white text-sm font-bold h-11 rounded-xl shadow-sm hover:shadow-md transition-shadow"
                   >
-                    Konfiguration überprüfen & anpassen
+                    {hasExistingData
+                      ? "Übernehmen & Entwurf ersetzen"
+                      : "Daten übernehmen & anpassen"}
                     <ChevronRight className="w-4 h-4 ml-1.5" />
                   </Button>
+                  <button
+                    onClick={() => navigate("/configurator/manual")}
+                    className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors py-1"
+                  >
+                    Ohne Übernahme zum Konfigurator
+                  </button>
                 </div>
               </div>
             )}
