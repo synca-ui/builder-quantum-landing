@@ -1,0 +1,75 @@
+name: CI
+
+# Qualitätsnetz für die Web-Plattform.
+#
+# Node wird bewusst auf 22.12 gepinnt: Erst ab dieser Version unterstützt Node
+# require(ESM). Unter 22.11 scheitert jsdom (html-encoding-sniffer) und damit die
+# GESAMTE Testsuite, und Vite warnt bei jedem Build. Siehe .nvmrc / engines.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22.12.0"
+
+jobs:
+  # Pflicht: Die Anwendung muss sich bauen lassen.
+  #
+  # Deckt mehr ab, als es klingt: `build:client` führt scripts/prerender.mjs aus,
+  # und das bricht ab, wenn der Google-Abschnitt (#google-profil) aus dem
+  # gerenderten HTML verschwindet, wenn der <noscript>-Block vom sichtbaren Text
+  # abweicht, oder wenn die Routenliste in entry.tsx, netlify.toml und
+  # sitemap.xml auseinanderläuft. Der Build IST hier ein Test.
+  build:
+    name: Build (client + prerender + server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Kein `version:` — die pnpm-Version kommt aus dem packageManager-Feld.
+      # Beides zugleich bricht mit "Multiple versions of pnpm".
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+  # Pflicht: Unit- und Vertragstests.
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Läuft ohne Datenbank: Der API-Vertragstest baut die Express-App nur, um
+      # ihre Routing-Tabelle auszulesen, und stellt keine Verbindung her.
+      - run: pnpm test
+
+  # Informativ, blockiert (noch) nicht: Der Root-Typecheck ist historisch rot.
+  # Stand 28.07.2026: 98 Fehler, ausschließlich in Altbestand. Sobald bei 0,
+  # dieses `continue-on-error` entfernen – dann wird er Pflicht.
+  typecheck:
+    name: Typecheck (informativ)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
