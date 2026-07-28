@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import {
   suggestedConfigToDraft,
   describeDraft,
+  mergeSection,
   type SuggestedConfig,
 } from "./suggestedConfig";
 
@@ -170,5 +171,61 @@ describe("suggestedConfigToDraft", () => {
     expect(parts).toContain("2 Gerichte");
     expect(parts).toContain("2 Bilder");
     expect(describeDraft(null)).toEqual([]);
+  });
+});
+
+describe("mergeSection", () => {
+  it("füllt leere Felder", () => {
+    const r = mergeSection({ name: "", type: "" }, { name: "Café Goldstück", type: "cafe" });
+    expect(r.merged).toEqual({ name: "Café Goldstück", type: "cafe" });
+    expect(r.applied).toEqual(["name", "type"]);
+  });
+
+  it("überschreibt NIEMALS, was der Nutzer eingetippt hat", () => {
+    const r = mergeSection({ name: "Mein Laden", type: "" }, { name: "Café Goldstück", type: "cafe" });
+    expect(r.merged.name).toBe("Mein Laden");
+    expect(r.merged.type).toBe("cafe");
+    expect(r.applied).toEqual(["type"]);
+  });
+
+  it("behandelt einen unveränderten Standardwert als frei", () => {
+    // Der Konfigurator startet mit primaryColor "#4F46E5". Steht der Wert noch
+    // darauf, hat niemand ihn gewählt – die gescrapte Farbe darf greifen.
+    const r = mergeSection(
+      { primaryColor: "#4F46E5" },
+      { primaryColor: "#660c21" },
+      { primaryColor: "#4F46E5" },
+    );
+    expect(r.merged.primaryColor).toBe("#660c21");
+  });
+
+  it("lässt eine bewusst gewählte Farbe stehen", () => {
+    const r = mergeSection(
+      { primaryColor: "#123456" },
+      { primaryColor: "#660c21" },
+      { primaryColor: "#4F46E5" },
+    );
+    expect(r.merged.primaryColor).toBe("#123456");
+    expect(r.applied).toEqual([]);
+  });
+
+  it("füllt leere Listen, rührt gefüllte nicht an", () => {
+    const scraped = [{ id: "a", name: "Flat White" }];
+    expect(mergeSection({ menuItems: [] }, { menuItems: scraped }).merged.menuItems)
+      .toEqual(scraped);
+    const eigene = [{ id: "x", name: "Eigenes Gericht" }];
+    expect(mergeSection({ menuItems: eigene }, { menuItems: scraped }).merged.menuItems)
+      .toEqual(eigene);
+  });
+
+  it("ignoriert undefined im Entwurf", () => {
+    const r = mergeSection({ slogan: "" }, { slogan: undefined });
+    expect(r.merged.slogan).toBe("");
+    expect(r.applied).toEqual([]);
+  });
+
+  it("stellt den Feldern auf Wunsch den Bereich voran", () => {
+    const r = mergeSection({ name: "" }, { name: "X" }, {}, "business");
+    expect(r.applied).toEqual(["business.name"]);
   });
 });

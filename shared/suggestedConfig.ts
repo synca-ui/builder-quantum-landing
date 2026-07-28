@@ -340,3 +340,48 @@ export function describeDraft(draft: ConfiguratorDraft | null): string[] {
   if (draft.design.primaryColor) parts.push(`Farben aus der Website`);
   return parts;
 }
+
+// ─── Zusammenführen mit dem bestehenden Konfigurator-Zustand ─────────────────
+
+/**
+ * Führt einen Entwurf in einen bestehenden Zustand ein, OHNE Eingaben des
+ * Nutzers zu überschreiben.
+ *
+ * Die Regel: Ein Feld gilt als "frei", wenn es leer ist ODER noch exakt auf dem
+ * Standardwert des Konfigurators steht. Nur dann wird der gescrapte Wert
+ * gesetzt. Damit lässt sich das Vorbefüllen gefahrlos auch dann auslösen, wenn
+ * jemand schon halb fertig getippt hat – seine Arbeit bleibt in jedem Fall
+ * stehen.
+ *
+ * Rein und ohne Seiteneffekte, damit es ohne React prüfbar bleibt.
+ */
+export interface MergeResult<T> {
+  merged: T;
+  /** Namen der Felder, die tatsächlich gesetzt wurden – für die Anzeige. */
+  applied: string[];
+}
+
+function isFree(currentValue: unknown, defaultValue: unknown): boolean {
+  if (currentValue === undefined || currentValue === null) return true;
+  if (typeof currentValue === "string" && currentValue.trim() === "") return true;
+  if (Array.isArray(currentValue) && currentValue.length === 0) return true;
+  // Noch auf dem Auslieferungszustand -> zählt als nicht vom Nutzer gesetzt.
+  return defaultValue !== undefined && currentValue === defaultValue;
+}
+
+export function mergeSection<T extends Record<string, any>>(
+  current: T,
+  incoming: Partial<T>,
+  defaults: Partial<T> = {},
+  label = "",
+): MergeResult<T> {
+  const merged: T = { ...current };
+  const applied: string[] = [];
+  for (const [key, value] of Object.entries(incoming)) {
+    if (value === undefined) continue;
+    if (!isFree(current[key], defaults[key])) continue;
+    (merged as Record<string, unknown>)[key] = value;
+    applied.push(label ? `${label}.${key}` : key);
+  }
+  return { merged, applied };
+}
