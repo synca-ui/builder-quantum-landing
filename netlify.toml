@@ -87,40 +87,52 @@ force = true
 # vorgerendert, alles andere muss weiterhin in den SPA-Fallback laufen.
 # Reihenfolge ist wichtig – Netlify wertet Regeln von oben nach unten aus,
 # diese müssen also vor dem catch-all stehen.
+#
+# force = true ist zwingend: Ohne das gewinnt Netlifys eingebaute
+# Verzeichnis-Normalisierung und antwortet auf /impressum mit 301 auf
+# /impressum/, bevor diese Regel überhaupt ausgewertet wird. Live verifiziert:
+# /impressum -> 301, /impressum/index.html -> 200, die Regel griff also nicht.
 [[redirects]]
 from = "/impressum"
 to = "/impressum/index.html"
 status = 200
+force = true
 
 [[redirects]]
 from = "/datenschutz"
 to = "/datenschutz/index.html"
 status = 200
+force = true
 
 [[redirects]]
 from = "/agb"
 to = "/agb/index.html"
 status = 200
+force = true
 
 [[redirects]]
 from = "/impressum-check"
 to = "/impressum-check/index.html"
 status = 200
+force = true
 
 [[redirects]]
 from = "/datenschutz-check"
 to = "/datenschutz-check/index.html"
 status = 200
+force = true
 
 [[redirects]]
 from = "/check-landing"
 to = "/check-landing/index.html"
 status = 200
+force = true
 
 [[redirects]]
 from = "/demo-dashboard"
 to = "/demo-dashboard/index.html"
 status = 200
+force = true
 
 # Fallback für Single-Page-Application
 [[redirects]]
