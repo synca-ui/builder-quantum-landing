@@ -3,6 +3,15 @@ import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { ensureUserBusiness } from "../services/BusinessService";
 import { createAuditLogger } from "../utils/audit";
+// Subdomain-Regeln liegen in shared/, weil der automatische Modus im Client
+// selbst Vorschläge ableiten muss. Lägen sie weiterhin nur hier, würde er
+// Namen anbieten, die validatePublishData anschließend ablehnt – und der
+// Nutzer sähe den Fehler erst nach der minutenlangen Analyse. Relativer Pfad
+// wie bei ../../shared/suggestedConfig: Der Alias "@shared" ist Client-seitig.
+import {
+  RESERVED_SUBDOMAINS,
+  normalizeSubdomain,
+} from "../../shared/subdomain";
 
 // ============================================
 // VALIDATION HELPERS
@@ -13,62 +22,6 @@ interface ValidationResult {
   errors: string[];
   warnings: string[];
 }
-
-const RESERVED_SUBDOMAINS = [
-  "www",
-  "admin",
-  "api",
-  "app",
-  "mail",
-  "ftp",
-  "blog",
-  "shop",
-  "store",
-  "help",
-  "support",
-  "info",
-  "news",
-  "test",
-  "demo",
-  "staging",
-  "dev",
-  "dashboard",
-  "portal",
-  "account",
-  "accounts",
-  "login",
-  "signin",
-  "signup",
-  "auth",
-  "oauth",
-  "static",
-  "assets",
-  "cdn",
-  "media",
-  "images",
-  "img",
-  "files",
-  "download",
-  "downloads",
-  "docs",
-  "documentation",
-  "status",
-  "health",
-  "ping",
-  "metrics",
-  "analytics",
-  "tracking",
-  "webhook",
-  "webhooks",
-  "graphql",
-  "rest",
-  "socket",
-  "ws",
-  "wss",
-  "ssl",
-  "secure",
-  "maitr",
-];
 
 function validatePublishData(config: any, subdomain: string): ValidationResult {
   const errors: string[] = [];
@@ -117,16 +70,6 @@ function validatePublishData(config: any, subdomain: string): ValidationResult {
     errors,
     warnings,
   };
-}
-
-function normalizeSubdomain(input: string): string {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 63);
 }
 
 export const webAppsRouter = Router();

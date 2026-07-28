@@ -16,7 +16,6 @@ import {
 import { useMaitrScore } from "@/hooks/useMaitrScore";
 import { useAuth } from "@clerk/clerk-react";
 import { AuthGateModal } from "@/components/AuthGateModal";
-import { ComingSoonModal } from "@/components/ComingSoonModal";
 
 interface ScraperJobData {
   id: string;
@@ -47,7 +46,6 @@ export default function ModeSelection() {
   const { isSignedIn } = useAuth();
   const [copied, setCopied] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
   const [scraperData, setScraperData] = useState<ScraperJobData | null>(null);
   const [scraperLoading, setScraperLoading] = useState(false);
 
@@ -167,6 +165,33 @@ export default function ModeSelection() {
     }
   };
 
+  /**
+   * Automatischer Modus.
+   *
+   * Beide Schaltflächen öffneten bis hierher nur ComingSoonModal, obwohl
+   * /configurator/auto vollständig gebaut ist und die Route in App.tsx steht –
+   * sie war schlicht von nirgendwo aus erreichbar.
+   *
+   * Die analysierte URL wird als sourceLink weitergereicht: AutoConfigurator
+   * liest den Parameter aus und füllt damit das URL- bzw. Maps-Feld vor, sodass
+   * niemand die Adresse ein zweites Mal eintippt.
+   *
+   * Dieselbe Anmelde-Schranke wie beim manuellen Weg, und hier zwingend: Der
+   * Scrape legt eine Zeile mit userId an, und ohne Konto gäbe es keinen
+   * Besitzer, über den das Ergebnis später abrufbar wäre.
+   */
+  const handleAutoConfiguratorClick = () => {
+    if (!isSignedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+    navigate(
+      urlSource
+        ? `/configurator/auto?sourceLink=${encodeURIComponent(decodedUrl ?? "")}`
+        : "/configurator/auto",
+    );
+  };
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(decodedUrl || "");
@@ -200,10 +225,6 @@ export default function ModeSelection() {
         headline="Jetzt einloggen – kostenlos starten"
         subline="Erstelle ein kostenloses Konto, um deine Konfiguration zu speichern und deine Website live zu schalten. Du kannst auch erst einmal ohne Account stöbern."
         redirectUrl="/configurator/manual"
-      />
-      <ComingSoonModal
-        open={showComingSoon}
-        onClose={() => setShowComingSoon(false)}
       />
       <PageSEO {...SEO.modeSelection} />
 
@@ -272,7 +293,7 @@ export default function ModeSelection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowComingSoon(true)}
+                onClick={handleAutoConfiguratorClick}
                 className="text-xs font-semibold"
               >
                 Automatisch starten
@@ -369,7 +390,7 @@ export default function ModeSelection() {
             </ul>
             <div className="mt-auto flex items-center gap-2">
               <Button
-                onClick={() => setShowComingSoon(true)}
+                onClick={handleAutoConfiguratorClick}
                 size="sm"
                 className={`flex-1 text-xs font-bold text-white transition-all duration-300 ${highScore ? "bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 shadow-md shadow-purple-200" : "bg-gradient-to-r from-purple-500 to-orange-500"}`}
               >
