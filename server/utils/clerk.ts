@@ -1,4 +1,4 @@
-import { verifyToken } from "@clerk/clerk-sdk-node";
+import { clerkClient, verifyToken } from "@clerk/clerk-sdk-node";
 import prisma from "../db/prisma";
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY || "";
@@ -62,7 +62,7 @@ export async function getOrCreateUser(clerkId: string, email?: string) {
   }
 
   try {
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { clerkId },
     });
 
@@ -70,22 +70,52 @@ export async function getOrCreateUser(clerkId: string, email?: string) {
       return user;
     }
 
-    if (!email) {
+    // Standard-Session-Tokens von Clerk enthalten KEINEN email-Claim. Vorher
+    // wurde hier hart geworfen ("Cannot create user without email") und die
+    // Middleware machte daraus pauschal 401 "Invalid token" – jeder Nutzer,
+    // dessen Datensatz noch nicht in der DB lag (z.B. nach der Umstellung auf
+    // die clerk.maitr.de-Instanz), konnte nichts Authentifiziertes tun.
+    // Deshalb: E-Mail notfalls direkt bei Clerk nachschlagen.
+    let resolvedEmail = email;
+    if (!resolvedEmail) {
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+      resolvedEmail =
+        clerkUser.emailAddresses.find(
+          (e) => e.id === clerkUser.primaryEmailAddressId,
+        )?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress;
+    }
+
+    if (!resolvedEmail) {
       throw new Error("Cannot create user without email");
     }
 
+    // Instanz-Migration: Existiert die E-Mail schon unter einer alten clerkId
+    // (E-Mail ist unique), den Datensatz umhängen statt an der Unique-
+    // Constraint zu scheitern. Businesses/Configurations hängen an der User-id
+    // und bleiben so erhalten.
+    const byEmail = await prisma.user.findUnique({
+      where: { email: resolvedEmail },
+    });
+    if (byEmail) {
+      console.log(
+        `[Lazy Sync] Re-linking user ${byEmail.id} (${resolvedEmail}) to new clerkId=${clerkId}`,
+      );
+      return await prisma.user.update({
+        where: { id: byEmail.id },
+        data: { clerkId },
+      });
+    }
+
     console.log(
-      `[Lazy Sync] Creating new user: clerkId=${clerkId}, email=${email}`,
+      `[Lazy Sync] Creating new user: clerkId=${clerkId}, email=${resolvedEmail}`,
     );
-    user = await prisma.user.create({
+    return await prisma.user.create({
       data: {
         clerkId,
-        email,
+        email: resolvedEmail,
         role: "OWNER",
       },
     });
-
-    return user;
   } catch (error) {
     console.error("Error in getOrCreateUser:", error);
     throw error;

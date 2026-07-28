@@ -21,17 +21,26 @@ export async function requireAuth(
   res: Response,
   next: NextFunction,
 ) {
+  const auth = req.headers.authorization || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+
+  if (!token) {
+    return res.status(401).json({ error: "Missing token" });
+  }
+
+  // Zwei getrennte Fehlerfälle, zwei getrennte Meldungen: Vorher wurde ALLES
+  // (abgelaufener Token, falscher Clerk-Key, DB nicht erreichbar, User-Sync
+  // kaputt) zu 401 "Invalid token" plattgedrückt – das hat die Diagnose des
+  // Publish-Fehlers unnötig teuer gemacht.
+  let verified;
   try {
-    const auth = req.headers.authorization || "";
-    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    verified = await verifyClerkToken(token);
+  } catch (e) {
+    console.error("Auth error (token verification):", e);
+    return res.status(401).json({ error: "Invalid token" });
+  }
 
-    if (!token) {
-      return res.status(401).json({ error: "Missing token" });
-    }
-
-    // Verify Clerk token
-    const verified = await verifyClerkToken(token);
-
+  try {
     // Lazy sync: get or create Prisma user
     const prismaUser = await getOrCreateUser(verified.sub, verified.email);
 
@@ -47,7 +56,7 @@ export async function requireAuth(
 
     return next();
   } catch (e) {
-    console.error("Auth error:", e);
-    return res.status(401).json({ error: "Invalid token" });
+    console.error("Auth error (user sync):", e);
+    return res.status(401).json({ error: "User sync failed" });
   }
 }
