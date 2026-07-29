@@ -34,6 +34,12 @@ const deep = load("Deep-Scrape-Flow.json");
 const nodeByName = (flow: any, name: string) =>
   flow.nodes.find((n: any) => n.name === name);
 
+/** Die beiden Knoten, die Binärdaten holen sollen – und es nie taten. */
+const BINARY_FETCH_NODES = ["Fetch: PDF Binary", "Fetch: Bild Binary"];
+
+const responseFormatOf = (node: any): string | undefined =>
+  node?.parameters?.options?.response?.response?.responseFormat;
+
 const userAgentOf = (node: any): string | undefined =>
   node?.parameters?.headerParameters?.parameters?.find(
     (h: any) => h.name?.toLowerCase() === "user-agent",
@@ -118,4 +124,60 @@ describe("n8n-Workflows", () => {
       expect(names).toContain("Vision: OCR Bild-PDF");
     });
   });
+
+  /**
+   * Der Menü-Zweig des Deep-Scrape ist defekt und wird NICHT mehr benutzt.
+   *
+   * Nachgewiesen an Ausführung 632: "Fetch: PDF Binary" trägt
+   * responseFormat "arraybuffer" – einen Wert, den n8n nicht kennt (gültig sind
+   * autodetect | file | json | text). n8n gab den Rumpf daraufhin als rohen
+   * String zurück (21.259.996 Zeichen, beginnend mit "%PDF-1.7"), das Feld
+   * binary blieb leer. Der folgende Code-Knoten las $input.item.json.data –
+   * an einem String nicht vorhanden –, Buffer.from(undefined) warf, sein
+   * eigener catch schluckte den Fehler, und heraus kamen pdfBase64:"" und
+   * pdfRawText:"". Der OCR-Knoten lief nie. "Fetch: Bild Binary" trägt
+   * dieselbe Konstruktion.
+   *
+   * Die Erkennung liegt jetzt im Express-Server (server/services/menuExtraction.ts),
+   * wo sie versioniert und geprüft ist. Der Client zieht sie nach, sobald der
+   * Scrape keine brauchbare Karte liefert.
+   *
+   * Dieser Test hält den Befund fest. Er schlägt fehl, sobald jemand den Zweig
+   * anfasst – und genau dann ist zu entscheiden: entweder ganz entfernen (dann
+   * spart jeder Lauf einen 21-MB-Download, der bislang die Ausführungsdaten
+   * aufblähte und die Platte füllte), oder korrekt auf responseFormat "file"
+   * umstellen UND die Code-Knoten auf das Binärfeld umschreiben. Halb
+   * repariert ist die schlechteste Möglichkeit: Dann liefert der ungetestete
+   * Regex-Ausdruck wieder Gerichte und verdrängt den geprüften Parser.
+   */
+  describe("Menü-Zweig (defekt, durch den Server ersetzt)", () => {
+    it.each(BINARY_FETCH_NODES)(
+      "%s trägt weiterhin den unbrauchbaren responseFormat-Wert",
+      (name) => {
+        const node = nodeByName(deep, name);
+        expect(node, `${name} fehlt im Export`).toBeTruthy();
+        expect(responseFormatOf(node)).toBe("arraybuffer");
+      },
+    );
+
+    it("die Code-Knoten lesen die Nutzdaten an der falschen Stelle", () => {
+      // json.data existiert nicht, wenn der Rumpf selbst der String ist.
+      for (const name of ["Code: PDF lesen", "Code: Bild → Base64"]) {
+        const code = nodeByName(deep, name)?.parameters?.jsCode ?? "";
+        expect(code, `${name} fehlt im Export`).toBeTruthy();
+        expect(code).toMatch(/json\.data|raw\.data/);
+        // Der richtige Weg ginge über das Binärfeld des Items. Genau das kommt
+        // nirgends vor – "binary" steht dort nur als Kodierungsname in
+        // Buffer.from(…, 'binary') und liest deshalb weiterhin ins Leere.
+        expect(code).not.toMatch(/item\.binary|\$binary|getBinaryDataBuffer/);
+      }
+    });
+
+    it("ein korrigierter Zweig müsste einen gültigen responseFormat-Wert tragen", () => {
+      // Dokumentiert die zulässigen Werte, damit beim Reparieren nicht erneut
+      // geraten wird.
+      expect(["autodetect", "file", "json", "text"]).not.toContain("arraybuffer");
+    });
+  });
+
 });

@@ -356,11 +356,15 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     expect(menuItems.map((m: { name: string }) => m.name)).toContain("Töttchen");
   });
 
-  test("fragt nicht nach, wenn der Scrape die Karte schon hatte", async () => {
+  test("fragt nicht nach, wenn der Scrape eine brauchbare Karte hatte", async () => {
     stubFetch({
       suggested: {
         ...SUGGESTED_CONFIG,
-        menuItems: [{ name: "Töttchen", price: "14.50" }],
+        menuItems: [
+          { name: "Töttchen", price: "14.50" },
+          { name: "Wiener Schnitzel", price: "18.90" },
+          { name: "Pannfisch", price: "21.00" },
+        ],
       },
     });
     renderPage();
@@ -368,6 +372,22 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     // Kurz warten, damit ein versehentlicher Aufruf Zeit hätte aufzutauchen.
     await new Promise((r) => setTimeout(r, 50));
     expect(menuCalls()).toHaveLength(0);
+  });
+
+  test("liest neu, wenn der Scrape nur ein einzelnes Gericht fand", async () => {
+    // Ein Treffer aus einer mehrseitigen Karte heißt: Erkennung gescheitert.
+    // Würde das als "Karte vorhanden" gelten, bliebe unser geprüfter Parser
+    // ungenutzt und der Nutzer bekäme eine Karte mit einer Position.
+    stubFetch({
+      suggested: { ...SUGGESTED_CONFIG, menuItems: [{ name: "Töttchen", price: "14.50" }] },
+    });
+    renderPage();
+    await runAnalysis();
+
+    await waitFor(() => expect(menuCalls()).toHaveLength(1));
+    await waitFor(() =>
+      expect(screen.getByText(/3 Gerichte erkannt/i)).toBeInTheDocument(),
+    );
   });
 
   test("fragt nicht nach, wenn es gar keine Menü-Adresse gibt", async () => {

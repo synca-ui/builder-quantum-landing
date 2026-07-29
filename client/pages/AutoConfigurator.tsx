@@ -25,6 +25,7 @@ import {
   normalizeSubdomain,
   validateSubdomain,
 } from "@shared/subdomain";
+import { menuQuality, type ParsedMenuItem } from "@shared/menuParser";
 import { API_PATHS } from "@/lib/apiPaths";
 import {
   Sparkles,
@@ -677,6 +678,8 @@ export default function AutoConfigurator() {
                 return;
               }
               setDraft(nextDraft);
+              const scrapedMenu = (nextDraft.content.menuItems ??
+                []) as ParsedMenuItem[];
               // Subdomain aus dem gefundenen Namen vorschlagen. Schlägt das
               // fehl (kein Name, oder nach dem Bereinigen zu kurz), bleibt das
               // Feld leer und die Oberfläche verlangt eine Eingabe – besser
@@ -684,12 +687,17 @@ export default function AutoConfigurator() {
               setSubdomain(suggestSubdomain(nextDraft.business.name) ?? "");
               setGenStatus("done");
 
-              // Speisekarte nachziehen, wenn der Scrape zwar eine Adresse
-              // gefunden, daraus aber keine Gerichte gezogen hat. Genau das ist
-              // der Regelfall: Der Menü-Zweig des n8n-Flows lieferte durch den
-              // Binärfehler nie etwas (siehe server/services/gemini.ts).
-              const alreadyHasMenu = (nextDraft.content.menuItems?.length ?? 0) > 0;
-              if (!alreadyHasMenu && job.menuUrl) {
+              // Speisekarte nachziehen, wenn der Scrape keine brauchbare
+              // geliefert hat.
+              //
+              // Bewusst an der QUALITÄT festgemacht und nicht daran, ob
+              // überhaupt etwas da ist: Der Menü-Zweig des n8n-Flows lieferte
+              // durch den Binärfehler nie etwas (siehe server/services/gemini.ts),
+              // und selbst repariert liefe er über einen ungetesteten
+              // Regex-Ausdruck. Ein einzelnes Gericht aus einer zwölfseitigen
+              // Karte hieße "erkannt" und würde unseren geprüften Weg
+              // überspringen – deshalb entscheidet menuQuality.
+              if (!menuQuality(scrapedMenu).usable && job.menuUrl) {
                 void recogniseMenu({ url: job.menuUrl });
               }
               toast({
