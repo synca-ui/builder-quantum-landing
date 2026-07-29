@@ -34,7 +34,13 @@ vi.mock("@clerk/clerk-react", () => ({
   UserButton: () => null,
 }));
 
-/** Was der Deep-Scrape-Flow für den echten Testbetrieb liefert. */
+/**
+ * Was der Deep-Scrape-Flow für den echten Testbetrieb liefert.
+ *
+ * Beachte: KEINE menuItems. Genau so sah das Ergebnis in Ausführung 632 aus –
+ * der Menü-Zweig des Flows lieferte durch den Binärfehler nie etwas. Deshalb
+ * muss die Speisekarte hier nachgezogen werden.
+ */
 const SUGGESTED_CONFIG = {
   businessName: "Kleiner Kiepenkerl",
   primaryColor: "#660c21",
@@ -46,6 +52,21 @@ const SUGGESTED_CONFIG = {
   },
 };
 
+const MENU_URL = "https://kleiner-kiepenkerl.de/speisekarte.pdf";
+
+/** Antwort von POST /api/menu/extract mit erkannten Gerichten. */
+const MENU_OK = {
+  success: true,
+  count: 3,
+  source: "pdf_ocr",
+  diagnostics: ["Texterkennung: 4210 Zeichen, daraus 3 Gerichte"],
+  items: [
+    { id: "pdfocr-0-toettchen", name: "Töttchen", price: "14.50", category: "Hauptgerichte" },
+    { id: "pdfocr-1-wiener-schnitzel", name: "Wiener Schnitzel", price: "18.90", category: "Hauptgerichte" },
+    { id: "pdfocr-2-pannfisch", name: "Pannfisch", price: "21.00", category: "Fisch" },
+  ],
+};
+
 interface FetchCall {
   url: string;
   method: string;
@@ -54,11 +75,27 @@ interface FetchCall {
 
 let calls: FetchCall[] = [];
 
-/**
- * @param publishResponses Antworten auf POST /publish, der Reihe nach. So lässt
- * sich eine belegte Subdomain nachstellen, ohne echte Nebenwirkungen.
- */
-function stubFetch(publishResponses: Array<{ status: number; body: any }>) {
+interface StubOptions {
+  /** Antworten auf POST /publish, der Reihe nach (409 nachstellen usw.). */
+  publish?: Array<{ status: number; body: any }>;
+  /** Antwort auf POST /api/menu/extract. */
+  menu?: { status: number; body: any };
+  /** Was suggestedConfig enthält – z.B. mit bereits vorhandener Karte. */
+  suggested?: Record<string, unknown>;
+  /** menuUrl im Job. null = der Scrape fand keine Karte. */
+  menuUrl?: string | null;
+}
+
+function stubFetch(
+  publishResponsesOrOptions: Array<{ status: number; body: any }> | StubOptions = [],
+) {
+  const options: StubOptions = Array.isArray(publishResponsesOrOptions)
+    ? { publish: publishResponsesOrOptions }
+    : publishResponsesOrOptions;
+  const publishResponses = options.publish ?? [];
+  const suggested = options.suggested ?? SUGGESTED_CONFIG;
+  const menuUrl = options.menuUrl === undefined ? MENU_URL : options.menuUrl;
+  const menuResponse = options.menu ?? { status: 200, body: MENU_OK };
   let publishIndex = 0;
 
   vi.stubGlobal(
@@ -66,7 +103,18 @@ function stubFetch(publishResponses: Array<{ status: number; body: any }>) {
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? "GET";
-      const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+      // FormData (Datei-Upload) lässt sich nicht als JSON lesen – dann merken
+      // wir uns die Feldnamen, damit der Test den Upload-Weg nachweisen kann.
+      let body: any;
+      if (init?.body instanceof FormData) {
+        body = { __form: [...init.body.keys()] };
+      } else if (init?.body) {
+        try {
+          body = JSON.parse(String(init.body));
+        } catch {
+          body = String(init.body);
+        }
+      }
       calls.push({ url, method, body });
 
       const json = (status: number, payload: any) =>
@@ -88,9 +136,15 @@ function stubFetch(publishResponses: Array<{ status: number; body: any }>) {
             id: "job_1",
             status: "completed",
             businessName: "Kleiner Kiepenkerl",
-            suggestedConfig: SUGGESTED_CONFIG,
+            menuUrl,
+            suggestedConfig: suggested,
           },
         });
+      }
+
+      // Speisekarten-Erkennung
+      if (url === "/api/menu/extract") {
+        return json(menuResponse.status, menuResponse.body);
       }
 
       // Veröffentlichen
@@ -128,6 +182,7 @@ async function runAnalysis() {
 }
 
 const publishCalls = () => calls.filter((c) => c.url.includes("/publish"));
+const menuCalls = () => calls.filter((c) => c.url === "/api/menu/extract");
 
 beforeEach(() => {
   calls = [];
@@ -267,6 +322,123 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     // Der Scrape liefert weder businessType noch template.
     expect(screen.getByText(/Nicht gefunden — wir haben angenommen/i)).toBeInTheDocument();
     expect(screen.getByText(/Geschäftstyp/i)).toBeInTheDocument();
+  });
+
+  test("holt die Speisekarte nach, wenn der Scrape keine geliefert hat", async () => {
+    // Der Regelfall: Der n8n-Menü-Zweig lieferte durch den Binärfehler nie
+    // Gerichte, wohl aber die Adresse der Karte.
+    stubFetch({});
+    renderPage();
+    await runAnalysis();
+
+    await waitFor(() => expect(menuCalls()).toHaveLength(1));
+    expect(menuCalls()[0].method).toBe("POST");
+    expect(menuCalls()[0].body.url).toBe(MENU_URL);
+
+    await waitFor(() =>
+      expect(screen.getByText(/3 Gerichte erkannt/i)).toBeInTheDocument(),
+    );
+  });
+
+  test("nimmt die erkannten Gerichte mit ins Veröffentlichen", async () => {
+    stubFetch({
+      publish: [{ status: 200, body: { success: true, publishedUrl: "https://x.maitr.de" } }],
+    });
+    renderPage();
+    await runAnalysis();
+    await waitFor(() => expect(screen.getByText(/3 Gerichte erkannt/i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: /Jetzt veröffentlichen/i }));
+    await waitFor(() => expect(publishCalls()).toHaveLength(1));
+
+    const menuItems = publishCalls()[0].body.config.content.menuItems;
+    expect(menuItems).toHaveLength(3);
+    expect(menuItems.map((m: { name: string }) => m.name)).toContain("Töttchen");
+  });
+
+  test("fragt nicht nach, wenn der Scrape die Karte schon hatte", async () => {
+    stubFetch({
+      suggested: {
+        ...SUGGESTED_CONFIG,
+        menuItems: [{ name: "Töttchen", price: "14.50" }],
+      },
+    });
+    renderPage();
+    await runAnalysis();
+    // Kurz warten, damit ein versehentlicher Aufruf Zeit hätte aufzutauchen.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(menuCalls()).toHaveLength(0);
+  });
+
+  test("fragt nicht nach, wenn es gar keine Menü-Adresse gibt", async () => {
+    stubFetch({ menuUrl: null });
+    renderPage();
+    await runAnalysis();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(menuCalls()).toHaveLength(0);
+    expect(screen.getByText(/Speisekarte hochladen/i)).toBeInTheDocument();
+  });
+
+  test("bietet das Hochladen an, wenn die Erkennung nichts fand – und sagt warum", async () => {
+    stubFetch({
+      menu: {
+        status: 200,
+        body: {
+          success: true,
+          items: [],
+          count: 0,
+          source: "none",
+          diagnostics: ["Texterkennung übersprungen: GEMINI_API_KEY ist nicht gesetzt"],
+        },
+      },
+    });
+    renderPage();
+    await runAnalysis();
+
+    await waitFor(() =>
+      expect(screen.getByText(/GEMINI_API_KEY/i)).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/Speisekarte hochladen/i)).toBeInTheDocument();
+  });
+
+  test("liest eine hochgeladene Speisekarte aus", async () => {
+    // Der ausdrücklich gewünschte Weg: einfach ein Bild der Karte hochladen.
+    stubFetch({ menuUrl: null });
+    const { container } = renderPage();
+    await runAnalysis();
+
+    const input = container.querySelector(
+      'input[type="file"][accept=".pdf,image/*"]',
+    ) as HTMLInputElement;
+    expect(input).toBeTruthy();
+
+    const file = new File(["%PDF-1.7"], "speisekarte.pdf", {
+      type: "application/pdf",
+    });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => expect(menuCalls()).toHaveLength(1));
+    // Als multipart, nicht als JSON – sonst nimmt der Server die Datei nicht an.
+    expect(menuCalls()[0].body.__form).toEqual(["file"]);
+
+    await waitFor(() =>
+      expect(screen.getByText(/3 Gerichte erkannt/i)).toBeInTheDocument(),
+    );
+  });
+
+  test("veröffentlicht auch ohne Speisekarte weiter", async () => {
+    // Ohne Karte ist die Web-App schwächer, aber nicht wertlos. Ein Fehlschlag
+    // hier darf den ganzen Durchlauf nicht verwerfen.
+    stubFetch({
+      menuUrl: null,
+      publish: [{ status: 200, body: { success: true, publishedUrl: "https://x.maitr.de" } }],
+    });
+    renderPage();
+    await runAnalysis();
+
+    expect(
+      screen.getByRole("button", { name: /Jetzt veröffentlichen/i }),
+    ).not.toBeDisabled();
   });
 
   test("veröffentlicht nicht, solange die Subdomain unbrauchbar ist", async () => {

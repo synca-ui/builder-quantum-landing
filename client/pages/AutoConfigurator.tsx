@@ -52,6 +52,9 @@ type GenStatus = "idle" | "loading" | "done" | "error";
 /** Zustand des Veröffentlichens, unabhängig vom Zustand der Analyse. */
 type PublishStatus = "idle" | "publishing" | "published" | "error";
 
+/** Zustand der Speisekarten-Erkennung, unabhängig von beidem. */
+type MenuStatus = "idle" | "running" | "done" | "failed";
+
 /**
  * Wie oft bei belegter Subdomain ein Zähler angehängt wird, bevor der Nutzer
  * selbst einen Namen wählen muss. Der Publish-Endpunkt kennt keine
@@ -319,6 +322,11 @@ export default function AutoConfigurator() {
   // Ergebnis der Übersetzung Scrape -> Konfigurator
   const [draft, setDraft] = useState<ConfiguratorDraft | null>(null);
 
+  // Speisekarten-Erkennung
+  const [menuStatus, setMenuStatus] = useState<MenuStatus>("idle");
+  const [menuNote, setMenuNote] = useState<string | null>(null);
+  const menuFileInputRef = useRef<HTMLInputElement>(null);
+
   // Direkt veröffentlichen (ohne den manuellen Konfigurator)
   const [subdomain, setSubdomain] = useState("");
   const [publishStatus, setPublishStatus] = useState<PublishStatus>("idle");
@@ -347,6 +355,8 @@ export default function AutoConfigurator() {
   // in mehrere Stellen der Anzeige einfließt und der Entwurf sich nur beim
   // Abschluss der Analyse ändert.
   const publishPlan = useMemo(() => buildPublishConfig(draft), [draft]);
+  const menuItemCount = draft?.content.menuItems?.length ?? 0;
+  const menuCategoryCount = draft?.content.categories?.length ?? 0;
   const externalImageCount = useMemo(() => countExternalImages(draft), [draft]);
   const subdomainCheck = useMemo(
     () => validateSubdomain(subdomain),
@@ -438,6 +448,119 @@ export default function AutoConfigurator() {
       toast({ title, description, variant: "destructive" });
     },
     [toast],
+  );
+
+  // ── Speisekarte erkennen ──────────────────────────────────────────────────
+
+  /**
+   * Lässt eine Speisekarte serverseitig erkennen und übernimmt die Gerichte
+   * in den Entwurf.
+   *
+   * Zwei Auslöser: automatisch nach der Analyse, wenn der Scrape eine
+   * Menü-Adresse gefunden, daraus aber keine Gerichte gezogen hat – und von
+   * Hand, wenn jemand ein Foto der Karte hochlädt.
+   *
+   * Das ist bewusst ein eigener Schritt nach der Analyse und kein Teil davon:
+   * Der n8n-Zweig für Speisekarten war nie funktionsfähig (siehe
+   * server/services/gemini.ts), und selbst wenn er es wäre, soll ein Fehlschlag
+   * hier nicht den ganzen Durchlauf verwerfen. Ohne Karte ist die Web-App
+   * schwächer, aber immer noch brauchbar.
+   */
+  const recogniseMenu = useCallback(
+    async (input: { url: string } | { file: File }) => {
+      setMenuStatus("running");
+      setMenuNote(null);
+
+      const token = await getAuthToken();
+      if (!token) {
+        setMenuStatus("failed");
+        setMenuNote("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.");
+        return;
+      }
+
+      try {
+        // Datei als multipart, Adresse als JSON – derselbe Endpunkt.
+        const isFile = "file" in input;
+        const res = await fetch(API_PATHS.extractMenu, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...(isFile ? {} : { "Content-Type": "application/json" }),
+          },
+          body: isFile
+            ? (() => {
+                const form = new FormData();
+                form.append("file", input.file);
+                return form;
+              })()
+            : JSON.stringify({ url: input.url }),
+        });
+
+        const payload = await res.json().catch(() => null);
+
+        if (!res.ok || !payload?.success) {
+          setMenuStatus("failed");
+          setMenuNote(
+            payload?.error ??
+              `Die Speisekarte konnte nicht gelesen werden (HTTP ${res.status}).`,
+          );
+          return;
+        }
+
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        if (!items.length) {
+          setMenuStatus("failed");
+          // Die Begründung kommt vom Server (diagnostics) – sie sagt, ob es an
+          // der Datei lag oder an fehlender Konfiguration.
+          setMenuNote(
+            Array.isArray(payload.diagnostics) && payload.diagnostics.length
+              ? String(payload.diagnostics[payload.diagnostics.length - 1])
+              : "In dieser Datei war keine Speisekarte zu erkennen.",
+          );
+          return;
+        }
+
+        setDraft((current) => {
+          if (!current) return current;
+          const categories = [
+            ...new Set(
+              items
+                .map((i: { category?: string }) => i.category)
+                .filter(Boolean) as string[],
+            ),
+          ];
+          return {
+            ...current,
+            content: {
+              ...current.content,
+              menuItems: items,
+              ...(categories.length ? { categories } : {}),
+            },
+          };
+        });
+
+        setMenuStatus("done");
+        setMenuNote(null);
+        toast({
+          title: "Speisekarte erkannt",
+          description: `${items.length} ${items.length === 1 ? "Gericht" : "Gerichte"} übernommen.`,
+        });
+      } catch (err) {
+        console.error("[AutoKonfigurator] Speisekarten-Erkennung fehlgeschlagen", err);
+        setMenuStatus("failed");
+        setMenuNote(
+          "Die Speisekarte konnte nicht gelesen werden — bitte prüfe deine Verbindung.",
+        );
+      }
+    },
+    [getAuthToken, toast],
+  );
+
+  const handleMenuUpload = useCallback(
+    (f?: File) => {
+      if (f) void recogniseMenu({ file: f });
+    },
+    [recogniseMenu],
   );
 
   /**
@@ -560,6 +683,15 @@ export default function AutoConfigurator() {
               // als unter einem unbrauchbaren Namen zu veröffentlichen.
               setSubdomain(suggestSubdomain(nextDraft.business.name) ?? "");
               setGenStatus("done");
+
+              // Speisekarte nachziehen, wenn der Scrape zwar eine Adresse
+              // gefunden, daraus aber keine Gerichte gezogen hat. Genau das ist
+              // der Regelfall: Der Menü-Zweig des n8n-Flows lieferte durch den
+              // Binärfehler nie etwas (siehe server/services/gemini.ts).
+              const alreadyHasMenu = (nextDraft.content.menuItems?.length ?? 0) > 0;
+              if (!alreadyHasMenu && job.menuUrl) {
+                void recogniseMenu({ url: job.menuUrl });
+              }
               toast({
                 title: "Analyse fertig",
                 description: "Schau dir an, was wir gefunden haben.",
@@ -586,7 +718,10 @@ export default function AutoConfigurator() {
 
       void tick();
     },
-    [failWith, getAuthToken, toast],
+    // recogniseMenu wird aus der Schleife heraus angestoßen, sobald der Entwurf
+    // steht – deshalb muss es hier stehen. Es ist oberhalb definiert, sonst
+    // liefe diese Liste beim ersten Render in die temporale Todeszone.
+    [failWith, getAuthToken, toast, recogniseMenu],
   );
 
   // ── Generierung starten ───────────────────────────────────────────────────
@@ -1133,6 +1268,78 @@ export default function AutoConfigurator() {
                     <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                       Alles lässt sich danach im Konfigurator ändern.
                     </p>
+                  </div>
+
+                  {/* Speisekarte: der wichtigste Einzelposten. Deshalb eigener
+                      Block mit eigenem Zustand statt einer Zeile in der Liste. */}
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-white">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Utensils className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span className="text-xs font-semibold text-gray-800">
+                        Speisekarte
+                      </span>
+                      {menuStatus === "running" && (
+                        <svg
+                          className="animate-spin h-3.5 w-3.5 text-purple-400 ml-auto"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          />
+                        </svg>
+                      )}
+                    </div>
+
+                    {menuItemCount > 0 ? (
+                      <p className="text-xs text-gray-700">
+                        {menuItemCount}{" "}
+                        {menuItemCount === 1 ? "Gericht" : "Gerichte"} erkannt
+                        {menuCategoryCount > 1
+                          ? ` in ${menuCategoryCount} Kategorien`
+                          : ""}
+                        .
+                      </p>
+                    ) : menuStatus === "running" ? (
+                      <p className="text-xs text-gray-500">
+                        Die Karte wird gelesen — das dauert bei einem PDF
+                        einen Moment.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          {menuNote ??
+                            "Auf der Website war keine Speisekarte zu finden."}{" "}
+                          Lade ein Foto oder ein PDF hoch — wir lesen es aus.
+                        </p>
+                        <button
+                          onClick={() => menuFileInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          Speisekarte hochladen
+                        </button>
+                      </div>
+                    )}
+
+                    <input
+                      ref={menuFileInputRef}
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => handleMenuUpload(e.target.files?.[0])}
+                      className="hidden"
+                    />
                   </div>
 
                   {/* Was NICHT aus dem Scrape stammt, sondern angenommen wurde.
