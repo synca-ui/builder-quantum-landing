@@ -12,6 +12,7 @@ import {
   RESERVED_SUBDOMAINS,
   normalizeSubdomain,
 } from "../../shared/subdomain";
+import { ingestGallery } from "../services/imageIngest";
 
 // ============================================
 // VALIDATION HELPERS
@@ -220,6 +221,37 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       // Non-fatal - continue without business link
     }
 
+    // ============ STAGE 3.5: BILDER ÜBERNEHMEN ============
+    //
+    // Die Galerie des automatischen Modus besteht aus Adressen der
+    // analysierten Website. Unverändert veröffentlicht, hängt die ausgelieferte
+    // Web-App an fremdem Hosting: Die Bilder verschwinden, sobald die Quelle sie
+    // umbenennt, und jeder Besucher meldet sich dort.
+    //
+    // Fehlschläge sind hier bewusst nicht tödlich – ingestGallery lässt das
+    // betroffene Bild auf seiner ursprünglichen Adresse. Eine Veröffentlichung
+    // an einem einzelnen unerreichbaren Bild scheitern zu lassen wäre die
+    // schlechtere Wahl.
+    let imageNotes: string[] = [];
+    try {
+      const sourceGallery = config?.content?.gallery ?? config?.gallery ?? [];
+      const ingest = await ingestGallery(sourceGallery, userId);
+      if (ingest.copied || ingest.failed || ingest.notes.length) {
+        console.log(
+          `[Publish] Stage 3.5: ${ingest.copied} Bilder übernommen, ` +
+            `${ingest.skipped} schon bei uns, ${ingest.failed} fehlgeschlagen`,
+        );
+      }
+      imageNotes = ingest.notes;
+      // Zurückschreiben, damit Stage 4 die eigenen Adressen speichert.
+      if (config?.content?.gallery) config.content.gallery = ingest.gallery;
+      else if (config?.gallery) config.gallery = ingest.gallery;
+    } catch (error) {
+      // Der ganze Schritt ist eine Verbesserung, keine Voraussetzung.
+      console.error("[Publish] Bildübernahme fehlgeschlagen:", error);
+      imageNotes = ["Bildübernahme fehlgeschlagen – Bilder bleiben extern"];
+    }
+
     // ============ STAGE 4: PERSIST TO DATABASE ============
     console.log(`[Publish] Stage 4: Persisting to database...`);
 
@@ -393,7 +425,10 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       configId: result.configuration?.id || configId,
       publishedAt: now.toISOString(),
       elapsed,
-      warnings: validation.warnings,
+      // Anmerkungen der Bildübernahme gehören dazu: Bleibt ein Bild extern,
+      // soll der Nutzer das erfahren und nicht erst merken, wenn es eines
+      // Tages verschwindet.
+      warnings: [...validation.warnings, ...imageNotes],
       stage: "complete",
     });
   } catch (error) {
