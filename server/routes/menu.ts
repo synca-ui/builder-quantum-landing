@@ -1,7 +1,17 @@
 /**
- * POST /api/menu/extract — erkennt eine Speisekarte und liefert die Gerichte.
+ * Speisekarten-Erkennung als Auftrag: anstoßen, dann abfragen.
  *
- * Zwei Wege, beide über denselben Endpunkt:
+ *   POST /api/menu/extract        -> 202 { jobId }        (antwortet sofort)
+ *   GET  /api/menu/extract/:jobId -> { status, items, … } (antwortet sofort)
+ *
+ * Warum zweistufig und nicht einfach synchron: Der erste Anlauf lief synchron
+ * und lieferte HTTP 504. /api/* geht über einen Netlify-Proxy zu Railway, und
+ * der bricht nach 26 Sekunden ab; die Erkennung eines 21-MB-Bild-PDFs braucht
+ * 40 bis 90. Netlifys eigene Empfehlung für längere Vorgänge lautet
+ * ausdrücklich, asynchron zu arbeiten. Beide Aufrufe hier sind in
+ * Millisekunden durch.
+ *
+ * Zwei Quellen, beide beim POST:
  *   { "url": "https://…/speisekarte.pdf" }   – Adresse, die der Scrape fand
  *   multipart/form-data, Feld "file"          – ein Foto, das jemand hochlädt
  *
@@ -22,6 +32,11 @@ import {
   extractMenuFromBuffer,
   extractMenuFromUrl,
 } from "../services/menuExtraction";
+import {
+  startMenuJob,
+  getMenuJob,
+  TooManyJobsError,
+} from "../services/menuJobs";
 import { ocrConfigured, configuredProviders, MAX_DOCUMENT_BYTES } from "../services/ocr";
 
 /** Passend zur größten Karte, die im Feld aufgetaucht ist (21 MB). */
@@ -80,9 +95,10 @@ menuRouter.post(
       }
       next();
     }),
-  async (req: Request, res: Response) => {
+  (req: Request, res: Response) => {
     const file = req.file;
     const url = typeof req.body?.url === "string" ? req.body.url.trim() : "";
+    const userId = req.user!.id;
 
     if (!file && !url) {
       return res.status(400).json({
@@ -91,35 +107,72 @@ menuRouter.post(
       });
     }
 
-    try {
-      const result = file
-        ? await extractMenuFromBuffer(
-            file.buffer,
-            file.mimetype || "application/octet-stream",
-          )
-        : await extractMenuFromUrl(url);
+    // Die Bytes werden JETZT festgehalten: req.file lebt nur für diese Anfrage,
+    // die Arbeit läuft aber darüber hinaus weiter.
+    const buffer = file?.buffer;
+    const mimetype = file?.mimetype || "application/octet-stream";
 
-      // Bewusst HTTP 200 auch bei null Gerichten: Die Anfrage war in Ordnung,
-      // die Karte gab nur nichts her. Die Begründung steht in diagnostics, und
-      // der Client kann sie anzeigen, statt einen Fehler zu melden.
-      return res.json({
-        success: true,
-        items: result.items,
-        count: result.items.length,
-        source: result.source,
-        diagnostics: result.diagnostics,
-      });
+    try {
+      const job = startMenuJob(userId, () =>
+        buffer
+          ? extractMenuFromBuffer(buffer, mimetype)
+          : extractMenuFromUrl(url),
+      );
+
+      // 202: angenommen, läuft noch. Der Client fragt unter jobId nach.
+      return res.status(202).json({ success: true, jobId: job.id, status: job.status });
     } catch (e) {
-      console.error("[Menu] Erkennung fehlgeschlagen:", e);
-      const message = e instanceof Error ? e.message : "Erkennung fehlgeschlagen";
-      // Fehlende Konfiguration ist ein Betriebs-, kein Nutzerproblem.
-      const status = /nicht konfiguriert/.test(message)
-        ? 503
-        : /zu groß/.test(message)
-          ? 413
-          : 502;
-      return res.status(status).json({ success: false, error: message });
+      if (e instanceof TooManyJobsError) {
+        return res.status(429).json({ success: false, error: e.message });
+      }
+      console.error("[Menu] Auftrag konnte nicht gestartet werden:", e);
+      return res.status(500).json({
+        success: false,
+        error: "Die Erkennung konnte nicht gestartet werden",
+      });
     }
+  },
+);
+
+/**
+ * GET /api/menu/extract/:jobId — Stand eines Auftrags.
+ *
+ * Bewusst HTTP 200 auch bei null Gerichten: Die Anfrage war in Ordnung, die
+ * Karte gab nur nichts her. Die Begründung steht in diagnostics, und der Client
+ * kann sie anzeigen, statt einen Fehler zu melden.
+ */
+menuRouter.get(
+  "/extract/:jobId",
+  requireAuth,
+  (req: Request, res: Response) => {
+    const job = getMenuJob(String(req.params.jobId), req.user!.id);
+
+    if (!job) {
+      // "Gibt es nicht" und "gehört jemand anderem" sehen absichtlich gleich aus.
+      return res.status(404).json({ success: false, error: "Auftrag nicht gefunden" });
+    }
+
+    if (job.status === "running") {
+      return res.json({ success: true, status: "running" });
+    }
+
+    if (job.status === "failed") {
+      return res.json({
+        success: false,
+        status: "failed",
+        error: job.error ?? "Erkennung fehlgeschlagen",
+      });
+    }
+
+    const result = job.result!;
+    return res.json({
+      success: true,
+      status: "done",
+      items: result.items,
+      count: result.items.length,
+      source: result.source,
+      diagnostics: result.diagnostics,
+    });
   },
 );
 

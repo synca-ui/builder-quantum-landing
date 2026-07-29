@@ -57,6 +57,7 @@ const MENU_URL = "https://kleiner-kiepenkerl.de/speisekarte.pdf";
 /** Antwort von POST /api/menu/extract mit erkannten Gerichten. */
 const MENU_OK = {
   success: true,
+  status: "done",
   count: 3,
   source: "pdf_ocr",
   diagnostics: ["Texterkennung: 4210 Zeichen, daraus 3 Gerichte"],
@@ -142,8 +143,13 @@ function stubFetch(
         });
       }
 
-      // Speisekarten-Erkennung
-      if (url === "/api/menu/extract") {
+      // Speisekarten-Erkennung: anstoßen …
+      if (url === "/api/menu/extract" && method === "POST") {
+        return json(202, { success: true, jobId: "menujob_1", status: "running" });
+      }
+      // … und abfragen. Der Test antwortet sofort fertig; der Client pollt
+      // trotzdem, sodass genau der Weg geprüft wird, der HTTP 504 vermeidet.
+      if (url.startsWith("/api/menu/extract/")) {
         return json(menuResponse.status, menuResponse.body);
       }
 
@@ -182,7 +188,9 @@ async function runAnalysis() {
 }
 
 const publishCalls = () => calls.filter((c) => c.url.includes("/publish"));
-const menuCalls = () => calls.filter((c) => c.url === "/api/menu/extract");
+const menuCalls = () =>
+  calls.filter((c) => c.url === "/api/menu/extract" && c.method === "POST");
+const menuPolls = () => calls.filter((c) => c.url.startsWith("/api/menu/extract/"));
 
 beforeEach(() => {
   calls = [];
@@ -340,6 +348,34 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     );
   });
 
+  test("stößt die Erkennung an und fragt sie ab, statt zu warten", async () => {
+    // Synchron lief das in HTTP 504: Der Netlify-Proxy vor Railway bricht nach
+    // 26 Sekunden ab, die Erkennung eines Bild-PDFs braucht 40 bis 90.
+    stubFetch({});
+    renderPage();
+    await runAnalysis();
+
+    await waitFor(() => expect(menuPolls().length).toBeGreaterThan(0));
+    // Genau ein Anstoß, danach nur noch Abfragen.
+    expect(menuCalls()).toHaveLength(1);
+    expect(menuPolls()[0].url).toBe("/api/menu/extract/menujob_1");
+    expect(menuPolls()[0].method).toBe("GET");
+  });
+
+  test("meldet einen abgelaufenen Auftrag, statt ewig zu fragen", async () => {
+    stubFetch({ menu: { status: 404, body: { success: false, error: "Auftrag nicht gefunden" } } });
+    renderPage();
+    await runAnalysis();
+
+    await waitFor(() =>
+      expect(screen.getByText(/nicht mehr auffindbar/i)).toBeInTheDocument(),
+    );
+    // Und dann ist Schluss – kein Dauerfeuer gegen den Server.
+    const nachher = menuPolls().length;
+    await new Promise((r) => setTimeout(r, 60));
+    expect(menuPolls().length).toBe(nachher);
+  });
+
   test("nimmt die erkannten Gerichte mit ins Veröffentlichen", async () => {
     stubFetch({
       publish: [{ status: 200, body: { success: true, publishedUrl: "https://x.maitr.de" } }],
@@ -405,6 +441,7 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
         status: 200,
         body: {
           success: true,
+          status: "done",
           items: [],
           count: 0,
           source: "none",

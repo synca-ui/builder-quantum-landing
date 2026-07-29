@@ -34,6 +34,8 @@ const PROTECTED = [
   // und startet eine kostenpflichtige Erkennung. Ohne Anmeldung wäre das ein
   // offener Netzwerk-Späher auf fremde Rechnung.
   { method: "post" as const, path: "/api/menu/extract" },
+  // Der Abfrage-Endpunkt gibt das Ergebnis heraus – ohne Token nichts.
+  { method: "get" as const, path: "/api/menu/extract/some-job" },
   // Scraper: Diese drei gaben zu jeder bekannten URL E-Mail, Telefon und die
   // vollständige Analyse heraus — ohne jede Anmeldung.
   { method: "get" as const, path: "/api/scraper-job/full?websiteUrl=https://x.de" },

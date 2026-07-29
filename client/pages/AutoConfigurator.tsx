@@ -64,6 +64,62 @@ type MenuStatus = "idle" | "running" | "done" | "failed";
  */
 const MAX_SUBDOMAIN_ATTEMPTS = 5;
 
+/**
+ * Abfrage-Takt für die Speisekarten-Erkennung.
+ *
+ * Sie läuft als Auftrag im Hintergrund, weil ein synchroner Aufruf in HTTP 504
+ * lief: Der Netlify-Proxy vor Railway bricht nach 26 Sekunden ab, die Erkennung
+ * eines Bild-PDFs braucht 40 bis 90. Die Obergrenze liegt darüber, damit auch
+ * eine langsame Karte durchkommt.
+ */
+const MENU_POLL_INTERVAL_MS = 2000;
+const MENU_POLL_TIMEOUT_MS = 4 * 60 * 1000;
+
+interface MenuJobPayload {
+  success?: boolean;
+  status?: "running" | "done" | "failed";
+  items?: unknown;
+  diagnostics?: unknown;
+  error?: string;
+}
+
+/**
+ * Fragt einen Erkennungs-Auftrag bis zum Ergebnis ab.
+ * Gibt null zurück, wenn die Zeit abläuft – dann sagt die Oberfläche das auch.
+ */
+async function pollMenuJob(
+  jobId: string,
+  token: string,
+): Promise<MenuJobPayload | null> {
+  const deadline = Date.now() + MENU_POLL_TIMEOUT_MS;
+  let first = true;
+
+  while (Date.now() < deadline) {
+    // Erst fragen, dann warten – nicht umgekehrt. Eine Karte, die schnell
+    // durch ist (eingebetteter PDF-Text, kleines Bild), soll nicht künstlich
+    // einen Takt lang blockiert werden.
+    if (!first) await new Promise((r) => setTimeout(r, MENU_POLL_INTERVAL_MS));
+    first = false;
+
+    const res = await fetch(
+      `${API_PATHS.extractMenu}/${encodeURIComponent(jobId)}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    // 404 heißt: Auftrag weg (abgelaufen oder Prozess neu gestartet). Weiter
+    // zu fragen bringt nichts mehr.
+    if (res.status === 404) {
+      return { success: false, status: "failed", error: "Der Auftrag ist nicht mehr auffindbar." };
+    }
+    if (!res.ok) continue; // vorübergehende Störung – weiter versuchen
+
+    const payload: MenuJobPayload = await res.json().catch(() => ({}));
+    if (payload.status && payload.status !== "running") return payload;
+  }
+
+  return null;
+}
+
 interface ScraperJob {
   id?: string;
   status?: string;
@@ -482,7 +538,7 @@ export default function AutoConfigurator() {
       try {
         // Datei als multipart, Adresse als JSON – derselbe Endpunkt.
         const isFile = "file" in input;
-        const res = await fetch(API_PATHS.extractMenu, {
+        const start = await fetch(API_PATHS.extractMenu, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -497,14 +553,33 @@ export default function AutoConfigurator() {
             : JSON.stringify({ url: input.url }),
         });
 
-        const payload = await res.json().catch(() => null);
+        const started = await start.json().catch(() => null);
 
-        if (!res.ok || !payload?.success) {
+        if (!start.ok || !started?.jobId) {
           setMenuStatus("failed");
           setMenuNote(
-            payload?.error ??
-              `Die Speisekarte konnte nicht gelesen werden (HTTP ${res.status}).`,
+            started?.error ??
+              `Die Erkennung konnte nicht gestartet werden (HTTP ${start.status}).`,
           );
+          return;
+        }
+
+        // Abfragen statt warten. Ein synchroner Aufruf lief in HTTP 504: Der
+        // Netlify-Proxy vor Railway bricht nach 26 Sekunden ab, die Erkennung
+        // eines Bild-PDFs braucht 40 bis 90.
+        const payload = await pollMenuJob(started.jobId, token);
+
+        if (!payload) {
+          setMenuStatus("failed");
+          setMenuNote(
+            "Die Erkennung dauert ungewöhnlich lange. Bitte versuche es später noch einmal.",
+          );
+          return;
+        }
+
+        if (payload.status === "failed" || !payload.success) {
+          setMenuStatus("failed");
+          setMenuNote(payload.error ?? "Die Speisekarte konnte nicht gelesen werden.");
           return;
         }
 
