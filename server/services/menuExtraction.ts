@@ -8,14 +8,14 @@
  *
  * Drei Quellen, drei Wege:
  *   HTML  -> erst strukturierte Daten (schema.org/Menu), sonst Text schälen
- *   Bild  -> Gemini-Texterkennung
+ *   Bild  -> Texterkennung über die Anbieterkette (server/services/ocr)
  *   PDF   -> erst der eingebettete Text (kostenlos und genau), und nur wenn der
- *            nichts hergibt, Gemini. Viele Karten sind abfotografiert und
- *            enthalten gar keinen Text – dann führt nur die Erkennung zum Ziel.
+ *            nichts hergibt, die Texterkennung. Viele Karten sind abfotografiert
+ *            und enthalten gar keinen Text – dann führt nur sie zum Ziel.
  */
 import { parseMenuText, menuQuality, type ParsedMenuItem } from "../../shared/menuParser";
 import { safeFetch, SafeFetchError } from "./safeFetch";
-import { transcribeDocument, geminiConfigured, MAX_DOCUMENT_BYTES } from "./gemini";
+import { transcribeDocument, ocrConfigured, MAX_DOCUMENT_BYTES } from "./ocr";
 
 export type MenuSource =
   | "html_jsonld"
@@ -260,9 +260,9 @@ export async function extractMenuFromBuffer(
     }
 
     // Zu wenig herausgekommen -> die Karte ist vermutlich abfotografiert.
-    if (!geminiConfigured()) {
+    if (!ocrConfigured()) {
       diagnostics.push(
-        "Texterkennung übersprungen: GEMINI_API_KEY ist nicht gesetzt",
+        "Texterkennung übersprungen: kein OCR-Anbieter eingerichtet (GEMINI_API_KEY oder ANTHROPIC_API_KEY setzen)",
       );
       return {
         items: fromText,
@@ -271,11 +271,12 @@ export async function extractMenuFromBuffer(
       };
     }
 
-    const transcript = await transcribeDocument(buffer, "application/pdf");
-    const fromOcr = parseMenuText(transcript, { idPrefix: "pdfocr" });
+    const ocr = await transcribeDocument(buffer, "application/pdf");
+    const fromOcr = parseMenuText(ocr.text, { idPrefix: "pdfocr" });
     diagnostics.push(
-      `Texterkennung: ${transcript.length} Zeichen, daraus ${fromOcr.length} Gerichte`,
+      `Texterkennung (${ocr.provider}): ${ocr.text.length} Zeichen, daraus ${fromOcr.length} Gerichte`,
     );
+    diagnostics.push(...ocr.attempts.map((a) => `Versuch – ${a}`));
     // Das jeweils bessere Ergebnis gewinnt.
     return fromOcr.length >= fromText.length
       ? { items: fromOcr, source: fromOcr.length ? "pdf_ocr" : "none", diagnostics }
@@ -283,18 +284,19 @@ export async function extractMenuFromBuffer(
   }
 
   if (kind === "image") {
-    if (!geminiConfigured()) {
+    if (!ocrConfigured()) {
       diagnostics.push(
-        "Bild kann ohne GEMINI_API_KEY nicht gelesen werden",
+        "Bild kann ohne eingerichteten OCR-Anbieter nicht gelesen werden",
       );
       return { items: [], source: "none", diagnostics };
     }
     const mime = contentType.startsWith("image/") ? contentType : "image/jpeg";
-    const transcript = await transcribeDocument(buffer, mime);
-    const items = parseMenuText(transcript, { idPrefix: "ocr" });
+    const ocr = await transcribeDocument(buffer, mime);
+    const items = parseMenuText(ocr.text, { idPrefix: "ocr" });
     diagnostics.push(
-      `Texterkennung: ${transcript.length} Zeichen, daraus ${items.length} Gerichte`,
+      `Texterkennung (${ocr.provider}): ${ocr.text.length} Zeichen, daraus ${items.length} Gerichte`,
     );
+    diagnostics.push(...ocr.attempts.map((a) => `Versuch – ${a}`));
     return { items, source: items.length ? "image_ocr" : "none", diagnostics };
   }
 

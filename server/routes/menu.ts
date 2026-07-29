@@ -22,7 +22,7 @@ import {
   extractMenuFromBuffer,
   extractMenuFromUrl,
 } from "../services/menuExtraction";
-import { geminiConfigured, MAX_DOCUMENT_BYTES } from "../services/gemini";
+import { ocrConfigured, configuredProviders, MAX_DOCUMENT_BYTES } from "../services/ocr";
 
 /** Passend zur größten Karte, die im Feld aufgetaucht ist (21 MB). */
 const MAX_UPLOAD_BYTES = 32 * 1024 * 1024;
@@ -58,7 +58,7 @@ export const menuRouter = Router();
  * Schlüssel und kein Modellname preisgegeben, nur ein Boolean.
  */
 menuRouter.get("/health", (_req: Request, res: Response) => {
-  res.json({ ocrConfigured: geminiConfigured() });
+  res.json({ ocrConfigured: ocrConfigured(), providers: configuredProviders() });
 });
 
 menuRouter.post(

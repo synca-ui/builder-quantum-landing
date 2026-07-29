@@ -6,7 +6,7 @@ import {
   extractPdfText,
   extractMenuFromBuffer,
 } from "../services/menuExtraction";
-import { chooseUploadStrategy, extractTextFromResponse } from "../services/gemini";
+import { chooseUploadStrategy, extractTextFromResponse } from "../services/ocr";
 
 /**
  * Alles hier läuft ohne Netz. Geprüft wird das, woran die Erkennung in der
@@ -205,7 +205,7 @@ BT (Gulasch 16,90) Tj ET
     const r = await extractMenuFromBuffer(jpeg, "image/jpeg");
     expect(r.items).toEqual([]);
     expect(r.source).toBe("none");
-    expect(r.diagnostics.join(" ")).toMatch(/GEMINI_API_KEY/);
+    expect(r.diagnostics.join(" ")).toMatch(/OCR-Anbieter/);
   });
 
   it("hält ein unbekanntes Format aus", async () => {
@@ -215,7 +215,7 @@ BT (Gulasch 16,90) Tj ET
   });
 });
 
-describe("Gemini: Entscheidungen ohne Netz", () => {
+describe("OCR-Anbieter: Entscheidungen ohne Netz", () => {
   it("schickt kleine Dateien eingebettet und große über die Files-API", () => {
     expect(chooseUploadStrategy(500_000)).toBe("inline");
     expect(chooseUploadStrategy(5 * 1024 * 1024)).toBe("inline");
@@ -223,8 +223,11 @@ describe("Gemini: Entscheidungen ohne Netz", () => {
     expect(chooseUploadStrategy(21_259_996)).toBe("files_api");
   });
 
-  it("lehnt ab, was auch für die Files-API zu groß ist", () => {
-    expect(chooseUploadStrategy(500 * 1024 * 1024)).toBe("too_large");
+  it("lehnt erst ab, was auch die Files-API nicht mehr nimmt", () => {
+    // Deren Grenze liegt bei 2 GB – eine Speisekarte erreicht das nie, aber
+    // die Prüfung soll an der echten Grenze hängen und nicht an einer geratenen.
+    expect(chooseUploadStrategy(500 * 1024 * 1024)).toBe("files_api");
+    expect(chooseUploadStrategy(3 * 1024 * 1024 * 1024)).toBe("too_large");
   });
 
   it("setzt eine in mehrere Teile zerlegte Antwort zusammen", () => {
