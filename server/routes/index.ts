@@ -8,6 +8,7 @@ import scraperRouter from "./scraper";
 import subscriptionsRouter from "./subscriptions";
 import { subdomainsRouter } from "./subdomains";
 import { mediaRouter } from "./media";
+import { menuRouter } from "./menu";
 import { handleForwardN8n } from "./n8nProxy";
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
@@ -152,6 +153,8 @@ apiRouter.use("/scraper", scraperRouter);
 apiRouter.use("/subscriptions", subscriptionsRouter);
 apiRouter.use("/subdomains", subdomainsRouter);
 apiRouter.use("/media", mediaRouter);
+// Speisekarten-Erkennung (OCR + Parser) – Kernstück des automatischen Modus
+apiRouter.use("/menu", menuRouter);
 
 // Dashboard API routes (authenticated)
 apiRouter.use("/dashboard/insights", insightsRouter);

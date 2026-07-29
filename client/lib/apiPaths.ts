@@ -28,4 +28,9 @@ export const API_PATHS = {
   appById: (id: string) => `/api/webapps/apps/${encodeURIComponent(id)}`,
   /** POST – lädt ein Bild hoch (multipart, Feld "file") und liefert die URL */
   uploadMedia: "/api/media/upload",
+  /**
+   * POST – erkennt eine Speisekarte. Entweder { url } als JSON oder eine Datei
+   * im multipart-Feld "file". Antwort: { items, source, diagnostics }.
+   */
+  extractMenu: "/api/menu/extract",
 } as const;

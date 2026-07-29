@@ -30,6 +30,10 @@ const PROTECTED = [
   { method: "post" as const, path: "/api/webapps/apps/publish" },
   { method: "get" as const, path: "/api/webapps/apps" },
   { method: "post" as const, path: "/api/media/upload" },
+  // Speisekarten-Erkennung: ruft eine Adresse ab, die der Aufrufer bestimmt,
+  // und startet eine kostenpflichtige Erkennung. Ohne Anmeldung wäre das ein
+  // offener Netzwerk-Späher auf fremde Rechnung.
+  { method: "post" as const, path: "/api/menu/extract" },
   // Scraper: Diese drei gaben zu jeder bekannten URL E-Mail, Telefon und die
   // vollständige Analyse heraus — ohne jede Anmeldung.
   { method: "get" as const, path: "/api/scraper-job/full?websiteUrl=https://x.de" },
