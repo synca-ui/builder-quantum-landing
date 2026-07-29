@@ -51,6 +51,12 @@ export interface BusinessInfo {
   location?: string;
   slogan?: string;
   uniqueDescription?: string;
+  /**
+   * Strukturgleich zu BusinessInfo.logo in client/types/domain.ts. Der Scrape
+   * liefert kein Logo; es kommt aus shared/siteDetails.ts und wird beim
+   * Veröffentlichen in den eigenen Speicher übernommen.
+   */
+  logo?: { url: string };
 }
 
 export interface DesignConfig {

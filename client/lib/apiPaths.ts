@@ -33,4 +33,6 @@ export const API_PATHS = {
    * im multipart-Feld "file". Antwort: { items, source, diagnostics }.
    */
   extractMenu: "/api/menu/extract",
+  /** POST – liest Logo, Adresse und soziale Netze aus einer Website */
+  siteDetails: "/api/site/details",
 } as const;

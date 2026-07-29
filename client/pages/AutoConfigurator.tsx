@@ -507,6 +507,66 @@ export default function AutoConfigurator() {
     [toast],
   );
 
+  // ── Logo, Adresse und soziale Netze nachziehen ────────────────────────────
+
+  /**
+   * Ergänzt den Entwurf um das, was der Scrape offen lässt.
+   *
+   * Gegen Ausführung 632 nachgemessen liefert der n8n-Flow address = '' und
+   * überhaupt kein Logo. Für die Web-App eines Restaurants ist beides keine
+   * Beigabe: ohne Adresse weiß niemand, wo der Betrieb liegt, ohne Logo sieht
+   * jede erzeugte Seite gleich aus.
+   *
+   * Überschreibt NICHTS, was der Scrape schon geliefert hat – nur leere Felder
+   * werden gefüllt. Ein Fehlschlag bleibt still: Die Angaben sind eine
+   * Ergänzung und dürfen den Ablauf nicht aufhalten.
+   */
+  const enrichFromSite = useCallback(
+    async (websiteUrl: string) => {
+      const token = await getAuthToken();
+      if (!token) return;
+
+      try {
+        const res = await fetch(API_PATHS.siteDetails, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: websiteUrl }),
+        });
+        if (!res.ok) return;
+
+        const payload = await res.json().catch(() => null);
+        const details = payload?.details;
+        if (!details || typeof details !== "object") return;
+
+        setDraft((current) => {
+          if (!current) return current;
+          const business = { ...current.business };
+
+          if (!business.location?.trim() && details.address) {
+            business.location = details.address;
+          }
+          if (!business.slogan?.trim() && details.slogan) {
+            business.slogan = details.slogan;
+          }
+          if (!business.uniqueDescription?.trim() && details.description) {
+            business.uniqueDescription = details.description;
+          }
+          if (!business.logo?.url && details.logoUrl) {
+            business.logo = { url: details.logoUrl };
+          }
+
+          return { ...current, business };
+        });
+      } catch (err) {
+        console.warn("[AutoKonfigurator] Website-Angaben nicht lesbar", err);
+      }
+    },
+    [getAuthToken],
+  );
+
   // ── Speisekarte erkennen ──────────────────────────────────────────────────
 
   /**
@@ -649,7 +709,12 @@ export default function AutoConfigurator() {
    * verschiebt sie sich mit jeder langsamen Antwort.
    */
   const startPolling = useCallback(
-    (lookup: JobLookup) => {
+    /**
+     * websiteUrl wird durchgereicht statt aus dem Zustand gelesen: Diese
+     * Rückruffunktion ist ohne `url` memoisiert, drinnen wäre der Wert der des
+     * ersten Renders – also leer. Die Anreicherung liefe dann nie.
+     */
+    (lookup: JobLookup, websiteUrl: string) => {
       stopPollRef.current?.();
 
       let cancelled = false;
@@ -762,6 +827,15 @@ export default function AutoConfigurator() {
               setSubdomain(suggestSubdomain(nextDraft.business.name) ?? "");
               setGenStatus("done");
 
+              // Logo, Adresse und soziale Netze nachziehen. Der Scrape lässt
+              // sie nachweislich offen: In Ausführung 632 kam address = ''
+              // zurück, und ein Logo taucht im ganzen n8n-Ablauf nicht auf.
+              // Beides steht fast immer im HTML der Startseite.
+              // || statt ??: Der Scrape liefert leere Zeichenketten, und ??
+              // fiele darauf nicht durch.
+              const site = job.websiteUrl || websiteUrl;
+              if (site) void enrichFromSite(site);
+
               // Speisekarte nachziehen, wenn der Scrape keine brauchbare
               // geliefert hat.
               //
@@ -804,7 +878,7 @@ export default function AutoConfigurator() {
     // recogniseMenu wird aus der Schleife heraus angestoßen, sobald der Entwurf
     // steht – deshalb muss es hier stehen. Es ist oberhalb definiert, sonst
     // liefe diese Liste beim ersten Render in die temporale Todeszone.
-    [failWith, getAuthToken, toast, recogniseMenu],
+    [failWith, getAuthToken, toast, recogniseMenu, enrichFromSite],
   );
 
   // ── Generierung starten ───────────────────────────────────────────────────
@@ -840,7 +914,7 @@ export default function AutoConfigurator() {
       return;
     }
 
-    startPolling(trigger.lookup);
+    startPolling(trigger.lookup, link);
   }, [
     url,
     mapsLink,

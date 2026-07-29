@@ -9,6 +9,7 @@ import subscriptionsRouter from "./subscriptions";
 import { subdomainsRouter } from "./subdomains";
 import { mediaRouter } from "./media";
 import { menuRouter } from "./menu";
+import { siteRouter } from "./site";
 import { handleForwardN8n } from "./n8nProxy";
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
@@ -155,6 +156,8 @@ apiRouter.use("/subdomains", subdomainsRouter);
 apiRouter.use("/media", mediaRouter);
 // Speisekarten-Erkennung (OCR + Parser) – Kernstück des automatischen Modus
 apiRouter.use("/menu", menuRouter);
+// Logo, Adresse und soziale Netze aus der Website – ergänzt, was der Scrape leer lässt
+apiRouter.use("/site", siteRouter);
 
 // Dashboard API routes (authenticated)
 apiRouter.use("/dashboard/insights", insightsRouter);

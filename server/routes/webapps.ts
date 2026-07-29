@@ -246,6 +246,23 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       // Zurückschreiben, damit Stage 4 die eigenen Adressen speichert.
       if (config?.content?.gallery) config.content.gallery = ingest.gallery;
       else if (config?.gallery) config.gallery = ingest.gallery;
+
+      // Das Logo genauso: Es stammt im automatischen Modus von der analysierten
+      // Website und hinge sonst ebenfalls an fremdem Hosting – ausgerechnet das
+      // Bild, das auf jeder einzelnen Seite steht.
+      const logoUrl = config?.business?.logo?.url ?? config?.logo?.url;
+      if (typeof logoUrl === "string" && /^https?:\/\//i.test(logoUrl)) {
+        const logoIngest = await ingestGallery(
+          [{ id: "logo", url: logoUrl }],
+          userId,
+        );
+        const own = logoIngest.gallery[0]?.url;
+        if (own && own !== logoUrl) {
+          if (config?.business?.logo) config.business.logo.url = own;
+          else if (config?.logo) config.logo.url = own;
+        }
+        imageNotes = [...imageNotes, ...logoIngest.notes];
+      }
     } catch (error) {
       // Der ganze Schritt ist eine Verbesserung, keine Voraussetzung.
       console.error("[Publish] Bildübernahme fehlgeschlagen:", error);
@@ -269,6 +286,11 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       slogan: config?.business?.slogan || config?.slogan || "",
       uniqueDescription:
         config?.business?.uniqueDescription || config?.uniqueDescription || "",
+      // Das Logo fehlte hier komplett. AppRenderer liest business.logo.url,
+      // aber gespeichert wurde es nie – ein im Konfigurator hochgeladenes Logo
+      // war nach dem Veröffentlichen weg, im manuellen Modus genauso wie im
+      // automatischen.
+      logo: config?.business?.logo || config?.logo || undefined,
 
       // Design
       template: config?.design?.template || config?.template || "",

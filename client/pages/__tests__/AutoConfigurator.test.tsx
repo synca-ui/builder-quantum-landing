@@ -54,6 +54,16 @@ const SUGGESTED_CONFIG = {
 
 const MENU_URL = "https://kleiner-kiepenkerl.de/speisekarte.pdf";
 
+/**
+ * Was der Scrape NICHT liefert und aus dem HTML nachgezogen wird.
+ * Gegen Ausführung 632 gemessen: address = '' und gar kein Logo.
+ */
+const SITE_DETAILS = {
+  logoUrl: "https://kleiner-kiepenkerl.de/logo.png",
+  address: "Spiekerhof 45, 48143 Münster",
+  slogan: "Westfälisch seit 1900",
+};
+
 /** Antwort von POST /api/menu/extract mit erkannten Gerichten. */
 const MENU_OK = {
   success: true,
@@ -85,6 +95,8 @@ interface StubOptions {
   suggested?: Record<string, unknown>;
   /** menuUrl im Job. null = der Scrape fand keine Karte. */
   menuUrl?: string | null;
+  /** Was /api/site/details liefert. */
+  site?: Record<string, unknown>;
 }
 
 function stubFetch(
@@ -97,6 +109,7 @@ function stubFetch(
   const suggested = options.suggested ?? SUGGESTED_CONFIG;
   const menuUrl = options.menuUrl === undefined ? MENU_URL : options.menuUrl;
   const menuResponse = options.menu ?? { status: 200, body: MENU_OK };
+  const siteDetails = options.site ?? SITE_DETAILS;
   let publishIndex = 0;
 
   vi.stubGlobal(
@@ -141,6 +154,11 @@ function stubFetch(
             suggestedConfig: suggested,
           },
         });
+      }
+
+      // Logo, Adresse und soziale Netze aus der Website
+      if (url === "/api/site/details") {
+        return json(200, { success: true, details: siteDetails });
       }
 
       // Speisekarten-Erkennung: anstoßen …
@@ -493,6 +511,58 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     renderPage();
     await runAnalysis();
 
+    expect(
+      screen.getByRole("button", { name: /Jetzt veröffentlichen/i }),
+    ).not.toBeDisabled();
+  });
+
+  test("zieht Adresse und Logo nach, die der Scrape leer lässt", async () => {
+    // Ausführung 632 lieferte address = '' und kein Logo – ohne Adresse weiß
+    // niemand, wo der Betrieb liegt, ohne Logo sieht jede Seite gleich aus.
+    stubFetch({
+      publish: [{ status: 200, body: { success: true, publishedUrl: "https://x.maitr.de" } }],
+    });
+    renderPage();
+    await runAnalysis();
+
+    await waitFor(() =>
+      expect(calls.some((c) => c.url === "/api/site/details")).toBe(true),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Jetzt veröffentlichen/i }));
+    await waitFor(() => expect(publishCalls()).toHaveLength(1));
+
+    const business = publishCalls()[0].body.config.business;
+    expect(business.location).toBe("Spiekerhof 45, 48143 Münster");
+    expect(business.logo?.url).toBe("https://kleiner-kiepenkerl.de/logo.png");
+    expect(business.slogan).toBe("Westfälisch seit 1900");
+  });
+
+  test("überschreibt nicht, was der Scrape schon geliefert hat", async () => {
+    stubFetch({
+      suggested: { ...SUGGESTED_CONFIG, location: "Echte Adresse 1", slogan: "Echter Slogan" },
+      site: { address: "Falsche Adresse 9", slogan: "Falscher Slogan" },
+      publish: [{ status: 200, body: { success: true, publishedUrl: "https://x.maitr.de" } }],
+    });
+    renderPage();
+    await runAnalysis();
+    await waitFor(() =>
+      expect(calls.some((c) => c.url === "/api/site/details")).toBe(true),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Jetzt veröffentlichen/i }));
+    await waitFor(() => expect(publishCalls()).toHaveLength(1));
+
+    const business = publishCalls()[0].body.config.business;
+    expect(business.location).toBe("Echte Adresse 1");
+    expect(business.slogan).toBe("Echter Slogan");
+  });
+
+  test("läuft weiter, wenn die Website-Angaben nichts hergeben", async () => {
+    // Sie sind eine Ergänzung und dürfen den Ablauf nicht aufhalten.
+    stubFetch({ site: {} });
+    renderPage();
+    await runAnalysis();
     expect(
       screen.getByRole("button", { name: /Jetzt veröffentlichen/i }),
     ).not.toBeDisabled();

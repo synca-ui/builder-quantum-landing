@@ -17,7 +17,12 @@
 import { OcrError, TRANSCRIBE_PROMPT, type OcrProvider } from "./types";
 
 const API_BASE = "https://generativelanguage.googleapis.com";
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+/**
+ * gemini-2.0-flash ist abgekündigt (Abschaltung 1. Juni 2026) – als Vorgabe
+ * eine Zeitbombe. gemini-2.5-flash-lite kostet dasselbe ($0,10 rein /
+ * $0,40 raus je Million Token) und ist der aktuelle Stand.
+ */
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
 
 /**
  * Ab dieser Rohgröße über die Files-API statt eingebettet.

@@ -36,6 +36,8 @@ const PROTECTED = [
   { method: "post" as const, path: "/api/menu/extract" },
   // Der Abfrage-Endpunkt gibt das Ergebnis heraus – ohne Token nichts.
   { method: "get" as const, path: "/api/menu/extract/some-job" },
+  // Ruft ebenfalls eine Adresse ab, die der Aufrufer bestimmt.
+  { method: "post" as const, path: "/api/site/details" },
   // Scraper: Diese drei gaben zu jeder bekannten URL E-Mail, Telefon und die
   // vollständige Analyse heraus — ohne jede Anmeldung.
   { method: "get" as const, path: "/api/scraper-job/full?websiteUrl=https://x.de" },
