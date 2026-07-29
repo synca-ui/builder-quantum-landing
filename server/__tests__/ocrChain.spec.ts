@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { OcrError } from "../services/ocr/types";
-import { classifyError, textFromMessage } from "../services/ocr/anthropic";
+import {
+  classifyError,
+  textFromMessage,
+  supportsEffort,
+  describeUsage,
+} from "../services/ocr/anthropic";
 
 /**
  * Die Rückfallkette ist die Antwort auf einen echten Ausfall: Der erste Lauf
@@ -232,6 +237,32 @@ describe("Anthropic-Anbieter: Auswertung ohne Netz", () => {
         ],
       }),
     ).toBe("Vorspeisen\nSuppe 5,50");
+  });
+
+  it("schickt effort nur an Modelle, die es kennen", () => {
+    // Ohne diese Prüfung war ANTHROPIC_OCR_MODEL ein Hebel ohne Wirkung: Auf
+    // ein günstigeres Modell umzustellen hätte jede Anfrage mit HTTP 400
+    // zerbrochen, weil ältere Modelle output_config.effort ablehnen.
+    expect(supportsEffort("claude-opus-5")).toBe(true);
+    expect(supportsEffort("claude-sonnet-5")).toBe(true);
+    expect(supportsEffort("claude-haiku-4-5")).toBe(false);
+    expect(supportsEffort("claude-sonnet-4-5")).toBe(false);
+  });
+
+  it("rechnet den Verbrauch in Cent um – damit die Kostenfrage belegbar wird", () => {
+    // 20.000 rein und 4.000 raus auf Opus 5:
+    // 20.000/1e6 × $5 + 4.000/1e6 × $25 = $0,10 + $0,10 = $0,20
+    expect(describeUsage("claude-opus-5", { input_tokens: 20000, output_tokens: 4000 }))
+      .toContain("20.00 US-Cent");
+    // Dieselbe Karte auf Haiku 4.5 – ein Fünftel.
+    expect(describeUsage("claude-haiku-4-5", { input_tokens: 20000, output_tokens: 4000 }))
+      .toContain("4.00 US-Cent");
+  });
+
+  it("behauptet keinen Preis für ein unbekanntes Modell", () => {
+    const text = describeUsage("irgendein-modell", { input_tokens: 10, output_tokens: 2 });
+    expect(text).toMatch(/kein Preis hinterlegt/);
+    expect(text).not.toMatch(/Cent/);
   });
 
   it("kommt mit einer leeren oder unerwarteten Antwort klar", () => {
