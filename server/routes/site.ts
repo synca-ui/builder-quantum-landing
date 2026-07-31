@@ -20,6 +20,7 @@ import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/auth";
 import { safeFetch, SafeFetchError } from "../services/safeFetch";
 import { extractSiteDetails } from "../../shared/siteDetails";
+import { detectReservation } from "../../shared/reservation";
 
 /** Eine Startseite ist selten größer; darüber ist etwas anderes verlinkt. */
 const MAX_HTML_BYTES = 8 * 1024 * 1024;
@@ -51,21 +52,23 @@ siteRouter.post(
         allowedContentTypes: ["text/html", "application/xhtml"],
       });
 
-      const details = extractSiteDetails(
-        downloaded.buffer.toString("utf8"),
-        // Gegen die ENDadresse auflösen: Nach einer Weiterleitung von
-        // example.de auf www.example.de zeigten relative Pfade sonst ins Leere.
-        downloaded.finalUrl,
-      );
+      const html = downloaded.buffer.toString("utf8");
+      // Gegen die ENDadresse auflösen: Nach einer Weiterleitung von example.de
+      // auf www.example.de zeigten relative Pfade sonst ins Leere.
+      const details = extractSiteDetails(html, downloaded.finalUrl);
 
-      return res.json({ success: true, details });
+      // Das bestehende Buchungssystem des Betriebs. Wird es gefunden,
+      // verlinken wir dorthin, statt ein zweites danebenzustellen.
+      const reservation = detectReservation(html, downloaded.finalUrl);
+
+      return res.json({ success: true, details, reservation });
     } catch (err) {
       const reason =
         err instanceof SafeFetchError ? `${err.reason}: ${err.message}` : String(err);
       console.warn("[Site] Details nicht lesbar:", reason);
       // Kein Fehler für den Nutzer: Die Angaben sind eine Ergänzung, ihr Fehlen
       // darf den automatischen Modus nicht aufhalten.
-      return res.json({ success: true, details: {}, note: reason });
+      return res.json({ success: true, details: {}, reservation: null, note: reason });
     }
   },
 );

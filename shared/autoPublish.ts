@@ -47,7 +47,12 @@ export interface PublishConfig {
   design: Partial<DesignConfig>;
   content: Partial<ContentData>;
   contact: Partial<ContactInfo>;
-  features?: { reservationsEnabled?: boolean };
+  features?: {
+    reservationsEnabled?: boolean;
+    /** Buchungsadresse des bestehenden Systems – siehe FeatureFlags. */
+    reservationUrl?: string;
+    reservationProvider?: string;
+  };
 }
 
 // ─── Farben: aus der gescrapten Palette ableiten ─────────────────────────────
@@ -214,6 +219,13 @@ export interface BuildPublishOptions {
    * Server-Standardwerten; hier fällt nur die Grundsatzentscheidung.
    */
   enableReservations?: boolean;
+  /**
+   * Das BESTEHENDE Buchungssystem des Betriebs (shared/reservation.ts).
+   * Ist es bekannt, wird dorthin verlinkt statt ein eigenes Formular
+   * anzubieten – sonst liefen Buchungen durch zwei Systeme, die
+   * voneinander nichts wissen, und derselbe Tisch würde zweimal vergeben.
+   */
+  reservation?: { provider: string; url: string } | null;
 }
 
 export function buildPublishConfig(
@@ -266,7 +278,14 @@ export function buildPublishConfig(
     contact: { ...draft.contact },
   };
 
-  if (options.enableReservations) {
+  // Ein bestehendes System hat Vorrang: verlinken statt ersetzen.
+  if (options.reservation) {
+    config.features = {
+      reservationsEnabled: true,
+      reservationUrl: options.reservation.url,
+      reservationProvider: options.reservation.provider,
+    };
+  } else if (options.enableReservations) {
     config.features = { reservationsEnabled: true };
   }
 

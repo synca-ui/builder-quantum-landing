@@ -5,6 +5,9 @@ import {
   absolutize,
   collectJsonLd,
   describeSiteDetails,
+  visibleText,
+  findAddressInText,
+  findHoursInText,
 } from "./siteDetails";
 
 /**
@@ -183,5 +186,106 @@ describe("describeSiteDetails", () => {
     expect(lines).toContain("Logo");
     expect(lines.join(" ")).toMatch(/Spiekerhof/);
     expect(lines).toContain("Instagram");
+  });
+});
+
+/**
+ * Rückfall auf den sichtbaren Text.
+ *
+ * An fünf echten Gastronomie-Seiten gemessen liefern nur zwei strukturierte
+ * Daten mit Adresse und Öffnungszeiten. Die übrigen schreiben beides schlicht
+ * in die Fußzeile – ohne diesen Rückfall bliebe die erzeugte Web-App bei der
+ * Mehrheit der Betriebe halb leer.
+ */
+describe("findAddressInText", () => {
+  it("findet eine Anschrift über zwei Zeilen", () => {
+    expect(findAddressInText("Kontakt\nSpiekerhof 47\n48143 Münster\nTelefon")).toBe(
+      "Spiekerhof 47, 48143 Münster",
+    );
+  });
+
+  it("findet eine einzeilige Anschrift", () => {
+    expect(findAddressInText("Besuchen Sie uns\nAm Hof 12-18, 50667 Köln")).toBe(
+      "Am Hof 12-18, 50667 Köln",
+    );
+  });
+
+  it("versteht mehrteilige Ortsnamen", () => {
+    const a = findAddressInText("Zeil 5\n60313 Frankfurt am Main");
+    expect(a).toContain("60313 Frankfurt am Main");
+  });
+
+  it("verlangt eine Straße, statt eine nackte Postleitzahl auszugeben", () => {
+    // Eine Postleitzahl im Fließtext gehört meist zu gar keiner Anschrift –
+    // und ohne Straße nützt sie auf einer Restaurantseite niemandem.
+    expect(findAddressInText("irgendein Fließtext 48143 Münster")).toBeUndefined();
+  });
+
+  it("hält eine beliebige fünfstellige Zahl nicht für eine Postleitzahl", () => {
+    expect(findAddressInText("Seit 12345 Gästen empfangen wir")).toBeUndefined();
+  });
+
+  it("liefert nichts, wenn keine Anschrift dasteht", () => {
+    expect(findAddressInText("Wir freuen uns auf Ihren Besuch")).toBeUndefined();
+  });
+});
+
+describe("findHoursInText", () => {
+  it("liest Öffnungszeiten aus der Fußzeile", () => {
+    const h = findHoursInText("Öffnungszeiten\nMontag bis Sonntag 11:30 – 23:00 Uhr");
+    expect(Object.keys(h)).toHaveLength(7);
+    expect(h.monday).toEqual({ open: "11:30", close: "23:00", closed: false });
+  });
+
+  it("liest getrennte Zeilen je Tagesgruppe", () => {
+    const h = findHoursInText("Mo-Fr 11:00-14:30\nSa und So 12:00-22:00");
+    expect(h.monday.open).toBe("11:00");
+    expect(h.saturday.open).toBe("12:00");
+    expect(Object.keys(h)).toHaveLength(7);
+  });
+
+  it("nimmt die ERSTE Angabe je Tag", () => {
+    // Weiter unten stehen oft Küchen- oder Feiertagszeiten, die nicht die
+    // Öffnungszeit sind.
+    const h = findHoursInText("Mo-So 11:30-23:00\nKüche Mo-So 12:00-21:00");
+    expect(h.monday.close).toBe("23:00");
+  });
+
+  it("erfindet nichts aus einer Zeile ohne Tagesangabe", () => {
+    expect(findHoursInText("Geöffnet 11:30-23:00")).toEqual({});
+  });
+});
+
+describe("visibleText", () => {
+  it("macht aus Blockelementen Zeilen und löst Entities auf", () => {
+    const t = visibleText("<div>Spiekerhof 47</div><div>48143 M&uuml;nster</div>");
+    expect(t.split("\n").filter(Boolean)).toEqual(["Spiekerhof 47", "48143 Münster"]);
+  });
+
+  it("wirft Skripte weg", () => {
+    expect(visibleText("<script>var plz=99999;</script><p>48143 Münster</p>")).not.toContain("99999");
+  });
+});
+
+describe("extractSiteDetails: Rückfall auf den Text", () => {
+  it("nimmt Adresse und Zeiten aus der Fußzeile, wenn strukturierte Daten fehlen", () => {
+    const html = `<html><body>
+      <footer>
+        <p>Spiekerhof 47</p><p>48143 Münster</p>
+        <p>Öffnungszeiten: Montag bis Sonntag 11:30 – 23:00 Uhr</p>
+      </footer></body></html>`;
+    const d = extractSiteDetails(html, "https://x.test/");
+    expect(d.address).toBe("Spiekerhof 47, 48143 Münster");
+    expect(Object.keys(d.openingHours ?? {})).toHaveLength(7);
+  });
+
+  it("lässt strukturierten Daten den Vorrang", () => {
+    const html = `
+      <script type="application/ld+json">
+      {"@type":"Restaurant","address":{"streetAddress":"Echte Str. 1","postalCode":"10115","addressLocality":"Berlin"}}</script>
+      <footer>Falsche Gasse 9, 99999 Nirgendwo</footer>`;
+    expect(extractSiteDetails(html, "https://x.test/").address).toBe(
+      "Echte Str. 1, 10115 Berlin",
+    );
   });
 });

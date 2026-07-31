@@ -381,6 +381,11 @@ export default function AutoConfigurator() {
 
   // Speisekarten-Erkennung
   const [menuStatus, setMenuStatus] = useState<MenuStatus>("idle");
+  /** Bestehendes Buchungssystem des Betriebs – siehe shared/reservation.ts. */
+  const [reservation, setReservation] = useState<{
+    provider: string;
+    url: string;
+  } | null>(null);
   const [menuNote, setMenuNote] = useState<string | null>(null);
   const menuFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -418,8 +423,9 @@ export default function AutoConfigurator() {
     () =>
       buildPublishConfig(draft, {
         enableReservations: Boolean(result?.hasReservation),
+        reservation,
       }),
-    [draft, result?.hasReservation],
+    [draft, result?.hasReservation, reservation],
   );
   const menuItemCount = draft?.content.menuItems?.length ?? 0;
   const menuCategoryCount = draft?.content.categories?.length ?? 0;
@@ -547,6 +553,15 @@ export default function AutoConfigurator() {
         if (!res.ok) return;
 
         const payload = await res.json().catch(() => null);
+
+        // Bestehendes Buchungssystem: verlinken statt ein zweites danebenstellen.
+        if (payload?.reservation?.url && payload?.reservation?.provider) {
+          setReservation({
+            provider: String(payload.reservation.provider),
+            url: String(payload.reservation.url),
+          });
+        }
+
         const details = payload?.details;
         if (!details || typeof details !== "object") return;
 
@@ -567,7 +582,17 @@ export default function AutoConfigurator() {
             business.logo = { url: details.logoUrl };
           }
 
-          return { ...current, business };
+          // Öffnungszeiten nur übernehmen, wenn der Scrape keine lieferte.
+          // Der n8n-Ablauf schiebt bei Nichttreffer Standardwerte unter
+          // (12:00–22:00) – die echten stehen in den strukturierten Daten.
+          const content = { ...current.content };
+          const vorhanden = Object.keys(content.openingHours ?? {}).length;
+          const geliefert = Object.keys(details.openingHours ?? {}).length;
+          if (geliefert > vorhanden) {
+            content.openingHours = details.openingHours;
+          }
+
+          return { ...current, business, content };
         });
       } catch (err) {
         console.warn("[AutoKonfigurator] Website-Angaben nicht lesbar", err);

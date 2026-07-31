@@ -183,7 +183,14 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       }
     }
 
-    if (features.reservationsEnabled && !menuSet.has("reservations")) {
+    // Nur wenn wir SELBST buchen. Zeigt der Knopf nach außen (bestehendes
+    // System des Betriebs), führte ein Navigationspunkt auf unsere leere
+    // eigene Reservierungsseite.
+    if (
+      features.reservationsEnabled &&
+      !features.reservationUrl &&
+      !menuSet.has("reservations")
+    ) {
       menuArray.push({ id: "reservations", label: "Reservieren" });
       menuSet.add("reservations");
     }
@@ -372,28 +379,61 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         </div>
       )}
 
-      {/* Reservierungsbuttonn */}
-      {features.reservationsEnabled && (
-        <div className="mt-8 md:mt-12 mb-6 md:mb-10 max-w-md mx-auto">
-          <button
-            className="w-full py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
-            style={{
-              backgroundColor:
-                features.reservationButtonColor || design.primaryColor,
-              color: features.reservationButtonTextColor || "#FFFFFF",
-              borderRadius:
-                features.reservationButtonShape === "pill"
-                  ? "9999px"
-                  : features.reservationButtonShape === "square"
-                    ? "0.5rem"
-                    : "0.75rem",
-            }}
-            onClick={() => navigateToPage("reservations")}
-          >
-            Tisch reservieren
-          </button>
-        </div>
-      )}
+      {/* Reservierungsbutton.
+          Hat der Betrieb ein BESTEHENDES Buchungssystem (OpenTable, Quandoo …),
+          führt der Knopf dorthin statt in unser eigenes Formular. Beides
+          anzubieten hieße: Buchungen laufen durch zwei Systeme, die voneinander
+          nichts wissen – derselbe Tisch würde zweimal vergeben. */}
+      {features.reservationsEnabled &&
+        (() => {
+          const buttonStyle = {
+            backgroundColor:
+              features.reservationButtonColor || design.primaryColor,
+            color: features.reservationButtonTextColor || "#FFFFFF",
+            borderRadius:
+              features.reservationButtonShape === "pill"
+                ? "9999px"
+                : features.reservationButtonShape === "square"
+                  ? "0.5rem"
+                  : "0.75rem",
+          };
+          const buttonClass =
+            "block w-full text-center py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105";
+
+          return (
+            <div className="mt-8 md:mt-12 mb-6 md:mb-10 max-w-md mx-auto">
+              {features.reservationUrl ? (
+                <a
+                  href={features.reservationUrl}
+                  target="_blank"
+                  // noopener ist hier Pflicht: Ohne das kann die geöffnete
+                  // fremde Seite über window.opener auf unsere zugreifen.
+                  rel="noopener noreferrer"
+                  className={buttonClass}
+                  style={buttonStyle}
+                >
+                  Tisch reservieren
+                </a>
+              ) : (
+                <button
+                  className={buttonClass}
+                  style={buttonStyle}
+                  onClick={() => navigateToPage("reservations")}
+                >
+                  Tisch reservieren
+                </button>
+              )}
+              {features.reservationUrl && features.reservationProvider && (
+                <p
+                  className="mt-2 text-center text-xs opacity-70"
+                  style={{ color: design.fontColor }}
+                >
+                  über {features.reservationProvider}
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
       {/* Öffnungszeiten & Location - NUTZT OpeningHours Shared Component */}
       <OpeningHours

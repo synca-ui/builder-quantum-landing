@@ -21,6 +21,13 @@
  * Rein und ohne Netz, damit es vollständig prüfbar bleibt.
  */
 
+import {
+  parseSchemaOpeningHours,
+  parseHoursLine,
+  hoursQuality,
+  type WeekHours,
+} from "./openingHours";
+
 export interface SiteSocial {
   instagram?: string;
   facebook?: string;
@@ -34,6 +41,15 @@ export interface SiteDetails {
   slogan?: string;
   description?: string;
   social?: SiteSocial;
+  /**
+   * Echte Öffnungszeiten aus den strukturierten Daten.
+   *
+   * Der n8n-Ablauf füllte hier Standardwerte ein (12:00–22:00), wenn sein
+   * Ausdruck nicht traf – und das tat er bei der Form
+   * "Monday,Tuesday,…,Sunday 11:30-23:00" nie. Die erste veröffentlichte Seite
+   * zeigte damit ERFUNDENE Öffnungszeiten. Falsche sind schlimmer als keine.
+   */
+  openingHours?: WeekHours;
 }
 
 /** Macht aus einer möglicherweise relativen Adresse eine absolute. */
@@ -110,6 +126,118 @@ export function formatAddress(node: any): string | undefined {
   return line || undefined;
 }
 
+/**
+ * Macht aus dem HTML zeilenweisen Text – für die Rückfälle unten.
+ *
+ * Anlass: An fünf echten Gastronomie-Seiten gemessen liefern nur zwei
+ * strukturierte Daten mit Adresse und Öffnungszeiten. Die übrigen schreiben
+ * beides schlicht sichtbar in Fußzeile oder Kontaktbereich. Wer nur
+ * schema.org liest, füllt die Web-App bei der Mehrheit der Betriebe nicht.
+ */
+export function visibleText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<\/?(br|p|div|li|tr|h[1-6]|section|article|td|span)\b[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&auml;/gi, "ä").replace(/&ouml;/gi, "ö").replace(/&uuml;/gi, "ü")
+    .replace(/&Auml;/g, "Ä").replace(/&Ouml;/g, "Ö").replace(/&Uuml;/g, "Ü")
+    .replace(/&szlig;/gi, "ß")
+    .replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c)))
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
+}
+
+/**
+ * Sucht eine deutsche Anschrift im sichtbaren Text.
+ *
+ * Anker ist die fünfstellige Postleitzahl mit folgendem Ortsnamen – die ist
+ * eindeutig genug, um nicht auf beliebige Zahlen hereinzufallen. Die Straße
+ * steht davor, entweder in derselben oder in der Zeile darüber.
+ *
+ * Bewusst zurückhaltend: Ohne erkennbare Straße wird NICHTS zurückgegeben.
+ * Eine Postleitzahl allein steht oft in ganz anderem Zusammenhang, und
+ * "48143 Münster" ohne Straße nützt auf einer Restaurantseite niemandem.
+ */
+export function findAddressInText(text: string): string | undefined {
+  // Postleitzahl + Ort.
+  //
+  // [ \t] statt \s ist wesentlich: \s umfasst den Zeilenumbruch, und dann
+  // verschluckte der Ortsname die Folgezeile – aus "48143 Münster" wurde
+  // "48143 Münster Öffnungszeiten:".
+  //
+  // Folgewörter müssen groß beginnen oder zu den üblichen Verbindern gehören
+  // ("Frankfurt am Main"). Ohne diese Einschränkung galt "12345 Gästen
+  // empfangen wir" als Anschrift.
+  const ORTSWORT = "[A-ZÄÖÜ][a-zäöüßA-ZÄÖÜ.-]*";
+  const VERBINDER = "(?:am|an|der|im|a\\.|i\\.)";
+  const plzRx = new RegExp(
+    `\\b(\\d{5})[ \\t]+(${ORTSWORT}(?:[ \\t](?:${VERBINDER}|${ORTSWORT})){0,2})`,
+    "g",
+  );
+
+  // Hausnummer: auch Bereiche und Zusätze – "12-18", "5a", "3 b".
+  const HAUSNR = "\\d{1,4}(?:\\s?[-–/]\\s?\\d{1,4})?\\s?[a-zA-Z]?";
+  const strasseRx = new RegExp(
+    `(${ORTSWORT}(?:[ \\t]${ORTSWORT}){0,3})[ \\t]+(${HAUSNR})[ \\t]*$`,
+  );
+  const einzeiligRx = new RegExp(
+    `([A-ZÄÖÜ][^,\\n]{2,50}?[ \\t]${HAUSNR})[ \\t]*,?[ \\t]*$`,
+  );
+
+  for (const m of text.matchAll(plzRx)) {
+    const plzOrt = `${m[1]} ${m[2]}`.trim();
+    const davor = text.slice(Math.max(0, m.index! - 120), m.index!);
+    // Letzte nicht-leere Zeile vor der Postleitzahl – dort steht die Straße.
+    const zeilen = davor.split(/\n/).map((z) => z.trim()).filter(Boolean);
+    const kandidat = zeilen[zeilen.length - 1] ?? "";
+
+    // Straße und Postleitzahl in EINER Zeile zuerst prüfen: "Am Hof 12-18,"
+    // trägt die Hausnummer am Ende und würde sonst am strengeren Muster
+    // darunter scheitern.
+    const einzeilig = kandidat.match(einzeiligRx);
+    if (einzeilig) return `${einzeilig[1].trim()}, ${plzOrt}`;
+
+    const s = kandidat.match(strasseRx);
+    if (s && s[1].length >= 3 && s[1].length <= 60) {
+      return `${s[1].trim()} ${s[2].trim()}, ${plzOrt}`;
+    }
+
+    // Keine saubere Straße davor: Diese Postleitzahl gehört vermutlich gar
+    // nicht zu einer Anschrift. Weitersuchen statt raten – "Seit 12345 Gästen"
+    // galt sonst als Adresse, und "48143 Münster" allein nützt auf einer
+    // Restaurantseite ohnehin niemandem.
+  }
+  return undefined;
+}
+
+/**
+ * Sucht Öffnungszeiten im sichtbaren Text.
+ *
+ * Genommen wird jede Zeile, die eine Tagesangabe UND zwei Uhrzeiten enthält.
+ * parseHoursLine entscheidet, ob daraus etwas wird – und erfindet nichts,
+ * wenn die Tagesangabe fehlt.
+ */
+export function findHoursInText(text: string): WeekHours {
+  const out: WeekHours = {};
+  const zeilenRx =
+    /^[^\n]{0,120}?(?:Mo|Di|Mi|Do|Fr|Sa|So|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)[^\n]{0,120}$/gim;
+  for (const m of text.matchAll(zeilenRx)) {
+    const zeile = m[0];
+    if ((zeile.match(/\d{1,2}[:.]\d{2}/g) ?? []).length < 2) continue;
+    for (const [tag, zeiten] of Object.entries(parseHoursLine(zeile))) {
+      // Die erste Angabe je Tag gewinnt: Weiter unten stehen oft
+      // Sonderzeiten (Küche, Feiertage), die nicht die Öffnungszeit sind.
+      if (!out[tag]) out[tag] = zeiten;
+    }
+  }
+  return out;
+}
+
 /** Erkennt ein Bild, das nach einem Logo aussieht. */
 function findLogoInMarkup(html: string): string | undefined {
   // 1. Ausdrücklich als Symbol ausgezeichnet – am verlässlichsten.
@@ -169,6 +297,10 @@ export function extractSiteDetails(html: string, baseUrl: string): SiteDetails {
       details.description = business.description.trim();
     }
 
+    // Echte Öffnungszeiten – nur übernehmen, wenn sie eine Woche ergeben.
+    const hours = parseSchemaOpeningHours(business);
+    if (hoursQuality(hours).usable) details.openingHours = hours;
+
     const sameAs: string[] = Array.isArray(business.sameAs)
       ? business.sameAs
       : business.sameAs
@@ -192,6 +324,24 @@ export function extractSiteDetails(html: string, baseUrl: string): SiteDetails {
   // ── Markup-Heuristik ─────────────────────────────────────────────────────
   if (!details.logoUrl) {
     details.logoUrl = absolutize(findLogoInMarkup(html), baseUrl);
+  }
+
+  // ── Sichtbarer Text als Rückfall ─────────────────────────────────────────
+  //
+  // An fünf echten Gastronomie-Seiten gemessen liefern nur zwei strukturierte
+  // Daten. Die übrigen schreiben Adresse und Öffnungszeiten schlicht in die
+  // Fußzeile. Ohne diesen Rückfall bliebe die erzeugte Web-App bei der
+  // Mehrheit der Betriebe halb leer.
+  if (!details.address || !details.openingHours) {
+    const text = visibleText(html);
+    if (!details.address) {
+      const address = findAddressInText(text);
+      if (address) details.address = address;
+    }
+    if (!details.openingHours) {
+      const hours = findHoursInText(text);
+      if (hoursQuality(hours).usable) details.openingHours = hours;
+    }
   }
 
   // Soziale Netze aus gewöhnlichen Links, falls sameAs fehlte.
@@ -218,6 +368,9 @@ export function describeSiteDetails(details: SiteDetails): string[] {
   if (details.logoUrl) parts.push("Logo");
   if (details.address) parts.push(`Adresse: ${details.address}`);
   if (details.slogan) parts.push("Slogan");
+  if (details.openingHours) {
+    parts.push(`${Object.keys(details.openingHours).length} Öffnungstage`);
+  }
   if (details.social?.instagram) parts.push("Instagram");
   if (details.social?.facebook) parts.push("Facebook");
   return parts;

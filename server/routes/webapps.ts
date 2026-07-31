@@ -326,6 +326,15 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
         config?.reservationsEnabled ??
         false,
       maxGuests: config?.features?.maxGuests || config?.maxGuests || 10,
+      // Bestehendes Reservierungssystem des Betriebs. MUSS hier stehen – ein
+      // Feld, das flatConfig nicht kennt, wird beim Veröffentlichen still
+      // verworfen. Genau so ging das Logo verloren.
+      reservationUrl:
+        config?.features?.reservationUrl || config?.reservationUrl || undefined,
+      reservationProvider:
+        config?.features?.reservationProvider ||
+        config?.reservationProvider ||
+        undefined,
       onlineOrdering:
         config?.features?.onlineOrdering ?? config?.onlineOrdering ?? false,
       onlineStore:

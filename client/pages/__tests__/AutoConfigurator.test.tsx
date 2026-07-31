@@ -1,8 +1,25 @@
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  configure,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import AutoConfigurator from "../AutoConfigurator";
+
+/**
+ * Wartezeit für waitFor heraufgesetzt.
+ *
+ * Die Speisekarte läuft seit dem 504 am Netlify-Proxy über Anstoß + Abfrage,
+ * und die Website-Angaben kommen als zweiter Aufruf dazu. Einzeln ist diese
+ * Datei grün; unter Volllast der gesamten Suite reichte die Vorgabe von einer
+ * Sekunde nicht. Das war ein Zeitproblem des Tests, kein Produktfehler –
+ * deshalb hier eine Zeile statt zwanzig Einzeländerungen.
+ */
+configure({ asyncUtilTimeout: 8000 });
 
 /**
  * Der vollautomatische Weg von Ende zu Ende: URL eintragen, Analyse abwarten,

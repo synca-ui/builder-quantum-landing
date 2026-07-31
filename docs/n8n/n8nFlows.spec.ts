@@ -126,6 +126,76 @@ describe("n8n-Workflows", () => {
   });
 
   /**
+   * Die geschärfte Erkennung, gemessen an kleiner-kiepenkerl.de.
+   *
+   * Vorher lieferte der Ablauf address = '', kein Logo, keine sozialen Netze
+   * und hasReservation = null – obwohl die Seite eine vollständige
+   * PostalAddress, ein Logo und ein OpenTable-Widget ausliefert. Drei Ursachen,
+   * alle hier festgehalten, damit sie nicht zurückkehren.
+   */
+  describe("Deep-Scrape: Erkennung", () => {
+    const parse: string = nodeByName(deep, "Code: Parse HTML").parameters.jsCode;
+    const build: string = nodeByName(deep, "Code: suggestedConfig bauen").parameters.jsCode;
+
+    it("steigt in @graph ab", () => {
+      // Die Seite legt ALLES in einen @graph. Ohne Abstieg war die Adresse
+      // unerreichbar.
+      expect(parse).toContain("@graph");
+    });
+
+    it("behandelt @type als Array", () => {
+      // Dort steht ['Restaurant','Organization']; ein .includes(item['@type'])
+      // auf ein Array trifft nie zu.
+      expect(parse).toMatch(/isType|Array\.isArray\(t\)/);
+    });
+
+    it("nimmt die Postleitzahl in die Anschrift auf", () => {
+      // Zuvor: "Spiekerhof 47, Münster" statt "…, 48143 Münster".
+      expect(parse).toContain("postalCode");
+    });
+
+    it("erkennt ein Reservierungssystem", () => {
+      // hasReservation wurde zuvor ÜBERHAUPT NICHT gesetzt.
+      expect(parse).toContain("hasReservation");
+      expect(parse).toContain("opentable");
+      expect(parse).toContain("reservationUrl");
+    });
+
+    it("sucht ein Logo", () => {
+      expect(parse).toContain("logoUrl");
+      expect(parse).toMatch(/apple-touch-icon/);
+    });
+
+    it("versteht ausgeschriebene, kommagetrennte Öffnungszeiten", () => {
+      // "Monday,Tuesday,…,Sunday 11:30-23:00" – daran scheiterte der alte
+      // Ausdruck, und der nächste Knoten schob Standardwerte unter.
+      expect(parse).toContain("parseHours");
+      expect(parse).toContain("expandDays");
+    });
+
+    it("erfindet KEINE Öffnungszeiten mehr", () => {
+      // Die veröffentlichte Seite zeigte 12:00–22:00, geöffnet ist 11:30–23:00.
+      // Ein Gast um 11:45 las "geschlossen". Falsche Zeiten sind schlimmer als
+      // keine – der Auffangwert muss weg bleiben.
+      //
+      // Kommentarzeilen abziehen: Der Knoten ZITIERT die alte Zeile als
+      // Begründung, und ohne diesen Schritt schlüge der Test daran an.
+      const aktiv = build
+        .split("\n")
+        .filter((z) => !z.trim().startsWith("//"))
+        .join("\n");
+      expect(aktiv).not.toMatch(/\{open:'12:00'/);
+      expect(aktiv).toContain("if(v&&v.open&&v.close)");
+    });
+
+    it("reicht Logo, soziale Netze und Reservierung in suggestedConfig durch", () => {
+      for (const feld of ["logoUrl", "socialMedia", "hasReservation", "reservationUrl"]) {
+        expect(build, feld).toContain(feld);
+      }
+    });
+  });
+
+  /**
    * Der Menü-Zweig des Deep-Scrape ist defekt und wird NICHT mehr benutzt.
    *
    * Nachgewiesen an Ausführung 632: "Fetch: PDF Binary" trägt

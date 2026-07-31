@@ -100,6 +100,19 @@ export interface ContentData {
  */
 export interface FeatureFlags {
   reservationsEnabled: boolean;
+  /**
+   * Buchungsadresse des BESTEHENDEN Systems des Betriebs (OpenTable, Quandoo,
+   * resmio …). Ist sie gesetzt, führt "Tisch reservieren" dorthin statt in
+   * unser eigenes Formular.
+   *
+   * Warum das wichtig ist: Der erste echte Betrieb bucht über OpenTable. Hätten
+   * wir zusätzlich unser Formular eingeschaltet, wären Buchungen per E-Mail bei
+   * uns eingegangen, während OpenTable nichts davon weiß – derselbe Tisch
+   * zweimal vergeben. Ein bestehendes System wird verlinkt, nicht ersetzt.
+   */
+  reservationUrl?: string;
+  /** Anzeigename des Anbieters, z.B. "OpenTable". Nur für die Beschriftung. */
+  reservationProvider?: string;
   maxGuests?: number;
   notificationMethod?: string;
   reservationEmail?: string;
