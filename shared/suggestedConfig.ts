@@ -27,6 +27,13 @@ export interface MenuItem {
   imageUrl?: string;
   category?: string;
   available?: boolean;
+  /**
+   * Erscheint im Bereich "Highlights" der Startseite. Ohne diese Markierung
+   * würfelt AppRenderer drei ZUFÄLLIGE Gerichte – bei einer Karte mit 141
+   * Positionen meist Getränke. shared/autoPublish.ts setzt sie beim
+   * automatischen Veröffentlichen.
+   */
+  isHighlight?: boolean;
 }
 
 export interface GalleryImage {
@@ -65,6 +72,16 @@ export interface DesignConfig {
   secondaryColor?: string;
   backgroundColor?: string;
   fontFamily?: string;
+  /**
+   * Die vier folgenden setzt shared/autoPublish.ts aus der gescrapten Palette.
+   * Bleiben sie leer, fällt der Server beim Ausliefern auf seine Standardwerte
+   * zurück (configurations.ts) – lila Kopfzeile und grüne Preise, die mit
+   * jeder gescrapten Markenfarbe kollidieren.
+   */
+  fontColor?: string;
+  priceColor?: string;
+  headerFontColor?: string;
+  headerBackgroundColor?: string;
 }
 
 export interface ContentData {

@@ -52,7 +52,9 @@ const CATEGORY_PATTERNS: Array<[RegExp, string]> = [
   [/burger/i, "Burger"],
   [/sandwich|wrap|toast|baguette|panini/i, "Sandwiches"],
   [/schnitzel/i, "Schnitzel"],
-  [/steak|vom\s+grill|grillgerich/i, "Vom Grill"],
+  // \bgrill\b statt der Phrase "vom grill": Die Überschriften-Prüfung testet
+  // nur das Kernwort HINTER dem Einleitungswort – bei "Vom Grill" also "Grill".
+  [/steak|grill/i, "Vom Grill"],
   [/fisch|fish|meeresfrüchte|seafood/i, "Fisch"],
   [/vegetarisch|vegan|veggie/i, "Vegetarisch"],
   [/beilage|side\s?dish/i, "Beilagen"],
@@ -176,6 +178,13 @@ function inRange(value: string): boolean {
   return Number.isFinite(n) && n >= MIN_PRICE && n <= MAX_PRICE;
 }
 
+/**
+ * Ein einzelnes Wort am Namensende, das eine Mengen- oder Preisangabe ist:
+ * "0,3l", "0,4", "4,10", "cl" – und das nackte "1", zu dem die Texterkennung
+ * ein kleines "l" (Liter) regelmäßig verliest.
+ */
+const TRAILING_MEASURE_TOKEN = /^(?:\d{1,3}[.,]\d{1,2}\s*l?|0[.,]\d|l|cl|ltr|1)$/i;
+
 /** Säubert den Textteil vor dem Preis zu einem Gerichtnamen. */
 export function cleanItemName(raw: string): string {
   let name = raw
@@ -190,6 +199,21 @@ export function cleanItemName(raw: string): string {
     if (next === name) break;
     name = next;
   }
+
+  // Mengen- und Preisreste am Ende abtragen. Getränkezeilen führen mehrere
+  // Größen ("Bier vom Fass 0,3l 4,10 0,4l 5,10"), und die Texterkennung
+  // verliest das "l" gern als "1" – ohne diese Schleife hieß das Gericht
+  // auf der ersten echten Karte "Bier vom Fass 0,31 4,10 0,4 1".
+  const words = name.split(/\s+/);
+  while (words.length > 1 && TRAILING_MEASURE_TOKEN.test(words[words.length - 1])) {
+    words.pop();
+  }
+  const stripped = words.join(" ");
+  // Nur übernehmen, wenn ein brauchbarer Name übrig bleibt.
+  if (stripped.length >= 2 && /[A-Za-zÄÖÜäöüß]/.test(stripped)) {
+    name = stripped;
+  }
+
   return name.replace(/\s{2,}/g, " ").trim();
 }
 
@@ -198,11 +222,31 @@ function isNoise(line: string): boolean {
 }
 
 /**
+ * Einleitungswörter, hinter denen das eigentliche Kategorie-Stichwort einer
+ * Überschrift stehen darf: "Unsere Suppen", "Warme Getränke", "Vom Grill".
+ */
+const HEADING_INTRO_WORDS = new Set([
+  "unsere", "unser", "warme", "kalte", "heisse", "heiße",
+  "alkoholfreie", "hausgemachte", "vom", "von", "der", "die", "das", "&",
+]);
+
+/**
  * Erkennt eine Kategorie-Überschrift.
  *
  * Zwei Wege, weil Karten es unterschiedlich halten: entweder ein bekanntes
  * Stichwort ("Vorspeisen"), oder eine kurze Zeile in Großbuchstaben ohne Preis
  * ("UNSERE KLASSIKER"). Zeilen mit Preis sind nie Überschriften.
+ *
+ * Der Stichwort-Weg ist bewusst STRENG. Die erste Fassung hielt jede Zeile bis
+ * 60 Zeichen mit einem Stichwort für eine Überschrift – und im OCR-Text einer
+ * mehrseitigen Karte kippte damit jede Beschreibungszeile die laufende
+ * Kategorie: "…dazu Salat und Brot" machte aus allem Folgenden "Salate",
+ * "…auf Toast" machte "Sandwiches". Auf der ersten echten Karte war danach
+ * die halbe Einsortierung falsch (Kabeljau unter Salate, Sauerbraten unter
+ * Schnitzel). Deshalb gilt jetzt: höchstens vier Wörter, kein Komma, keine
+ * Bindewörter mitten im Satz, und das Stichwort muss – abgesehen von
+ * Einleitungswörtern wie "Unsere" – das ERSTE Wort treffen. Eine
+ * Beschreibung beginnt praktisch nie mit dem Kategoriewort.
  */
 export function detectCategory(line: string): string | null {
   const trimmed = line.trim();
@@ -210,8 +254,20 @@ export function detectCategory(line: string): string | null {
   if (findPrices(trimmed).length > 0) return null;
   if (isNoise(trimmed)) return null;
 
-  for (const [rx, name] of CATEGORY_PATTERNS) {
-    if (rx.test(trimmed)) return name;
+  const words = trimmed.split(/\s+/);
+  const looksLikeSentence =
+    trimmed.includes(",") || / (mit|und|an|auf|im|in|aus|dazu|zu|für) /i.test(` ${trimmed} `);
+
+  if (trimmed.length <= 40 && words.length <= 4 && !looksLikeSentence) {
+    // Erstes Wort finden, das kein Einleitungswort ist.
+    const core = words.find(
+      (w) => !HEADING_INTRO_WORDS.has(w.toLowerCase().replace(/[^a-zäöüß&]/gi, "")),
+    );
+    if (core) {
+      for (const [rx, name] of CATEGORY_PATTERNS) {
+        if (rx.test(core)) return name;
+      }
+    }
   }
 
   // Großbuchstaben-Überschrift ohne bekanntes Stichwort: als eigene Kategorie
@@ -249,6 +305,74 @@ function looksLikeDescription(line: string): boolean {
   if (detectCategory(t)) return false;
   if (isNoise(t)) return false;
   return /\s/.test(t); // mindestens zwei Wörter
+}
+
+/**
+ * Grobe Einteilung der Kategorien. Sie entscheidet, wann die Nachkorrektur
+ * unten eingreifen darf: nur wenn Name und zugewiesene Kategorie in
+ * VERSCHIEDENE Gruppen fallen. Innerhalb einer Gruppe hat die Überschrift der
+ * Karte das letzte Wort – ein Wiener Schnitzel unter "Hauptgerichte" ist die
+ * Entscheidung des Wirts, ein Kaiserschmarrn unter "Weine" ist ein Fehler.
+ */
+const CATEGORY_GROUPS: Record<string, "essen" | "dessert" | "getraenke"> = {
+  Vorspeisen: "essen", Suppen: "essen", Salate: "essen", Pizza: "essen",
+  Pasta: "essen", Burger: "essen", Sandwiches: "essen", Schnitzel: "essen",
+  "Vom Grill": "essen", Fisch: "essen", Vegetarisch: "essen",
+  Beilagen: "essen", Snacks: "essen", "Frühstück": "essen",
+  Hauptgerichte: "essen",
+  Desserts: "dessert",
+  "Heißgetränke": "getraenke", Weine: "getraenke", Biere: "getraenke",
+  Cocktails: "getraenke", "Getränke": "getraenke",
+};
+
+/**
+ * Woran ein Gericht an seinem NAMEN zu erkennen ist. Reihenfolge zählt:
+ * "Weinschorle" muss vor "Wein" geprüft werden, sonst landet die Schorle bei
+ * den Weinen.
+ */
+const NAME_CATEGORY_RULES: Array<[RegExp, string]> = [
+  [/schorle|eistee|limonade|cola|spezi|saft\b|wasser\b|apfelsaft/i, "Getränke"],
+  [/wein\b|riesling|burgunder|merlot|chardonnay|sekt\b|prosecco/i, "Weine"],
+  [/bier\b|pils\b|weizen\b|radler|vom fass/i, "Biere"],
+  [/kaffee|espresso|cappuccino|latte|kakao|heiße schokolade|tee\b/i, "Heißgetränke"],
+  [/cocktail|spritz|mojito|aperol|gin\b|longdrink/i, "Cocktails"],
+  [/schmarrn|kuchen|mousse|sorbet|tiramisu|crème|creme brûlée|panna cotta|dessert|eisbecher/i, "Desserts"],
+  [/suppe\b|süppchen/i, "Suppen"],
+  [/lachs|kabeljau|forelle|zander|scholle|dorade|garnelen|matjes/i, "Fisch"],
+];
+
+/**
+ * Korrigiert grob falsche Kategorien anhand des Gerichtnamens.
+ *
+ * Anlass, an der ersten echten Karte gemessen: Die Texterkennung einer
+ * mehrseitigen Karte verwürfelt die Abschnitte, und die zeilenbasierte
+ * Einsortierung setzte "Kaiserschmarrn" unter Weine, "Pfirsich Eistee" unter
+ * Desserts und "Weinschorle" unter Cocktails.
+ *
+ * Eingegriffen wird NUR quer über die Gruppen (Essen / Dessert / Getränke).
+ * Innerhalb einer Gruppe bleibt die Überschrift der Karte maßgeblich – eine
+ * Tomatensuppe unter "Vorspeisen" ist die Entscheidung des Wirts. Einzige
+ * Ausnahme: Suppen werden auch aus dem AUFFANGWERT "Hauptgerichte" geholt,
+ * denn der heißt meist nur "keine Überschrift gesehen".
+ */
+export function refineCategories(items: ParsedMenuItem[]): ParsedMenuItem[] {
+  return items.map((item) => {
+    const assigned = item.category ?? "";
+    const assignedGroup = CATEGORY_GROUPS[assigned];
+
+    for (const [rx, byName] of NAME_CATEGORY_RULES) {
+      if (!rx.test(item.name)) continue;
+      const nameGroup = CATEGORY_GROUPS[byName];
+      const crossGroup = assignedGroup !== undefined && nameGroup !== assignedGroup;
+      const soupFromFallback =
+        byName === "Suppen" && assigned === DEFAULT_CATEGORY;
+      if (crossGroup || soupFromFallback) {
+        return { ...item, category: byName };
+      }
+      break; // Erste Regel entscheidet; weitere würden nur widersprechen.
+    }
+    return item;
+  });
 }
 
 export interface ParseOptions {
@@ -372,7 +496,8 @@ export function parseMenuText(
     items.push(item);
   }
 
-  return items;
+  // Grob falsche Zuordnungen am Namen korrigieren – siehe refineCategories.
+  return refineCategories(items);
 }
 
 /**

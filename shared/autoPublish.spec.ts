@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   buildPublishConfig,
   countExternalImages,
+  deriveCohesiveColors,
+  markHighlights,
+  contrastRatio,
   FALLBACK_BUSINESS_TYPE,
 } from "./autoPublish";
 import {
@@ -124,6 +127,111 @@ describe("buildPublishConfig", () => {
     expect(config?.design.template).toBe(FALLBACK_TEMPLATE);
     expect(defaulted).toHaveLength(2);
     expect(config?.design.primaryColor).toBe("#660c21");
+  });
+});
+
+describe("deriveCohesiveColors: Farben aus der gescrapten Palette", () => {
+  // Die echte Palette des ersten Testbetriebs: Bordeaux, Gold, Creme.
+  const palette = {
+    primaryColor: "#660c21",
+    secondaryColor: "#b8860a",
+    backgroundColor: "#f1e5d0",
+  };
+
+  it("leitet Kopfzeile und Preise aus der Marke ab, statt Standardwerte greifen zu lassen", () => {
+    // Ausgeliefert wurde zuvor eine LILA Kopfzeile (#5e30eb) mit grünen
+    // Preisen (#059669) – Server-Standardwerte, die von der Marke nichts wissen.
+    const d = deriveCohesiveColors(palette);
+    expect(d.headerBackgroundColor).toBe("#f1e5d0");
+    expect(d.headerFontColor).toBe("#660c21"); // Bordeaux auf Creme: lesbar
+    // Gold (#b8860a) auf Creme hat nur Kontrast 2,6:1 und fällt durch die
+    // AA-Schwelle – die Kette greift korrekt zur Primärfarbe. Markentreu UND
+    // lesbar schlägt markentreu allein.
+    expect(d.priceColor).toBe("#660c21");
+    expect(d.fontColor).toBe("#1f2937"); // dunkel auf hellem Grund
+  });
+
+  it("fällt auf lesbare Schrift zurück, wenn die Markenfarbe unleserlich wäre", () => {
+    // Helles Gelb auf Weiß – die Marke würde niemand entziffern.
+    const d = deriveCohesiveColors({
+      primaryColor: "#ffee88",
+      backgroundColor: "#ffffff",
+    });
+    expect(d.headerFontColor).toBe("#1f2937");
+    expect(contrastRatio(d.headerFontColor!, d.headerBackgroundColor!)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("wählt helle Schrift auf dunklem Grund", () => {
+    const d = deriveCohesiveColors({ backgroundColor: "#1a1a1a" });
+    expect(d.fontColor).toBe("#f8f7f4");
+  });
+
+  it("lässt bereits gesetzte Werte unberührt", () => {
+    const d = deriveCohesiveColors({ ...palette, priceColor: "#123456" });
+    expect(d.priceColor).toBe("#123456");
+  });
+
+  it("nimmt die Sekundärfarbe für Preise, wo sie lesbar ist", () => {
+    // Dunkles Gold auf Weiß: 4,6:1 – die Marke darf bleiben.
+    const d = deriveCohesiveColors({
+      primaryColor: "#660c21",
+      secondaryColor: "#8a6508",
+      backgroundColor: "#ffffff",
+    });
+    expect(d.priceColor).toBe("#8a6508");
+  });
+});
+
+describe("markHighlights: die Aushängeschilder der Startseite", () => {
+  const dish = (id, category, price, description) => ({
+    id, name: id, category, price, ...(description ? { description } : {}),
+  });
+
+  it("wählt Hauptgerichte mit Beschreibung statt Getränke", () => {
+    // Ohne Markierung würfelt der Renderer – bei 141 Positionen mit 71
+    // Getränken bestand die Startseite meist aus Getränken.
+    const items = markHighlights([
+      dish("cola", "Getränke", "4.10"),
+      dish("toettchen", "Hauptgerichte", "14.50", "Münsterländer Klassiker"),
+      dish("pils", "Biere", "3.90"),
+      dish("lachs", "Fisch", "22.00", "mit Blattspinat"),
+      dish("kaffee", "Heißgetränke", "3.30"),
+      dish("tournedo", "Vom Grill", "45.00", "vom Rind"),
+    ]);
+    const chosen = items.filter((i) => i.isHighlight).map((i) => i.id);
+    expect(chosen).toHaveLength(3);
+    expect(chosen).toEqual(expect.arrayContaining(["toettchen", "lachs", "tournedo"]));
+  });
+
+  it("verändert die Reihenfolge der Karte nicht", () => {
+    const items = markHighlights([
+      dish("a", "Hauptgerichte", "10.00", "x"),
+      dish("b", "Getränke", "3.00"),
+      dish("c", "Fisch", "20.00", "y"),
+    ]);
+    expect(items.map((i) => i.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("markiert nichts, wenn nichts als Aushängeschild taugt", () => {
+    // Lieber der Zufall des Renderers als eine Cola als "Highlight".
+    const items = markHighlights([dish("cola", "Getränke", "4.10")]);
+    expect(items.some((i) => i.isHighlight)).toBe(false);
+  });
+
+  it("übersteht eine leere Karte", () => {
+    expect(markHighlights([])).toEqual([]);
+  });
+});
+
+describe("buildPublishConfig: Reservierung folgt dem Scrape-Befund", () => {
+  it("schaltet Reservierungen ein, wenn die Website welche hat", () => {
+    const { config } = buildPublishConfig(draftWith(), { enableReservations: true });
+    expect(config?.features?.reservationsEnabled).toBe(true);
+  });
+
+  it("lässt sie aus, wenn der Scrape keine fand", () => {
+    const { config } = buildPublishConfig(draftWith());
+    expect(config?.features).toBeUndefined();
   });
 });
 

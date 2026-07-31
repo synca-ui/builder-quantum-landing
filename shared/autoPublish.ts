@@ -28,6 +28,7 @@ import {
   type ContentData,
   type DesignConfig,
   type BusinessInfo,
+  type MenuItem,
 } from "./suggestedConfig";
 
 /**
@@ -46,6 +47,143 @@ export interface PublishConfig {
   design: Partial<DesignConfig>;
   content: Partial<ContentData>;
   contact: Partial<ContactInfo>;
+  features?: { reservationsEnabled?: boolean };
+}
+
+// ─── Farben: aus der gescrapten Palette ableiten ─────────────────────────────
+//
+// An der ersten echten Veröffentlichung gemessen: Der Scrape lieferte Bordeaux
+// (#660c21), Gold (#b8860a) und Creme (#f1e5d0) – ausgeliefert wurde trotzdem
+// eine LILA Kopfzeile (#5e30eb) mit grünen Preisen (#059669). Grund: Der
+// automatische Modus setzte nur die drei Grundfarben, und für alles Weitere
+// griffen die Standardwerte des Servers (configurations.ts), die von der
+// Marke des Betriebs nichts wissen.
+
+/** Relative Leuchtdichte nach WCAG. 0 = schwarz, 1 = weiß. */
+export function relativeLuminance(hex: string): number {
+  const raw = hex.replace("#", "");
+  const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
+  const channel = (i: number) => {
+    const v = parseInt(full.slice(i * 2, i * 2 + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(0) + 0.7152 * channel(1) + 0.0722 * channel(2);
+}
+
+/** Kontrastverhältnis zweier Farben nach WCAG (1 bis 21). */
+export function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** Dunkle oder helle Schrift, je nachdem, was auf dem Grund lesbar ist. */
+export function readableTextOn(background: string): string {
+  return relativeLuminance(background) > 0.4 ? "#1f2937" : "#f8f7f4";
+}
+
+/** Untergrenze für Fließtext nach WCAG AA. */
+const MIN_CONTRAST = 4.5;
+
+/**
+ * Füllt die abgeleiteten Farben, wo der Scrape nur die Grundpalette liefert.
+ *
+ * Regeln: Kopfzeile auf dem Seitenhintergrund, Schrift darin in der
+ * Primärfarbe – außer sie ist darauf unleserlich, dann schlicht dunkel/hell.
+ * Preise in der Sekundärfarbe (statt des markenfremden Standard-Grüns), mit
+ * demselben Lesbarkeits-Rückfall. Bereits gesetzte Werte bleiben unberührt.
+ */
+export function deriveCohesiveColors(
+  design: Partial<DesignConfig>,
+): Partial<DesignConfig> {
+  const out = { ...design };
+  const background = out.backgroundColor ?? "#FFFFFF";
+
+  if (!out.fontColor) out.fontColor = readableTextOn(background);
+  if (!out.headerBackgroundColor) out.headerBackgroundColor = background;
+
+  if (!out.headerFontColor) {
+    const wish = out.primaryColor;
+    out.headerFontColor =
+      wish && contrastRatio(wish, out.headerBackgroundColor) >= MIN_CONTRAST
+        ? wish
+        : readableTextOn(out.headerBackgroundColor);
+  }
+
+  if (!out.priceColor) {
+    const candidates = [out.secondaryColor, out.primaryColor].filter(
+      (c): c is string => Boolean(c),
+    );
+    out.priceColor =
+      candidates.find((c) => contrastRatio(c, background) >= MIN_CONTRAST) ??
+      readableTextOn(background);
+  }
+
+  return out;
+}
+
+// ─── Highlights: die drei Aushängeschilder der Startseite ────────────────────
+
+/**
+ * Kategorien, deren Gerichte als Aushängeschild taugen. Getränke tun das
+ * nicht: Niemand wirbt auf der Startseite mit einer Cola.
+ */
+const HIGHLIGHT_CATEGORIES = new Set([
+  "Hauptgerichte", "Fisch", "Vom Grill", "Schnitzel", "Vegetarisch",
+  "Pasta", "Pizza", "Burger", "Vorspeisen",
+]);
+
+const DRINK_CATEGORIES = new Set([
+  "Getränke", "Weine", "Biere", "Cocktails", "Heißgetränke",
+]);
+
+/**
+ * Markiert die drei Gerichte, die die Startseite zeigen soll.
+ *
+ * Anlass: AppRenderer zeigt als "Highlights" die markierten Gerichte – und
+ * füllt ohne Markierung mit ZUFÄLLIGEN auf. Bei der ersten echten Karte (141
+ * Positionen, davon 71 Getränke) bestand die Startseite damit meist aus
+ * Getränken. Niemand hatte die Markierung je gesetzt.
+ *
+ * Gewählt wird nach einfachen, erklärbaren Signalen: Hauptgericht-Kategorie,
+ * vorhandene Beschreibung (der Wirt fand das Gericht erklärenswert), Preis im
+ * oberen Bereich. Die Reihenfolge der Karte bleibt unverändert – nur die
+ * Markierung kommt dazu.
+ */
+export function markHighlights(items: MenuItem[], count = 3): MenuItem[] {
+  if (!items.length) return items;
+
+  const prices = items
+    .map((i) => parseFloat(String(i.price ?? "")))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+  const median = prices.length ? prices[Math.floor(prices.length / 2)] : 0;
+
+  const score = (item: MenuItem): number => {
+    let s = 0;
+    const category = item.category ?? "";
+    if (HIGHLIGHT_CATEGORIES.has(category)) s += 3;
+    if (DRINK_CATEGORIES.has(category)) s -= 5;
+    if (item.description) s += 2;
+    const price = parseFloat(String(item.price ?? ""));
+    if (Number.isFinite(price) && price >= median) s += 1;
+    return s;
+  };
+
+  const chosen = new Set(
+    items
+      .map((item, index) => ({ item, index, s: score(item) }))
+      .filter((x) => x.s > 0)
+      .sort((a, b) => b.s - a.s || a.index - b.index)
+      .slice(0, count)
+      .map((x) => x.item.id),
+  );
+
+  if (!chosen.size) return items;
+  return items.map((item) =>
+    chosen.has(item.id) ? { ...item, isHighlight: true } : item,
+  );
 }
 
 export interface BuildPublishConfigResult {
@@ -68,8 +206,19 @@ export interface BuildPublishConfigResult {
  * entsprechenden Daten vorliegen. Eine selectedPages-Liste mitzuschicken würde
  * daran nichts verbessern und wäre eine zweite Wahrheit über dieselbe Frage.
  */
+export interface BuildPublishOptions {
+  /**
+   * Reservierungen einschalten – gesetzt, wenn der Scrape auf der Website
+   * eine Reservierungsmöglichkeit erkannt hat (ScraperJob.hasReservation).
+   * Die Formular-Einzelheiten (Zeitfenster, Vorlauf) kommen aus den
+   * Server-Standardwerten; hier fällt nur die Grundsatzentscheidung.
+   */
+  enableReservations?: boolean;
+}
+
 export function buildPublishConfig(
   draft: ConfiguratorDraft | null | undefined,
+  options: BuildPublishOptions = {},
 ): BuildPublishConfigResult {
   if (!draft) {
     return { config: null, defaulted: [], blocking: ["Kein Analyseergebnis"] };
@@ -101,18 +250,27 @@ export function buildPublishConfig(
 
   if (blocking.length) return { config: null, defaulted, blocking };
 
-  return {
-    config: {
-      // Der Entwurf wird durchgereicht, die drei Pflichtfelder überschrieben.
-      // Reihenfolge ist wichtig: erst der Scrape, dann die Ersatzwerte.
-      business: { ...draft.business, name, type },
-      design: { ...draft.design, template },
-      content: { ...draft.content },
-      contact: { ...draft.contact },
-    },
-    defaulted,
-    blocking: [],
+  // Abgeleitete Farben und Highlight-Markierung – siehe die Funktionen oben.
+  const design = deriveCohesiveColors({ ...draft.design, template });
+  const content: Partial<ContentData> = { ...draft.content };
+  if (content.menuItems?.length) {
+    content.menuItems = markHighlights(content.menuItems as MenuItem[]);
+  }
+
+  const config: PublishConfig = {
+    // Der Entwurf wird durchgereicht, die drei Pflichtfelder überschrieben.
+    // Reihenfolge ist wichtig: erst der Scrape, dann die Ersatzwerte.
+    business: { ...draft.business, name, type },
+    design,
+    content,
+    contact: { ...draft.contact },
   };
+
+  if (options.enableReservations) {
+    config.features = { reservationsEnabled: true };
+  }
+
+  return { config, defaulted, blocking: [] };
 }
 
 /**

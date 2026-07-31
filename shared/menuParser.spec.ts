@@ -5,6 +5,7 @@ import {
   cleanItemName,
   detectCategory,
   menuQuality,
+  refineCategories,
 } from "./menuParser";
 
 /**
@@ -110,6 +111,89 @@ describe("detectCategory", () => {
         "Wir verwenden ausschließlich frische Zutaten aus der Region und legen großen Wert",
       ),
     ).toBeNull();
+  });
+});
+
+describe("detectCategory: Strenge gegen OCR-Fließtext", () => {
+  it("hält eine Beschreibungszeile mit Stichwort NICHT für eine Überschrift", () => {
+    // Genau daran zerbrach die erste echte Karte: "…auf Toast" kippte die
+    // laufende Kategorie auf Sandwiches, "…dazu Salat und Brot" auf Salate –
+    // danach war die halbe Einsortierung falsch.
+    expect(detectCategory("Frische Pfifferlinge auf Toast")).toBeNull();
+    expect(detectCategory("dazu Salat und Brot")).toBeNull();
+    expect(detectCategory("serviert mit Kaffee")).toBeNull();
+  });
+
+  it("hält einen Gerichtnamen mit Kategorie-Silbe nicht für eine Überschrift", () => {
+    // "Hochzeitssuppe" enthält "suppe" – ist aber ein Gericht, keine Rubrik.
+    expect(detectCategory("Münsterländer Hochzeitssuppe")).toBeNull();
+  });
+
+  it("erkennt echte Überschriften weiterhin", () => {
+    expect(detectCategory("Suppen")).toBe("Suppen");
+    // Geprüft wird nur das Kernwort hinter dem Einleitungswort – "Getränke"
+    // statt "Heißgetränke" ist der bewusste Preis für die Strenge oben.
+    expect(detectCategory("Warme Getränke")).toBe("Getränke");
+    expect(detectCategory("Heißgetränke")).toBe("Heißgetränke");
+    expect(detectCategory("Vom Grill")).toBe("Vom Grill");
+    expect(detectCategory("Fisch & Meeresfrüchte")).toBe("Fisch");
+  });
+});
+
+describe("cleanItemName: Mengen-Reste der Texterkennung", () => {
+  it("trägt Größen- und Preisfolgen am Ende ab", () => {
+    // Die erste echte Karte lieferte "Bier vom Fass 0,31 4,10 0,4 1" – die
+    // Texterkennung verliest das Liter-l als 1.
+    expect(cleanItemName("Bier vom Fass 0,31 4,10 0,4 1")).toBe("Bier vom Fass");
+    expect(cleanItemName("Weinschorle - Weiß/Rot/Rosé 0,21")).toBe(
+      "Weinschorle - Weiß/Rot/Rosé",
+    );
+    expect(cleanItemName("Pfirsich Eistee 0,3 1")).toBe("Pfirsich Eistee");
+  });
+
+  it("lässt Zahlen stehen, die zum Namen gehören", () => {
+    expect(cleanItemName("Restaurant 1900")).toBe("Restaurant 1900");
+  });
+});
+
+describe("refineCategories: Nachkorrektur am Gerichtnamen", () => {
+  const item = (name, category) => ({ id: name, name, category });
+
+  it("holt Nachtisch aus den Getränken und Getränke aus dem Nachtisch", () => {
+    // Beides stand so auf der ersten veröffentlichten Seite.
+    const out = refineCategories([
+      item("Kaiserschmarrn", "Weine"),
+      item("Pfirsich Eistee", "Desserts"),
+    ]);
+    expect(out[0].category).toBe("Desserts");
+    expect(out[1].category).toBe("Getränke");
+  });
+
+  it("respektiert die Überschrift innerhalb einer Gruppe", () => {
+    // Tomatensuppe unter Vorspeisen ist die Entscheidung des Wirts.
+    const out = refineCategories([
+      item("Tomatensuppe", "Vorspeisen"),
+      item("Wiener Schnitzel", "Hauptgerichte"),
+    ]);
+    expect(out[0].category).toBe("Vorspeisen");
+    expect(out[1].category).toBe("Hauptgerichte");
+  });
+
+  it("holt Suppen aus dem Auffangwert heraus", () => {
+    // Hauptgerichte heißt oft nur "keine Überschrift gesehen".
+    const out = refineCategories([item("Pfifferling-Rahmsuppe", "Hauptgerichte")]);
+    expect(out[0].category).toBe("Suppen");
+  });
+
+  it("lässt die Weinschorle nicht bei den Weinen landen", () => {
+    // Reihenfolge der Regeln: Schorle vor Wein.
+    const out = refineCategories([item("Weinschorle", "Cocktails")]);
+    expect(out[0].category).toBe("Cocktails"); // beides Getränke – kein Eingriff
+  });
+
+  it("fasst Unbekanntes nicht an", () => {
+    const out = refineCategories([item("Land und Meer", "Biere")]);
+    expect(out[0].category).toBe("Biere"); // kein Stichwort im Namen
   });
 });
 

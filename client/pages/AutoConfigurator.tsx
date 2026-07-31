@@ -411,7 +411,16 @@ export default function AutoConfigurator() {
   // Was beim direkten Veröffentlichen herauskäme. useMemo, weil das Ergebnis
   // in mehrere Stellen der Anzeige einfließt und der Entwurf sich nur beim
   // Abschluss der Analyse ändert.
-  const publishPlan = useMemo(() => buildPublishConfig(draft), [draft]);
+  // Reservierungen folgen dem Scrape-Befund: Hat die analysierte Website eine
+  // Reservierungsmöglichkeit (job.hasReservation), bekommt die erzeugte auch
+  // eine. Die Formular-Einzelheiten kommen aus den Server-Standardwerten.
+  const publishPlan = useMemo(
+    () =>
+      buildPublishConfig(draft, {
+        enableReservations: Boolean(result?.hasReservation),
+      }),
+    [draft, result?.hasReservation],
+  );
   const menuItemCount = draft?.content.menuItems?.length ?? 0;
   const menuCategoryCount = draft?.content.categories?.length ?? 0;
   const externalImageCount = useMemo(() => countExternalImages(draft), [draft]);
