@@ -41,6 +41,21 @@ interface RouteDef {
    * Nötig, wenn die Komponente intern selbst weiterleitet.
    */
   location?: string;
+  /**
+   * Quelldatei der Seite, relativ zum Projektstamm.
+   *
+   * scripts/prerender.mjs liest daraus über `git log` das Datum der letzten
+   * Änderung und schreibt es als <lastmod> in die Sitemap. changefreq und
+   * priority wertet Google seit Jahren nicht mehr aus, lastmod dagegen schon –
+   * es ist der einzige Hinweis in der Sitemap, der ein erneutes Crawlen
+   * auslöst.
+   *
+   * Bewusst nur die Seitenkomponente und nicht ihr gesamter Abhängigkeitsbaum:
+   * Ein geändertes UI-Grundelement würde sonst alle acht Seiten gleichzeitig
+   * als frisch melden. Ein Datum, das für jede URL dasselbe ist, wertet Google
+   * als unglaubwürdig und ignoriert es.
+   */
+  source: string;
 }
 
 /**
@@ -50,13 +65,33 @@ interface RouteDef {
  * Die Liste spiegelt die Einträge aus public/sitemap.xml.
  */
 const ROUTES: Record<string, RouteDef> = {
-  "/": { Component: Index, pattern: "/" },
-  "/impressum": { Component: Impressum, pattern: "/impressum" },
-  "/datenschutz": { Component: Datenschutz, pattern: "/datenschutz" },
-  "/agb": { Component: AGB, pattern: "/agb" },
-  "/impressum-check": { Component: CheckImpressum, pattern: "/impressum-check" },
-  "/datenschutz-check": { Component: CheckDatenschutz, pattern: "/datenschutz-check" },
-  "/check-landing": { Component: CheckLanding, pattern: "/check-landing" },
+  "/": { Component: Index, pattern: "/", source: "client/pages/Index.tsx" },
+  "/impressum": {
+    Component: Impressum,
+    pattern: "/impressum",
+    source: "client/pages/Impressum.tsx",
+  },
+  "/datenschutz": {
+    Component: Datenschutz,
+    pattern: "/datenschutz",
+    source: "client/pages/Datenschutz.tsx",
+  },
+  "/agb": { Component: AGB, pattern: "/agb", source: "client/pages/AGB.tsx" },
+  "/impressum-check": {
+    Component: CheckImpressum,
+    pattern: "/impressum-check",
+    source: "client/pages/CheckImpressum.tsx",
+  },
+  "/datenschutz-check": {
+    Component: CheckDatenschutz,
+    pattern: "/datenschutz-check",
+    source: "client/pages/CheckDatenschutz.tsx",
+  },
+  "/check-landing": {
+    Component: CheckLanding,
+    pattern: "/check-landing",
+    source: "client/pages/CheckLanding.tsx",
+  },
   // DemoDashboardHome enthält ein eigenes <Routes> und leitet den Indexpfad per
   // <Navigate> auf /insights um. Ein <Navigate> beim ersten Render ist im
   // StaticRouter wirkungslos – gerendert würde nichts, und das <PageSEO> der
@@ -66,10 +101,16 @@ const ROUTES: Record<string, RouteDef> = {
     Component: DemoDashboardHome,
     pattern: "/demo-dashboard/*",
     location: "/demo-dashboard/insights",
+    source: "client/pages/demo/DemoDashboardHome.tsx",
   },
 };
 
 export const ROUTE_PATHS = Object.keys(ROUTES);
+
+/** Route -> Quelldatei, für das <lastmod> der Sitemap. Siehe RouteDef.source. */
+export const ROUTE_SOURCES: Record<string, string> = Object.fromEntries(
+  Object.entries(ROUTES).map(([route, def]) => [route, def.source]),
+);
 
 export function render(url = "/") {
   const def = ROUTES[url];

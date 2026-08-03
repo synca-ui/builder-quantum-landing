@@ -25,6 +25,7 @@
  * deckungsgleich und Hydration würde fehlschlagen.
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 
@@ -43,7 +44,7 @@ for (const [label, p] of [
   }
 }
 
-const { render, ROUTE_PATHS } = await import(pathToFileURL(ENTRY_PATH).href);
+const { render, ROUTE_PATHS, ROUTE_SOURCES } = await import(pathToFileURL(ENTRY_PATH).href);
 
 /**
  * Setzt eine bereits vorgerenderte index.html auf die Ausgangshülle zurück.
@@ -251,6 +252,52 @@ if (problems.length) {
   console.error("\n[prerender] Routenlisten laufen auseinander:");
   for (const p of problems) console.error(`  - ${p}`);
   process.exit(1);
+}
+
+// ── <lastmod> in die ausgelieferte Sitemap schreiben ─────────────────────────
+// public/sitemap.xml pflegt die Routenliste, hat aber kein Änderungsdatum.
+// changefreq und priority darin wertet Google nach eigener Aussage nicht aus;
+// lastmod dagegen schon – es ist der einzige Hinweis, der ein erneutes Crawlen
+// anstösst. Ohne ihn muss Google selbst raten, wann sich eine Seite gelohnt hat.
+//
+// Das Datum kommt aus der Versionsgeschichte der jeweiligen Seitenkomponente,
+// wird also nicht erfunden. Liefert git nichts – etwa bei einem flachen Klon
+// ohne Historie –, bleibt der Eintrag ohne lastmod, statt auf das Build-Datum
+// auszuweichen: Ein Datum, das bei jedem Build hochspringt, meldet acht
+// unveränderte Seiten als frisch und entwertet den Hinweis dauerhaft.
+function lastModified(file) {
+  try {
+    const iso = execFileSync("git", ["log", "-1", "--format=%cI", "--", file], {
+      cwd: ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return /^\d{4}-\d{2}-\d{2}T/.test(iso) ? iso : null;
+  } catch {
+    return null;
+  }
+}
+
+const OUT_SITEMAP = path.join(SPA_DIR, "sitemap.xml");
+if (existsSync(OUT_SITEMAP)) {
+  let dated = 0;
+  const withDates = sitemap.replace(
+    /([ \t]*)<loc>https:\/\/www\.maitr\.de(\/[^<]*)?<\/loc>/g,
+    (match, indent, rawPath) => {
+      const route = (rawPath || "/").replace(/\/$/, "") || "/";
+      const source = ROUTE_SOURCES?.[route];
+      const iso = source ? lastModified(source) : null;
+      if (!iso) return match;
+      dated++;
+      return `${match}\n${indent}<lastmod>${iso}</lastmod>`;
+    },
+  );
+  writeFileSync(OUT_SITEMAP, withDates);
+  console.log(
+    dated
+      ? `[prerender] sitemap.xml  ->  lastmod für ${dated}/${sitemapPaths.length} URL(s)`
+      : "[prerender] sitemap.xml  ->  ohne lastmod (keine Versionsgeschichte verfügbar)",
+  );
 }
 
 if (skipped.length) {
