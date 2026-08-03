@@ -81,3 +81,27 @@ describe("Zugriffskontrolle: keine Route gibt ohne Token Daten heraus", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("Entfernte Routen bleiben entfernt", () => {
+  it("GET /api/instagram antwortet nicht mehr", async () => {
+    // Anlass (03.08.2026, gegen Produktion verifiziert): Die Route nahm einen
+    // profileUrl-Parameter und rief ihn ungeprüft serverseitig ab — jede
+    // Eingabe mit http:// oder https:// ging unverändert an fetch(). Ohne
+    // Allowlist, ohne Sperre privater Netze, ohne Anmeldung.
+    // ?profileUrl=https://example.com lieferte HTTP 200; über den
+    // og:image-Rückfall floss fremder Inhalt zurück, und schon 200 gegen 500
+    // verriet, welche internen Hosts antworten.
+    //
+    // Geliefert hat sie dabei nie etwas: Alle Auslesewege hingen an
+    // window._sharedData und window.__additionalDataLoaded, die Instagram vor
+    // Jahren aus dem Markup genommen hat. Käme sie zurück, käme die Lücke mit.
+    const res = await request(app).get(
+      "/api/instagram?profileUrl=https://example.com",
+    );
+
+    expect(
+      res.status,
+      `/api/instagram antwortete ${res.status} statt 404 — die Route ist wieder da.`,
+    ).toBe(404);
+  });
+});
