@@ -4,14 +4,18 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "../theme";
-import { AccountIcon, GrowthIcon, PostIcon, TableIcon, TargetIcon, type IconProps } from "./icons";
+import { AccountIcon, GrowthIcon, PostIcon, StarIcon, TargetIcon, type IconProps } from "./icons";
 import { Glass } from "./ui/Glass";
 import { Text } from "./ui/Text";
 
-/** Reihenfolge und Beschriftung stammen aus `MaitrTabbar.dc.html`. */
+/**
+ * Die fünf Bereiche der Leiste. Der Stern steht projektweit für Bewertungen
+ * (Posteingang und Journey nutzen ihn bereits) - deshalb hier derselbe, statt eines
+ * zweiten Symbols für dieselbe Sache.
+ */
 const TAB_ICONS: Record<string, (props: IconProps) => ReactElement> = {
   start: TargetIcon,
-  tische: TableIcon,
+  bewertungen: StarIcon,
   beitraege: PostIcon,
   wachstum: GrowthIcon,
   konto: AccountIcon,
@@ -21,12 +25,17 @@ const TAB_ICONS: Record<string, (props: IconProps) => ReactElement> = {
  * Screens in der Tab-Gruppe, die keinen eigenen Eintrag haben. Solange einer davon
  * offen ist, leuchtet der Bereich, aus dem er kommt - die Zuordnung ist im Design
  * vorgegeben (Screen 11 „Kanäle" zeigt Konto, nicht Wachstum).
+ *
+ * Tische und Gäste zeigen auf Start: Reservierungen sind Tagesgeschäft, und der
+ * Posteingang unter Start ist der Weg, über den man dort hinkommt. Wichtig ist, dass
+ * hier ein SICHTBARER Tab steht - die Auflösung ist einstufig, eine Kette wie
+ * `gaeste -> tische -> start` würde keinen Eintrag mehr treffen.
  */
 const PARENT_TAB: Record<string, string> = {
   "profil-check": "wachstum",
   kanaele: "konto",
-  bewertungen: "start",
-  gaeste: "tische",
+  tische: "start",
+  gaeste: "start",
 };
 
 /**
@@ -95,8 +104,15 @@ export function MaitrTabBar({ state, descriptors, navigation }: BottomTabBarProp
               />
             ) : null}
 
-            <Icon size={22} color={color} />
-            <Text variant="eyebrow" color={color} style={styles.label}>
+            {/* strokeWidth explizit: die vier Bereichs-Icons haben 1.4 als Vorgabe,
+                StarIcon (auch anderswo verwendet) 1.5 - ohne diese Zeile stünde der
+                Stern in der Leiste sichtbar dicker als seine Nachbarn. */}
+            <Icon size={22} color={color} strokeWidth={1.4} />
+            {/* Einzeilig erzwingen: „Bewertungen" ist mit elf Zeichen das längste
+                Label der Leiste, und `Text` skaliert mit der OS-Textgröße mit. Ohne
+                Deckel bräche es auf zwei Zeilen um und sprengte die 64pt hohe Pille.
+                Der Screenreader liest weiterhin das volle `accessibilityLabel`. */}
+            <Text variant="eyebrow" color={color} style={styles.label} numberOfLines={1}>
               {label}
             </Text>
 

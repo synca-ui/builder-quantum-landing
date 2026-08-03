@@ -43,17 +43,6 @@
           "imageWidth": 160
         }
       ],
-      [
-        "expo-font",
-        {
-          "fonts": [
-            "./assets/fonts/PPFrama-Regular.otf",
-            "./assets/fonts/PPFrama-RegularItalic.otf",
-            "./assets/fonts/PPFramaText-Regular.otf",
-            "./assets/fonts/PPFramaText-RegularItalic.otf"
-          ]
-        }
-      ],
       "./plugins/withSpacePathFix",
       "./plugins/withLocalSigningTeam"
     ],

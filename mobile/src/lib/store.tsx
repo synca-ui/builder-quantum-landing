@@ -436,11 +436,48 @@ interface StoreValue {
   addMenuItem: (item: Omit<MenuItem, "id">) => void;
   removeMenuItem: (id: string) => void;
 
+  /**
+   * Alles, was von diesem Betrieb auf dem Gerät liegt, entfernen - und den
+   * Zustand auf den Punkt zurücksetzen, an dem eine frische Installation
+   * startet. Gehört zur Kontolöschung (Screen „Konto löschen"): ohne das
+   * blieben Gästenamen, Telefonnummern und Reservierungen im Gerätespeicher
+   * stehen, obwohl das Konto weg ist.
+   */
+  deleteLocalData: () => Promise<void>;
+
   /** Erst nach dem Laden aus dem Speicher wird die App gerendert. */
   hydrated: boolean;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
+
+/** Schlüssel des persistierten Schnappschusses. */
+const PERSIST_KEY = "maitr.demo.state.v1";
+
+/* ── Startzustand ─────────────────────────────────────────────────────────────
+   Die Anfangswerte stehen als Konstanten hier statt inline im useState, weil sie
+   an zwei Stellen gebraucht werden: beim ersten Start und in `deleteLocalData()`.
+   Nach einer Kontolöschung muss das Gerät exakt dort stehen, wo eine frische
+   Installation steht - nicht irgendwo dazwischen. */
+const CHANNELS_SEED: Record<string, boolean> = {
+  google: true,
+  instagram: true,
+  yelp: false,
+  thefork: false,
+  facebook: false,
+};
+const PROFILE_DONE_SEED: Record<string, boolean> = { photos: true };
+const REVIEW_ANSWERED_SEED: Record<string, boolean> = { rev_tobias: true };
+const CHANNEL_META_SEED: Record<string, { account: string; since: string }> = {
+  google: { account: "Sofia Brandt · Inhaberin", since: "verbunden vor 4 Min" },
+  instagram: { account: "@cafegoldstueck", since: "verbunden vor 12 Min" },
+};
+const AUTOPILOT_SEED: Record<AutopilotCategory, boolean> = {
+  reviews: false,
+  winback: false,
+  posts: false,
+};
+const PLAN_SEED: PlanId = "pro";
 
 /** Tiefe Kopie der Seed-Tage, damit der Reset-Zustand nie mutiert wird. */
 function seedServiceDays(): ServiceDayState[] {
@@ -477,36 +514,24 @@ function uid(prefix: string): string {
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
-  const [channels, setChannels] = useState<Record<string, boolean>>({
-    google: true,
-    instagram: true,
-    yelp: false,
-    thefork: false,
-    facebook: false,
-  });
-  const [profileDone, setProfileDone] = useState<Record<string, boolean>>({ photos: true });
+  const [channels, setChannels] = useState<Record<string, boolean>>(CHANNELS_SEED);
+  const [profileDone, setProfileDone] = useState<Record<string, boolean>>(PROFILE_DONE_SEED);
   const [taskDone, setTaskDone] = useState<Record<string, boolean>>({});
-  const [reviewAnswered, setReviewAnswered] = useState<Record<string, boolean>>({
-    rev_tobias: true,
-  });
+  const [reviewAnswered, setReviewAnswered] =
+    useState<Record<string, boolean>>(REVIEW_ANSWERED_SEED);
   const [posts, setPosts] = useState<Post[]>(POSTS_SEED);
   const [venueProfile, setVenueProfile] = useState<VenueProfile>(VENUE_PROFILE_SEED);
-  const [channelMeta, setChannelMeta] = useState<Record<string, { account: string; since: string }>>({
-    google: { account: "Sofia Brandt · Inhaberin", since: "verbunden vor 4 Min" },
-    instagram: { account: "@cafegoldstueck", since: "verbunden vor 12 Min" },
-  });
+  const [channelMeta, setChannelMeta] =
+    useState<Record<string, { account: string; since: string }>>(CHANNEL_META_SEED);
   const [days, setDays] = useState<ServiceDayState[]>(seedServiceDays);
   const [lastBooking, setLastBookingState] = useState<GuestBookingResult | null>(null);
   const [inboxRead, setInboxRead] = useState<Record<string, boolean>>({});
   const [guests, setGuests] = useState<Guest[]>(GUESTS_SEED);
   const [menu, setMenu] = useState<MenuItem[]>(MENU_SEED);
   const [activityLog, setActivityLog] = useState<ActivityItem[]>(ACTIVITY_SEED);
-  const [autopilot, setAutopilotState] = useState<Record<AutopilotCategory, boolean>>({
-    reviews: false,
-    winback: false,
-    posts: false,
-  });
-  const [currentPlan, setCurrentPlan] = useState<PlanId>("pro");
+  const [autopilot, setAutopilotState] =
+    useState<Record<AutopilotCategory, boolean>>(AUTOPILOT_SEED);
+  const [currentPlan, setCurrentPlan] = useState<PlanId>(PLAN_SEED);
   const [hydrated, setHydrated] = useState(false);
 
   const setPlan = useCallback((plan: PlanId) => setCurrentPlan(plan), []);
@@ -858,9 +883,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setMenu((list) => list.filter((m) => m.id !== id));
   }, []);
 
+  /**
+   * Kontolöschung, lokaler Teil: Zustand auf den Startpunkt, Schnappschuss weg.
+   *
+   * Beides ist nötig. Nur den Schlüssel zu löschen, reicht nicht: der
+   * Persistenz-Effekt unten schreibt bei JEDER Zustandsänderung neu und hätte
+   * den alten Zustand beim nächsten Tastendruck wieder im Speicher. Umgekehrt
+   * reicht auch der Reset allein nicht - erst das Entfernen macht das Fenster
+   * dazwischen leer. Dass der Effekt danach noch einmal schreibt, ist
+   * unschädlich: Was er dann speichert, ist der Startzustand.
+   */
+  const deleteLocalData = useCallback(async () => {
+    setSignedIn(false);
+    setChannels(CHANNELS_SEED);
+    setChannelMeta(CHANNEL_META_SEED);
+    setProfileDone(PROFILE_DONE_SEED);
+    setTaskDone({});
+    setReviewAnswered(REVIEW_ANSWERED_SEED);
+    setPosts(POSTS_SEED);
+    setVenueProfile(VENUE_PROFILE_SEED);
+    setInboxRead({});
+    setDays(seedServiceDays());
+    setGuests(GUESTS_SEED);
+    setMenu(MENU_SEED);
+    setActivityLog(ACTIVITY_SEED);
+    setAutopilotState(AUTOPILOT_SEED);
+    setCurrentPlan(PLAN_SEED);
+    setLastBookingState(null);
+
+    await AsyncStorage.removeItem(PERSIST_KEY);
+  }, []);
+
   /* ── Persistenz: hydrieren beim Start, Snapshot bei jeder Änderung ──────── */
 
-  const PERSIST_KEY = "maitr.demo.state.v1";
   const hydratedRef = useRef(false);
 
   useEffect(() => {
@@ -1002,6 +1057,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       menu,
       addMenuItem,
       removeMenuItem,
+      deleteLocalData,
       hydrated,
     }),
     [
@@ -1051,6 +1107,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       menu,
       addMenuItem,
       removeMenuItem,
+      deleteLocalData,
       hydrated,
     ],
   );

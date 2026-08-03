@@ -3,16 +3,24 @@ import { Platform, type TextStyle } from "react-native";
 /**
  * Typografie aus dem Design-System.
  *
- * Zwei Schnitte: "PP Frama" für Display/Labels, "PP Frama Text" für Fließtext.
- * Solange die OTF-Dateien nicht in `assets/fonts/` liegen (siehe `fonts.ts`), fällt
- * alles auf die Systemschrift zurück - die App läuft, nur die Anmutung fehlt.
+ * Das Design sieht zwei Schnitte vor: einen Display-Schnitt für Überschriften und Labels,
+ * einen Text-Schnitt für Fließtext. Derzeit ist keine Markenschrift hinterlegt - die
+ * ursprüngliche (PP Frama) durfte aus Lizenzgründen nicht im öffentlichen Repo bleiben,
+ * die Begründung und der Weg zurück stehen im Kopf von `fonts.ts`. Alle Größen,
+ * Zeilenhöhen und Laufweiten unten bleiben davon unberührt und gelten weiter.
  */
 
+/**
+ * Namen der Markenschnitte, wie sie in `fonts.ts` unter `fontAssets` registriert sind.
+ * Absichtlich leer, solange es keine Markenschrift gibt: `resolveFont` liefert dann die
+ * Systemschrift. Ein Name, zu dem keine geladene Datei gehört, würde von React Native
+ * still ignoriert oder als Warnung protokolliert - dieser stumme Fehlerfall entfällt so.
+ */
 export const fontFamily = {
-  display: "PPFrama-Regular",
-  displayItalic: "PPFrama-RegularItalic",
-  text: "PPFramaText-Regular",
-  textItalic: "PPFramaText-RegularItalic",
+  display: "",
+  displayItalic: "",
+  text: "",
+  textItalic: "",
 } as const;
 
 const systemFallback = Platform.select({
@@ -24,9 +32,13 @@ const systemFallback = Platform.select({
 /**
  * Löst einen Font-Namen auf. Ohne geladene Dateien liefert sie die Systemschrift,
  * damit `fontFamily` nie auf eine fehlende Ressource zeigt.
+ *
+ * Der leere Name wird mit abgefangen, nicht nur `loaded`: solange keine Markenschrift
+ * hinterlegt ist, sind die Namen in `fontFamily` leer, und ein leerer `fontFamily`-Wert
+ * ist für React Native kein gültiger Schriftname.
  */
 export function resolveFont(name: string, loaded: boolean): string {
-  return loaded ? name : systemFallback;
+  return loaded && name ? name : systemFallback;
 }
 
 /**

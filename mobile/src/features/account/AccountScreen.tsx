@@ -244,6 +244,22 @@ export function AccountScreen() {
         />
       </ListCard>
 
+      {/* Kontolöschung gehört sichtbar in den Kontobereich - Apple verlangt sie
+          in der App (5.1.1(v)), nicht in einer Mail an den Support. Eigene Karte
+          statt Zeile in der Liste darüber: Löschen ist keine Einstellung. */}
+      <ListCard style={{ borderRadius: 18 }}>
+        <ListRow
+          title="Konto löschen"
+          meta="Endgültig, mit allen Daten des Betriebs"
+          onPress={() => router.push("/konto-loeschen")}
+          trailing={
+            <Text variant="numeric" color={theme.colors.destructive} style={{ fontSize: 22 }}>
+              ›
+            </Text>
+          }
+        />
+      </ListCard>
+
       <Eyebrow tone="faint" style={{ textAlign: "center", marginTop: theme.spacing.md }}>
         Via Clerk ·{" "}
         <Eyebrow tone="accent" style={{ textDecorationLine: "underline" }} onPress={logout}>

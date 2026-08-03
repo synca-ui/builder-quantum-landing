@@ -38,9 +38,21 @@ WebApp.json
 # Lokale Claude-Code-Konfiguration (maschinenspezifisch, u. a. settings.local.json)
 .claude/
 
-# PP Frama liegt hier als "Free for Personal Use"-Version (Pangram Pangram).
-# Dieses Repo ist oeffentlich -> die OTF-Dateien duerfen nicht mitverteilt werden.
-# Fuer Builds lokal ablegen; ohne sie faellt die App auf die System-Grotesk zurueck
-# (siehe mobile/src/theme/fonts.ts, EXPO_PUBLIC_BRAND_FONT=off).
-mobile/assets/fonts/*.otf
-mobile/assets/fonts/*.ttf
+# PP Frama (Pangram Pangram) liegt uns nur als "Free for Personal Use"-Fassung vor.
+# Dieses Repo ist OEFFENTLICH: eingecheckte Schriftdateien waeren Weiterverteilung
+# und damit ein Lizenzverstoss. Die Dateien wurden deshalb aus der Versionskontrolle
+# genommen; lokal duerfen sie liegen bleiben (persoenliche Nutzung), fuer Builds
+# reicht das. Ohne sie faellt die App auf die System-Grotesk zurueck
+# (siehe mobile/src/theme/fonts.ts).
+#
+# Bewusst OHNE Pfadpraefix: Muster ohne Schraegstrich greifen in JEDEM Verzeichnis.
+# Das ist noetig, weil `expo prebuild` die Schriften zusaetzlich nach
+# mobile/android/app/src/main/assets/fonts/ und mobile/ios/ kopiert - ein Muster nur
+# fuer mobile/assets/fonts/ liess diese Kopien durch (genau so kamen sie ins Repo).
+PPFrama*.otf
+PPFrama*.ttf
+PPFrama*.woff
+PPFrama*.woff2
+
+# OFL-lizenzierte Schriften (z. B. Familjen Grotesk, Bricolage Grotesque) duerfen
+# mitverteilt werden und sind daher NICHT ausgeschlossen. Die OFL erlaubt auch Repo-Hosting.

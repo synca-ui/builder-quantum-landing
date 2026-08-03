@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import { Avatar } from "../../components/ui/Avatar";
 import { Card } from "../../components/ui/Card";
 import { DarkPanel, Stars, onDarkPanel } from "../../components/ui/DataDisplay";
+import { CheckIcon } from "../../components/icons";
 import { Eyebrow } from "../../components/ui/Eyebrow";
-import { NavHeader } from "../../components/ui/NavHeader";
 import { LinkAction, PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { ScreenHeader } from "../../components/ui/ScreenHeader";
@@ -55,10 +55,15 @@ export const reviews: Review[] = [
 ];
 
 /**
- * Screen 13 · Bewertungen.
+ * Screen 13 · Bewertungen - seit dem Tabbar-Umbau ein Hauptbereich, nicht mehr ein
+ * Unter-Screen von Start.
  *
  * Antwortstatus liegt im Store: „Freigeben" markiert die Bewertung als beantwortet,
  * der Zähler oben zählt runter, und die Karte verliert Rahmen und Aktionen.
+ *
+ * Kein `NavHeader`: Als Tab-Wurzel gibt es nichts, wohin ein Zurück-Pfeil führen
+ * könnte - Start, Beiträge, Wachstum und Konto tragen aus demselben Grund keinen.
+ * Der Weg zurück ist die Tab-Leiste.
  */
 export function ReviewsScreen() {
   const theme = useTheme();
@@ -76,7 +81,6 @@ export function ReviewsScreen() {
 
   return (
     <Screen withTabBar contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader fallback="/start" />
       <ScreenHeader
         title="Bewertungen"
         trailing={
@@ -100,9 +104,15 @@ export function ReviewsScreen() {
           alignItems: "center",
         }}
       >
-        <View>
+        <View style={{ flexShrink: 1 }}>
+          {/* Singular/Plural und der Nullfall müssen stimmen - die Zeile steht ganz
+              oben im Hauptbereich, „2 wartet auf Antwort" fällt jedem sofort auf. */}
           <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 17 }}>
-            {open} wartet auf Antwort
+            {open === 0
+              ? "Alles beantwortet"
+              : open === 1
+                ? "1 wartet auf Antwort"
+                : `${open} warten auf Antwort`}
           </Text>
           <Eyebrow color={onDarkPanel.meta} style={{ marginTop: 2 }}>
             Ø Antwortzeit 3 Std · Top 10 % in Köln
@@ -118,9 +128,15 @@ export function ReviewsScreen() {
             justifyContent: "center",
           }}
         >
-          <Text variant="numeric" color={onDarkPanel.onAccent} style={{ fontSize: 16 }}>
-            {open}
-          </Text>
+          {/* Eine „0" im Akzentkreis liest sich wie ein Fehler; das Häkchen sagt
+              dasselbe wie die Überschrift daneben. */}
+          {open === 0 ? (
+            <CheckIcon size={18} color={onDarkPanel.onAccent} />
+          ) : (
+            <Text variant="numeric" color={onDarkPanel.onAccent} style={{ fontSize: 16 }}>
+              {open}
+            </Text>
+          )}
         </View>
       </DarkPanel>
 
