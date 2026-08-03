@@ -1,6 +1,7 @@
 import path from "path";
 import { createServer } from "./index";
 import * as express from "express";
+import { startMaitrScheduler, stopMaitrScheduler } from "./maitr/scheduler";
 
 const app = createServer();
 const port = process.env.PORT || 3000;
@@ -95,14 +96,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`🔧 API: http://localhost:${port}/api`);
   });
 
+  // Maitr-Sync. Läuft NUR, wenn MAITR_SYNC_INTERVAL_MINUTES gesetzt ist —
+  // ohne die Variable passiert hier nichts. Absichtlich hinter app.listen:
+  // Der Zeitgeber darf das Annehmen von Anfragen nicht verzögern.
+  startMaitrScheduler();
+
   // Graceful shutdown
   process.on("SIGTERM", () => {
     console.log("🛑 Received SIGTERM, shutting down gracefully");
+    stopMaitrScheduler();
     process.exit(0);
   });
 
   process.on("SIGINT", () => {
     console.log("🛑 Received SIGINT, shutting down gracefully");
+    stopMaitrScheduler();
     process.exit(0);
   });
 }
