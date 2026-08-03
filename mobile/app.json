@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "Maitr",
+    "slug": "maitr",
+    "scheme": "maitr",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.maitr.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "app.maitr.mobile",
+      "versionCode": 1,
+      "permissions": [],
+      "adaptiveIcon": {
+        "backgroundColor": "#EAF1EE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F4F7F4",
+          "dark": { "backgroundColor": "#141518" },
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/PPFrama-Regular.otf",
+            "./assets/fonts/PPFrama-RegularItalic.otf",
+            "./assets/fonts/PPFramaText-Regular.otf",
+            "./assets/fonts/PPFramaText-RegularItalic.otf"
+          ]
+        }
+      ],
+      "./plugins/withSpacePathFix",
+      "./plugins/withLocalSigningTeam"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "onDemandFilesystem": false
+    }
+  }
+}

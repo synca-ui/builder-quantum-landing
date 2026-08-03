@@ -27,7 +27,14 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./client/*"],
-      "@shared/*": ["./shared/*"]
+      "@shared/*": ["./shared/*"],
+      // server/maitr importiert das Kernpaket unter diesem Namen. Ohne den Alias
+      // findet tsc die Dateien nicht, obwohl sie im Baum liegen – server/maitr
+      // brachte den Alias bisher nur in seiner eigenen tsconfig mit, die in
+      // keinem npm-Script vorkommt. Es gibt weder Workspaces noch ein
+      // installiertes @maitr/core-Paket; die Auflösung läuft rein über Pfade.
+      "@maitr/core": ["./packages/core/src/index.ts"],
+      "@maitr/core/*": ["./packages/core/src/*"]
     }
   },
   "include": [

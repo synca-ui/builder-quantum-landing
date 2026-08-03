@@ -1,0 +1,19 @@
+{
+  "name": "@maitr/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plattformneutrale Kernlogik (API, Auth, Supabase, Domain-Typen) fuer Web und Mobile.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./supabase": "./src/supabase/index.ts",
+    "./types": "./src/types/index.ts",
+    "./analytics": "./src/analytics/index.ts",
+    "./integrations": "./src/integrations/index.ts"
+  },
+  "sideEffects": false
+}

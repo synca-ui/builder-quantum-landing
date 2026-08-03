@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { webAppsRouter, publicAppsRouter } from "./webapps";
-import { configurationsRouter, getPublishedSite } from "./configurations";
+// getPublishedSite wird hier nicht mehr importiert: Die Route ist jetzt allein in
+// server/index.ts registriert, dort mit siteRateLimiter. Siehe unten.
+// getConfigBySlug aus "./config" entfällt ebenfalls – main hat die Datei samt
+// GET /config/:slug bereits entfernt (die Abfrage konnte nie treffen).
+import { configurationsRouter } from "./configurations";
 import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
@@ -10,7 +14,8 @@ import { subdomainsRouter } from "./subdomains";
 import { mediaRouter } from "./media";
 import { menuRouter } from "./menu";
 import { siteRouter } from "./site";
-import { handleForwardN8n } from "./n8nProxy";
+// handleForwardN8n wird hier nicht mehr importiert – die Registrierung ist entfernt,
+// siehe die Anmerkung weiter unten.
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
 import staffRouter from "./staff";
@@ -181,14 +186,21 @@ apiRouter.use("/public/reservations", publicReservationsRouter);
 // Kein Client rief sie auf. Mit ihr fallen server/routes/config.ts,
 // server/sql.ts und server/db.ts weg — und damit der einzige Konsument von
 // NETLIFY_DATABASE_URL.
-apiRouter.get("/sites/:subdomain", getPublishedSite);
+
+// "/sites/:subdomain" wird hier BEWUSST nicht registriert. Der apiRouter hängt in
+// server/index.ts auf /api, und zwar VOR der gedrosselten Registrierung derselben
+// Route. Express nimmt den ersten Treffer – eine Kopie hier beantwortete deshalb
+// jede Anfrage, ohne dass der siteRateLimiter je liefe. Genau das war der Zustand:
+// der Limiter gegen das Durchprobieren von Kundensubdomains war toter Code.
+// Einzige Quelle: app.get("/api/sites/:subdomain", siteRateLimiter, …).
+//
+// Dasselbe gilt für "/forward-to-n8n": nur in server/index.ts, dort mit
+// strictLimiter. Dort steht die Registrierung zufällig vor dem apiRouter, der
+// Limiter griff also – eine Kopie hier wäre trotzdem eine Falle für später.
 
 // Other routes
 apiRouter.get("/demo", handleDemo);
 apiRouter.get("/instagram", fetchInstagramPhotos);
-
-//N8N
-apiRouter.post("/forward-to-n8n", handleForwardN8n);
 
 // Health-Check
 apiRouter.get("/ping", (_req, res) => {
