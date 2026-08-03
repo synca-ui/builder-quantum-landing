@@ -52,6 +52,11 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./client"),
       "@shared": path.resolve(__dirname, "./shared"),
+      // server/maitr importiert das Kernpaket unter diesem Namen. Es gibt weder
+      // Workspaces noch ein installiertes @maitr/core, die Auflösung läuft rein
+      // über diesen Alias — ohne ihn bricht der Server-Build beim Bündeln ab.
+      // Gegenstück in tsconfig.json (dort für die Typprüfung).
+      "@maitr/core": path.resolve(__dirname, "./packages/core/src"),
     },
   },
   define: {

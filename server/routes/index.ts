@@ -5,6 +5,7 @@ import { webAppsRouter, publicAppsRouter } from "./webapps";
 // getConfigBySlug aus "./config" entfällt ebenfalls – main hat die Datei samt
 // GET /config/:slug bereits entfernt (die Abfrage konnte nie treffen).
 import { configurationsRouter } from "./configurations";
+import { maitrRouter } from "../maitr";
 import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
@@ -177,6 +178,22 @@ apiRouter.use("/demo/dashboard", demoDashboardRouter);
 
 // Public reservation routes (no auth required)
 apiRouter.use("/public/reservations", publicReservationsRouter);
+
+// Maitr-Backend (Präsenzverwaltung Google/Meta) unter /api/maitr.
+//
+// Der Router bringt seine Auth-Schranke selbst mit: publicRouter zuerst
+// (Gastprofil und OAuth-Rücksprung, letzterer durch signierten state geschützt),
+// danach requireAuth, danach alles Venue-scoped. Deshalb hier bewusst OHNE
+// zusätzliches requireAuth eingehängt — das würde den Callback aussperren, den
+// Google und Meta ohne Bearer-Token aufrufen.
+//
+// Der Meta-Webhook läuft NICHT über diesen Router, sondern über
+// registerMaitrWebhooks in server/index.ts, vor express.json().
+//
+// Ohne gesetzte MAITR_*-Variablen startet der Server normal: maitrEnv() wird erst
+// beim Zugriff ausgewertet. Die OAuth-Routen antworten dann mit einem Fehler, der
+// die fehlenden Variablen benennt — der übrige Betrieb bleibt unberührt.
+apiRouter.use("/maitr", maitrRouter);
 
 // GET /config/:slug ist entfernt: Die Route fragte per rohem SQL nach
 // public.tenants / restaurants mit Spalten tenant_slug, schema_name,

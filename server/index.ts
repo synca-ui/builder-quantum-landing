@@ -16,6 +16,7 @@ import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
 import { handleAutogen } from "./routes/autogen";
 import { usersRouter } from "./routes/users";
 import { handleClerkWebhook } from "./webhooks/clerk";
+import { registerMaitrWebhooks } from "./maitr";
 import {
   handleCreateOrder,
   handleGetRecentOrders,
@@ -90,6 +91,13 @@ export function createServer() {
   // handleClerkWebhook's req.body.toString() would yield "[object Object]" – every
   // signature check would fail and no user would ever be synced.
   app.post("/api/webhooks/clerk", express.raw({ type: "*/*" }), handleClerkWebhook);
+
+  // Meta-Webhook des Maitr-Backends – aus demselben Grund oberhalb von
+  // express.json(): verifyMetaSignature prüft eine HMAC über den Rohbody. Käme der
+  // JSON-Parser zuerst, bekäme die Prüfung ein Objekt statt des Buffers und würde
+  // ausnahmslos fehlschlagen. Registriert werden nur die beiden /webhooks/meta-
+  // Routen; der übrige Maitr-Router hängt regulär unter /api/maitr.
+  registerMaitrWebhooks(app);
 
   // Parse JSON request bodies with size limits
   app.use(express.json({ limit: "5mb" }));

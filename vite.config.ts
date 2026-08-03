@@ -109,6 +109,10 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./client"), // Alias for 'client' directory
       "@shared": path.resolve(__dirname, "./shared"), // Alias for 'shared' directory
+      // Für den Dev-Server: expressPlugin lädt server/index.ts über
+      // ssrLoadModule, und der Server importiert @maitr/core. Der Client-Code
+      // selbst nutzt das Paket nicht, es landet also nicht im Browser-Bündel.
+      "@maitr/core": path.resolve(__dirname, "./packages/core/src"),
       // Force single React instance to prevent duplicate React issues
       react: path.resolve(__dirname, "./node_modules/react"),
       "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
@@ -126,8 +130,21 @@ function expressPlugin(): Plugin {
       // WICHTIG: Das 'return async () =>' sorgt dafür, dass dieser Code erst NACH
       // den Vite-Standards (Frontend) ausgeführt wird.
       return async () => {
-        // Dynamically import the server only during dev server startup
-        const { createServer } = await import("./server");
+        // Server über Vites eigene Transformationskette laden, NICHT per import().
+        //
+        // Grund: Vite bündelt diese Konfigurationsdatei vor dem Ausführen mit
+        // esbuild und folgt dabei relativen Importen. Über ./server geriet damit
+        // die gesamte Serverkette in die temporäre Konfigurationsdatei — samt des
+        // bare Imports "@maitr/core", den esbuild extern liess und Node beim Laden
+        // nicht auflösen konnte ("Cannot find package '@maitr/core'"). Der Build
+        // brach ab, bevor er begann. Das Paket zeigt auf rohe .ts-Dateien und ist
+        // für Node grundsätzlich nicht direkt ladbar; es funktioniert nur über
+        // einen Bündler mit Alias.
+        //
+        // ssrLoadModule löst den Pfad zur Laufzeit über dieselbe Konfiguration
+        // auf, in der auch die Aliase stehen — der Import taucht in der
+        // gebündelten Konfigurationsdatei gar nicht mehr auf.
+        const { createServer } = await server.ssrLoadModule("/server/index.ts");
         const app = createServer();
 
         // Add the Express app as middleware to Vite dev server
