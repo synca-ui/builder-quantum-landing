@@ -17,7 +17,7 @@ Maitr ist ein Full‑Stack‑Starter für die schnelle Erstellung von Restaurant
     - Headbar.tsx — wiederverwendbare Headbar / Breadcrumb Komponente
 
 - server/ — Express API (integriert mit Vite dev server)
-  - routes/ — API-Hander (autogen, configurations, instagram, orders, webhooks/stripe usw.)
+  - routes/ — API-Hander (autogen, configurations, orders, webhooks/stripe usw.)
   - middleware/ — Auth und weitere Middlewares
 
 - shared/ — geteilte Typen/Interfaces

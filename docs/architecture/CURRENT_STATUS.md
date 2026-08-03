@@ -565,10 +565,6 @@ GET  /api/demo
      - Returns: Demo configuration
      - Protected: No
 
-GET  /api/instagram
-     - Returns: Instagram photos
-     - Protected: No
-
 GET  /health
      - Returns: { status: "ok" }
      - Protected: No (health check)

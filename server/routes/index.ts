@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { webAppsRouter, publicAppsRouter } from "./webapps";
 import { configurationsRouter, getPublishedSite } from "./configurations";
-import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
 import scraperRouter from "./scraper";
@@ -185,7 +184,25 @@ apiRouter.get("/sites/:subdomain", getPublishedSite);
 
 // Other routes
 apiRouter.get("/demo", handleDemo);
-apiRouter.get("/instagram", fetchInstagramPhotos);
+
+// GET /instagram ist entfernt. Die Route nahm einen profileUrl-Parameter und
+// rief ihn ungeprüft serverseitig ab: normalizeProfileUrl() gab alles, was mit
+// http:// oder https:// begann, unverändert an fetch() weiter — keine
+// Allowlist, keine Sperre privater Netze, keine Authentifizierung. Damit war
+// sie eine SSRF-Lücke (gegen Produktion gemessen: ?profileUrl=https://example.com
+// lieferte HTTP 200). Über den og:image-Rückfall floss fremder Inhalt zurück,
+// und schon der Unterschied 200 gegen 500 verriet, welche internen Hosts
+// antworten.
+//
+// Repariert statt entfernt wurde sie nicht, weil sie ohnehin nichts lieferte:
+// Alle drei Auslesewege hingen an window._sharedData und
+// window.__additionalDataLoaded, die Instagram vor Jahren aus dem Markup
+// genommen hat — gegen ein echtes Profil kam [] zurück. Kein Client rief sie
+// auf, und das Scrapen verstößt gegen Instagrams Nutzungsbedingungen.
+//
+// Falls Instagram-Bilder je gebraucht werden: über die offizielle Basic
+// Display API mit Token, nicht per Scrape. Für unvermeidbare Abrufe fremder
+// Adressen gibt es server/services/safeFetch.ts.
 
 //N8N
 apiRouter.post("/forward-to-n8n", handleForwardN8n);
