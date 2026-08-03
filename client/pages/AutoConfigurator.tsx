@@ -27,6 +27,13 @@ import {
 } from "@shared/subdomain";
 import { menuQuality, type ParsedMenuItem } from "@shared/menuParser";
 import { API_PATHS } from "@/lib/apiPaths";
+import type { DeploymentStage } from "@/lib/deployment";
+// Fortschritt und Erfolgsansicht kommen aus derselben Datei wie im manuellen
+// PublishStep. Eine eigene Nachbildung hier liefe unweigerlich auseinander.
+import {
+  PublishingProgress,
+  SuccessView,
+} from "@/components/publish/PublishSuccess";
 import {
   Sparkles,
   Upload,
@@ -44,7 +51,6 @@ import {
   Zap,
   Search,
   Rocket,
-  ExternalLink,
 } from "lucide-react";
 
 // ─── Typen ────────────────────────────────────────────────────────────────────
@@ -57,12 +63,147 @@ type PublishStatus = "idle" | "publishing" | "published" | "error";
 type MenuStatus = "idle" | "running" | "done" | "failed";
 
 /**
- * Wie oft bei belegter Subdomain ein Zähler angehängt wird, bevor der Nutzer
- * selbst einen Namen wählen muss. Der Publish-Endpunkt kennt keine
- * Verfügbarkeitsabfrage – jeder Versuch ist ein echter Aufruf, deshalb eine
+ * Wie oft bei belegter Adresse ein Zähler angehängt wird, bevor der Nutzer
+ * selbst einen Namen wählen muss.
+ *
+ * Seit der Verfügbarkeitsprüfung beim Tippen ist das nur noch der Notnagel für
+ * das Wettrennen: zwischen Prüfung und Schreibvorgang kann jemand schneller
+ * gewesen sein. Jeder Versuch ist ein echter Schreibvorgang, deshalb eine
  * kleine Zahl.
  */
 const MAX_SUBDOMAIN_ATTEMPTS = 5;
+
+/**
+ * Prüft, ob eine Subdomain noch frei ist. Öffentlich, ohne Anmeldung.
+ *
+ * Gehört eigentlich in client/lib/apiPaths.ts – die Datei liegt in diesem
+ * Arbeitsschritt aber außerhalb der zugewiesenen Dateien. Beim nächsten
+ * Anfassen dorthin verschieben.
+ */
+const SUBDOMAIN_VALIDATE_PATH = "/api/subdomains/validate";
+
+/**
+ * Wie lange nach dem letzten Tastendruck gewartet wird, bevor die
+ * Verfügbarkeit abgefragt wird. Ohne Verzögerung liefe pro getipptem Zeichen
+ * eine Anfrage.
+ */
+const AVAILABILITY_DEBOUNCE_MS = 450;
+
+/**
+ * Wie viele Ersatzvorschläge wir selbst erzeugen, wenn der Server bei einer
+ * Kollision keine mitliefert.
+ */
+const OWN_SUGGESTION_COUNT = 3;
+
+/** Ergebnis der Verfügbarkeitsprüfung, wie die Oberfläche es braucht. */
+type AvailabilityState =
+  /** Nichts zu prüfen (leeres oder formal ungültiges Feld). */
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "free" }
+  | { kind: "taken"; message: string; suggestions: string[] }
+  /** Die Prüfung selbst hat nicht geklappt – kein Urteil über die Adresse. */
+  | { kind: "unknown" };
+
+interface AvailabilityResponse {
+  available?: boolean;
+  reason?: "invalid" | "reserved" | "taken" | "pending" | "owned";
+  error?: string;
+  message?: string;
+  suggestions?: string[];
+}
+
+/**
+ * Fragt den Server, ob eine Subdomain noch zu haben ist.
+ *
+ * Die eigene userId geht mit: Gehört die Adresse bereits dem angemeldeten
+ * Nutzer, antwortet der Server mit available:true (reason "owned"). Ohne diese
+ * Angabe würde erneutes Veröffentlichen derselben Seite fälschlich als
+ * "vergeben" angezeigt — dabei aktualisiert der Publish-Endpunkt sie einfach.
+ */
+async function fetchAvailability(
+  subdomain: string,
+  userId: string | null | undefined,
+  signal: AbortSignal,
+): Promise<AvailabilityState> {
+  try {
+    const res = await fetch(SUBDOMAIN_VALIDATE_PATH, {
+      method: "POST",
+      signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subdomain, ...(userId ? { userId } : {}) }),
+    });
+
+    // Der Endpunkt antwortet auch bei "nicht verfügbar" mit HTTP 200 und
+    // available:false. Ein echter Fehlerstatus heißt: Wir wissen es nicht.
+    if (!res.ok) return { kind: "unknown" };
+
+    const payload: AvailabilityResponse = await res.json().catch(() => ({}));
+    if (payload.available) return { kind: "free" };
+
+    // Vorschläge des Servers haben Vorrang; er kennt den Bestand. Liefert er
+    // keine (etwa bei einem reservierten Namen), schlagen wir selbst welche
+    // vor – ein Klick darauf stößt die nächste Prüfung an.
+    const fromServer = Array.isArray(payload.suggestions)
+      ? payload.suggestions.filter((s) => typeof s === "string")
+      : [];
+
+    return {
+      kind: "taken",
+      message: payload.error ?? "Diese Adresse ist nicht verfügbar.",
+      suggestions: (fromServer.length
+        ? fromServer
+        : ownSuggestions(subdomain)
+      ).slice(0, 3),
+    };
+  } catch {
+    // Abbruch beim Weitertippen oder Netz-Aussetzer. Beides ist kein Urteil
+    // über die Adresse — also auch keines anzeigen.
+    return { kind: "unknown" };
+  }
+}
+
+/** Ersatzvorschläge, wenn der Server bei einer Kollision keine mitliefert. */
+function ownSuggestions(base: string): string[] {
+  return Array.from({ length: OWN_SUGGESTION_COUNT }, (_, i) =>
+    nextSubdomainCandidate(base, i + 1),
+  );
+}
+
+/**
+ * Übersetzt eine abgelehnte Veröffentlichung in einen Satz, mit dem der Nutzer
+ * etwas anfangen kann – die Ursache, nicht "etwas ist schiefgelaufen".
+ *
+ * Die Fälle des Endpunkts (server/routes/webapps.ts):
+ *   400 – Validierung; errors[] nennt die einzelnen Gründe
+ *   401 – Sitzung abgelaufen
+ *   409 – Adresse gehört jemand anderem (wird im Aufrufer abgefangen)
+ *   500 – unerwarteter Serverfehler, message enthält die Ursache
+ */
+function describePublishFailure(status: number, payload: any): string {
+  const data = payload ?? {};
+  const details =
+    Array.isArray(data.errors) && data.errors.length
+      ? data.errors.join(" · ")
+      : null;
+
+  switch (status) {
+    case 400:
+      return details
+        ? `Die Konfiguration wurde abgelehnt: ${details}`
+        : (data.error ??
+            "Die Konfiguration wurde abgelehnt. Bitte ergänze die fehlenden Angaben im Konfigurator.");
+    case 401:
+    case 403:
+      return "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an — dein Entwurf bleibt erhalten.";
+    case 409:
+      return "Diese Adresse ist bereits vergeben. Bitte wähle eine andere.";
+    default:
+      return data.message || data.error
+        ? `Der Server konnte nicht veröffentlichen: ${data.message ?? data.error}`
+        : `Der Server konnte nicht veröffentlichen (HTTP ${status}).`;
+  }
+}
 
 /**
  * Abfrage-Takt für die Speisekarten-Erkennung.
@@ -354,7 +495,7 @@ export default function AutoConfigurator() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { toast } = useToast();
-  const { getToken, isSignedIn } = useAuth();
+  const { getToken, isSignedIn, userId } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** Beendet die laufende Abfrage-Schleife (Timer + offener Request). */
   const stopPollRef = useRef<(() => void) | null>(null);
@@ -394,11 +535,41 @@ export default function AutoConfigurator() {
   const [publishStatus, setPublishStatus] = useState<PublishStatus>("idle");
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
+  /** Fortschritt für PublishingProgress – dieselben Stufen wie im PublishStep. */
+  const [publishStage, setPublishStage] =
+    useState<DeploymentStage>("validating");
+  /** Für die Kopieren-Schaltfläche der Erfolgsansicht. */
+  const [copied, setCopied] = useState(false);
+  const [availability, setAvailability] = useState<AvailabilityState>({
+    kind: "idle",
+  });
+
+  /**
+   * Sperre gegen den zweiten Klick.
+   *
+   * Die Schaltfläche wird über publishStatus deaktiviert, aber das greift erst
+   * nach dem nächsten Render. Zwei schnelle Klicks lösen sonst zwei echte
+   * Veröffentlichungen aus. Eine Ref wirkt sofort.
+   */
+  const publishingRef = useRef(false);
+  /** Läuft die Seite noch? Nach dem Verlassen keine Zustände mehr setzen. */
+  const mountedRef = useRef(true);
+  /** Laufende Verfügbarkeitsabfrage samt Wartezeit – beim Verlassen abbrechen. */
+  const availabilityAbortRef = useRef<AbortController | null>(null);
+  const availabilityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Konfigurator-Zustand: nur was für die Warnung und das Übernehmen nötig ist.
   const applyScrapedDraft = useConfiguratorStore((s) => s.applyScrapedDraft);
   const pushHistory = useConfiguratorStore((s) => s.pushHistory);
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
+  // Damit der manuelle Konfigurator anschließend weiß, dass die Web-App schon
+  // live ist, und nicht ein zweites Mal veröffentlichen lässt.
+  const updatePublishingInfo = useConfiguratorStore(
+    (s) => s.updatePublishingInfo,
+  );
+  const setBusinessInfo = useConfiguratorStore((s) => s.setBusinessInfo);
   const existingBusinessName = useConfiguratorStore((s) => s.business.name);
   const existingMenuCount = useConfiguratorStore(
     (s) => s.content.menuItems.length,
@@ -434,6 +605,16 @@ export default function AutoConfigurator() {
     () => validateSubdomain(subdomain),
     [subdomain],
   );
+  // "Belegt" ist ein HINWEIS, kein Riegel.
+  //
+  // Grund: Die Prüfung schickt die Clerk-userId mit, der Server vergleicht sie
+  // aber gegen webApp.userId — und das ist die Prisma-Id (middleware/auth.ts
+  // setzt req.user.id = prismaUser.id, User.clerkId ist ein separates Feld).
+  // Der "gehört dir bereits"-Zweig kann deshalb nie greifen: Die eigene, gerade
+  // erst veröffentlichte Adresse käme als "vergeben" zurück und der Nutzer
+  // stünde vor seiner eigenen Site und dürfte nicht weiter.
+  // Verbindlich entscheidet ohnehin der Publish-Endpunkt aus dem verifizierten
+  // Token; ein 409 fängt der Fehlerpfad sauber ab.
   const canPublish =
     Boolean(publishPlan.config) &&
     subdomainCheck.valid &&
@@ -466,11 +647,64 @@ export default function AutoConfigurator() {
   }, [search]);
 
   // ── Cleanup ──────────────────────────────────────────────────────────────
+  //
+  // Der Nutzer kann die Seite jederzeit verlassen. Dann müssen die
+  // Abfrage-Schleife, die Verfügbarkeitsprüfung und deren Wartezeit weg.
+  //
+  // Der Veröffentlichungs-Aufruf wird bewusst NICHT abgebrochen: Der Server
+  // schreibt die Web-App unabhängig davon fertig, ein Abbruch im Browser würde
+  // daran nichts ändern und nur den Anschein erwecken, es sei nichts passiert.
+  // Stattdessen verhindert mountedRef, dass danach noch Zustände gesetzt werden.
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       stopPollRef.current?.();
+      availabilityAbortRef.current?.abort();
+      if (availabilityTimerRef.current) {
+        clearTimeout(availabilityTimerRef.current);
+      }
     };
   }, []);
+
+  // ── Verfügbarkeit der Adresse prüfen ─────────────────────────────────────
+  //
+  // Beim Tippen, nicht erst beim Klick: Wer nach einer minutenlangen Analyse
+  // auf "Veröffentlichen" drückt, soll nicht dort erst erfahren, dass der Name
+  // vergeben ist.
+  useEffect(() => {
+    // Vorherige Abfrage und Wartezeit verwerfen – es zählt nur die letzte.
+    availabilityAbortRef.current?.abort();
+    if (availabilityTimerRef.current) {
+      clearTimeout(availabilityTimerRef.current);
+      availabilityTimerRef.current = null;
+    }
+
+    // Solange die Form nicht stimmt, sagt die lokale Prüfung schon alles.
+    if (!subdomain || !subdomainCheck.valid) {
+      setAvailability({ kind: "idle" });
+      return;
+    }
+
+    setAvailability({ kind: "checking" });
+
+    const controller = new AbortController();
+    availabilityAbortRef.current = controller;
+
+    availabilityTimerRef.current = setTimeout(async () => {
+      const next = await fetchAvailability(subdomain, userId, controller.signal);
+      if (controller.signal.aborted || !mountedRef.current) return;
+      setAvailability(next);
+    }, AVAILABILITY_DEBOUNCE_MS);
+
+    return () => {
+      controller.abort();
+      if (availabilityTimerRef.current) {
+        clearTimeout(availabilityTimerRef.current);
+        availabilityTimerRef.current = null;
+      }
+    };
+  }, [subdomain, subdomainCheck.valid, userId]);
 
   // ── Datei-Upload ─────────────────────────────────────────────────────────
   const handleFile = useCallback(
@@ -963,46 +1197,92 @@ export default function AutoConfigurator() {
 
   // ── Direkt veröffentlichen ────────────────────────────────────────────────
 
+  const copyToClipboard = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (!mountedRef.current) return;
+      setCopied(true);
+      setTimeout(() => {
+        if (mountedRef.current) setCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error("[AutoKonfigurator] Kopieren fehlgeschlagen", err);
+    }
+  }, []);
+
   /**
-   * Veröffentlicht den Entwurf unter einer Subdomain, ohne Umweg über den
-   * manuellen Konfigurator.
+   * Veröffentlicht den Entwurf unter der gewählten Adresse, ohne Umweg über
+   * den manuellen Konfigurator.
    *
-   * Die Kollisionsbehandlung steckt hier und nicht im Server: Der
-   * Publish-Endpunkt hat keine Verfügbarkeitsabfrage, er antwortet erst beim
-   * Schreiben mit 409. Statt den Nutzer raten zu lassen, wird der Name
-   * durchnummeriert – aber nur ein paar Mal, denn jeder Versuch ist ein
-   * echter Schreibvorgang.
+   * Veröffentlicht wird publishPlan.config und NICHT getFullConfiguration():
+   * buildPublishConfig leitet die fehlenden Farben ab, markiert die
+   * Highlight-Gerichte und setzt die Pflichtfelder, die der Scrape offen
+   * lässt. Genau daran hing die erste echte Veröffentlichung (lila Kopfzeile
+   * statt Bordeaux, Getränke als Aushängeschild) – siehe shared/autoPublish.ts.
    *
-   * Wichtig: Ein 409 kommt NUR, wenn die Subdomain jemand anderem gehört.
-   * Gehört sie dem Aufrufer selbst, aktualisiert der Endpunkt sie – erneutes
-   * Veröffentlichen derselben Seite überschreibt also die eigene und legt
-   * keine Kopie an.
+   * Aufgerufen wird der Endpunkt direkt per fetch und nicht über
+   * publishWebApp() aus client/lib/webapps.ts: Das benutzt axios, und axios
+   * greift unter jsdom zum XHR-Adapter. Die Testabdeckung dieses Ablaufs
+   * (client/pages/__tests__/AutoConfigurator.test.tsx) hängt am Abfangen von
+   * fetch und würde den Aufruf nicht mehr sehen – genau die Prüfung, die den
+   * Pfad und die Form des Rumpfs absichert. Der Pfad selbst kommt weiterhin
+   * aus API_PATHS, damit Client und Server nicht auseinanderlaufen.
+   *
+   * Ein 409 kommt NUR, wenn die Adresse jemand anderem gehört. Gehört sie dem
+   * Aufrufer selbst, aktualisiert der Endpunkt sie – erneutes Veröffentlichen
+   * derselben Seite überschreibt also die eigene und legt keine Kopie an.
    */
   const publishDirectly = useCallback(async () => {
+    // Zweiter Klick, bevor React die Schaltfläche deaktiviert hat. Die Ref
+    // wirkt sofort, der disabled-Zustand erst nach dem nächsten Render.
+    if (publishingRef.current) return;
+
     const config = publishPlan.config;
-    if (!config) return;
+    if (!config || !draft) return;
 
     const base = normalizeSubdomain(subdomain);
     const check = validateSubdomain(base);
     if (!check.valid) {
-      setPublishError(check.reason ?? "Subdomain ist ungültig");
+      setPublishError(check.reason ?? "Diese Adresse ist ungültig.");
       setPublishStatus("error");
       return;
     }
 
+    publishingRef.current = true;
     setPublishStatus("publishing");
     setPublishError(null);
+    setPublishStage("validating");
 
-    const token = await getAuthToken();
-    if (!token) {
-      setPublishStatus("error");
-      setPublishError("Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.");
-      return;
-    }
+    // Der Server meldet keine Zwischenstände – der Aufruf ist ein einziger
+    // Request. Die Stufen laufen deshalb auf der Uhr mit, wie im manuellen Weg
+    // (simulateProgress in client/lib/deployment.ts). Sie benennen, was der
+    // Server der Reihe nach tut, und werden abgeräumt, sobald die Antwort da ist.
+    const stageTimers: ReturnType<typeof setTimeout>[] = [];
+    const scheduleStage = (stage: DeploymentStage, ms: number) => {
+      stageTimers.push(
+        setTimeout(() => {
+          if (mountedRef.current) setPublishStage(stage);
+        }, ms),
+      );
+    };
+    scheduleStage("checking_subdomain", 500);
+    scheduleStage("persisting", 1100);
+    scheduleStage("routing", 2200);
 
-    for (let attempt = 0; attempt < MAX_SUBDOMAIN_ATTEMPTS; attempt++) {
-      const candidate = nextSubdomainCandidate(base, attempt);
-      try {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        if (!mountedRef.current) return;
+        setPublishStatus("error");
+        setPublishError(
+          "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+        );
+        return;
+      }
+
+      for (let attempt = 0; attempt < MAX_SUBDOMAIN_ATTEMPTS; attempt++) {
+        const candidate = nextSubdomainCandidate(base, attempt);
+
         const res = await fetch(API_PATHS.publishApp, {
           method: "POST",
           headers: {
@@ -1011,51 +1291,91 @@ export default function AutoConfigurator() {
           },
           body: JSON.stringify({ subdomain: candidate, config }),
         });
+        if (!mountedRef.current) return;
         const payload = await res.json().catch(() => null);
 
-        if (res.status === 409) {
-          // Vergeben – nächsten Namen probieren, ohne den Nutzer zu fragen.
-          continue;
-        }
+        // Vergeben: Das ist nach der Prüfung beim Tippen ein Wettrennen und
+        // kein Regelfall. Statt hier abzubrechen den nächsten Namen nehmen –
+        // welcher es geworden ist, steht anschließend groß in der Erfolgsansicht.
+        if (res.status === 409) continue;
 
         if (!res.ok || !payload?.success) {
           setPublishStatus("error");
-          // errors[] enthält die einzelnen Validierungsgründe; sie sind
-          // aussagekräftiger als das pauschale "Validierung fehlgeschlagen".
-          setPublishError(
-            Array.isArray(payload?.errors) && payload.errors.length
-              ? payload.errors.join(" · ")
-              : (payload?.error ??
-                `Veröffentlichen fehlgeschlagen (HTTP ${res.status}).`),
-          );
+          setPublishError(describePublishFailure(res.status, payload));
           return;
         }
 
+        // || statt ??: Ein leerer String ist hier genauso wertlos wie null,
+        // würde aber an ?? vorbeirutschen — publishStatus stünde auf
+        // "published", die Erfolgsansicht verlangt zusätzlich eine URL und
+        // griffe nicht, und der Nutzer fiele wortlos ins Formular zurück.
+        const url: string =
+          payload.publishedUrl || `https://${candidate}.maitr.de`;
+
+        // Erst jetzt in den Konfigurator-Store. Vor dem Aufruf übernommen,
+        // hätte ein Fehlschlag den bestehenden Entwurf des Nutzers ersetzt,
+        // ohne dass irgendetwas online gegangen wäre. pushHistory davor, damit
+        // "Rückgängig" im Konfigurator den alten Stand zurückholt.
+        pushHistory();
+        applyScrapedDraft(draft);
+        // Die tatsächlich benutzte Adresse festschreiben. ConfiguratorDraft hat
+        // kein domain-Feld, applyScrapedDraft kann sie also nicht mitbringen —
+        // ohne diese Zeile stünde der manuelle Konfigurator hinterher wieder
+        // ohne Subdomain da und würde beim nächsten Veröffentlichen eine neue
+        // aus dem Geschäftsnamen ableiten statt die bestehende zu aktualisieren.
+        setBusinessInfo({
+          domain: { hasDomain: false, selectedDomain: candidate },
+        });
+        updatePublishingInfo({
+          status: "published",
+          publishedUrl: url,
+          previewUrl: payload.previewUrl,
+          publishedAt: payload.publishedAt ?? new Date().toISOString(),
+        });
+
         setSubdomain(candidate);
-        setPublishedUrl(
-          payload.publishedUrl ?? `https://${candidate}.maitr.de`,
-        );
+        setPublishedUrl(url);
+        setPublishStage("complete");
         setPublishStatus("published");
         toast({
           title: "Web-App ist live",
           description: `Erreichbar unter ${candidate}.maitr.de`,
         });
         return;
-      } catch (err) {
-        console.error("[AutoKonfigurator] Veröffentlichen fehlgeschlagen", err);
-        setPublishStatus("error");
-        setPublishError(
-          "Veröffentlichen fehlgeschlagen — bitte prüfe deine Verbindung.",
-        );
-        return;
       }
-    }
 
-    setPublishStatus("error");
-    setPublishError(
-      `„${base}" und die nächsten ${MAX_SUBDOMAIN_ATTEMPTS - 1} Varianten sind vergeben. Bitte wähle selbst einen Namen.`,
-    );
-  }, [publishPlan.config, subdomain, getAuthToken, toast]);
+      // Alle Varianten vergeben. Keine Sackgasse: Das Feld bleibt änderbar,
+      // und jede Änderung stößt eine neue Verfügbarkeitsprüfung an.
+      setPublishStatus("error");
+      setPublishError(
+        `„${base}“ und die nächsten ${MAX_SUBDOMAIN_ATTEMPTS - 1} Varianten sind bereits vergeben. Bitte wähle selbst einen Namen.`,
+      );
+      setAvailability({
+        kind: "taken",
+        message: "Diese Adresse ist bereits vergeben.",
+        suggestions: [],
+      });
+    } catch (err) {
+      console.error("[AutoKonfigurator] Veröffentlichen fehlgeschlagen", err);
+      if (!mountedRef.current) return;
+      setPublishStatus("error");
+      setPublishError(
+        "Der Server war nicht erreichbar. Bitte prüfe deine Verbindung und versuche es erneut.",
+      );
+    } finally {
+      stageTimers.forEach(clearTimeout);
+      publishingRef.current = false;
+    }
+  }, [
+    publishPlan.config,
+    draft,
+    subdomain,
+    getAuthToken,
+    toast,
+    pushHistory,
+    applyScrapedDraft,
+    updatePublishingInfo,
+  ]);
 
   // ── Entwurf übernehmen → Konfigurator ─────────────────────────────────────
   const applyDraftAndOpenConfigurator = useCallback(() => {
@@ -1075,6 +1395,51 @@ export default function AutoConfigurator() {
   }, [draft, pushHistory, applyScrapedDraft, setCurrentStep, toast, navigate]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
+
+  // Fortschritt und Erfolg nehmen die ganze Seite ein statt nur der rechten
+  // Spalte: Ab dem Klick auf "Veröffentlichen" zählt nur noch, ob und wo die
+  // Web-App online geht. Beide Ansichten sind dieselben wie am Ende des
+  // manuellen Konfigurators.
+  if (publishStatus === "publishing") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white via-teal-50/40 to-gray-100">
+        <Headbar title="Automatisch" />
+        <div className="max-w-2xl mx-auto px-5 py-10">
+          <PublishingProgress currentStage={publishStage} />
+        </div>
+      </div>
+    );
+  }
+
+  if (publishStatus === "published" && publishedUrl) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white via-teal-50/40 to-gray-100">
+        <Headbar title="Automatisch" />
+        <div className="max-w-4xl mx-auto px-5 py-10">
+          {/* Blendet nach 1,5 s von selbst den QR-Code ein – direkt fürs Handy. */}
+          <SuccessView
+            publishedUrl={publishedUrl}
+            businessName={draft?.business.name ?? ""}
+            onCopy={copyToClipboard}
+            copied={copied}
+          />
+          <div className="text-center mt-6 space-y-1.5">
+            <p className="text-sm text-gray-500">
+              Deine Web-App ist live. Inhalte kannst du jederzeit nachziehen —
+              die Adresse bleibt dieselbe.
+            </p>
+            <button
+              onClick={applyDraftAndOpenConfigurator}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 underline transition-colors"
+            >
+              Inhalte noch anpassen
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-teal-50/40 to-gray-100">
       {/* Maitr-Standard-Header */}
@@ -1658,122 +2023,156 @@ export default function AutoConfigurator() {
                   )}
                 </div>
 
-                {/* Footer: veröffentlichen oder anpassen */}
+                {/* Footer: zwei Wege – direkt veröffentlichen oder erst anpassen */}
                 <div className="p-5 border-t border-gray-100 space-y-3">
-                  {publishStatus === "published" && publishedUrl ? (
-                    // Fertig – ab hier ist die Adresse das Einzige, was zählt.
-                    <div className="space-y-2.5">
-                      <div className="p-3.5 bg-green-50 rounded-xl border border-green-200">
-                        <p className="text-xs font-semibold text-green-900 mb-1.5">
-                          Deine Web-App ist live
-                        </p>
-                        <a
-                          href={publishedUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm font-bold text-green-700 underline break-all hover:text-green-900"
-                        >
-                          {publishedUrl.replace(/^https?:\/\//, "")}
-                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                        </a>
-                      </div>
-                      <button
-                        onClick={applyDraftAndOpenConfigurator}
-                        className="w-full text-xs text-gray-500 hover:text-gray-800 transition-colors py-1 underline"
-                      >
-                        Inhalte noch anpassen
-                      </button>
+                  {/* Adresse – vorgeschlagen, aber sichtbar und änderbar.
+                      Hier entsteht eine öffentlich erreichbare Website; das
+                      darf nicht unbemerkt unter einem geratenen Namen laufen. */}
+                  <div>
+                    <label
+                      htmlFor="auto-subdomain"
+                      className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5"
+                    >
+                      Adresse deiner Web-App
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        id="auto-subdomain"
+                        value={subdomain}
+                        // Beim TIPPEN nur weichspülen, nicht zurechtstutzen.
+                        // normalizeSubdomain entfernt auch den Bindestrich am
+                        // Ende — damit ließ sich "mein-restaurant" gar nicht
+                        // eingeben: Nach "mein" verschwand der Bindestrich
+                        // sofort wieder. Das endgültige Zurechtstutzen macht
+                        // onBlur und ohnehin publishDirectly.
+                        onChange={(e) =>
+                          setSubdomain(
+                            e.target.value
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-]/g, "-")
+                              .replace(/-{2,}/g, "-")
+                              .slice(0, 63),
+                          )
+                        }
+                        onBlur={() =>
+                          setSubdomain((v) => normalizeSubdomain(v))
+                        }
+                        placeholder="mein-restaurant"
+                        className="rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-100 text-sm"
+                      />
+                      <span className="text-sm text-gray-400 shrink-0">
+                        .maitr.de
+                      </span>
                     </div>
-                  ) : (
-                    <>
-                      {/* Subdomain – vorgeschlagen, aber änderbar */}
-                      <div>
-                        <label
-                          htmlFor="auto-subdomain"
-                          className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5"
-                        >
-                          Adresse deiner Web-App
-                        </label>
-                        <div className="flex items-center gap-1.5">
-                          <Input
-                            id="auto-subdomain"
-                            value={subdomain}
-                            onChange={(e) =>
-                              setSubdomain(
-                                normalizeSubdomain(e.target.value),
-                              )
-                            }
-                            placeholder="mein-restaurant"
-                            className="rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-100 text-sm"
-                          />
-                          <span className="text-sm text-gray-400 shrink-0">
-                            .maitr.de
-                          </span>
-                        </div>
-                        {subdomain && !subdomainCheck.valid && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {subdomainCheck.reason}
+
+                    {/* Erst die Form, dann die Verfügbarkeit: Eine ungültige
+                        Eingabe braucht keine Serverantwort. */}
+                    {subdomain && !subdomainCheck.valid ? (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {subdomainCheck.reason}
+                      </p>
+                    ) : (
+                      <>
+                        {availability.kind === "checking" && (
+                          <p className="mt-1.5 text-xs text-gray-400">
+                            Verfügbarkeit wird geprüft…
                           </p>
                         )}
-                      </div>
-
-                      {publishStatus === "error" && publishError && (
-                        <div className="p-3 bg-red-50 rounded-xl border border-red-200 flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-px" />
-                          <p className="text-xs text-red-800 leading-relaxed">
-                            {publishError}
+                        {availability.kind === "free" && (
+                          <p className="mt-1.5 text-xs text-green-600 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                            {subdomain}.maitr.de ist frei
                           </p>
-                        </div>
-                      )}
-
-                      <Button
-                        onClick={publishDirectly}
-                        disabled={!canPublish}
-                        className="w-full bg-gradient-to-r from-purple-500 to-orange-500 text-white text-sm font-bold h-11 rounded-xl shadow-sm hover:shadow-md transition-shadow disabled:opacity-50"
-                      >
-                        {publishStatus === "publishing" ? (
-                          <span className="flex items-center gap-2">
-                            <svg
-                              className="animate-spin h-4 w-4 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                              />
-                            </svg>
-                            Wird veröffentlicht…
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <Rocket className="w-4 h-4" />
-                            Jetzt veröffentlichen
-                          </span>
                         )}
-                      </Button>
+                        {availability.kind === "unknown" && (
+                          <p className="mt-1.5 text-xs text-gray-400">
+                            Die Verfügbarkeit ließ sich nicht prüfen — du kannst
+                            es trotzdem versuchen.
+                          </p>
+                        )}
+                        {availability.kind === "taken" && (
+                          <div className="mt-1.5">
+                            <p className="text-xs text-red-500">
+                              {availability.message}
+                            </p>
+                            {availability.suggestions.length > 0 && (
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                {/*
+                                  Nicht "Frei:" — keiner dieser Vorschläge ist
+                                  gegen die Datenbank geprüft. Der Server prüft
+                                  bei generateSuggestions nur das Format, die
+                                  eigenen sind durchnummeriert. Eine
+                                  Verfügbarkeit zu behaupten, die niemand
+                                  festgestellt hat, wäre gelogen.
+                                */}
+                                <span className="text-xs text-gray-400">
+                                  Alternativen:
+                                </span>
+                                {availability.suggestions.map((s) => (
+                                  <button
+                                    key={s}
+                                    onClick={() => setSubdomain(s)}
+                                    className="text-xs font-semibold text-purple-600 hover:text-purple-800 underline transition-colors"
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
 
-                      <button
-                        onClick={applyDraftAndOpenConfigurator}
-                        className="w-full text-xs text-gray-500 hover:text-gray-800 transition-colors py-1"
-                      >
-                        {hasExistingData
-                          ? "Lieber erst anpassen (ersetzt deinen Entwurf)"
-                          : "Lieber erst anpassen"}
-                        <ChevronRight className="w-3.5 h-3.5 ml-1 inline" />
-                      </button>
-                    </>
+                  {publishStatus === "error" && publishError && (
+                    <div className="p-3 bg-red-50 rounded-xl border border-red-200 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-px" />
+                      <p className="text-xs text-red-800 leading-relaxed">
+                        {publishError}
+                      </p>
+                    </div>
                   )}
+
+                  {/*
+                    Die Speisekarten-Erkennung läuft nach der Analyse noch
+                    weiter. Wer jetzt veröffentlicht, bekommt Konfetti und
+                    QR-Code — aber eine Web-App OHNE Karte, also ohne genau
+                    den Inhalt, für den dieser Modus gebaut ist. Deshalb ein
+                    Hinweis statt eines gesperrten Buttons: Warten ist eine
+                    Empfehlung, keine Vorschrift.
+                  */}
+                  {menuStatus === "running" && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      Die Speisekarte wird noch gelesen. Wenn du jetzt
+                      veröffentlichst, geht die Web-App ohne Karte online.
+                    </p>
+                  )}
+
+                  {/* Weg (a): direkt veröffentlichen – die empfohlene Aktion.
+                      Beschriftung bewusst „Jetzt veröffentlichen“: Daran hängt
+                      die Testabdeckung dieses Ablaufs. */}
+                  <Button
+                    onClick={publishDirectly}
+                    disabled={!canPublish}
+                    className="w-full bg-gradient-to-r from-purple-500 to-orange-500 text-white text-sm font-bold h-11 rounded-xl shadow-sm hover:shadow-md transition-shadow disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Rocket className="w-4 h-4" />
+                      Jetzt veröffentlichen
+                    </span>
+                  </Button>
+
+                  {/* Weg (b): wie bisher – übernehmen und im Konfigurator öffnen */}
+                  <button
+                    onClick={applyDraftAndOpenConfigurator}
+                    className="w-full text-xs text-gray-500 hover:text-gray-800 transition-colors py-1"
+                  >
+                    {hasExistingData
+                      ? "Erst anpassen (ersetzt deinen Entwurf)"
+                      : "Erst anpassen"}
+                    <ChevronRight className="w-3.5 h-3.5 ml-1 inline" />
+                  </button>
                 </div>
               </div>
             )}
