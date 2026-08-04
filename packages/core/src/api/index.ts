@@ -1,5 +1,12 @@
 import { request } from "../http";
-import type { DailyBriefing, DailyTask, Reservation, ServiceDay, Venue } from "../types";
+import type {
+  CreateVenueInput,
+  DailyBriefing,
+  DailyTask,
+  Reservation,
+  ServiceDay,
+  Venue,
+} from "../types";
 
 /**
  * Endpunkt-Wrapper. Dünne Schicht über `request()` - keine UI-Logik, kein State.
@@ -55,6 +62,22 @@ export const reservations = {
 export const venues = {
   mine() {
     return request<Venue[]>("/venues");
+  },
+
+  /**
+   * Den ersten eigenen Betrieb anlegen. Der Schritt zwischen "angemeldet" und
+   * "sieht eigene Daten": Ohne Betrieb liefert `mine()` eine leere Liste und jeder
+   * betriebsgebundene Aufruf endet in 403.
+   *
+   * Antwortet mit 201 und dem angelegten Betrieb. ZWEI Fälle, die der Aufrufer
+   * behandeln sollte - beide kommen als `ApiError`:
+   *  - 409: Es gibt schon einen Betrieb. Ein zweiter ist bewusst nicht möglich
+   *    (Begründung an der Route in server/maitr/routes.ts). Der vorhandene liegt
+   *    dann in `error.body.venue` - ein Doppeltipp muss also keine Sackgasse sein.
+   *  - 422: Der Name taugt nicht als Adresse; nach einem anderen Namen fragen.
+   */
+  create(input: CreateVenueInput) {
+    return request<Venue>("/venues", { method: "POST", body: input });
   },
 
   /** Oeffentliches Gast-Profil - ohne Anmeldung erreichbar. */

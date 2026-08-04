@@ -17,6 +17,22 @@ export interface Venue {
   tags: string[];
 }
 
+/**
+ * Eingabe für `api.venues.create` - der erste eigene Betrieb.
+ *
+ * Nur `name` ist Pflicht: Adresse (slug), Zeitzone und Status setzt der Server.
+ * Absichtlich KEIN slug-Feld - die Adresse leitet der Server aus dem Namen ab
+ * (`shared/subdomain.ts`), damit Client und Server nicht zwei Vorstellungen davon
+ * haben, was eine gültige Adresse ist.
+ */
+export interface CreateVenueInput {
+  name: string;
+  /** IANA-Zone wie "Europe/Berlin". Ohne Angabe setzt der Server Europe/Berlin. */
+  timezone?: string;
+  /** Freitext fürs Profil; taucht in der `Venue`-Antwort (noch) nicht auf. */
+  description?: string;
+}
+
 export type TaskKind = "review" | "post" | "profile" | "channel" | "reservation";
 
 /**

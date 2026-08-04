@@ -10,7 +10,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { connectors, GOOGLE_OAUTH, META_OAUTH } from "@maitr/core/integrations";
 import type { FetchLike, OAuthConfig, ProviderId } from "@maitr/core/integrations";
-import type { DailyTask, Reservation as ApiReservation } from "@maitr/core/types";
+import type { DailyTask, Reservation as ApiReservation, Venue } from "@maitr/core/types";
+import { nextSubdomainCandidate, suggestSubdomain } from "../../shared/subdomain";
 import { prisma } from "../db/prisma";
 import { requireVenueAccess, resolveVenue, validateBody } from "./middleware";
 import {
@@ -40,6 +41,34 @@ const venueGuard = asyncHandler(requireVenueAccess);
 
 export const venuesRouter = Router();
 
+/**
+ * Nur die Felder, die die API-Form braucht - wie `ReservationRow` weiter unten
+ * bewusst strukturell beschrieben statt aus `@prisma/client` importiert (der Client
+ * ist hier nicht generiert; siehe `node_modules/.prisma` fehlt).
+ */
+interface VenueRow {
+  id: string;
+  name: string;
+  tagline: string | null;
+  timezone: string;
+  tags: string[];
+}
+
+/**
+ * DB-Zeile → `@maitr/core/types#Venue`. An genau einer Stelle, damit die Liste
+ * (GET /venues), das öffentliche Profil und das Anlegen dieselbe Form liefern -
+ * sonst bekommt der Client je nach Endpunkt ein anderes Objekt für dieselbe Sache.
+ */
+function toApiVenue(b: VenueRow): Venue {
+  return {
+    id: b.id,
+    name: b.name,
+    tagline: b.tagline ?? undefined,
+    timezone: b.timezone,
+    tags: b.tags,
+  };
+}
+
 venuesRouter.get(
   "/",
   asyncHandler(async (req, res) => {
@@ -47,15 +76,201 @@ venuesRouter.get(
       where: { userId: req.userId! },
       include: { business: true },
     });
-    res.json(
-      memberships.map((m) => ({
-        id: m.business.id,
-        name: m.business.name,
-        tagline: m.business.tagline ?? undefined,
-        timezone: m.business.timezone,
-        tags: m.business.tags,
-      })),
-    );
+    res.json(memberships.map((m) => toApiVenue(m.business)));
+  }),
+);
+
+/* ── Den ersten eigenen Betrieb anlegen ──────────────────────────────────── */
+
+/**
+ * Eingabe des Onboardings. Bewusst schmal gehalten: Pflicht ist nur der Name. Jedes
+ * zusätzliche Pflichtfeld ist eine weitere Abbruchstelle in genau dem Schritt, der
+ * zwischen "angemeldet" und "nutzbar" liegt - Zeitzone und Beschreibung kann der
+ * Betrieb später im Profil nachziehen, einen Betrieb zu haben kann er nicht.
+ */
+const createVenueSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  /**
+   * IANA-Zone ("Europe/Berlin"). Wird geprüft, weil sie danach JEDE Tageslogik trägt
+   * (Briefing, Servicetag, Auswertung). Ungeprüft landet ein Tippfehler dauerhaft in
+   * der Zeile und fällt erst später bei jeder einzelnen Berechnung auf - dann aber
+   * an einer Stelle, die mit der Eingabe nichts mehr zu tun hat.
+   */
+  timezone: z
+    .string()
+    .min(1)
+    .max(64)
+    .refine(istBekannteZeitzone, { message: "Unbekannte Zeitzone" })
+    .optional(),
+  description: z.string().trim().max(2000).optional(),
+});
+
+/** `Intl` wirft bei unbekannter Zone einen RangeError - das ist die Prüfung. */
+function istBekannteZeitzone(wert: string): boolean {
+  try {
+    new Intl.DateTimeFormat("de-DE", { timeZone: wert });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Der Ausschnitt der Transaktion, den dieser Endpunkt benutzt. Von Hand beschrieben,
+ * weil der Prisma-Client in diesem Baum nicht generiert ist - so bleibt trotzdem
+ * geprüft, WAS in der Transaktion passieren darf.
+ */
+interface VenueTx {
+  business: {
+    create(args: { data: Record<string, unknown> }): Promise<VenueRow>;
+  };
+  businessMember: {
+    findFirst(args: {
+      where: { userId: string };
+      include: { business: true };
+    }): Promise<{ business: VenueRow } | null>;
+    create(args: {
+      data: { userId: string; businessId: string; role: "OWNER" };
+    }): Promise<unknown>;
+  };
+}
+
+/**
+ * Wie oft ein anderer Kandidat für die Adresse probiert wird, bevor aufgegeben wird.
+ * Endlich, damit ein häufiger Name ("Zur Post") nicht zu einer unbegrenzten Schleife
+ * gegen die Datenbank wird.
+ */
+const MAX_SLUG_VERSUCHE = 10;
+
+/**
+ * Ist das die Unique-Verletzung auf `Business.slug`?
+ *
+ * Nur dann darf der nächste Adress-Kandidat probiert werden. Jede andere P2002 (etwa
+ * auf `(userId, businessId)` in BusinessMember) bedeutet etwas anderes und muss
+ * sichtbar scheitern, statt in der Schleife stumm die Adresse zu wechseln.
+ *
+ * Prisma meldet das Ziel je nach Treiber als Spaltenliste (`["slug"]`) oder als
+ * Indexname (`"Business_slug_key"`) - deshalb wird auf das Vorkommen geprüft und
+ * nicht auf Gleichheit.
+ */
+function istSlugKollision(err: unknown): boolean {
+  const e = err as { code?: string; meta?: { target?: unknown } };
+  if (e?.code !== "P2002") return false;
+  const target = e.meta?.target;
+  const beschreibung = Array.isArray(target) ? target.join(",") : String(target ?? "");
+  return beschreibung.includes("slug");
+}
+
+/**
+ * Ersten eigenen Betrieb anlegen - der fehlende Schritt zwischen Anmeldung und
+ * eigenen Daten. Ohne ihn hat ein frisch angemeldeter Nutzer keine Mitgliedschaft,
+ * und JEDE venue-gebundene Route antwortet ihm mit 403.
+ *
+ * BEWUSST NICHT hinter `venueGuard`: Der Guard verlangt eine Betriebskennung und
+ * eine Mitgliedschaft - beides gibt es hier per Definition noch nicht. Die Schranke
+ * ist `requireAuth` (in `index.ts` vor diesem Router gemountet); der Betrieb wird
+ * ausschliesslich an `req.userId` gehängt, nie an eine Kennung aus der Anfrage.
+ *
+ * ZWEI DINGE, DIE HIER NICHT SCHIEFGEHEN DÜRFEN:
+ *
+ * 1) HALBER ZUSTAND. Business und BusinessMember entstehen in EINER Transaktion.
+ *    Fiele die Mitgliedschaft aus, bliebe ein Betrieb ohne Mitglied zurück - an den
+ *    kommt niemand mehr heran (jede Route prüft BusinessMember), und der Nutzer wird
+ *    ihn auch nicht wieder los: es gibt keine Route zum Löschen eines Betriebs, nur
+ *    die Kontolöschung räumt verwaiste Betriebe ab (server/routes/users.ts).
+ *
+ * 2) ZWEIMAL GETIPPT. Der Aufruf ist nicht idempotent - er legt an. Deshalb prüft er
+ *    INNERHALB der Transaktion, ob der Nutzer schon Mitglied irgendeines Betriebs
+ *    ist, und legt dann nichts an. Beim echten Doppeltipp laufen beide Anfragen mit
+ *    DEMSELBEN Namen und damit derselben Adresse: Der Verlierer läuft in die
+ *    Unique-Verletzung auf `slug`. Postgres lässt seinen INSERT dabei warten, bis der
+ *    Gewinner committet hat - beim nächsten Schleifendurchlauf sieht er also dessen
+ *    Mitgliedschaft und antwortet 409 statt einen zweiten Betrieb anzulegen. Offen
+ *    bleibt allein der konstruierte Fall, dass derselbe Nutzer zeitgleich zwei
+ *    VERSCHIEDENE Namen abschickt; das ist kein Doppeltipp mehr.
+ *
+ * WARUM KEIN ZWEITER BETRIEB (409 statt Anlegen):
+ * Der Client kann heute genau einen. `mobile/src/features/start/StartScreen.tsx`
+ * arbeitet auf einer festen Kennung, eine Betriebsauswahl gibt es nirgends. Schlimmer
+ * noch: `taskVenueGuard` (unten) leitet die Kennung aus der EINEN Mitgliedschaft ab,
+ * weil die App `approveTask`/`updateDraft` ohne Kennung ruft - bei mehr als einer
+ * Mitgliedschaft antwortet er 400. Ein zweiter Betrieb würde also still den grünen
+ * Knopf des ersten lahmlegen. Ablehnen ist zurücknehmbar (die Regel steht an einer
+ * Stelle), ein angelegter Betrieb ist es nicht. Die Antwort trägt den vorhandenen
+ * Betrieb mit, damit der Client daraus keine Sackgasse machen muss.
+ */
+venuesRouter.post(
+  "/",
+  validateBody(createVenueSchema),
+  asyncHandler(async (req, res) => {
+    if (!req.userId) return res.status(401).json({ error: "Nicht angemeldet" });
+    const userId = req.userId;
+    const { name, timezone, description } = req.body as z.infer<typeof createVenueSchema>;
+
+    // Die Adresse kommt aus den GEMEINSAMEN Regeln (shared/subdomain.ts), die auch
+    // der Konfigurator und der Veröffentlichungspfad benutzen. Eine zweite
+    // Slug-Logik hier hiesse: zwei Vorstellungen davon, was eine gültige Adresse ist.
+    const basis = suggestSubdomain(name);
+    if (!basis) {
+      // Kein ableitbarer Name (zu kurz, nur Sonderzeichen, oder reserviert wie "demo").
+      // Lieber ehrlich nachfragen als eine Adresse erfinden, die der Betrieb nie
+      // gewählt hat und später nicht mehr ändern kann.
+      return res.status(422).json({
+        error:
+          "Aus diesem Namen lässt sich keine Adresse ableiten. Bitte einen Namen mit " +
+          "mindestens drei Buchstaben oder Ziffern wählen.",
+      });
+    }
+
+    for (let versuch = 0; versuch < MAX_SLUG_VERSUCHE; versuch++) {
+      const slug = nextSubdomainCandidate(basis, versuch);
+      try {
+        const ergebnis = await (prisma as unknown as {
+          $transaction<T>(fn: (tx: VenueTx) => Promise<T>): Promise<T>;
+        }).$transaction(async (tx) => {
+          const bestehend = await tx.businessMember.findFirst({
+            where: { userId },
+            include: { business: true },
+          });
+          if (bestehend) return { venue: toApiVenue(bestehend.business), schonVorhanden: true };
+
+          const business = await tx.business.create({
+            data: {
+              slug,
+              name,
+              // Nur setzen, was der Nutzer genannt hat - sonst überschreiben leere
+              // Felder die Vorgaben aus dem Schema (timezone: "Europe/Berlin").
+              ...(description ? { description } : {}),
+              ...(timezone ? { timezone } : {}),
+            },
+          });
+          // OWNER ausdrücklich: Die Vorgabe des Modells ist STAFF. Wer seinen Betrieb
+          // anlegt, ist dessen Inhaber - alles andere wäre von Anfang an falsch.
+          await tx.businessMember.create({
+            data: { userId, businessId: business.id, role: "OWNER" },
+          });
+          return { venue: toApiVenue(business), schonVorhanden: false };
+        });
+
+        if (ergebnis.schonVorhanden) {
+          return res.status(409).json({
+            error: "Du hast bereits einen Betrieb.",
+            venue: ergebnis.venue,
+          });
+        }
+        return res.status(201).json(ergebnis.venue);
+      } catch (err) {
+        // Adresse vergeben → nächster Kandidat. Alles andere fliegt weiter an den
+        // asyncHandler; die Transaktion ist dabei bereits zurückgerollt.
+        if (!istSlugKollision(err)) throw err;
+      }
+    }
+
+    return res.status(409).json({
+      error:
+        "Unter diesem Namen ist keine freie Adresse mehr zu finden. Bitte den Namen " +
+        "leicht abwandeln.",
+    });
   }),
 );
 
@@ -71,13 +286,8 @@ publicRouter.get(
     const slug = String(req.params.slug ?? "");
     const business = await prisma.business.findUnique({ where: { slug } });
     if (!business) return res.status(404).json({ error: "Nicht gefunden" });
-    return res.json({
-      id: business.id,
-      name: business.name,
-      tagline: business.tagline ?? undefined,
-      timezone: business.timezone,
-      tags: business.tags,
-    });
+    // Dieselbe Abbildung wie in GET /venues - siehe toApiVenue.
+    return res.json(toApiVenue(business));
   }),
 );
 
