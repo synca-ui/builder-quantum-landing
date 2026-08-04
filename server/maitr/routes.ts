@@ -10,6 +10,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { connectors, GOOGLE_OAUTH, META_OAUTH } from "@maitr/core/integrations";
 import type { FetchLike, OAuthConfig, ProviderId } from "@maitr/core/integrations";
+import type { Reservation as ApiReservation } from "@maitr/core/types";
 import { prisma } from "../db/prisma";
 import { requireVenueAccess, validateBody } from "./middleware";
 import { computeBriefing } from "./briefing";
@@ -105,9 +106,160 @@ reservationsRouter.post("/", requireVenueAccess, validateBody(createReservationS
   res.status(201).json(reservation);
 });
 
+/**
+ * Nur die Felder, die die API-Form braucht. Bewusst strukturell beschrieben statt
+ * aus `@prisma/client` importiert, damit der Mapper auch ohne generierten Client
+ * (und in Tests mit einfachen Objekten) typprüfbar bleibt.
+ */
+interface ReservationRow {
+  id: string;
+  guestName: string;
+  guestCount: number;
+  guestPhone: string | null;
+  reservationTime: Date;
+  duration: number;
+  status: string;
+  source: string;
+}
+
+/** Prisma-`ReservationStatus` → Status des API-Vertrags (`@maitr/core/types`). */
+const API_STATUS: Record<string, ApiReservation["status"]> = {
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  ARRIVED: "confirmed",
+  COMPLETED: "confirmed",
+  CANCELLED: "cancelled",
+  NO_SHOW: "cancelled",
+};
+
+/**
+ * DB-Zeile → die Form, die `@maitr/core/types#Reservation` verspricht.
+ *
+ * Die beiden Modelle decken sich nicht: Die DB kennt `guestCount` und eine Dauer
+ * in Minuten, der Vertrag `partySize` und ein Ende; der Prisma-Enum kennt kein
+ * WALK_IN, der Vertrag dafür keinen Sitz-/Abschlusszustand. Diese Übersetzung
+ * gehört deshalb an genau eine Stelle - sonst rät jeder Handler neu.
+ */
+function toApiReservation(r: ReservationRow): ApiReservation {
+  // Reihenfolge mit Absicht: Eine Stornierung schlägt die Quelle. Sonst sähe ein
+  // stornierter Walk-in im Client weiterhin nach belegtem Tisch aus.
+  const status: ApiReservation["status"] =
+    r.status === "CANCELLED" || r.status === "NO_SHOW"
+      ? "cancelled"
+      : r.source === "walk_in"
+        ? "walk_in"
+        : (API_STATUS[r.status] ?? "confirmed");
+
+  return {
+    id: r.id,
+    guestName: r.guestName,
+    partySize: r.guestCount,
+    start: r.reservationTime.toISOString(),
+    end: new Date(r.reservationTime.getTime() + r.duration * 60_000).toISOString(),
+    status,
+    phone: r.guestPhone ?? undefined,
+  };
+}
+
+const walkInSchema = z.object({
+  venueId: z.string().min(1),
+  tableId: z.string().min(1),
+  partySize: z.number().int().min(1).max(50),
+  /** Walk-ins kommen ohne Namen an die Tür; der Client schickt keinen. */
+  guestName: z.string().min(1).max(120).optional(),
+});
+
+reservationsRouter.post("/walk-in", requireVenueAccess, validateBody(walkInSchema), async (req, res) => {
+  const { tableId, partySize, guestName } = req.body as z.infer<typeof walkInSchema>;
+
+  // Wie bei POST / : die geprüfte Kennung, nie die aus dem Rumpf.
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
+
+  // Der Tisch muss DIESEM Betrieb gehören. Ohne die Prüfung könnte ein Mitglied von
+  // Betrieb A einen Walk-in an einen Tisch von Betrieb B hängen: Die Zeile trüge
+  // zwar businessId A (der Filter oben hält), der Fremdschlüssel zeigte aber in den
+  // Tischplan von B - B bekäme eine Belegung, die er weder angelegt hat noch über
+  // seine eigenen Routen wieder los wird. Der Filter auf businessId macht fremde
+  // Tisch-IDs zugleich ununterscheidbar von nicht existierenden.
+  const table = await prisma.table.findFirst({
+    where: { id: tableId, businessId: venueId },
+    select: { id: true },
+  });
+  if (!table) return res.status(404).json({ error: "Tisch nicht gefunden" });
+
+  const reservation = await prisma.reservation.create({
+    data: {
+      businessId: venueId,
+      tableId: table.id,
+      // Ein Walk-in sitzt bereits: Zeitpunkt ist jetzt, Status ARRIVED (nicht
+      // PENDING - es gibt nichts mehr zu bestätigen).
+      guestName: guestName ?? "Walk-in",
+      guestCount: partySize,
+      reservationTime: new Date(),
+      status: "ARRIVED",
+      // dataset.ts bildet alles ausser "maitr"/"google" auf "walk_in" ab; explizit
+      // gesetzt, damit die Auswertung Walk-ins nicht als Online-Buchung zählt.
+      source: "walk_in",
+    },
+  });
+  return res.status(201).json(toApiReservation(reservation));
+});
+
+/**
+ * Stornierung. Antwortet mit 204 (kein Rumpf), wie der Client-Vertrag es erwartet.
+ *
+ * WICHTIG - zwei bewusste Entscheidungen:
+ *
+ * 1) Es wird nicht gelöscht, sondern auf CANCELLED gesetzt. Der Client nennt die
+ *    Funktion `cancel`, und die Auswertung braucht die Zeile: `dataset.ts` bildet
+ *    CANCELLED auf "cancelled" ab, der Insights-Motor rechnet Stornoquote und
+ *    No-Shows daraus. Ein echtes DELETE würde diese Zahlen still verfälschen und
+ *    wäre nicht rückholbar.
+ *
+ * 2) Die Zugehörigkeit ist Teil der WHERE-Klausel, nicht ein Schritt davor. Ein
+ *    `findUnique` + anschliessendes `update` liesse sich beim nächsten Umbau
+ *    trennen; hier kann der Schreibzugriff die Bedingung `businessId = venueId`
+ *    gar nicht verlieren. Trifft er nichts, war die ID fremd oder unbekannt -
+ *    beides beantwortet 404, damit fremde Reservierungs-IDs nicht bestätigt werden.
+ */
+reservationsRouter.delete("/:reservationId", requireVenueAccess, async (req, res) => {
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
+  // Wie bei `req.query.date` in GET /day: Express typisiert Parameter nicht als
+  // blossen String, deshalb erst festklopfen, bevor der Wert in die Abfrage geht.
+  const reservationId = String(req.params.reservationId ?? "");
+
+  const { count } = await prisma.reservation.updateMany({
+    where: { id: reservationId, businessId: venueId },
+    data: { status: "CANCELLED" },
+  });
+  if (count === 0) return res.status(404).json({ error: "Reservierung nicht gefunden" });
+  return res.status(204).end();
+});
+
 /* ── Tagesbriefing (die drei Entscheidungen) ─────────────────────────────── */
 
 export const briefingRouter = Router();
+
+/**
+ * NICHT vorhanden - und zwar mit Absicht: `POST /briefing/tasks/:id/approve` und
+ * `PATCH /briefing/tasks/:id` (beide in `packages/core/src/api/index.ts` aufgerufen).
+ *
+ * Es gibt nichts, worauf sie schreiben könnten. Aufgaben sind kein gespeicherter
+ * Datensatz: `computeBriefing` erzeugt sie bei jedem Aufruf neu aus `buildInsights`,
+ * die IDs sind abgeleitete Zeichenketten (`review_<id>`, `profile_<hebel>`) und
+ * verschwinden, sobald die zugrunde liegende Bewertung beantwortet ist. In
+ * `prisma/schema.prisma` existiert kein Aufgaben-Modell, und `insightToTask` füllt
+ * `draft` nicht einmal - es gibt also weder einen Entwurf zum Ändern noch einen
+ * Zustand zum Freigeben. Der `InsightsCache` taugt dafür nicht: Er wird nach 15
+ * Minuten und von jedem Sync-Lauf überschrieben; eine dort hinterlegte Freigabe
+ * wäre beim nächsten Rechnen weg.
+ *
+ * Ein ehrlicher Bau braucht zuerst (a) ein persistentes Modell für Aufgabe +
+ * Entwurf + Freigabezustand und (b) einen Veröffentlichungsweg - `ChannelConnector`
+ * kann heute nur `fetchReviews`/`fetchEngagement`, also lesen. Solange beides fehlt,
+ * wäre jede Route hier eine Attrappe, die dem Betrieb eine erledigte Freigabe
+ * vorspielt, die nie bei Google oder Meta ankommt.
+ */
 
 /** Frische-Fenster des Insights-Caches: darunter wird nicht neu gerechnet. */
 const CACHE_TTL_MS = 15 * 60_000;
