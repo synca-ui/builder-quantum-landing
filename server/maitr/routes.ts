@@ -10,10 +10,16 @@ import { Router } from "express";
 import { z } from "zod";
 import { connectors, GOOGLE_OAUTH, META_OAUTH } from "@maitr/core/integrations";
 import type { FetchLike, OAuthConfig, ProviderId } from "@maitr/core/integrations";
-import type { Reservation as ApiReservation } from "@maitr/core/types";
+import type { DailyTask, Reservation as ApiReservation } from "@maitr/core/types";
 import { prisma } from "../db/prisma";
-import { requireVenueAccess, validateBody } from "./middleware";
-import { computeBriefing } from "./briefing";
+import { requireVenueAccess, resolveVenue, validateBody } from "./middleware";
+import {
+  computeBriefing,
+  computeTasks,
+  REOPEN_AFTER_MS,
+  toApiState,
+  type TaskDecisionRow,
+} from "./briefing";
 import { createState, encryptToken, verifyState } from "./security";
 import { maitrEnv } from "./env";
 import { asyncHandler } from "./asyncHandler";
@@ -278,27 +284,6 @@ reservationsRouter.delete(
 
 export const briefingRouter = Router();
 
-/**
- * NICHT vorhanden - und zwar mit Absicht: `POST /briefing/tasks/:id/approve` und
- * `PATCH /briefing/tasks/:id` (beide in `packages/core/src/api/index.ts` aufgerufen).
- *
- * Es gibt nichts, worauf sie schreiben könnten. Aufgaben sind kein gespeicherter
- * Datensatz: `computeBriefing` erzeugt sie bei jedem Aufruf neu aus `buildInsights`,
- * die IDs sind abgeleitete Zeichenketten (`review_<id>`, `profile_<hebel>`) und
- * verschwinden, sobald die zugrunde liegende Bewertung beantwortet ist. In
- * `prisma/schema.prisma` existiert kein Aufgaben-Modell, und `insightToTask` füllt
- * `draft` nicht einmal - es gibt also weder einen Entwurf zum Ändern noch einen
- * Zustand zum Freigeben. Der `InsightsCache` taugt dafür nicht: Er wird nach 15
- * Minuten und von jedem Sync-Lauf überschrieben; eine dort hinterlegte Freigabe
- * wäre beim nächsten Rechnen weg.
- *
- * Ein ehrlicher Bau braucht zuerst (a) ein persistentes Modell für Aufgabe +
- * Entwurf + Freigabezustand und (b) einen Veröffentlichungsweg - `ChannelConnector`
- * kann heute nur `fetchReviews`/`fetchEngagement`, also lesen. Solange beides fehlt,
- * wäre jede Route hier eine Attrappe, die dem Betrieb eine erledigte Freigabe
- * vorspielt, die nie bei Google oder Meta ankommt.
- */
-
 /** Frische-Fenster des Insights-Caches: darunter wird nicht neu gerechnet. */
 const CACHE_TTL_MS = 15 * 60_000;
 
@@ -322,6 +307,175 @@ briefingRouter.get(
       update: { result, computedAt: new Date() },
     });
     return res.json(briefing);
+  }),
+);
+
+/* ── Aufgaben-Entscheidungen (der grüne Knopf) ───────────────────────────── */
+
+/**
+ * Venue-Schranke der beiden Aufgaben-Endpunkte.
+ *
+ * WARUM NICHT EINFACH `venueGuard`
+ * Der Client ruft `POST /briefing/tasks/:id/approve` OHNE Betriebskennung auf und
+ * `PATCH /briefing/tasks/:id` nur mit `{ draft }` (packages/core/src/api/index.ts,
+ * Zeilen 16 und 21). `requireVenueAccess` verlangt eine venueId in Pfad, Query oder
+ * Rumpf und antwortete darauf ausnahmslos mit 400 - die Endpunkte wären für den
+ * einzigen vorhandenen Aufrufer unbenutzbar, also genau die Attrappe, die hier
+ * vermieden werden soll. Den Client-Vertrag zu ändern stand nicht zur Wahl.
+ *
+ * Deshalb: Nennt die Anfrage eine venueId, gilt UNVERÄNDERT die reguläre Prüfung
+ * (inklusive Konflikt-400 und Mitgliedschaft). Nennt sie keine, wird sie NICHT
+ * geraten, sondern aus den Mitgliedschaften des angemeldeten Nutzers abgeleitet -
+ * und nur dann, wenn sie eindeutig ist. Das erweitert keine Rechte: Der Nutzer
+ * bekommt ausschliesslich den Betrieb, in dem er nachweislich Mitglied ist. Bei
+ * mehreren Mitgliedschaften wird abgelehnt statt gewählt; dann muss der Aufrufer
+ * die Kennung mitschicken (`?venueId=…` funktioniert an beiden Routen).
+ *
+ * Die Handler unten lesen die Kennung ausschliesslich aus `req.venueId` - nie aus
+ * Pfad, Query oder Rumpf.
+ */
+const taskVenueGuard = asyncHandler(async (req, res, next) => {
+  const { venueId, conflict } = resolveVenue(req);
+  if (conflict) {
+    return res.status(400).json({ error: "Widersprüchliche venueId in Pfad, Query und Rumpf" });
+  }
+  // Kennung genannt → unveränderte reguläre Prüfung. Das Promise wird hier bewusst
+  // zurückgegeben, damit eine Ablehnung (etwa ein Datenbankausfall in der Middleware)
+  // im asyncHandler landet und nicht als unbehandelte Ablehnung endet.
+  if (venueId) return requireVenueAccess(req, res, next);
+
+  if (!req.userId) return res.status(401).json({ error: "Nicht angemeldet" });
+  // `take: 2` genügt: Wir müssen nur "genau eine" von "mehr als eine" unterscheiden.
+  const memberships = await prisma.businessMember.findMany({
+    where: { userId: req.userId },
+    select: { businessId: true },
+    take: 2,
+  });
+  if (memberships.length === 0) return res.status(403).json({ error: "Kein Zugriff auf einen Betrieb" });
+  if (memberships.length > 1) return res.status(400).json({ error: "venueId fehlt" });
+
+  (req as typeof req & { venueId?: string }).venueId = memberships[0].businessId;
+  return next();
+});
+
+/**
+ * Form der Aufgabenkennung. Sie kommt aus `buildInsights` und besteht dort aus einem
+ * Präfix plus UUID oder Schlüssel (`review_<uuid>`, `profile_photos`, `roi_month`).
+ *
+ * Die Prüfung ist der billige erste Riegel gegen Müll im Pfad; der eigentliche
+ * Riegel ist die Existenzprüfung im Handler. Ohne beides legte jeder erfundene
+ * String eine Zeile in `TaskDecision` an - eine Tabelle, die ein Fremder dann nach
+ * Belieben füllen könnte.
+ */
+const TASK_ID_PATTERN = /^[A-Za-z0-9_-]{1,120}$/;
+
+/**
+ * Aufgabe aus dem Pfad auflösen. Antwortet mit `null`, wenn die Kennung heute keine
+ * Aufgabe dieses Betriebs trägt - der Aufrufer macht daraus einen 404.
+ *
+ * WICHTIG: gesucht wird in den Aufgaben DES GEPRÜFTEN BETRIEBS. Eine Kennung aus
+ * einem fremden Briefing findet hier nichts, selbst wenn sie stimmt. Damit ist auch
+ * die Existenz fremder Aufgaben nicht am Antwortverhalten ablesbar.
+ */
+async function resolveTask(venueId: string, taskId: string, now: Date) {
+  const tasks = await computeTasks(venueId, now);
+  return tasks.find((t) => t.id === taskId) ?? null;
+}
+
+/**
+ * Den Insights-Cache dieses Betriebs verwerfen.
+ *
+ * Ohne das bliebe die Freigabe bis zu 15 Minuten unsichtbar: `GET /briefing/today`
+ * liefert innerhalb von `CACHE_TTL_MS` die gespeicherte Antwort aus - mit der
+ * gerade freigegebenen Aufgabe darin. Der Betrieb drückt den grünen Knopf, kehrt
+ * zum Startbildschirm zurück und sieht dieselbe Karte wieder. `deleteMany` statt
+ * `delete`, damit ein fehlender Cache kein Fehler ist.
+ */
+async function invalidateBriefingCache(venueId: string): Promise<void> {
+  await prisma.insightsCache.deleteMany({ where: { businessId: venueId } });
+}
+
+/** Aufgabe + Entscheidung → die Form, die `@maitr/core/types#DailyTask` verspricht. */
+function withDecision(task: DailyTask, decision: TaskDecisionRow): DailyTask {
+  return {
+    ...task,
+    draft: decision.draft ?? task.draft,
+    state: toApiState(decision.state),
+    decidedAt: decision.decidedAt?.toISOString(),
+  };
+}
+
+/**
+ * Aufgabe freigeben - die Handlung, um die das Produkt gebaut ist.
+ *
+ * Gespeichert wird die ENTSCHEIDUNG, nicht die Aufgabe (Begründung im Modell in
+ * prisma/schema.prisma und in briefing.ts). Der Upsert auf `(businessId, taskId)`
+ * macht den Aufruf idempotent: Zweimal Freigeben ist kein Fehler und erzeugt keine
+ * zweite Zeile - was zählt, ist der Zustand danach.
+ */
+briefingRouter.post(
+  "/tasks/:taskId/approve",
+  taskVenueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const taskId = String(req.params.taskId ?? "");
+    if (!TASK_ID_PATTERN.test(taskId)) return res.status(400).json({ error: "Ungültige Aufgabenkennung" });
+
+    const now = new Date();
+    const task = await resolveTask(venueId, taskId, now);
+    if (!task) return res.status(404).json({ error: "Aufgabe nicht gefunden" });
+
+    // Wiedervorlage IMMER setzen, solange es keinen Veröffentlichungsweg gibt -
+    // ausführlich begründet an REOPEN_AFTER_MS in briefing.ts.
+    const reopenAt = new Date(now.getTime() + REOPEN_AFTER_MS);
+    const entschieden = {
+      state: "APPROVED" as const,
+      decidedAt: now,
+      decidedByUserId: req.userId!,
+      reopenAt,
+    };
+    const decision: TaskDecisionRow = await prisma.taskDecision.upsert({
+      where: { businessId_taskId: { businessId: venueId, taskId } },
+      create: { businessId: venueId, taskId, ...entschieden },
+      update: entschieden,
+    });
+
+    await invalidateBriefingCache(venueId);
+    return res.json(withDecision(task, decision));
+  }),
+);
+
+const draftSchema = z.object({ draft: z.string().min(1).max(4000) });
+
+/**
+ * Entwurf vor der Freigabe anpassen.
+ *
+ * Der Zustand bleibt dabei bewusst UNANGETASTET: Einen Text zu bearbeiten ist keine
+ * Freigabe. Die Aufgabe bleibt offen und erscheint im nächsten Briefing weiter -
+ * dann aber mit dem bearbeiteten Entwurf statt dem Vorschlag (`applyDecisions`).
+ */
+briefingRouter.patch(
+  "/tasks/:taskId",
+  taskVenueGuard,
+  validateBody(draftSchema),
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const taskId = String(req.params.taskId ?? "");
+    if (!TASK_ID_PATTERN.test(taskId)) return res.status(400).json({ error: "Ungültige Aufgabenkennung" });
+
+    const { draft } = req.body as z.infer<typeof draftSchema>;
+    const now = new Date();
+    const task = await resolveTask(venueId, taskId, now);
+    if (!task) return res.status(404).json({ error: "Aufgabe nicht gefunden" });
+
+    const decision: TaskDecisionRow = await prisma.taskDecision.upsert({
+      where: { businessId_taskId: { businessId: venueId, taskId } },
+      create: { businessId: venueId, taskId, draft },
+      update: { draft },
+    });
+
+    await invalidateBriefingCache(venueId);
+    return res.json(withDecision(task, decision));
   }),
 );
 

@@ -38,6 +38,17 @@ export interface DailyTask {
   secondaryAction?: { label: string; endpoint?: string };
   /** 1-5 Sterne, nur bei `kind: "review"`. */
   rating?: number;
+  /**
+   * Zustand der Entscheidung über diese Aufgabe (`TaskDecision` serverseitig).
+   *
+   * Im Tagesbriefing steht hier immer "open" - erledigte Aufgaben werden gar nicht
+   * erst ausgeliefert. "approved"/"dismissed" liefert nur die Antwort von
+   * `briefing.approveTask`, damit die Karte den Erfolg zeigen kann, bevor das
+   * nächste Briefing geladen ist. Optional, weil ältere Server das Feld nicht kennen.
+   */
+  state?: "open" | "approved" | "dismissed";
+  /** Zeitpunkt der Freigabe/Verwerfung; fehlt, solange die Aufgabe offen ist. */
+  decidedAt?: Iso8601;
 }
 
 export interface PresenceStats {
