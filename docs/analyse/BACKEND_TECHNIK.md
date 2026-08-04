@@ -20,12 +20,12 @@ Kein `npm run build`, kein voller Testlauf, keine Änderung am Quellcode.
 | Sache | Was | Beleg |
 |---|---|---|
 | Laufzeit | Node ≥ 22.12 (`engines`), CI pinnt 22.12.0 | `package.json:5-8`, `.github/workflows/ci.yml:19-20` |
-| Framework | Express **4.22.1** | `package.json:38` |
+| Framework | Express **4.22.1** | `package.json:43` |
 | Datenbank | PostgreSQL auf Neon | `prisma/schema.prisma:6-9`, `server/db/prisma.ts:16-20` |
-| ORM | Prisma **5.22.0** (Client + CLI) | `package.json:34`, `package.json:127` |
-| Paketmanager | pnpm 10.14.0 | `package.json:130` |
-| Validierung | Zod 3.25 | `package.json:64` |
-| Sprache | TypeScript 5.9, `strict: false` | `package.json:141`, `tsconfig.json:20-25` |
+| ORM | Prisma **5.22.0** (Client + CLI) | `package.json:38`, `package.json:117` |
+| Paketmanager | pnpm 10.14.0 | `package.json:135` |
+| Validierung | Zod 3.25 | `package.json:59` |
+| Sprache | TypeScript 5.9, `strict: false` | `package.json:130`, `tsconfig.json:20-25` |
 
 Aktuelle Fassungen auf npm zum Messzeitpunkt: `prisma` 7.9.1, `@prisma/client` 7.9.1,
 `express` 5.2.1 (`npm view`). Wir liegen bei Prisma zwei Hauptversionen, bei
@@ -56,7 +56,7 @@ Zwei Ziele, ein Repository:
 - **Railway** hält die API. Netlify leitet `/api/*` per Rewrite mit Status 200 an
   `https://builder-quantum-landing-production.up.railway.app/api/:splat`
   weiter (`netlify.toml:74-79`). Gestartet wird dort `node dist/server/node-build.mjs`
-  (`package.json:22`).
+  (`package.json:27`).
 
 Im Repository liegt **keine** Railway-Konfiguration (kein `railway.json`, kein
 `nixpacks.toml`, kein `Dockerfile`, kein `Procfile`). Die Bau- und Startbefehle
@@ -83,7 +83,7 @@ größte Einzelquelle im Backend.
 | **Supabase Storage** | Bild-Uploads | Nackte REST-API über `fetch`, bewusst **ohne** SDK (`server/services/supabaseStorage.ts:1-12`) | Mittel. Fehlt die Konfiguration, antwortet `/api/media/upload` mit 503 (`server/node-build.ts:49-56`), der Rest läuft. |
 | **n8n** | Analyse-Flow für den Konfigurator | Dünner Proxy `server/routes/n8nProxy.ts:3-43`, registriert mit `strictLimiter` in `server/index.ts:107` | Mittel. Nur eine Warnung beim Start (`server/node-build.ts:41-45`). |
 | **Gemini** | OCR der Speisekarte, erster Anbieter | `server/services/ocr/gemini.ts`, Kette in `server/services/ocr/index.ts:23-46` | Mittel, aber abgesichert: die Kette schaltet weiter. |
-| **Anthropic** | OCR, zweiter Anbieter | `server/services/ocr/anthropic.ts`, `@anthropic-ai/sdk` (`package.json:24`) | Gering. Rückfallebene. |
+| **Anthropic** | OCR, zweiter Anbieter | `server/services/ocr/anthropic.ts`, `@anthropic-ai/sdk` (`package.json:33`) | Gering. Rückfallebene. |
 | **Resend** | E-Mail (Reservierungsbestätigung) | `server/utils/email.ts` | Gering. |
 | **Netlify API** | Wildcard-Alias `*.maitr.de` einmalig eintragen | `server/services/NetlifyPublishService.ts:33-36`, optional | Gering. |
 | **Google / Meta** | Präsenzkanäle (Bewertungen, Reichweite) | `packages/core/src/integrations/{google,meta}.ts`, Server-Anbindung `server/maitr/sync.ts:10-11`, OAuth `server/maitr/routes.ts:11` | Noch keine. Ohne `MAITR_*`-Variablen bleibt der Zweig inaktiv, `maitrEnv()` wird erst beim Zugriff ausgewertet (`server/maitr/env.ts:28-39`). |
@@ -131,7 +131,7 @@ der Rest gehört zum Baukasten.
   und `admin.ts` (563). Prisma-Aufrufe stehen direkt in ihnen — 20 in
   `configurations.ts`, 16 in `creative-studio.ts`, 12 in `insights.ts`.
   `server/routes/insights.ts:57-90` rechnet Kennzahlen unmittelbar im Handler.
-- In `server/services/` (12 Dateien). Nur vier davon werden von Routen
+- In `server/services/` (14 Dateien). Nur vier davon werden von Routen
   importiert: `schemaGenerator` (`server/routes/schema.ts:7`), `TemplateEngine`
   (`server/routes/templates.ts:19`), `menuExtraction` und `menuJobs`
   (`server/routes/menu.ts:34-39`). Der Rest wird über andere Services oder gar
@@ -255,7 +255,7 @@ Fehler-Middleware weiter; das ist eine Neuerung von Express 5
 „Request middleware and handlers that return rejected promises are now handled by
 forwarding the rejected value as an `Error` to the error handling middleware").
 
-Wir laufen auf Express 4.22.1 (`package.json:38`), und in `server/maitr/routes.ts`
+Wir laufen auf Express 4.22.1 (`package.json:43`), und in `server/maitr/routes.ts`
 gibt es genau **einen** `try`-Block (Zeile 175, im OAuth-Callback). Sechs
 async-Handler haben keinen: Zeilen 25, 45, 61, 83, 115, 147. Jeder davon
 `await`et Prisma.
@@ -355,7 +355,7 @@ dass Schema und Datenbank übereinstimmen, ist ein Commit-Text, kein Zustand in
 der Datenbank. Bei der nächsten Änderung, die nicht rein additiv ist, gibt es
 weder eine Reihenfolge noch eine Prüfung.
 
-Weder CI noch Build noch `postinstall` (`package.json:20`, nur `prisma generate`)
+Weder CI noch Build noch `postinstall` (`package.json:22`, nur `prisma generate`)
 wenden Migrationen an. Das ist konsequent, macht aber sichtbar, dass der
 Datenbankstand ausschließlich von Hand geführt wird.
 
@@ -453,7 +453,7 @@ Railway. Für kurze JSON-Antworten ist das unerheblich, für alles Längere nich
   Der Kommentar im Code (`server/index.ts:34`) hält den Fall für erledigt — er
   ist es nicht.
 - **Clerk-SDK außerhalb des Supports.** Wir nutzen `@clerk/clerk-sdk-node`
-  (`server/utils/clerk.ts:1`, `package.json:26`). Beim Import gibt das Paket
+  (`server/utils/clerk.ts:1`, `package.json:35`). Beim Import gibt das Paket
   selbst aus, es sei in einer Kündigungsfrist. Clerk nennt als Nachfolger
   `@clerk/express` und als Ende des Supports den 8. Januar 2025
   ([clerk.com Changelog](https://clerk.com/changelog/2024-10-08-express-sdk)).
@@ -664,7 +664,7 @@ läuft grün (8 Tests). Der Test prüft die Taktung, die Überhol-Sperre und das
 
 - **Die Express-Typen beschreiben eine andere Hauptversion als die installierte.**
   `@types/express` ist **5.0.6**, `express` ist **4.22.1** (beide aus
-  `node_modules` gelesen; `package.json:83` bzw. `package.json:38`). Die
+  `node_modules` gelesen; `package.json:96` bzw. `package.json:43`). Die
   Typprüfung validiert damit gegen eine API, die zur Laufzeit nicht läuft. Das
   ist mit ein Grund, warum der Typecheck-Job überhaupt nur informativ sein kann,
   und es verdeckt genau den Unterschied, um den es in 2.2.1 geht: In der
