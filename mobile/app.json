@@ -43,6 +43,16 @@
           "imageWidth": 160
         }
       ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/BricolageGrotesque-Display.ttf",
+            "./assets/fonts/BricolageGrotesque-Text.ttf",
+            "./assets/fonts/FamiljenGrotesk-Italic.ttf"
+          ]
+        }
+      ],
       "./plugins/withSpacePathFix",
       "./plugins/withLocalSigningTeam"
     ],

@@ -3,24 +3,27 @@ import { Platform, type TextStyle } from "react-native";
 /**
  * Typografie aus dem Design-System.
  *
- * Das Design sieht zwei Schnitte vor: einen Display-Schnitt für Überschriften und Labels,
- * einen Text-Schnitt für Fließtext. Derzeit ist keine Markenschrift hinterlegt - die
- * ursprüngliche (PP Frama) durfte aus Lizenzgründen nicht im öffentlichen Repo bleiben,
- * die Begründung und der Weg zurück stehen im Kopf von `fonts.ts`. Alle Größen,
- * Zeilenhöhen und Laufweiten unten bleiben davon unberührt und gelten weiter.
+ * Markenschrift (Hybrid): Bricolage Grotesque (SIL OFL) mit echten optischen Größen für
+ * alle AUFRECHTEN Rollen - Überschriften „Display" (opsz 36), Fließtext „Text" (opsz 14).
+ * Bricolage hat keine eigene Kursive, daher nutzen die KURSIVEN Rollen Familjen Grotesk
+ * Italic (echte Kursive), damit die Signatur-Schrägstellung („Café Goldstück", Zitate)
+ * erhalten bleibt. Fehlen die Dateien oder ist die Markenschrift abgeschaltet, fällt alles
+ * auf die Systemschrift zurück - Größen, Zeilenhöhen und Laufweiten unten gelten unverändert
+ * weiter. (Komplett zurück zu Familjen: alle vier Namen unten auf
+ * `FamiljenGrotesk-Regular`/`-Italic` setzen und den Schnitt in `fonts.ts` registrieren.)
  */
 
 /**
  * Namen der Markenschnitte, wie sie in `fonts.ts` unter `fontAssets` registriert sind.
- * Absichtlich leer, solange es keine Markenschrift gibt: `resolveFont` liefert dann die
- * Systemschrift. Ein Name, zu dem keine geladene Datei gehört, würde von React Native
- * still ignoriert oder als Warnung protokolliert - dieser stumme Fehlerfall entfällt so.
+ * Die Zeichenketten müssen dort zeichengleich als Schlüssel auftauchen - sonst zeigt
+ * `fontFamily` auf eine Schrift, die nie geladen wurde, und React Native ignoriert das
+ * still. `resolveFont` fängt den Fall zusätzlich ab.
  */
 export const fontFamily = {
-  display: "",
-  displayItalic: "",
-  text: "",
-  textItalic: "",
+  display: "BricolageGrotesque-Display",
+  displayItalic: "FamiljenGrotesk-Italic",
+  text: "BricolageGrotesque-Text",
+  textItalic: "FamiljenGrotesk-Italic",
 } as const;
 
 const systemFallback = Platform.select({
@@ -33,9 +36,12 @@ const systemFallback = Platform.select({
  * Löst einen Font-Namen auf. Ohne geladene Dateien liefert sie die Systemschrift,
  * damit `fontFamily` nie auf eine fehlende Ressource zeigt.
  *
- * Der leere Name wird mit abgefangen, nicht nur `loaded`: solange keine Markenschrift
- * hinterlegt ist, sind die Namen in `fontFamily` leer, und ein leerer `fontFamily`-Wert
- * ist für React Native kein gültiger Schriftname.
+ * Der leere Name wird bewusst mit abgefangen, nicht nur `loaded`: ein leerer
+ * `fontFamily`-Wert ist für React Native kein gültiger Schriftname. Aktuell sind alle vier
+ * Namen gesetzt, aber der Zweig bleibt als Sicherheitsgurt stehen - müsste eine Schrift
+ * kurzfristig wieder entfernt werden (wie zuletzt bei PP Frama aus Lizenzgründen), genügt
+ * es, den Namen zu leeren; die App rendert dann in der Systemschrift weiter statt auf eine
+ * nicht vorhandene Schrift zu zeigen.
  */
 export function resolveFont(name: string, loaded: boolean): string {
   return loaded && name ? name : systemFallback;

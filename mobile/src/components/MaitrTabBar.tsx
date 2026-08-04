@@ -4,18 +4,22 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "../theme";
-import { AccountIcon, GrowthIcon, PostIcon, StarIcon, TargetIcon, type IconProps } from "./icons";
+import { AccountIcon, GrowthIcon, PostIcon, ReviewIcon, TargetIcon, type IconProps } from "./icons";
 import { Glass } from "./ui/Glass";
 import { Text } from "./ui/Text";
 
 /**
- * Die fünf Bereiche der Leiste. Der Stern steht projektweit für Bewertungen
- * (Posteingang und Journey nutzen ihn bereits) - deshalb hier derselbe, statt eines
- * zweiten Symbols für dieselbe Sache.
+ * Die fünf Bereiche der Leiste.
+ *
+ * Bewertungen trägt dasselbe Symbol wie die Bewertungs-Kachel auf der Startseite
+ * (StatRow nutzt dort ReviewIcon). Vorher stand hier der Stern - beide Wege führen
+ * in denselben Bereich, zeigten aber unterschiedliche Symbole. Der Stern bleibt für
+ * die Sterne EINER Bewertung reserviert (siehe Stars in DataDisplay), das Symbol
+ * für den BEREICH ist ReviewIcon.
  */
 const TAB_ICONS: Record<string, (props: IconProps) => ReactElement> = {
   start: TargetIcon,
-  bewertungen: StarIcon,
+  bewertungen: ReviewIcon,
   beitraege: PostIcon,
   wachstum: GrowthIcon,
   konto: AccountIcon,
@@ -104,9 +108,10 @@ export function MaitrTabBar({ state, descriptors, navigation }: BottomTabBarProp
               />
             ) : null}
 
-            {/* strokeWidth explizit: die vier Bereichs-Icons haben 1.4 als Vorgabe,
-                StarIcon (auch anderswo verwendet) 1.5 - ohne diese Zeile stünde der
-                Stern in der Leiste sichtbar dicker als seine Nachbarn. */}
+            {/* strokeWidth explizit für ALLE fünf: Die Icons tragen unterschiedliche
+                Vorgaben, weil sie auch anderswo in anderen Größen auftreten. Ohne
+                diese Zeile stünde eines sichtbar dicker als seine Nachbarn - in der
+                Leiste zählt die einheitliche Strichstärke, nicht die des Einzel-Icons. */}
             <Icon size={22} color={color} strokeWidth={1.4} />
             {/* Einzeilig erzwingen: „Bewertungen" ist mit elf Zeichen das längste
                 Label der Leiste, und `Text` skaliert mit der OS-Textgröße mit. Ohne
