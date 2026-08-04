@@ -11,7 +11,7 @@ import { z } from "zod";
 import { connectors, GOOGLE_OAUTH, META_OAUTH } from "@maitr/core/integrations";
 import type { FetchLike, OAuthConfig, ProviderId } from "@maitr/core/integrations";
 import { prisma } from "../db/prisma";
-import { requireVenueAccess, resolveVenueId, validateBody } from "./middleware";
+import { requireVenueAccess, validateBody } from "./middleware";
 import { computeBriefing } from "./briefing";
 import { createState, encryptToken, verifyState } from "./security";
 import { maitrEnv } from "./env";
@@ -59,7 +59,7 @@ publicRouter.get("/venues/:slug/public", async (req, res) => {
 export const reservationsRouter = Router();
 
 reservationsRouter.get("/day", requireVenueAccess, async (req, res) => {
-  const venueId = resolveVenueId(req)!;
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
   const date = String(req.query.date ?? "");
   const start = new Date(date);
   if (Number.isNaN(start.getTime())) return res.status(400).json({ error: "Ungültiges Datum" });
@@ -81,7 +81,17 @@ const createReservationSchema = z.object({
 });
 
 reservationsRouter.post("/", requireVenueAccess, validateBody(createReservationSchema), async (req, res) => {
-  const { venueId, guestName, partySize, start, phone } = req.body as z.infer<typeof createReservationSchema>;
+  const { guestName, partySize, start, phone } = req.body as z.infer<typeof createReservationSchema>;
+
+  // AUSSCHLIESSLICH die von requireVenueAccess geprüfte Kennung verwenden, niemals
+  // die aus dem Rumpf. Genau daran lag die Lücke: Die Middleware prüfte die
+  // Mitgliedschaft für die Query-Kennung, geschrieben wurde die Body-Kennung — ein
+  // Mitglied von Betrieb A konnte so in den fremden Betrieb B schreiben. Seit
+  // resolveVenue widersprüchliche Quellen mit 400 abweist, kann das nicht mehr
+  // auseinanderfallen; der Zugriff hier auf req.venueId hält es auch dann dicht,
+  // wenn jemand die Auflösung später wieder lockert.
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
+
   const reservation = await prisma.reservation.create({
     data: {
       businessId: venueId,
@@ -103,7 +113,7 @@ export const briefingRouter = Router();
 const CACHE_TTL_MS = 15 * 60_000;
 
 briefingRouter.get("/today", requireVenueAccess, async (req, res) => {
-  const venueId = resolveVenueId(req)!;
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
 
   // Cache wirklich nutzen: frisch → direkt ausliefern, sonst rechnen + schreiben.
   const cache = await prisma.insightsCache.findUnique({ where: { businessId: venueId } });
@@ -135,7 +145,7 @@ function oauthConfig(provider: ProviderId): OAuthConfig {
 }
 
 integrationsRouter.get("/", requireVenueAccess, async (req, res) => {
-  const venueId = resolveVenueId(req)!;
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
   const connections = await prisma.channelConnection.findMany({
     where: { businessId: venueId },
     // Tokens bewusst NICHT ausliefern.
@@ -147,9 +157,9 @@ integrationsRouter.get("/", requireVenueAccess, async (req, res) => {
 integrationsRouter.get("/:provider/connect", requireVenueAccess, (req, res) => {
   const provider = req.params.provider as ProviderId;
   if (provider !== "google" && provider !== "meta") return res.status(400).json({ error: "Unbekannter Anbieter" });
-  const venueId = resolveVenueId(req)!;
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
   const config = oauthConfig(provider);
-  const state = createState(venueId, provider);
+  const state = createState(venueId, provider, req.userId!);
   res.json({ url: connectors[provider].buildAuthorizationUrl(config, state) });
 });
 
@@ -166,6 +176,16 @@ publicRouter.get("/integrations/:provider/callback", async (req, res) => {
     const state = verifyState(stateRaw);
     if (state.provider !== provider) throw new Error("Provider passt nicht zum state");
     if (!code) throw new Error("Kein code");
+
+    // Mitgliedschaft ERNEUT prüfen, nicht nur beim Start des Flows. Zwischen
+    // /connect und dem Rücksprung liegen bis zu zehn Minuten; wer in dieser Zeit
+    // aus dem Betrieb entfernt wurde, darf keine offene Autorisierungs-URL mehr
+    // einlösen. Der Rücksprung selbst trägt keinen App-Token — deshalb steht der
+    // Auslöser im signierten state und wird hier gegen BusinessMember gehalten.
+    const membership = await prisma.businessMember.findUnique({
+      where: { userId_businessId: { userId: state.userId, businessId: state.businessId } },
+    });
+    if (!membership) throw new Error("Auslöser ist nicht (mehr) Mitglied des Betriebs");
 
     const tokens = await exchangeCode(provider, code);
     await prisma.channelConnection.upsert({

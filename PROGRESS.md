@@ -17,16 +17,33 @@ Bleibt offen für dich.
 
 ## Stand der fünf Aufgaben
 
-| # | Aufgabe | Status | Prüfurteil Runde 1 |
+| # | Aufgabe | Status | Weg dorthin |
 |---|---------|--------|------------|
-| 1 | Entscheidungsvorlage Branch | Nachbesserung läuft | ❌ 8 statt 4 PP-Frama-Dateien übersehen |
-| 2 | `/check-landing` bereinigen | ✅ + Nachbesserung | ✅ bestanden, ein Folgemangel |
-| 3 | Backend verdrahten | **fertig** | siehe unten |
-| 4 | Prerender-Build reparieren | ✅ **fertig** | ✅ bestanden |
-| 5a | Schriften (EAS/Lizenz) | Nachbesserung läuft | ❌ Änderung war wirkungslos |
-| 5b | Screenshots-Doku | Nachbesserung läuft | ❌ zwei Falschangaben |
-| 5c | Kontolöschung | Nachbesserung läuft | ❌ Medien wurden nicht gelöscht |
-| — | App: Tische → Bewertungen | läuft | — |
+| 1 | Entscheidungsvorlage Branch | ✅ `docs/BRANCH_ENTSCHEIDUNG.md` | 1 Nachbesserung (8 statt 4 Schriftdateien) |
+| 2 | `/check-landing` bereinigen | ✅ | bestanden, 1 Folgemangel nachgebessert |
+| 3 | Backend verdrahten | ✅ (bis auf Railway-Variablen) | siehe unten |
+| 4 | Prerender-Build | ✅ | direkt bestanden |
+| 5a | Schriften (Lizenz) | ✅ + iOS-Reparatur von Hand | 2× durchgefallen, dann selbst |
+| 5b | Screenshots-Doku | ✅ | 2× durchgefallen, dann selbst |
+| 5c | Kontolöschung | ✅ | 2× durchgefallen, dann selbst |
+| — | App: Tische → Bewertungen | ✅ | direkt bestanden |
+
+Commit `482fe6a`. Build grün, **392 Tests** grün (zu Beginn 352), Typprüfung 122 wie main.
+
+### Was die Gegenproben gefunden haben, das sonst durchgerutscht wäre
+
+- **Die Schriftlöschung zerstörte den iOS-Build.** `project.pbxproj` führte die vier
+  OTF-Dateien als `PBXBuildFile` in der Resources-Phase, `Info.plist` unter `UIAppFonts`.
+  Beide sind versioniert, und EAS führt bei vorhandenem `ios/` kein `prebuild` aus —
+  Xcode wäre mit „Build input file cannot be found" abgebrochen. Von Hand behoben.
+- **`deleteUserMedia` meldete Erfolg, ohne etwas zu prüfen.** Ein HTTP 200 des
+  Speicherdienstes heißt nicht, dass die Objekte weg sind — er antwortet mit der Liste
+  der tatsächlich entfernten. Danach hätte die Route Datenbank und Clerk geleert, womit
+  das Präfix nie wieder adressierbar gewesen wäre. Jetzt wird gezählt **und** am Ende
+  erneut aufgelistet.
+- **Die Screenshot-Anleitung behauptete „kein Backend nötig".** Der Startbildschirm
+  blendet ohne API sichtbar „Beispieldaten · API nicht verbunden" ein — und genau der ist
+  `01-start.png`, das erste Bild im Store-Set.
 
 ## Der schwerwiegendste Fund der Nacht
 

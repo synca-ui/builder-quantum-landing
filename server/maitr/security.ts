@@ -42,6 +42,17 @@ export interface StatePayload {
   provider: string;
   nonce: string;
   exp: number;
+  /**
+   * Wer den Flow gestartet hat.
+   *
+   * Der Rücksprung trägt keinen App-Token — der Provider ruft ihn ohne Anmeldung
+   * auf. Ohne diese Angabe wüsste der Callback nur, FÜR WELCHEN Betrieb er eine
+   * Verbindung anlegt, aber nicht, auf wessen Veranlassung. Mit ihr kann er vor
+   * dem Speichern erneut prüfen, ob diese Person überhaupt (noch) Mitglied des
+   * Betriebs ist — ein zwischenzeitlich entfernter Mitarbeiter kann so keine
+   * offene Autorisierungs-URL mehr einlösen.
+   */
+  userId: string;
 }
 
 function signState(body: string): string {
@@ -66,11 +77,12 @@ function consumeNonce(nonce: string, exp: number): boolean {
   return true;
 }
 
-/** Kurzlebiger, signierter State, der Betrieb + Provider bindet. */
-export function createState(businessId: string, provider: string): string {
+/** Kurzlebiger, signierter State, der Betrieb + Provider + Auslöser bindet. */
+export function createState(businessId: string, provider: string, userId: string): string {
   const payload: StatePayload = {
     businessId,
     provider,
+    userId,
     nonce: randomBytes(16).toString("hex"),
     exp: Date.now() + STATE_TTL_MS,
   };
@@ -95,7 +107,8 @@ export function verifyState(state: string): StatePayload {
     typeof (parsed as StatePayload).businessId !== "string" ||
     typeof (parsed as StatePayload).provider !== "string" ||
     typeof (parsed as StatePayload).nonce !== "string" ||
-    typeof (parsed as StatePayload).exp !== "number"
+    typeof (parsed as StatePayload).exp !== "number" ||
+    typeof (parsed as StatePayload).userId !== "string"
   ) {
     throw new Error("state-Payload ungültig");
   }
