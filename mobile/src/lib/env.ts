@@ -9,11 +9,35 @@
  */
 export const env = {
   /**
-   * Basis-URL der Express-API. Auf dem Simulator zeigt `localhost` auf den Simulator
-   * selbst, nicht auf den Mac - daher im lokalen Betrieb die LAN-IP eintragen.
+   * Basis-URL der Maitr-API.
+   *
+   * Zwei Dinge waren hier vorher falsch, beide belegt:
+   * - Der Pfad ist `/api/maitr`, nicht `/api`. Der Maitr-Router hängt in
+   *   `server/maitr/index.ts` unter diesem Präfix, und `eas.json` setzt für den
+   *   Produktionsbau genau `https://maitr.de/api/maitr`.
+   * - Der Dev-Port ist 8081, nicht 8080. Express läuft im Entwicklungsbetrieb im
+   *   Vite-Server (`vite.config.ts`, `port: 8081`); erst der eigenständige
+   *   Produktionsstart nutzt `PORT` bzw. 3000 (`server/node-build.ts`).
+   *
+   * `localhost` funktioniert nur im iOS-Simulator, der sich den Netzwerk-Stack mit
+   * dem Mac teilt. Im Android-Emulator ist der Mac `10.0.2.2`, auf einem echten
+   * Gerät braucht es die LAN-IP - siehe `.env.example`.
    */
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080/api",
+  // Vorgabe ist die PRODUKTIONS-URL, nicht localhost. Grund, im Simulator
+  // gemessen: Ein localhost-Vorgabewert traf Port 8081 — und dort lauscht Metro,
+  // nicht die API. Metro antwortete mit 200 auf einen unbekannten Pfad, der
+  // Erfolgszweig in useDailyBriefing griff, `briefing.tasks` blieb undefiniert
+  // und der Startbildschirm stürzte mit „Cannot read property 'filter' of
+  // undefined" ab. Ein Vorgabewert, der auf einen fremden Dienst zeigt, ist
+  // schlimmer als gar keiner: Er scheitert nicht, er lügt.
+  //
+  // Für die lokale Entwicklung EXPO_PUBLIC_API_URL setzen (siehe .env.example).
+  apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? "https://maitr.de/api/maitr",
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
   supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+  /**
+   * Clerk-Schlüssel. Ist er leer, startet die App im Demomodus - das ist der
+   * ausdrückliche Rückfall, kein Fehlerfall (siehe `lib/auth.ts`).
+   */
   clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
 } as const;

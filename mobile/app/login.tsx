@@ -8,26 +8,114 @@ import { Eyebrow } from "../src/components/ui/Eyebrow";
 import { PillButton } from "../src/components/ui/PillButton";
 import { Screen } from "../src/components/ui/Screen";
 import { Text } from "../src/components/ui/Text";
+import { hasRealAuth, requireClerk } from "../src/lib/auth";
 import { useStore } from "../src/lib/store";
+import { useToast } from "../src/lib/toast";
 import { useTheme } from "../src/theme";
 
 /**
  * Screen 01 · Login.
  *
- * Demo-Anmeldung: jeder Weg (Google, Apple, E-Mail) meldet denselben Betrieb an und
- * springt zum Start. Die echte Anbindung (Clerk Expo vs. Supabase Auth) ersetzt später
- * nur `signIn()` - Layout und Fluss bleiben.
+ * Zwei Wege, eine Oberfläche:
+ * - Mit `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` läuft der echte Clerk-OAuth-Flow. Das
+ *   Session-Token geht danach als Bearer an die API.
+ * - Ohne Schlüssel bleibt die Demo-Anmeldung. Das ist der gewollte Rückfall: ohne
+ *   Konfiguration muss die App trotzdem starten und bedienbar sein.
+ *
+ * Die Entscheidung fällt einmal und bleibt für die Prozesslaufzeit gleich (der
+ * Schlüssel steht zur Bauzeit fest), deshalb ist die Verzweigung auf zwei Komponenten
+ * hier hook-sicher.
  */
 export default function LoginScreen() {
-  const theme = useTheme();
+  return hasRealAuth() ? <ClerkLogin /> : <DemoLogin />;
+}
+
+/** Ohne Clerk-Schlüssel: jeder Weg meldet den Demobetrieb an, es fließt kein Token. */
+function DemoLogin() {
   const router = useRouter();
   const { signIn } = useStore();
-  const [email, setEmail] = useState("");
 
   const enter = () => {
     signIn();
     router.replace("/start");
   };
+
+  return (
+    <LoginForm
+      onGoogle={enter}
+      onApple={enter}
+      onEmail={enter}
+      footnote="Demomodus · Anmeldung noch nicht verbunden"
+    />
+  );
+}
+
+type SsoStrategy = "oauth_google" | "oauth_apple";
+
+/** Mit Clerk-Schlüssel: echter OAuth-Flow im System-Browser. */
+function ClerkLogin() {
+  const router = useRouter();
+  const toast = useToast();
+  const { signIn } = useStore();
+  // Das Modul liegt garantiert vor - `hasRealAuth()` hat es geladen, sonst stünden
+  // wir in `DemoLogin`.
+  const { startSSOFlow } = requireClerk().useSSO();
+  const [busy, setBusy] = useState<SsoStrategy | null>(null);
+
+  const start = async (strategy: SsoStrategy) => {
+    if (busy) return;
+    setBusy(strategy);
+    try {
+      // Ohne `redirectUrl` nimmt Clerk selbst `makeRedirectUri({ path: "sso-callback" })`
+      // und trifft damit das App-Schema (`maitr://`) aus app.json.
+      const { createdSessionId, setActive } = await startSSOFlow({ strategy });
+
+      if (!createdSessionId) {
+        // Kein Fehler, sondern der Normalfall bei Abbruch im Browser - oder Clerk
+        // verlangt einen weiteren Schritt (MFA), den dieser Screen noch nicht führt.
+        toast.show("Anmeldung abgebrochen.");
+        return;
+      }
+
+      await setActive?.({ session: createdSessionId });
+      // Der lokale Zustand steuert die Navigation der App; Clerk hält daneben die
+      // Sitzung, aus der `mobileAuthAdapter.getToken()` das Bearer-Token zieht.
+      signIn();
+      router.replace("/start");
+    } catch (error) {
+      console.warn("[login] SSO fehlgeschlagen", error);
+      toast.show("Anmeldung fehlgeschlagen. Bitte erneut versuchen.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <LoginForm
+      onGoogle={() => void start("oauth_google")}
+      onApple={() => void start("oauth_apple")}
+      // Ein E-Mail-Weg ist noch nicht gebaut. Lieber ehrlich vertrösten, als
+      // jemanden scheinbar anzumelden, dessen Aufrufe die API dann mit 401 abweist.
+      onEmail={() => toast.show("E-Mail-Anmeldung folgt - bitte Google oder Apple nutzen.")}
+      busy={busy !== null}
+      footnote="Geschützt durch Clerk · OAuth & MFA"
+    />
+  );
+}
+
+interface LoginFormProps {
+  onGoogle: () => void;
+  onApple: () => void;
+  onEmail: () => void;
+  busy?: boolean;
+  footnote: string;
+}
+
+/** Reine Darstellung - identisch in beiden Betriebsarten, damit das Layout nicht driftet. */
+function LoginForm({ onGoogle, onApple, onEmail, busy = false, footnote }: LoginFormProps) {
+  const theme = useTheme();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
 
   return (
     <Screen surface="deep" scroll={false} contentStyle={styles.container}>
@@ -45,12 +133,18 @@ export default function LoginScreen() {
 
       <Card emphasis="strong" padding={0} style={styles.card}>
         <PillButton
-          label="Weiter mit Google"
+          label={busy ? "Anmeldung läuft …" : "Weiter mit Google"}
           variant="outline"
           icon={<GoogleMark size={16} />}
-          onPress={enter}
+          disabled={busy}
+          onPress={onGoogle}
         />
-        <PillButton label="Weiter mit Apple" variant="outline" onPress={enter} />
+        <PillButton
+          label="Weiter mit Apple"
+          variant="outline"
+          disabled={busy}
+          onPress={onApple}
+        />
 
         <View style={styles.divider}>
           <View style={[styles.rule, { backgroundColor: theme.colors.border }]} />
@@ -69,7 +163,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
           autoCorrect={false}
           accessibilityLabel="E-Mail-Adresse"
-          onSubmitEditing={enter}
+          onSubmitEditing={onEmail}
           style={[
             theme.text.body,
             styles.field,
@@ -77,7 +171,7 @@ export default function LoginScreen() {
           ]}
         />
 
-        <PillButton label="Weiter" onPress={enter} />
+        <PillButton label="Weiter" disabled={busy} onPress={onEmail} />
 
         <Text variant="bodySm" tone="secondary" style={styles.signupLine}>
           Neu hier?{" "}
@@ -92,7 +186,7 @@ export default function LoginScreen() {
         </Text>
       </Card>
 
-      <Eyebrow style={styles.footnote}>Geschützt durch Clerk · Magic Link & MFA</Eyebrow>
+      <Eyebrow style={styles.footnote}>{footnote}</Eyebrow>
     </Screen>
   );
 }

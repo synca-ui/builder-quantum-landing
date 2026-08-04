@@ -63,8 +63,21 @@ export async function request<T>(
 
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
 
+  // Der Token-Lieferant kommt von der Plattform: im Web aus Clerk `getToken()`, mobil
+  // aus `mobile/src/lib/auth.ts` (Clerk-Sitzung bzw. lokaler Demo-Speicher). Öffentliche
+  // Endpunkte setzen `anonymous: true` und bleiben deshalb ohne Header - das gilt
+  // unverändert auch dann, wenn ein Lieferant konfiguriert ist.
   if (!options.anonymous && cfg.getAuthToken) {
-    const token = await cfg.getAuthToken();
+    let token: string | null = null;
+    try {
+      token = await cfg.getAuthToken();
+    } catch (error) {
+      // Ein fehlgeschlagener Token-Abruf (etwa: Clerk kommt beim Auffrischen nicht ans
+      // Netz) darf den Aufruf nicht mit einem fremden Fehler abbrechen. Ohne Header
+      // antwortet die API mit einem klaren 401 - das ist die verständlichere Spur als
+      // ein Stacktrace aus dem Auth-SDK mitten im Screen.
+      console.warn(`[core] Auth-Token nicht verfügbar für ${endpoint}`, error);
+    }
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 

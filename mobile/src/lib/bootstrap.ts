@@ -11,13 +11,22 @@ import { createMobileSupabaseClient, hasSupabaseConfig } from "./supabase";
  *
  * Genau hier liegt die Grenze zwischen geteilter Logik und Plattform. Der Core kennt
  * weder AsyncStorage noch Expo - er bekommt beides von außen gereicht.
+ *
+ * Die Token-Kette in einem Satz: Clerk hält die Sitzung, `lib/auth.ts` holt daraus das
+ * Token (oder `null` im Demomodus), `configureCore` reicht diese Funktion als
+ * `getAuthToken` in den Core, und `packages/core/src/http.ts` hängt das Ergebnis vor
+ * jedem `fetch` als `Authorization: Bearer …` an - außer bei `anonymous: true`.
  */
 export function bootstrapCore(): void {
   if (isCoreConfigured()) return;
 
   configureCore({
     apiBaseUrl: env.apiBaseUrl,
-    getAuthToken: mobileAuthAdapter.getToken,
+    // Der Token-Lieferant der App. Er entscheidet bei jedem Aufruf neu, ob ein
+    // Clerk-Token vorliegt - wichtig, weil `bootstrapCore()` schon beim Import des
+    // Root-Layouts läuft, also lange bevor sich jemand angemeldet hat. Als Pfeil
+    // gebunden, damit die Methode nicht vom Aufrufkontext abhängt.
+    getAuthToken: () => mobileAuthAdapter.getToken(),
     storage: AsyncStorage,
     locale: "de-DE",
     // Ohne konfiguriertes Projekt gar nicht erst anbieten - dann wirft `getSupabase()`

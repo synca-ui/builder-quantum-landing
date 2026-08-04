@@ -48,6 +48,16 @@ export function useDailyBriefing(venueId: string): BriefingState {
       .today(venueId, controller.signal)
       .then((data) => {
         if (!mounted.current) return;
+        // Antwort auf Form prüfen, nicht nur auf Erfolg. Ein HTTP 200 sagt nichts
+        // darüber, dass wirklich ein Briefing kam: Zeigt die Basis-URL versehentlich
+        // auf einen fremden Dienst, antwortet der ebenfalls mit 200 und die Seite
+        // stürzte beim ersten `briefing.tasks.filter(...)` ab. Genau so ist es im
+        // Simulator passiert, als der Vorgabewert auf Metros Port zeigte.
+        // Der `catch`-Zweig unten konnte das nie fangen — er greift nur bei
+        // geworfenen Fehlern, nicht bei einer erfolgreichen falschen Antwort.
+        if (!data || !Array.isArray((data as { tasks?: unknown }).tasks)) {
+          throw new Error("Antwort ist kein Briefing (tasks fehlt)");
+        }
         setBriefing(data);
         setSource("api");
         setError(null);

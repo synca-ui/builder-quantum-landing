@@ -38,7 +38,9 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#F4F7F4",
-          "dark": { "backgroundColor": "#141518" },
+          "dark": {
+            "backgroundColor": "#141518"
+          },
           "image": "./assets/splash-icon.png",
           "imageWidth": 160
         }
@@ -54,7 +56,9 @@
         }
       ],
       "./plugins/withSpacePathFix",
-      "./plugins/withLocalSigningTeam"
+      "./plugins/withLocalSigningTeam",
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

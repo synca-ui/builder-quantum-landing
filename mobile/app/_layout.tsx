@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
@@ -9,7 +9,9 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { OpeningAnimation } from "../src/components/OpeningAnimation";
 import { AppearanceProvider, useAppearance } from "../src/lib/appearance";
+import { getClerkTokenCache, hasRealAuth, requireClerk } from "../src/lib/auth";
 import { bootstrapCore } from "../src/lib/bootstrap";
+import { env } from "../src/lib/env";
 import { AppStateProvider, useStore } from "../src/lib/store";
 import { ToastProvider } from "../src/lib/toast";
 import { BRAND_FONT_ENABLED, ThemeProvider, fontAssets, useTheme } from "../src/theme";
@@ -37,14 +39,40 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <AppStateProvider>
-          <AppearanceProvider>
-            <ThemedApp fontsLoaded={brandFontActive} />
-          </AppearanceProvider>
-        </AppStateProvider>
-      </SafeAreaProvider>
+      <AuthProvider>
+        <SafeAreaProvider>
+          <AppStateProvider>
+            <AppearanceProvider>
+              <ThemedApp fontsLoaded={brandFontActive} />
+            </AppearanceProvider>
+          </AppStateProvider>
+        </SafeAreaProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
+  );
+}
+
+/**
+ * Hängt Clerk nur dann in den Baum, wenn ein Schlüssel konfiguriert ist.
+ *
+ * Ohne Schlüssel bleibt der Baum unverändert und die App läuft im Demomodus weiter -
+ * der Umschalter ist ein Rückfall, kein Fehlerfall. Der Zugriff läuft bewusst über
+ * `lib/auth.ts`: dort wird das Clerk-Paket erst beim ersten Bedarf geladen, damit
+ * seine nativen Abhängigkeiten im Demobetrieb gar nicht erst angefasst werden.
+ *
+ * Kein Hook in dieser Komponente, deshalb ist der frühe Rücksprung unbedenklich -
+ * und `hasRealAuth()` liefert ohnehin über die gesamte Laufzeit dieselbe Antwort.
+ */
+function AuthProvider({ children }: { children: ReactNode }) {
+  if (!hasRealAuth()) return <>{children}</>;
+
+  const { ClerkProvider } = requireClerk();
+  return (
+    // Der Tokenspeicher legt die Sitzung in expo-secure-store ab, sonst wäre man
+    // nach jedem Neustart der App abgemeldet.
+    <ClerkProvider publishableKey={env.clerkPublishableKey} tokenCache={getClerkTokenCache()}>
+      {children}
+    </ClerkProvider>
   );
 }
 
