@@ -16,62 +16,86 @@ import { requireVenueAccess, validateBody } from "./middleware";
 import { computeBriefing } from "./briefing";
 import { createState, encryptToken, verifyState } from "./security";
 import { maitrEnv } from "./env";
+import { asyncHandler } from "./asyncHandler";
 
 const DAY_MS = 86_400_000;
+
+/**
+ * `requireVenueAccess` ist selbst eine async-Middleware mit einer Prisma-Abfrage
+ * und hat damit exakt dasselbe Problem wie die Handler: Faellt die Datenbank aus,
+ * lehnt ihr Promise ab und Express 4 bekommt davon nichts mit. Sie liegt in
+ * `middleware.ts` und wird auch anderswo verwendet — deshalb wird sie hier am
+ * Verwendungsort umschlossen statt dort umgeschrieben. Alle Routen unten binden
+ * `venueGuard` ein, nie `requireVenueAccess` direkt.
+ */
+const venueGuard = asyncHandler(requireVenueAccess);
 
 /* ── Betriebe ────────────────────────────────────────────────────────────── */
 
 export const venuesRouter = Router();
 
-venuesRouter.get("/", async (req, res) => {
-  const memberships = await prisma.businessMember.findMany({
-    where: { userId: req.userId! },
-    include: { business: true },
-  });
-  res.json(
-    memberships.map((m) => ({
-      id: m.business.id,
-      name: m.business.name,
-      tagline: m.business.tagline ?? undefined,
-      timezone: m.business.timezone,
-      tags: m.business.tags,
-    })),
-  );
-});
+venuesRouter.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const memberships = await prisma.businessMember.findMany({
+      where: { userId: req.userId! },
+      include: { business: true },
+    });
+    res.json(
+      memberships.map((m) => ({
+        id: m.business.id,
+        name: m.business.name,
+        tagline: m.business.tagline ?? undefined,
+        timezone: m.business.timezone,
+        tags: m.business.tags,
+      })),
+    );
+  }),
+);
 
 /* ── Öffentliches Gastprofil (ohne Auth) ─────────────────────────────────── */
 
 export const publicRouter = Router();
 
-publicRouter.get("/venues/:slug/public", async (req, res) => {
-  const business = await prisma.business.findUnique({ where: { slug: req.params.slug } });
-  if (!business) return res.status(404).json({ error: "Nicht gefunden" });
-  return res.json({
-    id: business.id,
-    name: business.name,
-    tagline: business.tagline ?? undefined,
-    timezone: business.timezone,
-    tags: business.tags,
-  });
-});
+publicRouter.get(
+  "/venues/:slug/public",
+  asyncHandler(async (req, res) => {
+    // Wie beim DELETE weiter unten: Express typisiert Pfadparameter nicht als
+    // blossen String, deshalb erst festklopfen, bevor der Wert in die Abfrage geht.
+    const slug = String(req.params.slug ?? "");
+    const business = await prisma.business.findUnique({ where: { slug } });
+    if (!business) return res.status(404).json({ error: "Nicht gefunden" });
+    return res.json({
+      id: business.id,
+      name: business.name,
+      tagline: business.tagline ?? undefined,
+      timezone: business.timezone,
+      tags: business.tags,
+    });
+  }),
+);
 
 /* ── Reservierungen ──────────────────────────────────────────────────────── */
 
 export const reservationsRouter = Router();
 
-reservationsRouter.get("/day", requireVenueAccess, async (req, res) => {
-  const venueId = (req as typeof req & { venueId?: string }).venueId!;
-  const date = String(req.query.date ?? "");
-  const start = new Date(date);
-  if (Number.isNaN(start.getTime())) return res.status(400).json({ error: "Ungültiges Datum" });
-  const end = new Date(start.getTime() + DAY_MS);
+reservationsRouter.get(
+  "/day",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const date = String(req.query.date ?? "");
+    const start = new Date(date);
+    if (Number.isNaN(start.getTime())) return res.status(400).json({ error: "Ungültiges Datum" });
+    const end = new Date(start.getTime() + DAY_MS);
 
-  const reservations = await prisma.reservation.findMany({
-    where: { businessId: venueId, reservationTime: { gte: start, lt: end } },
-    orderBy: { reservationTime: "asc" },
-  });
-  res.json({ date, reservations });
-});
+    const reservations = await prisma.reservation.findMany({
+      where: { businessId: venueId, reservationTime: { gte: start, lt: end } },
+      orderBy: { reservationTime: "asc" },
+    });
+    return res.json({ date, reservations });
+  }),
+);
 
 const createReservationSchema = z.object({
   venueId: z.string().min(1),
@@ -81,30 +105,35 @@ const createReservationSchema = z.object({
   phone: z.string().max(40).optional(),
 });
 
-reservationsRouter.post("/", requireVenueAccess, validateBody(createReservationSchema), async (req, res) => {
-  const { guestName, partySize, start, phone } = req.body as z.infer<typeof createReservationSchema>;
+reservationsRouter.post(
+  "/",
+  venueGuard,
+  validateBody(createReservationSchema),
+  asyncHandler(async (req, res) => {
+    const { guestName, partySize, start, phone } = req.body as z.infer<typeof createReservationSchema>;
 
-  // AUSSCHLIESSLICH die von requireVenueAccess geprüfte Kennung verwenden, niemals
-  // die aus dem Rumpf. Genau daran lag die Lücke: Die Middleware prüfte die
-  // Mitgliedschaft für die Query-Kennung, geschrieben wurde die Body-Kennung — ein
-  // Mitglied von Betrieb A konnte so in den fremden Betrieb B schreiben. Seit
-  // resolveVenue widersprüchliche Quellen mit 400 abweist, kann das nicht mehr
-  // auseinanderfallen; der Zugriff hier auf req.venueId hält es auch dann dicht,
-  // wenn jemand die Auflösung später wieder lockert.
-  const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    // AUSSCHLIESSLICH die von requireVenueAccess geprüfte Kennung verwenden, niemals
+    // die aus dem Rumpf. Genau daran lag die Lücke: Die Middleware prüfte die
+    // Mitgliedschaft für die Query-Kennung, geschrieben wurde die Body-Kennung — ein
+    // Mitglied von Betrieb A konnte so in den fremden Betrieb B schreiben. Seit
+    // resolveVenue widersprüchliche Quellen mit 400 abweist, kann das nicht mehr
+    // auseinanderfallen; der Zugriff hier auf req.venueId hält es auch dann dicht,
+    // wenn jemand die Auflösung später wieder lockert.
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
 
-  const reservation = await prisma.reservation.create({
-    data: {
-      businessId: venueId,
-      guestName,
-      guestCount: partySize,
-      guestPhone: phone,
-      reservationTime: new Date(start),
-      source: "maitr",
-    },
-  });
-  res.status(201).json(reservation);
-});
+    const reservation = await prisma.reservation.create({
+      data: {
+        businessId: venueId,
+        guestName,
+        guestCount: partySize,
+        guestPhone: phone,
+        reservationTime: new Date(start),
+        source: "maitr",
+      },
+    });
+    return res.status(201).json(reservation);
+  }),
+);
 
 /**
  * Nur die Felder, die die API-Form braucht. Bewusst strukturell beschrieben statt
@@ -169,41 +198,46 @@ const walkInSchema = z.object({
   guestName: z.string().min(1).max(120).optional(),
 });
 
-reservationsRouter.post("/walk-in", requireVenueAccess, validateBody(walkInSchema), async (req, res) => {
-  const { tableId, partySize, guestName } = req.body as z.infer<typeof walkInSchema>;
+reservationsRouter.post(
+  "/walk-in",
+  venueGuard,
+  validateBody(walkInSchema),
+  asyncHandler(async (req, res) => {
+    const { tableId, partySize, guestName } = req.body as z.infer<typeof walkInSchema>;
 
-  // Wie bei POST / : die geprüfte Kennung, nie die aus dem Rumpf.
-  const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    // Wie bei POST / : die geprüfte Kennung, nie die aus dem Rumpf.
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
 
-  // Der Tisch muss DIESEM Betrieb gehören. Ohne die Prüfung könnte ein Mitglied von
-  // Betrieb A einen Walk-in an einen Tisch von Betrieb B hängen: Die Zeile trüge
-  // zwar businessId A (der Filter oben hält), der Fremdschlüssel zeigte aber in den
-  // Tischplan von B - B bekäme eine Belegung, die er weder angelegt hat noch über
-  // seine eigenen Routen wieder los wird. Der Filter auf businessId macht fremde
-  // Tisch-IDs zugleich ununterscheidbar von nicht existierenden.
-  const table = await prisma.table.findFirst({
-    where: { id: tableId, businessId: venueId },
-    select: { id: true },
-  });
-  if (!table) return res.status(404).json({ error: "Tisch nicht gefunden" });
+    // Der Tisch muss DIESEM Betrieb gehören. Ohne die Prüfung könnte ein Mitglied von
+    // Betrieb A einen Walk-in an einen Tisch von Betrieb B hängen: Die Zeile trüge
+    // zwar businessId A (der Filter oben hält), der Fremdschlüssel zeigte aber in den
+    // Tischplan von B - B bekäme eine Belegung, die er weder angelegt hat noch über
+    // seine eigenen Routen wieder los wird. Der Filter auf businessId macht fremde
+    // Tisch-IDs zugleich ununterscheidbar von nicht existierenden.
+    const table = await prisma.table.findFirst({
+      where: { id: tableId, businessId: venueId },
+      select: { id: true },
+    });
+    if (!table) return res.status(404).json({ error: "Tisch nicht gefunden" });
 
-  const reservation = await prisma.reservation.create({
-    data: {
-      businessId: venueId,
-      tableId: table.id,
-      // Ein Walk-in sitzt bereits: Zeitpunkt ist jetzt, Status ARRIVED (nicht
-      // PENDING - es gibt nichts mehr zu bestätigen).
-      guestName: guestName ?? "Walk-in",
-      guestCount: partySize,
-      reservationTime: new Date(),
-      status: "ARRIVED",
-      // dataset.ts bildet alles ausser "maitr"/"google" auf "walk_in" ab; explizit
-      // gesetzt, damit die Auswertung Walk-ins nicht als Online-Buchung zählt.
-      source: "walk_in",
-    },
-  });
-  return res.status(201).json(toApiReservation(reservation));
-});
+    const reservation = await prisma.reservation.create({
+      data: {
+        businessId: venueId,
+        tableId: table.id,
+        // Ein Walk-in sitzt bereits: Zeitpunkt ist jetzt, Status ARRIVED (nicht
+        // PENDING - es gibt nichts mehr zu bestätigen).
+        guestName: guestName ?? "Walk-in",
+        guestCount: partySize,
+        reservationTime: new Date(),
+        status: "ARRIVED",
+        // dataset.ts bildet alles ausser "maitr"/"google" auf "walk_in" ab; explizit
+        // gesetzt, damit die Auswertung Walk-ins nicht als Online-Buchung zählt.
+        source: "walk_in",
+      },
+    });
+    return res.status(201).json(toApiReservation(reservation));
+  }),
+);
 
 /**
  * Stornierung. Antwortet mit 204 (kein Rumpf), wie der Client-Vertrag es erwartet.
@@ -222,19 +256,23 @@ reservationsRouter.post("/walk-in", requireVenueAccess, validateBody(walkInSchem
  *    gar nicht verlieren. Trifft er nichts, war die ID fremd oder unbekannt -
  *    beides beantwortet 404, damit fremde Reservierungs-IDs nicht bestätigt werden.
  */
-reservationsRouter.delete("/:reservationId", requireVenueAccess, async (req, res) => {
-  const venueId = (req as typeof req & { venueId?: string }).venueId!;
-  // Wie bei `req.query.date` in GET /day: Express typisiert Parameter nicht als
-  // blossen String, deshalb erst festklopfen, bevor der Wert in die Abfrage geht.
-  const reservationId = String(req.params.reservationId ?? "");
+reservationsRouter.delete(
+  "/:reservationId",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    // Wie bei `req.query.date` in GET /day: Express typisiert Parameter nicht als
+    // blossen String, deshalb erst festklopfen, bevor der Wert in die Abfrage geht.
+    const reservationId = String(req.params.reservationId ?? "");
 
-  const { count } = await prisma.reservation.updateMany({
-    where: { id: reservationId, businessId: venueId },
-    data: { status: "CANCELLED" },
-  });
-  if (count === 0) return res.status(404).json({ error: "Reservierung nicht gefunden" });
-  return res.status(204).end();
-});
+    const { count } = await prisma.reservation.updateMany({
+      where: { id: reservationId, businessId: venueId },
+      data: { status: "CANCELLED" },
+    });
+    if (count === 0) return res.status(404).json({ error: "Reservierung nicht gefunden" });
+    return res.status(204).end();
+  }),
+);
 
 /* ── Tagesbriefing (die drei Entscheidungen) ─────────────────────────────── */
 
@@ -264,24 +302,28 @@ export const briefingRouter = Router();
 /** Frische-Fenster des Insights-Caches: darunter wird nicht neu gerechnet. */
 const CACHE_TTL_MS = 15 * 60_000;
 
-briefingRouter.get("/today", requireVenueAccess, async (req, res) => {
-  const venueId = (req as typeof req & { venueId?: string }).venueId!;
+briefingRouter.get(
+  "/today",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
 
-  // Cache wirklich nutzen: frisch → direkt ausliefern, sonst rechnen + schreiben.
-  const cache = await prisma.insightsCache.findUnique({ where: { businessId: venueId } });
-  if (cache && Date.now() - cache.computedAt.getTime() < CACHE_TTL_MS) {
-    return res.json(cache.result);
-  }
+    // Cache wirklich nutzen: frisch → direkt ausliefern, sonst rechnen + schreiben.
+    const cache = await prisma.insightsCache.findUnique({ where: { businessId: venueId } });
+    if (cache && Date.now() - cache.computedAt.getTime() < CACHE_TTL_MS) {
+      return res.json(cache.result);
+    }
 
-  const briefing = await computeBriefing(venueId);
-  const result = JSON.parse(JSON.stringify(briefing));
-  await prisma.insightsCache.upsert({
-    where: { businessId: venueId },
-    create: { businessId: venueId, result },
-    update: { result, computedAt: new Date() },
-  });
-  return res.json(briefing);
-});
+    const briefing = await computeBriefing(venueId);
+    const result = JSON.parse(JSON.stringify(briefing));
+    await prisma.insightsCache.upsert({
+      where: { businessId: venueId },
+      create: { businessId: venueId, result },
+      update: { result, computedAt: new Date() },
+    });
+    return res.json(briefing);
+  }),
+);
 
 /* ── Integrationen (Kanäle verbinden) ────────────────────────────────────── */
 
@@ -296,17 +338,23 @@ function oauthConfig(provider: ProviderId): OAuthConfig {
   return { ...META_OAUTH, clientId: env.META_APP_ID, redirectUri };
 }
 
-integrationsRouter.get("/", requireVenueAccess, async (req, res) => {
-  const venueId = (req as typeof req & { venueId?: string }).venueId!;
-  const connections = await prisma.channelConnection.findMany({
-    where: { businessId: venueId },
-    // Tokens bewusst NICHT ausliefern.
-    select: { provider: true, accountId: true, status: true, expiresAt: true, scopes: true },
-  });
-  res.json(connections);
-});
+integrationsRouter.get(
+  "/",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const connections = await prisma.channelConnection.findMany({
+      where: { businessId: venueId },
+      // Tokens bewusst NICHT ausliefern.
+      select: { provider: true, accountId: true, status: true, expiresAt: true, scopes: true },
+    });
+    return res.json(connections);
+  }),
+);
 
-integrationsRouter.get("/:provider/connect", requireVenueAccess, (req, res) => {
+// Synchron und ohne await — hier reicht Express' eigenes try/catch, deshalb kein
+// asyncHandler. Nur der venueGuard braucht ihn, weil die Middleware async ist.
+integrationsRouter.get("/:provider/connect", venueGuard, (req, res) => {
   const provider = req.params.provider as ProviderId;
   if (provider !== "google" && provider !== "meta") return res.status(400).json({ error: "Unbekannter Anbieter" });
   const venueId = (req as typeof req & { venueId?: string }).venueId!;
@@ -319,54 +367,74 @@ integrationsRouter.get("/:provider/connect", requireVenueAccess, (req, res) => {
  * OAuth-Rücksprung: state prüfen (CSRF), Code→Token serverseitig, verschlüsselt speichern.
  * Bewusst am `publicRouter` (ohne requireAuth) - der Provider-Redirect trägt keinen
  * App-Token; die Absicherung leistet der signierte `state`.
+ *
+ * DAS try/catch BLEIBT — und wird zusätzlich von `asyncHandler` umschlossen. Begründung:
+ *
+ * 1) Das try/catch ist keine Notbremse, sondern die fachlich richtige Antwort. Am
+ *    anderen Ende hängt ein BROWSER mitten im Anmeldefluss, nicht ein API-Aufrufer.
+ *    Ein JSON-500 wäre dort eine Sackgasse; der Nutzer landet stattdessen per
+ *    Deep-Link zurück in der App mit `status=error` und kann es erneut versuchen.
+ *    Die Fehler-Middleware kann das nicht leisten — sie kennt den Deep-Link nicht
+ *    und darf generisch keine Weiterleitung erfinden.
+ * 2) Das try/catch ist trotzdem nicht dicht: Der catch-Zweig ruft selbst `maitrEnv()`
+ *    auf, und `maitrEnv()` wirft bei fehlenden Variablen (env.ts). Wirft es dort,
+ *    fliegt der Fehler AUS dem catch heraus — genau in die unbehandelte Ablehnung,
+ *    die den Prozess killt. Der Wrapper fängt diesen zweiten Wurf ab und macht
+ *    daraus ein sauberes 500 statt eines toten Servers.
+ *
+ * Kurz: das try/catch beantwortet den erwarteten Fehler benutzergerecht, der
+ * asyncHandler sichert den Fehler im Fehlerpfad ab.
  */
-publicRouter.get("/integrations/:provider/callback", async (req, res) => {
-  const provider = req.params.provider as ProviderId;
-  const code = String(req.query.code ?? "");
-  const stateRaw = String(req.query.state ?? "");
-  try {
-    const state = verifyState(stateRaw);
-    if (state.provider !== provider) throw new Error("Provider passt nicht zum state");
-    if (!code) throw new Error("Kein code");
+publicRouter.get(
+  "/integrations/:provider/callback",
+  asyncHandler(async (req, res) => {
+    const provider = req.params.provider as ProviderId;
+    const code = String(req.query.code ?? "");
+    const stateRaw = String(req.query.state ?? "");
+    try {
+      const state = verifyState(stateRaw);
+      if (state.provider !== provider) throw new Error("Provider passt nicht zum state");
+      if (!code) throw new Error("Kein code");
 
-    // Mitgliedschaft ERNEUT prüfen, nicht nur beim Start des Flows. Zwischen
-    // /connect und dem Rücksprung liegen bis zu zehn Minuten; wer in dieser Zeit
-    // aus dem Betrieb entfernt wurde, darf keine offene Autorisierungs-URL mehr
-    // einlösen. Der Rücksprung selbst trägt keinen App-Token — deshalb steht der
-    // Auslöser im signierten state und wird hier gegen BusinessMember gehalten.
-    const membership = await prisma.businessMember.findUnique({
-      where: { userId_businessId: { userId: state.userId, businessId: state.businessId } },
-    });
-    if (!membership) throw new Error("Auslöser ist nicht (mehr) Mitglied des Betriebs");
+      // Mitgliedschaft ERNEUT prüfen, nicht nur beim Start des Flows. Zwischen
+      // /connect und dem Rücksprung liegen bis zu zehn Minuten; wer in dieser Zeit
+      // aus dem Betrieb entfernt wurde, darf keine offene Autorisierungs-URL mehr
+      // einlösen. Der Rücksprung selbst trägt keinen App-Token — deshalb steht der
+      // Auslöser im signierten state und wird hier gegen BusinessMember gehalten.
+      const membership = await prisma.businessMember.findUnique({
+        where: { userId_businessId: { userId: state.userId, businessId: state.businessId } },
+      });
+      if (!membership) throw new Error("Auslöser ist nicht (mehr) Mitglied des Betriebs");
 
-    const tokens = await exchangeCode(provider, code);
-    await prisma.channelConnection.upsert({
-      where: { businessId_provider: { businessId: state.businessId, provider: provider === "google" ? "GOOGLE" : "META" } },
-      create: {
-        businessId: state.businessId,
-        provider: provider === "google" ? "GOOGLE" : "META",
-        accountId: tokens.accountId,
-        encAccessToken: encryptToken(tokens.accessToken),
-        encRefreshToken: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
-        expiresAt: new Date(tokens.expiresAt),
-        scopes: tokens.scopes,
-      },
-      update: {
-        accountId: tokens.accountId,
-        encAccessToken: encryptToken(tokens.accessToken),
-        encRefreshToken: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
-        expiresAt: new Date(tokens.expiresAt),
-        scopes: tokens.scopes,
-        status: "ACTIVE",
-      },
-    });
-    // Zurück in die App (Deep-Link), Tokens tauchen nie im Redirect auf.
-    return res.redirect(`${maitrEnv().MAITR_APP_DEEP_LINK}?provider=${provider}&status=connected`);
-  } catch (err) {
-    console.error("[maitr] OAuth-Callback fehlgeschlagen:", (err as Error).message);
-    return res.redirect(`${maitrEnv().MAITR_APP_DEEP_LINK}?provider=${provider}&status=error`);
-  }
-});
+      const tokens = await exchangeCode(provider, code);
+      await prisma.channelConnection.upsert({
+        where: { businessId_provider: { businessId: state.businessId, provider: provider === "google" ? "GOOGLE" : "META" } },
+        create: {
+          businessId: state.businessId,
+          provider: provider === "google" ? "GOOGLE" : "META",
+          accountId: tokens.accountId,
+          encAccessToken: encryptToken(tokens.accessToken),
+          encRefreshToken: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
+          expiresAt: new Date(tokens.expiresAt),
+          scopes: tokens.scopes,
+        },
+        update: {
+          accountId: tokens.accountId,
+          encAccessToken: encryptToken(tokens.accessToken),
+          encRefreshToken: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
+          expiresAt: new Date(tokens.expiresAt),
+          scopes: tokens.scopes,
+          status: "ACTIVE",
+        },
+      });
+      // Zurück in die App (Deep-Link), Tokens tauchen nie im Redirect auf.
+      return res.redirect(`${maitrEnv().MAITR_APP_DEEP_LINK}?provider=${provider}&status=connected`);
+    } catch (err) {
+      console.error("[maitr] OAuth-Callback fehlgeschlagen:", (err as Error).message);
+      return res.redirect(`${maitrEnv().MAITR_APP_DEEP_LINK}?provider=${provider}&status=error`);
+    }
+  }),
+);
 
 interface ExchangedTokens {
   accessToken: string;

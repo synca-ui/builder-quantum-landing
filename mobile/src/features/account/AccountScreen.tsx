@@ -43,10 +43,38 @@ export function AccountScreen() {
   const plan = PLAN_INFO[currentPlan];
 
   const [dailyPush, setDailyPush] = useState(true);
+  const [abmeldung, setAbmeldung] = useState(false);
 
-  const logout = () => {
-    signOut();
-    router.replace("/login");
+  /**
+   * Abmelden.
+   *
+   * Erst warten, dann navigieren - nicht umgekehrt. `signOut()` beendet im echten
+   * Anmeldebetrieb auch die Clerk-Sitzung im SecureStore (Store → `lib/auth.ts`).
+   * Wer sofort auf den Login springt, kann dort „Weiter mit Google" antippen,
+   * während die alte Sitzung noch steht - der SSO-Flow liefe dann gegen eine
+   * bereits aktive Sitzung.
+   *
+   * Der Sperrschalter verhindert zusätzlich den doppelten Tipp; der Nutzer sieht
+   * ihn im Label.
+   */
+  const logout = async () => {
+    if (abmeldung) return;
+    setAbmeldung(true);
+    try {
+      await signOut();
+    } catch (err) {
+      // Fangen, nicht durchreichen. Der Aufruf ist ein `void logout()` am Knopf —
+      // eine abgelehnte Zusage hätte niemanden, der sie behandelt, und erschiene im
+      // Entwicklungsbau als rote Meldung über dem gerade erreichten Login. Die
+      // Clerk-Abmeldung ist in auth.ts bereits abgesichert; hier bleibt vor allem
+      // das Leeren des lokalen Speichers, das etwa bei vollem Gerät scheitern kann.
+      console.warn("[konto] Abmelden unvollständig:", (err as Error)?.message ?? err);
+    } finally {
+      // Auch nach einem Fehler weiterreichen: Der lokale Zustand ist in jedem Fall
+      // abgemeldet, auf diesem Screen wäre der Nutzer sonst gefangen.
+      setAbmeldung(false);
+      router.replace("/login");
+    }
   };
 
   return (
@@ -262,8 +290,12 @@ export function AccountScreen() {
 
       <Eyebrow tone="faint" style={{ textAlign: "center", marginTop: theme.spacing.md }}>
         Via Clerk ·{" "}
-        <Eyebrow tone="accent" style={{ textDecorationLine: "underline" }} onPress={logout}>
-          Abmelden
+        <Eyebrow
+          tone="accent"
+          style={{ textDecorationLine: "underline" }}
+          onPress={() => void logout()}
+        >
+          {abmeldung ? "Wird abgemeldet …" : "Abmelden"}
         </Eyebrow>
       </Eyebrow>
 

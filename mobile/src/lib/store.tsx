@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { formatHour, type TimelineBooking, type TimelineTable } from "../components/ui/Timeline";
 import { serviceDays as seedDays, type ServiceDayFixture } from "../features/reservations/fixtures";
+import { hasRealAuth, mobileAuthAdapter, subscribeToRealAuthSession } from "./auth";
 
 /**
  * Zentraler App-Zustand der Demo.
@@ -352,7 +353,13 @@ interface StoreValue {
   signedIn: boolean;
   user: SessionUser | null;
   signIn: () => void;
-  signOut: () => void;
+  /**
+   * Abmelden räumt BEIDE Wahrheiten: den lokalen Zustand und - im echten
+   * Anmeldebetrieb - die Clerk-Sitzung im SecureStore. Deshalb asynchron: Wer
+   * danach navigiert, sollte abwarten, sonst startet der nächste Anmeldeversuch
+   * gegen eine noch offene Sitzung.
+   */
+  signOut: () => Promise<void>;
 
   // Kanäle (Screen 11 + Journey 23): verbunden ja/nein je Plattform
   channels: Record<string, boolean>;
@@ -454,6 +461,16 @@ const StoreContext = createContext<StoreValue | null>(null);
 /** Schlüssel des persistierten Schnappschusses. */
 const PERSIST_KEY = "maitr.demo.state.v1";
 
+/**
+ * Wie lange wir im Clerk-Betrieb höchstens auf die Sitzungsmeldung warten.
+ *
+ * Die Eröffnungsanimation deckt ~2,3 s ab (OpeningAnimation: HOLD 1800 + FADE_OUT 460),
+ * ein Kaltstart mit Netz meldet lange davor. Der Wert ist die Obergrenze für den
+ * Fehlerfall - lieber 1,7 s ruhige Fläche als eine App, die ohne Netz gar nicht
+ * mehr aus dem Startbild kommt.
+ */
+const SESSION_TIMEOUT_MS = 4000;
+
 /* ── Startzustand ─────────────────────────────────────────────────────────────
    Die Anfangswerte stehen als Konstanten hier statt inline im useState, weil sie
    an zwei Stellen gebraucht werden: beim ersten Start und in `deleteLocalData()`.
@@ -532,7 +549,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [autopilot, setAutopilotState] =
     useState<Record<AutopilotCategory, boolean>>(AUTOPILOT_SEED);
   const [currentPlan, setCurrentPlan] = useState<PlanId>(PLAN_SEED);
-  const [hydrated, setHydrated] = useState(false);
+  const [storageHydrated, setStorageHydrated] = useState(false);
+  /**
+   * Steht die Anmeldelage fest?
+   *
+   * Im Demomodus sofort: dort entscheidet allein der persistierte Merker. Im
+   * Clerk-Betrieb erst, wenn Clerk seine Sitzung gemeldet hat - vorher wüssten wir
+   * nicht, ob wir den Login oder den Start zeigen müssen, und `app/index.tsx`
+   * entscheidet diese Weiche genau einmal.
+   */
+  const [sessionKnown, setSessionKnown] = useState(() => !hasRealAuth());
 
   const setPlan = useCallback((plan: PlanId) => setCurrentPlan(plan), []);
 
@@ -556,7 +582,25 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const unreadCount = INBOX_SEED.filter((i) => !inboxRead[i.id]).length;
 
   const signIn = useCallback(() => setSignedIn(true), []);
-  const signOut = useCallback(() => setSignedIn(false), []);
+
+  /**
+   * Abmelden - und zwar vollständig.
+   *
+   * Vorher setzte das hier nur `signedIn` auf false. Im Clerk-Betrieb blieb die
+   * Sitzung damit im SecureStore gültig: Die App zeigte den Login, aber
+   * `mobileAuthAdapter.getToken()` lieferte weiter ein Bearer-Token, und ein
+   * erneutes „Weiter mit Google" startete den SSO-Flow gegen eine noch aktive
+   * Sitzung. Der eigentliche Abmeldevorgang liegt in `lib/auth.ts` (dort kennt man
+   * Clerk), hier wird er nur mit dem lokalen Zustand zusammengeführt.
+   *
+   * Reihenfolge mit Absicht: erst der lokale Merker, damit die Oberfläche sofort
+   * umschaltet, dann der Netz-/Speicher-Teil. Im Demomodus räumt der Adapter nur
+   * die beiden AsyncStorage-Schlüssel - Clerk wird dort nicht angefasst.
+   */
+  const signOut = useCallback(async () => {
+    setSignedIn(false);
+    await mobileAuthAdapter.signOut();
+  }, []);
 
   const connectChannel = useCallback(
     (id: string) => setChannels((c) => ({ ...c, [id]: true })),
@@ -924,7 +968,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       .then((raw) => {
         if (!alive || !raw) return;
         const s = JSON.parse(raw);
-        if (typeof s.signedIn === "boolean") setSignedIn(s.signedIn);
+        // Der persistierte Merker gilt NUR im Demomodus. Im Clerk-Betrieb ist die
+        // Clerk-Sitzung die Wahrheit (siehe Effekt darunter); den Schnappschuss
+        // trotzdem einzuspielen, würde ein Rennen zwischen zwei Quellen eröffnen -
+        // je nachdem, wer zuerst antwortet, stünde die App angemeldet oder nicht.
+        if (typeof s.signedIn === "boolean" && !hasRealAuth()) setSignedIn(s.signedIn);
         if (s.channels) setChannels(s.channels);
         if (s.channelMeta) setChannelMeta(s.channelMeta);
         if (s.profileDone) setProfileDone(s.profileDone);
@@ -944,11 +992,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       .finally(() => {
         if (alive) {
           hydratedRef.current = true;
-          setHydrated(true);
+          setStorageHydrated(true);
         }
       });
     return () => {
       alive = false;
+    };
+  }, []);
+
+  /* ── Clerk-Sitzung ⇄ lokaler Merker ──────────────────────────────────────────
+     Im echten Anmeldebetrieb entscheidet allein Clerk, ob jemand angemeldet ist.
+     Das Abo zieht beide Richtungen gerade: Neustart mit gültiger Sitzung meldet an,
+     eine abgelaufene oder anderswo beendete Sitzung meldet ab.
+     Im Demomodus liefert `subscribeToRealAuthSession()` einen No-Op zurück und rührt
+     das Clerk-Paket nicht an - `hasRealAuth()` fragt hier nur, ob überhaupt gewartet
+     werden muss. */
+  useEffect(() => {
+    if (!hasRealAuth()) return;
+
+    // Notbremse: Ohne Netz (oder mit abgeschalteter Native API) lädt Clerk nicht und
+    // meldet nie. Ohne diesen Zeitgeber bliebe die App im leeren Canvas stehen, denn
+    // `hydrated` gibt das Routing frei. Nach Ablauf gilt „nicht angemeldet" - der
+    // Login ist der einzige Screen, der ohne Sitzung ehrlich funktioniert.
+    const notbremse = setTimeout(() => setSessionKnown(true), SESSION_TIMEOUT_MS);
+
+    const unsubscribe = subscribeToRealAuthSession((signedInAtClerk) => {
+      clearTimeout(notbremse);
+      setSignedIn(signedInAtClerk);
+      setSessionKnown(true);
+    });
+
+    return () => {
+      clearTimeout(notbremse);
+      unsubscribe();
     };
   }, []);
 
@@ -1005,6 +1081,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       Boolean(t.task_profile_menu) === hasMenu ? t : { ...t, task_profile_menu: hasMenu },
     );
   }, [menu]);
+
+  /**
+   * Gerendert wird erst, wenn BEIDES feststeht: der gespeicherte Zustand und - im
+   * Clerk-Betrieb - die Anmeldelage. `app/index.tsx` fällt seine Weiche
+   * (Start oder Login) genau einmal; eine zu frühe Freigabe schickte einen
+   * angemeldeten Nutzer auf den Login, von dem ihn nichts mehr wegholt.
+   */
+  const hydrated = storageHydrated && sessionKnown;
 
   const value = useMemo<StoreValue>(
     () => ({

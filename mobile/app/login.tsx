@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -27,6 +27,25 @@ import { useTheme } from "../src/theme";
  * hier hook-sicher.
  */
 export default function LoginScreen() {
+  const router = useRouter();
+  const { signedIn } = useStore();
+
+  // Wer hier steht und trotzdem angemeldet IST, muss weitergeschickt werden.
+  //
+  // Die Weiche in app/index.tsx ist ein <Redirect> und entscheidet deshalb nur
+  // EINMAL, beim Mounten. Meldet sich Clerk später — die Sitzungslage kommt über
+  // ein Abo, und der Store hat dafür eine Notbremse von vier Sekunden —, dann
+  // steht signedIn auf true, aber niemand navigiert mehr: Der Nutzer bliebe mit
+  // gültiger Sitzung auf dem Login und tippte „Weiter mit Google" gegen eine
+  // bereits offene Sitzung. Genau die Sackgasse, die das Zusammenführen von
+  // lokalem Zustand und Clerk-Sitzung beseitigen sollte.
+  //
+  // Deshalb hier reaktiv statt einmalig. Im Demobetrieb ist das folgenlos: Dort
+  // setzt erst der Knopf signedIn, und der navigiert ohnehin selbst.
+  useEffect(() => {
+    if (signedIn) router.replace("/start");
+  }, [signedIn, router]);
+
   return hasRealAuth() ? <ClerkLogin /> : <DemoLogin />;
 }
 

@@ -1,8 +1,11 @@
 // In SDK 57 liegt der JS-Tabs-Navigator unter `expo-router/js-tabs`;
 // der Re-Export aus `expo-router` ist deprecated.
+import { useEffect } from "react";
+import { useRouter } from "expo-router";
 import { Tabs } from "expo-router/js-tabs";
 
 import { MaitrTabBar } from "../../src/components/MaitrTabBar";
+import { useStore } from "../../src/lib/store";
 
 export const unstable_settings = {
   initialRouteName: "start",
@@ -29,6 +32,21 @@ export const unstable_settings = {
  * und State, damit die schwebende Pille pixelgenau dem Design folgen kann.
  */
 export default function TabsLayout() {
+  const router = useRouter();
+  const { signedIn } = useStore();
+
+  // Gegenstück zum reaktiven Redirect in app/login.tsx: Verliert die Sitzung zur
+  // Laufzeit ihre Gültigkeit — abgelaufen, im Clerk-Dashboard beendet, auf einem
+  // anderen Gerät abgemeldet —, meldet das Abo in store.tsx signedIn=false. Ohne
+  // diese Zeile bliebe der Nutzer trotzdem in den Tabs stehen und liefe in lauter
+  // 401-Antworten; die Abmeldung wirkte erst beim nächsten Kaltstart.
+  //
+  // Im Demobetrieb greift das nur beim bewussten Abmelden, und dort navigiert der
+  // Kontobildschirm ohnehin selbst — der Effekt kommt ihm höchstens zuvor.
+  useEffect(() => {
+    if (!signedIn) router.replace("/login");
+  }, [signedIn, router]);
+
   return (
     <Tabs
       tabBar={(props) => <MaitrTabBar {...props} />}

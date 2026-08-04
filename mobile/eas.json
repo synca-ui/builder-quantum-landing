@@ -13,7 +13,10 @@
     "preview": {
       "distribution": "internal",
       "ios": { "simulator": false },
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://maitr.de/api/maitr"
+      }
     },
     "production": {
       "autoIncrement": true,

@@ -119,6 +119,44 @@ function getClerkInstance(): ReturnType<ClerkExpo["getClerkInstance"]> | null {
 }
 
 /**
+ * Meldet Änderungen der Clerk-Sitzung an den lokalen Zustand.
+ *
+ * Warum das nötig ist: Die App führt zwei Wahrheiten. Die Clerk-Sitzung liegt im
+ * SecureStore und überlebt jeden Neustart; der lokale `signedIn`-Merker steuert die
+ * Navigation. Ohne Kopplung laufen beide auseinander, und zwar in beide Richtungen:
+ * Ein Neustart mit gültiger Sitzung landete auf dem Login, und ein „Abmelden", das
+ * nur den lokalen Merker löscht, ließ die Clerk-Sitzung stehen - der nächste
+ * SSO-Flow lief dann gegen eine bereits aktive Sitzung.
+ *
+ * Der Rückgabewert ist der Abmelder für den useEffect-Aufräumer.
+ *
+ * Im Demomodus passiert hier NICHTS: kein Clerk-Zugriff, kein Laden des Pakets, ein
+ * No-Op als Abmelder. Dort bleibt der lokale Zustand die einzige Wahrheit - genau
+ * wie bisher.
+ *
+ * `Boolean(session)` ist bewusst dieselbe Definition wie in
+ * `mobileAuthAdapter.isSignedIn()`; zwei unterschiedliche Begriffe von „angemeldet"
+ * wären wieder zwei Wahrheiten.
+ */
+export function subscribeToRealAuthSession(
+  onSessionChange: (signedIn: boolean) => void,
+): () => void {
+  const instance = getClerkInstance();
+  if (!instance) return () => {};
+
+  try {
+    // Clerk meldet sich beim Abonnieren sofort, sobald der Client geladen ist, und
+    // danach bei jeder Änderung (Anmeldung, Abmeldung, abgelaufene Sitzung).
+    return instance.addListener(({ session }) => onSessionChange(Boolean(session)));
+  } catch (error) {
+    // Kein Absturz, nur keine Kopplung: die App bleibt auf dem lokalen Zustand
+    // stehen, statt beim Start weiß zu bleiben.
+    console.warn("[auth] Clerk-Sitzung konnte nicht abonniert werden.", error);
+    return () => {};
+  }
+}
+
+/**
  * Auth-Adapter der Mobile-App.
  *
  * Zwei Betriebsarten hinter einer Schnittstelle: Mit gesetztem
