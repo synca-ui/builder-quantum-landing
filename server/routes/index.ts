@@ -6,7 +6,6 @@ import { webAppsRouter, publicAppsRouter } from "./webapps";
 // GET /config/:slug bereits entfernt (die Abfrage konnte nie treffen).
 import { configurationsRouter } from "./configurations";
 import { maitrRouter } from "../maitr";
-import { fetchInstagramPhotos } from "./instagram";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
 import scraperRouter from "./scraper";
@@ -217,7 +216,26 @@ apiRouter.use("/maitr", maitrRouter);
 
 // Other routes
 apiRouter.get("/demo", handleDemo);
-apiRouter.get("/instagram", fetchInstagramPhotos);
+
+// GET /instagram ist ENTFERNT, samt server/routes/instagram.ts.
+//
+// Der Endpunkt war öffentlich, ohne Anmeldung erreichbar, und holte eine vom
+// Aufrufer benannte Adresse serverseitig ab — eine SSRF-Fläche. Zugleich lieferte
+// er nichts: Alle drei Auswertungswege hingen an Markern, die Instagram vor Jahren
+// entfernt hat (window._sharedData, __additionalDataLoaded); ein Abruf gegen ein
+// echtes Profil ergab live eine leere Liste. Und er hatte keinen einzigen Aufrufer
+// in client/, server/, shared/, mobile/ oder packages/.
+//
+// Eine Härtung der Hostprüfung wurde erwogen und verworfen: Sie hielt die
+// Weiterleitung nicht auf. `fetch` folgt automatisch, ein offener Redirect auf
+// instagram.com hätte die Prüfung wirkungslos gemacht — nachgestellt mit zwei
+// lokalen Servern, der Rumpf des zweiten landete im og:image-Auswertungspfad.
+// Eine halbe Absicherung an einem ungenutzten Endpunkt ist schlechter als keine:
+// Sie hält die Fläche offen und suggeriert Schutz.
+//
+// Wer Instagram-Bilder wirklich anzeigen will, braucht die Graph API mit
+// OAuth je Betrieb (siehe packages/core/src/integrations/meta.ts) — nicht das
+// Abrufen einer öffentlichen Profilseite.
 
 // Health-Check
 apiRouter.get("/ping", (_req, res) => {

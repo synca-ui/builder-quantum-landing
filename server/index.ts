@@ -16,6 +16,7 @@ import { handleGenerateSchema, handleValidateSchema } from "./routes/schema";
 import { handleAutogen } from "./routes/autogen";
 import { usersRouter } from "./routes/users";
 import { handleClerkWebhook } from "./webhooks/clerk";
+import { handleStripeWebhook } from "./webhooks/stripe";
 import { registerMaitrWebhooks } from "./maitr";
 import {
   handleCreateOrder,
@@ -92,6 +93,10 @@ export function createServer() {
   // signature check would fail and no user would ever be synced.
   app.post("/api/webhooks/clerk", express.raw({ type: "*/*" }), handleClerkWebhook);
 
+  // Stripe Webhook – same principle: stripe.webhooks.constructEvent needs the
+  // raw body to verify the signature. Must be registered before express.json().
+  app.post("/api/webhooks/stripe", express.raw({ type: "*/*" }), handleStripeWebhook);
+
   // Meta-Webhook des Maitr-Backends – aus demselben Grund oberhalb von
   // express.json(): verifyMetaSignature prüft eine HMAC über den Rohbody. Käme der
   // JSON-Parser zuerst, bekäme die Prüfung ein Objekt statt des Buffers und würde
@@ -133,12 +138,12 @@ export function createServer() {
   // Auto-generation endpoint (rate-limited to prevent abuse)
   app.post("/api/autogen", strictLimiter, handleAutogen);
 
-  // Schema.org generation & validation
-  app.post("/api/schema/generate", handleGenerateSchema);
-  app.post("/api/schema/validate", handleValidateSchema);
+  // Schema.org generation & validation (rate-limited to prevent abuse)
+  app.post("/api/schema/generate", strictLimiter, handleGenerateSchema);
+  app.post("/api/schema/validate", strictLimiter, handleValidateSchema);
 
-  // Orders API
-  app.post("/api/orders/create", strictLimiter, handleCreateOrder);
+  // Orders API (create requires auth to prevent social-proof manipulation)
+  app.post("/api/orders/create", requireAuth, strictLimiter, handleCreateOrder);
   app.get("/api/orders/:webAppId/recent", handleGetRecentOrders);
   app.get("/api/orders/:webAppId/menu-stats", handleGetMenuStats);
   app.post("/api/orders/:webAppId/clear-old", requireAuth, handleClearOldOrders);

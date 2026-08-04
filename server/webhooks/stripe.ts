@@ -482,7 +482,10 @@ export async function handleStripeWebhook(
   let event: Stripe.Event;
 
   try {
-    const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+    // req.body is a Buffer here because this route is registered with
+    // express.raw({ type: "*/*" }) before express.json() — see server/index.ts.
+    const rawBody =
+      Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
 
     // Construct event from Stripe
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
@@ -490,10 +493,6 @@ export async function handleStripeWebhook(
     console.error("[Stripe] Webhook signature verification failed:", error);
     res.status(400).json({
       error: "Invalid signature",
-      message:
-        error instanceof Error
-          ? error.message
-          : "Signature verification failed",
     });
     return;
   }
@@ -560,7 +559,6 @@ export async function handleStripeWebhook(
     console.error("[Stripe] Webhook processing error:", error);
     res.status(500).json({
       error: "Webhook processing failed",
-      message: error instanceof Error ? error.message : "Internal server error",
     });
   }
 }

@@ -264,7 +264,6 @@ export async function saveConfiguration(req: Request, res: Response) {
 
     return res.status(500).json({
       error: "Failed to save configuration",
-      message: error instanceof Error ? error.message : undefined,
     });
   }
 }
