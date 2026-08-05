@@ -1,7 +1,9 @@
 PODS:
   - boost (1.84.0)
   - DoubleConversion (1.1.6)
-  - EXConstants (57.0.7):
+  - EXApplication (57.0.2):
+    - ExpoModulesCore
+  - EXConstants (57.0.9):
     - ExpoModulesCore
   - EXJSONUtils (57.0.1)
   - EXManifests (57.0.1):
@@ -220,6 +222,8 @@ PODS:
     - ExpoModulesCore
   - ExpoBlur (57.0.2):
     - ExpoModulesCore
+  - ExpoCrypto (57.0.1):
+    - ExpoModulesCore
   - ExpoDomWebView (57.0.1):
     - ExpoModulesCore
   - ExpoFileSystem (57.0.1):
@@ -232,7 +236,7 @@ PODS:
     - ExpoModulesCore
   - ExpoLinearGradient (57.0.1):
     - ExpoModulesCore
-  - ExpoLinking (57.0.4):
+  - ExpoLinking (57.0.5):
     - ExpoModulesCore
   - ExpoLogBox (57.0.1):
     - React-Core
@@ -275,6 +279,8 @@ PODS:
   - ExpoRouter (57.0.8):
     - ExpoModulesCore
     - RNScreens
+  - ExpoSecureStore (57.0.1):
+    - ExpoModulesCore
   - ExpoSplashScreen (57.0.5):
     - ExpoModulesCore
   - ExpoSymbols (57.0.1):
@@ -285,6 +291,8 @@ PODS:
     - ExpoModulesCore
     - ExpoModulesWorklets
     - React-RCTFabric
+  - ExpoWebBrowser (57.0.2):
+    - ExpoModulesCore
   - EXUpdatesInterface (57.0.1):
     - ExpoModulesCore
   - fast_float (8.0.0)
@@ -3295,6 +3303,7 @@ PODS:
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
+  - EXApplication (from `../node_modules/expo-application/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXJSONUtils (from `../node_modules/expo-json-utils/ios`)
   - EXManifests (from `../node_modules/expo-manifests/ios`)
@@ -3305,6 +3314,7 @@ DEPENDENCIES:
   - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
   - ExpoAsset (from `../node_modules/expo/node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
+  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - "ExpoDomWebView (from `../node_modules/@expo/dom-webview/ios`)"
   - ExpoFileSystem (from `../node_modules/expo/node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
@@ -3317,10 +3327,12 @@ DEPENDENCIES:
   - ExpoModulesJSI (from `../node_modules/expo-modules-jsi/apple`)
   - ExpoModulesWorklets (from `../node_modules/expo-modules-core`)
   - ExpoRouter (from `../node_modules/expo-router/ios`)
+  - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
   - "ExpoUI (from `../node_modules/expo-router/node_modules/@expo/ui/ios`)"
+  - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -3419,6 +3431,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
+  EXApplication:
+    :path: "../node_modules/expo-application/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
   EXJSONUtils:
@@ -3439,6 +3453,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo/node_modules/expo-asset/ios"
   ExpoBlur:
     :path: "../node_modules/expo-blur/ios"
+  ExpoCrypto:
+    :path: "../node_modules/expo-crypto/ios"
   ExpoDomWebView:
     :path: "../node_modules/@expo/dom-webview/ios"
   ExpoFileSystem:
@@ -3463,6 +3479,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoRouter:
     :path: "../node_modules/expo-router/ios"
+  ExpoSecureStore:
+    :path: "../node_modules/expo-secure-store/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
   ExpoSymbols:
@@ -3471,6 +3489,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-system-ui/ios"
   ExpoUI:
     :path: "../node_modules/expo-router/node_modules/@expo/ui/ios"
+  ExpoWebBrowser:
+    :path: "../node_modules/expo-web-browser/ios"
   EXUpdatesInterface:
     :path: "../node_modules/expo-updates-interface/ios"
   fast_float:
@@ -3648,7 +3668,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
-  EXConstants: 78fee23d07609ea4c1ee5046f5dd745098f7c12b
+  EXApplication: f62b1a7f8a6efe1d43f38bfbe98cf4acea9b9421
+  EXConstants: 4de2a921b65368dba903006a2106252512d6843e
   EXJSONUtils: 7a1683cfa2cbe6d11fca97097d51a496755b0287
   EXManifests: b9129302cc7af43d45c2f473fadb88e77f837273
   Expo: 0ca75c52b97fd7f0b5e77c43bb5633d139486a46
@@ -3658,22 +3679,25 @@ SPEC CHECKSUMS:
   expo-dev-menu-interface: 7a59e803916fbfd1b96c75ff91ea8dddac7e722f
   ExpoAsset: 016142e2ad35df49e73aeca75bd2d7b377061758
   ExpoBlur: 0f2c616d5422a2b1a31e622d2add98784eed1ceb
+  ExpoCrypto: 4272c8712a133905a00059ef6e109759fbda2cee
   ExpoDomWebView: fa9c72fe29dd4649197a7ecb07ddd870d55c4eda
   ExpoFileSystem: 3030d5166d05eb90b8f40d433f6007797310861f
   ExpoFont: 17668fb7b4e06edf35e015183eb7bc09d83be637
   ExpoGlassEffect: 5d25ad0b43e81255ff5d41039eb2131ebf7aaa5a
   ExpoKeepAwake: 20a87dafdd9d84d68673e8eaf1a1c7eed8f92659
   ExpoLinearGradient: 93e951fa19ee7b4bb1a8e2c97227bcfc4bacfa9a
-  ExpoLinking: e585bd571199811a0e95f804adc6f5e714c238f3
+  ExpoLinking: bf2536dae511c60982db438b4cd65f8a33c329eb
   ExpoLogBox: 083b0283fc9df6748661caec5a2837569d83b8a6
   ExpoModulesCore: 8ab1dcd6ce24c276e3230d07e791755e332e25da
   ExpoModulesJSI: 6cb6d299ace493e7dd20ba94c99e8c4799b07afd
   ExpoModulesWorklets: c05df2d21365b00637ccd5e0259f1190e23f37b4
   ExpoRouter: d210b9d2d33df52e0528c558942436f6696dadb6
+  ExpoSecureStore: bfe0879ff06a729a4a3ff4417ac4e1cd5f2aea04
   ExpoSplashScreen: 57dc730cbc8782e8b662e452a2379120b675b004
   ExpoSymbols: 904c2e6a3164c18bd065f9c84c9c630934fa7ce9
   ExpoSystemUI: cfdb733a92d608746cffab6db8c06c310dc0d12f
   ExpoUI: 1e538c474877ab878dbb0e62e7e1b67c049672f7
+  ExpoWebBrowser: f93f4989f6c2a34cfaba5461ea3572c191947e0f
   EXUpdatesInterface: 38eacf4b5c0d686727ccbfebaf4f76eab3766a63
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
   FBLazyVector: 688bade2cc6ee3de2ba9a411c85c21fd908af3bc

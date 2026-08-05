@@ -15,7 +15,7 @@
       "ios": { "simulator": false },
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://maitr.de/api/maitr"
+        "EXPO_PUBLIC_API_URL": "https://www.maitr.de/api/maitr"
       }
     },
     "production": {
@@ -23,7 +23,7 @@
       "channel": "production",
       "ios": { "resourceClass": "m-medium" },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://maitr.de/api/maitr"
+        "EXPO_PUBLIC_API_URL": "https://www.maitr.de/api/maitr"
       }
     }
   },
