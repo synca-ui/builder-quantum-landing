@@ -45,8 +45,26 @@ export const env = {
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
   supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   /**
-   * Clerk-Schlüssel. Ist er leer, startet die App im Demomodus - das ist der
-   * ausdrückliche Rückfall, kein Fehlerfall (siehe `lib/auth.ts`).
+   * Clerk-Schlüssel der LIVE-Instanz (clerk.maitr.de).
+   *
+   * Er steht im Klartext hier und in `eas.json`, und das ist richtig so:
+   * Publishable Keys sind öffentlich, sie werden bei JEDEM Seitenaufruf an den
+   * Browser ausgeliefert und stecken ohnehin in jedem gebauten App-Bündel.
+   * Geheim ist ausschließlich der `sk_…`-Schlüssel - der liegt auf Railway und
+   * hat in diesem Repo nichts verloren.
+   *
+   * Bewusst dieselbe Instanz wie die Website: Der Server prüft Tokens gegen
+   * genau diese Instanz. Mit der Entwicklerinstanz ("capital-mutt-70") hätte
+   * jede angemeldete Anfrage 401 ergeben - die Signaturen zweier Clerk-Instanzen
+   * passen nicht zueinander.
+   *
+   * WARUM EIN VORGABEWERT UND NICHT NUR DIE VARIABLE: Ohne ihn lief ein Bau
+   * ohne gesetzte Umgebungsvariable stillschweigend im Demomodus an - die App
+   * startet, sieht vollständig aus und zeigt Fixtures statt echter Daten.
+   * Genau das wäre in einem Store-Bau unbemerkt durchgegangen. Ein leerer
+   * Schlüssel bleibt weiterhin der ausdrückliche Rückfall (siehe `lib/auth.ts`),
+   * aber er muss jetzt absichtlich herbeigeführt werden, nicht versehentlich.
    */
-  clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  clerkPublishableKey:
+    process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "pk_live_Y2xlcmsubWFpdHIuZGUk",
 } as const;

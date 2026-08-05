@@ -16,16 +16,25 @@ import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 import { useState } from "react";
 
-const invoices = [
-  { period: "Juli 2026", amount: "29,00 €" },
-  { period: "Juni 2026", amount: "29,00 €" },
-];
+/**
+ * Rechnungen - vorerst keine.
+ *
+ * Hier standen zwei erfundene Rechnungen über 29,00 € für Juli und Juni 2026.
+ * Es hat nie jemand bezahlt und es gibt keinen Preis; das war eine Behauptung
+ * über Geldflüsse, die es nicht gab. Die Liste bleibt als Struktur stehen und
+ * füllt sich, sobald Stripe angebunden ist (Schritt 5) - dann aus echten
+ * Belegen, nicht aus dieser Datei.
+ */
+const invoices: { period: string; amount: string }[] = [];
 
-/** Muss zu den Plänen in AbonnementScreen passen - hier nur die Konto-Kurzfassung. */
-const PLAN_INFO: Record<PlanId, { name: string; price: string; blurb: string }> = {
-  start: { name: "Maitr Start", price: "0 €", blurb: "Präsenzscore, Erkenntnisse, 1 Kanal." },
-  pro: { name: "Maitr Pro", price: "29 €", blurb: "Alle Kanäle, KI-Antworten, Gäste-CRM, provisionsfrei." },
-  autopilot: { name: "Maitr Autopilot", price: "59 €", blurb: "Maitr übernimmt: Antworten, Beiträge, Auslastung." },
+/**
+ * Muss zu den Plänen in AbonnementScreen passen - hier nur die Konto-Kurzfassung.
+ * `price` ist optional, solange keine Preise entschieden sind (siehe dort).
+ */
+const PLAN_INFO: Record<PlanId, { name: string; price?: string; blurb: string }> = {
+  start: { name: "Maitr Start", blurb: "Präsenzscore, Erkenntnisse, 1 Kanal." },
+  pro: { name: "Maitr Pro", blurb: "Alle Kanäle, KI-Antworten, Gäste-CRM, provisionsfrei." },
+  autopilot: { name: "Maitr Autopilot", blurb: "Maitr übernimmt: Antworten, Beiträge, Auslastung." },
 };
 
 /**
@@ -97,20 +106,30 @@ export function AccountScreen() {
           <Eyebrow color={onDarkPanel.accent}>Aktiv</Eyebrow>
         </View>
 
-        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
-          <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 38, lineHeight: 42 }}>
-            {plan.price}
+        {/* Ohne Preis trägt der Planname die große Zeile - sonst klaffte hier eine
+            Lücke, wo vorher „29 € / Monat" stand. */}
+        {plan.price ? (
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+            <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 38, lineHeight: 42 }}>
+              {plan.price}
+            </Text>
+            <Text variant="body" color={onDarkPanel.body}>
+              / Monat
+            </Text>
+          </View>
+        ) : (
+          <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 36 }}>
+            {plan.name}
           </Text>
-          <Text variant="body" color={onDarkPanel.body}>
-            / Monat
-          </Text>
-        </View>
+        )}
 
         <Text variant="quote" color={onDarkPanel.bodyStrong} style={{ fontSize: 15 }}>
           {plan.blurb}
         </Text>
+        {/* Kein „Nächste Abrechnung: 1. August" mehr - es gibt keine Abrechnung.
+            Der Satz erweckte den Eindruck eines laufenden Vertrags. */}
         <Eyebrow color={onDarkPanel.meta} style={{ marginTop: 4 }}>
-          {currentPlan === "start" ? "Kostenlos · jederzeit upgraden" : "Nächste Abrechnung: 1. August"}
+          Preise stehen noch nicht fest · Zugang derzeit ohne Abrechnung
         </Eyebrow>
 
         <View
@@ -174,6 +193,11 @@ export function AccountScreen() {
         style={{ borderRadius: theme.radius.tile, paddingHorizontal: 18, paddingTop: theme.spacing.md }}
       >
         <Eyebrow style={{ marginBottom: 4 }}>Rechnungen</Eyebrow>
+        {invoices.length === 0 ? (
+          <Text variant="bodySm" tone="muted" style={{ paddingVertical: 9, fontSize: 14 }}>
+            Noch keine Rechnungen.
+          </Text>
+        ) : null}
         {invoices.map((invoice, index) => (
           <View
             key={invoice.period}
