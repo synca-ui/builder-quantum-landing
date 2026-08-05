@@ -1,0 +1,52 @@
+-- Migration: ChannelProvider bekommt den Wert WHATSAPP
+-- Datum: 2026-08-05
+-- Zweck: WhatsApp als EIGENER Kanal neben GOOGLE und META. Unter META gefuehrt
+--        liesse @@unique([businessId, provider]) genau eine Meta-Zeile je Betrieb
+--        zu - Instagram-Insights und die eigene WhatsApp-Nummer wuerden sich beim
+--        OAuth-Upsert still gegenseitig ueberschreiben.
+--
+-- ═══ REIHENFOLGE - DER WICHTIGSTE SATZ DIESER MIGRATION ═══════════════════════
+-- Diese Migration und ihre Schwester 20260805_add_loyalty_wallet_whatsapp gehoeren
+-- VOR den Merge nach main, nicht danach. main deployt automatisch auf Railway,
+-- postinstall baut den Prisma-Client aus dem neuen Schema, und dieser Client
+-- schreibt in JEDER Abfrage eine ausgeschriebene Spaltenliste - Prisma erzeugt
+-- niemals SELECT *. Landet der Code zuerst, antwortet Postgres auf das erste
+-- assembleVenueDataset (server/maitr/dataset.ts, drei bare findMany in EINEM
+-- Promise.all) mit 42703 "column ... does not exist" und GET /briefing/today - der
+-- Startbildschirm der App - ist tot, bis ein Mensch die Migration einspielt.
+-- Eine Fehlerabfangung hilft dort NICHT: ein leerer Datensatz waere keine gueltige
+-- Ersatzantwort, sondern ein Briefing, das dem Wirt "keine Bewertungen" meldet.
+-- Umgekehrt ist die Reihenfolge gefahrlos: neue Spalten und Tabellen sind fuer den
+-- alten, laufenden Client unsichtbar. Genau deshalb ist der additive Charakter der
+-- Freibrief fuer "Migration zuerst" - und die Falle bei "Code zuerst".
+--
+-- ═══ WARUM DER ENUM-WERT IN EINER EIGENEN DATEI STEHT ════════════════════════
+-- NICHT, weil Postgres ALTER TYPE ... ADD VALUE im Transaktionsblock verboete -
+-- das ist seit PostgreSQL 12 erlaubt (Neon laeuft auf 15+). Verboten ist nur die
+-- BENUTZUNG des neuen Werts in derselben Transaktion, und dieses Skript benutzt
+-- ihn nirgends: kein DEFAULT 'WHATSAPP', kein UPDATE, kein WHERE.
+-- Die Trennung ist trotzdem die robuste Wahl: Sie macht jede spaetere Ergaenzung
+-- eines "WHERE provider = 'WHATSAPP'" in der Schwesterdatei ungefaehrlich.
+--
+-- ═══ VORBEDINGUNG IM CODE - VOR DEM EINSPIELEN ZU ERLEDIGEN ══════════════════
+-- Erledigt im selben Commit (server/maitr/sync.ts):
+--   - syncAll holte ALLE ACTIVE-Verbindungen ohne Provider-Filter,
+--   - pullChannel bildete mit `provider === "GOOGLE" ? "google" : "meta"` ab,
+--   - ensureFreshToken setzte jede Nicht-Google-Verbindung auf EXPIRED.
+-- Eine WHATSAPP-Zeile waere damit an den Meta-Connector gegangen, dessen Aufruf
+-- scheitert; der catch-Zweig haette die Verbindung auf EXPIRED gesetzt. Die
+-- WhatsApp-Anbindung haette sich bei JEDEM Cron-Lauf selbst abgeschaltet - und
+-- waPhoneNumberId bliebe an der toten Zeile haengen und blockierte die
+-- Neuverbindung. Ein Schema-Kommentar ist dafuer kein Riegel: prisma db execute
+-- liest ihn nicht.
+--
+-- ANWENDEN: Dieses Repo fuehrt KEINE gueltige Prisma-Migrationshistorie,
+-- "prisma migrate deploy" laeuft hier nicht. Eingespielt wird von Hand
+-- (prisma db execute), diese Datei ZUERST, danach die Schwesterdatei.
+-- Sie wurde NICHT ausgefuehrt.
+
+SET lock_timeout = '3s';
+SET statement_timeout = '60s';
+
+-- AlterEnum
+ALTER TYPE "ChannelProvider" ADD VALUE 'WHATSAPP';

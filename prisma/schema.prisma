@@ -28,6 +28,11 @@ model User {
   // Freigaben im Tagesbriefing. onDelete: SetNull (siehe TaskDecision) - die
   // Entscheidung gehoert dem Betrieb, nicht dem Nutzer, und ueberlebt dessen Konto.
   taskDecisions   TaskDecision[]
+  // Stempelvorgaenge, die dieser Nutzer ausgeloest hat. onDelete: SetNull wie bei
+  // TaskDecision - die Stempelhistorie gehoert dem Betrieb und ueberlebt das Konto.
+  // Cascade waere hier fatal: ein Mitarbeiter koennte mit der Loeschung seines
+  // Kontos genau die Zeilen tilgen, die einen Verdacht gegen ihn belegen.
+  stampEvents     StampEvent[]
 }
 
 model Business {
@@ -51,6 +56,19 @@ model Business {
   averageCheck       Float               @default(9)
   tags               String[]            @default([])
   profileSignals     Json?
+  /// Nachbarschafts-Benchmark. Business hatte bisher KEIN indizierbares Ortsfeld -
+  /// die Adresse liegt im contactInfo-Json und ist damit nicht abfragbar.
+  /// Alle drei nullbar: Bestandszeilen bleiben unveraendert, der Benchmark liefert
+  /// fuer Betriebe ohne Ort schlicht nichts. Werte liegen bereits vor
+  /// (ScraperJob.suggestedConfig fuehrt latitude/longitude/location).
+  ///
+  /// ACHTUNG bei der Auslieferung: toApiVenue (server/maitr/routes.ts) ist eine
+  /// ausdrueckliche Allowlist und darf es bleiben - GET /venues/:slug/public laeuft
+  /// ohne Anmeldung. Wird sie je auf `...business` umgestellt, stehen Postleitzahl
+  /// und Koordinaten oeffentlich im Netz.
+  postalCode         String?
+  latitude           Float?
+  longitude          Float?
   originalPdfUrl     String?
   status             BusinessStatus      @default(DRAFT)
   createdAt          DateTime            @default(now())
@@ -74,12 +92,33 @@ model Business {
   taskDecisions      TaskDecision[]
 
   // Staff Management Relations (NEW)
-  staff              Staff[]
-  shifts             Shift[]
-  absences           Absence[]
+  staff    Staff[]
+  shifts   Shift[]
+  absences Absence[]
+
+  // Treue & Wallet
+  stampPrograms       StampProgram[]
+  stampCards          StampCard[]
+  stampEvents         StampEvent[]
+  walletRegistrations WalletDeviceRegistration[]
+
+  // WhatsApp
+  whatsAppConversations WhatsAppConversation[]
+  whatsAppMessages      WhatsAppMessage[]
+  whatsAppMedia         WhatsAppMedia[]
+  whatsAppTemplates     WhatsAppTemplate[]
+
+  // Nachbarschafts-Benchmark
+  benchmarkSnapshots BenchmarkSnapshot[]
 
   @@index([slug])
   @@index([status])
+  // Kohortenbildung fuer den Benchmark: exakter Treffer auf die Postleitzahl.
+  @@index([postalCode])
+  // Nur ein Vorfilter fuer ein Rechteck um den Betrieb - ein Btree-Index kann keine
+  // echte Umkreissuche. Die Feinauswahl nach Entfernung passiert danach im Server.
+  // Sobald das zu teuer wird, ist PostGIS die Antwort, nicht ein weiterer Index.
+  @@index([latitude, longitude])
 }
 
 model BusinessMember {
@@ -270,31 +309,31 @@ model TemplateRating {
 // ============================================
 
 model Staff {
-  id           String    @id @default(uuid())
-  businessId   String
-  email        String
-  firstName    String
-  lastName     String
-  phone        String?
-  position     String    @default("Staff") // Kitchen, Service, Manager, etc.
-  hourlyRate   Decimal?  @db.Decimal(8, 2)
-  isActive     Boolean   @default(true)
+  id         String   @id @default(uuid())
+  businessId String
+  email      String
+  firstName  String
+  lastName   String
+  phone      String?
+  position   String   @default("Staff") // Kitchen, Service, Manager, etc.
+  hourlyRate Decimal? @db.Decimal(8, 2)
+  isActive   Boolean  @default(true)
 
   // Employment Details
-  hireDate     DateTime  @default(now())
+  hireDate        DateTime  @default(now())
   terminationDate DateTime?
 
   // Permissions & Access
-  permissions  Json      @default("[]") // ["floor_plan", "reservations", "reports"]
+  permissions Json @default("[]") // ["floor_plan", "reservations", "reports"]
 
   // Timestamps
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  shifts       Shift[]
-  absences     Absence[]
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  shifts   Shift[]
+  absences Absence[]
 
   @@unique([businessId, email])
   @@index([businessId, isActive])
@@ -302,39 +341,39 @@ model Staff {
 }
 
 model Shift {
-  id           String      @id @default(uuid())
-  businessId   String
-  staffId      String
+  id         String @id @default(uuid())
+  businessId String
+  staffId    String
 
   // Shift Details
-  date         DateTime    @db.Date
-  startTime    DateTime    // Full timestamp for flexibility
-  endTime      DateTime
-  breakDuration Int        @default(0) // minutes
+  date          DateTime @db.Date
+  startTime     DateTime // Full timestamp for flexibility
+  endTime       DateTime
+  breakDuration Int      @default(0) // minutes
 
   // Shift Type & Status
-  shiftType    ShiftType   @default(REGULAR)
-  status       ShiftStatus @default(SCHEDULED)
+  shiftType ShiftType   @default(REGULAR)
+  status    ShiftStatus @default(SCHEDULED)
 
   // Work Details
-  position     String?     // Override staff default position
-  notes        String?
+  position String? // Override staff default position
+  notes    String?
 
   // Actual vs Scheduled (Clock In/Out)
-  actualStart  DateTime?
-  actualEnd    DateTime?
-  actualBreak  Int?        // actual break minutes taken
+  actualStart DateTime?
+  actualEnd   DateTime?
+  actualBreak Int? // actual break minutes taken
 
   // Financial
-  hourlyRate   Decimal?    @db.Decimal(8, 2) // Override staff default rate
+  hourlyRate Decimal? @db.Decimal(8, 2) // Override staff default rate
 
   // Timestamps
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  business     Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  staff        Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  staff    Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   @@index([businessId, date])
   @@index([staffId, date])
@@ -342,32 +381,32 @@ model Shift {
 }
 
 model Absence {
-  id           String      @id @default(uuid())
-  businessId   String
-  staffId      String
+  id         String @id @default(uuid())
+  businessId String
+  staffId    String
 
   // Absence Details
-  startDate    DateTime    @db.Date
-  endDate      DateTime    @db.Date
-  absenceType  AbsenceType
-  reason       String?
+  startDate   DateTime    @db.Date
+  endDate     DateTime    @db.Date
+  absenceType AbsenceType
+  reason      String?
 
   // Approval Workflow
-  status       AbsenceStatus @default(PENDING)
-  approvedBy   String?     // Staff ID who approved
-  approvedAt   DateTime?
+  status     AbsenceStatus @default(PENDING)
+  approvedBy String? // Staff ID who approved
+  approvedAt DateTime?
 
   // Documentation
-  notes        String?
-  attachments  Json?       // URLs to medical certificates, etc.
+  notes       String?
+  attachments Json? // URLs to medical certificates, etc.
 
   // Timestamps
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  business     Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  staff        Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  staff    Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   @@index([businessId, startDate, endDate])
   @@index([staffId, status])
@@ -375,91 +414,91 @@ model Absence {
 }
 
 enum ShiftType {
-  REGULAR     // Normal shift
-  OVERTIME    // Extra hours
-  HOLIDAY     // Holiday/special day
-  EMERGENCY   // Last-minute coverage
+  REGULAR // Normal shift
+  OVERTIME // Extra hours
+  HOLIDAY // Holiday/special day
+  EMERGENCY // Last-minute coverage
 }
 
 enum ShiftStatus {
-  SCHEDULED   // Planned shift
+  SCHEDULED // Planned shift
   IN_PROGRESS // Currently working
-  COMPLETED   // Shift finished
-  MISSED      // No-show
-  CANCELLED   // Cancelled shift
+  COMPLETED // Shift finished
+  MISSED // No-show
+  CANCELLED // Cancelled shift
 }
 
 enum AbsenceType {
-  VACATION    // Planned vacation
-  SICK_LEAVE  // Illness
-  PERSONAL    // Personal reasons
-  EMERGENCY   // Family emergency
-  TRAINING    // Training/education
-  OTHER       // Other reasons
+  VACATION // Planned vacation
+  SICK_LEAVE // Illness
+  PERSONAL // Personal reasons
+  EMERGENCY // Family emergency
+  TRAINING // Training/education
+  OTHER // Other reasons
 }
 
 enum AbsenceStatus {
-  PENDING     // Awaiting approval
-  APPROVED    // Approved by manager
-  REJECTED    // Rejected by manager
-  CANCELLED   // Cancelled by employee
+  PENDING // Awaiting approval
+  APPROVED // Approved by manager
+  REJECTED // Rejected by manager
+  CANCELLED // Cancelled by employee
 }
 
 model Configuration {
-  id                          String          @id @default(uuid())
-  userId                      String
-  businessId                  String?
-  businessName                String          @default("")
-  businessType                String          @default("")
-  location                    String?
-  slogan                      String?
-  uniqueDescription           String?
-  template                    String          @default("")
-  selectedTemplate            String?
-  primaryColor                String          @default("#111827")
-  secondaryColor              String          @default("#6B7280")
-  fontFamily                  String          @default("sans-serif")
-  menuItems                   Json            @default("[]")
-  gallery                     Json            @default("[]")
-  openingHours                Json            @default("{}")
-  reservationsEnabled         Boolean         @default(false)
-  maxGuests                   Int             @default(10)
-  onlineOrdering              Boolean         @default(false)
-  onlineStore                 Boolean         @default(false)
-  teamArea                    Boolean         @default(false)
-  contactMethods              Json            @default("[]")
-  socialMedia                 Json            @default("{}")
-  selectedPages               Json            @default("[\"home\"]")
-  customPages                 Json            @default("[]")
-  status                      String          @default("draft")
-  publishedUrl                String?         @unique
-  previewUrl                  String?
-  domainName                  String?
-  selectedDomain              String?
-  paymentOptions              Json            @default("[]")
-  offers                      Json            @default("[]")
-  createdAt                   DateTime        @default(now())
-  updatedAt                   DateTime        @updatedAt
-  backgroundColor             String          @default("#FFFFFF")
-  fontColor                   String          @default("#000000")
-  hasDomain                   Boolean         @default(false)
-  headerBackgroundColor       String?
-  headerFontColor             String?
-  headerFontSize              String?
-  homepageDishImageVisibility String?
-  priceColor                  String?
-  reservationButtonColor      String?
-  reservationButtonShape      String?
-  reservationButtonTextColor  String?
-  reservationFormStyle        String          @default("classic") // "classic" | "modern"
+  id                           String          @id @default(uuid())
+  userId                       String
+  businessId                   String?
+  businessName                 String          @default("")
+  businessType                 String          @default("")
+  location                     String?
+  slogan                       String?
+  uniqueDescription            String?
+  template                     String          @default("")
+  selectedTemplate             String?
+  primaryColor                 String          @default("#111827")
+  secondaryColor               String          @default("#6B7280")
+  fontFamily                   String          @default("sans-serif")
+  menuItems                    Json            @default("[]")
+  gallery                      Json            @default("[]")
+  openingHours                 Json            @default("{}")
+  reservationsEnabled          Boolean         @default(false)
+  maxGuests                    Int             @default(10)
+  onlineOrdering               Boolean         @default(false)
+  onlineStore                  Boolean         @default(false)
+  teamArea                     Boolean         @default(false)
+  contactMethods               Json            @default("[]")
+  socialMedia                  Json            @default("{}")
+  selectedPages                Json            @default("[\"home\"]")
+  customPages                  Json            @default("[]")
+  status                       String          @default("draft")
+  publishedUrl                 String?         @unique
+  previewUrl                   String?
+  domainName                   String?
+  selectedDomain               String?
+  paymentOptions               Json            @default("[]")
+  offers                       Json            @default("[]")
+  createdAt                    DateTime        @default(now())
+  updatedAt                    DateTime        @updatedAt
+  backgroundColor              String          @default("#FFFFFF")
+  fontColor                    String          @default("#000000")
+  hasDomain                    Boolean         @default(false)
+  headerBackgroundColor        String?
+  headerFontColor              String?
+  headerFontSize               String?
+  homepageDishImageVisibility  String?
+  priceColor                   String?
+  reservationButtonColor       String?
+  reservationButtonShape       String?
+  reservationButtonTextColor   String?
+  reservationFormStyle         String          @default("classic") // "classic" | "modern"
   reservationNotificationEmail String?
-  reservationTimeSlotInterval  Int            @default(30) // minutes between slots
-  reservationDaysAhead         Int            @default(7) // how many days ahead guests can book
-  timeSlots                   String[]        @default(["12:00", "13:00", "18:00", "19:00"])
-  addOns                      AddOnInstance[]
-  business                    Business?       @relation(fields: [businessId], references: [id])
-  templateData                Template?       @relation(fields: [selectedTemplate], references: [id])
-  user                        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reservationTimeSlotInterval  Int             @default(30) // minutes between slots
+  reservationDaysAhead         Int             @default(7) // how many days ahead guests can book
+  timeSlots                    String[]        @default(["12:00", "13:00", "18:00", "19:00"])
+  addOns                       AddOnInstance[]
+  business                     Business?       @relation(fields: [businessId], references: [id])
+  templateData                 Template?       @relation(fields: [selectedTemplate], references: [id])
+  user                         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, businessId])
   @@index([userId])
@@ -733,6 +772,21 @@ enum OrderType {
 enum ChannelProvider {
   GOOGLE
   META
+  /// WhatsApp Cloud API. Eigener Wert und NICHT unter META gefuehrt, weil
+  /// @@unique([businessId, provider]) sonst genau eine Meta-Zeile je Betrieb zulaesst:
+  /// Instagram-Insights und die eigene WhatsApp-Nummer wuerden sich beim OAuth-Upsert
+  /// gegenseitig ueberschreiben, und zwar still.
+  ///
+  /// VORBEDINGUNG IM CODE, vor dem Einspielen der Migration erledigt:
+  /// syncAll (server/maitr/sync.ts) holte ALLE ACTIVE-Verbindungen ohne
+  /// Provider-Filter, pullChannel bildete mit `provider === "GOOGLE" ? "google" :
+  /// "meta"` ab und ensureFreshToken setzte jede Nicht-Google-Verbindung auf
+  /// EXPIRED. Eine WHATSAPP-Zeile haette sich damit bei JEDEM Cron-Lauf selbst
+  /// abgeschaltet. Beide Stellen fuehren jetzt einen Provider-Filter bzw. einen
+  /// fruehen Ausstieg. Ein Schema-Kommentar ist dafuer kein Riegel - die Migration
+  /// laeuft unabhaengig vom Anwendungscode, deshalb steht der Enum-Wert in einer
+  /// EIGENEN Migrationsdatei, die den Wert nirgends benutzt.
+  WHATSAPP
 }
 
 enum ConnectionStatus {
@@ -742,35 +796,122 @@ enum ConnectionStatus {
 }
 
 /// Dem Betrieb gehörende Gästebeziehung (der verteidigbare Kern). → GuestRecord
+///
+/// LOESCHEN HEISST ANONYMISIEREN, NICHT DELETE - VERBINDLICH
+/// An diesem Gast haengen mit onDelete: Cascade die Stempelkarten, ueber sie das
+/// Stempel-Hauptbuch (StampEvent) und ueber WhatsAppConversation der gesamte
+/// Nachrichtenverlauf. Ein hartes DELETE aus der Oberflaeche waere damit ein
+/// Loeschknopf fuer Beweismittel: Ein Mitarbeiter legt einen Gast an, stempelt
+/// vierzigmal auf das eigene Handy (jede Zeile mit seiner staffUserId) und raeumt
+/// mit "Gast loeschen" in einem Klick alle vierzig Belege ab - mit einem Recht,
+/// das er fuer die taegliche Arbeit ohnehin braucht.
+/// Deshalb: Der Gastloeschpfad setzt phone, phoneE164, email auf NULL, name auf
+/// einen festen Platzhalter und anonymizedAt auf die Uhrzeit. Karten, Hauptbuch
+/// und Auswertung bleiben stehen, personenbezogene Daten sind weg.
+/// Ein echtes DELETE gibt es nur ueber das Loeschen des ganzen Betriebs; dort
+/// kaskadiert alles gemeinsam.
+/// (Warum nicht per onDelete: NoAction erzwungen: siehe Abschnittskommentar
+/// "Treue, Wallet und WhatsApp" ganz unten - NoAction bricht das Loeschen eines
+/// Betriebs und damit DELETE /me.)
 model MaitrGuest {
-  id         String   @id @default(uuid())
-  businessId String
-  name       String
-  phone      String?
-  firstVisit DateTime
-  lastVisit  DateTime
-  visits     Int      @default(1)
-  noShows    Int      @default(0)
-  tags       String[] @default([])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  id           String    @id @default(uuid())
+  businessId   String
+  name         String
+  /// Rohwert, wie ihn das Reservierungsformular liefert ("0151 123 45 67").
+  /// Bleibt unveraendert - er ist das, was der Betrieb eingegeben hat.
+  phone        String?
+  /// Dieselbe Nummer in E.164 OHNE fuehrendes Plus ("4915112345678") - genau die
+  /// Form, in der WhatsApp `wa_id` liefert. Zwei Spalten statt einer, weil ein
+  /// Vergleich zwischen Rohwert und wa_id sonst zur Laufzeit-Heuristik wird statt
+  /// zu einem Treffer auf einem Index.
+  ///
+  /// REIHENFOLGE: Der Backfill aus `phone` gehoert VOR die erste WhatsApp-
+  /// Verbindung, nicht nur vor den Livegang. Solange die Spalte leer ist, findet
+  /// die Zuordnung einer eingehenden Nachricht keinen Bestandsgast und legt ein
+  /// Gespraech mit guestId = NULL an - das wird spaeter nicht von selbst
+  /// nachgezogen. Das Backfill-Skript braucht deshalb einen zweiten Lauf, der
+  /// Gespraeche mit guestId IS NULL ueber [businessId, waId] nachverknuepft.
+  phoneE164    String?
+  /// Nullbar, und das ist fachlich richtig: die Gastbeziehung entsteht ueber
+  /// Telefon/WhatsApp, eine E-Mail gibt es typischerweise nicht.
+  email        String?
+  firstVisit   DateTime
+  lastVisit    DateTime
+  visits       Int       @default(1)
+  noShows      Int       @default(0)
+  tags         String[]  @default([])
+  /// Aus dem Mock-Betrieb erzeugt (ENABLE_PRODUCTION_APIS=false). Ohne dieses
+  /// Kennzeichen stehen erfundene Namen ununterscheidbar in der Gaesteliste eines
+  /// echten Betriebs und sind beim Umschalten nicht mehr auffindbar.
+  isMock       Boolean   @default(false)
+  /// Gesetzt, sobald der Gast anonymisiert wurde (siehe Modellkommentar). Die Zeile
+  /// bleibt als Traeger von Karten und Hauptbuch stehen, enthaelt aber keine
+  /// personenbezogenen Daten mehr. NULL = regulaerer Gast.
+  anonymizedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
+  stampCards            StampCard[]
+  whatsAppConversations WhatsAppConversation[]
+
+  // Zuordnung eingehender WhatsApp-Nachrichten: genau ein Gast je Betrieb und
+  // Nummer. Mandantengebunden, NICHT global - dieselbe Person darf selbstverstaendlich
+  // bei zwei Betrieben Gast sein; ein globales Unique waere ein
+  // betriebsuebergreifender Zusammenzug von Gastdaten.
+  // Postgres laesst beliebig viele NULL nebeneinander zu, Gaeste ohne Nummer bleiben
+  // also moeglich. Der Index haelt nur, wenn beim Schreiben normalisiert wird - die
+  // Normalisierung gehoert an die Schreibgrenze, nicht in den Index.
+  @@unique([businessId, phoneE164])
+  // KEIN Fachschluessel, sondern das Ziel der zusammengesetzten Fremdschluessel von
+  // StampCard und WhatsAppConversation:
+  // @relation(fields: [businessId, guestId], references: [businessId, id]).
+  // Damit ist strukturell ausgeschlossen, dass eine Stempelkarte Betrieb A nennt,
+  // aber an einem Gast von Betrieb B haengt. Kann nie an Duplikaten scheitern,
+  // weil id bereits Primaerschluessel ist.
+  @@unique([businessId, id])
   @@index([businessId, lastVisit])
 }
 
 /// Normalisierte Bewertung aus Google/Meta. externalId = Idempotenz beim Sync. → ReviewRecord
 model MaitrReview {
-  id         String   @id @default(uuid())
-  businessId String
-  source     String
-  externalId String
-  rating     Int
-  text       String
+  id              String            @id @default(uuid())
+  businessId      String
+  source          String
+  externalId      String
+  rating          Int
+  /// ACHTUNG: NOT NULL, obwohl Google und Meta regelmaessig Bewertungen ohne
+  /// Kommentar liefern (nur Sterne). Die bestehenden Connectors fangen das mit
+  /// `?? ""` ab. Jeder neue Mock- oder Importpfad muss dasselbe tun, sonst gibt es
+  /// einen NOT-NULL-Verstoss erst zur Laufzeit gegen die echte Datenbank.
+  text            String
+  /// Verfasser der Bewertung. MUSS nullbar sein: Google liefert anonyme und
+  /// geloeschte Rezensenten ohne Namen. Personenbezogen - gehoert in dieselbe
+  /// Loesch-/Aufbewahrungsbetrachtung wie MaitrGuest.name.
+  author          String?
+  /// Unsere eigene Antwort. Nicht ableitbar, also gespeichert.
+  replyText       String?
+  /// Zustand UNSERES Veroeffentlichungsversuchs (siehe Enum).
+  ///
+  /// BESTANDSDATEN: Die Migration setzt fuer jede Zeile mit repliedAt IS NOT NULL
+  /// direkt PUBLISHED - sonst gaelte die Regel "repliedAt folgt dem Status" fuer
+  /// keine einzige Bestandszeile und historisch beantwortete Bewertungen erschienen
+  /// wieder als offene Aufgabe. server/maitr/sync.ts fuehrt den Wert im
+  /// update-Zweig mit, damit die Drift beim naechsten Sync nicht zurueckkehrt.
+  replyStatus     ReviewReplyStatus @default(NONE)
+  /// Fehlermeldung des letzten Veroeffentlichungsversuchs (nur bei FAILED).
+  replyError      String?
   createdAtSource DateTime
-  repliedAt  DateTime?
-  createdAt  DateTime @default(now())
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  /// Wird AUSSCHLIESSLICH gesetzt, wenn replyStatus auf PUBLISHED geht. Der Status
+  /// fuehrt, der Zeitstempel folgt - sonst driften beide auseinander und
+  /// buildInsights zeigt eine beantwortete Bewertung wieder als offene Aufgabe.
+  repliedAt       DateTime?
+  /// Aus dem Mock-Betrieb erzeugt. Ohne Kennzeichen belegt eine erfundene
+  /// externalId dauerhaft den Idempotenzschluessel der spaeteren echten Bewertung,
+  /// und die Mock-Zeilen sind nach dem Umschalten nicht mehr entfernbar.
+  isMock          Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  business        Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   // Mandantengebunden: dieselbe externe Review-ID darf pro Betrieb existieren, ohne
   // dass der Sync eines Betriebs die Zeile eines anderen überschreibt (geteilte Konten).
@@ -786,6 +927,8 @@ model MaitrEngagementPoint {
   at          DateTime
   impressions Int      @default(0)
   actions     Int      @default(0)
+  /// Siehe MaitrReview.isMock.
+  isMock      Boolean  @default(false)
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@unique([businessId, source, at])
@@ -800,14 +943,79 @@ model ChannelConnection {
   accountId       String
   encAccessToken  String
   encRefreshToken String?
+  /// BLEIBT NOT NULL. Ein nie ablaufendes WhatsApp-System-User-Token bekommt ein
+  /// fernes Sentinel-Datum. Nullbar machen waere schema-seitig harmlos, bricht aber
+  /// Code: sync.ts ruft `conn.expiresAt.getTime()` bedingungslos auf und
+  /// ensureFreshToken kennt keinen Zweig fuer "laeuft nie ab".
   expiresAt       DateTime
   scopes          String[]         @default([])
   status          ConnectionStatus @default(ACTIVE)
+  /// Zustand des KONTOS beim Anbieter (Google-Standortverifizierung,
+  /// Meta-Seitenverifizierung, WhatsApp-Nummer registriert und Anzeigename
+  /// freigegeben) - NICHT der Zustand unseres Tokens, das ist `status`.
+  ///
+  /// DREIWERTIG UND BEWUSST OHNE DEFAULT:
+  ///   NULL  = noch nie geprueft (der Zustand aller Bestandsverbindungen nach der
+  ///           Migration - lokal ist der wahre Wert nicht bekannt, er muss von
+  ///           Google/Meta geholt werden),
+  ///   false = geprueft und NICHT verifiziert,
+  ///   true  = geprueft und verifiziert, mit verifiedAt als Alter der Aussage.
+  /// Ein `DEFAULT false` haette jede seit Wochen einwandfrei laufende Verbindung
+  /// wegen eines Migrationsdefaults als unverifiziert eingestuft.
+  ///
+  /// TRAGEND, NICHT NUR ANZEIGE: `status` entscheidet, ob wir das Token BENUTZEN
+  /// duerfen. `isVerified` ist zusaetzlich Voraussetzung fuer (a) das Zustellen
+  /// eingehender WhatsApp-Nachrichten an diesen Betrieb und (b) das Veroeffentlichen
+  /// von Bewertungsantworten. Ein PENDING im status-Enum koennte das nicht
+  /// ausdruecken (was gilt, wenn eine PENDING-Verbindung ablaeuft?).
+  isVerified      Boolean?
+  /// Wann die Verifizierung zuletzt bestaetigt wurde. Ein blosses Boolean sagt
+  /// nicht, wie alt die Aussage ist.
+  verifiedAt      DateTime?
+  /// NUR bei provider = WHATSAPP gesetzt: Metas `phone_number_id`.
+  ///
+  /// Der einzige Routing-Anker fuer eingehende Webhooks: Meta stellt die Webhooks
+  /// ALLER Betriebe an EINE App-URL zu, und der Rumpf nennt als einzigen Anker
+  /// value.metadata.phone_number_id. Die HMAC beweist nur, dass Meta gesendet hat,
+  /// nicht WEM die Nachricht gehoert. Das bestehende `accountId` taugt dafuer nicht:
+  /// geteilte Konten ueber mehrere Betriebe sind ausdruecklich erlaubt.
+  ///
+  /// KEIN globales @unique im Modell, sondern ein PARTIELLER Unique-Index von Hand
+  /// im Migrations-SQL:
+  ///   CREATE UNIQUE INDEX "ChannelConnection_waPhoneNumberId_active_key"
+  ///     ON "ChannelConnection"("waPhoneNumberId") WHERE "status" = 'ACTIVE';
+  /// Prisma kann eine Teilbedingung nicht ausdruecken. Ein globales Unique waere an
+  /// zwei Stellen falsch: (1) eine tote REVOKED-Zeile blockierte dauerhaft die
+  /// Neuvergabe derselben Nummer an einen anderen Betrieb, obwohl Meta sie laengst
+  /// weitergereicht hat; (2) wer zuerst schreibt, gewinnt - ohne Verifizierung
+  /// koennte ein Betrieb die Nummer eines anderen eintragen und bekaeme dessen
+  /// eingehende Gastnachrichten.
+  /// REGELN dazu: waPhoneNumberId wird erst geschrieben, nachdem GET
+  /// /{phone_number_id} mit dem EIGENEN gespeicherten Token erfolgreich war
+  /// (isVerified = true), beim Uebergang auf REVOKED/EXPIRED wieder auf NULL
+  /// gesetzt, und das Routing verlangt status = ACTIVE AND isVerified = true.
+  waPhoneNumberId String?
+  /// WhatsApp Business Account (`waba_id`, im Webhook entry[].id). Zweitkennung,
+  /// NICHT eindeutig: ein WABA kann mehrere Nummern fuehren.
+  wabaId          String?
+  /// Anzeigenummer (+49...), rein informativ fuer die Oberflaeche.
+  waDisplayPhone  String?
+  /// Verbindung aus dem Mock-Betrieb.
+  isMock          Boolean          @default(false)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@unique([businessId, provider])
+  // Reines Ziel fuer kuenftige zusammengesetzte Fremdschluessel auf diese Tabelle -
+  // damit eine spaetere Beziehung gar nicht erst einspaltig auf `id` zeigen kann und
+  // eine fremde Verbindungs-uuid im Request-Rumpf strukturell wirkungslos bleibt.
+  // Kein Fachschluessel, kann nie an Duplikaten scheitern (id ist Primaerschluessel).
+  @@unique([businessId, id])
+  // Nachschlagen der Nummer beim eingehenden Webhook.
+  @@index([waPhoneNumberId])
+  // Alle Nummern eines WhatsApp-Business-Accounts.
+  @@index([wabaId])
 }
 
 /// Gecachtes Analytics-Ergebnis, damit /briefing/today nicht bei jedem Aufruf neu rechnet.
@@ -892,4 +1100,871 @@ model TaskDecision {
   // Mandantengebunden: dieselbe Aufgabenkennung darf in jedem Betrieb existieren.
   @@unique([businessId, taskId])
   @@index([businessId, state])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Treue, Wallet und WhatsApp
+//
+// Dieselbe Machart wie die Maitr-Tabellen darueber: jede Zeile traegt eine eigene
+// businessId mit Fremdschluessel auf Business und onDelete: Cascade - auch dort,
+// wo sie ueber die Kette ableitbar waere. Zwei Gruende. Erstens haengt DELETE /me
+// (server/routes/users.ts) vollstaendig am Cascade; eine Tabelle ohne lueckenlosen
+// Weg zu Business laesst die Kontoloeschung in Prismas Default (Restrict) laufen
+// und der Nutzer kann sein Konto gar nicht mehr loeschen - nachdem seine Bilder
+// bereits geloescht wurden. Zweitens ist die eigene businessId die zweite
+// Verteidigungslinie: eine Abfrage ohne Join liest damit nicht versehentlich
+// betriebsuebergreifend.
+//
+// Wo zwei Angaben auseinanderfallen koennten (Karte nennt Betrieb A, Gast gehoert
+// zu B), steht ein ZUSAMMENGESETZTER Fremdschluessel auf [businessId, id] statt
+// zweier unabhaengiger Spalten. Ein einspaltiger Fremdschluessel auf eine fremde
+// uuid ist hier kein Schoenheitsfehler, sondern die Luecke selbst: uuids sind kein
+// Geheimnis, sie stehen bereits in ausgelieferten Briefing-Antworten, und
+// requireVenueAccess prueft nur die venueId aus dem Request - nicht, ob die
+// mitgeschickte Fremd-uuid demselben Betrieb gehoert.
+//
+// WARUM ALLE DIESE ZUSAMMENGESETZTEN SCHLUESSEL "Cascade" TRAGEN UND NICHT
+// "NoAction" ODER "SetNull" - die Stelle, an der die naheliegende Verschaerfung
+// mehr kaputt macht, als sie schuetzt:
+//   - SetNull scheidet aus: Postgres setzt beim SET NULL ALLE Spalten des
+//     Schluessels auf NULL, also auch businessId - und die ist NOT NULL.
+//   - NoAction scheidet aus, obwohl es auf den ersten Blick der sicherere Wert ist:
+//     Business -> MaitrGuest (Cascade, aelterer Fremdschluessel) und
+//     Business -> StampCard (Cascade, neu) bilden eine Raute. Beim Loeschen eines
+//     Betriebs feuert die Kaskade auf MaitrGuest zuerst; die NoAction-Pruefung auf
+//     StampCard schlaegt dann an, WEIL die Karten in diesem Moment noch stehen.
+//     Ergebnis waere ein Betrieb, der sich nicht mehr loeschen laesst - und damit
+//     ein DELETE /me, das nach dem Loeschen der Bilder haengen bleibt.
+// Die Missbrauchsabwehr, die NoAction leisten sollte (ein Mitarbeiter loescht mit
+// "Gast loeschen" seine eigenen Stempelbelege), sitzt deshalb im Schreibpfad:
+// Gastloeschung ist eine Anonymisierung (siehe MaitrGuest.anonymizedAt), ein hartes
+// DELETE auf MaitrGuest gibt es in der Oberflaeche nicht.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Zustand UNSERES Veroeffentlichungsversuchs zu einer Bewertung - nicht der
+/// Zustand der Bewertung selbst.
+///
+/// Bewusste Abweichung von einem freien `status`-Feld: "neu" und "beantwortet" sind
+/// ABLEITBAR (aus repliedAt), "ignoriert" liegt bereits in TaskDecision
+/// (state = DISMISSED, taskId = "review_<id>"). Ein zweites Zustandsfeld waere ab
+/// dem ersten Sync genau die zweite Wahrheit, die der Kommentar an TaskDecision
+/// beschreibt. Was sich NICHT ausrechnen laesst, ist der Ausgang eines
+/// Sendeversuchs an Google/Meta - und nur den fuehrt dieses Enum.
+enum ReviewReplyStatus {
+  /// Keine Antwort begonnen.
+  NONE
+  /// Entwurf gespeichert, noch nichts gesendet.
+  DRAFT
+  /// Senden laeuft. Verhindert, dass zwei Klicks zweimal veroeffentlichen.
+  PUBLISHING
+  /// Erfolgreich veroeffentlicht. NUR in diesem Uebergang wird repliedAt gesetzt.
+  PUBLISHED
+  /// Fehlgeschlagen, Grund in replyError. Der Entwurf bleibt erhalten.
+  FAILED
+}
+
+/// Lebenszyklus einer Stempelkarte.
+///
+/// Prisma kann keine partielle Eindeutigkeit ausdruecken ("nur EINE ACTIVE Karte je
+/// Gast und Programm"). Deshalb traegt StampCard.cycle den Durchlauf und der
+/// Unique-Schluessel enthaelt ihn; die eingeloeste Karte bleibt mit REDEEMED und
+/// ihrer Historie stehen, die naechste bekommt cycle + 1.
+enum StampCardStatus {
+  ACTIVE
+  /// Voll, aber die Praemie ist noch nicht eingeloest.
+  COMPLETED
+  /// Praemie eingeloest. Karte ist abgeschlossen, Historie bleibt.
+  REDEEMED
+  EXPIRED
+  /// Vom Betrieb entwertet (Missbrauch, Fehlausgabe).
+  VOIDED
+}
+
+/// Art eines Eintrags im Stempel-Hauptbuch.
+enum StampEventKind {
+  /// Stempel gutgeschrieben (delta > 0).
+  EARNED
+  /// Praemie eingeloest (delta = -maxStamps). Eigenes Ereignis statt
+  /// "currentStamps = 0", sonst ist hinterher nicht unterscheidbar, ob eingeloest
+  /// oder zurueckgesetzt wurde.
+  REDEEMED
+  /// Nachtraegliche Korrektur durch den Betrieb, in beide Richtungen.
+  CORRECTION
+  /// Karte entwertet.
+  VOIDED
+}
+
+/// Woher ein Stempeleintrag kommt.
+enum StampEventSource {
+  /// Personal hat den Pass des Gastes gescannt (der vorgesehene Weg).
+  QR_SCAN
+  /// Von Hand in der App gesetzt.
+  MANUAL
+  /// Uebernahme aus einem Altsystem.
+  IMPORT
+  /// Aus dem Mock-Betrieb erzeugt.
+  MOCK
+}
+
+enum WhatsAppDirection {
+  IN
+  OUT
+}
+
+/// Zustellzustand einer WhatsApp-Nachricht.
+///
+/// WICHTIG: Der Zustand steht als SPALTE auf der Nachricht, es gibt bewusst KEINE
+/// Ereignistabelle je Statusmeldung. Grund: sent, delivered und read zu derselben
+/// Nachricht tragen bei Meta DIESELBE wamid. Wer je Meldung eine Zeile mit @@unique
+/// auf der wamid anlegt, verliert zwei von drei Meldungen; wer ohne Unique anlegt,
+/// bekommt bei jeder Wiederholzustellung Dubletten.
+///
+/// REGEL, ohne die die Spalte ruecklaeufig wird: `status` ist MONOTON und wird
+/// ausschliesslich aus den Zeitstempeln abgeleitet (failedAt -> FAILED, sonst
+/// readAt -> READ, deliveredAt -> DELIVERED, sentAt -> SENT). Ein Webhook setzt nur
+/// seinen eigenen Zeitstempel, und nur wenn dieser noch NULL ist; `status` wird nie
+/// direkt geschrieben. Sonst setzt eine wiederholt zugestellte sent-Meldung eine
+/// laengst gelesene Nachricht auf "nicht zugestellt" zurueck - Meta stellt Status-
+/// Webhooks wiederholt und nicht in garantierter Reihenfolge zu.
+enum WhatsAppMessageStatus {
+  /// Eingehend, von uns entgegengenommen.
+  RECEIVED
+  /// Ausgehend, angelegt aber noch nicht an die Cloud API uebergeben.
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+/// Freigabezustand einer Nachrichtenvorlage bei Meta.
+enum WhatsAppTemplateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAUSED
+  DISABLED
+}
+
+/// Zustand der eigenen Kopie einer Mediendatei.
+enum WhatsAppMediaState {
+  /// media_id ist bekannt, die Datei noch nicht geholt.
+  PENDING
+  /// Datei liegt im eigenen (privaten) Speicher, storagePath ist gesetzt.
+  STORED
+  /// Download endgueltig fehlgeschlagen (meist: Frist bei Meta abgelaufen).
+  FAILED
+  /// Nach Aufbewahrungsfrist geloescht; die Zeile bleibt als Nachweis.
+  PURGED
+}
+
+/// Wie die Vergleichsgruppe des Nachbarschafts-Benchmarks gebildet wird.
+///
+/// Ein Enum mit vorerst genau EINEM Wert, und das ist der Punkt: ein freier
+/// `cohortKey` mit frei waehlbarem Radius macht die Mindestkohorte wirkungslos.
+/// Wer nacheinander "umkreis:1000" (n=5, Schnitt 4,20) und "umkreis:1200" (n=6,
+/// Schnitt 4,28) abruft, bekommt beide Male eine zulaessige Auskunft - und rechnet
+/// aus der Differenz die exakte Bewertung genau des einen Betriebs aus, der
+/// dazwischen liegt. Ueber die Karte ist der eindeutig zu benennen. Die Kohorte
+/// wird deshalb serverseitig festgelegt, nicht aus dem Request uebernommen.
+enum BenchmarkCohort {
+  /// Alle Betriebe mit derselben Postleitzahl.
+  POSTAL_CODE
+}
+
+/// Die Regeln eines Treueprogramms - NICHT die einzelne Karte.
+///
+/// WARUM EINE EIGENE TABELLE STATT NUR "maxStamps" AN DER KARTE
+/// maxStamps allein an der Karte ist rueckwirkend gefaehrlich: aendert der Betrieb
+/// 10 auf 12, muessten entweder alle laufenden Karten mitwandern (der Gast verliert
+/// eine bereits erreichte Praemie) oder sie laufen auseinander, ohne dass irgendwo
+/// steht, welche Regel fuer welche Karte galt. Deshalb: Regel hier, Snapshot auf der
+/// Karte (StampCard.maxStamps). Die Karte ist damit fuer sich allein lesbar.
+///
+/// Zweiter Grund: die Wallet-Kennungen sind pro BETRIEB konstant, nicht pro Karte.
+/// applePassTypeIdentifier und googleClassId n-fach in jede Karte zu schreiben waere
+/// Redundanz, die beim ersten Wechsel widerspruechlich wird.
+///
+/// Alle Wallet-Felder sind NULLBAR. Das ist Absicht und keine Nachlaessigkeit:
+/// ohne Apple-Zertifikat und ohne freigegebenen Google-Aussteller muss ein Programm
+/// lokal trotzdem anlegbar und testbar sein (Mock-Betrieb). Ein Pass wird erst
+/// erzeugt, wenn die Kennungen vorhanden sind.
+model StampProgram {
+  id                      String    @id @default(uuid())
+  businessId              String
+  name                    String
+  /// Wie viele Stempel bis zur Praemie. Wird beim Anlegen einer Karte kopiert.
+  maxStamps               Int       @default(10)
+  /// Klartext der Praemie ("1x Kaffee gratis"). Steht so auch auf dem Pass.
+  rewardText              String
+  isActive                Boolean   @default(true)
+  /// Sperrfrist zwischen zwei Stempeln derselben Karte. Verhindert, dass der Gast im
+  /// selben Besuch mehrfach gestempelt wird. Die Pruefung ist ein
+  /// Read-Modify-Write und braucht deshalb die Transaktion samt StampCard.version -
+  /// zwei gleichzeitige Anfragen lesen sonst beide "keine Sperre" und schreiben beide.
+  cooldownSeconds         Int       @default(3600)
+  /// Gueltigkeit einer ausgegebenen Karte in Tagen. NULL = unbefristet.
+  validityDays            Int?
+  /// Apple Pass Type ID. NULL, solange kein Apple-Zertifikat vorliegt.
+  ///
+  /// WIRD SERVERSEITIG AUS APPLE_PASS_TYPE_IDENTIFIER GESETZT und ist KEIN
+  /// Eingabefeld des Betriebs: jede Pass Type ID braucht ihr EIGENES
+  /// Signaturzertifikat. Solange nur eines in der Umgebung liegt, ist jeder
+  /// abweichende Wert ein Pass, den keine Wallet oeffnet - und zwar kommentarlos,
+  /// ohne Fehlermeldung, aus der die Ursache hervorginge.
+  applePassTypeIdentifier String?
+  /// Google-Wallet-Aussteller. NULL, solange der Account nicht freigegeben ist.
+  googleIssuerId          String?
+  /// Vollstaendige Klassenkennung "<issuerId>.<suffix>". Unveraenderlich, sobald das
+  /// erste Objekt darauf verweist.
+  ///
+  /// DAS SUFFIX MUSS AUS businessId/id GEBILDET WERDEN, nicht aus einer globalen
+  /// Umgebungsvariablen: aus einem globalen Aussteller plus globalem Suffix ergaebe
+  /// sich fuer JEDEN Betrieb dieselbe classId. Die Klasse traegt bei Google Logo,
+  /// Programmnamen und Ausstellertext - ein PATCH von Betrieb B aenderte damit die
+  /// Darstellung auf den bereits ausgelieferten Karten der Gaeste von Betrieb A.
+  /// Zeichenvorrat: nur [A-Za-z0-9._-].
+  googleClassId           String?
+  /// Wann die Klasse bei Google tatsaechlich per POST genericClass angelegt wurde.
+  /// Gleiche Begruendung wie StampCard.googleObjectCreatedAt eine Ebene tiefer: ohne
+  /// dieses Feld weiss der Server nicht, ob insert oder patch - und das erste Objekt
+  /// scheitert an einer Klasse, die es bei Google nie gab ("Class not found").
+  googleClassCreatedAt    DateTime?
+  /// Farben, Logo, Feldbeschriftungen des Passes. Bewusst formfrei - der Pass ist
+  /// Darstellung, keine Rechengrundlage.
+  designJson              Json?
+  isMock                  Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  business                Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  cards StampCard[]
+
+  // Ein Programmname je Betrieb - macht den Anlegepfad zu einem Upsert.
+  @@unique([businessId, name])
+  // Ziel des zusammengesetzten Fremdschluessels von StampCard.
+  @@unique([businessId, id])
+  // "Welches Programm laeuft gerade in diesem Betrieb?" - der Aufruf beim Ausgeben
+  // einer neuen Karte.
+  @@index([businessId, isActive])
+}
+
+/// Die Stempelkarte eines Gastes - Zaehlerstand, QR-Geheimnis und die Kennungen
+/// beider Wallet-Systeme.
+///
+/// WARUM businessId UND guestId, OBWOHL businessId ABLEITBAR WAERE
+/// Ableitbar ja - aber nur ueber einen Join, den jede einzelne Abfrage schreiben
+/// muesste. Die erste Stelle, die ihn vergisst, liest ueber eine uuid aus dem
+/// Request-Body die Karte eines fremden Betriebs. Damit die beiden Angaben nicht
+/// auseinanderfallen koennen, zeigen die Fremdschluessel auf Gast UND Programm
+/// ZUSAMMENGESETZT auf [businessId, id].
+///
+/// WARUM DER QR-CODE NICHT DIE GAST-ID TRAEGT
+/// Der Token liegt hier, an der Karte, nicht am Gast: ein Token am Gast ist so
+/// langlebig wie der Gast - rotieren hiesse, alle seine Paesse gleichzeitig zu
+/// entwerten, widerrufen ginge nur durch Loeschen des Gastes. Der Wert steht offen
+/// im Barcode auf dem Sperrbildschirm und ist abfotografierbar; er darf deshalb kein
+/// interner Schluessel sein und muss ersetzbar bleiben (scanTokenRotatedAt/RevokedAt).
+///
+/// DIE TRAGENDE ABSICHERUNG IST NICHT DER TOKEN
+/// Sie ist die Richtung der Berechtigung: der Barcode sagt nur, WELCHE Karte gemeint
+/// ist. Das Recht zu stempeln kommt vom angemeldeten Personal (requireAuth +
+/// requireVenueAccess), die businessId kommt AUS DER SITZUNG, nie aus dem gescannten
+/// Code. Ein abfotografierter Code ist damit wertlos. Fremdscan endet in "Code
+/// unbekannt" - ohne Unterscheidung, sonst wird der Endpunkt zum Orakel fuer fremde
+/// Codes. Ein Upsert auf dem Tokenpfad ist verboten: er importierte beim Fremdscan
+/// stillschweigend einen fremden Gast.
+///
+/// WAS @@unique([businessId, scanTokenHash]) LEISTET - UND WAS NICHT
+/// Es macht `findUnique({ where: { scanTokenHash } })` zum Compilefehler, und die
+/// fuehrende businessId macht eine Abfrage ohne Mandantenbezug zum Seq-Scan. Es
+/// leistet NICHT mehr: `findFirst`, `findMany`, `updateMany` mit demselben `where`
+/// uebersetzen sauber und liefern die Karte eines fremden Betriebs. Der Schutz ist
+/// die Regel im Schreibpfad - jede Abfrage auf scanTokenHash fuehrt businessId aus
+/// req.venueId im selben `where` -, nicht das Typsystem.
+model StampCard {
+  id            String          @id @default(uuid())
+  businessId    String
+  programId     String
+  guestId       String
+  /// Wievielte Karte dieses Gastes in diesem Programm. Traegt "mehrere Karten
+  /// nacheinander", ohne dass eine partielle Eindeutigkeit noetig waere.
+  cycle         Int             @default(1)
+  /// Lese-Cache; die Wahrheit ist die Summe der StampEvents. In derselben
+  /// Transaktion wie das Ereignis fortgeschrieben.
+  currentStamps Int             @default(0)
+  /// Snapshot aus StampProgram.maxStamps zum Zeitpunkt der Ausgabe.
+  maxStamps     Int             @default(10)
+  redeemedCount Int             @default(0)
+  status        StampCardStatus @default(ACTIVE)
+  /// Optimistische Sperre. Der Stempelpfad schreibt `update where { id, version }`
+  /// und erhoeht sie - sonst mogeln sich zwei gleichzeitige Scans mit verschiedenen
+  /// Idempotenzschluesseln beide an der Cooldown-Pruefung vorbei. Prismas
+  /// `increment` allein reicht dafuer nicht: das Inkrement ist atomar, die Pruefung
+  /// davor nicht.
+  version       Int             @default(0)
+
+  /// sha256(QR-Token) als Hex. Der SUCHSCHLUESSEL des Scanpfads - der Server muss
+  /// den Wert wiedererkennen, mehr nicht. SHA-256 ohne KDF ist hier richtig: der
+  /// Wert ist 32 Byte Zufall, es gibt kein Woerterbuch, und der Scanpfad braucht
+  /// eine einzelne indizierte Abfrage.
+  scanTokenHash      String
+  /// DERSELBE Token, aber reversibel (encryptToken, AES-256-GCM,
+  /// server/maitr/security.ts). Zwingend, und zwar aus genau demselben Grund, aus
+  /// dem encAuthToken nicht gehasht ist: bei GET /v1/passes/... baut der Server den
+  /// .pkpass NEU, und pass.json enthaelt barcodes[0].message im Klartext. Aus einem
+  /// Hash ist der Wert nicht rueckgewinnbar. Ohne diese Spalte gaebe es nur zwei
+  /// Auswege, und beide sind kaputt: Barcode weglassen (die Karte ist ab dem ersten
+  /// Stempel nicht mehr scannbar) oder bei jedem Abruf einen neuen Token vergeben
+  /// (der Pass auf dem zweiten Geraet des Gastes - Apple Watch - zeigt dann einen
+  /// toten Code, und das Google-Objekt fuehrt bis zum naechsten PATCH einen dritten).
+  /// Auch der Google-PATCH schreibt genau diesen Wert in barcode.value.
+  /// Gelesen wird die Spalte AUSSCHLIESSLICH beim Passbau, NIE im Scanpfad.
+  encScanToken       String?
+  scanTokenIssuedAt  DateTime  @default(now())
+  /// Neuausgabe bei Handyverlust: neuer Zufallswert, Hash UND Chiffrat in derselben
+  /// Transaktion ueberschreiben, danach Apple-Push und Google-PATCH - sonst ist die
+  /// Rotation genau der Fehler, den sie verhindern soll. Der Stempelstand bleibt,
+  /// weil er an der Karte haengt und nicht am Ausweis.
+  scanTokenRotatedAt DateTime?
+  /// Sperren ohne Neuausgabe.
+  scanTokenRevokedAt DateTime?
+
+  /// Apple: Seriennummer des Passes. GLOBAL eindeutig und damit die bewusste
+  /// Ausnahme von der businessId-Regel - Apples Geraet ruft
+  /// /v1/passes/{passTypeIdentifier}/{serialNumber} ohne Sitzung und ohne venueId
+  /// auf, requireVenueAccess kann diese Route strukturell nicht schuetzen. Die
+  /// Mandantenzugehoerigkeit muss deshalb IN der Zeile stehen: der Handler laedt die
+  /// businessId AUS der gefundenen Karte. Zufallswert, NICHT die id - die
+  /// Seriennummer steht in pass.json und in jeder PassKit-URL.
+  ///
+  /// NULLBAR, und das ist ein Sicherheitsmerkmal: Solange kein Pass ausgestellt ist
+  /// (Mock-Betrieb, kein Apple-Zertifikat), darf die Karte auch keine ueber Apple
+  /// adressierbare Kennung haben. Sonst entstuenden Karten mit Seriennummer, aber
+  /// ohne encAuthToken - und der einzige Riegel dieser sitzungslosen Route ist der
+  /// Vergleich des ApplePass-Headers gegen genau dieses Geheimnis. Die drei Felder
+  /// serialNumber/passTypeIdentifier/encAuthToken werden GEMEINSAM in einem Update
+  /// gesetzt; das Migrations-SQL erzwingt das zusaetzlich mit einem CHECK
+  /// (num_nonnulls(...) IN (0, 3)), den Prisma nicht ausdruecken kann.
+  serialNumber       String?   @unique
+  /// Snapshot von StampProgram.applePassTypeIdentifier. Als Snapshot, weil ein
+  /// spaeterer Wechsel im Programm sonst alle bereits ausgelieferten Paesse
+  /// unerreichbar machte - der Wert steht in jeder Apple-URL.
+  passTypeIdentifier String?
+  /// Apples `authenticationToken`, AES-256-GCM. Verschluesselt und NICHT gehasht:
+  /// bei GET /v1/passes/... baut der Server den .pkpass neu, und pass.json enthaelt
+  /// genau diesen Token im Klartext. Der Vergleich des eingehenden Tokens gehoert
+  /// zeitkonstant (Muster safeEqual in security.ts). Fehlt der Wert, ist die Antwort
+  /// ein hartes 401 - niemals ein uebersprungener Vergleich.
+  encAuthToken       String?
+  /// Aenderungsstempel fuer `passesUpdatedSince`. Ein undurchsichtiger, GLOBAL
+  /// monoton wachsender Zaehler: das Geraet fragt mit EINEM Wert nach Aenderungen an
+  /// MEHREREN Paessen, ein Zaehler je Karte waere nicht vergleichbar. Der Wert kommt
+  /// aus der Sequenz "wallet_pass_update_seq", die das Migrations-SQL anlegt (Prisma
+  /// kann eine geteilte Sequenz nicht ausdruecken) und die der Stempelpfad per
+  /// nextval() zieht - deshalb hier nur @default(0).
+  ///
+  /// Int und NICHT BigInt: Prisma bildet BigInt auf das JS-BigInt ab, und
+  /// JSON.stringify wirft darauf "Do not know how to serialize a BigInt" - der erste
+  /// res.json(card) waere ein 500er, den kein Typecheck sieht (res.json nimmt any).
+  /// 2,1 Milliarden Passaenderungen werden nicht erreicht. Ueber die Grenze geht der
+  /// Wert ohnehin als String: Apples Tag ist ein undurchsichtiger String.
+  passUpdateSeq      Int       @default(0)
+  /// Zeitpunkt der letzten INHALTLICHEN Aenderung (Stempel, Einloesen, Entwerten,
+  /// Token-Rotation) - nicht des letzten Baus. Quelle des Last-Modified-Headers bei
+  /// GET /v1/passes/... und in derselben Transaktion wie das StampEvent zu schreiben.
+  ///
+  /// Ohne dieses Feld bliebe nur lastPassBuiltAt, und damit antwortet der Server
+  /// dauerhaft 304: gebaut wurde um 10:00, gestempelt um 10:05 (kein Bau), das
+  /// Geraet fragt mit If-Modified-Since 10:00 - nicht neuer - 304, fuer immer. Beim
+  /// Entwickeln faellt das nicht auf, weil das manuelle Herunterziehen in der
+  /// Wallet-App den Cache umgeht.
+  ///
+  /// REGEL: If-Modified-Since hat Sekundenaufloesung, dieses Feld Millisekunden. Bei
+  /// GLEICHER Sekunde wird 200 geantwortet, nicht 304 - sonst verschluckt ein
+  /// Doppelscan innerhalb einer Sekunde die zweite Aenderung dauerhaft.
+  contentChangedAt   DateTime  @default(now())
+  /// Nur Diagnose ("wann haben wir zuletzt gebaut?"). Darf NIE in den
+  /// Last-Modified-Header - dafuer ist contentChangedAt da.
+  lastPassBuiltAt    DateTime?
+
+  /// Google Wallet: die Objektkennung "<issuerId>.<suffix>". Unveraenderlich.
+  /// Ein "googlePassToken" gibt es bewusst nicht - Google Wallet kennt keinen
+  /// Pass-Token. Aktualisiert wird per PATCH auf
+  /// walletobjects/v1/genericObject/{objectId}; dauerhaft sind ausschliesslich
+  /// issuerId, classId und objectId. Die Save-URL enthaelt ein kurzlebiges, bei
+  /// jedem Aufruf neu signiertes JWT - gespeichert waere es ein Inhaber-Link, mit
+  /// dem jeder Fremde die Karte in seine eigene Wallet legt.
+  googleObjectId        String?   @unique
+  /// Snapshot von StampProgram.googleClassId zum Zeitpunkt der Objekterzeugung.
+  /// Aus demselben Grund wie passTypeIdentifier: classId ist bei Google
+  /// unveraenderlich, und das Save-JWT wird bei JEDEM Aufruf neu signiert - es muss
+  /// die Klasse nennen, unter der das Objekt TATSAECHLICH liegt, nicht die, die im
+  /// Programm gerade eingetragen ist. Sonst lehnt Google den erneuten Save-Aufruf
+  /// eines Bestandsgastes mit "classId mismatch" ab.
+  googleClassId         String?
+  /// Wann das Objekt bei Google tatsaechlich angelegt wurde. Ohne dieses Feld weiss
+  /// der Server nicht, ob er insert oder patch aufrufen muss - ein PATCH auf ein nie
+  /// angelegtes Objekt endet mit 404.
+  googleObjectCreatedAt DateTime?
+
+  completedAt DateTime?
+  redeemedAt  DateTime?
+  expiresAt   DateTime?
+  isMock      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  program  StampProgram @relation(fields: [businessId, programId], references: [businessId, id], onDelete: Cascade)
+  guest    MaitrGuest   @relation(fields: [businessId, guestId], references: [businessId, id], onDelete: Cascade)
+
+  events        StampEvent[]
+  registrations WalletDeviceRegistration[]
+
+  // "Gast per QR-Token finden" - mandantengebunden, siehe Modellkommentar.
+  @@unique([businessId, scanTokenHash])
+  // Eine ACTIVE-Karte je Gast und Programm, spaetere Durchlaeufe ueber cycle.
+  @@unique([programId, guestId, cycle])
+  // Ziel der zusammengesetzten Fremdschluessel von StampEvent und
+  // WalletDeviceRegistration.
+  @@unique([businessId, id])
+  // "Alle Stempelkarten eines Betriebs" (Liste in der App, nach Zustand gefiltert).
+  @@index([businessId, status])
+  // "Alle Karten dieses Gastes" (Gastdetail, Loeschanfrage).
+  @@index([guestId])
+  // "Welche Paesse haben sich seit <tag> geaendert?" - der Apple-Aufruf
+  // passesUpdatedSince, sonst ein Seq-Scan bei jeder Wallet-Abfrage.
+  @@index([passUpdateSeq])
+}
+
+/// Hauptbuch der Stempelvergabe. Jede Veraenderung von StampCard.currentStamps hat
+/// hier genau eine Zeile.
+///
+/// WARUM NICHT NUR EIN ZAEHLER
+/// Ein Zaehler beantwortet keine der Fragen, die am Tresen wirklich auftreten.
+/// Doppelscan, weil das erste Piepen unterging: ohne idempotencyKey zwei Stempel.
+/// Ein Mitarbeiter stempelt sich vierzigmal selbst: ohne staffUserId nicht
+/// nachweisbar. Der Gast sagt "ich hatte neun": ohne createdAt, source und
+/// balanceAfter gibt es keine Geschichte, nur eine Behauptung.
+///
+/// @@unique([stampCardId, idempotencyKey]) ist der Kern: die Abwehr sitzt in der
+/// DATENBANK, nicht im Handler. Nur so halten auch zwei gleichzeitige Anfragen aus
+/// zwei Prozessen - dasselbe Muster, das MaitrReview mit
+/// [businessId, source, externalId] fuer den Sync bereits nutzt.
+model StampEvent {
+  id             String           @id @default(uuid())
+  businessId     String
+  stampCardId    String
+  kind           StampEventKind
+  /// Veraenderung des Standes. Positiv beim Stempeln, negativ beim Einloesen.
+  delta          Int              @default(1)
+  /// Stand NACH diesem Ereignis. Redundant zur Summe - und genau deshalb da: macht
+  /// die Historie ohne Nachrechnen lesbar und Rechenfehler sichtbar.
+  balanceAfter   Int
+  source         StampEventSource @default(QR_SCAN)
+  /// Vom Aufrufer mitgegebener Vorgangsschluessel (jti des Scan-Tokens bzw. eine vom
+  /// Geraet erzeugte uuid). Wiederholung desselben Vorgangs prallt am Unique ab.
+  idempotencyKey String
+  /// Wer gestempelt hat. Nullbar + SetNull wie TaskDecision.decidedByUserId: die
+  /// Stempelhistorie gehoert dem BETRIEB und ueberlebt das Konto des Mitarbeiters.
+  staffUserId    String?
+  /// Freitext des Tresengeraets, wenn ohne persoenliche Anmeldung gearbeitet wird.
+  deviceLabel    String?
+  note           String?
+  createdAt      DateTime         @default(now())
+
+  business  Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stampCard StampCard @relation(fields: [businessId, stampCardId], references: [businessId, id], onDelete: Cascade)
+  staff     User?     @relation(fields: [staffUserId], references: [id], onDelete: SetNull)
+
+  @@unique([stampCardId, idempotencyKey])
+  // "Verlauf dieser Karte" - die Ansicht im Streitfall.
+  @@index([stampCardId, createdAt])
+  // "Alle Stempel dieses Betriebs im Zeitraum" - Auswertung und Missbrauchspruefung.
+  @@index([businessId, createdAt])
+}
+
+/// Ein Geraet, das einen Apple-Pass registriert hat - der Adressat des Push, ohne
+/// den sich auf dem Sperrbildschirm nichts aendert.
+///
+/// WARUM NICHT EIN FELD "applePassToken" AUF DER KARTE
+/// Weil Apple drei verschiedene Dinge braucht und nur eines davon bei der
+/// Passerzeugung entsteht: die serialNumber (in pass.json), das authenticationToken
+/// (auf der Karte, verschluesselt) und den pushToken - der kommt erst SPAETER vom
+/// Geraet und existiert PRO GERAET. Ein Gast mit iPhone UND Apple Watch registriert
+/// zweimal, mit verschiedenem deviceLibraryIdentifier und verschiedenem pushToken.
+/// Ein einzelnes Feld auf der Karte kann nur eines halten; der zweite Eintrag
+/// ueberschriebe den ersten und ein Geraet bekaeme nie wieder ein Update.
+///
+/// Die Tabelle ist Apple-only und hat deshalb keine platform-Spalte. Google Wallet
+/// kennt keine Geraeteregistrierung und keinen Push: dort wird das Objekt per REST
+/// ueber seine objectId aktualisiert.
+///
+/// Die vier Endpunkte, die genau auf diese Spalten zeigen:
+///   POST   /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}
+///   GET    /v1/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}?passesUpdatedSince=
+///   GET    /v1/passes/{passTypeIdentifier}/{serialNumber}
+///   DELETE derselben Registrierungs-URL
+/// Alle mit "Authorization: ApplePass <authenticationToken>", also ohne Sitzung -
+/// deshalb traegt die Zeile ihre eigene businessId.
+model WalletDeviceRegistration {
+  id                      String    @id @default(uuid())
+  businessId              String
+  stampCardId             String
+  /// Von Apple erzeugt, identifiziert das GERAET (nicht den Gast). Personenbezogen.
+  deviceLibraryIdentifier String
+  /// Redundant zur Karte, weil Apple die Registrierungen genau danach abfragt.
+  passTypeIdentifier      String
+  /// APNs-Adresse. Kein Beweismittel, deshalb im Klartext vertretbar.
+  pushToken               String
+  lastPushAt              DateTime?
+  lastPushError           String?
+  /// Nach mehreren Fehlversuchen ist die Registrierung tot und wird aufgeraeumt.
+  failedPushes            Int       @default(0)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  business  Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stampCard StampCard @relation(fields: [businessId, stampCardId], references: [businessId, id], onDelete: Cascade)
+
+  // Genau die Kennung, mit der Apple registriert und abmeldet.
+  @@unique([deviceLibraryIdentifier, passTypeIdentifier, stampCardId])
+  // "Welche Geraete brauchen einen Push?" - nach dem Stempeln, ueber die Karte.
+  @@index([stampCardId])
+  // "Welche Paesse dieses Geraets haben sich geaendert?" - der GET oben.
+  @@index([deviceLibraryIdentifier, passTypeIdentifier])
+}
+
+/// Ein WhatsApp-Gespraech zwischen einem Betrieb und einer Nummer.
+///
+/// WARUM EINE EIGENE EBENE UEBER DEN NACHRICHTEN
+/// Wegen des 24-Stunden-Fensters, und das ist keine Feinheit: Innerhalb des Fensters
+/// darf der Betrieb frei formulieren, ausserhalb ausschliesslich eine vorab
+/// genehmigte Vorlage - sonst weist die API die Nachricht ab. Das Fenster OEFFNET
+/// ausschliesslich eine EINGEHENDE Nachricht und laeuft 24 Stunden ab ihr. Ein
+/// gemischtes Feld wie "lastMessageAt" sieht richtig aus und gibt bei jeder
+/// ausgehenden Nachricht gruenes Licht; die Nachricht wird dann von Meta abgelehnt,
+/// waehrend die App sie als gesendet fuehrt.
+///
+/// KEIN GESPEICHERTES FENSTERENDE: Das Fenster wird ueberall aus
+/// `lastInboundAt + 24 h` gerechnet. Eine eigene Spalte waere eine zweite Wahrheit
+/// ohne verlaessliche Quelle - Metas conversation.expiration_timestamp gehoerte zur
+/// abgeschafften konversationsbasierten Abrechnung und faellt fuer umgestellte
+/// Konten weg, und bei einer eingehenden Nachricht ohne jede Antwort gibt es
+/// ueberhaupt keinen Status-Webhook, aus dem sie zu fuellen waere. Der Sendedialog
+/// fragt: lastInboundAt > now() - interval '24 hours' AND optOutAt IS NULL.
+///
+/// WARUM guestId NULLBAR IST
+/// Die erste Nachricht einer unbekannten Nummer kommt an, bevor es einen Gast gibt.
+/// Aus einer unbekannten wa_id automatisch einen MaitrGuest anzulegen ist
+/// ausdruecklich VERBOTEN: assembleVenueDataset laedt alle Gaeste ungefiltert,
+/// visits ist @default(1) und firstVisit NOT NULL - jeder Anfrager waere damit ein
+/// Gast mit einem erfundenen Besuch, "neue Gaeste" und der Anteil wiederkehrender
+/// Gaeste im Briefing wuerden mit jeder eingehenden Nachricht verfaelscht.
+/// Verknuepft wird nur bei einem Treffer auf MaitrGuest.phoneE164 oder auf
+/// ausdrueckliche Zuordnung durch den Betrieb - und das ZUSAMMENGESETZT ueber
+/// [businessId, guestId], sonst nimmt der Zuordnungsaufruf eine fremde guestId
+/// entgegen und der Verlauf zeigt Name, Nummer und Besuchszahl eines Gastes aus
+/// einem anderen Betrieb.
+///
+/// KEIN connectionId: Die Verbindung wird beim Senden ueber
+/// ChannelConnection[businessId, provider = WHATSAPP] geholt. Ein eigenes
+/// Verbindungsfeld waere ein Einfallstor - mit einer fremden Verbindungs-uuid im
+/// Rumpf ginge die Nachricht unter dem verifizierten Anzeigenamen eines fremden
+/// Betriebs raus, und die ANTWORT des Gastes landete in dessen Posteingang.
+///
+/// LOESCHEN: personenbezogen ist waId. Ueber [businessId, waId] ist das Gespraech
+/// samt Nachrichten und Medien auffindbar und loeschbar (Cascade nach unten). Die
+/// Speicherobjekte der Medien haengen NICHT am Cascade - siehe WhatsAppMedia.
+model WhatsAppConversation {
+  id             String    @id @default(uuid())
+  businessId     String
+  /// Metas `wa_id` (Ziffern, ohne '+'). ACHTUNG: nicht immer identisch mit der
+  /// Nummer, die der Gast angibt (Brasilien ohne die eingeschobene 9, Mexiko mit
+  /// zusaetzlicher 1). Kanonisch ist ausschliesslich contacts[].wa_id aus dem Rumpf -
+  /// deshalb steht hier genau dieser Wert und die Verknuepfung zum Gast laeuft
+  /// getrennt ueber phoneE164. Sonst haengt der Empfang von Nachrichten daran, dass
+  /// eine Normalisierung stimmt.
+  waId           String
+  /// contacts[].profile.name - vom Gast selbst gesetzt, aendert sich jederzeit.
+  profileName    String?
+  guestId        String?
+  /// Oeffnet das 24-Stunden-Fenster. NUR eingehende Nachrichten setzen es.
+  lastInboundAt  DateTime?
+  lastOutboundAt DateTime?
+  /// Nachweisbare Einwilligung fuer Marketing-Vorlagen. Am Gespraech und nicht am
+  /// Gast, weil es das Gespraech auch ohne zugeordneten Gast gibt.
+  optInAt        DateTime?
+  optInSource    String?
+  /// Beachtung von STOP. Gesetzt = keine ausgehenden Nachrichten mehr.
+  optOutAt       DateTime?
+  isMock         Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  business Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  guest    MaitrGuest?       @relation(fields: [businessId, guestId], references: [businessId, id], onDelete: Cascade)
+  messages WhatsAppMessage[]
+
+  // Ein Gespraech je Betrieb und Nummer. Mandantengebunden, NICHT global:
+  // dieselbe Person darf bei zwei Betrieben schreiben.
+  @@unique([businessId, waId])
+  // Ziel des zusammengesetzten Fremdschluessels von WhatsAppMessage.
+  @@unique([businessId, id])
+  // "Welche Gespraeche laufen noch im 24-Stunden-Fenster?" - die Frage, die der
+  // Sendedialog bei jedem Oeffnen stellt.
+  @@index([businessId, lastInboundAt])
+  @@index([guestId])
+}
+
+/// Eine einzelne WhatsApp-Nachricht, ein- oder ausgehend.
+///
+/// IDEMPOTENZ IN BEIDE RICHTUNGEN, mit zwei verschiedenen Schluesseln:
+///
+/// EINGEHEND ueber `providerMessageId` (Metas wamid): Meta stellt Webhooks mehrfach
+/// zu und liefert KEINEN Zustell-Header, an dem man das sonst erkennen koennte;
+/// entry[].id ist nur die WABA-Kennung und damit fuer jede Nachricht desselben
+/// Betriebs gleich - als Schluessel benutzt wuerde sie nach der ersten Nachricht
+/// alle weiteren verwerfen.
+///
+/// AUSGEHEND ueber `clientToken`: die wamid entsteht erst in der ANTWORT von
+/// POST /{phone-number-id}/messages. Waere providerMessageId NOT NULL, koennte es
+/// den Zustand QUEUED gar nicht geben und es bliebe nur "erst senden, dann
+/// schreiben" - also gar keine Idempotenz: zwei Klicks bei wackeligem Netz sind zwei
+/// zugestellte Nachrichten mit zwei verschiedenen wamids (bei einer
+/// MARKETING-Vorlage zwei abgerechnete Vorgaenge und ein Beschwerdegrund), ein
+/// Prozessneustart nach dem Graph-Aufruf verliert die Zeile ganz, und ein
+/// sent-Webhook, der vor dem eigenen Commit eintrifft, findet nichts und wird
+/// verworfen.
+/// SCHREIBREGEL: create(clientToken, QUEUED) -> Graph-Aufruf -> update mit wamid und
+/// SENT. Scheitert der Aufruf, bleibt die Zeile als FAILED stehen und ist sichtbar.
+/// Bei eingehenden Nachrichten ist clientToken die wamid.
+///
+/// STATUS ALS SPALTEN, NICHT ALS ZEILEN: siehe WhatsAppMessageStatus.
+///
+/// `occurredAt` ist Metas timestamp, NICHT unsere Empfangszeit - der Verlauf muss
+/// die Reihenfolge des Gastes zeigen, nicht die unserer Zustellung.
+model WhatsAppMessage {
+  id                String                @id @default(uuid())
+  businessId        String
+  conversationId    String
+  /// Metas wamid. NULLBAR: bei ausgehenden Nachrichten erst nach der Graph-Antwort
+  /// bekannt. Postgres laesst beliebig viele NULL im Unique zu, der Eingangs-Dedupe
+  /// bleibt davon unberuehrt.
+  providerMessageId String?
+  /// Vorgangsschluessel des Aufrufers (uuid); bei eingehenden Nachrichten die wamid.
+  /// Traegt die Idempotenz des Sendepfads - dasselbe Muster wie
+  /// StampEvent.idempotencyKey: zwei Klicks prallen an der Datenbank ab, nicht am
+  /// Handler, und halten deshalb auch bei zwei Prozessen.
+  clientToken       String
+  direction         WhatsAppDirection
+  /// text | image | audio | document | location | interactive | button | sticker |
+  /// reaction | system. Bewusst String und kein Enum: Meta ergaenzt Typen, und ein
+  /// unbekannter Typ darf den Webhook nicht scheitern lassen.
+  type              String                @default("text")
+  status            WhatsAppMessageStatus
+  /// Der ANZEIGETEXT. Nur der.
+  body              String?
+  /// Der typspezifische Teil des Webhook-Rumpfs, wie Meta ihn liefert
+  /// (interactive.button_reply, list_reply, location, reaction, contacts, ...).
+  /// Bewusst formfrei und zwingend noetig: bei einer Quick-Reply-Antwort ist der
+  /// auswertbare Wert die id ("res_confirm_7f21"), nicht die Beschriftung ("Passt").
+  /// Ohne sie ist eine Bestaetigung nicht auf ihre Reservierung buchbar und faellt
+  /// auf Textabgleich zurueck, der beim zweiten Knopf mit derselben Beschriftung
+  /// falsch trifft. Ebenso gehen sonst latitude/longitude (location) und
+  /// emoji + message_id (reaction) verloren.
+  payload           Json?
+  /// context.id - auf welche Nachricht sich diese bezieht (Antwort/Zitat).
+  replyToProviderId String?
+  /// Nur bei ausgehenden Vorlagennachrichten. category bestimmt Preis und
+  /// Zulaessigkeit (MARKETING verlangt zusaetzlich optInAt am Gespraech).
+  templateName      String?
+  templateLanguage  String?
+  templateCategory  String?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  readAt            DateTime?
+  failedAt          DateTime?
+  errorCode         Int?
+  errorTitle        String?
+  occurredAt        DateTime
+  isMock            Boolean               @default(false)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  business     Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  conversation WhatsAppConversation @relation(fields: [businessId, conversationId], references: [businessId, id], onDelete: Cascade)
+  media        WhatsAppMedia[]
+
+  // "Nachricht schon verarbeitet?" - der Upsert des Webhooks laeuft genau hierauf.
+  @@unique([businessId, providerMessageId])
+  // Der Riegel des Sendepfads.
+  @@unique([businessId, clientToken])
+  // Ziel des zusammengesetzten Fremdschluessels von WhatsAppMedia.
+  @@unique([businessId, id])
+  // "Verlauf dieses Gespraechs, neueste zuerst".
+  @@index([conversationId, occurredAt])
+  // "Welche ausgehenden Nachrichten haengen noch?" (QUEUED/FAILED).
+  @@index([businessId, status])
+}
+
+/// Eine Mediendatei aus WhatsApp - vor allem Gaestefotos.
+///
+/// WAS GESPEICHERT WIRD UND WAS NICHT
+/// Gespeichert werden die media_id UND die Datei; die Download-URL NIEMALS. Die URL
+/// aus GET /{media_id} ist nur wenige Minuten gueltig und verlangt zum Abruf ohnehin
+/// den Bearer-Token - als gespeicherter Wert ist sie ein totes Feld. Die media_id
+/// allein reicht ebenfalls nicht: Meta loescht Mediendateien nach etwa 30 Tagen, ein
+/// Gastfoto waere danach unwiederbringlich weg.
+///
+/// WARUM EMPFANG UND DOWNLOAD GETRENNT SIND
+/// Der Webhook muss binnen Sekunden mit 200 antworten, sonst stellt Meta erneut zu -
+/// und zwar ausgerechnet bei den grossen Dateien, deren Download lange dauert.
+/// Deshalb haelt der Webhook nur die Kennung fest (state = PENDING) und ein Nachlauf
+/// holt die Datei.
+///
+/// WARUM DER UNIQUE AUF DER VERWENDUNG LIEGT UND NICHT AUF DER DATEI
+/// Metas media_id gehoert zur DATEI, nicht zur Nachricht: ein Upload
+/// (POST /{phone-number-id}/media) liefert eine media_id, die fuer beliebig viele
+/// Sendungen wiederverwendbar ist - das ist der vorgesehene Weg. Ein
+/// @@unique([businessId, mediaId]) liefe deshalb beim zweiten Empfaenger derselben
+/// Wochenkarte in einen P2002 und riss - in einer Transaktion - die bereits
+/// zugestellte Nachricht mit. messageId ist zusaetzlich NULLBAR, damit ein Upload
+/// festgehalten werden kann, bevor gesendet wird.
+///
+/// ABLAGEORT - HIER LIEGT DER SCHARFE PUNKT
+/// NICHT in den bestehenden Medien-Bucket: server/services/supabaseStorage.ts legt
+/// ihn in ensureBucket mit `public: true` an und liefert mit
+/// 'max-age=31536000, immutable' aus. Gaestefotos sind personenbezogene Daten
+/// DRITTER - wer die Adresse einmal hat, kommt ohne Anmeldung dauerhaft an das Bild.
+/// Richtig ist ein getrennter, NICHT oeffentlicher Bucket
+/// (MAITR_GUEST_MEDIA_BUCKET), hier nur der Objektpfad, und die Auslieferung ueber
+/// eine kurzlebige signierte Adresse hinter requireVenueAccess.
+///
+/// VORBEDINGUNG VOR DEM ERSTEN ECHTEN FOTO (nicht im Schema loesbar):
+/// deleteUserMedia in server/routes/users.ts raeumt ausschliesslich das Praefix
+/// "<userId>/" des OEFFENTLICHEN Buckets ab. Loescht ein Wirt sein Konto, meldet der
+/// Aufruf fuer den Gaestemedien-Bucket "deleted: 0" ohne Fehler, danach kaskadiert
+/// Business und mit ihm verschwindet diese Zeile - samt storagePath. Die Fotos
+/// DRITTER blieben liegen, ohne dass irgendeine Zeile ihren Pfad noch kennt. Deshalb
+/// muss der Objektpfad "<businessId>/..." lauten und DELETE /me vor der $transaction
+/// ein deleteBusinessMedia(businessId) mit demselben 503-Verhalten aufrufen.
+model WhatsAppMedia {
+  id            String             @id @default(uuid())
+  businessId    String
+  messageId     String?
+  /// Metas media_id. Nur Herkunftsnachweis - nach etwa 30 Tagen wertlos.
+  mediaId       String
+  mimeType      String
+  /// Aus dem Webhook-Rumpf. Erkennt dieselbe Datei ueber Nachrichten hinweg.
+  sha256        String?
+  fileSize      Int?
+  caption       String?
+  /// Objektpfad im eigenen, PRIVATEN Speicher, zwingend mit "<businessId>/" beginnend
+  /// (siehe Modellkommentar). KEINE oeffentliche URL - ein Objekt laesst sich nur
+  /// ueber seinen Pfad wieder loeschen.
+  storagePath   String?
+  state         WhatsAppMediaState @default(PENDING)
+  downloadError String?
+  /// Ab wann die Kopie geloescht werden darf. Ohne dieses Feld ist eine
+  /// Aufbewahrungsfrist nicht durchsetzbar und die eigene Kopie ueberdauert die
+  /// Loeschung bei Meta unbefristet.
+  purgeAfter    DateTime?
+  isMock        Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  business Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  message  WhatsAppMessage? @relation(fields: [businessId, messageId], references: [businessId, id], onDelete: Cascade)
+
+  // Der Eingangs-Dedupe: eine wiederholt zugestellte eingehende Nachricht traegt
+  // dieselbe messageId und prallt ab. Mehrfachversand derselben Datei an
+  // verschiedene Gaeste bleibt moeglich.
+  @@unique([businessId, messageId, mediaId])
+  // "Alle Verwendungen dieser Datei" und der Weg vom Upload zur Nachricht.
+  @@index([businessId, mediaId])
+  @@index([messageId])
+  // Arbeitsvorrat des Nachlaufs: "was ist noch nicht geholt / faellig zum Loeschen?"
+  @@index([state, createdAt])
+}
+
+/// Lokaler Abzug der bei Meta genehmigten Nachrichtenvorlagen.
+///
+/// Ausserhalb des 24-Stunden-Fensters ist eine genehmigte Vorlage der EINZIGE Weg,
+/// einen Gast anzuschreiben. Welche genehmigt sind, weiss nur Meta; ohne lokalen
+/// Abzug muesste die App bei jedem Oeffnen des Sendedialogs nachfragen und koennte
+/// dem Betrieb nicht anzeigen, was ueberhaupt waehlbar ist. Die Tabelle ist ein
+/// Cache mit `syncedAt` und keine Wahrheit - bei Widerspruch gilt Meta.
+model WhatsAppTemplate {
+  id         String                 @id @default(uuid())
+  businessId String
+  name       String
+  language   String
+  /// MARKETING | UTILITY | AUTHENTICATION. Bestimmt Preis und Zulaessigkeit.
+  category   String
+  status     WhatsAppTemplateStatus @default(PENDING)
+  externalId String?
+  /// Rohform der Bausteine, wie Meta sie liefert.
+  components Json?
+  isMock     Boolean                @default(false)
+  syncedAt   DateTime               @default(now())
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, name, language])
+  @@index([businessId, status])
+}
+
+/// Vorberechneter Nachbarschaftsvergleich fuer GENAU EINEN Betrieb.
+///
+/// DIE EINE FUNKTION, DIE DIE MANDANTENGRENZE UEBERSCHREITEN MUSS
+/// Ein Vergleich braucht Daten anderer Betriebe - requireVenueAccess kann das
+/// strukturell nicht schuetzen, weil das Ueberschreiten der Zweck ist. Deshalb:
+/// die Zeile gehoert dem ANFRAGENDEN Betrieb (businessId, Cascade wie alles andere),
+/// und sie enthaelt ausschliesslich AGGREGATE. Nie ein benannter Wettbewerber, nie
+/// eine Fremdzeile, nie ein aus dem Request durchgereichter Filter.
+///
+/// GENAU EINE ZEILE JE BETRIEB - @@unique([businessId]), nicht [businessId, cohort].
+/// Mehrere nebeneinander bestehende Kohorten sind keine Bequemlichkeit, sondern eine
+/// Rechenluecke: aus zwei zulaessigen Auskuenften (n=5 und n=6) faellt durch
+/// Differenzbildung die Einzelauskunft ueber genau den einen Betrieb heraus, der
+/// dazwischen liegt. Wird spaeter eine zweite Sicht gebraucht, muss zusaetzlich
+/// gelten, dass sich zwei ausgelieferte Kohorten um mindestens die
+/// Mindestkohortengroesse unterscheiden.
+///
+/// WARUM sampleSize EINE SPALTE IST UND KEIN RECHENSCHRITT
+/// Ohne Mindestkohorte ist ein Mittelwert ueber zwei Betriebe eine Offenlegung: wer
+/// seine eigene Zahl kennt, rechnet die des Nachbarn aus. Weil die Groesse
+/// mitgespeichert ist, kann der AUSLIEFERUNGSPFAD die Regel (n >= 5, siehe
+/// MAITR_BENCHMARK_MIN_COHORT) an der gespeicherten Zeile pruefen, statt sie beim
+/// Berechnen einmal richtig gemacht zu haben und beim naechsten Lesen zu vergessen.
+///
+/// WARUM NICHT IN AnalyticsSnapshot UND NICHT IN InsightsCache
+/// AnalyticsSnapshot fuehrt je Zeile die EIGENEN Kennzahlen eines Betriebs unter
+/// [businessId, date, period]; Fremdaggregate wuerden die Bedeutung der Tabelle
+/// aufweichen. InsightsCache wird bei jedem Sync verworfen (rebuildInsights) - der
+/// Benchmark wuerde dann bei jeder eingehenden Bewertung neu ueber alle Betriebe der
+/// Umgebung rechnen. Er braucht eine eigene, viel laengere Standzeit.
+model BenchmarkSnapshot {
+  id         String          @id @default(uuid())
+  businessId String
+  /// Wie die Kohorte gebildet wurde. Serverseitig festgelegt, nie aus dem Request.
+  cohort     BenchmarkCohort @default(POSTAL_CODE)
+  /// Zahl der Betriebe im Vergleich. Auslieferung erst ab MAITR_BENCHMARK_MIN_COHORT.
+  sampleSize Int             @default(0)
+  /// Die Aggregate selbst (Median-Bewertung, Antwortquote, Foto-Anzahl ...).
+  /// Formfrei, weil sich die gezeigten Kennzahlen noch bewegen.
+  payload    Json
+  computedAt DateTime        @default(now())
+  isMock     Boolean         @default(false)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Macht das Neuberechnen zu einem Upsert statt zu einem wachsenden Stapel - und
+  // schliesst die Differenzbildung ueber mehrere Kohorten aus.
+  @@unique([businessId])
+  @@index([businessId, computedAt])
 }

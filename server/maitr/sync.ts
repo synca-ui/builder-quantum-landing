@@ -71,6 +71,16 @@ export async function pullChannel(connectionId: string): Promise<void> {
   const conn = await prisma.channelConnection.findUniqueOrThrow({ where: { id: connectionId } });
   if (conn.status !== "ACTIVE") return;
 
+  // WhatsApp hat keinen Pull: Nachrichten kommen ausschließlich über den Webhook.
+  // Ohne diesen Ausstieg liefe eine WHATSAPP-Verbindung durch die Abbildung
+  // unten in den Meta-Connector, dessen Aufruf scheitert - und der catch-Zweig in
+  // syncAll setzte sie auf EXPIRED. Die WhatsApp-Anbindung schaltete sich damit
+  // bei jedem Cron-Lauf selbst ab, und waPhoneNumberId bliebe an der toten Zeile
+  // hängen und blockierte die Neuverbindung. Der Ausstieg steht VOR
+  // ensureFreshToken, denn schon dort würde jede Nicht-Google-Verbindung auf
+  // EXPIRED gesetzt.
+  if (conn.provider === "WHATSAPP") return;
+
   const provider = conn.provider === "GOOGLE" ? "google" : "meta";
   const accessToken = await ensureFreshToken(conn);
   const tokens: ConnectionTokens = {
@@ -100,8 +110,21 @@ export async function pullChannel(connectionId: string): Promise<void> {
         text: r.text,
         createdAtSource: new Date(r.createdAt),
         repliedAt: r.repliedAt ? new Date(r.repliedAt) : null,
+        // Status und Zeitstempel gehen gemeinsam los, sonst driften sie ab dem
+        // ersten Sync auseinander: eine bei Google bereits beantwortete Bewertung
+        // käme mit repliedAt, aber replyStatus = NONE herein und erschiene, sobald
+        // ein Lesepfad auf replyStatus umgestellt ist, wieder als offene Aufgabe.
+        replyStatus: r.repliedAt ? "PUBLISHED" : undefined,
       },
-      update: { rating: r.rating, text: r.text, repliedAt: r.repliedAt ? new Date(r.repliedAt) : null },
+      update: {
+        rating: r.rating,
+        text: r.text,
+        repliedAt: r.repliedAt ? new Date(r.repliedAt) : null,
+        // undefined statt NONE: eine lokal begonnene Antwort (DRAFT/PUBLISHING)
+        // darf ein Sync-Lauf nicht zurücksetzen. Nur der Übergang nach PUBLISHED
+        // wird von außen bestätigt.
+        replyStatus: r.repliedAt ? "PUBLISHED" : undefined,
+      },
     });
   }
 
@@ -133,7 +156,13 @@ export async function rebuildInsights(businessId: string): Promise<void> {
 
 /** Voller Durchlauf für alle aktiven Verbindungen - der Cron-Einstieg. */
 export async function syncAll(): Promise<void> {
-  const connections = await prisma.channelConnection.findMany({ where: { status: "ACTIVE" } });
+  // Provider-Filter, nicht nur der Status: WHATSAPP-Verbindungen werden nicht
+  // gepullt (Nachrichten kommen über den Webhook). Ohne den Filter liefe jede
+  // WhatsApp-Zeile in den catch-Zweig weiter unten und würde bei jedem Cron-Lauf
+  // auf EXPIRED gesetzt - die Anbindung schaltete sich selbst ab.
+  const connections = await prisma.channelConnection.findMany({
+    where: { status: "ACTIVE", provider: { in: ["GOOGLE", "META"] } },
+  });
   const touched = new Set<string>();
 
   for (const c of connections) {
