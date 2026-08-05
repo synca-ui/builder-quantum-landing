@@ -576,7 +576,8 @@ Limit: "100 API-published posts within a 24-hour moving period". Bilder muessen
 "hosted on a publicly accessible server at the time of the attempt" sein.
 Quelle: <https://developers.facebook.com/docs/instagram-platform/content-publishing>
 
-**Was maitr heute anfragt** (`packages/core/src/integrations/meta.ts:19-26`):
+**Was maitr heute anfragt** (`META_SCOPES` in
+`packages/core/src/integrations/meta.ts`):
 
 ```
 instagram_basic
@@ -584,8 +585,11 @@ instagram_manage_insights
 pages_show_list
 pages_read_engagement
 pages_read_user_content
-business_management
 ```
+
+(Frueher stand hier zusaetzlich `business_management`. Sie ist raus: kein Aufruf
+im Repo fasst die Business-Manager-API an. Jede verbliebene Berechtigung ist im
+Code mit dem Aufruf kommentiert, der sie braucht.)
 
 **`instagram_content_publish` ist nicht dabei.** Die Liste enthaelt ausschliesslich
 Lese-Berechtigungen. Veroeffentlichen ist mit dem heutigen Scope-Satz nicht moeglich —

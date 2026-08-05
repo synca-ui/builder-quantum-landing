@@ -22,7 +22,17 @@ Normalisierung sind dort exakt so hinterlegt, wie unten beschrieben.
 Datenquellen, die wir nutzen:
 - **Bewertungen** – `mybusiness.googleapis.com/v4/accounts/*/locations/*/reviews`
 - **Reichweite/Aufrufe** – Business Profile Performance API
-  (`businessprofileperformance.googleapis.com/v1/…:fetchMultiDailyMetricsTimeSeries`)
+  `businessprofileperformance.googleapis.com/v1/locations/*:fetchMultiDailyMetricsTimeSeries`
+
+> **Zwei Pfadformen, eine Kennung.** Gespeichert wird pro Verbindung nur
+> `accounts/X/locations/Y`. Die Bewertungs-API (v4) will genau das; die
+> Performance-API will **nur** `locations/Y` und führt Konten gar nicht im Pfad.
+> Gemessen (curl, ohne Token): `…/v1/locations/222:fetch…` → **401**,
+> `…/v1/accounts/111/locations/222:fetch…` → **404**. 401 heißt „Route existiert,
+> nur nicht angemeldet", 404 heißt „gibt es nicht". Der Connector leitet die kurze
+> Form aus der gespeicherten ab (`googleRessourcenNamen` in
+> `packages/core/src/integrations/google.ts`) – es gibt bewusst keine zweite
+> Konfiguration, die abdriften könnte.
 
 ### Schritte
 
@@ -72,13 +82,24 @@ Datenquellen:
    (App-Typ *Business*).
 2. **Produkte hinzufügen**: *Facebook Login* und *Instagram Graph API*
    („Instagram API mit Facebook Login").
-3. **Berechtigungen (Permissions)**, die wir anfragen:
-   - `instagram_basic`
-   - `instagram_manage_insights`
-   - `pages_show_list`
-   - `pages_read_engagement`
-   - `pages_read_user_content`
-   - `business_management`
+3. **Berechtigungen (Permissions)**, die wir anfragen – fünf, und zu jeder gehört
+   genau ein Aufruf. Diese Spalte ist die Vorlage für die Review-Begründung:
+
+   | Permission | Der Aufruf, der sie braucht |
+   | --- | --- |
+   | `instagram_basic` | Grundzugang zum Instagram-Profikonto; ohne sie antwortet der Graph auf den Insights-Aufruf nicht |
+   | `instagram_manage_insights` | `/{ig-user-id}/insights?metric=impressions,reach,profile_views` (`metaConnector.fetchEngagement`) |
+   | `pages_show_list` | `GET /me/accounts` (`resolveAccountId` in `server/maitr/routes.ts`) – liefert die Page-ID, auf der alles Weitere aufsetzt |
+   | `pages_read_engagement` | Seitenzugriff für `/{page-id}/ratings` (`metaConnector.fetchReviews`) |
+   | `pages_read_user_content` | Empfehlungen sind *von Nutzern* geschriebene Inhalte; `pages_read_engagement` deckt nur die seiteneigenen Daten ab. Ohne sie antwortet `/{page-id}/ratings` mit 403 |
+
+   **Nicht angefragt:** `business_management`. Sie öffnet den gesamten Bestand des
+   Business Managers, obwohl kein Aufruf im Code die Business-Manager-API anfasst.
+   Wer sie wieder einträgt, braucht erst einen Aufruf, der sie rechtfertigt.
+   (Randfall, den man kennen sollte: Hat der Nutzer seine Seitenrolle *ausschließlich*
+   über den Business Manager und nicht direkt auf der Seite, kann `/me/accounts`
+   leer zurückkommen. Der Weg dahin ist dann eine Seitenrolle für den Nutzer –
+   nicht diese Berechtigung für alle.)
 4. **App Review**: Für all diese Permissions brauchst du *Advanced Access*. Dafür jede
    Permission mit Screencast begründen (wie und wo Maitr sie nutzt), plus App-Icon,
    Datenschutzerklärung-URL und Nutzungsbedingungen.

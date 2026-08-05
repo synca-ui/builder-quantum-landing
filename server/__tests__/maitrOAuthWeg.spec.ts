@@ -336,8 +336,11 @@ describe("Schritt 1 - GET /integrations/:provider/connect baut die Autorisierung
     );
     // Meta trennt Scopes mit Komma, Google mit Leerzeichen. Verwechselt man das,
     // lehnt der Dialog die Anfrage ab - deshalb hier festgenagelt.
+    // Welche Berechtigungen hier stehen duerfen und warum, nagelt
+    // metaBerechtigungen.spec.ts fest - hier zaehlt nur, dass die Liste aus
+    // META_SCOPES unveraendert in der URL landet.
     expect(url.searchParams.get("scope")).toBe(
-      "instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement,pages_read_user_content,business_management",
+      "instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement,pages_read_user_content",
     );
   });
 
@@ -763,6 +766,19 @@ function verbindung(opts: { id: string; abgelaufenIn: number; provider?: "GOOGLE
 const GOOGLE_REVIEWS = "https://mybusiness.googleapis.com/v4/accounts/111/locations/222/reviews";
 
 /**
+ * VOLLSTAENDIG, nicht nur der Host. Vorher stand hier ein startsWith auf
+ * "https://businessprofileperformance.googleapis.com/" - damit war jeder Pfad
+ * recht, und der falsche (mit accounts-Praefix, den es dort gar nicht gibt)
+ * konnte jahrelang gruen durchlaufen. Wer den Pfad im Connector aendert, faellt
+ * jetzt in den "Unerwarteter Aufruf"-Zweig des Doppelgaengers.
+ */
+const GOOGLE_PERFORMANCE =
+  "https://businessprofileperformance.googleapis.com/v1" +
+  "/locations/222:fetchMultiDailyMetricsTimeSeries" +
+  "?dailyMetrics=BUSINESS_IMPRESSIONS_DESKTOP_MAPS" +
+  "&dailyMetrics=BUSINESS_IMPRESSIONS_MOBILE_MAPS";
+
+/**
  * Doppelgaenger fuer den Sync: haelt den Refresh an, bis freigeben() gerufen wird.
  * Nur so ueberlappen zwei Abfragen nachweislich - sonst waere ein einzelner
  * Refresh auch dann zu sehen, wenn sie schlicht nacheinander liefen.
@@ -787,7 +803,7 @@ function syncDoppelgaenger() {
           ],
         },
       };
-    if (url.startsWith("https://businessprofileperformance.googleapis.com/")) return { body: {} };
+    if (url === GOOGLE_PERFORMANCE) return { body: {} };
     throw new Error(`Unerwarteter Aufruf: ${url}`);
   });
 
@@ -799,6 +815,7 @@ function syncDoppelgaenger() {
     },
     refreshes: () => aufrufe.filter((a) => a.url === GOOGLE_TOKEN),
     reviewAufrufe: () => aufrufe.filter((a) => a.url === GOOGLE_REVIEWS),
+    reichweiteAufrufe: () => aufrufe.filter((a) => a.url === GOOGLE_PERFORMANCE),
   };
 }
 
@@ -894,6 +911,11 @@ describe("Schritt 6 - abgelaufenes Access-Token: genau EIN Refresh trotz zwei Ab
     expect(prismaMock.maitrReview.upsert).toHaveBeenCalledTimes(1);
     const arg = prismaMock.maitrReview.upsert.mock.calls[0][0];
     expect(arg.create).toMatchObject({ businessId: BETRIEB, source: "google", externalId: "r1", rating: 5 });
+
+    // Der Pull holt BEIDES: Bewertungen und Reichweite - jeweils unter dem
+    // vollstaendigen, oben festgeschriebenen Pfad.
+    expect(d.reviewAufrufe()).toHaveLength(1);
+    expect(d.reichweiteAufrufe()).toHaveLength(1);
   });
 });
 
@@ -938,5 +960,91 @@ describe("Wo der Doppelgaenger eingesetzt werden kann - und wo nicht", () => {
     const res = await rueckSprung("google", { code: "code-vom-anbieter", state });
 
     expect(res.headers.location).toContain("status=error");
+  });
+});
+
+/* ═══ Die zwei Google-Formen: gemessen, nicht geglaubt ════════════════════ */
+
+/**
+ * Google fuehrt EINE gespeicherte Kennung ("accounts/111/locations/222"), aber
+ * ZWEI Pfadformen - und die Verwechslung faellt im Betrieb nicht auf, weil beide
+ * APIs unter einem plausiblen Host liegen und der Fehler nur als "HTTP 404"
+ * ankommt, also aussieht wie ein noch nicht freigegebener Zugang.
+ *
+ * Per curl gemessen, ohne Token:
+ *   .../v1/locations/222:fetchMultiDailyMetricsTimeSeries              -> 401
+ *   .../v1/accounts/111/locations/222:fetch...                         -> 404
+ * 401 = Route existiert, nur nicht angemeldet. 404 = Route gibt es nicht.
+ *
+ * Die Tests hier pruefen deshalb den VOLLSTAENDIGEN Pfad, nicht den Host. Genau
+ * daran ist es vorher durchgerutscht: der Doppelgaenger oben liess per
+ * startsWith jeden Pfad auf dem Performance-Host als richtig durchgehen.
+ */
+describe("Google: Bewertungen brauchen die volle Form, Reichweite die kurze", () => {
+  const tokens = {
+    provider: "google" as const,
+    accessToken: "t",
+    expiresAt: new Date().toISOString(),
+    accountId: "accounts/111/locations/222",
+  };
+
+  /** Merkt sich die aufgerufene URL und antwortet leer. Kein globales fetch noetig. */
+  function urlMitschrieb() {
+    const urls: string[] = [];
+    const fetchLike = async (url: string) => {
+      urls.push(url);
+      return { ok: true, status: 200, json: async () => ({}) };
+    };
+    return { urls, fetchLike };
+  }
+
+  it("fetchReviews ruft mybusiness v4 MIT accounts-Praefix auf", async () => {
+    const m = urlMitschrieb();
+
+    await connectors.google.fetchReviews(tokens, m.fetchLike);
+
+    expect(m.urls).toEqual([
+      "https://mybusiness.googleapis.com/v4/accounts/111/locations/222/reviews",
+    ]);
+  });
+
+  it("fetchEngagement ruft die Performance-API OHNE accounts-Praefix auf", async () => {
+    const m = urlMitschrieb();
+
+    await connectors.google.fetchEngagement(tokens, m.fetchLike);
+
+    expect(m.urls).toEqual([GOOGLE_PERFORMANCE]);
+    // Doppelt gesichert gegen ein Zurueckdrehen: die 404-Form darf nirgends stehen.
+    expect(m.urls[0]).not.toContain("/v1/accounts/");
+  });
+
+  it("beide Formen stammen aus DERSELBEN gespeicherten Kennung - keine zweite Konfiguration", async () => {
+    // Waere die kurze Form ein eigenes Feld, koennte sie von der langen abdriften.
+    // Sie wird abgeleitet, also kann genau das nicht passieren.
+    const r = urlMitschrieb();
+    const e = urlMitschrieb();
+    const andere = { ...tokens, accountId: "accounts/999/locations/888" };
+
+    await connectors.google.fetchReviews(andere, r.fetchLike);
+    await connectors.google.fetchEngagement(andere, e.fetchLike);
+
+    expect(r.urls[0]).toContain("/v4/accounts/999/locations/888/reviews");
+    expect(e.urls[0]).toContain("/v1/locations/888:fetchMultiDailyMetricsTimeSeries");
+    expect(e.urls[0]).not.toContain("999");
+  });
+
+  it("Muell in der Kennung wird auf BEIDEN Wegen abgewiesen, bevor irgendetwas rausgeht", async () => {
+    // Die Zerlegung ist zugleich die Pruefung - sie darf beim Umbau nicht
+    // versehentlich nur noch an einem der beiden Aufrufe haengen.
+    for (const kaputt of ["locations/222", "accounts/111", "../../etc", "accounts/1/locations/2/x"]) {
+      const m = urlMitschrieb();
+      await expect(connectors.google.fetchReviews({ ...tokens, accountId: kaputt }, m.fetchLike)).rejects.toThrow(
+        /Ungültige Google/,
+      );
+      await expect(
+        connectors.google.fetchEngagement({ ...tokens, accountId: kaputt }, m.fetchLike),
+      ).rejects.toThrow(/Ungültige Google/);
+      expect(m.urls).toEqual([]);
+    }
   });
 });

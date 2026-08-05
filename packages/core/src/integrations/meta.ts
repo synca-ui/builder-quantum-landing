@@ -16,13 +16,41 @@
 import type { EngagementPoint, ReviewRecord } from "../analytics/types";
 import type { ChannelConnector, ConnectionTokens, FetchLike, OAuthConfig } from "./types";
 
+/**
+ * Angefragte Berechtigungen - genau so viele, wie die drei Aufrufe tragen, die
+ * es wirklich gibt. Jede Zeile nennt den Aufruf, der sie braucht; das ist
+ * zugleich die Vorlage für die Begründung im Meta-App-Review, denn dort ist
+ * jede Berechtigung einzeln mit Screencast zu rechtfertigen.
+ *
+ * Die Regel dahinter: Wer eine Berechtigung ergänzt, muss den Aufruf daneben
+ * schreiben können. Geht das nicht, gehört sie nicht in die Liste - eine
+ * Berechtigung ohne Aufruf verzögert nur den Review und vergrößert im selben
+ * Zug den Schaden, den ein abhandengekommenes Token anrichten kann.
+ */
 export const META_SCOPES = [
+  // Grundzugang zum Instagram-Profikonto; ohne sie beantwortet der Graph den
+  // Insights-Aufruf in fetchEngagement gar nicht erst.
   "instagram_basic",
+  // Trägt `/{ig-user-id}/insights?metric=impressions,reach,profile_views`
+  // in fetchEngagement (unten).
   "instagram_manage_insights",
+  // Trägt `GET /me/accounts` in resolveAccountId (server/maitr/routes.ts) - der
+  // Aufruf, der die Page-ID liefert, auf der beide Connector-Aufrufe aufsetzen.
   "pages_show_list",
+  // Trägt den Seitenzugriff für `/{page-id}/ratings` in fetchReviews (unten).
   "pages_read_engagement",
+  // Empfehlungen sind von Nutzern geschriebene Inhalte, und genau die deckt
+  // pages_read_engagement NICHT ab: sie trägt nur die seiteneigenen Daten.
+  // Ohne diese zweite Berechtigung antwortet `/{page-id}/ratings` in
+  // fetchReviews mit 403. Sie fällt also erst weg, wenn der /ratings-Aufruf
+  // fällt - nicht vorher, sonst bricht der Bewertungs-Sync still im Betrieb,
+  // wo keine Testattrappe ihn mehr auffängt.
   "pages_read_user_content",
-  "business_management",
+  // Entfernt: "business_management". Sie öffnet den gesamten Bestand des
+  // Business Managers (Konten, Seiten, Werbekonten), obwohl kein einziger
+  // Aufruf im Repo die Business-Manager-API anfasst - /me/accounts, /ratings
+  // und /insights kommen ohne sie aus. Sie war die breiteste der sechs und die
+  // einzige ohne Aufruf dahinter.
 ];
 
 export const META_OAUTH: Omit<OAuthConfig, "clientId" | "redirectUri"> = {

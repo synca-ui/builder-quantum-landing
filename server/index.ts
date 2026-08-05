@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 // zieht also weder Prisma noch sonst etwas mit.
 import { asyncHandler, type AsyncRequestHandler } from "./maitr/asyncHandler";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { globalLimiter, strictLimiter } from "./middleware/rateLimit";
 import { requireAuth } from "./middleware/auth";
 import { apiRouter } from "./routes";
@@ -37,11 +37,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteRateLimiter = rateLimit({
   windowMs: 60_000,
   limit: 60,
-  // Normalize IPv6 addresses (strip brackets) to avoid ERR_ERL_KEY_GEN_IPV6
-  keyGenerator: (req) => {
-    const ip = (req.ip ?? "").replace(/^\[|\]$/g, "");
-    return `${ip}-${req.params.subdomain ?? ""}`;
-  },
+  // Der Schluessel muss ueber ipKeyGenerator laufen, nicht ueber eine eigene
+  // Normalisierung. Das Update auf express-rate-limit 8.6.2 schliesst nur den
+  // EINGEBAUTEN Schluessel (GHSA-46wh-pxpv-q5gq); ein eigener keyGenerator
+  // umgeht diesen Fix vollstaendig und blieb hier offen.
+  // Die vermiedene Falle: das blosse Strippen der eckigen Klammern liess
+  // "::ffff:1.2.3.4" stehen, waehrend derselbe Klient ueber IPv4 als "1.2.3.4"
+  // zaehlte - auf einem Dual-Stack-Host (Railway) also zwei getrennte Zaehler
+  // und damit die doppelte Rate. ipKeyGenerator faltet die IPv4-abgebildete
+  // Form auf die IPv4-Adresse zurueck und fasst echtes IPv6 zum /56-Praefix
+  // zusammen, sodass ein Angreifer sich nicht ueber sein eigenes Praefix
+  // beliebig viele Zaehler ausstellen kann.
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? "")}-${req.params.subdomain ?? ""}`,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Zu viele Anfragen für diese Seite." },

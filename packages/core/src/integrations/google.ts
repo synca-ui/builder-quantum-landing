@@ -57,8 +57,9 @@ export const googleConnector: ChannelConnector = {
   },
 
   async fetchReviews(tokens, fetchImpl) {
-    const account = assertGoogleAccountId(tokens.accountId);
-    const res = await fetchImpl(`${REVIEWS_BASE}/${account}/reviews`, {
+    // v4 will die VOLLE Form: ohne accounts-Präfix kennt diese API den Standort nicht.
+    const { voll } = googleRessourcenNamen(tokens.accountId);
+    const res = await fetchImpl(`${REVIEWS_BASE}/${voll}/reviews`, {
       headers: { Authorization: `Bearer ${tokens.accessToken}` },
     });
     if (!res.ok) throw new Error(`Google reviews HTTP ${res.status}`);
@@ -67,10 +68,15 @@ export const googleConnector: ChannelConnector = {
   },
 
   async fetchEngagement(tokens, fetchImpl) {
-    const account = assertGoogleAccountId(tokens.accountId);
+    // NUR die kurze Form "locations/Y" - die Performance-API kennt keine Konten
+    // in ihrem Pfad. Siehe die Messung bei googleRessourcenNamen(): mit
+    // accounts-Präfix antwortet Google 404, ohne 401. Das ist der Unterschied
+    // zwischen "diese Route gibt es nicht" und "diese Route gibt es, ich bin
+    // hier nur nicht angemeldet" - und damit der Beleg, welche Form stimmt.
+    const { standort } = googleRessourcenNamen(tokens.accountId);
     // BUSINESS_IMPRESSIONS_* sind die Aufruf-Metriken der Performance-API.
     const url =
-      `${PERFORMANCE_BASE}/${account}:fetchMultiDailyMetricsTimeSeries` +
+      `${PERFORMANCE_BASE}/${standort}:fetchMultiDailyMetricsTimeSeries` +
       `?dailyMetrics=BUSINESS_IMPRESSIONS_DESKTOP_MAPS` +
       `&dailyMetrics=BUSINESS_IMPRESSIONS_MOBILE_MAPS`;
     const res = await fetchImpl(url, {
@@ -82,12 +88,35 @@ export const googleConnector: ChannelConnector = {
   },
 };
 
-/** Google-Standort-Ressourcenname strikt prüfen (verhindert Path-Injection/SSRF). */
-function assertGoogleAccountId(id: string): string {
-  if (!/^accounts\/[A-Za-z0-9_-]+\/locations\/[A-Za-z0-9_-]+$/.test(id)) {
+/**
+ * Zerlegt die gespeicherte Kennung in die ZWEI Formen, die Google verlangt - und
+ * prüft sie dabei strikt (verhindert Path-Injection/SSRF).
+ *
+ * Gespeichert wird genau ein Wert: "accounts/X/locations/Y" (resolveAccountId in
+ * server/maitr/routes.ts baut ihn so). Die beiden APIs wollen davon aber
+ * Unterschiedliches, und das war hier lange falsch verdrahtet:
+ *
+ *   • `voll`     = "accounts/X/locations/Y"  → Business Profile API v4 (Bewertungen)
+ *   • `standort` = "locations/Y"             → Performance API (Reichweite)
+ *
+ * MESSUNG, damit das niemand "zurückkorrigiert" (per curl, ohne Token):
+ *   .../v1/locations/222:fetchMultiDailyMetricsTimeSeries              → 401
+ *   .../v1/accounts/111/locations/222:fetchMultiDailyMetricsTimeSeries → 404
+ * 401 heißt: die Route existiert, es fehlt nur die Anmeldung - also die richtige
+ * Form. 404 heißt: diese Route gibt es nicht. Die Performance-API führt Konten
+ * schlicht nicht im Pfad. Mit der 404-Form lief der Reichweite-Pull ins Leere,
+ * ohne dass es je auffiel - `fetchEngagement` warf nur "HTTP 404", und das sah
+ * aus wie ein noch nicht freigegebener Zugang.
+ *
+ * Deshalb wird hier abgeleitet statt konfiguriert: eine zweite gespeicherte
+ * Kennung könnte von der ersten abdriften, diese kann es nicht.
+ */
+function googleRessourcenNamen(id: string): { voll: string; standort: string } {
+  const treffer = /^accounts\/[A-Za-z0-9_-]+\/(locations\/[A-Za-z0-9_-]+)$/.exec(id);
+  if (!treffer) {
     throw new Error("Ungültige Google-Konto-/Standort-ID");
   }
-  return id;
+  return { voll: id, standort: treffer[1] };
 }
 
 function normalizeGoogleReview(r: GoogleReview): ReviewRecord {
