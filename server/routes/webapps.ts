@@ -196,29 +196,50 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
     // ============ STAGE 3: ENSURE BUSINESS LINK ============
     console.log(`[Publish] Stage 3: Ensuring business link...`);
 
-    let businessId: string | undefined;
+    // Hinweise, die der Nutzer in der Antwort sehen soll.
+    let businessNotes: string[] = [];
     try {
       const businessName =
         config?.business?.name || config?.businessName || "Unnamed Business";
-      const businessSetup = await ensureUserBusiness(
-        userId,
-        businessName,
-        undefined,
-        {
-          primaryColor:
-            config?.design?.primaryColor || config?.primaryColor || "#000000",
-          secondaryColor:
-            config?.design?.secondaryColor ||
-            config?.secondaryColor ||
-            "#ffffff",
-          fontFamily:
-            config?.design?.fontFamily || config?.fontFamily || "sans",
-        },
-      );
-      businessId = businessSetup.businessId;
+      // Die Vorlage ist im Konfigurator Pflicht (siehe validatePublishData) und
+      // trägt genau die Kennungen der Template-Tabelle: minimalist | modern |
+      // stylish | cozy (shared/suggestedConfig.ts TEMPLATE_MAP, prisma/seed.ts).
+      // Bisher stand hier fest `undefined` – der Betrieb wäre also selbst dann
+      // ohne Vorlagenbezug entstanden, wenn er entstanden wäre.
+      const templateId =
+        config?.design?.template || config?.template || undefined;
+      await ensureUserBusiness(userId, businessName, templateId, {
+        primaryColor:
+          config?.design?.primaryColor || config?.primaryColor || "#000000",
+        secondaryColor:
+          config?.design?.secondaryColor || config?.secondaryColor || "#ffffff",
+        fontFamily: config?.design?.fontFamily || config?.fontFamily || "sans",
+      });
     } catch (error) {
-      console.error("[Publish] Business link failed:", error);
-      // Non-fatal - continue without business link
+      // Hier stand "Non-fatal - continue without business link". Das war der
+      // Grund, warum niemand etwas gemerkt hat: Ohne Betrieb gibt es keine
+      // BusinessMember-Zeile, und ab da antwortet jede betriebsgebundene Route
+      // mit 403 "Kein Zugriff auf diesen Betrieb". Der Nutzer hat eine
+      // erreichbare Web-App und ein leeres Dashboard – ohne jeden Hinweis,
+      // dass etwas schiefging.
+      //
+      // Trotzdem NICHT die ganze Veröffentlichung scheitern lassen: Die Web-App
+      // ist gleich online, das ist das Ergebnis, für das der Nutzer die Analyse
+      // durchlaufen hat. Ein 500 an dieser Stelle nähme ihm ein fertiges
+      // Ergebnis weg, statt ihm zu helfen.
+      //
+      // Also: weiterlaufen, aber laut – Log, Auditeintrag und ein Hinweis in
+      // der Antwort. Ein Fehler, der niemanden erreicht, wird nie behoben.
+      const grund = error instanceof Error ? error.message : String(error);
+      console.error(
+        "[Publish] Stage 3 FEHLGESCHLAGEN – kein Betrieb angelegt:",
+        grund,
+      );
+      await audit("business_link_failed", userId, false, grund);
+      businessNotes = [
+        "Der Betrieb konnte nicht angelegt werden – die Web-App ist online, " +
+          "das Dashboard bleibt vorerst leer.",
+      ];
     }
 
     // ============ STAGE 3.5: BILDER ÜBERNEHMEN ============
@@ -459,7 +480,7 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       // Anmerkungen der Bildübernahme gehören dazu: Bleibt ein Bild extern,
       // soll der Nutzer das erfahren und nicht erst merken, wenn es eines
       // Tages verschwindet.
-      warnings: [...validation.warnings, ...imageNotes],
+      warnings: [...validation.warnings, ...businessNotes, ...imageNotes],
       stage: "complete",
     });
   } catch (error) {

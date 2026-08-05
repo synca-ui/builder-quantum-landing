@@ -25,6 +25,9 @@ model User {
   templateRatings TemplateRating[]
   tenants         Tenant[]
   webApps         WebApp[]
+  // Freigaben im Tagesbriefing. onDelete: SetNull (siehe TaskDecision) - die
+  // Entscheidung gehoert dem Betrieb, nicht dem Nutzer, und ueberlebt dessen Konto.
+  taskDecisions   TaskDecision[]
 }
 
 model Business {
@@ -43,6 +46,11 @@ model Business {
   socialLinks        Json?
   contactInfo        Json?
   maitrScore         Int                 @default(0)
+  // Maitr-Präsenz-Felder (füttern @maitr/core/analytics)
+  timezone           String              @default("Europe/Berlin")
+  averageCheck       Float               @default(9)
+  tags               String[]            @default([])
+  profileSignals     Json?
   originalPdfUrl     String?
   status             BusinessStatus      @default(DRAFT)
   createdAt          DateTime            @default(now())
@@ -56,6 +64,14 @@ model Business {
   orders             Order[]
   reservations       Reservation[]
   tables             Table[]
+
+  // Maitr Presence Relations (NEW)
+  maitrGuests        MaitrGuest[]
+  maitrReviews       MaitrReview[]
+  engagementPoints   MaitrEngagementPoint[]
+  channelConnections ChannelConnection[]
+  insightsCaches     InsightsCache[]
+  taskDecisions      TaskDecision[]
 
   // Staff Management Relations (NEW)
   staff              Staff[]
@@ -704,4 +720,176 @@ enum OrderType {
   DINE_IN
   TAKEOUT
   DELIVERY
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Maitr Presence & Analytics
+//
+// Diese Tabellen füttern @maitr/core/analytics. Sie sind bewusst quellenneutral
+// (source-Feld) und mandantengebunden (businessId) - jede Zeile gehört genau
+// einem Betrieb; die API erzwingt das über requireVenueAccess.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ChannelProvider {
+  GOOGLE
+  META
+}
+
+enum ConnectionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+/// Dem Betrieb gehörende Gästebeziehung (der verteidigbare Kern). → GuestRecord
+model MaitrGuest {
+  id         String   @id @default(uuid())
+  businessId String
+  name       String
+  phone      String?
+  firstVisit DateTime
+  lastVisit  DateTime
+  visits     Int      @default(1)
+  noShows    Int      @default(0)
+  tags       String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, lastVisit])
+}
+
+/// Normalisierte Bewertung aus Google/Meta. externalId = Idempotenz beim Sync. → ReviewRecord
+model MaitrReview {
+  id         String   @id @default(uuid())
+  businessId String
+  source     String
+  externalId String
+  rating     Int
+  text       String
+  createdAtSource DateTime
+  repliedAt  DateTime?
+  createdAt  DateTime @default(now())
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Mandantengebunden: dieselbe externe Review-ID darf pro Betrieb existieren, ohne
+  // dass der Sync eines Betriebs die Zeile eines anderen überschreibt (geteilte Konten).
+  @@unique([businessId, source, externalId])
+  @@index([businessId, createdAtSource])
+}
+
+/// Stündliche Reichweite/Interaktion aus den Insights-APIs. → EngagementPoint
+model MaitrEngagementPoint {
+  id          String   @id @default(uuid())
+  businessId  String
+  source      String
+  at          DateTime
+  impressions Int      @default(0)
+  actions     Int      @default(0)
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, source, at])
+  @@index([businessId, at])
+}
+
+/// Verbundener Kanal. Tokens NUR verschlüsselt (AES-256-GCM), nie im Klartext. → ConnectionTokens
+model ChannelConnection {
+  id              String           @id @default(uuid())
+  businessId      String
+  provider        ChannelProvider
+  accountId       String
+  encAccessToken  String
+  encRefreshToken String?
+  expiresAt       DateTime
+  scopes          String[]         @default([])
+  status          ConnectionStatus @default(ACTIVE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, provider])
+}
+
+/// Gecachtes Analytics-Ergebnis, damit /briefing/today nicht bei jedem Aufruf neu rechnet.
+model InsightsCache {
+  id         String   @id @default(uuid())
+  businessId String   @unique
+  computedAt DateTime @default(now())
+  result     Json
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+/// Zustand einer Aufgaben-Entscheidung.
+///
+/// OPEN ist KEIN Ersatz für "es gibt keine Zeile": Die Zeile entsteht auch beim
+/// blossen Bearbeiten des Entwurfs (PATCH /briefing/tasks/:id), und eine bearbeitete,
+/// aber noch nicht freigegebene Aufgabe MUSS weiterhin als offen im Briefing stehen.
+/// Nur APPROVED und DISMISSED blenden sie aus.
+enum TaskDecisionState {
+  OPEN
+  APPROVED
+  DISMISSED
+}
+
+/// Die Entscheidung über eine Aufgabe des Tagesbriefings - NICHT die Aufgabe selbst.
+///
+/// WARUM NICHT DIE AUFGABE SPEICHERN
+/// Aufgaben sind abgeleitet: `buildInsights` (packages/core/src/analytics/insights.ts)
+/// rechnet sie bei jedem Aufruf neu aus Bewertungen, Reservierungen, Gästen und
+/// Profilsignalen. Eine gespeicherte Aufgabenzeile wäre ab dem ersten Sync eine
+/// zweite Wahrheit: Eine beantwortete Bewertung fiele aus `buildInsights` heraus,
+/// stünde in der Aufgabentabelle aber weiter als offen. Deshalb wird nur das
+/// gespeichert, was sich NICHT ausrechnen lässt - der Wille des Betriebs.
+///
+/// `taskId` ist die abgeleitete Aufgabenkennung aus dem Insights-Motor
+/// (`review_<reviewId>`, `profile_<hebel>`, `occupancy_fill`, ...). Bewusst KEIN
+/// Fremdschlüssel: die Kennungen zeigen je nach Art auf verschiedene Tabellen
+/// (MaitrReview, MaitrGuest) oder auf gar keine (`roi_month`), ein FK ist dafür
+/// nicht formulierbar.
+///
+/// WAS PASSIERT, WENN DIE GRUNDLAGE VERSCHWINDET
+/// Nichts - und das ist Absicht. Wird die Bewertung hinter `review_<id>` gelöscht,
+/// bleibt die Entscheidungszeile als wirkungsloser Rest stehen: `computeBriefing`
+/// legt Entscheidungen nur ÜBER die frisch berechneten Aufgaben, eine Entscheidung
+/// ohne zugehörige Aufgabe erzeugt also keinen Eintrag. Der Preis ist eine tote
+/// Zeile (wenige Byte), der Gewinn ist, dass eine Freigabe eine kurzzeitig
+/// verschwundene und wiederkehrende Grundlage überlebt - etwa wenn ein Sync-Lauf
+/// eine Bewertung vorübergehend nicht liefert. Aufräumen kann später ein Job über
+/// `decidedAt`; ein Cascade-Delete gäbe es dafür nicht.
+///
+/// `reopenAt` löst das zweite Problem abgeleiteter Kennungen: nicht alle sind
+/// einmalig. `review_<id>` nennt ein konkretes Objekt und verschwindet nach der
+/// Antwort - `occupancy_fill`, `roi_month`, `profile_<hebel>`, `noshow_<gastId>`
+/// beschreiben einen Dauerzustand und werden jeden Tag neu erzeugt. Ohne
+/// Wiedervorlage tilgte eine einzige Freigabe diese zweite Sorte für immer.
+/// Hinzu kommt: Es gibt noch KEINEN Veröffentlichungsweg (ChannelConnector kann
+/// nur lesen), eine Freigabe stellt also nichts ein. Deshalb setzt der Server
+/// heute ausnahmslos eine Wiedervorlage (server/maitr/briefing.ts,
+/// REOPEN_AFTER_MS). NULL = unbefristet erledigt - richtig erst, wenn die
+/// Veröffentlichung steht und der Sync die Erledigung selbst nachliefert.
+model TaskDecision {
+  id              String            @id @default(uuid())
+  businessId      String
+  /// Abgeleitete Aufgabenkennung aus buildInsights, z. B. "review_abc123".
+  taskId          String
+  state           TaskDecisionState @default(OPEN)
+  /// Vom Betrieb bearbeiteter Entwurfstext; NULL = Vorschlag unverändert übernommen.
+  draft           String?
+  /// Zeitpunkt der Freigabe/Verwerfung. NULL, solange nur der Entwurf bearbeitet wurde.
+  decidedAt       DateTime?
+  /// Wer freigegeben hat. Nullbar + SetNull: Die Entscheidung des Betriebs bleibt
+  /// gültig, auch wenn der handelnde Nutzer sein Konto später löscht.
+  decidedByUserId String?
+  /// Ab diesem Zeitpunkt zählt die Aufgabe wieder als offen. NULL = für immer erledigt.
+  reopenAt        DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  business        Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  decidedBy       User?             @relation(fields: [decidedByUserId], references: [id], onDelete: SetNull)
+
+  // Eine Entscheidung je Betrieb und Aufgabe - das macht den Schreibpfad zu einem
+  // Upsert und verhindert, dass zwei Mitarbeiter zwei widersprüchliche Zeilen anlegen.
+  // Mandantengebunden: dieselbe Aufgabenkennung darf in jedem Betrieb existieren.
+  @@unique([businessId, taskId])
+  @@index([businessId, state])
 }

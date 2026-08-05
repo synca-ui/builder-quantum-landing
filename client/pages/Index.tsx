@@ -35,10 +35,14 @@ import { openCookieSettings } from "@/components/cookie-banner";
 const MaitrWorkflowAnimation = lazy(
   () => import("@/components/MaitrWorkflowAnimation"),
 );
-const LazyAuthSection = lazy(() => import("@/components/LazyAuthSection"));
 
 import { Card, CardContent } from "@/components/ui/card";
 import GoogleProfileSection from "@/components/sections/GoogleProfileSection";
+// Bewusst NICHT lazy: beide Bausteine kommen ohne framer-motion aus und stehen
+// dadurch schon im vorgerenderten HTML — siehe Kommentar an der Suspense-Grenze
+// des Workflow-Abschnitts weiter unten.
+import MaitrWorkflowStill from "@/components/MaitrWorkflowStill";
+import WorkflowStatsSection from "@/components/sections/WorkflowStatsSection";
 import { sessionApi } from "@/lib/api";
 import {
   useResourcePreloader,
@@ -47,8 +51,19 @@ import {
   useImageOptimization,
   useDemoDashboardVisibility,
 } from "@/hooks/usePerformanceOptimization";
-// Clerk removed from landing page for performance (~700KB JS saving)
-// Auth UI is only loaded on /login, /signup, /dashboard etc.
+// Diese Seite kommt ohne @clerk/clerk-react aus. Der Kopf verlinkt auf
+// /dashboard, statt den Anmeldezustand abzufragen; das Auth-SDK hängt an
+// AppAreaShell (client/components/AppAreaShell.tsx) und wird erst beim ersten
+// Aufruf einer Route dahinter geladen.
+//
+// Hier stand vorher: "Clerk removed from landing page for performance (~700KB
+// JS saving)". Das stimmte nicht. LazyAuthSection importierte useAuth als
+// normalen Import und hing an einer <Suspense>-Grenze im Kopf, die React beim
+// ERSTEN Render auflöst — der Clerk-Chunk stand deshalb als
+// <link rel="modulepreload"> im ausgelieferten HTML (live gemessen am
+// 05.08.2026: /js/chunk-DJPcoK6t.js, 81.277 B roh / 20.906 B Brotli) und wurde
+// bei jedem Seitenaufruf mitgeladen. Zusätzlich stand ClerkProvider in
+// client/App.tsx als normaler Import um die ganze Anwendung.
 
 const features = [
   {
@@ -266,9 +281,30 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <Suspense fallback={<div className="w-32 h-9 bg-gray-100 animate-pulse rounded-lg"></div>}>
-              <LazyAuthSection />
-            </Suspense>
+            {/*
+              Ein Ziel, das BEIDE Fälle trägt, statt eines Platzhalters, der
+              nach dem Laden von Clerk umspringt: Wer angemeldet ist, landet
+              direkt im Dashboard; wer es nicht ist, wird von dort zur Anmeldung
+              geschickt (RequireAuth in client/App.tsx). Der Kopf braucht den
+              Anmeldezustand damit im ersten Render überhaupt nicht — genau das
+              hält @clerk/clerk-react aus dem Ladepfad der Startseite heraus.
+
+              Vorher standen hier zwei Knöpfe ("Log in" / "Sign up") hinter
+              einer <Suspense>-Grenze, die React beim allerersten Render auflöst.
+              Der Kommentar weiter oben behauptete eine Einsparung, die deshalb
+              nie eintrat: der Chunk wurde bei jedem Seitenaufruf geladen.
+              Anmelden bleibt über dieses Ziel erreichbar, Registrieren über den
+              Hauptknopf daneben.
+            */}
+            <a href="/dashboard">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-bold text-gray-700 hover:text-teal-600"
+              >
+                Mein Bereich
+              </Button>
+            </a>
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -333,9 +369,16 @@ const Navigation = () => {
             ))}
 
             <div className="pt-2 border-t border-gray-200/50 space-y-2">
-              <Suspense fallback={null}>
-                <LazyAuthSection />
-              </Suspense>
+              {/* Gleiches Ziel wie im Desktop-Kopf, siehe Begründung dort. */}
+              <a href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-center font-bold text-gray-700 hover:text-teal-600"
+                >
+                  Mein Bereich
+                </Button>
+              </a>
 
               <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                 <Button
@@ -657,18 +700,27 @@ function IndexContent() {
           </div>
 
           {/* Workflow Animation */}
-          <Suspense
-            fallback={
-              // Höhe muss exakt der des geladenen MaitrWorkflowAnimation
-              // entsprechen (h-[850px] md:h-[850px]), sonst springt das Layout
-              // beim Nachladen um 150px – siehe CLS-Messung.
-              <div className="w-full max-w-7xl mx-auto h-[850px] md:h-[850px] bg-gray-50 rounded-3xl border border-gray-200 mt-4 md:mt-8 mb-10 md:mb-20 flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-teal-500" />
-              </div>
-            }
-          >
+          {/*
+            Der Fallback ist jetzt ein Standbild der ersten Animationsphase
+            statt eines leeren Kastens mit Spinner. Höhe und Abstände sind
+            unverändert (h-[850px] md:h-[850px]), sonst springt das Layout beim
+            Nachladen um 150px – siehe CLS-Messung. Weil renderToString auf ein
+            lazy()-Promise nicht warten kann, ist genau dieses Standbild das,
+            was im vorgerenderten HTML steht.
+          */}
+          <Suspense fallback={<MaitrWorkflowStill />}>
             <MaitrWorkflowAnimation />
           </Suspense>
+
+          {/*
+            Der dunkle Stats-Block lag bisher innerhalb von
+            MaitrWorkflowAnimation und hing damit am framer-motion-Chunk,
+            obwohl er selbst reines statisches Markup ist. Hier gerendert
+            steht er im vorgerenderten HTML und ist ohne JavaScript lesbar.
+            Reihenfolge und Verschachtelungstiefe entsprechen dem vorherigen
+            Zustand — beides sind Blockelemente über die volle Breite.
+          */}
+          <WorkflowStatsSection />
         </div>
       </section>
 

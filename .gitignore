@@ -34,3 +34,28 @@ rec.mov
 
 # DB-Exporte mit echten Kundendaten — gehören nie ins (öffentliche) Repo
 WebApp.json
+
+# Lokale Claude-Code-Konfiguration (maschinenspezifisch, u. a. settings.local.json)
+.claude/
+
+# PP Frama (Pangram Pangram) liegt uns nur als "Free for Personal Use"-Fassung vor.
+# Dieses Repo ist OEFFENTLICH: eingecheckte Schriftdateien waeren Weiterverteilung
+# und damit ein Lizenzverstoss. Die Dateien wurden deshalb aus der Versionskontrolle
+# genommen; lokal duerfen sie liegen bleiben (persoenliche Nutzung). Die App nutzt sie
+# nicht mehr - Markenschrift ist jetzt Bricolage Grotesque + Familjen Grotesk Italic
+# (beide SIL OFL, siehe mobile/src/theme/fonts.ts). Diese Sperre bleibt trotzdem stehen,
+# damit die PP-Frama-Dateien nicht versehentlich wieder ins oeffentliche Repo geraten.
+#
+# Bewusst OHNE Pfadpraefix: Muster ohne Schraegstrich greifen in JEDEM Verzeichnis.
+# Das ist noetig, weil `expo prebuild` die Schriften zusaetzlich nach
+# mobile/android/app/src/main/assets/fonts/ und mobile/ios/ kopiert - ein Muster nur
+# fuer mobile/assets/fonts/ liess diese Kopien durch (genau so kamen sie ins Repo).
+PPFrama*.otf
+PPFrama*.ttf
+PPFrama*.woff
+PPFrama*.woff2
+
+# OFL-lizenzierte Schriften (Familjen Grotesk, Bricolage Grotesque) duerfen mitverteilt
+# werden und sind daher NICHT ausgeschlossen - sie liegen bewusst eingecheckt unter
+# mobile/assets/fonts/, zusammen mit den beiden geforderten OFL.txt-Lizenztexten. Deshalb
+# hier auch KEIN pauschales *.ttf/*.otf: das wuerde die Markenschrift mit aussperren.

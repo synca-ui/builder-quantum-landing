@@ -1,0 +1,909 @@
+/**
+ * Maitr-API-Routen. Halten sich an den Vertrag aus `@maitr/core/api`
+ * (venue-scoped, hinter requireAuth + requireVenueAccess; `public` ohne Auth).
+ *
+ * Kernidee: die Analytik läuft NICHT hier, sondern in `@maitr/core/analytics` -
+ * der Server assembliert nur das Dataset und ruft dieselben reinen Funktionen wie
+ * die Demo. Kein doppelter Code, kein Auseinanderlaufen.
+ */
+import { Router } from "express";
+import { z } from "zod";
+import { connectors, GOOGLE_OAUTH, META_OAUTH } from "@maitr/core/integrations";
+import type { FetchLike, OAuthConfig, ProviderId } from "@maitr/core/integrations";
+import type { DailyTask, Reservation as ApiReservation, Venue } from "@maitr/core/types";
+import { nextSubdomainCandidate, suggestSubdomain } from "../../shared/subdomain";
+import { prisma } from "../db/prisma";
+import { requireVenueAccess, resolveVenue, validateBody } from "./middleware";
+import {
+  computeBriefing,
+  computeTasks,
+  REOPEN_AFTER_MS,
+  toApiState,
+  type TaskDecisionRow,
+} from "./briefing";
+import { createState, encryptToken, verifyState } from "./security";
+import { maitrEnv } from "./env";
+import { asyncHandler } from "./asyncHandler";
+
+const DAY_MS = 86_400_000;
+
+/**
+ * `requireVenueAccess` ist selbst eine async-Middleware mit einer Prisma-Abfrage
+ * und hat damit exakt dasselbe Problem wie die Handler: Faellt die Datenbank aus,
+ * lehnt ihr Promise ab und Express 4 bekommt davon nichts mit. Sie liegt in
+ * `middleware.ts` und wird auch anderswo verwendet — deshalb wird sie hier am
+ * Verwendungsort umschlossen statt dort umgeschrieben. Alle Routen unten binden
+ * `venueGuard` ein, nie `requireVenueAccess` direkt.
+ */
+const venueGuard = asyncHandler(requireVenueAccess);
+
+/* ── Betriebe ────────────────────────────────────────────────────────────── */
+
+export const venuesRouter = Router();
+
+/**
+ * Nur die Felder, die die API-Form braucht - wie `ReservationRow` weiter unten
+ * bewusst strukturell beschrieben statt aus `@prisma/client` importiert (der Client
+ * ist hier nicht generiert; siehe `node_modules/.prisma` fehlt).
+ */
+interface VenueRow {
+  id: string;
+  name: string;
+  tagline: string | null;
+  timezone: string;
+  tags: string[];
+}
+
+/**
+ * DB-Zeile → `@maitr/core/types#Venue`. An genau einer Stelle, damit die Liste
+ * (GET /venues), das öffentliche Profil und das Anlegen dieselbe Form liefern -
+ * sonst bekommt der Client je nach Endpunkt ein anderes Objekt für dieselbe Sache.
+ */
+function toApiVenue(b: VenueRow): Venue {
+  return {
+    id: b.id,
+    name: b.name,
+    tagline: b.tagline ?? undefined,
+    timezone: b.timezone,
+    tags: b.tags,
+  };
+}
+
+venuesRouter.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const memberships = await prisma.businessMember.findMany({
+      where: { userId: req.userId! },
+      include: { business: true },
+    });
+    res.json(memberships.map((m) => toApiVenue(m.business)));
+  }),
+);
+
+/* ── Den ersten eigenen Betrieb anlegen ──────────────────────────────────── */
+
+/**
+ * Eingabe des Onboardings. Bewusst schmal gehalten: Pflicht ist nur der Name. Jedes
+ * zusätzliche Pflichtfeld ist eine weitere Abbruchstelle in genau dem Schritt, der
+ * zwischen "angemeldet" und "nutzbar" liegt - Zeitzone und Beschreibung kann der
+ * Betrieb später im Profil nachziehen, einen Betrieb zu haben kann er nicht.
+ */
+const createVenueSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  /**
+   * IANA-Zone ("Europe/Berlin"). Wird geprüft, weil sie danach JEDE Tageslogik trägt
+   * (Briefing, Servicetag, Auswertung). Ungeprüft landet ein Tippfehler dauerhaft in
+   * der Zeile und fällt erst später bei jeder einzelnen Berechnung auf - dann aber
+   * an einer Stelle, die mit der Eingabe nichts mehr zu tun hat.
+   */
+  timezone: z
+    .string()
+    .min(1)
+    .max(64)
+    .refine(istBekannteZeitzone, { message: "Unbekannte Zeitzone" })
+    .optional(),
+  description: z.string().trim().max(2000).optional(),
+});
+
+/** `Intl` wirft bei unbekannter Zone einen RangeError - das ist die Prüfung. */
+function istBekannteZeitzone(wert: string): boolean {
+  try {
+    new Intl.DateTimeFormat("de-DE", { timeZone: wert });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Der Ausschnitt der Transaktion, den dieser Endpunkt benutzt. Von Hand beschrieben,
+ * weil der Prisma-Client in diesem Baum nicht generiert ist - so bleibt trotzdem
+ * geprüft, WAS in der Transaktion passieren darf.
+ */
+interface VenueTx {
+  business: {
+    create(args: { data: Record<string, unknown> }): Promise<VenueRow>;
+  };
+  businessMember: {
+    findFirst(args: {
+      where: { userId: string };
+      include: { business: true };
+    }): Promise<{ business: VenueRow } | null>;
+    create(args: {
+      data: { userId: string; businessId: string; role: "OWNER" };
+    }): Promise<unknown>;
+  };
+}
+
+/**
+ * Wie oft ein anderer Kandidat für die Adresse probiert wird, bevor aufgegeben wird.
+ * Endlich, damit ein häufiger Name ("Zur Post") nicht zu einer unbegrenzten Schleife
+ * gegen die Datenbank wird.
+ */
+const MAX_SLUG_VERSUCHE = 10;
+
+/**
+ * Ist das die Unique-Verletzung auf `Business.slug`?
+ *
+ * Nur dann darf der nächste Adress-Kandidat probiert werden. Jede andere P2002 (etwa
+ * auf `(userId, businessId)` in BusinessMember) bedeutet etwas anderes und muss
+ * sichtbar scheitern, statt in der Schleife stumm die Adresse zu wechseln.
+ *
+ * Prisma meldet das Ziel je nach Treiber als Spaltenliste (`["slug"]`) oder als
+ * Indexname (`"Business_slug_key"`) - deshalb wird auf das Vorkommen geprüft und
+ * nicht auf Gleichheit.
+ */
+function istSlugKollision(err: unknown): boolean {
+  const e = err as { code?: string; meta?: { target?: unknown } };
+  if (e?.code !== "P2002") return false;
+  const target = e.meta?.target;
+  const beschreibung = Array.isArray(target) ? target.join(",") : String(target ?? "");
+  return beschreibung.includes("slug");
+}
+
+/**
+ * Ersten eigenen Betrieb anlegen - der fehlende Schritt zwischen Anmeldung und
+ * eigenen Daten. Ohne ihn hat ein frisch angemeldeter Nutzer keine Mitgliedschaft,
+ * und JEDE venue-gebundene Route antwortet ihm mit 403.
+ *
+ * BEWUSST NICHT hinter `venueGuard`: Der Guard verlangt eine Betriebskennung und
+ * eine Mitgliedschaft - beides gibt es hier per Definition noch nicht. Die Schranke
+ * ist `requireAuth` (in `index.ts` vor diesem Router gemountet); der Betrieb wird
+ * ausschliesslich an `req.userId` gehängt, nie an eine Kennung aus der Anfrage.
+ *
+ * ZWEI DINGE, DIE HIER NICHT SCHIEFGEHEN DÜRFEN:
+ *
+ * 1) HALBER ZUSTAND. Business und BusinessMember entstehen in EINER Transaktion.
+ *    Fiele die Mitgliedschaft aus, bliebe ein Betrieb ohne Mitglied zurück - an den
+ *    kommt niemand mehr heran (jede Route prüft BusinessMember), und der Nutzer wird
+ *    ihn auch nicht wieder los: es gibt keine Route zum Löschen eines Betriebs, nur
+ *    die Kontolöschung räumt verwaiste Betriebe ab (server/routes/users.ts).
+ *
+ * 2) ZWEIMAL GETIPPT. Der Aufruf ist nicht idempotent - er legt an. Deshalb prüft er
+ *    INNERHALB der Transaktion, ob der Nutzer schon Mitglied irgendeines Betriebs
+ *    ist, und legt dann nichts an. Beim echten Doppeltipp laufen beide Anfragen mit
+ *    DEMSELBEN Namen und damit derselben Adresse: Der Verlierer läuft in die
+ *    Unique-Verletzung auf `slug`. Postgres lässt seinen INSERT dabei warten, bis der
+ *    Gewinner committet hat - beim nächsten Schleifendurchlauf sieht er also dessen
+ *    Mitgliedschaft und antwortet 409 statt einen zweiten Betrieb anzulegen. Offen
+ *    bleibt allein der konstruierte Fall, dass derselbe Nutzer zeitgleich zwei
+ *    VERSCHIEDENE Namen abschickt; das ist kein Doppeltipp mehr.
+ *
+ * WARUM KEIN ZWEITER BETRIEB (409 statt Anlegen):
+ * Der Client kann heute genau einen. `mobile/src/features/start/StartScreen.tsx`
+ * arbeitet auf einer festen Kennung, eine Betriebsauswahl gibt es nirgends. Schlimmer
+ * noch: `taskVenueGuard` (unten) leitet die Kennung aus der EINEN Mitgliedschaft ab,
+ * weil die App `approveTask`/`updateDraft` ohne Kennung ruft - bei mehr als einer
+ * Mitgliedschaft antwortet er 400. Ein zweiter Betrieb würde also still den grünen
+ * Knopf des ersten lahmlegen. Ablehnen ist zurücknehmbar (die Regel steht an einer
+ * Stelle), ein angelegter Betrieb ist es nicht. Die Antwort trägt den vorhandenen
+ * Betrieb mit, damit der Client daraus keine Sackgasse machen muss.
+ */
+venuesRouter.post(
+  "/",
+  validateBody(createVenueSchema),
+  asyncHandler(async (req, res) => {
+    if (!req.userId) return res.status(401).json({ error: "Nicht angemeldet" });
+    const userId = req.userId;
+    const { name, timezone, description } = req.body as z.infer<typeof createVenueSchema>;
+
+    // Die Adresse kommt aus den GEMEINSAMEN Regeln (shared/subdomain.ts), die auch
+    // der Konfigurator und der Veröffentlichungspfad benutzen. Eine zweite
+    // Slug-Logik hier hiesse: zwei Vorstellungen davon, was eine gültige Adresse ist.
+    const basis = suggestSubdomain(name);
+    if (!basis) {
+      // Kein ableitbarer Name (zu kurz, nur Sonderzeichen, oder reserviert wie "demo").
+      // Lieber ehrlich nachfragen als eine Adresse erfinden, die der Betrieb nie
+      // gewählt hat und später nicht mehr ändern kann.
+      return res.status(422).json({
+        error:
+          "Aus diesem Namen lässt sich keine Adresse ableiten. Bitte einen Namen mit " +
+          "mindestens drei Buchstaben oder Ziffern wählen.",
+      });
+    }
+
+    for (let versuch = 0; versuch < MAX_SLUG_VERSUCHE; versuch++) {
+      const slug = nextSubdomainCandidate(basis, versuch);
+      try {
+        const ergebnis = await (prisma as unknown as {
+          $transaction<T>(fn: (tx: VenueTx) => Promise<T>): Promise<T>;
+        }).$transaction(async (tx) => {
+          const bestehend = await tx.businessMember.findFirst({
+            where: { userId },
+            include: { business: true },
+          });
+          if (bestehend) return { venue: toApiVenue(bestehend.business), schonVorhanden: true };
+
+          const business = await tx.business.create({
+            data: {
+              slug,
+              name,
+              // Nur setzen, was der Nutzer genannt hat - sonst überschreiben leere
+              // Felder die Vorgaben aus dem Schema (timezone: "Europe/Berlin").
+              ...(description ? { description } : {}),
+              ...(timezone ? { timezone } : {}),
+            },
+          });
+          // OWNER ausdrücklich: Die Vorgabe des Modells ist STAFF. Wer seinen Betrieb
+          // anlegt, ist dessen Inhaber - alles andere wäre von Anfang an falsch.
+          await tx.businessMember.create({
+            data: { userId, businessId: business.id, role: "OWNER" },
+          });
+          return { venue: toApiVenue(business), schonVorhanden: false };
+        });
+
+        if (ergebnis.schonVorhanden) {
+          return res.status(409).json({
+            error: "Du hast bereits einen Betrieb.",
+            venue: ergebnis.venue,
+          });
+        }
+        return res.status(201).json(ergebnis.venue);
+      } catch (err) {
+        // Adresse vergeben → nächster Kandidat. Alles andere fliegt weiter an den
+        // asyncHandler; die Transaktion ist dabei bereits zurückgerollt.
+        if (!istSlugKollision(err)) throw err;
+      }
+    }
+
+    return res.status(409).json({
+      error:
+        "Unter diesem Namen ist keine freie Adresse mehr zu finden. Bitte den Namen " +
+        "leicht abwandeln.",
+    });
+  }),
+);
+
+/* ── Öffentliches Gastprofil (ohne Auth) ─────────────────────────────────── */
+
+export const publicRouter = Router();
+
+publicRouter.get(
+  "/venues/:slug/public",
+  asyncHandler(async (req, res) => {
+    // Wie beim DELETE weiter unten: Express typisiert Pfadparameter nicht als
+    // blossen String, deshalb erst festklopfen, bevor der Wert in die Abfrage geht.
+    const slug = String(req.params.slug ?? "");
+    const business = await prisma.business.findUnique({ where: { slug } });
+    if (!business) return res.status(404).json({ error: "Nicht gefunden" });
+    // Dieselbe Abbildung wie in GET /venues - siehe toApiVenue.
+    return res.json(toApiVenue(business));
+  }),
+);
+
+/* ── Reservierungen ──────────────────────────────────────────────────────── */
+
+export const reservationsRouter = Router();
+
+reservationsRouter.get(
+  "/day",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const date = String(req.query.date ?? "");
+    const start = new Date(date);
+    if (Number.isNaN(start.getTime())) return res.status(400).json({ error: "Ungültiges Datum" });
+    const end = new Date(start.getTime() + DAY_MS);
+
+    const reservations = await prisma.reservation.findMany({
+      where: { businessId: venueId, reservationTime: { gte: start, lt: end } },
+      orderBy: { reservationTime: "asc" },
+    });
+    return res.json({ date, reservations });
+  }),
+);
+
+const createReservationSchema = z.object({
+  venueId: z.string().min(1),
+  guestName: z.string().min(1).max(120),
+  partySize: z.number().int().min(1).max(50),
+  start: z.string().datetime(),
+  phone: z.string().max(40).optional(),
+});
+
+reservationsRouter.post(
+  "/",
+  venueGuard,
+  validateBody(createReservationSchema),
+  asyncHandler(async (req, res) => {
+    const { guestName, partySize, start, phone } = req.body as z.infer<typeof createReservationSchema>;
+
+    // AUSSCHLIESSLICH die von requireVenueAccess geprüfte Kennung verwenden, niemals
+    // die aus dem Rumpf. Genau daran lag die Lücke: Die Middleware prüfte die
+    // Mitgliedschaft für die Query-Kennung, geschrieben wurde die Body-Kennung — ein
+    // Mitglied von Betrieb A konnte so in den fremden Betrieb B schreiben. Seit
+    // resolveVenue widersprüchliche Quellen mit 400 abweist, kann das nicht mehr
+    // auseinanderfallen; der Zugriff hier auf req.venueId hält es auch dann dicht,
+    // wenn jemand die Auflösung später wieder lockert.
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+
+    const reservation = await prisma.reservation.create({
+      data: {
+        businessId: venueId,
+        guestName,
+        guestCount: partySize,
+        guestPhone: phone,
+        reservationTime: new Date(start),
+        source: "maitr",
+      },
+    });
+    return res.status(201).json(reservation);
+  }),
+);
+
+/**
+ * Nur die Felder, die die API-Form braucht. Bewusst strukturell beschrieben statt
+ * aus `@prisma/client` importiert, damit der Mapper auch ohne generierten Client
+ * (und in Tests mit einfachen Objekten) typprüfbar bleibt.
+ */
+interface ReservationRow {
+  id: string;
+  guestName: string;
+  guestCount: number;
+  guestPhone: string | null;
+  reservationTime: Date;
+  duration: number;
+  status: string;
+  source: string;
+}
+
+/** Prisma-`ReservationStatus` → Status des API-Vertrags (`@maitr/core/types`). */
+const API_STATUS: Record<string, ApiReservation["status"]> = {
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  ARRIVED: "confirmed",
+  COMPLETED: "confirmed",
+  CANCELLED: "cancelled",
+  NO_SHOW: "cancelled",
+};
+
+/**
+ * DB-Zeile → die Form, die `@maitr/core/types#Reservation` verspricht.
+ *
+ * Die beiden Modelle decken sich nicht: Die DB kennt `guestCount` und eine Dauer
+ * in Minuten, der Vertrag `partySize` und ein Ende; der Prisma-Enum kennt kein
+ * WALK_IN, der Vertrag dafür keinen Sitz-/Abschlusszustand. Diese Übersetzung
+ * gehört deshalb an genau eine Stelle - sonst rät jeder Handler neu.
+ */
+function toApiReservation(r: ReservationRow): ApiReservation {
+  // Reihenfolge mit Absicht: Eine Stornierung schlägt die Quelle. Sonst sähe ein
+  // stornierter Walk-in im Client weiterhin nach belegtem Tisch aus.
+  const status: ApiReservation["status"] =
+    r.status === "CANCELLED" || r.status === "NO_SHOW"
+      ? "cancelled"
+      : r.source === "walk_in"
+        ? "walk_in"
+        : (API_STATUS[r.status] ?? "confirmed");
+
+  return {
+    id: r.id,
+    guestName: r.guestName,
+    partySize: r.guestCount,
+    start: r.reservationTime.toISOString(),
+    end: new Date(r.reservationTime.getTime() + r.duration * 60_000).toISOString(),
+    status,
+    phone: r.guestPhone ?? undefined,
+  };
+}
+
+const walkInSchema = z.object({
+  venueId: z.string().min(1),
+  tableId: z.string().min(1),
+  partySize: z.number().int().min(1).max(50),
+  /** Walk-ins kommen ohne Namen an die Tür; der Client schickt keinen. */
+  guestName: z.string().min(1).max(120).optional(),
+});
+
+reservationsRouter.post(
+  "/walk-in",
+  venueGuard,
+  validateBody(walkInSchema),
+  asyncHandler(async (req, res) => {
+    const { tableId, partySize, guestName } = req.body as z.infer<typeof walkInSchema>;
+
+    // Wie bei POST / : die geprüfte Kennung, nie die aus dem Rumpf.
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+
+    // Der Tisch muss DIESEM Betrieb gehören. Ohne die Prüfung könnte ein Mitglied von
+    // Betrieb A einen Walk-in an einen Tisch von Betrieb B hängen: Die Zeile trüge
+    // zwar businessId A (der Filter oben hält), der Fremdschlüssel zeigte aber in den
+    // Tischplan von B - B bekäme eine Belegung, die er weder angelegt hat noch über
+    // seine eigenen Routen wieder los wird. Der Filter auf businessId macht fremde
+    // Tisch-IDs zugleich ununterscheidbar von nicht existierenden.
+    const table = await prisma.table.findFirst({
+      where: { id: tableId, businessId: venueId },
+      select: { id: true },
+    });
+    if (!table) return res.status(404).json({ error: "Tisch nicht gefunden" });
+
+    const reservation = await prisma.reservation.create({
+      data: {
+        businessId: venueId,
+        tableId: table.id,
+        // Ein Walk-in sitzt bereits: Zeitpunkt ist jetzt, Status ARRIVED (nicht
+        // PENDING - es gibt nichts mehr zu bestätigen).
+        guestName: guestName ?? "Walk-in",
+        guestCount: partySize,
+        reservationTime: new Date(),
+        status: "ARRIVED",
+        // dataset.ts bildet alles ausser "maitr"/"google" auf "walk_in" ab; explizit
+        // gesetzt, damit die Auswertung Walk-ins nicht als Online-Buchung zählt.
+        source: "walk_in",
+      },
+    });
+    return res.status(201).json(toApiReservation(reservation));
+  }),
+);
+
+/**
+ * Stornierung. Antwortet mit 204 (kein Rumpf), wie der Client-Vertrag es erwartet.
+ *
+ * WICHTIG - zwei bewusste Entscheidungen:
+ *
+ * 1) Es wird nicht gelöscht, sondern auf CANCELLED gesetzt. Der Client nennt die
+ *    Funktion `cancel`, und die Auswertung braucht die Zeile: `dataset.ts` bildet
+ *    CANCELLED auf "cancelled" ab, der Insights-Motor rechnet Stornoquote und
+ *    No-Shows daraus. Ein echtes DELETE würde diese Zahlen still verfälschen und
+ *    wäre nicht rückholbar.
+ *
+ * 2) Die Zugehörigkeit ist Teil der WHERE-Klausel, nicht ein Schritt davor. Ein
+ *    `findUnique` + anschliessendes `update` liesse sich beim nächsten Umbau
+ *    trennen; hier kann der Schreibzugriff die Bedingung `businessId = venueId`
+ *    gar nicht verlieren. Trifft er nichts, war die ID fremd oder unbekannt -
+ *    beides beantwortet 404, damit fremde Reservierungs-IDs nicht bestätigt werden.
+ */
+reservationsRouter.delete(
+  "/:reservationId",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    // Wie bei `req.query.date` in GET /day: Express typisiert Parameter nicht als
+    // blossen String, deshalb erst festklopfen, bevor der Wert in die Abfrage geht.
+    const reservationId = String(req.params.reservationId ?? "");
+
+    const { count } = await prisma.reservation.updateMany({
+      where: { id: reservationId, businessId: venueId },
+      data: { status: "CANCELLED" },
+    });
+    if (count === 0) return res.status(404).json({ error: "Reservierung nicht gefunden" });
+    return res.status(204).end();
+  }),
+);
+
+/* ── Tagesbriefing (die drei Entscheidungen) ─────────────────────────────── */
+
+export const briefingRouter = Router();
+
+/** Frische-Fenster des Insights-Caches: darunter wird nicht neu gerechnet. */
+const CACHE_TTL_MS = 15 * 60_000;
+
+briefingRouter.get(
+  "/today",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+
+    // Cache wirklich nutzen: frisch → direkt ausliefern, sonst rechnen + schreiben.
+    const cache = await prisma.insightsCache.findUnique({ where: { businessId: venueId } });
+    if (cache && Date.now() - cache.computedAt.getTime() < CACHE_TTL_MS) {
+      return res.json(cache.result);
+    }
+
+    const briefing = await computeBriefing(venueId);
+    const result = JSON.parse(JSON.stringify(briefing));
+    await prisma.insightsCache.upsert({
+      where: { businessId: venueId },
+      create: { businessId: venueId, result },
+      update: { result, computedAt: new Date() },
+    });
+    return res.json(briefing);
+  }),
+);
+
+/* ── Aufgaben-Entscheidungen (der grüne Knopf) ───────────────────────────── */
+
+/**
+ * Venue-Schranke der beiden Aufgaben-Endpunkte.
+ *
+ * WARUM NICHT EINFACH `venueGuard`
+ * Der Client ruft `POST /briefing/tasks/:id/approve` OHNE Betriebskennung auf und
+ * `PATCH /briefing/tasks/:id` nur mit `{ draft }` (packages/core/src/api/index.ts,
+ * Zeilen 16 und 21). `requireVenueAccess` verlangt eine venueId in Pfad, Query oder
+ * Rumpf und antwortete darauf ausnahmslos mit 400 - die Endpunkte wären für den
+ * einzigen vorhandenen Aufrufer unbenutzbar, also genau die Attrappe, die hier
+ * vermieden werden soll. Den Client-Vertrag zu ändern stand nicht zur Wahl.
+ *
+ * Deshalb: Nennt die Anfrage eine venueId, gilt UNVERÄNDERT die reguläre Prüfung
+ * (inklusive Konflikt-400 und Mitgliedschaft). Nennt sie keine, wird sie NICHT
+ * geraten, sondern aus den Mitgliedschaften des angemeldeten Nutzers abgeleitet -
+ * und nur dann, wenn sie eindeutig ist. Das erweitert keine Rechte: Der Nutzer
+ * bekommt ausschliesslich den Betrieb, in dem er nachweislich Mitglied ist. Bei
+ * mehreren Mitgliedschaften wird abgelehnt statt gewählt; dann muss der Aufrufer
+ * die Kennung mitschicken (`?venueId=…` funktioniert an beiden Routen).
+ *
+ * Die Handler unten lesen die Kennung ausschliesslich aus `req.venueId` - nie aus
+ * Pfad, Query oder Rumpf.
+ */
+const taskVenueGuard = asyncHandler(async (req, res, next) => {
+  const { venueId, conflict } = resolveVenue(req);
+  if (conflict) {
+    return res.status(400).json({ error: "Widersprüchliche venueId in Pfad, Query und Rumpf" });
+  }
+  // Kennung genannt → unveränderte reguläre Prüfung. Das Promise wird hier bewusst
+  // zurückgegeben, damit eine Ablehnung (etwa ein Datenbankausfall in der Middleware)
+  // im asyncHandler landet und nicht als unbehandelte Ablehnung endet.
+  if (venueId) return requireVenueAccess(req, res, next);
+
+  if (!req.userId) return res.status(401).json({ error: "Nicht angemeldet" });
+  // `take: 2` genügt: Wir müssen nur "genau eine" von "mehr als eine" unterscheiden.
+  const memberships = await prisma.businessMember.findMany({
+    where: { userId: req.userId },
+    select: { businessId: true },
+    take: 2,
+  });
+  if (memberships.length === 0) return res.status(403).json({ error: "Kein Zugriff auf einen Betrieb" });
+  if (memberships.length > 1) return res.status(400).json({ error: "venueId fehlt" });
+
+  (req as typeof req & { venueId?: string }).venueId = memberships[0].businessId;
+  return next();
+});
+
+/**
+ * Form der Aufgabenkennung. Sie kommt aus `buildInsights` und besteht dort aus einem
+ * Präfix plus UUID oder Schlüssel (`review_<uuid>`, `profile_photos`, `roi_month`).
+ *
+ * Die Prüfung ist der billige erste Riegel gegen Müll im Pfad; der eigentliche
+ * Riegel ist die Existenzprüfung im Handler. Ohne beides legte jeder erfundene
+ * String eine Zeile in `TaskDecision` an - eine Tabelle, die ein Fremder dann nach
+ * Belieben füllen könnte.
+ */
+const TASK_ID_PATTERN = /^[A-Za-z0-9_-]{1,120}$/;
+
+/**
+ * Aufgabe aus dem Pfad auflösen. Antwortet mit `null`, wenn die Kennung heute keine
+ * Aufgabe dieses Betriebs trägt - der Aufrufer macht daraus einen 404.
+ *
+ * WICHTIG: gesucht wird in den Aufgaben DES GEPRÜFTEN BETRIEBS. Eine Kennung aus
+ * einem fremden Briefing findet hier nichts, selbst wenn sie stimmt. Damit ist auch
+ * die Existenz fremder Aufgaben nicht am Antwortverhalten ablesbar.
+ */
+async function resolveTask(venueId: string, taskId: string, now: Date) {
+  const tasks = await computeTasks(venueId, now);
+  return tasks.find((t) => t.id === taskId) ?? null;
+}
+
+/**
+ * Den Insights-Cache dieses Betriebs verwerfen.
+ *
+ * Ohne das bliebe die Freigabe bis zu 15 Minuten unsichtbar: `GET /briefing/today`
+ * liefert innerhalb von `CACHE_TTL_MS` die gespeicherte Antwort aus - mit der
+ * gerade freigegebenen Aufgabe darin. Der Betrieb drückt den grünen Knopf, kehrt
+ * zum Startbildschirm zurück und sieht dieselbe Karte wieder. `deleteMany` statt
+ * `delete`, damit ein fehlender Cache kein Fehler ist.
+ */
+async function invalidateBriefingCache(venueId: string): Promise<void> {
+  await prisma.insightsCache.deleteMany({ where: { businessId: venueId } });
+}
+
+/** Aufgabe + Entscheidung → die Form, die `@maitr/core/types#DailyTask` verspricht. */
+function withDecision(task: DailyTask, decision: TaskDecisionRow): DailyTask {
+  return {
+    ...task,
+    draft: decision.draft ?? task.draft,
+    state: toApiState(decision.state),
+    decidedAt: decision.decidedAt?.toISOString(),
+  };
+}
+
+/**
+ * Aufgabe freigeben - die Handlung, um die das Produkt gebaut ist.
+ *
+ * Gespeichert wird die ENTSCHEIDUNG, nicht die Aufgabe (Begründung im Modell in
+ * prisma/schema.prisma und in briefing.ts). Der Upsert auf `(businessId, taskId)`
+ * macht den Aufruf idempotent: Zweimal Freigeben ist kein Fehler und erzeugt keine
+ * zweite Zeile - was zählt, ist der Zustand danach.
+ */
+briefingRouter.post(
+  "/tasks/:taskId/approve",
+  taskVenueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const taskId = String(req.params.taskId ?? "");
+    if (!TASK_ID_PATTERN.test(taskId)) return res.status(400).json({ error: "Ungültige Aufgabenkennung" });
+
+    const now = new Date();
+    const task = await resolveTask(venueId, taskId, now);
+    if (!task) return res.status(404).json({ error: "Aufgabe nicht gefunden" });
+
+    // Wiedervorlage IMMER setzen, solange es keinen Veröffentlichungsweg gibt -
+    // ausführlich begründet an REOPEN_AFTER_MS in briefing.ts.
+    const reopenAt = new Date(now.getTime() + REOPEN_AFTER_MS);
+    const entschieden = {
+      state: "APPROVED" as const,
+      decidedAt: now,
+      decidedByUserId: req.userId!,
+      reopenAt,
+    };
+    const decision: TaskDecisionRow = await prisma.taskDecision.upsert({
+      where: { businessId_taskId: { businessId: venueId, taskId } },
+      create: { businessId: venueId, taskId, ...entschieden },
+      update: entschieden,
+    });
+
+    await invalidateBriefingCache(venueId);
+    return res.json(withDecision(task, decision));
+  }),
+);
+
+const draftSchema = z.object({ draft: z.string().min(1).max(4000) });
+
+/**
+ * Entwurf vor der Freigabe anpassen.
+ *
+ * Der Zustand bleibt dabei bewusst UNANGETASTET: Einen Text zu bearbeiten ist keine
+ * Freigabe. Die Aufgabe bleibt offen und erscheint im nächsten Briefing weiter -
+ * dann aber mit dem bearbeiteten Entwurf statt dem Vorschlag (`applyDecisions`).
+ */
+briefingRouter.patch(
+  "/tasks/:taskId",
+  taskVenueGuard,
+  validateBody(draftSchema),
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const taskId = String(req.params.taskId ?? "");
+    if (!TASK_ID_PATTERN.test(taskId)) return res.status(400).json({ error: "Ungültige Aufgabenkennung" });
+
+    const { draft } = req.body as z.infer<typeof draftSchema>;
+    const now = new Date();
+    const task = await resolveTask(venueId, taskId, now);
+    if (!task) return res.status(404).json({ error: "Aufgabe nicht gefunden" });
+
+    const decision: TaskDecisionRow = await prisma.taskDecision.upsert({
+      where: { businessId_taskId: { businessId: venueId, taskId } },
+      create: { businessId: venueId, taskId, draft },
+      update: { draft },
+    });
+
+    await invalidateBriefingCache(venueId);
+    return res.json(withDecision(task, decision));
+  }),
+);
+
+/* ── Integrationen (Kanäle verbinden) ────────────────────────────────────── */
+
+export const integrationsRouter = Router();
+
+function oauthConfig(provider: ProviderId): OAuthConfig {
+  const env = maitrEnv();
+  const redirectUri = `${env.MAITR_API_BASE_URL}/maitr/integrations/${provider}/callback`;
+  if (provider === "google") {
+    return { ...GOOGLE_OAUTH, clientId: env.GOOGLE_CLIENT_ID, redirectUri };
+  }
+  return { ...META_OAUTH, clientId: env.META_APP_ID, redirectUri };
+}
+
+integrationsRouter.get(
+  "/",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const connections = await prisma.channelConnection.findMany({
+      where: { businessId: venueId },
+      // Tokens bewusst NICHT ausliefern.
+      select: { provider: true, accountId: true, status: true, expiresAt: true, scopes: true },
+    });
+    return res.json(connections);
+  }),
+);
+
+// Synchron und ohne await — hier reicht Express' eigenes try/catch, deshalb kein
+// asyncHandler. Nur der venueGuard braucht ihn, weil die Middleware async ist.
+integrationsRouter.get("/:provider/connect", venueGuard, (req, res) => {
+  const provider = req.params.provider as ProviderId;
+  if (provider !== "google" && provider !== "meta") return res.status(400).json({ error: "Unbekannter Anbieter" });
+  const venueId = (req as typeof req & { venueId?: string }).venueId!;
+  const config = oauthConfig(provider);
+  const state = createState(venueId, provider, req.userId!);
+  res.json({ url: connectors[provider].buildAuthorizationUrl(config, state) });
+});
+
+/**
+ * OAuth-Rücksprung: state prüfen (CSRF), Code→Token serverseitig, verschlüsselt speichern.
+ * Bewusst am `publicRouter` (ohne requireAuth) - der Provider-Redirect trägt keinen
+ * App-Token; die Absicherung leistet der signierte `state`.
+ *
+ * DAS try/catch BLEIBT — und wird zusätzlich von `asyncHandler` umschlossen. Begründung:
+ *
+ * 1) Das try/catch ist keine Notbremse, sondern die fachlich richtige Antwort. Am
+ *    anderen Ende hängt ein BROWSER mitten im Anmeldefluss, nicht ein API-Aufrufer.
+ *    Ein JSON-500 wäre dort eine Sackgasse; der Nutzer landet stattdessen per
+ *    Deep-Link zurück in der App mit `status=error` und kann es erneut versuchen.
+ *    Die Fehler-Middleware kann das nicht leisten — sie kennt den Deep-Link nicht
+ *    und darf generisch keine Weiterleitung erfinden.
+ * 2) Das try/catch ist trotzdem nicht dicht: Der catch-Zweig ruft selbst `maitrEnv()`
+ *    auf, und `maitrEnv()` wirft bei fehlenden Variablen (env.ts). Wirft es dort,
+ *    fliegt der Fehler AUS dem catch heraus — genau in die unbehandelte Ablehnung,
+ *    die den Prozess killt. Der Wrapper fängt diesen zweiten Wurf ab und macht
+ *    daraus ein sauberes 500 statt eines toten Servers.
+ *
+ * Kurz: das try/catch beantwortet den erwarteten Fehler benutzergerecht, der
+ * asyncHandler sichert den Fehler im Fehlerpfad ab.
+ */
+publicRouter.get(
+  "/integrations/:provider/callback",
+  asyncHandler(async (req, res) => {
+    const provider = req.params.provider as ProviderId;
+    const code = String(req.query.code ?? "");
+    const stateRaw = String(req.query.state ?? "");
+    try {
+      const state = verifyState(stateRaw);
+      if (state.provider !== provider) throw new Error("Provider passt nicht zum state");
+      if (!code) throw new Error("Kein code");
+
+      // Mitgliedschaft ERNEUT prüfen, nicht nur beim Start des Flows. Zwischen
+      // /connect und dem Rücksprung liegen bis zu zehn Minuten; wer in dieser Zeit
+      // aus dem Betrieb entfernt wurde, darf keine offene Autorisierungs-URL mehr
+      // einlösen. Der Rücksprung selbst trägt keinen App-Token — deshalb steht der
+      // Auslöser im signierten state und wird hier gegen BusinessMember gehalten.
+      const membership = await prisma.businessMember.findUnique({
+        where: { userId_businessId: { userId: state.userId, businessId: state.businessId } },
+      });
+      if (!membership) throw new Error("Auslöser ist nicht (mehr) Mitglied des Betriebs");
+
+      const tokens = await exchangeCode(provider, code);
+      await prisma.channelConnection.upsert({
+        where: { businessId_provider: { businessId: state.businessId, provider: provider === "google" ? "GOOGLE" : "META" } },
+        create: {
+          businessId: state.businessId,
+          provider: provider === "google" ? "GOOGLE" : "META",
+          accountId: tokens.accountId,
+          encAccessToken: encryptToken(tokens.accessToken),
+          encRefreshToken: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
+          expiresAt: new Date(tokens.expiresAt),
+          scopes: tokens.scopes,
+        },
+        update: {
+          accountId: tokens.accountId,
+          encAccessToken: encryptToken(tokens.accessToken),
+          encRefreshToken: tokens.refreshToken ? encryptToken(tokens.refreshToken) : null,
+          expiresAt: new Date(tokens.expiresAt),
+          scopes: tokens.scopes,
+          status: "ACTIVE",
+        },
+      });
+      // Zurück in die App (Deep-Link), Tokens tauchen nie im Redirect auf.
+      return res.redirect(`${maitrEnv().MAITR_APP_DEEP_LINK}?provider=${provider}&status=connected`);
+    } catch (err) {
+      console.error("[maitr] OAuth-Callback fehlgeschlagen:", (err as Error).message);
+      return res.redirect(`${maitrEnv().MAITR_APP_DEEP_LINK}?provider=${provider}&status=error`);
+    }
+  }),
+);
+
+interface ExchangedTokens {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  accountId: string;
+  scopes: string[];
+}
+
+const fetchLike: FetchLike = async (url, init) => {
+  const res = await fetch(url, init);
+  return { ok: res.ok, status: res.status, json: () => res.json() };
+};
+
+/** Confidential-Client-Token-Tausch (client_secret serverseitig, nie im Client). */
+async function exchangeCode(provider: ProviderId, code: string): Promise<ExchangedTokens> {
+  const env = maitrEnv();
+  const config = oauthConfig(provider);
+  if (provider === "google") {
+    const body = new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: config.redirectUri,
+      grant_type: "authorization_code",
+    });
+    const res = await fetchLike(config.tokenEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+    if (!res.ok) throw new Error(`Google Token HTTP ${res.status}`);
+    const t = (await res.json()) as { access_token: string; refresh_token?: string; expires_in: number };
+    return {
+      accessToken: t.access_token,
+      refreshToken: t.refresh_token,
+      expiresAt: Date.now() + t.expires_in * 1000,
+      accountId: await resolveAccountId("google", t.access_token),
+      scopes: config.scopes,
+    };
+  }
+
+  // Meta: kurzlebiges User-Token holen, dann gegen ein langlebiges (~60 Tage) tauschen.
+  // Secrets/Code gehören in den POST-Body, NIE in die Query (sonst in Access-/Proxy-Logs).
+  const form = { "Content-Type": "application/x-www-form-urlencoded" };
+  const shortRes = await fetchLike(config.tokenEndpoint, {
+    method: "POST",
+    headers: form,
+    body: new URLSearchParams({
+      client_id: env.META_APP_ID,
+      client_secret: env.META_APP_SECRET,
+      redirect_uri: config.redirectUri,
+      code,
+    }).toString(),
+  });
+  if (!shortRes.ok) throw new Error(`Meta Token HTTP ${shortRes.status}`);
+  const shortTok = (await shortRes.json()) as { access_token: string };
+
+  const longRes = await fetchLike(config.tokenEndpoint, {
+    method: "POST",
+    headers: form,
+    body: new URLSearchParams({
+      grant_type: "fb_exchange_token",
+      client_id: env.META_APP_ID,
+      client_secret: env.META_APP_SECRET,
+      fb_exchange_token: shortTok.access_token,
+    }).toString(),
+  });
+  if (!longRes.ok) throw new Error(`Meta Long-Lived HTTP ${longRes.status}`);
+  const longTok = (await longRes.json()) as { access_token: string; expires_in?: number };
+
+  return {
+    accessToken: longTok.access_token,
+    expiresAt: Date.now() + (longTok.expires_in ?? 60 * 24 * 3600) * 1000,
+    accountId: await resolveAccountId("meta", longTok.access_token),
+    scopes: config.scopes,
+  };
+}
+
+/**
+ * Löst die anbieterspezifische Konto-/Standortkennung auf - ohne sie ist kein Sync
+ * möglich (die Connectors bauen ihre URLs damit). Token stets im Header, nie in der
+ * Query.
+ */
+async function resolveAccountId(provider: ProviderId, accessToken: string): Promise<string> {
+  const auth = { Authorization: `Bearer ${accessToken}` };
+  if (provider === "google") {
+    // 1) erstes Business-Konto, 2) erster Standort → "accounts/…/locations/…"
+    const accRes = await fetchLike("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", { headers: auth });
+    if (!accRes.ok) throw new Error(`Google accounts HTTP ${accRes.status}`);
+    const account = ((await accRes.json()) as { accounts?: { name: string }[] }).accounts?.[0]?.name;
+    if (!account) throw new Error("Kein Google-Business-Konto gefunden");
+    const locRes = await fetchLike(
+      `https://mybusinessbusinessinformation.googleapis.com/v1/${account}/locations?readMask=name`,
+      { headers: auth },
+    );
+    if (!locRes.ok) throw new Error(`Google locations HTTP ${locRes.status}`);
+    const location = ((await locRes.json()) as { locations?: { name: string }[] }).locations?.[0]?.name;
+    if (!location) throw new Error("Kein Standort gefunden");
+    return `${account}/${location}`;
+  }
+  // Meta: erste verwaltete Facebook-Seite → numerische Page-ID (passt zu assertMetaId).
+  const pagesRes = await fetchLike("https://graph.facebook.com/v21.0/me/accounts", { headers: auth });
+  if (!pagesRes.ok) throw new Error(`Meta pages HTTP ${pagesRes.status}`);
+  const pageId = ((await pagesRes.json()) as { data?: { id: string }[] }).data?.[0]?.id;
+  if (!pageId) throw new Error("Keine Facebook-Seite gefunden");
+  return pageId;
+}

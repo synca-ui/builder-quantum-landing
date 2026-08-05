@@ -63,13 +63,6 @@
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
-    <key>UIAppFonts</key>
-    <array>
-      <string>PPFrama-Regular.otf</string>
-      <string>PPFrama-RegularItalic.otf</string>
-      <string>PPFramaText-Regular.otf</string>
-      <string>PPFramaText-RegularItalic.otf</string>
-    </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

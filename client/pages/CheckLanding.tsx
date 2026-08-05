@@ -4,125 +4,90 @@ import "./check.css";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { openCookieSettings } from "@/components/cookie-banner";
 
-const reviews1 = [
+/**
+ * Beispielhafte Schwachstellen von Restaurant-Websites – KEINE Gästestimmen.
+ *
+ * Hier standen zwölf erfundene Zitate, jedes mit Vornamen und Initiale,
+ * Sternewertung, Avatar und Zeitangabe. Erfundene Verbraucherbewertungen sind
+ * unzulässig, und wer Bewertungen zeigt, muss zusätzlich offenlegen, ob und
+ * wie er ihre Echtheit prüft – was bei erfundenen Personen niemand kann.
+ * Das Problem, das der Abschnitt illustriert, ist dasselbe geblieben; es
+ * tritt nur nicht mehr als Zitat einer Person auf, sondern als neutrale
+ * Beschreibung der Situation. Deshalb bewusst: kein Name, kein Stern, keine
+ * Zeitangabe, kein Avatar – sonst sieht es wieder aus wie eine Bewertung.
+ */
+const problemBeispiele1 = [
   {
-    text: "Ewige Ladezeiten auf dem Handy! Ich habe leider aufgegeben und woanders bestellt.",
-    name: "Maria K.",
-    emoji: "M",
-    date: "vor 1 Woche",
-    rating: 1,
+    text: "Die Seite lädt auf dem Handy so lange, dass Gäste vorher abspringen.",
+    topic: "Ladezeit",
   },
   {
-    text: "Die Speisekarte auf der Website ist ein winziges PDF, das man kaum lesen kann.",
-    name: "Thomas B.",
-    emoji: "T",
-    date: "vor 2 Wochen",
-    rating: 2,
+    text: "Die Speisekarte liegt nur als winziges PDF vor und ist mobil kaum lesbar.",
+    topic: "Speisekarte",
   },
   {
-    text: "Tolles Essen, aber online einen Tisch zu reservieren ist quasi unmöglich.",
-    name: "Lukas P.",
-    emoji: "L",
-    date: "vor 3 Wochen",
-    rating: 3,
+    text: "Ein Tisch lässt sich online nirgends anfragen – es bleibt nur der Anruf.",
+    topic: "Reservierung",
   },
   {
-    text: "Wollte nur kurz die Preise checken, aber die Seite hat so lange geladen, dass ich die Geduld verloren habe.",
-    name: "Sarah M.",
-    emoji: "S",
-    date: "vor 1 Monat",
-    rating: 1,
+    text: "Preise und Tagesangebote sind auf dem Smartphone schwer zu finden.",
+    topic: "Orientierung",
   },
   {
-    text: "Im Restaurant top, online leider ein Flop. Keine Möglichkeit, von unterwegs schnell das Menü zu sehen.",
-    name: "Jan F.",
-    emoji: "J",
-    date: "vor 1 Monat",
-    rating: 2,
+    text: "Von unterwegs führt kein schneller Weg zur aktuellen Karte.",
+    topic: "Mobil",
   },
   {
-    text: "Wir wollten spontan hin, aber man konnte nicht einfach über das Smartphone buchen.",
-    name: "Elena R.",
-    emoji: "E",
-    date: "vor 2 Monaten",
-    rating: 2,
+    text: "Spontane Anfragen scheitern, weil das Handy keine Buchung anbietet.",
+    topic: "Reservierung",
   },
 ];
 
-const reviews2 = [
+const problemBeispiele2 = [
   {
-    text: "Der Service ist nett, aber ohne vernünftige mobile Website wirkt das Restaurant nicht sehr modern.",
-    name: "Markus S.",
-    emoji: "M",
-    date: "vor 2 Monaten",
-    rating: 3,
+    text: "Der Online-Auftritt wirkt älter, als das Restaurant tatsächlich ist.",
+    topic: "Auftritt",
   },
   {
-    text: "Früher war unsere Seite auf dem Handy komplett unleserlich. Das ist leider immer noch so.",
-    name: "Julia W.",
-    emoji: "J",
-    date: "vor 2 Monaten",
-    rating: 1,
+    text: "Schrift und Buttons sind auf kleinen Displays kaum zu treffen.",
+    topic: "Bedienung",
   },
   {
-    text: "Schade, dass man auf dem Smartphone immer ewig zoomen muss, um das Menü lesen zu können.",
-    name: "Kevin T.",
-    emoji: "K",
-    date: "vor 3 Monaten",
-    rating: 2,
+    text: "Die Karte lässt sich nur mit ständigem Zoomen lesen.",
+    topic: "Speisekarte",
   },
   {
-    text: "Ich habe versucht anzurufen, aber die Nummer war auf der veralteten Seite schwer zu finden.",
-    name: "Anna L.",
-    emoji: "A",
-    date: "vor 3 Monaten",
-    rating: 2,
+    text: "Die Telefonnummer versteckt sich auf einer veralteten Unterseite.",
+    topic: "Kontakt",
   },
   {
-    text: "Tolles Essen, aber die Webseite lädt ewig und die Speisekarte war extrem schwer zu finden.",
-    name: "Davide C.",
-    emoji: "D",
-    date: "vor 4 Monaten",
-    rating: 3,
+    text: "Öffnungszeiten stehen an mehreren Stellen unterschiedlich.",
+    topic: "Vertrauen",
   },
   {
-    text: "Gutes Ambiente – schade, dass man online nicht auf einfachem Wege reservieren kann.",
-    name: "Sophie H.",
-    emoji: "S",
-    date: "vor 5 Monaten",
-    rating: 2,
+    text: "Die Speisekarte ist tief in der Navigation vergraben.",
+    topic: "Navigation",
   },
 ];
 
-function ReviewCard({
-  text,
-  name,
-  emoji,
-  date,
-  rating,
-}: {
-  text: string;
-  name: string;
-  emoji: string;
-  date: string;
-  rating: number;
-}) {
+/**
+ * Jede Reihe läuft zweimal durch die Marquee – nur so trifft das Ende der
+ * Animation wieder auf den Anfang und der Umlauf wirkt nahtlos.
+ */
+const marqueeReihe1 = [...problemBeispiele1, ...problemBeispiele1];
+const marqueeReihe2 = [...problemBeispiele2, ...problemBeispiele2];
+
+/**
+ * Die CSS-Klassen heißen weiterhin "ck-review-*", weil check.css hier nicht
+ * angefasst wird. Inhaltlich ist die Karte keine Bewertung mehr: nur die
+ * Beschreibung und ein Themen-Label, kein Verfasser.
+ */
+function ProblemBeispielCard({ text, topic }: { text: string; topic: string }) {
   return (
     <div className="ck-review-card ck-marquee-card">
-      <PageSEO {...SEO.checkLanding} />
-
-      <div className="ck-review-stars">
-        {"★★★★★".split("").map((s, i) => (
-          <span key={i} style={{ color: i < rating ? "#f59e0b" : "#e5e7eb" }}>
-            {s}
-          </span>
-        ))}
-      </div>
-      <div className="ck-review-text">„{text}“</div>
+      <div className="ck-review-text">{text}</div>
       <div className="ck-review-meta">
-        <div className="ck-review-av">{emoji}</div>
-        <span className="ck-review-name">{name}</span>
-        <span className="ck-review-date">{date}</span>
+        <span className="ck-review-name">{topic}</span>
       </div>
     </div>
   );
@@ -967,14 +932,34 @@ export default function CheckLanding() {
   const scrollToCta = () =>
     document.getElementById("ck-cta")?.scrollIntoView({ behavior: "smooth" });
 
+  /**
+   * Der eigene Maitr-Balken ist raus: Er lieferte die Sekundenzahl, auf der
+   * die entfernte Spitzenstellungsbehauptung darunter aufsetzte, und für ihn
+   * gibt es keine Messung, die wir vorzeigen könnten.
+   * ("sub" war an keiner Stelle ausgelesen und ist mit rausgefallen.)
+   *
+   * Auch der zweite Balken "Münster Ø" ist weg. Er gab einen Ortsdurchschnitt
+   * als eigene Messung aus, den wir nie erhoben haben, und er widersprach
+   * zusätzlich der Sekundenzahl im Fließtext daneben (dort stand eine andere
+   * Zahl als hier – und in der Zwillingsdatei war es genau umgekehrt).
+   * Der Vergleich bleibt erhalten, stellt jetzt aber zwei Schwellenwerte
+   * gegenüber, die durch die Quellenzeile unter dem Text gedeckt sind:
+   * den Zielwert und die Grenze, ab der die Mehrheit abspringt.
+   * Die Balkenbreiten bleiben proportional zu den Sekunden (45/75 = 1.8/3.0).
+   */
   const speedBars = [
-    { lbl: "Maitr", color: "#14b8a6", w: 10, val: "0.8s", sub: "" },
-    { lbl: "Ideal", color: "#22c55e", w: 22, val: "1.8s", sub: "" },
-    { lbl: "Münster Ø", color: "#f97316", w: 75, val: "6.2s", sub: "" },
+    { lbl: "Ideal", color: "#22c55e", w: 45, val: "1.8s" },
+    { lbl: "Kritisch ab", color: "#f97316", w: 75, val: "3.0s" },
   ];
 
   return (
     <div style={{ overflowX: "clip", width: "100%", position: "relative" }}>
+      {/* Stand vorher in der Bewertungs-Karte und wurde dadurch pro Marquee-
+          Karte gerendert, also 24-mal. Gehört auf Seitenebene, wie auf jeder
+          anderen Seite auch; Titel und Canonical wurden danach im Browser
+          gegengeprüft. */}
+      <PageSEO {...SEO.checkLanding} />
+
       {/* ── NAV ── */}
       <nav className="ck-nav">
         <div className="ck-nav-inner">
@@ -1007,8 +992,13 @@ export default function CheckLanding() {
             <a className="ck-nav-link" href="#p02">
               Mobile
             </a>
+            {/* Abschnitt 03 handelt nicht mehr von Bewertungen, sondern von
+                den Hürden, an denen Gäste online scheitern – deshalb zieht der
+                Menütext mit. Die Sprungmarke selbst bleibt "#p03": Sie ist eine
+                reine Nummerierung ohne Thema, und geteilte Links auf den
+                Abschnitt sollen weiter funktionieren. */}
             <a className="ck-nav-link" href="#p03">
-              Bewertungen
+              Hürden
             </a>
             <a className="ck-nav-link" href="#s-reservation">
               Reservierung
@@ -1034,8 +1024,14 @@ export default function CheckLanding() {
             <div className="ck-hero-badge-dot" />
             Kostenlose Analyse in 30 Sekunden
           </div>
+          {/* Vorher: "9 von 10 Gästen googlen dich." Eine harte Quote ohne
+              jede Quelle – die Zahl haben wir nicht erhoben und können sie
+              nicht belegen. Die Kernaussage der Seite braucht sie nicht: Sie
+              lautet, dass Gäste sich vorab online informieren und dabei auf
+              das treffen, was der Check gleich prüft. (Nebenbei behoben: Der
+              alte Satz sprang mitten in der Zeile von "dich" auf "Sie".) */}
           <h1 className="ck-hero-h1">
-            9 von 10 Gästen googlen dich. Was sehen Sie?
+            Deine Gäste googlen dich, bevor sie kommen. Was finden sie?
           </h1>
           <p
             style={{
@@ -1088,8 +1084,11 @@ export default function CheckLanding() {
             <div className="ck-trust-item">
               <div className="ck-trust-check">✓</div> Keine Anmeldung
             </div>
+            {/* Hier stand eine Zahl bereits analysierter Restaurants. Sie ist
+                nirgends belegt und wäre als Erfolgsbeleg angreifbar – ersetzt
+                durch eine Eigenschaft des Angebots, die ohne Zahl auskommt. */}
             <div className="ck-trust-item">
-              <div className="ck-trust-check">✓</div> 50+ Restaurants analysiert
+              <div className="ck-trust-check">✓</div> Unverbindlich
             </div>
           </div>
         </div>
@@ -1101,10 +1100,15 @@ export default function CheckLanding() {
       </div>
       <div className="ck-wave-banner">
         <div className="ck-wave-content">
+          {/* Hier stand "8.4s – Ladezeit Münster Restaurants im Schnitt".
+              Diesen Ortsdurchschnitt messen wir nicht, und er widersprach der
+              Zahl im Balken von Abschnitt 01. Ersetzt durch die Abbruchquote,
+              die im Abschnitt darunter ohnehin mit Quelle steht – die anderen
+              beiden Kacheln wiederholen ebenfalls belegte Werte der Seite. */}
           <div className="ck-wave-stat ck-fade">
-            <div className="ck-wave-num">8.4s</div>
+            <div className="ck-wave-num">53%</div>
             <div className="ck-wave-label">
-              Ladezeit Münster Restaurants im Schnitt
+              springen nach 3 Sekunden Ladezeit ab
             </div>
           </div>
           <div className="ck-wave-sep" />
@@ -1141,11 +1145,14 @@ export default function CheckLanding() {
                 <br />
                 Google auch nicht.
               </h2>
+              {/* Der Einstieg "Ein Restaurant in Münster braucht im Schnitt X
+                  Sekunden" ist ersatzlos gestrichen: Wir haben diesen
+                  Ortsdurchschnitt nie gemessen, und die Zahl stand in dieser
+                  Datei anders als im Balken daneben. Übrig bleiben der
+                  Zielwert und die belegte Abbruchquote. */}
               <p className="ck-section-body">
-                Ein Restaurant in Münster braucht im Schnitt{" "}
-                <strong>8.4 Sekunden</strong>, bis die Seite lädt. Ideal wäre
-                unter 1.8 Sekunden. Nach 3 Sekunden verlassen{" "}
-                <strong>53% aller Besucher</strong> die Seite ohne
+                Eine gute Seite steht in unter 1.8 Sekunden. Nach 3 Sekunden
+                verlassen <strong>53% aller Besucher</strong> die Seite ohne
                 wiederzukommen.
                 <br />
                 <br />
@@ -1180,9 +1187,15 @@ export default function CheckLanding() {
                   </span>
                 </div>
               ))}
+              {/* Vorher stand hier eine feste Sekundenzahl für Maitr plus die
+                  Behauptung, damit schneller zu sein als fast alle anderen
+                  Restaurantseiten. Für diese Spitzenstellung gibt es weder
+                  eine Messung noch eine Vergleichsgrundlage. Ersetzt durch
+                  das, was wir tatsächlich tun – ohne Zahl. */}
               <div className="ck-speed-note">
-                Mit <strong>Maitr</strong> lädst du in <strong>0.8s</strong> —
-                schneller als 96% aller Restaurantseiten.
+                <strong>Maitr</strong> baut deine Seite von Anfang an auf kurze
+                Ladezeiten aus: schlanke Seiten, optimierte Bilder, keine
+                PDF-Umwege.
               </div>
             </div>
           </div>
@@ -1225,7 +1238,24 @@ export default function CheckLanding() {
         </div>
       </section>
 
-      {/* ── PROBLEM 03: REVIEWS ── */}
+      {/* ── PROBLEM 03: HÜRDEN ──
+          Dieser Abschnitt hieß "Reviews" und trug links das Bewertungsthema,
+          während rechts seit dem Entfernen der erfundenen Gästezitate
+          Website-Mängel laufen (Ladezeit, Speisekarte, Reservierung).
+          Überschrift und Inhalt passten nicht mehr zusammen.
+
+          Aufgelöst über die Textseite, nicht über die Kartenseite: Die Karten
+          sind belegfrei formulierte Beispielsituationen und damit unbedenklich –
+          sie zum Bewertungsthema zurückzudrehen hieße, in Bewertungs-Optik
+          wieder Bewertungsinhalte zu zeigen, also genau dorthin, wo das
+          Problem herkam. Stattdessen folgt der Text den Karten.
+
+          Mit gestrichen: "Restaurants mit aktivem Review Management haben 34%
+          mehr Reservierungen". Die Quellenzeile nannte pauschal zwei Häuser,
+          ohne dass die Zahl einer davon zuzuordnen wäre. Da der Abschnitt jetzt
+          gar keine Zahl mehr behauptet, entfällt die Quellenzeile mit.
+          Das Bewertungsthema bleibt der Seite als Produktversprechen in der
+          Feature-Karte "Bessere Bewertungen" weiter unten erhalten. */}
       <section className="ck-section" id="p03">
         <div className="ck-wrap">
           <div className="ck-section-inner">
@@ -1235,28 +1265,26 @@ export default function CheckLanding() {
                 Problem
               </div>
               <h2 className="ck-section-h2">
-                Bewertungen sind
+                Nicht ein großes Problem.
                 <br />
-                dein Aushängeschild.
+                Viele kleine Hürden.
               </h2>
               <p className="ck-section-body">
-                Deine Google Bewertungen formen den ersten Eindruck noch bevor
-                ein Gast deine Website sieht.
+                Gäste springen selten wegen einer einzigen Sache ab. Sie
+                springen ab, weil sich Kleinigkeiten summieren: Die Karte lädt
+                nicht, die Telefonnummer ist nicht zu finden, die
+                Öffnungszeiten stehen an zwei Stellen unterschiedlich.
                 <br />
                 <br />
-                Restaurants mit aktivem Review Management haben{" "}
-                <strong>34% mehr Reservierungen</strong>. Kein Tool hilft dir,
-                neue Bewertungen zu sammeln oder auf negative zu reagieren.
+                Jede Hürde für sich wirkt harmlos. Zusammen kosten sie den
+                Besuch – und du erfährst nie, warum jemand nicht gekommen ist.
                 <br />
                 <br />
                 <strong>
-                  Maitr zeigt dir deinen Score und hilft dir, ihn zu verbessern.
+                  Maitr räumt diese Hürden aus dem Weg, auf einer Seite, die
+                  fürs Handy gebaut ist.
                 </strong>
               </p>
-              <div className="ck-source">
-                Quelle: Harvard Business Review, BrightLocal Consumer Survey
-                2024
-              </div>
             </div>
 
             <div
@@ -1267,34 +1295,32 @@ export default function CheckLanding() {
                 position: "relative",
               }}
             >
+              {/* Vorher: eine erfundene Durchschnittsnote samt Sternen,
+                  zugeschrieben an "Dein Restaurant". Diese Note kennen und
+                  messen wir für einen fremden Betrieb nicht – und mit Sternen
+                  daneben sieht sie aus wie ein echtes Bewertungsergebnis.
+                  Der Titel sagt jetzt ohne Zahl, was die Karten zeigen. */}
               <div>
-                <div className="ck-rating-big">3.2</div>
-                <div className="ck-stars">
-                  {"★★★☆☆".split("").map((s, i) => (
-                    <span
-                      key={i}
-                      style={{ color: i < 3 ? "#f59e0b" : "#e5e7eb" }}
-                    >
-                      {s}
-                    </span>
-                  ))}
+                <div className="ck-feature-title">
+                  Woran Gäste online scheitern
                 </div>
                 <div className="ck-rating-sub">
-                  Dein Restaurant ohne App Erlebnis
+                  Beispielhafte Situationen zur Veranschaulichung – keine
+                  Gästebewertungen.
                 </div>
               </div>
               <div className="ck-marquee-mask" style={{ marginTop: "24px" }}>
                 <div className="ck-marquee-row">
                   <div className="ck-marquee-track ck-track-left">
-                    {[...reviews1, ...reviews1].map((r, i) => (
-                      <ReviewCard key={i} {...r} />
+                    {marqueeReihe1.map((b, i) => (
+                      <ProblemBeispielCard key={i} {...b} />
                     ))}
                   </div>
                 </div>
                 <div className="ck-marquee-row" style={{ marginTop: "16px" }}>
                   <div className="ck-marquee-track ck-track-right">
-                    {[...reviews2, ...reviews2].map((r, i) => (
-                      <ReviewCard key={i} {...r} />
+                    {marqueeReihe2.map((b, i) => (
+                      <ProblemBeispielCard key={i} {...b} />
                     ))}
                   </div>
                 </div>
@@ -1325,11 +1351,15 @@ export default function CheckLanding() {
                 <br />
                 <br />
                 <strong>
-                  Maitr macht Reservierungen buchbar über die Website, Google
-                  und Instagram in 10 Sekunden. Automatisch.
+                  Maitr macht Reservierungen buchbar – über die Website, Google
+                  und Instagram. Automatisch.
                 </strong>
               </p>
-              <div className="ck-source">Quelle: maitr interne Daten, 2025</div>
+              {/* Raus sind die Sekundenangabe für die Buchung und die darunter
+                  stehende Quellenzeile auf eigene, unveröffentlichte Zahlen.
+                  Eine Quelle, die niemand nachschlagen kann, belegt nichts –
+                  sie behauptet nur Belegbarkeit. Ohne die Zahl braucht der
+                  Absatz sie ohnehin nicht mehr. */}
             </div>
             <div className="ck-fade ck-fade-d1 ck-vis-col">
               <PhoneMockupReservation />
@@ -1518,10 +1548,13 @@ export default function CheckLanding() {
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                 </svg>
               </div>
-              <div className="ck-feature-title">Blitzschnelle Ladezeit</div>
+              <div className="ck-feature-title">Auf Tempo gebaut</div>
+              {/* Vorher war das als Garantie auf eine feste Ladezeit auf jedem
+                  Gerät formuliert. Über fremde Geräte und Mobilfunknetze
+                  können wir so etwas weder zusichern noch belegen. */}
               <div className="ck-feature-desc">
-                Unsere Technologie garantiert Ladezeiten unter einer Sekunde auf
-                jedem Gerät.
+                Schlanke Seiten, optimierte Bilder, keine schweren Plugins –
+                damit deine Gäste nicht auf einen Ladebalken schauen.
               </div>
             </div>
             <div className="ck-feature-card">

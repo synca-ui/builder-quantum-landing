@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": true },
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": { "simulator": false },
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://maitr.de/api/maitr"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "ios": { "resourceClass": "m-medium" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://maitr.de/api/maitr"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

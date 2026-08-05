@@ -1,9 +1,21 @@
 import { Request, Response } from "express";
 import prisma from "../db/prisma";
+import { z } from "zod";
+
+// ─── Validation Schemas ───────────────────────────────────────────────────────
+
+const createOrderSchema = z.object({
+  webAppId: z.string().uuid(),
+  menuItemId: z.string().max(255).optional(),
+  menuItemName: z.string().min(1).max(255),
+  orderSource: z.enum(["stripe", "pos_api", "manual"]),
+  userAvatarUrl: z.string().url().max(2048).optional(),
+});
 
 /**
  * POST /api/orders/create
  * Record a new order event (for social proof badges)
+ * Requires authentication (requireAuth middleware in server/index.ts)
  *
  * Body: {
  *   webAppId: string (uuid),
@@ -15,24 +27,16 @@ import prisma from "../db/prisma";
  */
 export async function handleCreateOrder(req: Request, res: Response) {
   try {
-    const { webAppId, menuItemId, menuItemName, orderSource, userAvatarUrl } =
-      req.body;
-
-    if (!webAppId || !menuItemName || !orderSource) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required fields: webAppId, menuItemName, orderSource",
-      });
-    }
+    const validatedData = createOrderSchema.parse(req.body);
 
     const event = await prisma.orderEvent.create({
       data: {
-        webAppId,
+        webAppId: validatedData.webAppId,
         orderId: `order-${Date.now()}`,
-        menuItemId: menuItemId || null,
-        menuItemName,
-        orderSource,
-        userAvatarUrl: userAvatarUrl || null,
+        menuItemId: validatedData.menuItemId || null,
+        menuItemName: validatedData.menuItemName,
+        orderSource: validatedData.orderSource,
+        userAvatarUrl: validatedData.userAvatarUrl || null,
       },
       select: {
         id: true,
@@ -45,10 +49,13 @@ export async function handleCreateOrder(req: Request, res: Response) {
       event,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ success: false, error: error.errors });
+    }
     console.error("Create order error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create order",
+      error: "Failed to create order",
     });
   }
 }
@@ -105,7 +112,7 @@ export async function handleGetRecentOrders(req: Request, res: Response) {
     console.error("Get recent orders error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch orders",
+      error: "Failed to fetch orders",
     });
   }
 }
@@ -129,9 +136,11 @@ export async function handleGetMenuStats(req: Request, res: Response) {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+    // Limit to last 24h to avoid unbounded queries
     const orders = await prisma.orderEvent.findMany({
       where: {
         webAppId,
+        orderedAt: { gt: oneDayAgo },
       },
       select: {
         menuItemId: true,
@@ -183,8 +192,7 @@ export async function handleGetMenuStats(req: Request, res: Response) {
     console.error("Get menu stats error:", error);
     return res.status(500).json({
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch menu stats",
+      error: "Failed to fetch menu stats",
     });
   }
 }
@@ -223,7 +231,7 @@ export async function handleClearOldOrders(req: Request, res: Response) {
     console.error("Clear old orders error:", error);
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "Failed to clear orders",
+      error: "Failed to clear orders",
     });
   }
 }

@@ -1,0 +1,116 @@
+/**
+ * Domänen-Typen, die Web und Mobile teilen.
+ * Bewusst entkoppelt von Prisma-Modellen: hier steht nur, was über die API geht.
+ */
+
+export type Iso8601 = string;
+
+export interface Venue {
+  id: string;
+  name: string;
+  /** Kurzbeschreibung, z. B. "Spezialitätenkaffee & hausgemachtes Gebäck". */
+  tagline?: string;
+  city?: string;
+  district?: string;
+  street?: string;
+  timezone: string;
+  tags: string[];
+}
+
+/**
+ * Eingabe für `api.venues.create` - der erste eigene Betrieb.
+ *
+ * Nur `name` ist Pflicht: Adresse (slug), Zeitzone und Status setzt der Server.
+ * Absichtlich KEIN slug-Feld - die Adresse leitet der Server aus dem Namen ab
+ * (`shared/subdomain.ts`), damit Client und Server nicht zwei Vorstellungen davon
+ * haben, was eine gültige Adresse ist.
+ */
+export interface CreateVenueInput {
+  name: string;
+  /** IANA-Zone wie "Europe/Berlin". Ohne Angabe setzt der Server Europe/Berlin. */
+  timezone?: string;
+  /** Freitext fürs Profil; taucht in der `Venue`-Antwort (noch) nicht auf. */
+  description?: string;
+}
+
+export type TaskKind = "review" | "post" | "profile" | "channel" | "reservation";
+
+/**
+ * Eine der "drei Entscheidungen" auf dem Start-Screen.
+ * `estimatedMinutes` und `impact` steuern die Reihenfolge im Tagesbriefing.
+ */
+export interface DailyTask {
+  id: string;
+  kind: TaskKind;
+  /** Kleine Großbuchstaben-Zeile über der Karte, z. B. "Bewertung · 2 Min". */
+  eyebrow: string;
+  title: string;
+  /** Optionaler Vorschlagstext (KI-Antwort, Beitragstext). */
+  draft?: string;
+  /** Wirkungsversprechen, z. B. "+35 % Profilaufrufe". */
+  impact?: string;
+  estimatedMinutes: number;
+  primaryAction: { label: string; endpoint?: string };
+  secondaryAction?: { label: string; endpoint?: string };
+  /** 1-5 Sterne, nur bei `kind: "review"`. */
+  rating?: number;
+  /**
+   * Zustand der Entscheidung über diese Aufgabe (`TaskDecision` serverseitig).
+   *
+   * Im Tagesbriefing steht hier immer "open" - erledigte Aufgaben werden gar nicht
+   * erst ausgeliefert. "approved"/"dismissed" liefert nur die Antwort von
+   * `briefing.approveTask`, damit die Karte den Erfolg zeigen kann, bevor das
+   * nächste Briefing geladen ist. Optional, weil ältere Server das Feld nicht kennen.
+   */
+  state?: "open" | "approved" | "dismissed";
+  /** Zeitpunkt der Freigabe/Verwerfung; fehlt, solange die Aufgabe offen ist. */
+  decidedAt?: Iso8601;
+}
+
+export interface PresenceStats {
+  /** Google-Sternebewertung, z. B. 4.6. */
+  rating: number;
+  /** Maitr-Präsenzscore 0-100. */
+  score: number;
+  /** Profilaufrufe im laufenden Zeitraum. */
+  impressions: number;
+}
+
+export interface DailyBriefing {
+  venue: Venue;
+  /** Serverzeit, damit Client und Betrieb dieselbe Tageslogik verwenden. */
+  now: Iso8601;
+  /** "morning" | "evening" steuert Hell-/Nachtbar-Darstellung. */
+  daypart: "morning" | "day" | "evening";
+  greeting: string;
+  subline: string;
+  stats: PresenceStats;
+  tasks: DailyTask[];
+}
+
+export interface TableSlot {
+  tableId: string;
+  tableName: string;
+  seats: number;
+  reservations: Reservation[];
+}
+
+export interface Reservation {
+  id: string;
+  guestName: string;
+  partySize: number;
+  start: Iso8601;
+  end: Iso8601;
+  status: "confirmed" | "pending" | "cancelled" | "walk_in";
+  phone?: string;
+}
+
+export interface ServiceDay {
+  date: string;
+  serviceStartHour: number;
+  serviceEndHour: number;
+  bufferMinutes: number;
+  seatsTotal: number;
+  seatsReserved: number;
+  tables: TableSlot[];
+}

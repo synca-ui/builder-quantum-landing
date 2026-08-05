@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { webAppsRouter, publicAppsRouter } from "./webapps";
-import { configurationsRouter, getPublishedSite } from "./configurations";
-import { fetchInstagramPhotos } from "./instagram";
+// getPublishedSite wird hier nicht mehr importiert: Die Route ist jetzt allein in
+// server/index.ts registriert, dort mit siteRateLimiter. Siehe unten.
+// getConfigBySlug aus "./config" entfällt ebenfalls – main hat die Datei samt
+// GET /config/:slug bereits entfernt (die Abfrage konnte nie treffen).
+import { configurationsRouter } from "./configurations";
+import { maitrRouter } from "../maitr";
 import { handleDemo } from "./demo";
 import templatesRouter from "./templates";
 import scraperRouter from "./scraper";
@@ -10,7 +14,8 @@ import { subdomainsRouter } from "./subdomains";
 import { mediaRouter } from "./media";
 import { menuRouter } from "./menu";
 import { siteRouter } from "./site";
-import { handleForwardN8n } from "./n8nProxy";
+// handleForwardN8n wird hier nicht mehr importiert – die Registrierung ist entfernt,
+// siehe die Anmerkung weiter unten.
 import insightsRouter from "./insights";
 import floorPlanRouter from "./floor-plan";
 import staffRouter from "./staff";
@@ -173,6 +178,22 @@ apiRouter.use("/demo/dashboard", demoDashboardRouter);
 // Public reservation routes (no auth required)
 apiRouter.use("/public/reservations", publicReservationsRouter);
 
+// Maitr-Backend (Präsenzverwaltung Google/Meta) unter /api/maitr.
+//
+// Der Router bringt seine Auth-Schranke selbst mit: publicRouter zuerst
+// (Gastprofil und OAuth-Rücksprung, letzterer durch signierten state geschützt),
+// danach requireAuth, danach alles Venue-scoped. Deshalb hier bewusst OHNE
+// zusätzliches requireAuth eingehängt — das würde den Callback aussperren, den
+// Google und Meta ohne Bearer-Token aufrufen.
+//
+// Der Meta-Webhook läuft NICHT über diesen Router, sondern über
+// registerMaitrWebhooks in server/index.ts, vor express.json().
+//
+// Ohne gesetzte MAITR_*-Variablen startet der Server normal: maitrEnv() wird erst
+// beim Zugriff ausgewertet. Die OAuth-Routen antworten dann mit einem Fehler, der
+// die fehlenden Variablen benennt — der übrige Betrieb bleibt unberührt.
+apiRouter.use("/maitr", maitrRouter);
+
 // GET /config/:slug ist entfernt: Die Route fragte per rohem SQL nach
 // public.tenants / restaurants mit Spalten tenant_slug, schema_name,
 // config_json — das aktuelle Prisma-Schema erzeugt aber Tenant/Restaurant mit
@@ -181,14 +202,40 @@ apiRouter.use("/public/reservations", publicReservationsRouter);
 // Kein Client rief sie auf. Mit ihr fallen server/routes/config.ts,
 // server/sql.ts und server/db.ts weg — und damit der einzige Konsument von
 // NETLIFY_DATABASE_URL.
-apiRouter.get("/sites/:subdomain", getPublishedSite);
+
+// "/sites/:subdomain" wird hier BEWUSST nicht registriert. Der apiRouter hängt in
+// server/index.ts auf /api, und zwar VOR der gedrosselten Registrierung derselben
+// Route. Express nimmt den ersten Treffer – eine Kopie hier beantwortete deshalb
+// jede Anfrage, ohne dass der siteRateLimiter je liefe. Genau das war der Zustand:
+// der Limiter gegen das Durchprobieren von Kundensubdomains war toter Code.
+// Einzige Quelle: app.get("/api/sites/:subdomain", siteRateLimiter, …).
+//
+// Dasselbe gilt für "/forward-to-n8n": nur in server/index.ts, dort mit
+// strictLimiter. Dort steht die Registrierung zufällig vor dem apiRouter, der
+// Limiter griff also – eine Kopie hier wäre trotzdem eine Falle für später.
 
 // Other routes
 apiRouter.get("/demo", handleDemo);
-apiRouter.get("/instagram", fetchInstagramPhotos);
 
-//N8N
-apiRouter.post("/forward-to-n8n", handleForwardN8n);
+// GET /instagram ist ENTFERNT, samt server/routes/instagram.ts.
+//
+// Der Endpunkt war öffentlich, ohne Anmeldung erreichbar, und holte eine vom
+// Aufrufer benannte Adresse serverseitig ab — eine SSRF-Fläche. Zugleich lieferte
+// er nichts: Alle drei Auswertungswege hingen an Markern, die Instagram vor Jahren
+// entfernt hat (window._sharedData, __additionalDataLoaded); ein Abruf gegen ein
+// echtes Profil ergab live eine leere Liste. Und er hatte keinen einzigen Aufrufer
+// in client/, server/, shared/, mobile/ oder packages/.
+//
+// Eine Härtung der Hostprüfung wurde erwogen und verworfen: Sie hielt die
+// Weiterleitung nicht auf. `fetch` folgt automatisch, ein offener Redirect auf
+// instagram.com hätte die Prüfung wirkungslos gemacht — nachgestellt mit zwei
+// lokalen Servern, der Rumpf des zweiten landete im og:image-Auswertungspfad.
+// Eine halbe Absicherung an einem ungenutzten Endpunkt ist schlechter als keine:
+// Sie hält die Fläche offen und suggeriert Schutz.
+//
+// Wer Instagram-Bilder wirklich anzeigen will, braucht die Graph API mit
+// OAuth je Betrieb (siehe packages/core/src/integrations/meta.ts) — nicht das
+// Abrufen einer öffentlichen Profilseite.
 
 // Health-Check
 apiRouter.get("/ping", (_req, res) => {

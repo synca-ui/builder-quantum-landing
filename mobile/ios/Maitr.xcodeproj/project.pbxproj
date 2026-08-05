@@ -8,12 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		2254C10393184B9C8B98EED6 /* PPFramaText-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4C9C9405226A4CB38280A433 /* PPFramaText-Regular.otf */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		588C51C1053C4755A8C58562 /* PPFramaText-RegularItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = E33573C9FBE943889F02607F /* PPFramaText-RegularItalic.otf */; };
-		5A12F344114D494EA050516B /* PPFrama-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7B909F257FF14FBC9CC78272 /* PPFrama-Regular.otf */; };
 		74795E444B781B4EF1E62A1F /* libPods-Maitr.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A13AE5D264ECF17B7ABE53E /* libPods-Maitr.a */; };
-		74F8C95D35154C758D2149D1 /* PPFrama-RegularItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = DC84EC7EAAB74FE0B79F78E2 /* PPFrama-RegularItalic.otf */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		DAC73D1209460827436C58AE /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D465BC9C54DED734E0490B /* ExpoModulesProvider.swift */; };
 		E36A0E68F619554E77879710 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A6C8EF9FF4BA54ACC1101562 /* PrivacyInfo.xcprivacy */; };
@@ -24,17 +20,13 @@
 		13B07F961A680F5B00A75B9A /* Maitr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maitr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Maitr/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Maitr/Info.plist; sourceTree = "<group>"; };
-		4C9C9405226A4CB38280A433 /* PPFramaText-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PPFramaText-Regular.otf"; path = "../assets/fonts/PPFramaText-Regular.otf"; sourceTree = "<group>"; };
 		56DC582EA462F347CE9CEA04 /* Pods-Maitr.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Maitr.release.xcconfig"; path = "Target Support Files/Pods-Maitr/Pods-Maitr.release.xcconfig"; sourceTree = "<group>"; };
 		5D824713AABC01B799A8F0FA /* Pods-Maitr.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Maitr.debug.xcconfig"; path = "Target Support Files/Pods-Maitr/Pods-Maitr.debug.xcconfig"; sourceTree = "<group>"; };
-		7B909F257FF14FBC9CC78272 /* PPFrama-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PPFrama-Regular.otf"; path = "../assets/fonts/PPFrama-Regular.otf"; sourceTree = "<group>"; };
 		8A13AE5D264ECF17B7ABE53E /* libPods-Maitr.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Maitr.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A6C8EF9FF4BA54ACC1101562 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Maitr/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Maitr/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		C9D465BC9C54DED734E0490B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Maitr/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		DC84EC7EAAB74FE0B79F78E2 /* PPFrama-RegularItalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PPFrama-RegularItalic.otf"; path = "../assets/fonts/PPFrama-RegularItalic.otf"; sourceTree = "<group>"; };
-		E33573C9FBE943889F02607F /* PPFramaText-RegularItalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "PPFramaText-RegularItalic.otf"; path = "../assets/fonts/PPFramaText-RegularItalic.otf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Maitr/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Maitr-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Maitr-Bridging-Header.h"; path = "Maitr/Maitr-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -87,10 +79,6 @@
 		7744C75E29424246936E86D9 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				7B909F257FF14FBC9CC78272 /* PPFrama-Regular.otf */,
-				DC84EC7EAAB74FE0B79F78E2 /* PPFrama-RegularItalic.otf */,
-				4C9C9405226A4CB38280A433 /* PPFramaText-Regular.otf */,
-				E33573C9FBE943889F02607F /* PPFramaText-RegularItalic.otf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -216,10 +204,6 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				5A12F344114D494EA050516B /* PPFrama-Regular.otf in Resources */,
-				74F8C95D35154C758D2149D1 /* PPFrama-RegularItalic.otf in Resources */,
-				2254C10393184B9C8B98EED6 /* PPFramaText-Regular.otf in Resources */,
-				588C51C1053C4755A8C58562 /* PPFramaText-RegularItalic.otf in Resources */,
 				E36A0E68F619554E77879710 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

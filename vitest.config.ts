@@ -6,6 +6,17 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./client"),
       "@shared": path.resolve(__dirname, "./shared"),
+      // Vierte und letzte Stelle, an der dieser Alias stehen muss: Tests, die
+      // server/index.ts laden, ziehen über den Maitr-Router auch @maitr/core.
+      // Die anderen drei sind tsconfig.json (Typprüfung), vite.config.ts
+      // (Dev-Server) und vite.config.server.ts (Server-Build).
+      //
+      // Dass es vier sind, liegt daran, dass es keine Workspaces gibt und
+      // packages/core auf rohe .ts-Dateien zeigt — Node kann das Paket nicht
+      // selbst auflösen, jeder Werkzeugkette muss man es einzeln beibringen.
+      // Wer @maitr/core-Unterpfade ergänzt, muss hier nichts ändern; wer das
+      // Paket verschiebt, muss alle vier anfassen.
+      "@maitr/core": path.resolve(__dirname, "./packages/core/src"),
     },
   },
   test: {

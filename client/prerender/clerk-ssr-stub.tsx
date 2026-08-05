@@ -10,8 +10,12 @@
  * vorgerenderte Markup identisch mit dem, was React beim Mounten erzeugt –
  * genau das verhindert einen Layout-Shift.
  *
- * Konkret rendert LazyAuthSection bei isLoaded=false die StaticLoginButtons,
- * im Browser zunächst ebenfalls.
+ * Stand 05.08.2026 erreicht keine der vorgerenderten Routen mehr Clerk: Der
+ * Kopf der Startseite fragt den Anmeldezustand nicht mehr ab, und ClerkProvider
+ * hängt an client/components/AppAreaShell.tsx, das client/prerender/entry.tsx
+ * nicht importiert. Der Stub bleibt als Netz stehen – zieht jemand künftig eine
+ * Clerk-Komponente in eine vorgerenderte Seite, bricht der Build nicht ab,
+ * sondern rendert weiter den abgemeldeten Zustand.
  */
 import type { ReactNode } from "react";
 
