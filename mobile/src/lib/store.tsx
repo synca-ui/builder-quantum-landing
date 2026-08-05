@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api, isCoreConfigured } from "@maitr/core";
 
@@ -493,12 +494,40 @@ const StoreContext = createContext<StoreValue | null>(null);
 const PERSIST_KEY = "maitr.demo.state.v1";
 
 /**
+ * Wartezeit, bevor ein geänderter Zustand auf die Platte geht.
+ *
+ * Vorher schrieb jede einzelne Änderung sofort den kompletten Schnappschuss. Auf dem
+ * Simulator gemessen: **ein Tastendruck = ein voller `AsyncStorage.setItem`** (vier
+ * getippte Zeichen ergaben vier Schreibvorgänge à ~4,8 kB). „8:00 – 18:00" sind zwölf
+ * Zeichen, also zwölf Plattenzugriffe, von denen elf im selben Moment veraltet sind.
+ * 400 ms sind länger als der Abstand zwischen zwei Tastendrücken und kurz genug, dass
+ * niemand die Verzögerung bemerkt - und weil beim Wegtauchen der App sofort geschrieben
+ * wird (siehe `flushSnapshot`), geht dabei nichts verloren.
+ */
+const PERSIST_DEBOUNCE_MS = 400;
+
+/**
+ * Wie viele Einträge die Chronik behält.
+ *
+ * `activityLog` wuchs unbegrenzt - und zwar in zwei Richtungen: Der Schnappschuss auf
+ * der Platte wurde mit jeder automatischen Aktion größer, und `AutopilotScreen`
+ * rendert die Liste ungekürzt und unvirtualisiert (`AutopilotScreen.tsx:80`). Ein
+ * Deckel begrenzt beides. 50 Einträge sind mehr, als „Zuletzt erledigt" je zeigen
+ * soll, und weniger, als irgendein Gerät spürt.
+ */
+const ACTIVITY_LIMIT = 50;
+
+/**
  * Wie lange wir im Clerk-Betrieb höchstens auf die Sitzungsmeldung warten.
  *
- * Die Eröffnungsanimation deckt ~2,3 s ab (OpeningAnimation: HOLD 1800 + FADE_OUT 460),
- * ein Kaltstart mit Netz meldet lange davor. Der Wert ist die Obergrenze für den
- * Fehlerfall - lieber 1,7 s ruhige Fläche als eine App, die ohne Netz gar nicht
- * mehr aus dem Startbild kommt.
+ * Ein Kaltstart mit Netz meldet lange davor; der Wert ist die Obergrenze für den
+ * Fehlerfall - lieber ein paar Sekunden ruhige Fläche als eine App, die ohne Netz gar
+ * nicht mehr aus dem Startbild kommt.
+ *
+ * Früher deckte die Eröffnungsanimation den Großteil dieser Zeit ab. Seit sie auf
+ * 760 ms gekürzt ist (`OpeningAnimation`: HOLD 520 + FADE_OUT 240), deckt sie nur noch
+ * den Anfang - im Fehlerfall sieht man danach die ruhige Fläche. Das ist der ehrlichere
+ * Zustand: Es wird wirklich gewartet, und nur im Fehlerfall lange.
  */
 const SESSION_TIMEOUT_MS = 4000;
 
@@ -595,7 +624,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const setPlan = useCallback((plan: PlanId) => setCurrentPlan(plan), []);
 
   const logActivity = useCallback((item: Omit<ActivityItem, "id" | "time">) => {
-    setActivityLog((list) => [{ ...item, id: uid("act"), time: "gerade" }, ...list]);
+    // Gedeckelt: siehe ACTIVITY_LIMIT. Neueste zuerst, der Rest fällt hinten raus.
+    setActivityLog((list) =>
+      [{ ...item, id: uid("act"), time: "gerade" }, ...list].slice(0, ACTIVITY_LIMIT),
+    );
   }, []);
   const setAutopilot = useCallback(
     (category: AutopilotCategory, on: boolean) =>
@@ -1008,6 +1040,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setMenu((list) => list.filter((m) => m.id !== id));
   }, []);
 
+  /** Zuletzt geänderter, noch nicht geschriebener Stand (roh, noch nicht serialisiert). */
+  const pendingSnapshot = useRef<object | null>(null);
+  const writeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   /**
    * Kontolöschung, lokaler Teil: Zustand auf den Startpunkt, Schnappschuss weg.
    *
@@ -1017,8 +1053,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
    * reicht auch der Reset allein nicht - erst das Entfernen macht das Fenster
    * dazwischen leer. Dass der Effekt danach noch einmal schreibt, ist
    * unschädlich: Was er dann speichert, ist der Startzustand.
+   *
+   * Seit die Schreibvorgänge entprellt sind, kommt ein Schritt dazu: Ein bereits
+   * vorgemerkter Stand von VOR der Löschung darf nicht 400 ms später doch noch auf
+   * der Platte landen. Deshalb wird er hier verworfen, bevor irgendetwas anderes
+   * passiert.
    */
   const deleteLocalData = useCallback(async () => {
+    if (writeTimer.current) {
+      clearTimeout(writeTimer.current);
+      writeTimer.current = null;
+    }
+    pendingSnapshot.current = null;
+
     setSignedIn(false);
     setChannels(CHANNELS_SEED);
     setChannelMeta(CHANNEL_META_SEED);
@@ -1040,9 +1087,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.removeItem(PERSIST_KEY);
   }, []);
 
-  /* ── Persistenz: hydrieren beim Start, Snapshot bei jeder Änderung ──────── */
+  /* ── Persistenz: hydrieren beim Start, Snapshot entprellt bei Änderungen ─── */
 
   const hydratedRef = useRef(false);
+
+  /**
+   * Den vorgemerkten Stand jetzt wirklich schreiben.
+   *
+   * Wird sowohl vom Zeitgeber gerufen (Ruhepause vorbei) als auch von Hand, wenn die
+   * App wegtaucht. Ist nichts vorgemerkt, passiert nichts - der zweite Aufruf
+   * hintereinander schreibt also nicht doppelt.
+   */
+  const flushSnapshot = useCallback(() => {
+    if (writeTimer.current) {
+      clearTimeout(writeTimer.current);
+      writeTimer.current = null;
+    }
+    const state = pendingSnapshot.current;
+    if (!state) return;
+    pendingSnapshot.current = null;
+    AsyncStorage.setItem(PERSIST_KEY, JSON.stringify(state)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -1075,7 +1140,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (s.days) setDays(s.days);
         if (s.guests) setGuests(s.guests);
         if (s.menu) setMenu(s.menu);
-        if (s.activityLog) setActivityLog(s.activityLog);
+        // Auch beim Einlesen deckeln: Schnappschüsse aus der Zeit vor dem Limit
+        // können beliebig lang sein.
+        if (s.activityLog) setActivityLog(s.activityLog.slice(0, ACTIVITY_LIMIT));
         if (s.autopilot) setAutopilotState(s.autopilot);
         if (s.currentPlan) setCurrentPlan(s.currentPlan);
       })
@@ -1122,7 +1189,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Erst nach dem Hydrieren schreiben - sonst überschreiben die Defaults den Speicher.
     if (!hydratedRef.current) return;
-    const snapshot = JSON.stringify({
+    // Nur den Stand vormerken. Weder `JSON.stringify` noch der Plattenzugriff laufen
+    // hier - beides erledigt `flushSnapshot` nach der Ruhepause. Die Objekte im Store
+    // werden nie mutiert (jede Aktion legt neue an), das spätere Serialisieren sieht
+    // also genau den Stand, der hier vorlag.
+    pendingSnapshot.current = {
       signedIn,
       channels,
       channelMeta,
@@ -1139,9 +1210,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       activityLog,
       autopilot,
       currentPlan,
-    });
-    AsyncStorage.setItem(PERSIST_KEY, snapshot).catch(() => {});
+    };
+    if (writeTimer.current) clearTimeout(writeTimer.current);
+    writeTimer.current = setTimeout(flushSnapshot, PERSIST_DEBOUNCE_MS);
   }, [
+    flushSnapshot,
     signedIn,
     channels,
     channelMeta,
@@ -1159,6 +1232,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     autopilot,
     currentPlan,
   ]);
+
+  /* ── Die Ruhepause darf nichts kosten ────────────────────────────────────────
+     Entprellen heißt: Zwischen der letzten Änderung und dem Schreiben liegen bis zu
+     400 ms, in denen der Stand nur im Speicher steht. Wandert die App in genau dieser
+     Zeitspanne in den Hintergrund (oder wird sie beendet), wäre die letzte Eingabe
+     weg. Deshalb schreibt der Zustandswechsel sofort - dasselbe Muster wie in
+     `usePendingCommit`, wo eine offene Freigabe beim Wegtauchen ebenfalls sofort
+     verbindlich wird. */
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") flushSnapshot();
+    });
+    return () => {
+      sub.remove();
+      flushSnapshot();
+    };
+  }, [flushSnapshot]);
 
   /* ── Speisekarte ist die einzige Wahrheit für ihre Aufgaben ─────────────────
      „Speisekarte hinterlegen" erscheint an zwei Stellen - im Profil-Check (Score,

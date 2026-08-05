@@ -189,7 +189,11 @@ vi.mock("../services/imageIngest", () => ({
   })),
 }));
 
-import { ensureUserBusiness } from "../services/BusinessService";
+import {
+  ensureUserBusiness,
+  generateBusinessSlug,
+  legacyBusinessSlug,
+} from "../services/BusinessService";
 import { webAppsRouter } from "../routes/webapps";
 
 // ===========================================================================
@@ -533,8 +537,8 @@ describe("POST /api/apps/publish legt den Betrieb wirklich an", () => {
     const ersterWirt = "user-wirt-a";
     const zweiterWirt = "user-wirt-b";
     nutzer = [
-      { id: ersterWirt, email: "a@example.de" },
-      { id: zweiterWirt, email: "b@example.de" },
+      { id: ersterWirt },
+      { id: zweiterWirt },
     ];
 
     const a = await ensureUserBusiness(ersterWirt, "Zur Post");
@@ -551,6 +555,71 @@ describe("POST /api/apps/publish legt den Betrieb wirklich an", () => {
     // Und vor allem: Wirt B ist NICHT Mitglied bei Wirt A.
     const fremdeMitgliedschaft = mitglieder.find(
       (m) => m.userId === zweiterWirt && m.businessId === a.businessId,
+    );
+    expect(fremdeMitgliedschaft).toBeUndefined();
+  });
+
+  /**
+   * DAS LOCH IM ALTBESTANDS-RUECKFALL, von der Gegenprobe gefunden.
+   *
+   * Der Rueckfall suchte die alte Adresse nur, wenn unter der NEUEN gar nichts
+   * lag. Belegt eine FREMDE Zeile die neue Adresse, wurde die eigene Altzeile nie
+   * gesucht - der Aufruf fiel direkt ins Ausweichen und legte einen zweiten
+   * Betrieb an, obwohl der eigene unter der alten Adresse danebenstand.
+   */
+  it("findet den eigenen Altbestand auch, wenn ein Fremder die neue Adresse belegt", async () => {
+    const ich = "user-ich";
+    const fremder = "user-fremd";
+    nutzer = [
+      { id: ich },
+      { id: fremder },
+    ];
+
+    const name = "Café Müller";
+    const neueAdresse = generateBusinessSlug(name);
+    const alteAdresse = legacyBusinessSlug(name);
+    // Nur sinnvoll, wenn sich die Regeln fuer diesen Namen unterscheiden.
+    expect(alteAdresse).not.toBe(neueAdresse);
+
+    // Altbestand: MEIN Betrieb liegt unter der alten Adresse.
+    betriebe = [
+      {
+        id: "biz-alt",
+        slug: alteAdresse,
+        name,
+        templateId: null,
+        status: "DRAFT",
+        primaryColor: "#000000",
+        secondaryColor: "#ffffff",
+        fontFamily: "sans",
+      },
+      // Ein FREMDER hat inzwischen die neue Adresse belegt.
+      {
+        id: "biz-fremd",
+        slug: neueAdresse,
+        name,
+        templateId: null,
+        status: "DRAFT",
+        primaryColor: "#000000",
+        secondaryColor: "#ffffff",
+        fontFamily: "sans",
+      },
+    ];
+    mitglieder = [
+      { userId: ich, businessId: "biz-alt", role: "OWNER" },
+      { userId: fremder, businessId: "biz-fremd", role: "OWNER" },
+    ];
+
+    const ergebnis = await ensureUserBusiness(ich, name);
+
+    // Mein Altbestand wird aktualisiert - kein dritter Betrieb.
+    expect(ergebnis.businessId).toBe("biz-alt");
+    expect(ergebnis.businessSlug).toBe(alteAdresse);
+    expect(betriebe).toHaveLength(2);
+
+    // Und der fremde Betrieb bleibt unangetastet.
+    const fremdeMitgliedschaft = mitglieder.find(
+      (m) => m.userId === ich && m.businessId === "biz-fremd",
     );
     expect(fremdeMitgliedschaft).toBeUndefined();
   });

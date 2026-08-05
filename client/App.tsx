@@ -15,12 +15,18 @@ import {
 } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
-import { ClerkProvider } from "@clerk/clerk-react";
-import { I18nextProvider } from "react-i18next";
-import i18n from "@/i18n";
 
 // Import Service Worker Hook
 import { useServiceWorker, useInstallPrompt } from "@/hooks/useServiceWorker";
+
+/**
+ * ClerkProvider und I18nextProvider hängen jetzt an dieser Layout-Route statt
+ * an der ganzen Anwendung — siehe die Begründung in AppAreaShell.tsx. Wichtig
+ * ist der lazy()-Import: ein normaler Import würde @clerk/clerk-react und
+ * i18next wieder in den Einstiegsgraphen und damit in den Ladepfad der
+ * Startseite ziehen.
+ */
+const AppAreaShell = lazy(() => import("./components/AppAreaShell"));
 
 const Configurator = lazy(() => import("./pages/Configurator"));
 const ModeSelection = lazy(() => import("./pages/ModeSelection"));
@@ -32,10 +38,14 @@ const Site = lazy(() => import("./pages/Site"));
 const TestSite = lazy(() => import("./pages/TestSite"));
 import NotFound from "./pages/NotFound";
 import HostAwareRoot from "./pages/HostAwareRoot";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+// Login, Signup und RequireAuth importieren @clerk/clerk-react direkt. Als
+// normale Importe zogen sie das Auth-SDK in den Einstiegsgraphen — auch für
+// Besucher, die nur die Startseite ansehen. Alle drei liegen unterhalb von
+// AppAreaShell, werden also ohnehin nie ohne dessen Chunk gebraucht.
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
 const Profile = lazy(() => import("./pages/Profile"));
-import RequireAuth from "./components/RequireAuth";
+const RequireAuth = lazy(() => import("./components/RequireAuth"));
 
 const Datenschutz = lazy(() => import("./pages/Datenschutz"));
 const Impressum = lazy(() => import("./pages/Impressum"));
@@ -77,8 +87,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
-
 const App = () => {
   // Register Service Worker and PWA functionality
   useServiceWorker();
@@ -96,10 +104,8 @@ const App = () => {
   }, []);
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
     <PerformanceErrorBoundary>
       <ErrorBoundary>
-        <I18nextProvider i18n={i18n}>
           <QueryClientProvider client={queryClient}>
             <HelmetProvider>
               <TooltipProvider>
@@ -132,8 +138,14 @@ const App = () => {
                       <Route path="/" element={<HostAwareRoot />} />
                       <Route path="/r/:id" element={<ManageReservation />} />
 
-                      {/* CLERK AUTHENTICATED ROUTES */}
-                      <Route>
+                      {/*
+                        App-Bereich: alles, was Clerk und/oder i18next braucht.
+                        AppAreaShell ist eine Layout-Route ohne eigenen Pfad —
+                        sie setzt nur die beiden Provider und rendert die
+                        Zielseite in ihrem <Outlet>. Dadurch bleibt das Auth-SDK
+                        aus dem Ladepfad der öffentlichen Seiten.
+                      */}
+                      <Route element={<AppAreaShell />}>
                         <Route path="/login/*" element={<Login />} />
                         <Route path="/signup/*" element={<Signup />} />
                         <Route
@@ -247,10 +259,8 @@ const App = () => {
               </Suspense>
             )}
           </QueryClientProvider>
-        </I18nextProvider>
       </ErrorBoundary>
     </PerformanceErrorBoundary>
-    </ClerkProvider>
   );
 };
 

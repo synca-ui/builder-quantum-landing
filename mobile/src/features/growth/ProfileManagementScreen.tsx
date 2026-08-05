@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -136,7 +136,20 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
   );
 }
 
-/** Öffnungszeit-Zeile: Wert editierbar, „Geschlossen" schaltet den Tag ab. */
+/**
+ * Öffnungszeit-Zeile: Wert editierbar, „Geschlossen" schaltet den Tag ab.
+ *
+ * Der Wert geht beim Verlassen des Feldes in den Store, nicht bei jedem Zeichen.
+ * Das war die teuerste Tastatur der App: Auf dem Simulator gemessen kostete ein
+ * einzelner Tastendruck hier **einen kompletten Neubau des Store-Kontexts, einen
+ * vollen `AsyncStorage`-Schreibvorgang und zwei Renders des Start-Screens** - eines
+ * Screens, der gar nicht sichtbar ist, sondern hinter diesem Modal liegt. Bei
+ * „8:00 – 18:00" sind das 12 Zeichen, also 12-mal alles.
+ *
+ * Name, Kurzbeschreibung und Bio machen es in dieser Datei schon lange so
+ * (lokaler State, Schreiben beim Speichern) - die Öffnungszeiten waren die
+ * Ausnahme.
+ */
 function HourRow({
   id,
   label,
@@ -153,6 +166,27 @@ function HourRow({
   const theme = useTheme();
   const [text, setText] = useState(closed ? "" : value);
 
+  /*
+   * Beim Verlassen schreiben - und beim Verschwinden der Zeile ebenfalls.
+   *
+   * `onBlur` allein wäre eine Falle: Wer tippt und dann sofort das Modal zuzieht
+   * (Wischen von links), verlässt das Feld nie regulär. Deshalb halten zwei Refs den
+   * zuletzt getippten und den zuletzt geschriebenen Stand, und die Aufräumfunktion
+   * schreibt nach, falls beide auseinanderliegen. Refs statt State, weil beim
+   * Aufräumen kein Render mehr stattfindet.
+   */
+  const latest = useRef(text);
+  const committed = useRef(text);
+
+  const commit = useCallback(() => {
+    if (latest.current === committed.current) return;
+    committed.current = latest.current;
+    onChange(id, latest.current, false);
+  }, [id, onChange]);
+
+  // Aufräumen = nachschreiben. Beim Unmount der Zeile ist das die letzte Gelegenheit.
+  useEffect(() => commit, [commit]);
+
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing.md }}>
       <Text variant="numeric" style={{ fontSize: 15, width: 96 }}>
@@ -168,9 +202,10 @@ function HourRow({
         <TextInput
           value={text}
           onChangeText={(t) => {
+            latest.current = t;
             setText(t);
-            onChange(id, t, false);
           }}
+          onBlur={commit}
           placeholder="8:00 – 18:00"
           placeholderTextColor={theme.colors.textFaint}
           accessibilityLabel={`Öffnungszeit ${label}`}
@@ -189,7 +224,13 @@ function HourRow({
       )}
       <Toggle
         value={!closed}
-        onValueChange={(open) => onChange(id, open ? value || "9:00 – 17:00" : "Geschlossen", !open)}
+        onValueChange={(open) => {
+          // Der Schalter schreibt selbst - also gilt der getippte Stand als abgegolten.
+          // Ohne diese Zeile würde die Aufräumfunktion oben einen gerade geschlossenen
+          // Tag beim Verlassen des Screens wieder öffnen.
+          committed.current = latest.current;
+          onChange(id, open ? latest.current || value || "9:00 – 17:00" : "Geschlossen", !open);
+        }}
         accessibilityLabel={`${label} geöffnet`}
       />
     </View>

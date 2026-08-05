@@ -93,9 +93,10 @@ function ThemedApp({ fontsLoaded }: { fontsLoaded: boolean }) {
 function ThemedNavigator() {
   const theme = useTheme();
   const { hydrated } = useStore();
-  // Die Eröffnungsanimation liegt über allem und läuft einmal pro Kaltstart. In den
-  // ~2 s, die sie sichtbar ist, wird die Hydration ohnehin fertig - blendet sie aus,
-  // steht der eigentliche Screen bereits dahinter.
+  // Die Eröffnungsanimation liegt über allem und läuft einmal pro Kaltstart. Sie ist
+  // jetzt 760 ms sichtbar (vorher 2 260 ms). Das reicht der Hydration aus dem lokalen
+  // Speicher; ist sie doch einmal langsamer, steht dahinter die ruhige Fläche aus dem
+  // `else`-Zweig unten - kein Login-Blitzer, kein halb gefüllter Screen.
   const [introDone, setIntroDone] = useState(false);
 
   return (
