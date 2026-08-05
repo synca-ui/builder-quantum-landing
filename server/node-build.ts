@@ -1,4 +1,5 @@
 import path from "path";
+import { pathToFileURL } from "url";
 import { createServer } from "./index";
 import * as express from "express";
 import { startMaitrScheduler, stopMaitrScheduler } from "./maitr/scheduler";
@@ -84,9 +85,20 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
-// Only listen if run directly (node dist/server/node-build.js)
-// This prevents app.listen() from executing when imported by Netlify serverless functions
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Nur lauschen, wenn direkt gestartet (node dist/server/node-build.mjs) - nicht,
+// wenn eine andere Datei dieses Modul importiert.
+//
+// Der Vergleich läuft über pathToFileURL und NICHT über `file://${process.argv[1]}`.
+// Grund, hier gemessen: `import.meta.url` ist eine URL und damit prozentkodiert,
+// `process.argv[1]` ist ein roher Pfad. Auf diesem Rechner liegt das Projekt unter
+// "…/Antigravity Projects/…" — die eine Seite sagt "%20", die andere sagt " ", die
+// Bedingung wird nie wahr. Ergebnis: Der Prozess lief durch, hörte auf keinem Port
+// und beendete sich mit Exit 0. Also die schlimmste Sorte Fehler — die Plattform
+// meldet "erfolgreich beendet", während nichts erreichbar ist.
+//
+// Auf Railway fällt das nicht auf, weil dort kein Leerzeichen im Pfad steht. Es
+// genügt aber ein Umzug in einen Ordner mit Leerzeichen, Umlaut oder Klammer.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   // Validate environment before starting server
   validateEnvironment();
 

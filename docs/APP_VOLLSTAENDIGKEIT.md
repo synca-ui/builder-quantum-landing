@@ -626,7 +626,15 @@ Kontrolle laufen ließ — **14 von 14 bestanden**.
 **Railway** (Voraussetzung für b4)
 - [ ] `MAITR_ENCRYPTION_KEY` — 32 Byte als Hex (`openssl rand -hex 32`)
 - [ ] `MAITR_OAUTH_STATE_SECRET` — mindestens 32 Zeichen
-- [ ] `MAITR_API_BASE_URL` — die öffentliche HTTPS-Adresse der API
+- [ ] `MAITR_API_BASE_URL` — **`https://www.maitr.de/api`**, mit `/api` am Ende und mit `www`.
+      Zwei Fallstricke, die beide erst nach der Google-Freigabe auffallen würden:
+      `routes.ts:698` hängt `/maitr/integrations/…/callback` an diesen Wert, die Route
+      liegt aber unter `/api/maitr/…` (`routes/index.ts:195` + `index.ts:283`) — ohne `/api`
+      zeigt die bei Google hinterlegte `redirect_uri` ins Leere. Und der Sprung von der
+      Apex-Domain auf `www` ist ein Cross-Host-Redirect; dabei verwerfen viele HTTP-Clients
+      den `Authorization`-Header. Abgesichert in `server/__tests__/maitrOAuthWeg.spec.ts`:
+      der Test nimmt die `redirect_uri` aus der Autorisierungs-URL und ruft genau diesen
+      Pfad an der wie in Produktion montierten App auf.
 - [ ] `MAITR_APP_DEEP_LINK` — z. B. `maitr://connected` (das Schema `maitr` ist in `app.json` gesetzt)
 - [ ] `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - [ ] `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`

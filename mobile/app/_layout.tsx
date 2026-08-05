@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
@@ -39,7 +39,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
+      <AuthBoundary>
         <SafeAreaProvider>
           <AppStateProvider>
             <AppearanceProvider>
@@ -47,7 +47,7 @@ export default function RootLayout() {
             </AppearanceProvider>
           </AppStateProvider>
         </SafeAreaProvider>
-      </AuthProvider>
+      </AuthBoundary>
     </GestureHandlerRootView>
   );
 }
@@ -74,6 +74,45 @@ function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </ClerkProvider>
   );
+}
+
+/**
+ * Letztes Netz: Zerlegt sich Clerk, läuft die App im Demomodus weiter.
+ *
+ * Der try/catch in `lib/auth.ts` fängt nur, was das `require` SYNCHRON wirft.
+ * Genau das reichte nicht — im Simulator kam „Cannot find native module
+ * 'ExpoWebBrowser'" als roter Schirm durch, weil der Fehler erst in Clerks
+ * eigener Initialisierung entsteht, nicht beim Laden des Moduls. Ergebnis: Der
+ * Demomodus war als Rückweg gedacht und wurde zum Absturz.
+ *
+ * Der häufigste Auslöser ist ein Dev-Client, der älter ist als die
+ * Clerk-Installation und deren native Teile nicht enthält. Im Release-Bau kann
+ * das nicht passieren, weil app.json die Plugins führt — aber „kann nicht
+ * passieren" ist kein Grund, ohne Netz zu arbeiten: Ein fehlerhafter Schlüssel
+ * oder ein Ausfall bei Clerk hätte dieselbe Wirkung.
+ *
+ * Bewusst eine Klasse: Fehlergrenzen gibt es in React nur so.
+ */
+class AuthBoundary extends Component<{ children: ReactNode }, { gescheitert: boolean }> {
+  state = { gescheitert: false };
+
+  static getDerivedStateFromError() {
+    return { gescheitert: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn(
+      "[auth] Anmeldung konnte nicht geladen werden — die App läuft im Demomodus weiter.",
+      error?.message ?? error,
+    );
+  }
+
+  render() {
+    // Im Fehlerfall die Kinder OHNE ClerkProvider: Das ist exakt der Demopfad,
+    // den die App ohne Schlüssel ohnehin nimmt.
+    if (this.state.gescheitert) return <>{this.props.children}</>;
+    return <AuthProvider>{this.props.children}</AuthProvider>;
+  }
 }
 
 /** Getrennt, damit `useAppearance()` innerhalb seines Providers liegt. */

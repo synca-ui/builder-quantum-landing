@@ -14,7 +14,16 @@ export const env = {
    * Zwei Dinge waren hier vorher falsch, beide belegt:
    * - Der Pfad ist `/api/maitr`, nicht `/api`. Der Maitr-Router hängt in
    *   `server/maitr/index.ts` unter diesem Präfix, und `eas.json` setzt für den
-   *   Produktionsbau genau `https://maitr.de/api/maitr`.
+   *   Produktionsbau genau `https://www.maitr.de/api/maitr`.
+   *
+   * MIT www, und das ist kein Schoenheitsfehler: `maitr.de` antwortet mit 301 auf
+   * `www.maitr.de`. Ein Host-Wechsel laesst viele HTTP-Klienten den
+   * `Authorization`-Header fallen - aus Sicherheitsgruenden, damit ein Token
+   * nicht versehentlich an eine fremde Domain geht. Ohne www haette also JEDE
+   * angemeldete Anfrage 401 ergeben, und der Fehler haette wie ein Auth-Problem
+   * ausgesehen statt wie eine falsche Adresse. Live nachgemessen:
+   *   https://maitr.de/api/maitr/venues      -> 301
+   *   https://www.maitr.de/api/maitr/venues  -> 401 {"error":"Missing token"}
    * - Der Dev-Port ist 8081, nicht 8080. Express läuft im Entwicklungsbetrieb im
    *   Vite-Server (`vite.config.ts`, `port: 8081`); erst der eigenständige
    *   Produktionsstart nutzt `PORT` bzw. 3000 (`server/node-build.ts`).
@@ -32,7 +41,7 @@ export const env = {
   // schlimmer als gar keiner: Er scheitert nicht, er lügt.
   //
   // Für die lokale Entwicklung EXPO_PUBLIC_API_URL setzen (siehe .env.example).
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? "https://maitr.de/api/maitr",
+  apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? "https://www.maitr.de/api/maitr",
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
   supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   /**
