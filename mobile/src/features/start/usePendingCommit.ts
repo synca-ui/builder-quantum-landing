@@ -7,8 +7,15 @@ export interface PendingAction {
   /** Zeile während der Wartezeit, z. B. „Antwort an Marion geht raus". */
   label: string;
   durationMs: number;
-  /** Wird beim Ablauf (oder sofortigem Verbindlichmachen) ausgeführt. */
-  commit: () => void;
+  /**
+   * Wird beim Ablauf (oder sofortigem Verbindlichmachen) ausgeführt.
+   *
+   * Darf ein Promise liefern. Das ist seit dem Anschluss an `api.briefing.approveTask`
+   * nötig: Erst wenn der Server die Freigabe bestätigt hat, ist die Aktion wirklich
+   * passiert. Ein abgelehntes Promise heißt „nicht passiert" - dann bleibt auch die
+   * Zeile „Veröffentlicht · 9:41" aus, statt einen Erfolg zu behaupten, den es nicht gab.
+   */
+  commit: () => void | Promise<void>;
 }
 
 export interface HistoryEntry {
@@ -50,9 +57,21 @@ export function usePendingCommit() {
     const p = pendingRef.current;
     if (!p) return;
     clearTimer();
-    p.commit();
-    setHistory((h) => [{ taskId: p.taskId, kind: p.kind, time: formatTime(new Date()) }, ...h]);
+    // Die Wartezeile verschwindet sofort - ab hier ist nichts mehr zurückzunehmen.
     setPending(null);
+    // Der Zeitstempel wird JETZT genommen, nicht erst nach der Serverantwort: der
+    // Nutzer hat zu diesem Zeitpunkt entschieden, nicht 400 ms später.
+    const time = formatTime(new Date());
+    // `Promise.resolve().then(...)` fängt auch einen synchron geworfenen Fehler ein.
+    // Der Historieneintrag hängt am Erfolg: Scheitert der Serveraufruf, behauptet die
+    // Liste nichts. Wie es dann weitergeht (Karte zurückholen, Hinweis zeigen),
+    // entscheidet der Aufrufer in seinem `catch` - dieser Hook kennt keine Endpunkte.
+    Promise.resolve()
+      .then(() => p.commit())
+      .then(() => {
+        setHistory((h) => [{ taskId: p.taskId, kind: p.kind, time }, ...h]);
+      })
+      .catch(() => {});
   }, []);
 
   const start = useCallback(
@@ -79,9 +98,15 @@ export function usePendingCommit() {
       sub.remove();
       clearTimer();
       // Beim Unmount ausstehende Aktion committen (nicht verlieren) - ohne React-State,
-      // da die Komponente gerade verschwindet.
+      // da die Komponente gerade verschwindet. Ein abgelehntes Promise wird hier
+      // bewusst nur verschluckt: Es gibt keine Oberfläche mehr, die es zeigen könnte,
+      // und eine unbehandelte Ablehnung würde in React Native als roter Kasten landen.
       const p = pendingRef.current;
-      if (p) p.commit();
+      if (p) {
+        Promise.resolve()
+          .then(() => p.commit())
+          .catch(() => {});
+      }
     };
   }, [commitNow]);
 

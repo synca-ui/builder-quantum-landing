@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api, isCoreConfigured } from "@maitr/core";
 
 import { formatHour, type TimelineBooking, type TimelineTable } from "../components/ui/Timeline";
 import { serviceDays as seedDays, type ServiceDayFixture } from "../features/reservations/fixtures";
@@ -36,6 +37,18 @@ export interface SessionUser {
   district: string;
   initials: string;
 }
+
+/* ── Betriebskennung ─────────────────────────────────────────────────────────
+   Welcher Betrieb ist gemeint? Bis hierher stand die Antwort als Konstante im
+   Start-Screen. Sie gehört in den Store, weil zwei Screens sie brauchen: der
+   Onboarding-Bildschirm legt den Betrieb an, der Start-Screen lädt sein Briefing
+   dafür.
+
+   Der Vorgabewert bleibt die Demokennung. Ohne Backend und ohne Clerk-Schlüssel
+   ist das die einzige Kennung, die es gibt - und sie muss die App vollständig
+   bedienbar halten (die Fixtures in `features/start/fixtures.ts` sind darauf
+   gemünzt). Erst wenn `GET /venues` einen echten Betrieb meldet, wird sie ersetzt. */
+export const DEMO_VENUE_ID = "venue_goldstueck";
 
 const DEMO_USER: SessionUser = {
   name: "Sofia Brandt",
@@ -387,6 +400,24 @@ interface StoreValue {
   /** Foto/Sprach-first: aus Notiz + Stimmung einen eingeplanten Beitrag machen. */
   createQuickPost: (input: { note: string; tone: MediaTone; when: string; channels: string[] }) => void;
 
+  /**
+   * Kennung des aktuell bespielten Betriebs.
+   *
+   * `DEMO_VENUE_ID`, solange kein echter Betrieb bekannt ist - dann liefert die API
+   * nichts Passendes und die Screens fallen auf ihre Fixtures zurück. Sobald
+   * `GET /venues` oder `POST /venues` einen echten Betrieb meldet, steht hier dessen
+   * Kennung, und `useDailyBriefing` lädt damit echte Daten.
+   */
+  venueId: string;
+  /** true, sobald `venueId` von einem echten Betrieb stammt (nicht der Demokennung). */
+  hasRealVenue: boolean;
+  /**
+   * Echten Betrieb übernehmen - aus `GET /venues` oder frisch angelegt. Setzt neben der
+   * Kennung auch den Namen im Betriebsprofil, damit nicht die halbe App weiter
+   * „Café Goldstück" zeigt, während der Server einen anderen Betrieb meint.
+   */
+  adoptVenue: (venue: { id: string; name?: string }) => void;
+
   // Betriebsprofil (Google Business / Instagram)
   venueProfile: VenueProfile;
   updateVenueProfile: (patch: Partial<VenueProfile>) => void;
@@ -537,6 +568,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [reviewAnswered, setReviewAnswered] =
     useState<Record<string, boolean>>(REVIEW_ANSWERED_SEED);
   const [posts, setPosts] = useState<Post[]>(POSTS_SEED);
+  const [venueId, setVenueId] = useState<string>(DEMO_VENUE_ID);
   const [venueProfile, setVenueProfile] = useState<VenueProfile>(VENUE_PROFILE_SEED);
   const [channelMeta, setChannelMeta] =
     useState<Record<string, { account: string; since: string }>>(CHANNEL_META_SEED);
@@ -599,6 +631,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
    */
   const signOut = useCallback(async () => {
     setSignedIn(false);
+    // Ohne Sitzung gibt es keinen eigenen Betrieb mehr. Bliebe die echte Kennung
+    // stehen, lüde der nächste Anmelder für einen Wimpernschlag das Briefing eines
+    // fremden Betriebs - bis die eigene Abfrage antwortet.
+    setVenueId(DEMO_VENUE_ID);
     await mobileAuthAdapter.signOut();
   }, []);
 
@@ -690,6 +726,51 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       })),
     [],
   );
+
+  const adoptVenue = useCallback<StoreValue["adoptVenue"]>((venue) => {
+    if (!venue?.id) return;
+    setVenueId(venue.id);
+    // Nur überschreiben, wenn der Server wirklich einen Namen mitschickt - ein leerer
+    // Name würde sonst die Kopfzeile des Start-Screens leeren.
+    const name = venue.name;
+    if (name) setVenueProfile((v) => (v.name === name ? v : { ...v, name }));
+  }, []);
+
+  /* ── Welcher Betrieb gehört zu dieser Anmeldung? ────────────────────────────
+     Genau eine Stelle fragt das, und sie fragt es nur, wenn es etwas zu fragen gibt.
+
+     Drei Bedingungen, alle drei nötig:
+     - `signedIn`: ohne Sitzung antwortet `GET /venues` mit 401.
+     - `hasRealAuth()`: ohne Clerk-Schlüssel gibt es überhaupt kein Konto, an dem ein
+       Betrieb hängen könnte. Der Demo-Token aus dem AsyncStorage taugt dem Server
+       nicht - der Aufruf könnte nur scheitern.
+     - `isCoreConfigured()`: sonst wirft `getCoreConfig()` in `http.ts`.
+
+     Im Demomodus passiert hier deshalb NICHTS: kein `fetch`, keine Clerk-Berührung,
+     `venueId` bleibt `DEMO_VENUE_ID`, und die App startet wie bisher. */
+  useEffect(() => {
+    if (!signedIn || !hasRealAuth() || !isCoreConfigured()) return;
+
+    let alive = true;
+    api.venues
+      .mine()
+      .then((list) => {
+        if (!alive) return;
+        // Form prüfen, nicht nur den Erfolg (dieselbe Lehre wie in `useDailyBriefing`):
+        // Ein HTTP 200 von einem fremden Dienst ist ebenfalls ein Erfolg.
+        const first = Array.isArray(list) ? list[0] : undefined;
+        if (first?.id) adoptVenue(first);
+      })
+      .catch(() => {
+        // Kein Netz, 401, noch kein Betrieb: die Demokennung bleibt stehen. Der
+        // Start-Screen zeigt dann seine Fixture samt „API nicht verbunden" - das ist
+        // der ehrliche Zustand, kein Absturz.
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [signedIn, adoptVenue]);
 
   const connectChannelAs = useCallback(
     (id: string, account: string) => {
@@ -945,6 +1026,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setTaskDone({});
     setReviewAnswered(REVIEW_ANSWERED_SEED);
     setPosts(POSTS_SEED);
+    setVenueId(DEMO_VENUE_ID);
     setVenueProfile(VENUE_PROFILE_SEED);
     setInboxRead({});
     setDays(seedServiceDays());
@@ -979,6 +1061,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (s.taskDone) setTaskDone(s.taskDone);
         if (s.reviewAnswered) setReviewAnswered(s.reviewAnswered);
         if (s.posts) setPosts(s.posts);
+        // Die zuletzt bekannte Betriebskennung überlebt den Neustart, damit der
+        // Start-Screen nicht erst eine Runde Fixture zeigt, bis `GET /venues`
+        // antwortet. Der Netzabruf oben korrigiert sie, falls sie veraltet ist.
+        //
+        // Dieselbe Einschränkung wie beim `signedIn`-Merker zwei Zeilen darüber: Nur
+        // im Clerk-Betrieb kann eine echte Kennung gültig sein. Fällt ein Bau auf den
+        // Demomodus zurück (Schlüssel entfernt), bliebe sonst die Kennung eines
+        // Betriebs stehen, den dieses Gerät gar nicht mehr abfragen darf.
+        if (typeof s.venueId === "string" && s.venueId && hasRealAuth()) setVenueId(s.venueId);
         if (s.venueProfile) setVenueProfile(s.venueProfile);
         if (s.inboxRead) setInboxRead(s.inboxRead);
         if (s.days) setDays(s.days);
@@ -1039,6 +1130,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       taskDone,
       reviewAnswered,
       posts,
+      venueId,
       venueProfile,
       inboxRead,
       days,
@@ -1057,6 +1149,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     taskDone,
     reviewAnswered,
     posts,
+    venueId,
     venueProfile,
     inboxRead,
     days,
@@ -1111,6 +1204,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       publishPost,
       updatePost,
       createQuickPost,
+      venueId,
+      hasRealVenue: venueId !== DEMO_VENUE_ID,
+      adoptVenue,
       venueProfile,
       updateVenueProfile,
       updateHour,
@@ -1163,6 +1259,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       publishPost,
       updatePost,
       createQuickPost,
+      venueId,
+      adoptVenue,
       venueProfile,
       updateVenueProfile,
       updateHour,

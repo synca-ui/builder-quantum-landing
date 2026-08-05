@@ -63,28 +63,125 @@ export async function ensureUserBusiness(
         throw new Error(`User not found: ${userId}`);
       }
 
+      // Step 1b: Vorlage nur verknüpfen, wenn es sie wirklich gibt.
+      //
+      // `templateId` ist ein Fremdschlüssel auf `Template` (schema.prisma:59).
+      // Zeigt er auf eine Vorlage, die in dieser Datenbank nicht existiert,
+      // bricht der Insert mit P2003 ab – und wir stünden wieder genau da, wo
+      // wir herkommen: ohne Betrieb, ohne Mitgliedschaft. `Template.id` hat
+      // keinen Vorgabewert, die Zeilen entstehen ausschließlich über
+      // prisma/seed.ts; ob das je gelaufen ist, weiß dieser Code nicht.
+      //
+      // Die Verknüpfung ist Beiwerk – Farben und Schrift stehen ohnehin direkt
+      // am Betrieb. Sie darf das Anlegen nicht gefährden: lieber ein Betrieb
+      // ohne Vorlagenbezug als gar keiner.
+      let vorlagenBezug: string | undefined;
+      if (templateId) {
+        const vorlage = await tx.template.findUnique({
+          where: { id: templateId },
+          select: { id: true },
+        });
+        if (vorlage) {
+          vorlagenBezug = vorlage.id;
+        } else {
+          console.warn(
+            "[BusinessService] Vorlage unbekannt, Betrieb wird ohne Bezug angelegt:",
+            { templateId, businessSlug },
+          );
+        }
+      }
+
       // Step 2: Upsert Business
-      const business = await tx.business.upsert({
+      //
+      // Hier stand bis eben zusätzlich `template: templateId || "minimalist"`.
+      // `template` ist im Schema aber KEIN Textfeld, sondern die Relation
+      // (`template Template? @relation(fields: [templateId], ...)`). Prisma
+      // nimmt dort nur ein verschachteltes Schreibobjekt entgegen, niemals eine
+      // Zeichenkette – der Aufruf ist deshalb bei JEDER Veröffentlichung
+      // gescheitert, still verschluckt vom Aufrufer. Ergebnis: 0 Zeilen in
+      // Business. Der Fremdschlüssel `templateId` erledigt dieselbe Aufgabe.
+      //
+      // `undefined` bei templateId heißt für Prisma "Feld nicht anfassen" –
+      // im update-Zweig bleibt ein bereits gesetzter Bezug damit erhalten,
+      // statt bei unbekannter Vorlage gelöscht zu werden.
+      // MANDANTENTRENNUNG — hier lag eine Lücke, die erst durch die Reparatur
+      // oben erreichbar wurde.
+      //
+      // Der frühere Upsert traf den Betrieb über den GLOBALEN slug und legte
+      // danach bedingungslos eine OWNER-Mitgliedschaft an (Step 4). Zwei Wirte mit
+      // demselben Betriebsnamen ergeben denselben slug — der zweite wäre damit
+      // Mitinhaber des ersten geworden. Schlimmer noch: Der update-Zweig hätte
+      // Name, Farben und Vorlage des ersten mit den Daten des zweiten
+      // überschrieben. Solange nie ein Betrieb entstand, konnte das nicht
+      // auffallen; ab jetzt schon.
+      //
+      // Deshalb drei getrennte Fälle statt eines blinden Upserts.
+      const gleicheAdresse = await tx.business.findUnique({
         where: { slug: businessSlug },
-        update: {
-          name: businessName,
-          templateId: templateId || undefined,
-          primaryColor: designTokens?.primaryColor || "#000000",
-          secondaryColor: designTokens?.secondaryColor || "#ffffff",
-          fontFamily: designTokens?.fontFamily || "sans",
-          updatedAt: new Date(),
-        },
-        create: {
-          slug: businessSlug,
-          name: businessName,
-          templateId: templateId || undefined,
-          primaryColor: designTokens?.primaryColor || "#000000",
-          secondaryColor: designTokens?.secondaryColor || "#ffffff",
-          fontFamily: designTokens?.fontFamily || "sans",
-          template: templateId || "minimalist",
-          status: "DRAFT",
-        },
+        select: { id: true },
       });
+
+      const gemeinsameFelder = {
+        name: businessName,
+        templateId: vorlagenBezug,
+        primaryColor: designTokens?.primaryColor || "#000000",
+        secondaryColor: designTokens?.secondaryColor || "#ffffff",
+        fontFamily: designTokens?.fontFamily || "sans",
+      };
+
+      let business: { id: string; name: string; slug: string };
+
+      if (!gleicheAdresse) {
+        // Fall 1: Adresse frei — Betrieb entsteht neu.
+        business = await tx.business.create({
+          data: { slug: businessSlug, ...gemeinsameFelder, status: "DRAFT" },
+          select: { id: true, name: true, slug: true },
+        });
+      } else {
+        const eigene = await tx.businessMember.findUnique({
+          where: { userId_businessId: { userId, businessId: gleicheAdresse.id } },
+          select: { businessId: true },
+        });
+
+        if (eigene) {
+          // Fall 2: eigener Betrieb, erneut veröffentlicht — aktualisieren.
+          business = await tx.business.update({
+            where: { id: gleicheAdresse.id },
+            data: { ...gemeinsameFelder, updatedAt: new Date() },
+            select: { id: true, name: true, slug: true },
+          });
+        } else {
+          // Fall 3: Die Adresse gehört einem FREMDEN Betrieb. Dann bekommt dieser
+          // hier eine freie, statt den fremden zu übernehmen. Der slug ist nur der
+          // Schlüssel des Betriebsdatensatzes — die öffentliche Subdomain der
+          // Web-App vergibt webapps.ts getrennt davon.
+          let kandidat: string | null = null;
+          for (let i = 2; i <= 21; i++) {
+            const versuch = `${businessSlug}-${i}`;
+            const belegt = await tx.business.findUnique({
+              where: { slug: versuch },
+              select: { id: true },
+            });
+            if (!belegt) {
+              kandidat = versuch;
+              break;
+            }
+          }
+          if (!kandidat) {
+            throw new Error(
+              `Keine freie Betriebsadresse für "${businessSlug}" gefunden (20 Versuche)`,
+            );
+          }
+          console.warn(
+            "[BusinessService] Betriebsadresse gehört einem anderen Betrieb, weiche aus:",
+            { gewuenscht: businessSlug, verwendet: kandidat },
+          );
+          business = await tx.business.create({
+            data: { slug: kandidat, ...gemeinsameFelder, status: "DRAFT" },
+            select: { id: true, name: true, slug: true },
+          });
+        }
+      }
 
       // Step 3: Check if user-business membership already exists
       const existingMembership = await tx.businessMember.findUnique({

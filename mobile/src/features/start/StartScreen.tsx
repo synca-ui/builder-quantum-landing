@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import type { DailyTask } from "@maitr/core";
+import { ApiError, api, type DailyTask } from "@maitr/core";
 
 import { Card } from "../../components/ui/Card";
 import { CheckIcon } from "../../components/icons";
@@ -14,6 +14,7 @@ import { Text } from "../../components/ui/Text";
 import { useAppearance } from "../../lib/appearance";
 import { computeProfileScore } from "../growth/profileScore";
 import { useStore } from "../../lib/store";
+import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 import { EveningScreen } from "./EveningScreen";
 import { GreetingHeader } from "./components/GreetingHeader";
@@ -23,9 +24,6 @@ import { DoneRow } from "./components/DoneRow";
 import { PendingRow } from "./components/PendingRow";
 import { useDailyBriefing } from "./useDailyBriefing";
 import { usePendingCommit } from "./usePendingCommit";
-
-/** Solange keine Betriebsauswahl existiert, arbeitet der Screen auf dem Demo-Betrieb. */
-const VENUE_ID = "venue_goldstueck";
 
 /**
  * Screen 04 · Start · „Guten Morgen".
@@ -38,15 +36,79 @@ export function StartScreen() {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const toast = useToast();
   const { nightMode, toggleNightMode } = useAppearance();
-  const { taskDone, completeTask, unreadCount, profileDone } = useStore();
-  const { briefing, source } = useDailyBriefing(VENUE_ID);
+  const { taskDone, completeTask, unreadCount, profileDone, venueId } = useStore();
+  const { briefing, source } = useDailyBriefing(venueId);
   const pending = usePendingCommit();
   // Per Wisch entfernte Aufgaben (Session): fallen aus der Liste UND aus dem Zähler.
   const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
+  // Freigabe liegt gerade beim Server. Die Aufgabe bleibt dabei sichtbar - siehe
+  // `approve()` weiter unten.
+  const [approving, setApproving] = useState<Record<string, boolean>>({});
+  // Fehlgeschlagene Freigaben: Kennung → Klartext unter der Karte.
+  const [approveFailed, setApproveFailed] = useState<Record<string, string>>({});
 
   // Die „Score"-Kachel zeigt denselben Live-Wert wie der Profil-Check-Ring.
   const liveStats = { ...briefing.stats, score: computeProfileScore(profileDone) };
+
+  /**
+   * Die Freigabe wirklich vollziehen - nach Ablauf der Rücknahmefrist.
+   *
+   * Zwei Wege, und `source` entscheidet welcher. `source === "api"` heißt: Das
+   * Briefing kam vom Server, die Kennungen in `briefing.tasks` sind seine. Nur dann
+   * gibt es serverseitig etwas freizugeben. Kam das Briefing aus der Fixture
+   * (Demomodus, kein Netz, 401), kennt der Server die Kennung `task_review_marion`
+   * nicht - ein Aufruf könnte nur mit 404 enden. Dort bleibt es beim lokalen Häkchen,
+   * genau wie bisher.
+   *
+   * Der Ablauf im Serverfall ist bewusst „sichtbar hängen" statt „still verschwinden":
+   * Die Aufgabe bleibt in der Liste und zeigt einen Spinner, bis der Server bestätigt
+   * hat. Erst dann verschwindet sie. Scheitert der Aufruf, steht die Karte noch da,
+   * mit einer Zeile darunter, was schiefging - eine Aufgabe, die scheinbar erledigt
+   * ist und morgen wieder auftaucht, wäre der teurere Fehler.
+   *
+   * Das zurückgegebene Promise liest `usePendingCommit`: Nur bei Erfolg schreibt es
+   * „Veröffentlicht · 9:41" in die Historie.
+   */
+  const approve = useCallback(
+    (task: DailyTask): Promise<void> => {
+      if (source !== "api") {
+        completeTask(task.id);
+        return Promise.resolve();
+      }
+
+      setApproving((a) => ({ ...a, [task.id]: true }));
+      setApproveFailed((f) => {
+        if (!f[task.id]) return f;
+        const next = { ...f };
+        delete next[task.id];
+        return next;
+      });
+
+      return api.briefing
+        .approveTask(task.id)
+        .then(() => {
+          // Erst jetzt aus der Liste nehmen. Der Server hat bestätigt; das nächste
+          // Briefing liefert die Aufgabe ohnehin nicht mehr aus.
+          completeTask(task.id);
+        })
+        .catch((err: unknown) => {
+          setApproveFailed((f) => ({ ...f, [task.id]: approveFehlerText(err) }));
+          toast.show("Freigabe fehlgeschlagen");
+          // Weiterwerfen: `usePendingCommit` darf daraus keinen Historieneintrag machen.
+          throw err;
+        })
+        .finally(() => {
+          setApproving((a) => {
+            const next = { ...a };
+            delete next[task.id];
+            return next;
+          });
+        });
+    },
+    [source, completeTask, toast],
+  );
 
   const handlePrimary = useCallback(
     (task: DailyTask) => {
@@ -65,10 +127,10 @@ export function StartScreen() {
         kind: task.kind,
         label: isPublic ? `Antwort an ${who} geht raus` : "Beitrag wird eingeplant",
         durationMs,
-        commit: () => completeTask(task.id),
+        commit: () => approve(task),
       });
     },
-    [pending, completeTask, router, theme.accessible],
+    [pending, approve, router, theme.accessible],
   );
 
   const handleSecondary = useCallback(
@@ -100,7 +162,11 @@ export function StartScreen() {
   const totalTasks = briefing.tasks.filter((task) => !dismissed[task.id]).length;
   // Eine laufende Aktion zählt sofort mit - außer Löschen (das entfernt, erledigt nicht).
   const pendingCountsDone = pending.pending != null && pending.pending.kind !== "delete";
-  const doneTasks = totalTasks - openTasks.length + (pendingCountsDone ? 1 : 0);
+  // Aufgaben, deren Freigabe beim Server liegt, stehen noch in `openTasks` (mit Absicht -
+  // sie sollen sichtbar bleiben). Für den Fortschritt zählen sie trotzdem schon mit,
+  // sonst fiele der Balken zwischen Rücknahmefrist und Serverantwort zurück.
+  const approvingCount = openTasks.filter((task) => approving[task.id]).length;
+  const doneTasks = totalTasks - openTasks.length + (pendingCountsDone ? 1 : 0) + approvingCount;
   const allDone = openTasks.length === 0;
 
   // ~28 px Puffer zwischen letzter Karte und der schwebenden Tabbar.
@@ -153,6 +219,11 @@ export function StartScreen() {
                   />
                 );
               }
+              // Rücknahmefrist vorbei, Server antwortet noch: sichtbar hängen statt
+              // still verschwinden. Kein „Rückgängig" mehr - die Freigabe ist raus.
+              if (approving[task.id]) {
+                return <ApprovingRow key={task.id} label="Freigabe läuft" />;
+              }
               const card =
                 task.kind === "review" ? (
                   <ReviewTaskCard task={task} onPrimary={handlePrimary} onSecondary={handleSecondary} />
@@ -161,10 +232,17 @@ export function StartScreen() {
                   <CompactTaskCard task={task} variant="outline" onPrimary={handlePrimary} />
                 );
               return (
-                // Nach links wischen → Löschen mit 7-s-Rückgängig (siehe startDelete).
-                <SwipeToDelete key={task.id} onDelete={() => startDelete(task)}>
-                  {card}
-                </SwipeToDelete>
+                <View key={task.id}>
+                  {/* Nach links wischen → Löschen mit 7-s-Rückgängig (siehe startDelete). */}
+                  <SwipeToDelete onDelete={() => startDelete(task)}>{card}</SwipeToDelete>
+                  {approveFailed[task.id] ? (
+                    // Die Karte steht noch, weil nichts passiert ist. Der Grund gehört
+                    // direkt darunter - der Toast ist da längst wieder weg.
+                    <Eyebrow color={theme.colors.destructive} style={styles.failNote}>
+                      {approveFailed[task.id]}
+                    </Eyebrow>
+                  ) : null}
+                </View>
               );
             })
           )}
@@ -249,6 +327,41 @@ function ProgressHeader({ done, total }: { done: number; total: number }) {
   );
 }
 
+/**
+ * Zeile, während die Freigabe beim Server liegt.
+ *
+ * Bewusst dieselbe schmale Form wie `PendingRow`, aber ohne Ring und ohne
+ * „Rückgängig": Die Frist ist abgelaufen, zurückzunehmen gibt es nichts mehr. Der
+ * Spinner sagt, dass die Aufgabe nicht vergessen wurde, sondern wartet.
+ */
+function ApprovingRow({ label }: { label: string }) {
+  const theme = useTheme();
+  return (
+    <Card emphasis="subtle" padding={0} style={styles.approvingRow}>
+      <ActivityIndicator size="small" color={theme.colors.textMuted} />
+      <Text variant="bodySm" tone="secondary" style={styles.approvingLabel} numberOfLines={1}>
+        {label}
+      </Text>
+    </Card>
+  );
+}
+
+/**
+ * Aus einem Fehler eine Zeile machen, die jemandem hinter der Theke etwas sagt.
+ *
+ * Der Text aus `ApiError.message` kommt vom Server (`{ error: "…" }`) und ist auf
+ * Deutsch formuliert - den zeigen wir. Nur bei den Statuscodes, deren Serverwortlaut
+ * technisch bleibt, setzen wir eine eigene Zeile davor.
+ */
+function approveFehlerText(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 401 || err.status === 403) return "Nicht mehr angemeldet. Bitte neu anmelden.";
+    if (err.status === 404) return "Diese Aufgabe gibt es nicht mehr.";
+    return err.message;
+  }
+  return "Keine Verbindung. Die Aufgabe bleibt offen.";
+}
+
 /** Erscheint, wenn alle drei Entscheidungen des Tages getroffen sind. */
 function AllClear() {
   const theme = useTheme();
@@ -281,6 +394,18 @@ function AllClear() {
     </Card>
   );
 }
+
+const styles = StyleSheet.create({
+  approvingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
+  },
+  approvingLabel: { flex: 1, fontSize: 15 },
+  failNote: { marginTop: 6, marginLeft: 4 },
+});
 
 /** „Mittwoch, 16. Juli" - Wochentag und Datum ohne Jahr, wie im Design. */
 function formatDateLabel(iso: string, timeZone: string): string {

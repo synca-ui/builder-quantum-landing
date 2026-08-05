@@ -22,10 +22,83 @@ const PLAN_MAP: Record<
 };
 
 // ============================================
-// SIGNATURE VERIFICATION
+// SDK-HELFER
 // ============================================
 
+/**
+ * Ermittelt die interne userId zu einer Stripe-Kundennummer.
+ *
+ * WARUM eine eigene Funktion: stripe.customers.retrieve() liefert laut
+ * installiertem SDK ein Stripe.Response<Customer | DeletedCustomer>. Auf
+ * DeletedCustomer (node_modules/stripe/types/Customers.d.ts, Zeilen 309-324)
+ * existieren nur id, object und deleted - kein metadata. Der Zugriff musste
+ * deshalb an sieben Stellen identisch abgesichert werden.
+ *
+ * Nebenbei geschlossen: fuenf der sieben Aufrufer griffen ohne Pruefung auf
+ * stripe zu, obwohl die Variable ohne STRIPE_SECRET_KEY null ist. tsconfig.json
+ * hat strictNullChecks auf false, der Compiler deckt das also nicht auf - zur
+ * Laufzeit waere es ein TypeError gewesen, den nur der catch-Block aufgefangen
+ * haette.
+ */
+async function resolveUserIdFromCustomer(
+  customerId: string,
+): Promise<string | null> {
+  if (!stripe) {
+    console.error("[Stripe] Stripe not initialized");
+    return null;
+  }
 
+  const customer = await stripe.customers.retrieve(customerId);
+
+  // Geloeschte Kunden tragen keine Metadaten mehr - ohne userId kein Datensatz.
+  // Der Vergleich auf === true ist nicht kosmetisch: Stripe.Customer deklariert
+  // deleted als optionales void (Customers.d.ts, Zeile 65), Stripe.DeletedCustomer
+  // als true (Zeile 323). Ein blosses if (customer.deleted) engt die Union nicht
+  // ein - der Zugriff auf metadata darunter bleibt dann ein Typfehler. Mit einem
+  // Vergleich auf true trennt TypeScript die beiden Faelle sauber.
+  if (customer.deleted === true) {
+    console.warn("[Stripe] Customer is deleted, no metadata:", customerId);
+    return null;
+  }
+
+  return customer.metadata?.userId || null;
+}
+
+/**
+ * Liest den aktuellen Abrechnungszeitraum eines Abos.
+ *
+ * WARUM diese Umleitung: current_period_start/-end lagen frueher direkt auf dem
+ * Subscription-Objekt. Seit der Stripe-API-Version 2025-03-31.basil sitzen sie
+ * auf den einzelnen Positionen, weil ein Abo Positionen mit unterschiedlichen
+ * Zeitraeumen haben kann. Im installierten SDK (stripe 20.3.1, API-Version
+ * 2026-01-28.clover laut node_modules/stripe/types/apiVersion.d.ts) gilt:
+ *   Subscriptions.d.ts     -> kein current_period_* mehr vorhanden
+ *   SubscriptionItems.d.ts -> current_period_end (Zeile 53), _start (Zeile 58)
+ *
+ * Wir lesen dieselbe Position, aus der auch Preis und Plan stammen (data[0]),
+ * damit Plan und Zeitraum zueinander passen. Fehlt die Position, geben wir ein
+ * leeres Objekt zurueck statt new Date(NaN) - so bleibt ein bereits
+ * gespeicherter Zeitraum bei einem update erhalten.
+ */
+function readBillingPeriod(subscription: Stripe.Subscription): {
+  currentPeriodStart?: Date;
+  currentPeriodEnd?: Date;
+} {
+  const item = subscription.items?.data?.[0];
+
+  if (!item) {
+    console.warn(
+      "[Stripe] Subscription without items, billing period unknown:",
+      subscription.id,
+    );
+    return {};
+  }
+
+  return {
+    currentPeriodStart: new Date(item.current_period_start * 1000),
+    currentPeriodEnd: new Date(item.current_period_end * 1000),
+  };
+}
 
 // ============================================
 // EVENT HANDLERS
@@ -43,15 +116,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     return;
   }
 
-  if (!stripe) {
-    console.error("[Stripe] Stripe not initialized");
-    return;
-  }
-
   try {
     // Retrieve customer to get userId from metadata
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = customer.metadata?.userId as string;
+    const userId = await resolveUserIdFromCustomer(customerId);
 
     if (!userId) {
       console.warn("[Stripe] No userId in customer metadata for", customerId);
@@ -61,9 +128,10 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     // Get plan info
     const priceId = subscription.items.data[0]?.price?.id as string;
     const plan = PLAN_MAP[priceId] || PLAN_MAP.price_free;
+    const period = readBillingPeriod(subscription);
 
     // Create or update subscription
-    const updatedSub = await prisma.subscription.upsert({
+    await prisma.subscription.upsert({
       where: { userId },
       update: {
         stripeCustomerId: customerId,
@@ -72,8 +140,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         status: "active",
         maxSites: plan.maxSites,
         maxUsers: plan.maxUsers,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        ...period,
       },
       create: {
         userId,
@@ -83,8 +150,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         status: "active",
         maxSites: plan.maxSites,
         maxUsers: plan.maxUsers,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        ...period,
       },
     });
 
@@ -120,14 +186,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   if (!customerId) return;
 
-  if (!stripe) {
-    console.error("[Stripe] Stripe not initialized");
-    return;
-  }
-
   try {
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = customer.metadata?.userId as string;
+    const userId = await resolveUserIdFromCustomer(customerId);
 
     if (!userId) return;
 
@@ -141,8 +201,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         plan: plan.name,
         maxSites: plan.maxSites,
         maxUsers: plan.maxUsers,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        ...readBillingPeriod(subscription),
       },
     });
 
@@ -178,8 +237,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   if (!customerId) return;
 
   try {
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = customer.metadata?.userId as string;
+    const userId = await resolveUserIdFromCustomer(customerId);
 
     if (!userId) return;
 
@@ -228,8 +286,7 @@ async function handlePaymentIntentSucceeded(
   }
 
   try {
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = customer.metadata?.userId as string;
+    const userId = await resolveUserIdFromCustomer(customerId);
 
     if (!userId) return;
 
@@ -271,8 +328,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 
   try {
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = customer.metadata?.userId as string;
+    const userId = await resolveUserIdFromCustomer(customerId);
 
     if (!userId) return;
 
@@ -313,8 +369,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   }
 
   try {
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = customer.metadata?.userId as string;
+    const userId = await resolveUserIdFromCustomer(customerId);
 
     if (!userId) return;
 
@@ -370,8 +425,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   }
 
   try {
-    const customer = await stripe.customers.retrieve(customerId);
-    const userId = customer.metadata?.userId as string;
+    const userId = await resolveUserIdFromCustomer(customerId);
 
     if (!userId) return;
 
@@ -382,6 +436,16 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         status: "active",
       },
     });
+
+    // invoice.paid_at gibt es im installierten SDK nicht; der Zeitpunkt steht
+    // unter status_transitions.paid_at (node_modules/stripe/types/Invoices.d.ts,
+    // Zeile 1508, Typ number | null) und ist eine Unix-Zeit in SEKUNDEN. Der
+    // alte Code reichte den Wert ungerechnet an new Date() weiter, das
+    // Millisekunden erwartet - selbst wenn es das Feld gaebe, waere das Ergebnis
+    // ein Datum kurz nach 1970 gewesen. Fehlt der Zeitpunkt, nehmen wir den
+    // Empfangszeitpunkt, damit das Feld nicht leer bleibt.
+    const paidAtSeconds = invoice.status_transitions?.paid_at;
+    const paidAt = paidAtSeconds ? new Date(paidAtSeconds * 1000) : new Date();
 
     // Log event
     await prisma.billingEvent.create({
@@ -394,7 +458,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         metadata: {
           invoiceId: invoice.id,
           customerId,
-          paidAt: new Date(invoice.paid_at || Date.now()).toISOString(),
+          paidAt: paidAt.toISOString(),
         },
       },
     });
