@@ -92,6 +92,48 @@ Machbarkeit ist noch nicht geprüft — das passiert vor dem Bauen, nicht danach
 - **C5.1** Audit von Struktur **und** Sicherheit. Keine Überschneidungen
   zwischen Kunden — jede Zeile gehört genau einem Betrieb
 
+### C6 — Kanalverbindung trennen. **Blockiert den Google-Antrag.**
+Es gibt **keinen** Endpunkt zum Trennen einer Verbindung. In
+`server/maitr/routes.ts` steht dazu nur ein Kommentar. Wer im Client
+„Verbindung trennen" drückt, lässt die Token serverseitig aktiv.
+
+Das ist nicht bloß unschön: **Google fragt im OAuth-Antrag ausdrücklich, wie
+Nutzer den Zugriff widerrufen.** Diese Frage ist derzeit nicht wahrheitsgemäß
+zu beantworten — der Endpunkt gehört gebaut, *bevor* der Antrag rausgeht.
+
+- **C6.1** `DELETE /integrations/:provider` — Token löschen, Status auf
+  `REVOKED`, hinter `ownerGuard`
+- **C6.2** Beim Anbieter mit-widerrufen, nicht nur lokal vergessen
+  (Google `oauth2/revoke`, Meta `DELETE /{user-id}/permissions`)
+- **C6.3** Client verdrahten — der Knopf existiert, sein Gegenstück nicht
+- **C6.4** `[?]` Was passiert mit bereits geholten Bewertungen und
+  Reichweitendaten? Löschen oder behalten ist eine Entscheidung, keine
+  Programmierfrage
+
+### C7 — Das 30-Tage-Löschversprechen einlösen
+`client/pages/AGB.tsx` verspricht **öffentlich**, alle Nutzerdaten würden
+30 Tage nach Kündigung unwiderruflich gelöscht. Einen Job, der das tut, gibt es
+nicht — kein Treffer auf `purge`, `retention` oder `Aufbewahrung` im gesamten
+Serverbestand.
+
+- **C7.1** Entweder den Job bauen oder das Versprechen in der AGB ändern.
+  Beides ist vertretbar, der jetzige Zustand nicht
+- **C7.2** Falls Job: `server/maitr/scheduler.ts` ist der Ort. Achtung — er
+  läuft nur, wenn genau **eine** Instanz aktiv ist
+
+### C8 — Gesundheitsdaten im Personalmodul
+`Absence` mit `SICK_LEAVE` und `attachments` — das sind Atteste. Sie fallen
+unter Art. 9 DSGVO und brauchen besondere Schutzmaßnahmen nach § 22 Abs. 2
+BDSG. Im Code bisher nicht vorgesehen.
+
+- **C8.1** `[?]` Braucht das Produkt Krankmeldungen überhaupt? Die
+  billigste Lösung wäre, die Kategorie zu streichen
+- **C8.2** Falls ja: Zugriff einschränken, Anhänge getrennt und
+  verschlüsselt ablegen, Löschfrist festlegen
+
+*C6–C8 stammen aus dem Schreiben der Rechtstexte am 6.8. — sie fielen auf,
+weil der Text behaupten sollte, was der Code nicht tut.*
+
 ---
 
 ## D · Aufräumen
