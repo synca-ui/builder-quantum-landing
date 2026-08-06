@@ -6,14 +6,20 @@
  * der Server assembliert nur das Dataset und ruft dieselben reinen Funktionen wie
  * die Demo. Kein doppelter Code, kein Auseinanderlaufen.
  */
-import { Router } from "express";
+import { Router, type Request, type RequestHandler, type Response } from "express";
 import { z } from "zod";
 import { connectors, GOOGLE_OAUTH, META_OAUTH } from "@maitr/core/integrations";
 import type { FetchLike, OAuthConfig, ProviderId } from "@maitr/core/integrations";
 import type { DailyTask, Reservation as ApiReservation, Venue } from "@maitr/core/types";
 import { nextSubdomainCandidate, suggestSubdomain } from "../../shared/subdomain";
 import { prisma } from "../db/prisma";
-import { requireVenueAccess, resolveVenue, validateBody } from "./middleware";
+import {
+  requireVenueAccess,
+  resolveVenue,
+  validateBody,
+  type VenueRequest,
+  type VenueRolle,
+} from "./middleware";
 import {
   computeBriefing,
   computeTasks,
@@ -23,7 +29,29 @@ import {
 } from "./briefing";
 import { createState, encryptToken, verifyState } from "./security";
 import { maitrEnv } from "./env";
-import { asyncHandler } from "./asyncHandler";
+import { asyncHandler, type AsyncRequestHandler } from "./asyncHandler";
+import {
+  ganzzahl,
+  gastAnonymisieren,
+  istFehlendeLoyaltyTabelle,
+  istKartenFilter,
+  karteAusgeben,
+  karteEntwerten,
+  kartenDetail,
+  kartenEreignisse,
+  kartenListe,
+  praemieEinloesen,
+  programAendern,
+  programAnlegen,
+  programLesen,
+  SEITE_MAX,
+  SEITE_VORGABE,
+  stempelSetzen,
+  uebersicht,
+  VERLAUF_MAX,
+  VERLAUF_VORGABE,
+  type BuchungsErgebnis,
+} from "./stempelkarte";
 
 const DAY_MS = 86_400_000;
 
@@ -686,6 +714,415 @@ briefingRouter.patch(
 
     await invalidateBriefingCache(venueId);
     return res.json(withDecision(task, decision));
+  }),
+);
+
+/* ── Stempelkarte (Einstellungen, Karten, Hauptbuch) ─────────────────────── */
+
+export const loyaltyRouter = Router();
+
+/**
+ * Wie `asyncHandler`, plus die eine Antwort, die dieser Bereich zusätzlich braucht.
+ *
+ * Die Loyalty-Tabellen liegen als Migrationsdatei vor und sind nach heutigem Stand
+ * NICHT eingespielt (prisma/migrations/20260805_add_loyalty_wallet_whatsapp, dazu
+ * 20260806_add_stampcard_reward_snapshot). Bis ein Mensch das tut, antwortet Postgres
+ * mit 42P01. Das ist ein bekannter, vorübergehender Zustand - er gehört als 503 mit
+ * einem benennbaren Grund beantwortet, nicht als 500. Ein 500 sähe aus wie ein
+ * Absturz, und der Bildschirm könnte den Unterschied nicht machen: er würde einen
+ * "Erneut versuchen"-Knopf anbieten, der nie hilft.
+ *
+ * Nur für diesen Router. Alles andere fliegt unverändert an die Fehler-Middleware.
+ */
+function loyaltyHandler(handler: AsyncRequestHandler): RequestHandler {
+  return asyncHandler(async (req, res, next) => {
+    try {
+      return await handler(req, res, next);
+    } catch (err) {
+      if (!istFehlendeLoyaltyTabelle(err)) throw err;
+      console.warn(
+        `[maitr] Stempelkarte nicht eingerichtet (Migration eingespielt?) bei ` +
+          `${req.method} ${req.originalUrl}: ${(err as Error).message}`,
+      );
+      return res.status(503).json({ error: "loyalty_nicht_eingerichtet" });
+    }
+  });
+}
+
+/** Die geprüfte Betriebskennung. Nie aus Query, Pfad oder Rumpf. */
+function venueOf(req: Request): string {
+  return (req as VenueRequest).venueId!;
+}
+
+/** Die geprüfte Rolle in diesem Betrieb. Kommt aus der Mitgliedschaft, nie aus der Anfrage. */
+function rolleOf(req: Request): VenueRolle {
+  return (req as VenueRequest).venueRolle ?? "STAFF";
+}
+
+/**
+ * Nur der Inhaber.
+ *
+ * Die Rolle wird NICHT in `requireVenueAccess` erzwungen: dort hängen auch alle
+ * Lesewege und das Stempeln, und beides muss das Personal können. Erzwungen wird sie
+ * an genau den drei Zugriffen, die entweder eine Zusage an den Gast ändern oder
+ * unumkehrbar sind.
+ *
+ * Vorher hing alles am blossen Wahrheitswert „Mitglied ja/nein". `BusinessMember.role`
+ * hat den Vorgabewert STAFF, und eine Aushilfe konnte damit die Prämie auf „1x
+ * Leitungswasser" setzen, die Ausgabe neuer Karten abschalten, Karten entwerten und
+ * Gastdaten löschen - ohne Rollenriegel, ohne Log, ohne dass der Inhaber es erfährt.
+ *
+ * ADMIN ist mitgemeint: das ist die Plattformrolle, nicht eine Aushilfe.
+ */
+const ownerGuard: RequestHandler = (req, res, next) => {
+  const rolle = rolleOf(req);
+  if (rolle !== "OWNER" && rolle !== "ADMIN") {
+    return res.status(403).json({ error: "nur_inhaber" });
+  }
+  return next();
+};
+
+/**
+ * Die sechs Felder des Programms - und NUR sie.
+ *
+ * `.strict()` ist hier kein Feinschliff, sondern der Riegel: der geprüfte Rumpf geht
+ * als `data`-Block in den Schreibzugriff. Ohne `.strict()` rutschte ein
+ * mitgeschicktes `applePassTypeIdentifier` oder `googleClassId` direkt durch - und
+ * das sind genau die zwei Werte, die das Schema ausdrücklich vom Betrieb fernhält
+ * (falsche Pass Type ID = ein Pass, den keine Wallet kommentarlos öffnet; frei
+ * gesetzte googleClassId = geänderte Darstellung auf ausgelieferten Karten FREMDER
+ * Betriebe).
+ *
+ * `venueId` muss erlaubt bleiben: `resolveVenue` liest sie aus dem Rumpf, und
+ * `validateBody` läuft danach.
+ */
+const programFelder = {
+  name: z.string().trim().min(1).max(60),
+  maxStamps: z.number().int().min(1).max(50),
+  /**
+   * 60 Zeichen, nicht mehr: der Text steht auf dem Wallet-Pass, und Wallet
+   * schneidet Längeres kommentarlos ab - der Gast läse dann eine andere Zusage als
+   * der Wirt eingegeben hat.
+   */
+  rewardText: z.string().trim().min(1).max(60),
+  /** 0 = keine Sperre. Der Bildschirm bietet nur 1800/3600/14400/86400/0 an. */
+  cooldownSeconds: z.number().int().min(0).max(86_400),
+  validityDays: z.number().int().min(1).max(3650).nullable(),
+  isActive: z.boolean(),
+};
+
+const createProgramSchema = z
+  .object({ venueId: z.string().min(1), ...programFelder })
+  .strict();
+
+const patchProgramSchema = z
+  .object({
+    venueId: z.string().min(1).optional(),
+    name: programFelder.name.optional(),
+    maxStamps: programFelder.maxStamps.optional(),
+    rewardText: programFelder.rewardText.optional(),
+    cooldownSeconds: programFelder.cooldownSeconds.optional(),
+    validityDays: programFelder.validityDays.optional(),
+    isActive: programFelder.isActive.optional(),
+  })
+  .strict()
+  .refine((b) => Object.keys(b).some((k) => k !== "venueId"), {
+    message: "Keine Änderung angegeben",
+  });
+
+loyaltyRouter.get(
+  "/program",
+  venueGuard,
+  loyaltyHandler(async (req, res) => {
+    // Die Rolle geht MIT über die Grenze: sonst zeigt der Bildschirm die drei
+    // Inhaber-Knöpfe auch der Aushilfe an und macht damit eine Zusage, die der
+    // Server danach mit 403 bricht.
+    return res.json(await programLesen(venueOf(req), rolleOf(req)));
+  }),
+);
+
+loyaltyRouter.post(
+  "/program",
+  venueGuard,
+  // Legt die Zusage an den Gast überhaupt erst fest - derselbe Vorgang wie PATCH,
+  // nur beim ersten Mal. Wäre er offen, wäre der Rollenriegel am PATCH umgehbar,
+  // solange es noch kein Programm gibt.
+  ownerGuard,
+  validateBody(createProgramSchema),
+  loyaltyHandler(async (req, res) => {
+    const { name, maxStamps, rewardText, cooldownSeconds, validityDays, isActive } =
+      req.body as z.infer<typeof createProgramSchema>;
+    const ergebnis = await programAnlegen(venueOf(req), {
+      name,
+      maxStamps,
+      rewardText,
+      cooldownSeconds,
+      validityDays,
+      isActive,
+    });
+    if (ergebnis.art !== "ok") {
+      // Genau EIN Programm je Betrieb: es gibt keinen Scanpfad, der zwischen
+      // mehreren wählen könnte. Das vorhandene wird mitgeliefert, damit ein
+      // Doppeltipp keine Sackgasse ist.
+      return res
+        .status(409)
+        .json({ error: "programm_existiert_bereits", program: ergebnis.program });
+    }
+    return res.status(201).json({ program: ergebnis.program });
+  }),
+);
+
+loyaltyRouter.patch(
+  "/program/:programId",
+  venueGuard,
+  // Ändert die Zusage an den Gast (rewardText) und kann die Ausgabe neuer Karten
+  // abschalten. Nicht die Aufgabe einer Aushilfe.
+  ownerGuard,
+  validateBody(patchProgramSchema),
+  loyaltyHandler(async (req, res) => {
+    const { venueId: _ignoriert, ...aenderung } = req.body as z.infer<typeof patchProgramSchema>;
+    const ergebnis = await programAendern(
+      venueOf(req),
+      String(req.params.programId ?? ""),
+      aenderung,
+    );
+    if (ergebnis.art === "name_bereits_vergeben") {
+      return res.status(409).json({ error: "name_bereits_vergeben" });
+    }
+    if (ergebnis.art !== "ok") {
+      // Fremdes oder unbekanntes Programm - ununterscheidbar, mit Absicht.
+      return res.status(404).json({ error: "programm_nicht_gefunden" });
+    }
+    return res.json({ program: ergebnis.program, wirkung: ergebnis.wirkung });
+  }),
+);
+
+loyaltyRouter.get(
+  "/program/:programId/overview",
+  venueGuard,
+  loyaltyHandler(async (req, res) => {
+    const zahlen = await uebersicht(venueOf(req), String(req.params.programId ?? ""));
+    if (!zahlen) return res.status(404).json({ error: "programm_nicht_gefunden" });
+    return res.json(zahlen);
+  }),
+);
+
+loyaltyRouter.get(
+  "/program/:programId/cards",
+  venueGuard,
+  loyaltyHandler(async (req, res) => {
+    const roh = req.query.filter;
+    const filter = istKartenFilter(roh) ? roh : "alle";
+    const seite = await kartenListe(venueOf(req), String(req.params.programId ?? ""), {
+      filter,
+      versatz: ganzzahl(req.query.cursor, 0, 0, 100_000),
+      limit: ganzzahl(req.query.limit, SEITE_VORGABE, 1, SEITE_MAX),
+    });
+    if (!seite) return res.status(404).json({ error: "programm_nicht_gefunden" });
+    return res.json(seite);
+  }),
+);
+
+loyaltyRouter.get(
+  "/cards/:cardId",
+  venueGuard,
+  loyaltyHandler(async (req, res) => {
+    const karte = await kartenDetail(venueOf(req), String(req.params.cardId ?? ""));
+    if (!karte) return res.status(404).json({ error: "karte_nicht_gefunden" });
+    return res.json(karte);
+  }),
+);
+
+loyaltyRouter.get(
+  "/cards/:cardId/events",
+  venueGuard,
+  loyaltyHandler(async (req, res) => {
+    const items = await kartenEreignisse(
+      venueOf(req),
+      String(req.params.cardId ?? ""),
+      ganzzahl(req.query.limit, VERLAUF_VORGABE, 1, VERLAUF_MAX),
+    );
+    if (!items) return res.status(404).json({ error: "karte_nicht_gefunden" });
+    return res.json({ items });
+  }),
+);
+
+/* ── Stufe 2: damit überhaupt etwas in der Liste steht ───────────────────── */
+
+/**
+ * Karte ausgeben - entweder für einen bekannten Gast oder für einen neu erfassten.
+ *
+ * `guestId` UND `gast` zugleich wäre widersprüchlich und wird abgewiesen, statt sich
+ * still für eines zu entscheiden - dasselbe Prinzip wie bei `resolveVenue`.
+ */
+const createCardSchema = z
+  .object({
+    venueId: z.string().min(1),
+    guestId: z.string().min(1).optional(),
+    gast: z
+      .object({ name: z.string().trim().min(1).max(120), phone: z.string().trim().max(40).optional() })
+      .strict()
+      .optional(),
+  })
+  .strict()
+  .refine((b) => Boolean(b.guestId) !== Boolean(b.gast), {
+    message: "Entweder guestId oder gast angeben, nicht beides",
+  });
+
+const buchungSchema = z
+  .object({
+    venueId: z.string().min(1),
+    /** Vorgangsschlüssel des Geräts. Wiederholung desselben Vorgangs ist Erfolg. */
+    idempotencyKey: z.string().trim().min(8).max(120),
+    note: z.string().trim().max(280).optional(),
+    deviceLabel: z.string().trim().max(80).optional(),
+  })
+  .strict();
+
+const voidSchema = z
+  .object({ venueId: z.string().min(1), grund: z.string().trim().min(3).max(280) })
+  .strict();
+
+const venueOnlySchema = z.object({ venueId: z.string().min(1) }).strict();
+
+/** Buchungsergebnis → HTTP. An einer Stelle, damit die drei Pfade nicht auseinanderlaufen. */
+function buchungAntwort(res: Response, ergebnis: BuchungsErgebnis): Response {
+  switch (ergebnis.art) {
+    case "ok":
+      // Wiederholung ist ERFOLG, nicht 409: derselbe Vorgang zweimal geschickt
+      // heisst, das erste Piepen ging unter. Was zählt, ist der Zustand danach.
+      return res
+        .status(200)
+        .json({ karte: ergebnis.karte, wiederholung: ergebnis.wiederholung });
+    case "nicht_gefunden":
+      // Fremde oder unbekannte Karte - ununterscheidbar, mit Absicht.
+      return res.status(404).json({ error: "karte_nicht_gefunden" });
+    case "sperrfrist":
+      // "Ein Stempel pro Besuch". `frueheste` sagt dem Bildschirm, ab wann wieder.
+      return res.status(409).json({ error: "sperrfrist", frueheste: ergebnis.frueheste });
+    case "karte_nicht_aktiv":
+      return res.status(409).json({ error: "karte_nicht_aktiv", status: ergebnis.status });
+    case "praemie_nicht_erreicht":
+      return res.status(409).json({
+        error: "praemie_nicht_erreicht",
+        stand: ergebnis.stand,
+        benoetigt: ergebnis.benoetigt,
+      });
+    default:
+      // karte_abgelaufen | konflikt. Bei `konflikt` darf der Aufrufer denselben
+      // Vorgangsschlüssel schlicht wiederholen - die optimistische Sperre hat
+      // gegriffen, gebucht wurde nichts.
+      return res.status(409).json({ error: ergebnis.art });
+  }
+}
+
+loyaltyRouter.post(
+  "/cards",
+  venueGuard,
+  validateBody(createCardSchema),
+  loyaltyHandler(async (req, res) => {
+    const { guestId, gast } = req.body as z.infer<typeof createCardSchema>;
+    const ergebnis = await karteAusgeben(venueOf(req), {
+      guestId,
+      // Zod hat den Namen bereits als Pflichtfeld geprüft; ohne strictNullChecks
+      // führt `z.infer` ihn trotzdem als optional. Deshalb hier einmal festklopfen.
+      gast: gast ? { name: String(gast.name), phone: gast.phone } : undefined,
+    });
+    if (ergebnis.art === "gast_nicht_gefunden") {
+      return res.status(404).json({ error: "gast_nicht_gefunden" });
+    }
+    if (ergebnis.art === "karte_laeuft_bereits") {
+      // Der Gast sammelt schon. Die laufende Karte kommt mit, damit der Bildschirm
+      // sie öffnen kann, statt in einer Fehlermeldung zu enden.
+      return res
+        .status(409)
+        .json({ error: "karte_laeuft_bereits", kartenId: ergebnis.kartenId });
+    }
+    if (ergebnis.art !== "ok") return res.status(409).json({ error: ergebnis.art });
+    return res.status(201).json({ karte: ergebnis.karte });
+  }),
+);
+
+loyaltyRouter.post(
+  "/cards/:cardId/stamps",
+  venueGuard,
+  validateBody(buchungSchema),
+  loyaltyHandler(async (req, res) => {
+    const { idempotencyKey, note, deviceLabel } = req.body as z.infer<typeof buchungSchema>;
+    return buchungAntwort(
+      res,
+      await stempelSetzen(venueOf(req), String(req.params.cardId ?? ""), {
+        idempotencyKey,
+        note,
+        deviceLabel,
+        // Wer gestempelt hat, kommt aus der SITZUNG, nie aus dem Rumpf - sonst wäre
+        // die Missbrauchsprüfung, für die das Hauptbuch gebaut ist, wertlos.
+        staffUserId: req.userId ?? null,
+      }),
+    );
+  }),
+);
+
+loyaltyRouter.post(
+  "/cards/:cardId/redeem",
+  venueGuard,
+  validateBody(buchungSchema),
+  loyaltyHandler(async (req, res) => {
+    const { idempotencyKey, note, deviceLabel } = req.body as z.infer<typeof buchungSchema>;
+    return buchungAntwort(
+      res,
+      await praemieEinloesen(venueOf(req), String(req.params.cardId ?? ""), {
+        idempotencyKey,
+        note,
+        deviceLabel,
+        staffUserId: req.userId ?? null,
+      }),
+    );
+  }),
+);
+
+loyaltyRouter.post(
+  "/cards/:cardId/void",
+  venueGuard,
+  // UNUMKEHRBAR - nimmt dem Gast seinen gesammelten Stand.
+  ownerGuard,
+  validateBody(voidSchema),
+  loyaltyHandler(async (req, res) => {
+    const { grund } = req.body as z.infer<typeof voidSchema>;
+    return buchungAntwort(
+      res,
+      await karteEntwerten(venueOf(req), String(req.params.cardId ?? ""), grund, req.userId ?? null),
+    );
+  }),
+);
+
+/**
+ * "Daten dieses Gastes löschen" - als Anonymisierung, nie als DELETE.
+ *
+ * Weil maitr nur Auftragsverarbeiter ist, muss der BETRIEB die Anfrage seines
+ * Gastes selbst beantworten können; die Funktion gehört deshalb in seine Oberfläche
+ * und nicht in einen Support-Kanal.
+ *
+ * `req.userId` wird hier hart verlangt statt mit `?? null` weitergereicht:
+ * `AuditLog.userId` ist NOT NULL, und ein Protokolleintrag ohne Urheber wäre für
+ * genau den Fall wertlos, für den er geschrieben wird.
+ */
+loyaltyRouter.post(
+  "/guests/:guestId/anonymize",
+  venueGuard,
+  // Löscht die Kontaktdaten eines Gastes unumkehrbar - und damit den Kontext der
+  // Belege, die auf ihn zeigen.
+  ownerGuard,
+  validateBody(venueOnlySchema),
+  loyaltyHandler(async (req, res) => {
+    if (!req.userId) return res.status(401).json({ error: "Nicht angemeldet" });
+    const ergebnis = await gastAnonymisieren(
+      venueOf(req),
+      String(req.params.guestId ?? ""),
+      req.userId,
+    );
+    if (ergebnis.art !== "ok") return res.status(404).json({ error: "gast_nicht_gefunden" });
+    return res.status(204).end();
   }),
 );
 

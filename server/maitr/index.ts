@@ -14,6 +14,7 @@ import { requireAuth } from "../middleware/auth";
 import {
   briefingRouter,
   integrationsRouter,
+  loyaltyRouter,
   publicRouter,
   reservationsRouter,
   venuesRouter,
@@ -31,6 +32,10 @@ maitrRouter.use("/venues", venuesRouter);
 maitrRouter.use("/reservations", reservationsRouter);
 maitrRouter.use("/briefing", briefingRouter);
 maitrRouter.use("/integrations", integrationsRouter);
+// Stempelkarte. NACH `requireAuth`, jede Route zusätzlich hinter `venueGuard` -
+// es gibt hier keinen öffentlichen Einstieg. Der sitzungslose Apple-Wallet-Pfad
+// (GET /v1/passes/...) wäre der einzige, der das nicht könnte; den gibt es nicht.
+maitrRouter.use("/loyalty", loyaltyRouter);
 
 /**
  * Fehler-Middleware des Maitr-Routers. MUSS als Letztes am Router hängen — Express

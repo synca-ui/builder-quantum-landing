@@ -294,6 +294,18 @@ export function AccountScreen() {
             </Text>
           }
         />
+        {/* Gehört in diese Karte und nicht in die Löschen-Karte darunter: die
+            Stempelkarte ist eine Einstellung des Betriebs, wie Autopilot und Profil. */}
+        <ListRow
+          title="Stempelkarte"
+          meta="Prämie, Stempel, wer sammelt"
+          onPress={() => router.push("/stempelkarte")}
+          trailing={
+            <Text variant="numeric" tone="faint" style={{ fontSize: 22 }}>
+              ›
+            </Text>
+          }
+        />
       </ListCard>
 
       {/* Kontolöschung gehört sichtbar in den Kontobereich - Apple verlangt sie

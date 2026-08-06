@@ -65,12 +65,18 @@ export function GuestsScreen() {
           {guests.length} Gäste · {regulars} Stammgäste · deine Beziehung, nicht die der Plattform.
         </Text>
         <View style={{ flexDirection: "row", marginTop: 8 }}>
+          {/* Führt jetzt auf die echte Stempelkarte statt auf den alten
+              „Stammgast-Pass". Der rechnete aus `visits % 10` des lokalen
+              Demospeichers, zeigte fest verdrahtete „Freikaffees" statt der Prämie
+              des Wirts und meldete nach einem Tipp „Belohnung gesendet" - es ging
+              nie eine Anfrage raus. Zwei Treueprogramme nebeneinander, von denen
+              eines „gesendet" behauptet, sind schlechter als eines. */}
           <PillButton
-            label="Stammgast-Pass ›"
+            label="Stempelkarte ›"
             variant="ghost"
             size="compact"
             labelSize={14}
-            onPress={() => router.push("/loyalty")}
+            onPress={() => router.push("/stempelkarte")}
             style={{ paddingHorizontal: 0 }}
           />
         </View>

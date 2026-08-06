@@ -86,4 +86,316 @@ export const venues = {
   },
 };
 
+/* ── Stempelkarte ────────────────────────────────────────────────────────── */
+
+/**
+ * Die Formen der Stempelkarten-API. Bewusst HIER beschrieben und nicht aus dem
+ * Server importiert - `packages/core` ist die gemeinsame Sprache von Web und Mobile
+ * und darf nicht auf `server/` zeigen.
+ *
+ * Zur Vollständigkeit gehört, was NICHT hier steht: es gibt keinen `notify`- und
+ * keinen `broadcast`-Aufruf. Der Apple-Wallet-Push trägt keinen Text (er sagt dem
+ * Gerät nur "hol den Pass neu"), Google kennt für den hier verwendeten Passtyp
+ * keinen Benachrichtigungsschalter, und der Gast hat keine App. Ein Sendeknopf wäre
+ * eine Zusage, die kein Kanal einlöst - deshalb existiert er auch nicht als
+ * deaktivierter Knopf.
+ */
+export interface StampProgram {
+  id: string;
+  name: string;
+  maxStamps: number;
+  rewardText: string;
+  isActive: boolean;
+  cooldownSeconds: number;
+  /** `null` = die Karte verfällt nie. */
+  validityDays: number | null;
+  /** Abgeleitet; die Wallet-Kennungen selbst gehen nie über die Grenze. */
+  walletStatus: { apple: boolean; google: boolean };
+}
+
+/** Zustand des SERVERS, nicht des Programms: was für Wallet-Pässe noch fehlt. */
+export interface WalletBereitschaft {
+  /** Die Apple-Zugangsdaten sind hinterlegt. NICHT: "es gibt Pässe". */
+  apple: boolean;
+  google: boolean;
+  ready: boolean;
+  missing: string[];
+  /**
+   * Baut der Server überhaupt schon Wallet-Pässe? Heute: nein.
+   *
+   * Zwei Dimensionen, und der Bildschirm kannte nur eine. `apple: true` heisst
+   * ausschliesslich, dass die Umgebungsvariablen parsen - es gibt im Repo weder
+   * Passbau noch APNs-Client. Ohne dieses Feld stand am Bildschirm "Apple Wallet:
+   * eingerichtet" und "iPhone-Gäste sehen den neuen Stand", während auf keinem
+   * Gerät je ein Pass lag.
+   *
+   * Optional getippt, weil ein älterer Server das Feld nicht mitschickt; fehlt es,
+   * behandelt der Bildschirm es wie `false` - die vorsichtigere Richtung.
+   */
+  passausgabeGebaut?: boolean;
+}
+
+/** Rolle des Anfragenden im Betrieb. Bestimmt, welche Knöpfe der Server einlöst. */
+export type VenueRolle = "OWNER" | "STAFF" | "ADMIN";
+
+export interface StampGuest {
+  id: string;
+  /** Bei anonymisierten Gästen serverseitig durch "Gelöschter Gast" ersetzt. */
+  anzeigename: string;
+  geloescht: boolean;
+  istBeispiel: boolean;
+}
+
+export interface StampCardRow {
+  id: string;
+  stand: { current: number; max: number };
+  status: "ACTIVE" | "COMPLETED" | "REDEEMED" | "EXPIRED" | "VOIDED";
+  cycle: number;
+  letzterStempelAt: string | null;
+  gast: StampGuest;
+}
+
+export interface StampCardDetail {
+  id: string;
+  programId: string;
+  /** Aus dem Hauptbuch gerechnet - das Detail ist die Ansicht im Streitfall. */
+  stand: { current: number; max: number };
+  cacheStand: number;
+  status: StampCardRow["status"];
+  cycle: number;
+  redeemedCount: number;
+  rewardText: string;
+  rewardTextQuelle: "karte" | "programm";
+  ausgegebenAm: string;
+  gueltigBis: string | null;
+  vollSeit: string | null;
+  eingeloestAm: string | null;
+  gast: StampGuest;
+  walletGeraete: number;
+}
+
+export interface StampEventRow {
+  id: string;
+  createdAt: string;
+  kind: "EARNED" | "REDEEMED" | "CORRECTION" | "VOIDED";
+  delta: number;
+  balanceAfter: number;
+  source: "QR_SCAN" | "MANUAL" | "IMPORT" | "MOCK";
+  /** `null` = nicht mehr zuordenbar (Konto des Mitarbeiters gelöscht). */
+  staffName: string | null;
+  deviceLabel: string | null;
+  note: string | null;
+}
+
+export interface StampOverview {
+  gesamt: number;
+  aktiv: number;
+  /**
+   * Karten, die noch ein offenes Versprechen tragen (ACTIVE **und** COMPLETED).
+   *
+   * Genau die Menge, in die der Server bei einer Prämienänderung den alten Text
+   * festschreibt. Der Bildschirm warnt mit dieser Zahl - vorher stand dort `aktiv`,
+   * und die volle Karte des Gastes, der morgen seinen Kaffee abholt, fehlte in der
+   * Warnung, die es für sie gibt. `aktiv + voll` ist kein Ersatz: `voll` kommt aus
+   * dem Hauptbuch, `aktiv` aus dem Status, eine Karte kann in beiden stehen.
+   */
+  offeneKarten: number;
+  fastVoll: number;
+  voll: number;
+  eingeschlafen: number;
+  /** GÄSTE mit mehr als einer Karte - nicht die Zahl der Folgekarten. */
+  wiederkommer: number;
+  eingeloest30d: number;
+  medianTageBisVoll: number | null;
+  walletRegistrierteKarten: number;
+  cacheAbweichungen: number;
+}
+
+/** Was eine Programmänderung tatsächlich bewirkt hat - mit echten Zahlen. */
+export interface StampWirkung {
+  laufendeKarten: number;
+  praemieFestgeschrieben: number;
+  sofortWirksam: Array<"cooldownSeconds">;
+  nurFuerNeueKarten: Array<"maxStamps" | "rewardText" | "validityDays">;
+}
+
+export type StampCardFilter = "alle" | "fastvoll" | "voll" | "eingeschlafen";
+
+/**
+ * Kennungen im Pfad IMMER kodieren.
+ *
+ * Die Kennungen sind heute uuids, in denen kein Sonderzeichen vorkommt - deshalb
+ * fiel es nicht auf. Sie kommen aber aus einer Serverantwort und nicht aus einer
+ * Konstanten: ein `/` oder `?` darin verschöbe den Aufruf auf eine andere Route
+ * oder hängte einen Query-Parameter an, und das fiele erst im Betrieb auf.
+ */
+function teil(wert: string): string {
+  return encodeURIComponent(wert);
+}
+
+/**
+ * Die zwölf Pfade der Stempelkarte an EINER Stelle - und damit prüfbar.
+ *
+ * Anlass ist derselbe wie bei `client/lib/apiPaths.ts`: Pfade sind schlicht
+ * Zeichenketten, und weder Typecheck noch Build noch Testlauf bemerken einen
+ * Tippfehler darin. Der Vertragstest (`server/__tests__/apiContract.spec.ts`) prüfte
+ * bisher NUR die Weboberfläche; Mobile und `packages/core` hatten ihre Pfade roh im
+ * Funktionsrumpf stehen und waren davon nicht gedeckt. Ein Vertipper wäre erst im
+ * Betrieb aufgefallen.
+ *
+ * Die Kennungen laufen durch `teil()`: sie kommen aus einer Serverantwort, nicht aus
+ * einer Konstanten, und ein `/` darin verschöbe den Aufruf auf eine andere Route.
+ */
+export const LOYALTY_PFADE = {
+  programm: "/loyalty/program",
+  programmMitId: (programId: string) => `/loyalty/program/${teil(programId)}`,
+  uebersicht: (programId: string) => `/loyalty/program/${teil(programId)}/overview`,
+  kartenListe: (programId: string) => `/loyalty/program/${teil(programId)}/cards`,
+  karten: "/loyalty/cards",
+  karte: (cardId: string) => `/loyalty/cards/${teil(cardId)}`,
+  ereignisse: (cardId: string) => `/loyalty/cards/${teil(cardId)}/events`,
+  stempeln: (cardId: string) => `/loyalty/cards/${teil(cardId)}/stamps`,
+  einloesen: (cardId: string) => `/loyalty/cards/${teil(cardId)}/redeem`,
+  entwerten: (cardId: string) => `/loyalty/cards/${teil(cardId)}/void`,
+  gastAnonymisieren: (guestId: string) => `/loyalty/guests/${teil(guestId)}/anonymize`,
+} as const;
+
+export const loyalty = {
+  /** Programm, Wallet-Zustand und die eigene Rolle. `program: null` = noch nichts eingerichtet. */
+  program(venueId: string, signal?: AbortSignal) {
+    return request<{
+      program: StampProgram | null;
+      wallet: WalletBereitschaft;
+      /** Fehlt bei einem älteren Server; der Bildschirm behandelt das als "STAFF". */
+      rolle?: VenueRolle;
+    }>(LOYALTY_PFADE.programm, { query: { venueId }, signal });
+  },
+
+  /**
+   * Programm anlegen. 409 `programm_existiert_bereits`, wenn es schon eines gibt -
+   * das vorhandene liegt dann in `error.body.program`.
+   */
+  createProgram(input: {
+    venueId: string;
+    name: string;
+    maxStamps: number;
+    rewardText: string;
+    cooldownSeconds: number;
+    validityDays: number | null;
+    isActive: boolean;
+  }) {
+    return request<{ program: StampProgram }>(LOYALTY_PFADE.programm, {
+      method: "POST",
+      body: input,
+    });
+  },
+
+  /**
+   * Programm ändern. Nur die geänderten Felder schicken.
+   *
+   * Die Antwort trägt `wirkung` - damit der Bildschirm nach dem Speichern sagen
+   * kann, was tatsächlich passiert ist: wie viele Karten laufen, in wie viele davon
+   * der ALTE Prämientext festgeschrieben wurde (damit niemand rückwirkend eine
+   * andere Zusage bekommt) und welche Felder erst für neue Karten gelten.
+   */
+  updateProgram(
+    programId: string,
+    input: Partial<{
+      venueId: string;
+      name: string;
+      maxStamps: number;
+      rewardText: string;
+      cooldownSeconds: number;
+      validityDays: number | null;
+      isActive: boolean;
+    }>,
+  ) {
+    return request<{ program: StampProgram; wirkung: StampWirkung }>(
+      LOYALTY_PFADE.programmMitId(programId),
+      { method: "PATCH", body: input },
+    );
+  },
+
+  overview(venueId: string, programId: string, signal?: AbortSignal) {
+    return request<StampOverview>(LOYALTY_PFADE.uebersicht(programId), {
+      query: { venueId },
+      signal,
+    });
+  },
+
+  cards(
+    venueId: string,
+    programId: string,
+    optionen: { filter?: StampCardFilter; cursor?: string; limit?: number } = {},
+    signal?: AbortSignal,
+  ) {
+    return request<{ items: StampCardRow[]; nextCursor: string | null; abgeschnitten: boolean }>(
+      LOYALTY_PFADE.kartenListe(programId),
+      {
+        query: {
+          venueId,
+          filter: optionen.filter ?? "alle",
+          ...(optionen.cursor ? { cursor: optionen.cursor } : {}),
+          ...(optionen.limit ? { limit: String(optionen.limit) } : {}),
+        },
+        signal,
+      },
+    );
+  },
+
+  card(venueId: string, cardId: string, signal?: AbortSignal) {
+    return request<StampCardDetail>(LOYALTY_PFADE.karte(cardId), { query: { venueId }, signal });
+  },
+
+  events(venueId: string, cardId: string, limit?: number, signal?: AbortSignal) {
+    return request<{ items: StampEventRow[] }>(LOYALTY_PFADE.ereignisse(cardId), {
+      query: { venueId, ...(limit ? { limit: String(limit) } : {}) },
+      signal,
+    });
+  },
+
+  /** Karte ausgeben - für einen bekannten Gast ODER einen neu erfassten, nie beides. */
+  issueCard(input: { venueId: string; guestId?: string; gast?: { name: string; phone?: string } }) {
+    return request<{ karte: StampCardDetail }>(LOYALTY_PFADE.karten, { method: "POST", body: input });
+  },
+
+  /**
+   * Stempeln. `idempotencyKey` muss vom Gerät kommen und bei einem Wiederholversuch
+   * DERSELBE sein - dann antwortet der Server 200 mit `wiederholung: true` statt ein
+   * zweites Mal zu buchen. Ein neuer Schlüssel je Tipp hebt den Schutz auf.
+   *
+   * 409 `sperrfrist` trägt `frueheste` (ISO): so lange gilt "ein Stempel pro Besuch".
+   */
+  stamp(cardId: string, input: { venueId: string; idempotencyKey: string; note?: string; deviceLabel?: string }) {
+    return request<{ karte: StampCardDetail; wiederholung: boolean }>(
+      LOYALTY_PFADE.stempeln(cardId),
+      { method: "POST", body: input },
+    );
+  },
+
+  redeem(cardId: string, input: { venueId: string; idempotencyKey: string; note?: string }) {
+    return request<{ karte: StampCardDetail; wiederholung: boolean }>(
+      LOYALTY_PFADE.einloesen(cardId),
+      { method: "POST", body: input },
+    );
+  },
+
+  /** UNUMKEHRBAR. Gehört hinter eine Rückfrage mit Grund, nicht in eine Liste. */
+  voidCard(cardId: string, input: { venueId: string; grund: string }) {
+    return request<{ karte: StampCardDetail; wiederholung: boolean }>(
+      LOYALTY_PFADE.entwerten(cardId),
+      { method: "POST", body: input },
+    );
+  },
+
+  /**
+   * "Daten dieses Gastes löschen" = Anonymisierung. Karten und Hauptbuch bleiben
+   * stehen; sie gehören dem Betrieb und sind sein Nachweis im Streit- und
+   * Missbrauchsfall. Ein echtes Löschen gibt es bewusst nicht.
+   */
+  anonymizeGuest(guestId: string, input: { venueId: string }) {
+    return request<void>(LOYALTY_PFADE.gastAnonymisieren(guestId), { method: "POST", body: input });
+  },
+};
+
 export { ApiError } from "../http";

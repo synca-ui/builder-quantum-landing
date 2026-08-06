@@ -47,6 +47,12 @@ export function resolveVenueId(req: Request): string | null {
   return resolveVenue(req).venueId;
 }
 
+/** Die Rolle des Anfragenden IN diesem Betrieb. Siehe `requireVenueAccess`. */
+export type VenueRolle = "OWNER" | "STAFF" | "ADMIN";
+
+/** Anfrage mit den beiden Werten, die `requireVenueAccess` festschreibt. */
+export type VenueRequest = Request & { venueId?: string; venueRolle?: VenueRolle };
+
 export async function requireVenueAccess(req: Request, res: Response, next: NextFunction) {
   const { venueId, conflict } = resolveVenue(req);
   if (conflict) {
@@ -59,10 +65,20 @@ export async function requireVenueAccess(req: Request, res: Response, next: Next
 
   const membership = await prisma.businessMember.findUnique({
     where: { userId_businessId: { userId: req.userId, businessId: venueId } },
+    // Die Rolle wird jetzt mitgelesen. Vorher stand sie in der Zeile, wurde geladen
+    // und weggeworfen: `BusinessMember.role` hat den Vorgabewert STAFF, und jeder
+    // Schreibpfad hing allein am Wahrheitswert „Mitglied ja/nein". Eine Aushilfe
+    // konnte damit die Prämie ändern, Karten entwerten und Gastdaten löschen.
+    select: { role: true },
   });
   if (!membership) return res.status(403).json({ error: "Kein Zugriff auf diesen Betrieb" });
 
-  (req as Request & { venueId?: string }).venueId = venueId;
+  const angereichert = req as VenueRequest;
+  angereichert.venueId = venueId;
+  // Hier wird NICHTS erzwungen. Hinter diesem Guard hängen auch alle Lesewege und
+  // das Stempeln - beides muss das Personal können. Wer eine Rolle verlangt, setzt
+  // dafür einen zweiten, benannten Guard davor (siehe `ownerGuard` in routes.ts).
+  angereichert.venueRolle = (membership as { role?: VenueRolle })?.role ?? "STAFF";
   return next();
 }
 

@@ -1395,6 +1395,25 @@ model StampCard {
   currentStamps Int             @default(0)
   /// Snapshot aus StampProgram.maxStamps zum Zeitpunkt der Ausgabe.
   maxStamps     Int             @default(10)
+  /// Snapshot aus StampProgram.rewardText zum Zeitpunkt der Ausgabe. Gleiche
+  /// Begruendung wie maxStamps eine Zeile hoeher, nur fuer den Text der Zusage:
+  /// aendert der Wirt die Praemie von "1x Kaffee gratis" auf "1x Espresso", darf
+  /// das nicht rueckwirkend die Zusage an den Gast aendern, der schon 10 von 10 hat
+  /// und morgen seinen Kaffee abholen wollte.
+  ///
+  /// NULLBAR NUR WEGEN DER MIGRATION AUF GEFUELLTER TABELLE - fachlich ist der Wert
+  /// ab der Ausgabe gesetzt. Lesen deshalb IMMER als
+  /// `card.rewardText ?? program.rewardText`. Und weil dieser Rueckfall sonst genau
+  /// die Rueckwirkung waere, die das Feld verhindern soll, schreibt der
+  /// Aenderungspfad (PATCH /loyalty/program) den ALTEN Programmtext vorher in jede
+  /// laufende Karte, die noch NULL traegt, bevor er den neuen speichert.
+  ///
+  /// FOLGE, DIE DEN WALLET-PFAD VEREINFACHT: Weil der Pass den Snapshot der Karte
+  /// zeigt, loest eine Praemienaenderung KEIN Pass-Update aus. Ohne das Feld
+  /// muessten contentChangedAt und passUpdateSeq jeder betroffenen Karte
+  /// fortgeschrieben und alle Paesse gepusht werden - sonst antwortet der Server
+  /// dauerhaft 304 und der Gast sieht wochenlang die alte Praemie.
+  rewardText    String?
   redeemedCount Int             @default(0)
   status        StampCardStatus @default(ACTIVE)
   /// Optimistische Sperre. Der Stempelpfad schreibt `update where { id, version }`

@@ -1,0 +1,59 @@
+-- Migration: Praemientext als Snapshot auf der Stempelkarte
+-- Datum: 2026-08-06
+-- Zweck: StampCard bekommt eine eigene Spalte "rewardText". Bisher stand der Text
+--        der Praemie AUSSCHLIESSLICH auf StampProgram (schema.prisma, eine einzige
+--        Fundstelle). Damit aendert der Wirt mit "Praemie aendern" rueckwirkend die
+--        Zusage an JEDEN Gast, der bereits sammelt - auch an den, der 10 von 10 hat
+--        und morgen seinen Kaffee abholen wollte. maxStamps hat aus genau diesem
+--        Grund seit der ersten Fassung einen Snapshot auf der Karte; fuer rewardText
+--        war derselbe Gedanke nicht zu Ende gefuehrt.
+--
+-- Erzeugt mit (lokal, OHNE Datenbankverbindung - die Produktionsdatenbank wurde
+-- nicht angefasst):
+--   npx prisma migrate diff --from-schema-datamodel <schema auf HEAD> \
+--                           --to-schema-datamodel prisma/schema.prisma --script
+--
+-- ═══ EINSPIELREIHENFOLGE ══════════════════════════════════════════════════════
+-- 1. 20260805_add_whatsapp_provider/migration.sql
+-- 2. 20260805_add_loyalty_wallet_whatsapp/migration.sql   (legt "StampCard" ueberhaupt an)
+-- 3. DIESE Datei
+-- 4. ERST DANACH der Merge nach main / das Deploy.
+--
+-- Punkt 2 ist keine Formalie: Ohne ihn existiert die Tabelle "StampCard" nicht und
+-- dieses Skript endet mit 42P01. Nach heutigem Stand ist Punkt 2 NICHT eingespielt
+-- (kein "Migration eingespielt"-Commit nach 6d2d508, kein `prisma migrate deploy` in
+-- package.json oder .github/). Solange das so ist, antworten die neuen
+-- Loyalty-Endpunkte mit 503 "loyalty_nicht_eingerichtet" statt mit 500 - siehe
+-- istFehlendeLoyaltyTabelle() in server/maitr/stempelkarte.ts.
+--
+-- ═══ WAS HIER HANDGESCHRIEBEN IST ═════════════════════════════════════════════
+-- Nichts an der Struktur. Ergaenzt sind nur die beiden Timeouts unten; sie stehen
+-- in jeder Migrationsdatei dieses Verzeichnisses und begrenzen den Schaden, falls
+-- eine lange Transaktion die Tabelle gerade haelt.
+--
+-- BEWUSST KEIN BACKFILL: Ein "UPDATE StampCard SET rewardText = <Programmtext>"
+-- steht NICHT hier. Zwei Gruende. Erstens ist die Tabelle heute leer - es gibt im
+-- ganzen Repo keinen Pfad, der je eine Karte angelegt haette, es faellt also kein
+-- einziger Datensatz auf den Rueckfall. Zweitens gehoert das Fuellen fachlich in
+-- den Aenderungspfad und nicht in die Migration: PATCH /loyalty/program schreibt den
+-- ALTEN Programmtext in jede laufende Karte, die noch NULL traegt, BEVOR es den
+-- neuen speichert (server/maitr/stempelkarte.ts, praemieFestschreiben). Ein
+-- Backfill hier waere zum Einspielzeitpunkt richtig und danach nie wieder.
+--
+-- ═══ SICHERHEIT AUF EINER GEFUELLTEN DATENBANK ════════════════════════════════
+-- Additiv und nullbar, ohne Default. Postgres schreibt dabei keine Zeile um und
+-- braucht keinen Tabellenscan; die Anweisung ist ein reiner Katalogeintrag und
+-- haelt die ACCESS EXCLUSIVE-Sperre nur fuer Sekundenbruchteile.
+-- Kein DROP, kein ALTER COLUMN, kein SET NOT NULL, kein RENAME, kein neuer Index.
+--
+-- ═══ VERTRAEGLICHKEIT MIT DEM LAUFENDEN CODE ══════════════════════════════════
+-- Der ALTE Client kennt die Spalte nicht und schreibt ausgeschriebene Spaltenlisten
+-- (nie SELECT *) - er sieht sie also schlicht nicht. Deshalb ist diese Datei VOR dem
+-- Deploy einspielbar, ohne irgendetwas zu stoeren. Andersherum (Code zuerst) wuerde
+-- jede Loyalty-Abfrage mit 42703 enden.
+
+SET lock_timeout = '3s';
+SET statement_timeout = '60s';
+
+-- AlterTable
+ALTER TABLE "StampCard" ADD COLUMN     "rewardText" TEXT;

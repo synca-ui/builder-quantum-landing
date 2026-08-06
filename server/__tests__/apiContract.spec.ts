@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { createServer } from "../index";
 import { API_PATHS } from "../../client/lib/apiPaths";
+import { LOYALTY_PFADE } from "../../packages/core/src/api";
 
 /** Wandelt die Regex eines gemounteten Routers zurück in sein Pfad-Präfix. */
 function prefixFromLayer(layer: any): string {
@@ -79,6 +80,35 @@ describe("API-Vertrag zwischen Client und Server", () => {
       ).toBe(true);
     },
   );
+
+  /**
+   * Die Stempelkarte lief bisher an diesem Test vorbei.
+   *
+   * Geprüft wurde ausschliesslich `client/lib/apiPaths.ts` (Web). Mobile und
+   * `packages/core` hatten ihre zwölf Loyalty-Pfade roh im Funktionsrumpf stehen -
+   * ein Tippfehler darin wäre erst im Betrieb aufgefallen, und zwar am Tresen.
+   * Seit sie in `LOYALTY_PFADE` liegen, sind sie hier prüfbar.
+   */
+  it.each(
+    Object.entries(LOYALTY_PFADE).map(([name, wert]) => {
+      const pfad =
+        typeof wert === "function" ? wert("__id__").replace("__id__", ":id") : (wert as string);
+      return [name, pfad] as const;
+    }),
+  )("loyalty.%s (%s) existiert serverseitig", (_name, pfad) => {
+    // Der Loyalty-Router hängt unter /api/maitr; die Kennung heisst dort je nach
+    // Route :programId, :cardId oder :guestId.
+    const kandidaten = [":programId", ":cardId", ":guestId"].map(
+      (param) => `/api/maitr${pfad.replace(":id", param)}`,
+    );
+    const vorhanden = routes.some((r) => kandidaten.includes(r));
+
+    expect(
+      vorhanden,
+      `Pfad "${pfad}" aus packages/core/src/api ist serverseitig nicht registriert.\n` +
+        `Bekannte Routen:\n  ${routes.sort().join("\n  ")}`,
+    ).toBe(true);
+  });
 
   it("der frühere Fehlpfad /api/apps/publish existiert weiterhin NICHT", () => {
     // Absicherung gegen einen Rückfall: Wäre er da, hätte jemand den Router
