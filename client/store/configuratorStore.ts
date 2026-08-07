@@ -121,6 +121,16 @@ interface ConfiguratorState {
 
   // Actions: Content Domain
   addMenuItem: (item: MenuItem) => void;
+  /**
+   * Mehrere Gerichte in EINEM Zustandswechsel anhaengen.
+   *
+   * Notwendig, nicht bequem: checkThrottleGuard wirft ab 50 Aenderungen je
+   * Sekunde. Wer eine erkannte Karte mit 124 Gerichten in einer Schleife
+   * einzeln anhaengt, bricht ab dem 51. mit "Infinite loop detected" ab —
+   * genau bei den grossen Karten, bei denen die Erkennung am meisten spart.
+   * Nebenbei: ein Neuzeichnen statt hundert.
+   */
+  addMenuItems: (items: MenuItem[]) => void;
   removeMenuItem: (id: string) => void;
   updateMenuItem: (id: string, updates: Partial<MenuItem>) => void;
   addGalleryImage: (image: GalleryImage) => void;
@@ -128,6 +138,12 @@ interface ConfiguratorState {
   removeGalleryImage: (id: string) => void;
   updateOpeningHours: (hours: OpeningHours) => void;
   setCategories: (categories: string[]) => void;
+  /**
+   * Bedeutung der Allergen-Kuerzel, wie die Karte des Betriebs sie angibt.
+   * Wird beim Erkennen einer hochgeladenen Karte mitgeliefert und ist je
+   * Betrieb verschieden — deshalb Teil der Konfiguration und keine Konstante.
+   */
+  setAllergenLegend: (legend: Record<string, string>) => void;
 
   // Actions: Features Domain
   updateFeatureFlags: (flags: Partial<FeatureFlags>) => void;
@@ -576,6 +592,21 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }));
       },
 
+      addMenuItems: (neue) => {
+        if (!Array.isArray(neue) || neue.length === 0) return;
+        checkThrottleGuard("addMenuItems");
+        set((state) => ({
+          content: {
+            ...state.content,
+            menuItems: [...state.content.menuItems, ...neue],
+          },
+          publishing: {
+            ...state.publishing,
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+      },
+
       removeMenuItem: (id) => {
         checkThrottleGuard("removeMenuItem");
         set((state) => ({
@@ -667,6 +698,22 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         checkThrottleGuard("setCategories");
         set((state) => ({
           content: { ...state.content, categories },
+          publishing: {
+            ...state.publishing,
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+      },
+
+      setAllergenLegend: (legend) => {
+        checkThrottleGuard("setAllergenLegend");
+        set((state) => ({
+          // Zusammenfuehren statt ersetzen: Wer zwei Karten hochlaedt (Speisen
+          // und Getraenke), soll nicht die Legende der ersten verlieren.
+          content: {
+            ...state.content,
+            allergenLegend: { ...(state.content.allergenLegend ?? {}), ...legend },
+          },
           publishing: {
             ...state.publishing,
             updatedAt: new Date().toISOString(),
@@ -1112,6 +1159,7 @@ export const useConfiguratorActions = () => {
       },
       content: {
         addMenuItem: store.addMenuItem,
+        addMenuItems: store.addMenuItems,
         removeMenuItem: store.removeMenuItem,
         updateMenuItem: store.updateMenuItem,
         addGalleryImage: store.addGalleryImage,
@@ -1119,6 +1167,7 @@ export const useConfiguratorActions = () => {
         removeGalleryImage: store.removeGalleryImage,
         updateOpeningHours: store.updateOpeningHours,
         setCategories: store.setCategories,
+        setAllergenLegend: store.setAllergenLegend,
       },
       features: {
         updateFeatureFlags: store.updateFeatureFlags,

@@ -20,6 +20,26 @@ Machbarkeit ist noch nicht geprüft — das passiert vor dem Bauen, nicht danach
 - **A1.5** Kein Bild anzeigen, wenn keins vorhanden ist. Die Detailkarte eines
   Gerichts darf keinen leeren Bildrahmen zeigen
 
+> **Stand 7.8.2026 — die Erkennung strukturiert jetzt mit einem Modell.**
+> Gemessen auf der Prüfmenge (13 Karten, gegen die nie optimiert wurde):
+>
+> | | gefunden | erfunden | Varianten falsch | Kennzeichnung |
+> |---|---|---|---|---|
+> | Regeln allein | 54 % | 39 % | 71/122 | 9 % |
+> | **Haiku 4.5** | **98 %** | **1 %** | **31/122** | 101 % |
+> | Sonnet 5 | 99 % | 2 % | 53/122 | 100 % |
+>
+> Das trägt A1.1, A1.2 und A1.3 gemeinsam — Varianten und Kennzeichnungen waren
+> die beiden teuersten Einzelposten. Umgesetzt in
+> `server/services/menuStructure.ts`; die Regeln bleiben als Rückfall ohne
+> Schlüssel. Kosten rund 0,03 US-Dollar je Karte.
+>
+> **Offen:** Der Bildpfad schreibt weiter mit Opus 5 ab
+> (`server/services/ocr/anthropic.ts`). Seit die Strukturierung dahinter liegt,
+> muss die Abschrift nur noch richtige Zeichen liefern — ein günstigeres Modell
+> genügt vermutlich. Nicht umgestellt, weil nicht gemessen: Die Messung betraf
+> das Strukturieren von Text, nicht das Abschreiben von Bildern.
+
 ### A2 — Bedienbarkeit des Ergebnisses
 - **A2.1** Alle Kategorien einblendbar — aktuell steht „6 mehr", nicht anklickbar
 - **A2.2** Menü direkt im Konfigurator anpassbar
@@ -66,19 +86,59 @@ Machbarkeit ist noch nicht geprüft — das passiert vor dem Bauen, nicht danach
 
 ## C · App
 
-### C1 — Onboarding. **Kritisch.**
-- **C1.1** Onboarding ist derzeit reiner Platzhalter ohne Funktion
-- **C1.2** Vollständig prüfen und zum Laufen bringen
-- **C1.3** Eventuell mehr Schritte einfügen
+### C1 — Onboarding. **erledigt 7.8.**
+- **C1.1** ~~Reiner Platzhalter~~ Der Kern war nicht der Bildschirm, sondern die
+  Weiche: `app/index.tsx` schickte **jeden** Angemeldeten nach `/start`. Ein
+  neuer Wirt landete in den Beispieldaten von „Café Goldstück", das Onboarding
+  war von der Oberfläche aus gar nicht erreichbar. Jetzt entscheidet
+  `einstiegsWeiche()` — mit einem **Wartezustand**, statt bei noch laufender
+  `GET /venues`-Abfrage zu raten
+- **C1.2** ~~Prüfen und zum Laufen bringen~~ Vier Schritte, jeder gegen echte
+  Endpunkte: Betrieb (`POST /venues`), Google (echte OAuth-URL, Beleg über
+  `GET /integrations` — dem `status=connected` im Rücksprung wird **nicht**
+  geglaubt), Zeiten (`PATCH /venues/:venueId`), Abschluss mit Häkchen nur für
+  serverseitig Belegtes
+- **C1.3** ~~Eventuell mehr Schritte~~ Im Gegenteil: von sieben erfundenen auf
+  vier echte. Die alte Journey ist **gelöscht**, nicht repariert — sie rief am
+  Ende `signIn()` ohne Clerk-Sitzung und hinterließ ein Konto, das keines war
+- **Neu dabei behoben:** `PATCH /venues/:venueId` gab es nicht; `openingHours`
+  war unbegrenzt und trat über die **unangemeldete** Route wieder aus (gemessen:
+  509 KB); Öffnung über Mitternacht war unmöglich gemacht; für „sonntags
+  geschlossen" mussten zwei Uhrzeiten erfunden werden
 
-### C2 — Anmeldung
-- **C2.1** Clerk-Login prüfen. *Teilweise erledigt: Native API ist an, der Login
-  lädt ohne Fehler. Der Weg **nach** der Anmeldung ist ungeprüft, weil in
-  Produktion noch kein Betrieb existiert*
+### C2 — Anmeldung. **erledigt 7.8.**
+- **C2.1** ~~Der Weg nach der Anmeldung ist ungeprüft~~ Beim Prüfen ein Loch in
+  C1 gefunden: `login.tsx` navigierte nach erfolgreichem Clerk-Login **direkt**
+  nach `/start` — an allen drei Stellen. Die Weiche in `app/index.tsx` läuft aber
+  nur, wenn jemand auf `/` landet. Ein frisch angemeldeter Wirt sah damit trotz
+  fertigem Onboarding weiterhin „Café Goldstück" — durch eine andere Tür.
+  Alle drei Wege gehen jetzt über `/`, die Weiche entscheidet.
+  **Die Lehre, größer als der Fehler:** Eine Weiche taugt nur, wenn *jeder* Weg
+  durch sie führt. Wer neben ihr einen zweiten Eingang stehen lässt, hat sie
+  nicht gebaut, sondern nur hingestellt.
+- **`[?]` Bleibt offen und ist nicht durch Code lösbar:** Ein echter Durchlauf
+  Anmeldung → Betrieb → Start ist erst möglich, wenn in Produktion ein Konto
+  existiert. `Business` hat dort weiterhin 0 Zeilen
 
-### C3 — Navigation
-- **C3.1** Zurück-Buttons prüfen — manche führen zur Startseite, obwohl sie es
-  nicht sollten
+### C3 — Navigation. **erledigt 7.8., eine Prüfung am Gerät offen**
+- **C3.1** ~~Zurück-Buttons prüfen~~ Ursache gefunden und behoben.
+  `app/_layout.tsx` setzt `unstable_settings.initialRouteName: "(tabs)"` — das
+  ist ein **Anker**: Öffnet die App direkt auf einem gepushten Bildschirm
+  (Deep-Link, Kaltstart, Benachrichtigung), legt expo-router `(tabs)` darunter,
+  und `(tabs)` ankert auf `start`. `canGoBack()` meldet dann `true`, `back()`
+  landet auf der **Startseite**, und der an den Bildschirmen gepflegte
+  `fallback` wurde **nie** gefragt — er galt nur für den `false`-Fall.
+  Die Entscheidung liegt jetzt in `components/ui/rueckweg.ts` und ist geprüft
+  (6 Fälle, Gegenprobe gefahren): Ankerfall → Elternbildschirm, echter Verlauf
+  behält Vorrang, unbekannte Stapeltiefe verhält sich wie bisher.
+  Nebenbefund mit behoben: sechs Bildschirme überschrieben den Rückweg mit
+  `onBack={() => router.back()}` — das ist die Vorgabe *minus* Ankerprüfung und
+  Elternbildschirm, also strikt schlechter. Drei weitere hatten gar keinen
+  Elternbildschirm hinterlegt.
+- **`[?]` Offen:** Dass die Stapeltiefe im Ankerfall wirklich 2 ist, ist aus dem
+  Verhalten von expo-router abgeleitet, **nicht am Gerät gemessen**. Ein
+  Deep-Link-Test auf `/stempelkarte/<id>` und `/kanal/<id>` bestätigt oder
+  widerlegt es in fünf Minuten
 
 ### C4 — Zweck schärfen
 - **C4.1** Übernimmt die App wirklich alle Aufgaben des Google Business Profiles

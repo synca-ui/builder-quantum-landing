@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { openCookieSettings } from "@/components/cookie-banner";
+import { HeaderAuthGate, HeaderAuthButton } from "@/components/HeaderAuth";
 const MaitrWorkflowAnimation = lazy(
   () => import("@/components/MaitrWorkflowAnimation"),
 );
@@ -227,6 +228,10 @@ const Navigation = () => {
   ];
 
   return (
+    // Ein einziger Clerk-Rahmen für beide Anmeldeknöpfe (Kopf und mobiles
+    // Menü). Er zeichnet seine Kinder sofort und lädt Clerk erst im Leerlauf —
+    // Begründung in client/components/HeaderAuth.tsx.
+    <HeaderAuthGate>
     <nav
       aria-label="Hauptnavigation"
       className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
@@ -282,29 +287,15 @@ const Navigation = () => {
 
           <div className="hidden md:flex items-center space-x-3">
             {/*
-              Ein Ziel, das BEIDE Fälle trägt, statt eines Platzhalters, der
-              nach dem Laden von Clerk umspringt: Wer angemeldet ist, landet
-              direkt im Dashboard; wer es nicht ist, wird von dort zur Anmeldung
-              geschickt (RequireAuth in client/App.tsx). Der Kopf braucht den
-              Anmeldezustand damit im ersten Render überhaupt nicht — genau das
-              hält @clerk/clerk-react aus dem Ladepfad der Startseite heraus.
+              Der Clerk-Knopf, aber erst nach dem ersten Zeichnen: bis dahin
+              steht der gleich große Platzhalter, der ebenfalls zur Anmeldung
+              führt. Begründung und Maße in client/components/HeaderAuth.tsx.
 
-              Vorher standen hier zwei Knöpfe ("Log in" / "Sign up") hinter
-              einer <Suspense>-Grenze, die React beim allerersten Render auflöst.
-              Der Kommentar weiter oben behauptete eine Einsparung, die deshalb
-              nie eintrat: der Chunk wurde bei jedem Seitenaufruf geladen.
-              Anmelden bleibt über dieses Ziel erreichbar, Registrieren über den
-              Hauptknopf daneben.
+              Damit gilt beides: der Anmeldezustand ist im Kopf wieder sichtbar
+              (angemeldet = eigener Avatar), und @clerk/clerk-react bleibt aus
+              dem Ladepfad der Startseite heraus.
             */}
-            <a href="/dashboard">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="font-bold text-gray-700 hover:text-teal-600"
-              >
-                Mein Bereich
-              </Button>
-            </a>
+            <HeaderAuthButton />
             <a href="/mode-selection">
               <Button
                 size="sm"
@@ -348,7 +339,13 @@ const Navigation = () => {
 
       <div
         id="mobile-menu"
-        className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"}`}
+        /*
+         * max-h-96 statt max-h-64: Der Anmeldeknopf ist als sechste Zeile
+         * dazugekommen und lag mit 256px Deckel ausserhalb des Sichtfensters —
+         * durch overflow-hidden unsichtbar UND unerreichbar. Wer den Deckel
+         * hier anfasst, muss die Zahl der Zeilen im Menue mitzaehlen.
+         */
+        className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
       >
         <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
           <div className="px-4 py-4 space-y-2">
@@ -369,16 +366,13 @@ const Navigation = () => {
             ))}
 
             <div className="pt-2 border-t border-gray-200/50 space-y-2">
-              {/* Gleiches Ziel wie im Desktop-Kopf, siehe Begründung dort. */}
-              <a href="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-center font-bold text-gray-700 hover:text-teal-600"
-                >
-                  Mein Bereich
-                </Button>
-              </a>
+              {/* Gleicher Knopf wie im Desktop-Kopf, siehe Begründung dort. */}
+              <div
+                className="flex justify-center py-1"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <HeaderAuthButton />
+              </div>
 
               <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
                 <Button
@@ -398,6 +392,7 @@ const Navigation = () => {
       </div>
 
     </nav>
+    </HeaderAuthGate>
   );
 };
 

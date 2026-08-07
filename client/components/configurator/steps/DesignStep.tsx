@@ -44,7 +44,11 @@ const FONT_OPTIONS = [
     description: "Traditionell und anspruchsvoll",
   },
   {
-    id: "mono",
+    // "monospace", nicht "mono": Das Zod-Schema des Servers
+    // (server/schemas/configuration.ts) laesst nur sans-serif|serif|monospace
+    // zu. Mit "mono" scheiterte jedes manuelle Speichern an HTTP 400 — still,
+    // weil der Fehler nur geloggt wurde.
+    id: "monospace",
     name: "Display",
     class: "font-mono",
     preview: "Bold & Kreativ",

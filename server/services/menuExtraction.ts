@@ -13,9 +13,15 @@
  *            nichts hergibt, die Texterkennung. Viele Karten sind abfotografiert
  *            und enthalten gar keinen Text – dann führt nur sie zum Ziel.
  */
-import { parseMenuText, menuQuality, type ParsedMenuItem } from "../../shared/menuParser";
+import {
+  parseMenuText,
+  menuQuality,
+  parseAllergenLegend,
+  type ParsedMenuItem,
+} from "../../shared/menuParser";
 import { safeFetch, SafeFetchError } from "./safeFetch";
 import { transcribeDocument, ocrConfigured, MAX_DOCUMENT_BYTES } from "./ocr";
+import { structureMenuText, menuStructureConfigured } from "./menuStructure";
 
 export type MenuSource =
   | "html_jsonld"
@@ -30,6 +36,16 @@ export interface MenuExtractionResult {
   source: MenuSource;
   /** Für die Fehlersuche und die Anzeige: was ist tatsächlich passiert. */
   diagnostics: string[];
+  /**
+   * Was die Kürzel an den Gerichten bedeuten — so, wie DIESE Karte es angibt:
+   * { "a1": "Weizen", "f": "Milch/Laktose" }.
+   *
+   * Ohne sie steht in der Web-App "(a1, f)", und das ist für einen Gast mit
+   * einer Unverträglichkeit wertlos. Eine feste Tabelle scheidet aus: Die
+   * Zuordnung ist je Karte verschieden — beim Landgasthof zum Löwen ist "f"
+   * die Milch, bei der Kneipe am Kirchplatz ist Milch "g".
+   */
+  allergenLegend?: Record<string, string>;
 }
 
 /** Speisekarten sind selten größer; darüber ist etwas anderes verlinkt. */
@@ -188,15 +204,17 @@ export function htmlToText(html: string): string {
 }
 
 /**
- * Holt den eingebetteten Text aus einem PDF, ohne fremde Bibliothek.
+ * Notnagel: liest NUR unkomprimierte Textblöcke, ohne fremde Bibliothek.
  *
- * Bewusst schlicht: Es geht nur um die Frage, ob überhaupt Text drinsteckt.
- * Liefert das zu wenig, übernimmt die Texterkennung – und die ist bei
- * abfotografierten Karten ohnehin der einzige Weg.
+ * Das war bis zum 7.8.2026 der einzige Weg – und der Grund, aus dem KEINE
+ * einzige echte PDF-Speisekarte erkannt wurde. Gemessen an 7 echten Karten von
+ * deutschen Gasthof-Websites: alle sieben ergaben null Gerichte, weil ihr Text
+ * FlateDecode-komprimiert ist (das ist bei realen PDFs die Regel, nicht die
+ * Ausnahme). Anschließend rief die Kette bezahltes OCR – für Text, der lokal
+ * vollständig lesbar war.
  *
- * Nur unkomprimierte Textblöcke werden gelesen (FlateDecode bräuchte zlib über
- * dem ganzen Objektbaum). Das ist Absicht: ein halbgares Ergebnis wäre
- * schlimmer als gar keines, weil dann die Erkennung übersprungen würde.
+ * Steht nur noch als Rückfall hinter readPdfText, für den Fall, dass pdf.js
+ * ein PDF gar nicht öffnen kann.
  */
 export function extractPdfText(pdf: Buffer): string {
   const raw = pdf.toString("latin1");
@@ -224,6 +242,117 @@ export function extractPdfText(pdf: Buffer): string {
     .trim();
 }
 
+/**
+ * Liest den Text eines PDFs – der Weg, der bei echten Karten trägt.
+ *
+ * Nimmt pdf.js (über unpdf). Das ist keine Bequemlichkeit, sondern das
+ * Ergebnis eines gescheiterten Eigenbaus: Ein selbst geschriebener Leser
+ * bekommt zwar die Streams mit zlib ausgepackt und die Zeilen über die
+ * Tm-Koordinaten zusammengesetzt, verliert aber jeden Textlauf, der in einer
+ * zweiten Schrift mit eigener Kodierung steht. Auf der ersten echten Karte
+ * fehlten dadurch genau der Restaurantname ("„ZUR POST“"), jedes Gericht mit
+ * Anführungszeichen im Namen und die Endung jedes Preises – aus "12,90 €"
+ * wurde "12,9". Schriftkodierungen und ToUnicode-Tabellen sauber aufzulösen
+ * ist die Arbeit, die pdf.js seit Jahren macht.
+ *
+ * Gegenprobe an 7 echten Karten: identische Ausbeute wie `pdftotext -layout`
+ * (auf ±1 Gericht), zusammen 299 statt 0 Gerichten.
+ *
+ * Wirft nie. Kann pdf.js die Datei nicht öffnen, bleibt der alte Notnagel –
+ * und wenn auch der nichts hergibt, übernimmt weiter unten die Texterkennung.
+ */
+export async function readPdfText(
+  pdf: Buffer,
+): Promise<{ text: string; via: "pdfjs" | "roh" }> {
+  try {
+    // Erst hier laden: unpdf bringt pdf.js mit, und der Server soll dafür nicht
+    // bei jedem Start ein paar Megabyte auswerten, die die meisten Anfragen
+    // nie brauchen.
+    const { extractText, getDocumentProxy } = await import("unpdf");
+    const doc = await getDocumentProxy(new Uint8Array(pdf));
+    const { text } = await extractText(doc, { mergePages: true });
+    const clean = String(text ?? "").trim();
+    if (clean) return { text: clean, via: "pdfjs" };
+  } catch (err) {
+    // Nicht still: ein PDF, das pdf.js nicht öffnen kann, ist ein Hinweis –
+    // sonst sieht man später nur "0 Gerichte" ohne Grund.
+    console.warn(
+      `[Speisekarte] pdf.js konnte das PDF nicht lesen: ${String(err)}`,
+    );
+  }
+  return { text: extractPdfText(pdf), via: "roh" };
+}
+
+/**
+ * Liest die Kürzel-Legende aus demselben Text und gibt sie nur zurück, wenn
+ * überhaupt ein Gericht gekennzeichnet ist.
+ *
+ * Eine Legende ohne gekennzeichnete Gerichte ist eine Tabelle, die niemand
+ * aufschlägt — und im Konfigurator eine Zeile mehr, die der Wirt wegklicken
+ * muss. Umgekehrt sind Kürzel ohne Legende zwar unschön, aber immer noch die
+ * Information, die auf der Karte steht.
+ */
+function legendeAus(
+  text: string,
+  items: ParsedMenuItem[],
+): { allergenLegend?: Record<string, string> } {
+  if (!items.some((i) => i.allergens?.length)) return {};
+  const legende = parseAllergenLegend(text);
+  return Object.keys(legende).length ? { allergenLegend: legende } : {};
+}
+
+/**
+ * Macht aus ausgelesenem Kartentext Gerichte — Modell zuerst, Regeln als
+ * Rückfall.
+ *
+ * Diese eine Stelle bedient alle drei Wege (Website, PDF-Text, Texterkennung),
+ * damit eine Verbesserung nicht an zwei von drei Stellen vergessen wird.
+ *
+ * Warum das Modell zuerst und nicht die Regeln: gemessen am 7.8.2026 auf der
+ * Prüfmenge findet es 98 % der Gerichte gegen 54 %, bei 1 % statt 39 %
+ * Erfundenem — die Zahlen und die Gegenprüfung stehen in menuStructure.ts.
+ *
+ * Die Regeln fallen NICHT weg. Ohne Schlüssel, bei Netzstörung oder wenn das
+ * Modell nichts liefert, greifen sie — eine halb erkannte Karte ist besser als
+ * eine leere. Beides steht in den diagnostics, damit im Zweifel nachvollziehbar
+ * ist, welcher Weg gelaufen ist.
+ */
+async function gerichteAus(
+  kartentext: string,
+  idPrefix: string,
+  diagnostics: string[],
+): Promise<{ items: ParsedMenuItem[]; allergenLegend?: Record<string, string> }> {
+  const mitRegeln = () => {
+    const items = parseMenuText(kartentext, { idPrefix });
+    diagnostics.push(`Regeln: ${items.length} Gerichte`);
+    return { items, ...legendeAus(kartentext, items) };
+  };
+
+  if (!menuStructureConfigured()) {
+    diagnostics.push(
+      "Strukturierung übersprungen: ANTHROPIC_API_KEY nicht gesetzt — nur Regeln",
+    );
+    return mitRegeln();
+  }
+
+  try {
+    const s = await structureMenuText(kartentext, { idPrefix });
+    diagnostics.push(`Strukturierung – ${s.hinweis}`);
+    // Die Legende des Modells hat Vorrang; sonst aus dem Text schälen. Beides
+    // stammt von DIESER Karte — eine allgemeine Tabelle wäre falsch, nicht nur
+    // unvollständig.
+    return {
+      items: s.items,
+      ...(s.allergenLegend
+        ? { allergenLegend: s.allergenLegend }
+        : legendeAus(kartentext, s.items)),
+    };
+  } catch (err) {
+    diagnostics.push(`Strukturierung fehlgeschlagen (${String(err)}) — Regeln als Rückfall`);
+    return mitRegeln();
+  }
+}
+
 /** Erkennt eine Karte aus bereits vorliegenden Bytes. */
 export async function extractMenuFromBuffer(
   buffer: Buffer,
@@ -240,47 +369,70 @@ export async function extractMenuFromBuffer(
       diagnostics.push(`${structured.length} Gerichte aus strukturierten Daten`);
       return { items: structured, source: "html_jsonld", diagnostics };
     }
-    const items = parseMenuText(htmlToText(html), { idPrefix: "web" });
+    const seitentext = htmlToText(html);
+    const { items, allergenLegend } = await gerichteAus(seitentext, "web", diagnostics);
     diagnostics.push(`${items.length} Gerichte aus dem Seitentext`);
     return {
       items,
       source: items.length ? "html_text" : "none",
       diagnostics,
+      ...(allergenLegend ? { allergenLegend } : {}),
     };
   }
 
   if (kind === "pdf") {
-    const text = extractPdfText(buffer);
-    const fromText = parseMenuText(text, { idPrefix: "pdf" });
+    const { text, via } = await readPdfText(buffer);
+    // menuQuality entscheidet hier NUR, ob das PDF überhaupt eine Textebene
+    // hat — dafür taugt es. Als Qualitätsurteil taugt es nicht: Es prüft
+    // lediglich, ob drei Preise gefunden wurden, und ließ in der Messung vom
+    // 7.8.2026 alle 14 Prüfkarten durch, auch die mit 8 von 118 Gerichten.
+    // Deshalb strukturiert unten das Modell, nicht dieses Tor.
+    const textprobe = parseMenuText(text, { idPrefix: "pdf" });
     diagnostics.push(
-      `PDF-Text: ${text.length} Zeichen, daraus ${fromText.length} Gerichte`,
+      `PDF-Text (${via}): ${text.length} Zeichen, Textebene ${menuQuality(textprobe).usable ? "vorhanden" : "leer oder unbrauchbar"}`,
     );
-    if (menuQuality(fromText).usable) {
-      return { items: fromText, source: "pdf_text", diagnostics };
+
+    if (menuQuality(textprobe).usable) {
+      const { items, allergenLegend } = await gerichteAus(text, "pdf", diagnostics);
+      return {
+        items,
+        source: "pdf_text",
+        diagnostics,
+        ...(allergenLegend ? { allergenLegend } : {}),
+      };
     }
 
-    // Zu wenig herausgekommen -> die Karte ist vermutlich abfotografiert.
+    // Keine brauchbare Textebene -> die Karte ist vermutlich abfotografiert.
     if (!ocrConfigured()) {
       diagnostics.push(
         "Texterkennung übersprungen: kein OCR-Anbieter eingerichtet (GEMINI_API_KEY oder ANTHROPIC_API_KEY setzen)",
       );
       return {
-        items: fromText,
-        source: fromText.length ? "pdf_text" : "none",
+        items: textprobe,
+        source: textprobe.length ? "pdf_text" : "none",
         diagnostics,
+        ...legendeAus(text, textprobe),
       };
     }
 
     const ocr = await transcribeDocument(buffer, "application/pdf");
-    const fromOcr = parseMenuText(ocr.text, { idPrefix: "pdfocr" });
-    diagnostics.push(
-      `Texterkennung (${ocr.provider}): ${ocr.text.length} Zeichen, daraus ${fromOcr.length} Gerichte`,
-    );
+    diagnostics.push(`Texterkennung (${ocr.provider}): ${ocr.text.length} Zeichen`);
     diagnostics.push(...ocr.attempts.map((a) => `Versuch – ${a}`));
+    const ausOcr = await gerichteAus(ocr.text, "pdfocr", diagnostics);
     // Das jeweils bessere Ergebnis gewinnt.
-    return fromOcr.length >= fromText.length
-      ? { items: fromOcr, source: fromOcr.length ? "pdf_ocr" : "none", diagnostics }
-      : { items: fromText, source: "pdf_text", diagnostics };
+    return ausOcr.items.length >= textprobe.length
+      ? {
+          items: ausOcr.items,
+          source: ausOcr.items.length ? "pdf_ocr" : "none",
+          diagnostics,
+          ...(ausOcr.allergenLegend ? { allergenLegend: ausOcr.allergenLegend } : {}),
+        }
+      : {
+          items: textprobe,
+          source: "pdf_text",
+          diagnostics,
+          ...legendeAus(text, textprobe),
+        };
   }
 
   if (kind === "image") {
@@ -292,17 +444,85 @@ export async function extractMenuFromBuffer(
     }
     const mime = contentType.startsWith("image/") ? contentType : "image/jpeg";
     const ocr = await transcribeDocument(buffer, mime);
-    const items = parseMenuText(ocr.text, { idPrefix: "ocr" });
-    diagnostics.push(
-      `Texterkennung (${ocr.provider}): ${ocr.text.length} Zeichen, daraus ${items.length} Gerichte`,
-    );
+    diagnostics.push(`Texterkennung (${ocr.provider}): ${ocr.text.length} Zeichen`);
     diagnostics.push(...ocr.attempts.map((a) => `Versuch – ${a}`));
-    return { items, source: items.length ? "image_ocr" : "none", diagnostics };
+    const { items, allergenLegend } = await gerichteAus(ocr.text, "ocr", diagnostics);
+    return {
+      items,
+      source: items.length ? "image_ocr" : "none",
+      diagnostics,
+      ...(allergenLegend ? { allergenLegend } : {}),
+    };
   }
 
   diagnostics.push("Unbekanntes Dateiformat – keine Erkennung möglich");
   return { items: [], source: "none", diagnostics };
 }
+
+/**
+ * Sucht auf einer Seite die Verweise, hinter denen die eigentliche Karte liegt.
+ *
+ * Der Anlass ist der Normalfall, nicht ein Sonderfall: Der Wirt gibt im
+ * Konfigurator die Adresse seiner Speisekarten-SEITE an. Auf sehr vielen
+ * Gasthof-Websites steht dort aber gar keine Karte, sondern nur ein Link auf
+ * ein PDF ("Aktuelle Speisekarte"). Gemessen an der ersten echten Karte des
+ * Korpus: Die Seite hat 813 Zeichen Text und null Gerichte, das verlinkte PDF
+ * dahinter 28.
+ *
+ * Bewertet wird jeder Verweis, der auf eine Datei zeigen könnte. Höher zählt,
+ * was im Dateinamen oder im Linktext nach Speisekarte klingt — sonst folgt die
+ * Erkennung dem erstbesten PDF, und das ist auf halben Websites die
+ * Anfahrtsskizze oder das Impressum.
+ */
+export function findMenuLinks(html: string, baseUrl: string): string[] {
+  const KLINGT_NACH_KARTE =
+    /speise|speisekarte|men(u|ue|ü)|karte|tageskarte|abendkarte|getr(ae|ä)nke|wochenkarte|mittagstisch/i;
+  const NIE = /impressum|datenschutz|agb|anfahrt|lageplan|formular|anmeld|gutschein|hygiene/i;
+
+  const treffer = new Map<string, number>();
+  const anker = html.matchAll(
+    /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+  );
+
+  for (const m of anker) {
+    const roh = m[1].trim();
+    const text = m[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (!roh || /^(#|javascript:|mailto:|tel:)/i.test(roh)) continue;
+
+    let ziel: URL;
+    try {
+      ziel = new URL(roh, baseUrl);
+    } catch {
+      continue;
+    }
+    if (ziel.protocol !== "http:" && ziel.protocol !== "https:") continue;
+
+    const pfad = decodeURIComponent(ziel.pathname);
+    if (NIE.test(pfad) || NIE.test(text)) continue;
+
+    const istPdf = /\.pdf(\?|$)/i.test(pfad);
+    const istBild = /\.(jpe?g|png|webp)(\?|$)/i.test(pfad);
+    if (!istPdf && !istBild) continue;
+
+    // Punkte: Dateityp, Benennung im Pfad, Benennung im Linktext.
+    let punkte = istPdf ? 2 : 1;
+    if (KLINGT_NACH_KARTE.test(pfad)) punkte += 3;
+    if (KLINGT_NACH_KARTE.test(text)) punkte += 2;
+    // Ein Bild ohne jeden Hinweis auf eine Karte ist fast immer ein Foto der
+    // Terrasse. Nur PDFs sind auch ohne sprechenden Namen einen Versuch wert.
+    if (istBild && punkte < 3) continue;
+
+    const bisher = treffer.get(ziel.href) ?? 0;
+    if (punkte > bisher) treffer.set(ziel.href, punkte);
+  }
+
+  return [...treffer.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([href]) => href);
+}
+
+/** Wie viele verlinkte Dateien höchstens nachgeladen werden. */
+const MAX_VERFOLGTE_LINKS = 3;
 
 /** Erkennt eine Karte, die hinter einer Adresse liegt. */
 export async function extractMenuFromUrl(
@@ -330,5 +550,49 @@ export async function extractMenuFromUrl(
     downloaded.contentType,
   );
   result.diagnostics.unshift(`Geladen von ${downloaded.finalUrl}`);
-  return result;
+
+  // Auf der Seite selbst stand nichts Brauchbares — liegt die Karte verlinkt
+  // dahinter? Nur bei HTML, und nur wenn die Seite nichts hergab: Wer schon
+  // eine brauchbare Karte hat, soll sie nicht gegen ein altes PDF tauschen.
+  const istHtml = sniffType(downloaded.buffer, downloaded.contentType) === "html";
+  if (!istHtml || menuQuality(result.items).usable) return result;
+
+  const links = findMenuLinks(
+    downloaded.buffer.toString("utf8"),
+    downloaded.finalUrl,
+  );
+  if (!links.length) {
+    result.diagnostics.push("Keine verlinkte Speisekarte auf der Seite gefunden");
+    return result;
+  }
+  result.diagnostics.push(
+    `${links.length} mögliche verlinkte Karte(n), davon werden bis zu ${MAX_VERFOLGTE_LINKS} geprüft`,
+  );
+
+  let bestes = result;
+  for (const link of links.slice(0, MAX_VERFOLGTE_LINKS)) {
+    try {
+      const datei = await safeFetch(link, {
+        maxBytes: MAX_MENU_BYTES,
+        timeoutMs: 30_000,
+        allowedContentTypes: ALLOWED_CONTENT_TYPES,
+      });
+      const versuch = await extractMenuFromBuffer(datei.buffer, datei.contentType);
+      bestes.diagnostics.push(
+        `Verlinkt: ${link} → ${versuch.items.length} Gerichte (${versuch.source})`,
+      );
+      if (versuch.items.length > bestes.items.length) {
+        bestes = { ...versuch, diagnostics: bestes.diagnostics.concat(versuch.diagnostics) };
+      }
+      // Reicht das schon, muss nicht weiter geladen werden — jede weitere
+      // Datei kostet Zeit und, wenn OCR anspringt, Geld.
+      if (menuQuality(bestes.items).usable) break;
+    } catch (err) {
+      const grund =
+        err instanceof SafeFetchError ? `${err.reason}: ${err.message}` : String(err);
+      bestes.diagnostics.push(`Verlinkt: ${link} nicht abrufbar (${grund})`);
+    }
+  }
+
+  return bestes;
 }

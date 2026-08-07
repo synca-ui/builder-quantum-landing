@@ -91,6 +91,115 @@ export function readableTextOn(background: string): string {
 /** Untergrenze für Fließtext nach WCAG AA. */
 const MIN_CONTRAST = 4.5;
 
+// ─── A4.1: Der Hintergrund ist nie grell ─────────────────────────────────────
+
+function hexZuRgb(hex: string): [number, number, number] | null {
+  const raw = hex.replace("#", "").trim();
+  const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
+  if (!/^[0-9a-f]{6}$/i.test(full)) return null;
+  return [
+    parseInt(full.slice(0, 2), 16),
+    parseInt(full.slice(2, 4), 16),
+    parseInt(full.slice(4, 6), 16),
+  ];
+}
+
+function rgbZuHex(r: number, g: number, b: number): string {
+  const teil = (v: number) =>
+    Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+  return `#${teil(r)}${teil(g)}${teil(b)}`;
+}
+
+/** RGB (0–255) nach HSL (h in Grad, s und l als 0–1). */
+export function rgbZuHsl(r: number, g: number, b: number): [number, number, number] {
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h: number;
+  if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) * 60;
+  else if (max === gn) h = ((bn - rn) / d + 2) * 60;
+  else h = ((rn - gn) / d + 4) * 60;
+  return [h, s, l];
+}
+
+/** HSL zurück nach RGB. */
+export function hslZuRgb(h: number, s: number, l: number): [number, number, number] {
+  if (s === 0) return [l * 255, l * 255, l * 255];
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const kanal = (t: number) => {
+    let tt = t;
+    if (tt < 0) tt += 1;
+    if (tt > 1) tt -= 1;
+    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2) return q;
+    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  const hn = h / 360;
+  return [kanal(hn + 1 / 3) * 255, kanal(hn) * 255, kanal(hn - 1 / 3) * 255];
+}
+
+/**
+ * Buntheit einer Farbe (0 = grau, 1 = maximal bunt).
+ *
+ * Nicht die HSL-Sättigung allein: Creme (#f1e5d0) hat eine Sättigung von 0,55
+ * und wirkt trotzdem weich, weil es sehr hell ist. Ein Signalrot mit derselben
+ * Sättigung bei mittlerer Helligkeit ist grell. Erst das Produkt aus beidem
+ * beschreibt, was das Auge als "grell" liest.
+ */
+export function buntheit(s: number, l: number): number {
+  return (1 - Math.abs(2 * l - 1)) * s;
+}
+
+/** Ab hier gilt ein Hintergrund als grell. */
+const MAX_BUNTHEIT = 0.18;
+/** Zielhelligkeit für helle Hintergründe. */
+const HELL_ZIEL = 0.93;
+/** Zielhelligkeit für dunkle Hintergründe (bewusste dunkle Gestaltung). */
+const DUNKEL_ZIEL = 0.16;
+/** Ab dieser Helligkeit gilt ein Hintergrund als hell gemeint. */
+const DUNKEL_GRENZE = 0.3;
+
+/**
+ * Macht aus einer beliebigen gescrapten Farbe einen Hintergrund, der nie grell
+ * ist — mit derselben Grundfarbe, damit die Marke erkennbar bleibt.
+ *
+ * A4.1 aus dem Feedback vom 6.8.2026: "Hintergrundfarbe nie grell — immer eine
+ * weiche Farbe. Als Regel im Code, nicht als Zufall." Genau das war das
+ * Problem: Der Scrape nimmt die auffälligste Farbe des Stylesheets, und das ist
+ * auf einer Restaurantseite regelmäßig die Signalfarbe eines Knopfes. Als
+ * vollflächiger Hintergrund ist ein sattes Rot oder Grün unlesbar und billig.
+ *
+ * Regel: Der Farbton bleibt immer. Ist die Buntheit über der Grenze, wird die
+ * Helligkeit an den hellen oder dunklen Rand gezogen und die Sättigung nur so
+ * weit gesenkt, wie danach noch nötig ist.
+ *
+ * Dunkel gemeinte Hintergründe bleiben dunkel: Ein Steakhaus mit
+ * anthrazitfarbener Seite soll nicht plötzlich weiß werden.
+ *
+ * Farben, die schon weich sind, kommen buchstabengleich zurück — sonst wandert
+ * eine bewusst gesetzte Farbe (Creme #f1e5d0) bei jedem Lauf ein wenig.
+ */
+export function softenBackground(hex?: string): string | undefined {
+  if (!hex) return undefined;
+  const rgb = hexZuRgb(hex);
+  if (!rgb) return undefined;
+
+  const [h, s, l] = rgbZuHsl(...rgb);
+  if (buntheit(s, l) <= MAX_BUNTHEIT) return hex;
+
+  const neueHelligkeit = l < DUNKEL_GRENZE ? DUNKEL_ZIEL : HELL_ZIEL;
+  // Wie viel Sättigung an dieser Helligkeit noch in die Grenze passt.
+  const spielraum = 1 - Math.abs(2 * neueHelligkeit - 1);
+  const neueSaettigung = Math.min(s, MAX_BUNTHEIT / spielraum);
+
+  return rgbZuHex(...hslZuRgb(h, neueSaettigung, neueHelligkeit));
+}
+
 /**
  * Füllt die abgeleiteten Farben, wo der Scrape nur die Grundpalette liefert.
  *
@@ -103,6 +212,11 @@ export function deriveCohesiveColors(
   design: Partial<DesignConfig>,
 ): Partial<DesignConfig> {
   const out = { ...design };
+  // A4.1: Der Hintergrund wird hier entschärft, BEVOR die übrigen Farben
+  // daraus abgeleitet werden. Sonst rechnet der Rest gegen einen Grund, der so
+  // nie ausgeliefert wird, und die Kontrastprüfungen unten stimmen nicht mehr.
+  const weich = softenBackground(out.backgroundColor);
+  if (weich) out.backgroundColor = weich;
   const background = out.backgroundColor ?? "#FFFFFF";
 
   if (!out.fontColor) out.fontColor = readableTextOn(background);

@@ -28,6 +28,7 @@ import { Router, type Request, type Response } from "express";
 import multer from "multer";
 import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/auth";
+import type { MenuExtractionResult } from "../services/menuExtraction";
 import {
   extractMenuFromBuffer,
   extractMenuFromUrl,
@@ -164,16 +165,34 @@ menuRouter.get(
       });
     }
 
-    const result = job.result!;
-    return res.json({
-      success: true,
-      status: "done",
-      items: result.items,
-      count: result.items.length,
-      source: result.source,
-      diagnostics: result.diagnostics,
-    });
+    return res.json(menuJobAntwort(job.result!));
   },
 );
+
+/**
+ * Baut die Antwort eines fertigen Erkennungsauftrags.
+ *
+ * Eigene Funktion, weil hier schon einmal etwas verlorenging: Die
+ * Kürzel-Legende wurde in menuExtraction.ts gelesen, in res.json() aber nicht
+ * aufgeführt. Am Gericht standen dadurch nur Kürzel wie "a1" — und was die
+ * bedeuten, legt jede Karte selbst fest. Für einen Gast mit einer
+ * Unverträglichkeit ist "(a1, f)" wertlos.
+ *
+ * Fehlt die Legende auf der Karte, fehlt auch das Feld. Die Oberfläche zeigt
+ * dann das rohe Kürzel — lieber das als eine erfundene Zuordnung.
+ */
+export function menuJobAntwort(result: MenuExtractionResult) {
+  return {
+    success: true as const,
+    status: "done" as const,
+    items: result.items,
+    count: result.items.length,
+    source: result.source,
+    diagnostics: result.diagnostics,
+    ...(result.allergenLegend && Object.keys(result.allergenLegend).length
+      ? { allergenLegend: result.allergenLegend }
+      : {}),
+  };
+}
 
 export { MAX_UPLOAD_BYTES, MAX_DOCUMENT_BYTES };

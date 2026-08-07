@@ -233,7 +233,7 @@
     "uploadPhotos": "Upload Photos",
     "dragAndDrop": "Drag and drop your images or click to browse",
     "chooseImages": "Choose Images",
-    "sizeLimit": "JPG, PNG up to 5MB each \u2022 Maximum 20 images",
+    "sizeLimit": "JPG, PNG up to 5MB each • Maximum 20 images",
     "yourGallery": "Your Gallery"
   },
   "reservations": {
@@ -327,8 +327,7 @@
     "highlights": "Highlights",
     "ourSpecials": "Our Specials",
     "quickAdjustments": "Quick Adjustments",
-    "websiteTitle": "Website Title",
-    "performanceScore": "Performance Score"
+    "websiteTitle": "Website Title"
   },
   "publish": {
     "readyToPublish": "Ready to Publish",

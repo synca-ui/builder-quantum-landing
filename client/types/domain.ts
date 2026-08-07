@@ -68,6 +68,21 @@ export interface MenuItem {
   image?: { url: string; alt?: string; file?: File };
   images?: { url: string; alt?: string; file?: File }[];
   isHighlight?: boolean; // ✅ NEU: Markiert Dish als Highlight auf der Startseite
+  /**
+   * Allergen- und Zusatzstoff-Kürzel, wie sie auf der Karte am Gericht stehen:
+   * ["a1", "j", "f"]. Was sie bedeuten, steht in ContentData.allergenLegend —
+   * die Zuordnung ist je Betrieb verschieden und darf nicht geraten werden.
+   * Strukturgleich zu shared/suggestedConfig.ts.
+   */
+  allergens?: string[];
+  /** Ernährungs-Labels: ["vegan"], ["vegetarisch", "glutenfrei"]. */
+  labels?: string[];
+  /**
+   * Aufpreise, Größen und Beilagen, die zu DIESEM Gericht gehören (A1.2):
+   * [{ name: "Käse", price: "1.20" }]. Strukturgleich zu
+   * shared/menuParser.ts — dort entstehen sie beim Erkennen der Karte.
+   */
+  extras?: Array<{ name: string; price?: string; allergens?: string[] }>;
 }
 
 export interface GalleryImage {
@@ -92,6 +107,12 @@ export interface ContentData {
   openingHours: OpeningHours;
   homepageDishImageVisibility?: string;
   categories?: string[]; // "Drinks", "Food", etc.
+  /**
+   * Bedeutung der Allergen-Kürzel, wie die Karte des Betriebs sie angibt:
+   * { "a1": "Weizen", "f": "Milch/Laktose" }. Kommt aus der Erkennung
+   * (shared/menuParser.ts, parseAllergenLegend) und ist je Betrieb anders.
+   */
+  allergenLegend?: Record<string, string>;
 }
 
 /**

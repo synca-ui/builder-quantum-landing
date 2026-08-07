@@ -136,9 +136,12 @@ export const DishCard = memo(function DishCard({
         ? `${item.price}€`
         : "";
 
-  // Bild-URL
-  const imageUrl =
-    item.imageUrl || (item.image ? normalizeImageSrc(item.image) : null);
+  // Bild-URL. normalizeImageSrc gibt "/placeholder.svg" zurück, wenn es aus
+  // dem Wert nichts machen kann — das ist KEIN Bild und darf hier nicht als
+  // eines durchgehen, sonst steht in der Karte ein leerer Rahmen. Bei einer
+  // automatisch erkannten Speisekarte hat fast kein Gericht ein Bild.
+  const roh = item.imageUrl || (item.image ? normalizeImageSrc(item.image) : null);
+  const imageUrl = roh && roh !== "/placeholder.svg" ? roh : null;
 
   return (
     <article

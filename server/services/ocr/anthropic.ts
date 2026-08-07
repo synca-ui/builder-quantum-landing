@@ -39,6 +39,18 @@ const MAX_BYTES = 500 * 1024 * 1024;
  *
  *   ANTHROPIC_OCR_MODEL=claude-sonnet-5    (~0,6× der Kosten)
  *   ANTHROPIC_OCR_MODEL=claude-haiku-4-5   (~0,2× der Kosten)
+ *
+ * OFFEN, und der wahrscheinlich größte verbliebene Sparposten: Seit dem
+ * 7.8.2026 strukturiert nicht mehr der Regel-Parser, sondern Haiku (siehe
+ * server/services/menuStructure.ts). Diese Abschrift hier muss deshalb keine
+ * ordentliche Gliederung mehr liefern, sondern nur noch richtige Zeichen — die
+ * Anforderung ist also gesunken, und Opus 5 ist womöglich fünfmal zu teuer für
+ * das, was noch verlangt wird.
+ *
+ * Umgestellt wurde trotzdem nicht, weil es NICHT gemessen ist: Die Messung vom
+ * 7.8.2026 verglich Modelle beim Strukturieren von bereits ausgelesenem Text,
+ * nicht beim Abschreiben von Bildern. Wer das umstellt, misst vorher an echten
+ * abfotografierten Karten, wie viele Zeichen verlorengehen.
  */
 const MODEL = process.env.ANTHROPIC_OCR_MODEL || "claude-opus-5";
 

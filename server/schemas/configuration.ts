@@ -4,6 +4,12 @@
  */
 
 import { z } from "zod";
+// DAYS ist die kanonische Wochentagsliste - jetzt in packages/core/src/types
+// definiert (die gemeinsame Sprache von Web, Server und App), vorher in
+// shared/suggestedConfig.ts und von dort re-exportiert. Hier wiederverwendet
+// statt ein zweites Mal geschrieben (Grundsatz: erweitern, nicht duplizieren) -
+// siehe StrictOpeningHoursSchema unten.
+import { DAYS } from "@maitr/core/types";
 
 // Business Info Schema
 export const BusinessInfoSchema = z.object({
@@ -54,6 +60,25 @@ export const MenuItemSchema = z.object({
   available: z.boolean().optional().default(true),
   category: z.string().optional(),
   isHighlight: z.boolean().optional(),
+  /**
+   * Allergen-Kuerzel und Ernaehrungs-Labels am Gericht (A1.3).
+   *
+   * Ohne diese beiden Zeilen streift Zod sie beim Speichern still ab — die
+   * Erkennung liest sie aus der Karte, und beim naechsten Laden sind sie weg.
+   * Bei einer Kennzeichnungspflicht ist genau das der teuerste Verlust.
+   */
+  allergens: z.array(z.string()).optional(),
+  labels: z.array(z.string()).optional(),
+  /** Aufpreise und Groessen, die zu diesem Gericht gehoeren (A1.2). */
+  extras: z
+    .array(
+      z.object({
+        name: z.string(),
+        price: z.string().optional(),
+        allergens: z.array(z.string()).optional(),
+      }),
+    )
+    .optional(),
 });
 
 // Gallery Image Schema
@@ -74,9 +99,96 @@ export const OpeningHoursSchema = z.record(
   }),
 );
 
+/**
+ * HH:MM mit echten Grenzen (Stunde 00-23, Minute 00-59) - im Unterschied zur
+ * Ziffernform-Regex oben, die z. B. "99:99" durchlässt. Nur für
+ * StrictOpeningHoursSchema unten.
+ */
+const strictOpeningTimeSchema = z
+  .string()
+  .regex(
+    /^([01]\d|2[0-3]):[0-5]\d$/,
+    "Uhrzeit muss als HH:MM mit gültiger Stunde (00-23) und Minute (00-59) vorliegen",
+  );
+
+/**
+ * Ein Tageseintrag ist entweder geschlossen (keine Uhrzeiten - "sonntags
+ * geschlossen" braucht kein erfundenes `open`/`close`, Grundsatz: lieber eine
+ * Lücke als eine erfundene Angabe) oder geöffnet mit beiden Uhrzeiten. Dieselbe
+ * Unterscheidung beschreibt `DayHours` in packages/core/src/types/index.ts -
+ * hier als `z.discriminatedUnion("closed", …)` die geprüfte Fassung davon.
+ *
+ * Zod streift bei z.object() unbekannte Schlüssel im Vorgabemodus ("strip")
+ * von selbst ab (kein `.strict()`, kein `.passthrough()` hier) - eine Altzeile
+ * wie {closed:true, open:"00:00", close:"00:00"} wird beim Lesen also nicht
+ * verworfen, sondern auf {closed:true} zurückgeschnitten. Nachgeprüft statt nur
+ * angenommen: `StrictClosedDaySchema.parse({closed:true, open:"00:00",
+ * close:"00:00"})` liefert `{closed:true}`, keine offenen Uhrzeiten.
+ */
+const StrictClosedDaySchema = z.object({ closed: z.literal(true) });
+const StrictOpenDaySchema = z.object({
+  closed: z.literal(false),
+  open: strictOpeningTimeSchema,
+  close: strictOpeningTimeSchema,
+});
+const StrictDayHoursSchema = z.discriminatedUnion("closed", [
+  StrictClosedDaySchema,
+  StrictOpenDaySchema,
+]);
+
+/**
+ * Warum es hier zwei Öffnungszeiten-Schemata gibt, und warum OpeningHoursSchema
+ * oben absichtlich lose bleibt:
+ *
+ * OpeningHoursSchema hängt an ContentDataSchema (unten) und damit am
+ * Konfigurator, der Altbestand in der Datenbank hat. Eine Verschärfung dort
+ * könnte das Speichern bestehender Konfigurationen abweisen. OpeningHoursSchema
+ * bleibt deshalb, wie es war: Schlüssel beliebig (jeder String, in beliebiger
+ * Zahl und Länge), Uhrzeit nur als Ziffernform geprüft.
+ *
+ * StrictOpeningHoursSchema hier daneben gilt für Business.openingHours - die
+ * Wahrheit für die Maitr-Oberflächen (App und das öffentliche Gastprofil
+ * `GET /venues/:slug/public`, das OHNE Anmeldung ausgeliefert wird; siehe
+ * `toApiVenue` in server/maitr/routes.ts). Für einen Wert, der ungeprüft an
+ * einen zahlenden Gast geht, reicht "sieht aus wie eine Uhrzeit" nicht - er
+ * muss wirklich eine sein.
+ *
+ * Gemessen wurde: ohne diese Schranke nahm PATCH /venues/:venueId 2000
+ * beliebig benannte Schlüssel à 200 Zeichen an (509 023 Byte in der Zeile)
+ * und lieferte sie öffentlich, unangemeldet, wieder aus; dazu Tage wie
+ * "Montag" oder "friday " (kein Leser im Repo erkennt sie) und Uhrzeiten wie
+ * {"open":"99:99","close":"88:88"}.
+ *
+ * Baut auf denselben Bausteinen wie OpeningHoursSchema auf, verschärft aber:
+ * - Schlüssel NUR aus DAYS (@maitr/core/types) - eine Allowlist über z.enum,
+ *   keine Regex. Daraus folgt zugleich die Obergrenze von sieben Einträgen:
+ *   mehr als sieben verschiedene Wochentage gibt es nicht, und ein
+ *   JS-Objekt kann denselben Schlüssel nicht zweimal tragen.
+ * - Uhrzeit wirklich gültig (strictOpeningTimeSchema): Stunde 00-23,
+ *   Minute 00-59, statt nur Ziffernform.
+ * - Der Tageseintrag folgt StrictDayHoursSchema oben (geschlossen ohne
+ *   Uhrzeiten, geöffnet mit beiden).
+ *
+ * KEINE Reihenfolge-Prüfung (open < close) mehr: Ein Betrieb mit Sperrstunde
+ * nach Mitternacht öffnet z. B. freitags 18:00 und schließt 01:00 - "open"
+ * liegt dann als Uhrzeit NACH "close", obwohl die Zeitspanne richtig ist. Eine
+ * Regel, die open < close verlangt, kann 20:00-02:00 nicht von einem
+ * Tippfehler unterscheiden und weist damit jede Bar, jede Küche mit
+ * Sperrstunde nach Mitternacht und jeden 24-Stunden-Betrieb (00:00-00:00) ab -
+ * das ist keine Härtung, das ist eine Fachlücke, und sie richtet mehr Schaden
+ * an als die Tippfehler, die sie fangen würde.
+ */
+export const StrictOpeningHoursSchema = z.record(z.enum(DAYS), StrictDayHoursSchema);
+
 // Content Data Schema
 export const ContentDataSchema = z.object({
   menuItems: z.array(MenuItemSchema).default([]),
+  /**
+   * Bedeutung der Allergen-Kuerzel, wie die Karte des Betriebs sie angibt.
+   * Muss mitgespeichert werden: Die Zuordnung ist je Betrieb verschieden,
+   * eine feste Tabelle waere falsch statt unvollstaendig.
+   */
+  allergenLegend: z.record(z.string()).optional(),
   gallery: z.array(GalleryImageSchema).default([]),
   openingHours: OpeningHoursSchema.default({}),
   homepageDishImageVisibility: z.string().optional(),

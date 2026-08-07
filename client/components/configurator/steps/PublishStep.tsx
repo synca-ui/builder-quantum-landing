@@ -248,8 +248,12 @@ export function PublishStep({
           }
         }
       } else {
+        // Derselbe Grund wie im catch darunter: Ohne dieses Zurücksetzen bleibt
+        // der Knopf im Ladezustand hängen, obwohl die Veröffentlichung
+        // abgelehnt wurde.
         setPublishError(result.error || "Veröffentlichung fehlgeschlagen");
         setCurrentStage("error");
+        setIsPublishing(false);
       }
     } catch (error) {
       console.error("Publishing failed:", error);
@@ -257,13 +261,23 @@ export function PublishStep({
         error instanceof Error ? error.message : "Unbekannter Fehler",
       );
       setCurrentStage("error");
-    } finally {
-      if (!isPublished) {
-        setTimeout(() => {
-          if (currentStage === "error") setIsPublishing(false);
-        }, 2000);
-      }
+      setIsPublishing(false);
     }
+    /*
+     * Vorher stand hier ein finally-Block:
+     *
+     *   setTimeout(() => { if (currentStage === "error") setIsPublishing(false) }, 2000)
+     *
+     * Das ging nicht auf. `currentStage` in dieser Closure ist der Wert von
+     * VOR dem setCurrentStage("error") drei Zeilen darüber — React ersetzt
+     * den Zustand nicht rückwirkend in einer bereits laufenden Funktion. Beim
+     * ersten Fehlschlag war die Bedingung deshalb falsch, setIsPublishing(false)
+     * lief nie, und der Knopf blieb dauerhaft auf "wird veröffentlicht" stehen.
+     * Der Wirt sah einen Ladezustand, der nie endete, und keinen Fehler.
+     *
+     * Jetzt wird das Zurücksetzen dort erledigt, wo der Fehler entsteht — ohne
+     * Umweg über Zeitgeber und ohne Blick auf einen veralteten Zustand.
+     */
     // FIX: Dependency Array aktualisiert
   }, [
     getToken,

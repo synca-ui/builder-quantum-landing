@@ -41,6 +41,7 @@ import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
 import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
+import { fontClassFor } from "@/lib/fontClass";
 import { CategoryFilter } from "@/components/shared/CategoryFilter"; // ✅ CategoryFilter Component
 import ReservationFormModern from "./ReservationFormModern";
 
@@ -135,13 +136,10 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
   const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Font Class
-  const fontClass =
-    {
-      "sans-serif": "font-sans",
-      serif: "font-serif",
-      monospace: "font-mono",
-    }[design.fontFamily] || "font-sans";
+  // Font Class — gemeinsame Zuordnung mit der Vorschau, siehe client/lib/fontClass.ts.
+  // Vorher kannte diese Stelle nur "monospace" und die Vorschau nur "mono";
+  // die Auswahl "Display" sah dadurch live anders aus als im Konfigurator.
+  const fontClass = fontClassFor(design.fontFamily);
 
   // Build deduplicated navigation menu + AUTO-DISCOVERY
   const navigationMenu = useMemo(() => {
@@ -811,6 +809,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         onSetImageIndex={setCurrentImageIndex}
         onAddToCart={addToCart}
         isPreview={false}
+        allergenLegend={content.allergenLegend}
       />
 
       {/* FOOTER */}

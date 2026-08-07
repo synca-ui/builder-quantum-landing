@@ -39,6 +39,13 @@ export default defineConfig({
         "cors",
         "@prisma/client",
         ".prisma",
+        // unpdf bringt pdf.js mit (~2 MB) und wird in
+        // server/services/menuExtraction.ts ohnehin nur per dynamischem
+        // import() geholt. Hier ausdrücklich extern, damit es nicht von einer
+        // Vite-Voreinstellung abhängt: Es steht in dependencies (nicht
+        // devDependencies) und muss zur Laufzeit aus node_modules auflösbar
+        // sein — sonst liest der Server in Produktion wieder keine PDF-Karte.
+        "unpdf",
       ],
       output: {
         format: "es",

@@ -264,6 +264,21 @@ function normalizeMenuItems(items: unknown): MenuItem[] {
       image: (i.image as MenuItem["image"]) || undefined,
       images: (i.images as MenuItem["images"]) || undefined,
       isHighlight: i.isHighlight === true,
+      /*
+       * A1.3: Ohne diese drei Zeilen baut normalizeConfig das Gericht Feld fuer
+       * Feld neu auf und laesst Allergene, Labels und Aufpreise dabei liegen.
+       * Der Block im DishModal koennte auf der veroeffentlichten Seite dann nie
+       * erscheinen — die Erkennung liefe, die Anzeige bliebe leer.
+       */
+      allergens: Array.isArray(i.allergens)
+        ? (i.allergens as string[]).map(String).filter(Boolean)
+        : undefined,
+      labels: Array.isArray(i.labels)
+        ? (i.labels as string[]).map(String).filter(Boolean)
+        : undefined,
+      extras: Array.isArray(i.extras)
+        ? (i.extras as MenuItem["extras"])
+        : undefined,
     };
   });
 }
@@ -565,6 +580,25 @@ export function normalizeConfig(
         categories.length > 0
           ? categories
           : typeDefaults?.categories || DEFAULT_CONTENT_DATA.categories,
+      /*
+       * Die Kuerzel-Legende der Karte (A1.3). Ohne sie zeigt DishModal an den
+       * Gerichten nur "a1" und "f" — und was die bedeuten, legt jede Karte
+       * selbst fest. Kein Vorgabewert: Fehlt sie, bleibt das Kuerzel roh
+       * stehen, statt eine Zuordnung zu erfinden.
+       */
+      allergenLegend: (() => {
+        const roh =
+          (contentObj.allergenLegend as Record<string, string> | undefined) ??
+          (flatConfig.allergenLegend as Record<string, string> | undefined);
+        if (!roh || typeof roh !== "object") return undefined;
+        const sauber: Record<string, string> = {};
+        for (const [k, v] of Object.entries(roh)) {
+          const kuerzel = String(k).trim().toLowerCase();
+          const bedeutung = String(v ?? "").trim();
+          if (kuerzel && bedeutung) sauber[kuerzel] = bedeutung;
+        }
+        return Object.keys(sauber).length ? sauber : undefined;
+      })(),
       homepageDishImageVisibility:
         contentObj.homepageDishImageVisibility ||
         flatConfig.homepageDishImageVisibility ||

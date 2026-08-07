@@ -10,7 +10,13 @@ import { Router, type Request, type RequestHandler, type Response } from "expres
 import { z } from "zod";
 import { connectors, GOOGLE_OAUTH, META_OAUTH } from "@maitr/core/integrations";
 import type { FetchLike, OAuthConfig, ProviderId } from "@maitr/core/integrations";
-import type { DailyTask, Reservation as ApiReservation, Venue } from "@maitr/core/types";
+import type {
+  DailyTask,
+  OpeningHours,
+  Reservation as ApiReservation,
+  Venue,
+} from "@maitr/core/types";
+import { Prisma } from "@prisma/client";
 import { nextSubdomainCandidate, suggestSubdomain } from "../../shared/subdomain";
 import { prisma } from "../db/prisma";
 import {
@@ -20,6 +26,12 @@ import {
   type VenueRequest,
   type VenueRolle,
 } from "./middleware";
+// StrictOpeningHoursSchema (server/schemas/configuration.ts) ist die enge Form
+// neben dem losen OpeningHoursSchema des Konfigurators - hier wiederverwendet
+// statt ein zweites Mal geschrieben (Grundsatz: erweitern, nicht duplizieren).
+// Business.openingHours ist die Wahrheit für App und öffentliches Gastprofil;
+// die lose Form des Konfigurators wäre hier eine Lücke, kein Feinschliff.
+import { StrictOpeningHoursSchema } from "../schemas/configuration";
 import {
   computeBriefing,
   computeTasks,
@@ -80,12 +92,69 @@ interface VenueRow {
   tagline: string | null;
   timezone: string;
   tags: string[];
+  /**
+   * Kommt aus Prisma als `Json` - zur Laufzeit UNBEKANNT getippt, nicht ungeprüft
+   * `any`. `geprüfteOeffnungszeiten` unten prüft die Form, bevor sie an den Client
+   * geht; eine kaputte oder fremd geformte Zeile darf ihn nicht sprengen.
+   */
+  openingHours?: unknown;
+}
+
+/**
+ * Prüft, ob der DB-Wert die Form aus `@maitr/core/types#OpeningHours` hat - DAYS
+ * und die Tageseintrag-Union `DayHours` sind dort definiert (Begründung über der
+ * Definition in `packages/core/src/types/index.ts`). Das schließt die dort
+ * dokumentierte Tagesschlüssel-Regel ein (nur "monday" … "sunday", klein
+ * geschrieben): `server/schemas/configuration.ts#StrictOpeningHoursSchema`
+ * erzwingt sie über eine Allowlist, nicht nur die Form der Werte. Dieselbe enge
+ * Form validiert bereits `PATCH /venues/:venueId` weiter unten - hier
+ * wiederverwendet statt ein zweites Mal geschrieben. Fehlt die Spalte, ist sie
+ * falsch geformt, oder stammt die Zeile noch aus der Zeit vor dieser Schranke
+ * (z. B. `{"Mo": "9-17"}`), liefert die Funktion `undefined` - eine solche
+ * Altzeile darf keinen Client erreichen, auch nicht über den unangemeldeten
+ * öffentlichen Weg. Ein Fehler darf aber nie still sein: passt die Spalte nicht,
+ * obwohl sie einen Wert trägt, warnt die Funktion - sonst sieht der Inhaber nur
+ * "keine Öffnungszeiten" ohne jeden Hinweis, warum.
+ */
+function geprüfteOeffnungszeiten(
+  wert: unknown,
+  betriebId: string,
+): OpeningHours | undefined {
+  const ergebnis = StrictOpeningHoursSchema.safeParse(wert);
+  if (!ergebnis.success && wert != null) {
+    // Ohne den Inhalt der Spalte selbst zu loggen - er kann laut Kommentar oben
+    // mehrere hunderttausend Byte groß sein (gemessen: 509 023 Byte in einer Zeile).
+    console.warn(
+      `[maitr] Öffnungszeiten von Betrieb ${betriebId} verworfen: Spalte entspricht nicht StrictOpeningHoursSchema`,
+    );
+  }
+  // Der Cast korrigiert nur die TYPANGABE: `safeParse` hat die Form zur Laufzeit
+  // bereits geprüft, aber die in diesem Repo installierte Zod-Version leitet die
+  // Objektfelder von z.object() (unabhängig von dieser Stelle, betrifft jedes
+  // z.object() im Baum) als optional statt als Pflichtfelder ab.
+  return ergebnis.success ? (ergebnis.data as OpeningHours) : undefined;
 }
 
 /**
  * DB-Zeile → `@maitr/core/types#Venue`. An genau einer Stelle, damit die Liste
- * (GET /venues), das öffentliche Profil und das Anlegen dieselbe Form liefern -
- * sonst bekommt der Client je nach Endpunkt ein anderes Objekt für dieselbe Sache.
+ * (GET /venues), das öffentliche Profil, das Anlegen und das Ändern dieselbe Form
+ * liefern - sonst bekommt der Client je nach Endpunkt ein anderes Objekt für
+ * dieselbe Sache.
+ *
+ * ACHTUNG: Diese Funktion bedient AUCH `GET /venues/:slug/public` - eine Route OHNE
+ * Anmeldung (siehe die Warnung bei `Business.postalCode` in `prisma/schema.prisma`).
+ * Die Allowlist bleibt deshalb eine Allowlist; `openingHours` kommt bewusst dazu,
+ * weil Öffnungszeiten ihrem Wesen nach öffentlich sind - sie stehen bei Google.
+ * NICHT bei der veröffentlichten Web-App: Die speist sich aus
+ * `Configuration.content.openingHours` (server/routes/subdomains.ts,
+ * server/routes/webapps.ts) und wird von `Business.openingHours` überhaupt nicht
+ * berührt. `Business.openingHours` ist stattdessen die Wahrheit für die
+ * Maitr-Oberflächen - die App und dieses öffentliche Gastprofil. Im Code lesen
+ * genau zwei Stellen die rohe Spalte: diese Funktion hier (über
+ * `geprüfteOeffnungszeiten`, mit Formprüfung) und `server/routes/admin.ts:256`
+ * (`!!business.openingHours`, ein blosses Häkchen im Admin-SEO-Bericht - ob die
+ * Spalte gesetzt ist, nicht ob sie gültig ist). Postleitzahl und Koordinaten
+ * gehören NICHT hierher.
  */
 function toApiVenue(b: VenueRow): Venue {
   return {
@@ -94,6 +163,7 @@ function toApiVenue(b: VenueRow): Venue {
     tagline: b.tagline ?? undefined,
     timezone: b.timezone,
     tags: b.tags,
+    openingHours: geprüfteOeffnungszeiten(b.openingHours, b.id),
   };
 }
 
@@ -781,6 +851,104 @@ const ownerGuard: RequestHandler = (req, res, next) => {
   }
   return next();
 };
+
+/* ── Betriebe: Profil ändern ──────────────────────────────────────────────
+ * Hängt an `venuesRouter` (wie GET / und POST / weiter oben), steht aber erst hier
+ * im Modul: die Route braucht `ownerGuard`, und der ist ein `const` - eine Referenz
+ * VOR seiner Zeile würde beim Laden des Moduls sofort mit "Cannot access
+ * 'ownerGuard' before initialization" abstürzen, nicht erst bei der ersten Anfrage.
+ */
+
+/**
+ * Die vier änderbaren Profilfelder - alle optional, mindestens eines nötig (siehe
+ * `.refine` unten). `venueId` muss erlaubt bleiben: `resolveVenue` liest sie aus dem
+ * Rumpf, und `validateBody` läuft danach (siehe die Begründung bei `programFelder`
+ * unten).
+ *
+ * `name` und `timezone` übernehmen ihre Prüfung von `createVenueSchema` statt sie
+ * ein zweites Mal zu schreiben - dieselbe Regel, die beim Anlegen gilt, soll auch
+ * beim Ändern gelten.
+ */
+const patchVenueSchema = z
+  .object({
+    venueId: z.string().min(1).optional(),
+    name: createVenueSchema.shape.name.optional(),
+    /**
+     * "" löscht die Tagline (→ null); ausgelassen (undefined) lässt sie unverändert.
+     * Das Schema selbst lässt hier bewusst keinen `null`-Wert zu - die Umwandlung
+     * geschieht erst im Handler, weil `""` für den Gast dieselbe Aussage trifft wie
+     * gar keine Tagline.
+     */
+    tagline: z.string().trim().max(200).optional(),
+    timezone: createVenueSchema.shape.timezone,
+    /**
+     * `server/schemas/configuration.ts#StrictOpeningHoursSchema` - die enge Form
+     * für Business.openingHours (Tagesschlüssel aus `shared/suggestedConfig.ts#DAYS`),
+     * NICHT das lose `OpeningHoursSchema` des Konfigurators. `null` löscht die
+     * Öffnungszeiten, ausgelassen lässt sie unverändert; ein leeres Objekt `{}`
+     * zählt beim Schreiben wie `null` (siehe unten im Handler).
+     */
+    openingHours: StrictOpeningHoursSchema.nullable().optional(),
+  })
+  .strict()
+  .refine((b) => Object.keys(b).some((k) => k !== "venueId"), {
+    message: "Keine Änderung angegeben",
+  });
+
+/**
+ * PATCH /venues/:venueId - Profilfelder eines Betriebs ändern (nur Inhaber/Admin).
+ *
+ * Der SLUG wandert bewusst NICHT mit: er ist die veröffentlichte Adresse
+ * (`GET /venues/:slug/public`, jede ausgelieferte Web-App verlinkt darauf). Ein
+ * stiller Wechsel würde eine bereits veröffentlichte Adresse ins Leere laufen
+ * lassen - dafür gibt es hier absichtlich keine Route.
+ */
+venuesRouter.patch(
+  "/:venueId",
+  venueGuard,
+  // Ändert Angaben, die der Gast ausserhalb der App sieht (Name, Öffnungszeiten) -
+  // dieselbe Kategorie wie die Programmänderungen unten: keine Aushilfen-Aufgabe.
+  ownerGuard,
+  validateBody(patchVenueSchema),
+  asyncHandler(async (req, res) => {
+    // AUSSCHLIESSLICH die von venueGuard geprüfte Kennung schreiben, niemals eine aus
+    // dem Rumpf - siehe die Begründung bei POST /reservations weiter oben: Prüf- und
+    // Schreibkennung dürfen nie auseinanderfallen.
+    const venueId = venueOf(req);
+
+    const { venueId: _ignoriert, tagline, openingHours, ...rest } =
+      req.body as z.infer<typeof patchVenueSchema>;
+
+    // Prisma ignoriert `undefined`-Felder in `data` (kein Schreibzugriff auf die
+    // Spalte) - `name` und `timezone` können deshalb unverändert durchgereicht
+    // werden. `tagline` und `openingHours` brauchen je eine eigene Zeile.
+    const data: Record<string, unknown> = { ...rest };
+    // "" löscht die Tagline (→ null); das Schema selbst lässt hier keinen
+    // `null`-Wert zu, die Umwandlung geschieht erst hier.
+    if (tagline !== undefined) {
+      data.tagline = tagline === "" ? null : tagline;
+    }
+    if (openingHours !== undefined) {
+      // Json-Spalten verlangen bei Prisma ein Sentinel statt eines blossen `null` -
+      // ein einfaches `null` ist mehrdeutig zwischen SQL NULL und dem JSON-Literal
+      // `null` (derselbe Fall wie `Prisma.DbNull` in server/routes/scraper.ts beim
+      // Neustart eines Scraper-Jobs). DbNull ist hier richtig: die Spalte soll leer
+      // sein, nicht ein JSON-"null" enthalten.
+      //
+      // `{}` zählt dabei wie `null`: beides sagt "keine Öffnungszeiten hinterlegt".
+      // Ohne diese Gleichsetzung landete `openingHours: {}` als leeres JSON-Objekt
+      // in der Spalte, während `openingHours: null` als Prisma.DbNull landete -
+      // zwei Schreibweisen für dieselbe Aussage, die jeder Leser (App, öffentliches
+      // Profil) dann unterscheiden müsste, obwohl keine der beiden Formen mehr
+      // aussagt als die andere.
+      const istLeer = openingHours === null || Object.keys(openingHours).length === 0;
+      data.openingHours = istLeer ? Prisma.DbNull : openingHours;
+    }
+
+    const business = await prisma.business.update({ where: { id: venueId }, data });
+    return res.json(toApiVenue(business));
+  }),
+);
 
 /**
  * Die sechs Felder des Programms - und NUR sie.

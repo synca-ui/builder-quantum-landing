@@ -34,3 +34,26 @@ export function ClerkProvider({ children }: { children?: ReactNode }) {
 export const UserButton = () => null;
 export const SignIn = () => null;
 export const SignUp = () => null;
+
+/**
+ * Abgemeldeter, noch nicht geladener Zustand — passend zu useAuth() oben.
+ * client/components/HeaderAuth.tsx nutzt davon nur useAuth und UserButton;
+ * die vier hier stehen als Netz für die nächste Clerk-Komponente, die jemand
+ * in eine vorgerenderte Seite zieht.
+ */
+export function SignedIn(_: { children?: ReactNode }) {
+  return null;
+}
+
+export function SignedOut({ children }: { children?: ReactNode }) {
+  return <>{children}</>;
+}
+
+/** Passend zu isLoaded: false — der Ladezustand ist der, der im HTML steht. */
+export function ClerkLoading({ children }: { children?: ReactNode }) {
+  return <>{children}</>;
+}
+
+export function ClerkLoaded(_: { children?: ReactNode }) {
+  return null;
+}

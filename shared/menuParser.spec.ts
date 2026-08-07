@@ -6,6 +6,9 @@ import {
   detectCategory,
   menuQuality,
   refineCategories,
+  extractAllergenCodes,
+  parseAllergenLegend,
+  extractLabels,
 } from "./menuParser";
 
 /**
@@ -393,5 +396,579 @@ describe("menuQuality", () => {
 
   it("hält gar nichts für nicht brauchbar", () => {
     expect(menuQuality([]).usable).toBe(false);
+  });
+});
+
+/**
+ * A1.2 aus dem Feedback vom 6.8.2026: "Zusatzpunkte einer Speise (Beilagen,
+ * Varianten, 'dazu…') als Teil des Gerichts darstellen, nicht als eigenes
+ * Gericht."
+ *
+ * Am Messkorpus vom 7.8.2026 gemessen war das der teuerste Einzelfehler: Sehr
+ * viele deutsche Karten brechen den Gerichtnamen um und setzen den Preis ans
+ * Ende der zweiten Zeile. Der Parser nahm dann die zweite Zeile als Namen und
+ * warf die erste weg — beim Gasthof Rössle 9 von 11 Gerichten.
+ */
+describe("Gerichtname über zwei Zeilen (A1.2)", () => {
+  const karte = [
+    "Selbstgemachte schwäbische Maultaschen mit Zwiebelschmelze,",
+    "dazu Kartoffelsalat - 11,50 €",
+    "Rahmhackbraten mit Champignonrahmsoße,",
+    "dazu Butterspätzle - 8,90 €",
+  ].join("\n");
+
+  it("nimmt den Namen aus der ersten Zeile, nicht die Beilage aus der zweiten", () => {
+    const items = parseMenuText(karte);
+    expect(items).toHaveLength(2);
+    expect(items[0].name).toBe(
+      "Selbstgemachte schwäbische Maultaschen mit Zwiebelschmelze",
+    );
+    expect(items[0].price).toBe("11.50");
+    expect(items[1].name).toBe("Rahmhackbraten mit Champignonrahmsoße");
+  });
+
+  it("macht aus der Beilagenzeile die Beschreibung", () => {
+    const items = parseMenuText(karte);
+    expect(items[0].description).toBe("dazu Kartoffelsalat");
+    expect(items[1].description).toBe("dazu Butterspätzle");
+  });
+
+  it("erzeugt kein Gericht namens 'dazu …'", () => {
+    // Die Gegenprobe zum Fehlerbild: genau so hieß es vorher in der Web-App.
+    const namen = parseMenuText(karte).map((i) => i.name.toLowerCase());
+    expect(namen.some((n) => n.startsWith("dazu"))).toBe(false);
+  });
+
+  it("erkennt die Fortsetzung auch ohne Komma am Zeilenende", () => {
+    const items = parseMenuText(
+      "Wiener Schnitzel vom Kalb\nmit Pommes und Salat 18,90 €",
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe("Wiener Schnitzel vom Kalb");
+    expect(items[0].description).toBe("mit Pommes und Salat");
+  });
+
+  it("hält zwei getrennte Gerichte weiterhin auseinander", () => {
+    // Die Gegenrichtung: Ohne Fortsetzungszeichen darf nichts zusammenfallen.
+    const items = parseMenuText("Tomatensuppe 5,50 €\nGulasch 16,50 €");
+    expect(items).toHaveLength(2);
+    expect(items[0].name).toBe("Tomatensuppe");
+    expect(items[1].name).toBe("Gulasch");
+  });
+});
+
+describe("Kategorien auf durchgehend großgeschriebenen Karten (A1.1)", () => {
+  it("macht aus einer Beilagenzeile keine Rubrik", () => {
+    // Auf der Karte "Zur Post" ergab das 19 Kategorien statt 7, darunter
+    // "Mit Pommes Und Beilagensalat" und "Dazu Pommes".
+    expect(detectCategory("MIT POMMES UND BEILAGENSALAT")).toBeNull();
+    expect(detectCategory("DAZU POMMES")).toBeNull();
+    expect(detectCategory("MIT BÖHMISCHEN KNÖDELN UND PREISELBEEREN")).toBeNull();
+  });
+
+  it("verwirft den Rest eines umbrochenen Satzes", () => {
+    // "AUS DEM GARTEN DER SAISON" wird beim Umbruch zu "DER SAISON".
+    expect(detectCategory("DER SAISON")).toBeNull();
+  });
+
+  it("erkennt echte Großbuchstaben-Rubriken weiterhin", () => {
+    expect(detectCategory("AUS DEM SUPPENTOPF")).toBe("Aus Dem Suppentopf");
+    expect(detectCategory("AUS DER PFANNE")).toBe("Aus Der Pfanne");
+    // "Klassiker" ist ein bekanntes Stichwort und gewinnt vor der Eigenrubrik.
+    expect(detectCategory("UNSERE KLASSIKER")).toBe("Hauptgerichte");
+    expect(detectCategory("ZEHNTSTUBE")).toBe("Zehntstube");
+    expect(detectCategory("BROTZEITEN")).toBe("Brotzeiten");
+  });
+
+  it("wirft Kopfzeilen weg, die auf jeder Seite wiederkehren", () => {
+    // Der Betriebsname stand auf jeder der vier Seiten und wurde zur Rubrik,
+    // unter der dann die halbe Karte einsortiert war.
+    const karte = [
+      "„ZUR POST“ HOTEL",
+      "VORSPEISEN",
+      "Forelle 12,90 €",
+      "„ZUR POST“ HOTEL",
+      "Schnitzel 15,90 €",
+      "„ZUR POST“ HOTEL",
+      "Gulasch 16,90 €",
+    ].join("\n");
+    const kategorien = new Set(parseMenuText(karte).map((i) => i.category));
+    expect(kategorien.has("„zur Post“ Hotel")).toBe(false);
+    expect(parseMenuText(karte)).toHaveLength(3);
+  });
+});
+
+/**
+ * A1.3 aus dem Feedback vom 6.8.2026: "Labels und Allergene je Gericht
+ * erkennen — Erkennung darauf trainieren."
+ *
+ * Vorher gab es dafür kein Feld: Auf den 12 vermessenen Karten standen 87
+ * Kennzeichnungen, erkannt wurden 0. Die Kürzel wurden sogar aktiv entfernt.
+ *
+ * Der springende Punkt, an zwei echten Karten belegt: Die Zuordnung
+ * Kürzel -> Stoff ist JE KARTE VERSCHIEDEN. Beim Landgasthof zum Löwen ist "f"
+ * die Milch, bei der Kneipe am Kirchplatz ist Milch "g". Eine fest verdrahtete
+ * Tabelle wäre nicht unvollständig, sondern falsch — und bei einer
+ * Kennzeichnungspflicht ist eine falsche Angabe schlimmer als keine.
+ */
+describe("Allergene (A1.3)", () => {
+  describe("extractAllergenCodes", () => {
+    it("liest die geklammerte Schreibweise", () => {
+      expect(extractAllergenCodes("Gemüsecremesuppe (a1, j, f) 6,50")).toEqual([
+        "a1",
+        "j",
+        "f",
+      ]);
+      expect(extractAllergenCodes("Rösti (o) 14,50")).toEqual(["o"]);
+    });
+
+    it("hält eine Mengenangabe NICHT für eine Kennzeichnung", () => {
+      // "(ca. 250 g)" enthält ein "g" — und das heißt je nach Karte Sesam oder
+      // Milch. Ein Hüftsteak mit erfundener Milchangabe ist der teuerste
+      // denkbare Fehler dieser Funktion.
+      expect(extractAllergenCodes("Hüftsteak (ca. 250 g) 24,80")).toEqual([]);
+      expect(extractAllergenCodes("Schweinemedaillons (durchgegart)")).toEqual([]);
+      expect(extractAllergenCodes("Penne (scharf) 12,90")).toEqual([]);
+    });
+
+    it("liest hochgestellte Ziffern", () => {
+      expect(extractAllergenCodes("Wiener Schnitzel¹² 18,90")).toEqual(["1", "2"]);
+    });
+
+    it("liest die ungeklammerte Schreibweise NUR mit Legende", () => {
+      const zeile = "würzige Lauch-Käse-Cremesuppe   a, g";
+      // Ohne Legende: kein Risiko eingehen.
+      expect(extractAllergenCodes(zeile)).toEqual([]);
+      // Mit Legende: eindeutig.
+      expect(extractAllergenCodes(zeile, new Set(["a", "g"]))).toEqual(["a", "g"]);
+    });
+
+    it("hält ein Wortende nicht für ein Kürzel", () => {
+      // "…und Ei" endet auf zwei Buchstaben wie ein Kürzel. Weil "ei" nicht in
+      // der Legende steht, bleibt es ein Wort.
+      expect(
+        extractAllergenCodes("Rösti mit Speck und Ei", new Set(["a", "g"])),
+      ).toEqual([]);
+    });
+  });
+
+  describe("parseAllergenLegend", () => {
+    it("liest die Schreibweise 'Name=Kürzel'", () => {
+      const legende = parseAllergenLegend(
+        "Allergene:\nWeizen=a1, Roggen=a2,\nMilch/Laktose=f,\nSenf=k, Soja=l,",
+      );
+      expect(legende.a1).toBe("Weizen");
+      expect(legende.f).toBe("Milch/Laktose");
+      expect(legende.l).toBe("Soja");
+    });
+
+    it("liest die Schreibweise 'Kürzel: Name'", () => {
+      const legende = parseAllergenLegend(
+        "Liste der Allergene:\na: Glutenhaltiges Getreide\ng: Milch und daraus gewonnene Erzeugnisse\n1: mit Farbstoff",
+      );
+      expect(legende.a).toBe("Glutenhaltiges Getreide");
+      expect(legende.g).toBe("Milch und daraus gewonnene Erzeugnisse");
+      expect(legende["1"]).toBe("mit Farbstoff");
+    });
+
+    it("verwechselt eine Gerichtszeile nicht mit einer Legende", () => {
+      // "Tagesempfehlung: Rinderroulade" sieht aus wie "Kürzel: Name" — ohne
+      // den Legendenkopf davor darf das nicht greifen.
+      const legende = parseAllergenLegend("Tagesempfehlung: Rinderroulade 18,90");
+      expect(Object.keys(legende)).toHaveLength(0);
+    });
+
+    it("liefert nichts, wenn es keine Legende gibt", () => {
+      expect(parseAllergenLegend("Schnitzel 18,90\nGulasch 16,50")).toEqual({});
+      expect(parseAllergenLegend("")).toEqual({});
+    });
+  });
+
+  describe("im ganzen Durchlauf", () => {
+    const karte = [
+      "Suppen",
+      "Gemüsecremesuppe (a1, j, f) 6,50",
+      "Hüftsteak (ca. 250 g)",
+      "mit frischen Pfifferlingen in Rahm (f, o) 24,80",
+      "Allergene:",
+      "Weizen=a1, Milch/Laktose=f, Lupinen=j, Knoblauch=o,",
+    ].join("\n");
+
+    it("hängt die Kennzeichnung ans Gericht", () => {
+      const items = parseMenuText(karte);
+      const suppe = items.find((i) => i.name.includes("Gemüsecremesuppe"));
+      expect(suppe?.allergens).toEqual(["a1", "j", "f"]);
+    });
+
+    it("nimmt auch die Kennzeichnung von der Fortsetzungszeile mit", () => {
+      // Beim Hüftsteak steht sie an der zweiten Zeile, nicht am Namen.
+      const steak = parseMenuText(karte).find((i) => i.name.includes("Hüftsteak"));
+      expect(steak?.allergens).toEqual(["f", "o"]);
+    });
+
+    it("lässt die Kürzel nicht im Namen stehen", () => {
+      const namen = parseMenuText(karte).map((i) => i.name);
+      expect(namen.some((n) => n.includes("(a1"))).toBe(false);
+      expect(namen.some((n) => n.includes("(f,"))).toBe(false);
+    });
+
+    it("setzt kein leeres Feld, wenn nichts gekennzeichnet ist", () => {
+      // Ein leeres Array liest sich wie "geprüft, nichts enthalten" — das hat
+      // niemand behauptet.
+      const items = parseMenuText("Schnitzel 18,90");
+      expect(items[0].allergens).toBeUndefined();
+    });
+  });
+});
+
+describe("Labels (A1.3)", () => {
+  it("erkennt die gebräuchlichen Ernährungs-Labels", () => {
+    expect(extractLabels("Gemüsecurry (vegan)")).toEqual(["vegan"]);
+    expect(extractLabels("Walnussknödel vegetarisch")).toEqual(["vegetarisch"]);
+    expect(extractLabels("Penne Spezial (scharf)")).toEqual(["scharf"]);
+    expect(extractLabels("Reisbowl vegan, glutenfrei")).toEqual([
+      "vegan",
+      "glutenfrei",
+    ]);
+  });
+
+  it("hält Werbesprache nicht für ein Label", () => {
+    // Am Korpus geprüft: "hausgemacht" und "regional" stehen in fast jedem
+    // zweiten Gerichtnamen. Ein Label, das überall steht, sagt nichts.
+    expect(extractLabels("Reinerts hausgemachte Rinderkraftbrühe")).toEqual([]);
+    expect(extractLabels("Regionale Zutaten aus dem Umland")).toEqual([]);
+  });
+
+  it("hängt das Label ans Gericht, nicht an die Rubrik", () => {
+    // Unter der Rubrik "Vegetarisch" darf nicht jedes Gericht das Label
+    // erben — dort steht auch mal etwas mit Speck daneben.
+    const items = parseMenuText(
+      "Vegetarisch\nGemüsecurry (vegan) 12,50\nBauernomelett mit Speck 11,00",
+    );
+    expect(items[0].labels).toEqual(["vegan"]);
+    expect(items[1].labels).toBeUndefined();
+  });
+});
+
+/**
+ * Die folgenden Fälle stammen alle aus dem Messkorpus vom 7.8.2026 — jeder
+ * hat auf einer echten Karte Gerichte gekostet. Sie stehen hier, damit sie
+ * nicht zurückkommen.
+ */
+describe("Muster echter Karten", () => {
+  it("hält einen Namen über vier Zeilen zusammen", () => {
+    // Landgasthof zum Löwen: Name, drei Beschreibungszeilen, Preis am Ende.
+    // Vorher hieß das Gericht "Spiegelei und Salat" — jede weitere
+    // Beschreibungszeile überschrieb den Namen.
+    const items = parseMenuText(
+      [
+        "Löwentoast",
+        "kleines Schnitzel auf Toast,",
+        "mit frischen Champignons,",
+        "Spiegelei und Salat 14,40",
+      ].join("\n"),
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe("Löwentoast");
+    expect(items[0].price).toBe("14.40");
+    expect(items[0].description).toContain("kleines Schnitzel auf Toast");
+    expect(items[0].description).toContain("Spiegelei und Salat");
+  });
+
+  it("verschluckt den nächsten Gerichtnamen nicht als Beschreibung", () => {
+    // Der Preis des zweiten Gerichts steht zwei Zeilen weiter — ein Blick von
+    // nur einer Zeile reichte nicht.
+    const items = parseMenuText(
+      [
+        "Gemüsecremesuppe 6,50",
+        "Hüftsteak (ca. 250 g)",
+        "mit frischen Pfifferlingen in Rahm",
+        "und eine Beilage nach Wahl 24,80",
+      ].join("\n"),
+    );
+    expect(items).toHaveLength(2);
+    expect(items[1].name).toBe("Hüftsteak (ca. 250 g)");
+    expect(items[1].price).toBe("24.80");
+  });
+
+  it("erkennt den Preis hinter einer Beschriftung", () => {
+    // Landgasthaus zum Schwarzbachtal: "à la carte 27,00". Ohne diese Regel
+    // hieß das Gericht "à la carte" — und "à" fiel zusätzlich durch die
+    // Kleinbuchstaben-Prüfung, die nur a-z kannte.
+    const items = parseMenuText(
+      ["Rumpsteak", "mit Kräuterbutter,", "à la carte 27,00 €"].join("\n"),
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe("Rumpsteak");
+    expect(items[0].price).toBe("27.00");
+  });
+
+  it("lässt sich von 'zzgl. Beilage' nicht das Gericht wegnehmen", () => {
+    // Gasthof Pesterwitz: "16,95 € zzgl. Beilage Ihrer Wahl". Die Rauschregel
+    // für "zzgl." war für die Mehrwertsteuer gedacht und traf hier die
+    // Preiszeile — 27 von 56 Gerichten gingen dadurch verloren.
+    const items = parseMenuText(
+      ["Zanderfilet", "Gebraten nach Müllerin Art", "16,95 € zzgl. Beilage Ihrer Wahl"].join("\n"),
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe("Zanderfilet");
+    expect(items[0].price).toBe("16.95");
+  });
+
+  it("wirft eine Steuerzeile weiterhin weg", () => {
+    // Die Gegenrichtung: Der ursprüngliche Zweck der Regel muss erhalten bleiben.
+    expect(parseMenuText("Alle Preise zzgl. MwSt. 19,00")).toHaveLength(0);
+    expect(parseMenuText("Preise inkl. 19 % MwSt. 19,00")).toHaveLength(0);
+  });
+
+  it("macht aus einem Urlaubshinweis keine Gerichte", () => {
+    // Rotes Roß: "Urlaub vom 02.08.26 bis einschl. 14.08.26" ergab zwei
+    // Gerichte zu 2,08 € und 14,08 €.
+    expect(
+      parseMenuText("Urlaub vom 02.08.26 bis einschl.14.08.26"),
+    ).toHaveLength(0);
+  });
+
+  it("hält ein Datum nicht für einen Preis", () => {
+    expect(findPrices("Aktion am 02.08.26")).toHaveLength(0);
+    // Ein echter Preis in derselben Schreibweise bleibt einer.
+    expect(findPrices("Schnitzel 18,90")[0].value).toBe("18.90");
+  });
+});
+
+/**
+ * A1.2, zweiter Teil: Aufpreise und Größen gehören AN das Gericht.
+ * Vorher stand auf der Karte des Landgasthofs zum Löwen ein eigenständiges
+ * Gericht namens "Käse" für 1,20 € neben dem Rumpsteak.
+ */
+describe("Varianten und Aufpreise (A1.2)", () => {
+  const karte = [
+    "Salatteller 7,90",
+    "Käse + 1,20",
+    "Ei + 1,20",
+    "3 Riesengarnelen + 5,40",
+  ].join("\n");
+
+  it("macht aus Aufpreisen keine eigenen Gerichte", () => {
+    const items = parseMenuText(karte);
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe("Salatteller");
+  });
+
+  it("hängt sie als Varianten ans Gericht", () => {
+    const extras = parseMenuText(karte)[0].extras ?? [];
+    expect(extras.map((e) => e.name)).toEqual(["Käse", "Ei", "3 Riesengarnelen"]);
+    expect(extras[0].price).toBe("1.20");
+    expect(extras[2].price).toBe("5.40");
+  });
+
+  it("erkennt Größen und Portionen", () => {
+    const items = parseMenuText(
+      ["Café Crème 3,50", "Tasse 3,50", "Pott 4,50", "kleine Portion 10,00"].join("\n"),
+    );
+    expect(items).toHaveLength(1);
+    expect((items[0].extras ?? []).map((e) => e.name)).toEqual([
+      "Tasse",
+      "Pott",
+      "kleine Portion",
+    ]);
+  });
+
+  it("gibt der Variante ihre eigene Kennzeichnung", () => {
+    // Ein "Käse +" bringt Milch mit, das Schnitzel darunter nicht. Sie
+    // hochzureichen hieße, dem Grundgericht ein Allergen anzudichten.
+    const items = parseMenuText(
+      ["Allergene:", "Milch=f", "Schnitzel 15,90", "Käse + (f) 1,20"].join("\n"),
+    );
+    expect(items[0].allergens).toBeUndefined();
+    expect(items[0].extras?.[0].allergens).toEqual(["f"]);
+  });
+
+  it("lässt eine Variante ohne Gericht davor nicht verschwinden", () => {
+    // Lieber eine unschöne Position als eine verschwundene.
+    const items = parseMenuText("Käse + 1,20");
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe("Käse +");
+  });
+});
+
+/**
+ * Der Mittagstisch: Wochentag als Überschrift, Gerichte darunter, der Preis
+ * einmal für alles. Eine der häufigsten Strukturen auf deutschen Gastro-Seiten
+ * — und bis zum 7.8.2026 vollständig unsichtbar, weil ein Gericht nur dort
+ * entstand, wo ein Preis stand.
+ */
+describe("Mittagstisch nach Wochentagen", () => {
+  const karte = [
+    "Unser Tagesessen mit Suppe und Hauptgang für 12,00€",
+    "Montag",
+    "Spanferkel-Rollbraten mit Serviettenknödel und Salat",
+    "Hausgemachtes Tiramisu",
+    "Donnerstag",
+    "Gemüsecremesuppe",
+    "Fleischküchle mit Pfefferrahmsauce",
+  ].join("\n");
+
+  it("erkennt die Gerichte auch ohne eigenen Preis", () => {
+    const namen = parseMenuText(karte).map((i) => i.name);
+    expect(namen).toContain("Spanferkel-Rollbraten mit Serviettenknödel und Salat");
+    expect(namen).toContain("Hausgemachtes Tiramisu");
+    expect(namen).toContain("Gemüsecremesuppe");
+  });
+
+  it("nimmt den Wochentag als Kategorie", () => {
+    const items = parseMenuText(karte);
+    const tiramisu = items.find((i) => i.name.includes("Tiramisu"));
+    expect(tiramisu?.category).toBe("Montag");
+    const suppe = items.find((i) => i.name === "Gemüsecremesuppe");
+    expect(suppe?.category).toBe("Donnerstag");
+  });
+
+  it("macht aus einer Öffnungszeiten-Tabelle keine Speisekarte", () => {
+    // Die Gegenprobe. Ohne die Zeitprüfung stünde hier ein Gericht namens
+    // "11:30 - 14:00 Uhr" unter der Kategorie "Montag".
+    const items = parseMenuText(
+      ["Öffnungszeiten", "Montag", "11:30 - 14:00 Uhr", "Dienstag", "Ruhetag"].join("\n"),
+    );
+    expect(items).toHaveLength(0);
+  });
+
+  it("hört beim nächsten Abschnitt auf", () => {
+    const items = parseMenuText(
+      ["Montag", "Rinderroulade mit Klößen", "Vorspeisen", "Forelle 12,90"].join("\n"),
+    );
+    expect(items.map((i) => i.name)).toEqual([
+      "Rinderroulade mit Klößen",
+      "Forelle",
+    ]);
+    expect(items[1].category).toBe("Vorspeisen");
+  });
+
+  it("hält einen Datumsbereich nicht für einen Preis", () => {
+    // "Tagesessen 03.08.- 07.08.2026" ergab ein Gericht "Tagesessen" zu 3,08 €.
+    expect(findPrices("Tagesessen 03.08.- 07.08.2026")).toHaveLength(0);
+    expect(parseMenuText("Tagesessen 03.08.- 07.08.2026")).toHaveLength(0);
+  });
+});
+
+/**
+ * Der teuerste denkbare Fehler dieser Datei: eine Allergenangabe, die auf der
+ * Karte nicht steht. Jemand mit einer Unverträglichkeit trifft danach eine
+ * Entscheidung — deshalb ist eine fehlende Angabe besser als eine erfundene.
+ */
+describe("Erfundene Allergene", () => {
+  it("hält Füllmengen und Herkunftskürzel nicht für Kennzeichnungen", () => {
+    expect(extractAllergenCodes("Weißbier (0,5l) 4,90")).toEqual([]);
+    expect(extractAllergenCodes("Rindersteak (DE) 27,50")).toEqual([]);
+    expect(extractAllergenCodes("Apfelsaft (BIO) 3,50")).toEqual([]);
+    expect(extractAllergenCodes("Hüftsteak (ca. 250 g) 24,80")).toEqual([]);
+  });
+
+  it("nimmt ohne Legende nur die klassischen Kürzelformen", () => {
+    // Ziffer, Buchstabe, Buchstabe+Ziffer — mehr ist ohne Legende nicht sicher.
+    expect(extractAllergenCodes("Schnitzel (1,2) 18,90")).toEqual(["1", "2"]);
+    expect(extractAllergenCodes("Suppe (f) 5,50")).toEqual(["f"]);
+    expect(extractAllergenCodes("Brot (a1) 3,00")).toEqual(["a1"]);
+  });
+
+  it("richtet sich nach der Legende, wenn die Karte eine hat", () => {
+    const bekannt = new Set(["a", "g"]);
+    // In der Legende: wird genommen.
+    expect(extractAllergenCodes("Suppe (a, g) 6,50", bekannt)).toEqual(["a", "g"]);
+    // Nicht in der Legende: bleibt liegen, auch wenn die Form passt.
+    expect(extractAllergenCodes("Suppe (z) 6,50", bekannt)).toEqual([]);
+  });
+
+  it("erzeugt aus einer ganzen Karte keine Kennzeichnung, die nicht dasteht", () => {
+    // Gegenprobe über den ganzen Durchlauf, ohne Legende.
+    const items = parseMenuText(
+      ["Weißbier (0,5l) 4,90", "Rindersteak (DE) 27,50"].join("\n"),
+    );
+    expect(items.every((i) => !i.allergens)).toBe(true);
+  });
+});
+
+/**
+ * Zwei Fehler, die eine Opus-Durchsicht am 7.8.2026 ausführend nachgewiesen
+ * hat. Beide trafen ausgerechnet die zweispaltige Karte — die Form, für die
+ * dieser Parser überhaupt gebaut wurde. Die damals bestehenden 84 Tests
+ * blieben bei beiden grün.
+ */
+describe("Zweispaltige Karten: Preis in der Folgezeile", () => {
+  it("überlebt eine Beilagenzeile, die sich wiederholt", () => {
+    // Der Seitenmöbel-Filter erklärte jede preislose Zeile ab dem dritten
+    // Vorkommen zur Kopfzeile — und nahm mit clearPending() den anstehenden
+    // Gerichtnamen mit. "mit Semmelknödeln und Salat" steht auf einer echten
+    // Schnitzelkarte fünf- bis zehnmal. Ergebnis vorher: NULL Gerichte.
+    const karte = [
+      "Gulasch vom Rind",
+      "mit Semmelknödeln und Salat",
+      "16,90",
+      "Rinderroulade",
+      "mit Semmelknödeln und Salat",
+      "17,90",
+      "Kalbsbraten",
+      "mit Semmelknödeln und Salat",
+      "18,90",
+    ].join("\n");
+    const items = parseMenuText(karte);
+    expect(items.map((i) => i.name)).toEqual([
+      "Gulasch vom Rind",
+      "Rinderroulade",
+      "Kalbsbraten",
+    ]);
+    expect(items.map((i) => i.price)).toEqual(["16.90", "17.90", "18.90"]);
+  });
+
+  it("macht aus einem Gerichtnamen mit Rubrik-Stichwort keine Rubrik", () => {
+    // Die Überschriftenbremse fragte setztFort mit dem Text VOR dem Preis.
+    // Steht der Preis allein in der Zeile, ist dieser Text leer — und
+    // setztFort gibt auf Leeres per Definition false zurück. Die Bremse griff
+    // in zweispaltigen Karten also nie: "Zwiebelsuppe" wurde zur Rubrik
+    // "Suppen", "Rumpsteak" zu "Vom Grill", beide Gerichte verschwanden.
+    const karte = [
+      "Speisen",
+      "Zwiebelsuppe",
+      "5,50",
+      "Gulasch",
+      "16,90",
+      "Rumpsteak",
+      "24,00",
+    ].join("\n");
+    const items = parseMenuText(karte);
+    expect(items.map((i) => i.name)).toEqual([
+      "Zwiebelsuppe",
+      "Gulasch",
+      "Rumpsteak",
+    ]);
+    expect(items.map((i) => i.price)).toEqual(["5.50", "16.90", "24.00"]);
+  });
+
+  it("erkennt echte Rubriken in zweispaltigen Karten weiterhin", () => {
+    // Die Gegenrichtung: Die Bremse darf nicht ALLES durchlassen.
+    const items = parseMenuText(
+      ["Vorspeisen", "Forelle", "12,90", "Suppen", "Tagessuppe", "5,50"].join("\n"),
+    );
+    expect(items.find((i) => i.name === "Forelle")?.category).toBe("Vorspeisen");
+    expect(items.find((i) => i.name === "Tagessuppe")?.category).toBe("Suppen");
+  });
+
+  it("wirft eine echte Kopfzeile weiterhin weg, ohne das Gericht zu verlieren", () => {
+    // Der Betriebsname zwischen Name und Preis — in mehrseitigen PDFs die
+    // Regel. Er darf verschwinden, das Gericht nicht.
+    const karte = [
+      "„ZUR POST“ HOTEL",
+      "Forelle",
+      "„ZUR POST“ HOTEL",
+      "12,90",
+      "Schnitzel",
+      "„ZUR POST“ HOTEL",
+      "15,90",
+    ].join("\n");
+    const items = parseMenuText(karte);
+    expect(items.map((i) => i.name)).toEqual(["Forelle", "Schnitzel"]);
+    expect(
+      items.every((i) => !String(i.category).includes("Post")),
+    ).toBe(true);
   });
 });

@@ -41,6 +41,10 @@
     "client/**/*",
     "server/**/*",
     "shared/**/*",
+    // Nur die Typ-Deklaration, nicht der ganze test-Ordner: Sie macht die
+    // Matcher von @testing-library/jest-dom bekannt, die setupTests.ts zur
+    // Laufzeit längst lädt. Begründung in test/matchers.d.ts.
+    "test/matchers.d.ts",
     "vite.config.ts",
     "vite.config.server.ts"
   ],

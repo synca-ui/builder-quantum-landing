@@ -1,0 +1,22 @@
+[
+  { "id": "post-gasthof", "restaurant": "Hotel-Gasthof Zur Post", "bauart": "pdf_text", "seite": "https://www.ghzp.de/de/restaurant/speisekarten.html", "karte_url": "https://www.ghzp.de/files/aktuelle_speisekarte_.pdf" },
+  { "id": "zumloewen", "restaurant": "Landgasthof zum Loewen", "bauart": "pdf_text", "seite": "http://www.landgasthof-zumloewen.de/", "karte_url": "http://www.landgasthof-zumloewen.de/img/speisekarte/speisekarte.pdf" },
+  { "id": "reinert", "restaurant": "Landgasthof Reinert", "bauart": "pdf_text", "seite": "https://www.landgasthof-reinert.de/", "karte_url": "https://www.landgasthof-reinert.de/fileadmin/user_upload/Speisekarte.pdf" },
+  { "id": "sw-loewen", "restaurant": "Schwarzwald-Landgasthof Loewen", "bauart": "pdf_text", "seite": "https://www.schwarzwald-landgasthof-loewen.de/", "karte_url": "https://www.schwarzwald-landgasthof-loewen.de/wp-content/uploads/2023/04/Speisekarte.pdf" },
+  { "id": "roessle", "restaurant": "Gasthof Roessle", "bauart": "pdf_text", "seite": "https://www.gasthof-roessle.com/", "karte_url": "https://www.gasthof-roessle.com/fileadmin/download/200316_Speisekarte.pdf" },
+  { "id": "goldener-baer", "restaurant": "Gasthof Goldener Baer", "bauart": "pdf_text", "seite": "https://www.gasthof-goldener-baer.de/", "karte_url": "https://www.gasthof-goldener-baer.de/wp-content/uploads/2020/05/speisekarte.pdf" },
+  { "id": "ratskeller", "restaurant": "Ratskeller Leipzig", "bauart": "pdf_text", "seite": "https://ratskeller.restaurant/", "karte_url": "https://ratskeller.restaurant/wp-content/speisekarte/speisekarte.pdf" },
+
+  { "id": "hoelzle", "restaurant": "Landgasthof Hoelzle", "bauart": "html_inline", "seite": "https://www.hoelzle.de/restaurant/speisekarte-tageskarte/", "karte_url": "https://www.hoelzle.de/restaurant/speisekarte-tageskarte/" },
+  { "id": "hohkeppeler", "restaurant": "Hohkeppeler Hof", "bauart": "html_inline", "seite": "https://www.hohkeppeler-hof.de/speisekarte/", "karte_url": "https://www.hohkeppeler-hof.de/speisekarte/" },
+  { "id": "dulkhaeusle", "restaurant": "Dulkhaeusle", "bauart": "html_inline", "seite": "https://www.dulkhaeusle.de/speisekarte.html", "karte_url": "https://www.dulkhaeusle.de/speisekarte.html" },
+  { "id": "schwarzbachtal", "restaurant": "Landgasthaus zum Schwarzbachtal", "bauart": "html_inline", "seite": "https://www.schwarzbachtal.de/speisekarte.html", "karte_url": "https://www.schwarzbachtal.de/speisekarte.html" },
+  { "id": "pesterwitz", "restaurant": "Gasthof Pesterwitz", "bauart": "html_inline", "seite": "https://www.gasthof-pesterwitz.de/index.php/restaurant-speisekarte.html", "karte_url": "https://www.gasthof-pesterwitz.de/index.php/restaurant-speisekarte.html" },
+  { "id": "kirchplatz", "restaurant": "Kneipe am Kirchplatz", "bauart": "html_inline", "seite": "https://www.kneipe-am-kirchplatz.de/index.php/speisekarte.html", "karte_url": "https://www.kneipe-am-kirchplatz.de/index.php/speisekarte.html" },
+
+  { "id": "wirtshaus-hameln", "restaurant": "Das Wirtshaus Hameln", "bauart": "foto_scan", "seite": "https://www.das-wirtshaus-hameln.de/", "karte_url": "https://www.das-wirtshaus-hameln.de/wp-content/uploads/2019/05/Speisekarte_.pdf" },
+  { "id": "goschs", "restaurant": "Goschs Gasthof", "bauart": "foto_scan", "seite": "https://goschs-gasthof.de/", "karte_url": "https://goschs-gasthof.de/images/goschs/mittagstisch/Goschs_Mittagskarte-August26.jpg" },
+  { "id": "pila", "restaurant": "Speisegaststaette PILA", "bauart": "foto_scan", "seite": "https://www.restaurant-pila.de/speisekarte.php", "karte_url": "https://www.restaurant-pila.de/img/PILA-3-Gaenge-Menue-Sept-2021-Groupon.jpg" },
+  { "id": "schmankerl", "restaurant": "Das Schmankerl", "bauart": "foto_scan", "seite": "https://www.gasthaus-spitzer.de/", "karte_url": "https://www.gasthaus-spitzer.de/documents/Speisekarte.pdf" },
+  { "id": "rotes-ross", "restaurant": "Hotel Gasthof Rotes Ross", "bauart": "foto_scan", "seite": "https://www.rotesross-heroldsberg.de/", "karte_url": "https://www.rotesross-heroldsberg.de/wp-content/uploads/2018/03/Speisekarte.pdf" }
+]

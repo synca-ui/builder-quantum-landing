@@ -107,40 +107,23 @@ export function PreviewAdjustmentsStep({
             </div>
           </Card>
 
-          <Card className="p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              {t("preview.performanceScore")}
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Speed</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full w-4/5"></div>
-                  </div>
-                  <span className="text-sm font-bold text-green-600">95</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">SEO</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full w-5/6"></div>
-                  </div>
-                  <span className="text-sm font-bold text-blue-600">92</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Mobile</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div className="bg-purple-500 h-2 rounded-full w-full"></div>
-                  </div>
-                  <span className="text-sm font-bold text-purple-600">100</span>
-                </div>
-              </div>
-            </div>
-          </Card>
+          {/*
+            HIER STAND EINE "Performance-Wertung": Speed 95, SEO 92, Mobile 100,
+            samt Fortschrittsbalken. Keine dieser Zahlen wurde je berechnet —
+            sie standen fest im Markup, die Balkenbreiten ebenso. Jeder Betrieb
+            sah dieselbe Wertung, unabhängig vom Zustand seiner Seite.
+
+            Entfernt statt repariert, aus zwei Gründen:
+              1. "Lieber eine Lücke als eine erfundene Angabe" — eine Kennzahl,
+                 die als gemessen auftritt und geraten ist, ist schlimmer als
+                 keine. Ein Wirt trifft danach Entscheidungen.
+              2. Eine echte Messung gibt es an dieser Stelle nicht: Die Seite
+                 ist noch nicht veröffentlicht, es existiert also keine URL, an
+                 der sich Ladezeit oder Mobiltauglichkeit prüfen ließen.
+
+            Wenn die Wertung zurückkommen soll, gehört sie NACH das
+            Veröffentlichen und muss aus einer echten Messung stammen.
+          */}
         </div>
 
         <div className="lg:col-span-2">

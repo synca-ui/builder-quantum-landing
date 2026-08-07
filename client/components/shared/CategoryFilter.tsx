@@ -8,7 +8,7 @@
  * - AppRenderer.tsx (Live-Seite)
  */
 
-import React, { memo, useRef, useEffect } from "react";
+import React, { memo, useRef, useEffect, useState } from "react";
 
 // ============================================
 // TYPES
@@ -51,6 +51,24 @@ export const CategoryFilter = memo(function CategoryFilter({
   className = "",
 }: CategoryFilterProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  /**
+   * Sind auch die abgeschnittenen Kategorien sichtbar?
+   *
+   * Vorher war "+6 mehr" ein <div> ohne onClick — die sechs Kategorien
+   * dahinter waren damit überhaupt nicht erreichbar. Bei einer automatisch
+   * erkannten Karte ist das kein Randfall: Der Messkorpus hat Karten mit 14
+   * und 19 Kategorien, von denen dann fünf sichtbar waren.
+   */
+  const [expanded, setExpanded] = useState(false);
+
+  /**
+   * Steht die gewählte Kategorie im abgeschnittenen Teil, muss aufgeklappt
+   * werden — sonst ist gefiltert, aber nicht erkennbar wonach.
+   */
+  const activeIndex = activeCategory ? categories.indexOf(activeCategory) : -1;
+  useEffect(() => {
+    if (activeIndex >= maxVisible) setExpanded(true);
+  }, [activeIndex, maxVisible]);
 
   // Scroll zur aktiven Kategorie wenn sie sich ändert
   useEffect(() => {
@@ -77,8 +95,11 @@ export const CategoryFilter = memo(function CategoryFilter({
     return null;
   }
 
-  // Kategorien limitieren
-  const visibleCategories = categories.slice(0, maxVisible);
+  // Kategorien limitieren, solange nicht aufgeklappt
+  const visibleCategories = expanded
+    ? categories
+    : categories.slice(0, maxVisible);
+  const versteckt = categories.length - maxVisible;
 
   return (
     <div
@@ -145,14 +166,26 @@ export const CategoryFilter = memo(function CategoryFilter({
         );
       })}
 
-      {/* "Mehr" Indikator wenn abgeschnitten */}
-      {categories.length > maxVisible && (
-        <div
-          className="px-2 py-2 text-xs opacity-50 whitespace-nowrap shrink-0 flex items-center"
-          style={{ color: fontColor }}
+      {/*
+        Auf-/Zuklappen. Muss ein <button> sein: Als <div> war es ein toter
+        Hinweis, und die Kategorien dahinter blieben unerreichbar.
+      */}
+      {versteckt > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0"
+          style={{
+            backgroundColor: "transparent",
+            color: fontColor,
+            borderRadius: "var(--radius-button, 9999px)",
+            border: `1px dashed ${fontColor}40`,
+            opacity: 0.8,
+          }}
+          aria-expanded={expanded}
         >
-          +{categories.length - maxVisible} mehr
-        </div>
+          {expanded ? "weniger" : `+${versteckt} mehr`}
+        </button>
       )}
     </div>
   );

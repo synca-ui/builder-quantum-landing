@@ -1,13 +1,18 @@
 // @vitest-environment node
 //
 // Bewusst ohne jsdom: Die Abbildung ist eine reine Funktion und braucht kein DOM.
-// Die in vitest.config.ts eingestellte jsdom-Umgebung lässt sich in diesem Projekt
-// derzeit ohnehin nicht laden (html-encoding-sniffer verlangt ERR_REQUIRE_ESM),
-// wodurch die gesamte Suite abbricht – auch der bestehende utils.spec.ts.
-// Diese Datei umgeht das, behebt aber nicht die Ursache.
+//
+// Nachtrag 7.8.2026 zur Ursache des ERR_REQUIRE_ESM, das hier bisher als
+// Paketfehler notiert war: Es ist die NODE-VERSION. jsdom 27 zieht
+// html-encoding-sniffer@6, das per require() ein ESM-Modul lädt — das kann Node
+// erst ab 22.12. Auf einem Rechner mit Node 22.11 fällt damit die GESAMTE
+// Client-Suite still aus, und ein grüner Lauf sieht trotzdem vollständig aus.
+// Mit einer neueren Node-Version läuft alles, auch ohne diese Zeile hier.
 import { describe, expect, it } from "vitest";
 import {
   suggestedConfigToDraft,
+  plausibleBusinessName,
+  normalizeSocialLinks,
   describeDraft,
   mergeSection,
   type SuggestedConfig,
@@ -227,5 +232,131 @@ describe("mergeSection", () => {
   it("stellt den Feldern auf Wunsch den Bereich voran", () => {
     const r = mergeSection({ name: "" }, { name: "X" }, {}, "business");
     expect(r.applied).toEqual(["business.name"]);
+  });
+});
+
+/**
+ * A3.1 aus dem Feedback vom 6.8.2026: Der Betriebsname kam als "Herzlich" an —
+ * aus dem "Herzlich willkommen" der Startseite. Die Ursache liegt im n8n-Flow;
+ * hier steht die Absicherung, durch die jedes Scrape-Ergebnis muss.
+ */
+describe("plausibleBusinessName", () => {
+  it("verwirft den Fehlerfall aus dem Feedback", () => {
+    expect(plausibleBusinessName("Herzlich")).toBeUndefined();
+    expect(plausibleBusinessName("Willkommen")).toBeUndefined();
+  });
+
+  it("schält die Begrüßung ab und behält den Namen dahinter", () => {
+    expect(plausibleBusinessName("Herzlich willkommen im Gasthof Adler")).toBe(
+      "Gasthof Adler",
+    );
+    expect(plausibleBusinessName("Willkommen bei uns im Landgasthof Krone")).toBe(
+      "Landgasthof Krone",
+    );
+    expect(plausibleBusinessName("Welcome to Ristorante Bella Vista")).toBe(
+      "Ristorante Bella Vista",
+    );
+  });
+
+  it("nimmt aus einem Seitentitel den Teil, der ein Name sein kann", () => {
+    expect(plausibleBusinessName("Gasthof Adler | Startseite")).toBe("Gasthof Adler");
+    expect(plausibleBusinessName("Startseite – Hotel Krone")).toBe("Hotel Krone");
+  });
+
+  it("verwirft Gattungsbegriffe, die allein stehen", () => {
+    // "Gasthof" ist kein Name, "Gasthof Adler" schon.
+    expect(plausibleBusinessName("Restaurant")).toBeUndefined();
+    expect(plausibleBusinessName("Speisekarte")).toBeUndefined();
+    expect(plausibleBusinessName("Über uns")).toBeUndefined();
+    expect(plausibleBusinessName("Gasthof")).toBeUndefined();
+  });
+
+  it("lässt echte Namen unangetastet", () => {
+    expect(plausibleBusinessName("Gasthof Rössle")).toBe("Gasthof Rössle");
+    expect(plausibleBusinessName("Ratskeller Leipzig")).toBe("Ratskeller Leipzig");
+    expect(plausibleBusinessName("  Zum Löwen  ")).toBe("Zum Löwen");
+  });
+
+  it("lässt Anführungszeichen stehen, die zum Namen gehören", () => {
+    // Echte Karte aus dem Messkorpus. Der Gedankenstrich trennt hier NICHT
+    // Seitenmöbel ab, sondern steht mitten im Namen.
+    expect(plausibleBusinessName("\u201eZUR POST\u201c HOTEL – GASTHOF")).toBe(
+      "\u201eZUR POST\u201c HOTEL – GASTHOF",
+    );
+    // Umschließen sie den ganzen Namen, kommen sie weg.
+    expect(plausibleBusinessName("\u201eZur Post\u201c")).toBe("Zur Post");
+  });
+
+  it("liefert lieber nichts als etwas Erfundenes", () => {
+    expect(plausibleBusinessName("")).toBeUndefined();
+    expect(plausibleBusinessName(undefined)).toBeUndefined();
+    expect(plausibleBusinessName("   ")).toBeUndefined();
+    expect(plausibleBusinessName("123")).toBeUndefined();
+  });
+});
+
+/**
+ * A3.3 aus dem Feedback vom 6.8.2026: "Social-Media-Konten korrekt übernehmen."
+ *
+ * Der Fehler war kein falscher Wert, sondern ein fehlendes Feld: siteDetails
+ * las Instagram und Facebook aus dem HTML, der Publish-Endpunkt nahm sie unter
+ * contact.socialMedia entgegen — dazwischen fiel alles auf den Boden.
+ */
+describe("normalizeSocialLinks", () => {
+  it("übernimmt echte Profil-Adressen", () => {
+    expect(
+      normalizeSocialLinks({
+        instagram: "https://www.instagram.com/gasthof_adler/",
+        facebook: "https://facebook.com/GasthofAdler",
+      }),
+    ).toEqual({
+      instagram: "https://www.instagram.com/gasthof_adler/",
+      facebook: "https://facebook.com/GasthofAdler",
+    });
+  });
+
+  it("verwirft ein Handle ohne Adresse", () => {
+    // Aus "@gasthof_adler" eine URL zu bauen hieße, eine Adresse zu erfinden,
+    // die es womöglich nicht gibt.
+    expect(normalizeSocialLinks({ instagram: "@gasthof_adler" })).toEqual({});
+    expect(normalizeSocialLinks({ facebook: "GasthofAdler" })).toEqual({});
+  });
+
+  it("verwirft einen Kanal, der nicht zur Adresse passt", () => {
+    // Sonst führt das Instagram-Symbol auf Facebook.
+    expect(
+      normalizeSocialLinks({ instagram: "https://facebook.com/GasthofAdler" }),
+    ).toEqual({});
+  });
+
+  it("ignoriert unbekannte Kanäle", () => {
+    // Für die hat die Web-App weder Symbol noch Platz.
+    expect(normalizeSocialLinks({ myspace: "https://myspace.com/x" })).toEqual({});
+  });
+
+  it("führt twitter und x zusammen", () => {
+    expect(normalizeSocialLinks({ twitter: "https://twitter.com/adler" })).toEqual({
+      x: "https://twitter.com/adler",
+    });
+    expect(normalizeSocialLinks({ x: "https://x.com/adler" })).toEqual({
+      x: "https://x.com/adler",
+    });
+  });
+
+  it("kommt mit fehlenden und kaputten Werten klar", () => {
+    expect(normalizeSocialLinks(undefined)).toEqual({});
+    expect(normalizeSocialLinks(null)).toEqual({});
+    expect(normalizeSocialLinks({ instagram: "" })).toEqual({});
+    expect(normalizeSocialLinks({ instagram: "nicht mal eine url" })).toEqual({});
+  });
+
+  it("landet über suggestedConfigToDraft im Entwurf", () => {
+    const draft = suggestedConfigToDraft({
+      businessName: "Gasthof Adler",
+      socialMedia: { instagram: "https://instagram.com/adler" },
+    });
+    expect(draft?.contact.socialMedia).toEqual({
+      instagram: "https://instagram.com/adler",
+    });
   });
 });

@@ -11,6 +11,7 @@ import {
   Tag,
   Edit2,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import {
 } from "@/store/configuratorStore";
 import { normalizeImageSrc } from "@/lib/configurator-data";
 import { uploadImageFile } from "@/lib/mediaUpload";
+import { extractMenuFromFile } from "@/lib/menuExtract";
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import type { MenuItem } from "@/types/domain";
@@ -78,6 +80,8 @@ export function MenuProductsStep({
   const categories = useConfiguratorStore((s) => s.content.categories) || [];
   const actions = useConfiguratorActions();
   const { getToken } = useAuth();
+  /** Läuft gerade eine Speisekarten-Erkennung? Sperrt den Knopf dagegen. */
+  const [menuScanLaeuft, setMenuScanLaeuft] = useState(false);
 
   const [newItem, setNewItem] = useState({
     name: "",
@@ -182,10 +186,18 @@ export function MenuProductsStep({
     return localUrl;
   };
 
-  const handleUploadImagesForItem = (index: number, files: FileList | null) => {
-    if (!files) return;
-    const item = menuItems[index];
-    if (!item) return;
+  /**
+   * Bilder an ein Gericht haengen.
+   *
+   * Nimmt das GERICHT, nicht seine Position. Vorher stand hier
+   * `menuItems[index]` — der Index kam aber aus filteredItems.map(). Sobald ein
+   * Kategoriefilter aktiv war, zeigte er auf ein anderes Gericht: Wer unter
+   * "Desserts" ein Bild zum Apfelkuechl hochlud, haengte es in Wahrheit an die
+   * Tagessuppe. Ein Index in eine gefilterte Liste ist als Schluessel
+   * grundsaetzlich unbrauchbar; die id ist eindeutig.
+   */
+  const handleUploadImagesForItem = (item: MenuItem, files: FileList | null) => {
+    if (!files || !item) return;
 
     const images = Array.from(files).map((file) => {
       const localUrl = URL.createObjectURL(file);
@@ -364,7 +376,9 @@ export function MenuProductsStep({
           })
           .filter(Boolean) as MenuItem[];
 
-        newItems.forEach((item) => actions.content.addMenuItem(item));
+        // Aus demselben Grund wie beim Foto-Upload: einzeln angehaengt bricht
+        // eine CSV mit ueber 50 Zeilen an der Schutzbremse des Stores ab.
+        actions.content.addMenuItems(newItems);
 
         try {
           e.target.value = "";
@@ -376,10 +390,130 @@ export function MenuProductsStep({
     reader.readAsText(file, "utf-8");
   };
 
-  const handleMenuImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * A1.4 — Foto oder PDF der Speisekarte hochladen, erkennen, übernehmen.
+   *
+   * Vorher stand hier ein console.log. Der Knopf öffnete den Dateidialog, und
+   * dann passierte nichts: ein Knopf, der nichts tut. Der Server konnte das
+   * schon die ganze Zeit (server/routes/menu.ts), nur rief ihn niemand.
+   *
+   * Doppelte Gerichte werden übersprungen statt angehängt: Wer die Karte
+   * zweimal hochlädt — oder sie neben einem Scrape-Ergebnis hochlädt — soll
+   * nicht jedes Schnitzel doppelt in der Liste finden.
+   */
+  const handleMenuImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      console.log("Menu image uploaded:", file.name);
+    // Das Feld sofort leeren, sonst löst dieselbe Datei kein change mehr aus.
+    try {
+      e.target.value = "";
+    } catch {}
+    if (!file) return;
+
+    setMenuScanLaeuft(true);
+    const meldung = toast.loading("Speisekarte wird gelesen …");
+    try {
+      const ergebnis = await extractMenuFromFile(file, await getToken());
+
+      // Zuerst die Legende: Ohne sie stehen an den Gerichten nur Kuerzel wie
+      // "a1", und die sind fuer einen Gast mit einer Unvertraeglichkeit
+      // wertlos. Sie ist je Karte verschieden und kommt deshalb mit ihr.
+      if (ergebnis.allergenLegend) {
+        actions.content.setAllergenLegend(ergebnis.allergenLegend);
+      }
+
+      const vorhanden = new Set(
+        useConfiguratorStore
+          .getState()
+          .content.menuItems.map((i) => (i.name || "").trim().toLowerCase()),
+      );
+      // Erst sammeln, dann EINMAL anhaengen: Der Store wirft ab 50 Aenderungen
+      // je Sekunde ("Infinite loop detected"). Eine erkannte Karte hat leicht
+      // 120 Gerichte — in einer Schleife einzeln angehaengt bricht der Upload
+      // genau bei den grossen Karten ab.
+      const neue: MenuItem[] = [];
+      for (const gericht of ergebnis.items) {
+        const schluessel = (gericht.name || "").trim().toLowerCase();
+        if (!schluessel || vorhanden.has(schluessel)) continue;
+        vorhanden.add(schluessel);
+        neue.push({
+          id: gericht.id || `scan-${schluessel.replace(/\W+/g, "-")}`,
+          name: gericht.name,
+          description: gericht.description || "",
+          // Preis WEGLASSEN statt "" setzen. Das Zod-Schema des Servers prüft
+          // price mit z.coerce.number().positive().optional() — undefined ist
+          // erlaubt, "" wird zu 0 und fällt durch. Das ganze Speichern der
+          // Konfiguration scheitert dann mit HTTP 400, während die Oberfläche
+          // "Gespeichert" meldet.
+          //
+          // Vorher fiel das kaum auf, weil die Regel-Erkennung fast nur
+          // Gerichte MIT Preis ausgab. Seit die Strukturierung über ein Modell
+          // läuft, bleibt der Preis dort leer, wo die Karte keinen druckt —
+          // beim Mittagstisch nach Wochentagen etwa ganze Blöcke.
+          ...(gericht.price ? { price: gericht.price } : {}),
+          ...(gericht.category ? { category: gericht.category } : {}),
+          ...(gericht.allergens?.length ? { allergens: gericht.allergens } : {}),
+          ...(gericht.labels?.length ? { labels: gericht.labels } : {}),
+          ...(gericht.extras?.length ? { extras: gericht.extras } : {}),
+        } as MenuItem);
+      }
+      actions.content.addMenuItems(neue);
+
+      /**
+       * Die Rubriken der erkannten Karte MÜSSEN mit angemeldet werden.
+       *
+       * Die Vorschau gruppiert nach content.categories und zeigt nur, was dort
+       * eingetragen ist (TemplatePreviewContent: `categories.map(...)` und
+       * darin `menuItems.filter(item => item.category === category)`). Ein
+       * Gericht mit einer nicht angemeldeten Rubrik verschwindet daher
+       * vollständig aus der Vorschau — und taucht erst auf der
+       * veröffentlichten Seite wieder auf. Der Wirt sieht seine Karte also
+       * unvollständig und veröffentlicht sie trotzdem, oder er scannt entnervt
+       * noch einmal.
+       *
+       * Solange die Regeln erkannten, fiel das kaum auf: Sie vergaben selten
+       * eine brauchbare Rubrik. Seit der Strukturierung durch ein Modell trägt
+       * fast jedes Gericht die Rubrik, die auf der Karte steht.
+       *
+       * Reihenfolge wie auf der Karte, keine Dubletten, Bestehendes zuerst.
+       */
+      const neueRubriken: string[] = [];
+      for (const g of neue) {
+        const rubrik = (g.category || "").trim();
+        if (!rubrik) continue;
+        if (categories.includes(rubrik) || neueRubriken.includes(rubrik)) continue;
+        neueRubriken.push(rubrik);
+      }
+      if (neueRubriken.length) {
+        actions.content.setCategories([...categories, ...neueRubriken]);
+      }
+
+      const uebernommen = neue.length;
+
+      if (uebernommen > 0) {
+        toast.success(
+          `${uebernommen} ${uebernommen === 1 ? "Gericht" : "Gerichte"} übernommen`,
+          { id: meldung },
+        );
+      } else {
+        // Ehrlich sagen, WARUM nichts kam — die Diagnose des Servers nennt den
+        // Grund (kein OCR-Anbieter, Datei unlesbar, Karte ohne Preise).
+        toast.error(
+          ergebnis.items.length > 0
+            ? "Diese Gerichte stehen schon in der Liste"
+            : ergebnis.diagnostics[ergebnis.diagnostics.length - 1] ||
+              "Auf dieser Datei war keine Speisekarte zu erkennen",
+          { id: meldung, duration: 8000 },
+        );
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Die Erkennung ist fehlgeschlagen",
+        { id: meldung, duration: 8000 },
+      );
+    } finally {
+      setMenuScanLaeuft(false);
     }
   };
 
@@ -408,22 +542,35 @@ export function MenuProductsStep({
             </p>
             <Button
               variant="outline"
-              className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700"
+              disabled={menuScanLaeuft}
+              className="w-full border-2 border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50 text-orange-700 disabled:opacity-60"
               onClick={() =>
                 document.getElementById("menu-img-upload")?.click()
               }
             >
-              <Upload className="w-4 h-4 mr-2" />
-              {t("menu.chooseImageFile")}
+              {menuScanLaeuft ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Karte wird gelesen …
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  {t("menu.chooseImageFile")}
+                </>
+              )}
             </Button>
             <input
               id="menu-img-upload"
               type="file"
-              accept="image/*"
+              // Auch PDF: Auf Gasthof-Websites liegt die Karte weit öfter als
+              // PDF vor denn als Foto, und der Server liest beides.
+              accept="image/*,application/pdf"
               className="hidden"
+              disabled={menuScanLaeuft}
               onChange={handleMenuImageUpload}
             />
-            <p className="text-xs text-gray-500 mt-2">JPG, PNG up to 10MB</p>
+            <p className="text-xs text-gray-500 mt-2">JPG, PNG oder PDF</p>
           </div>
         </Card>
 
@@ -771,19 +918,19 @@ export function MenuProductsStep({
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    document.getElementById(`item-images-${index}`)?.click()
+                    document.getElementById(`item-images-${item.id}`)?.click()
                   }
                 >
                   {t("menu.uploadImages")}
                 </Button>
                 <input
-                  id={`item-images-${index}`}
+                  id={`item-images-${item.id}`}
                   type="file"
                   accept="image/*"
                   multiple
                   className="hidden"
                   onChange={(e) =>
-                    handleUploadImagesForItem(index, e.target.files)
+                    handleUploadImagesForItem(item as MenuItem, e.target.files)
                   }
                 />
                 <div className="text-xs text-gray-500">

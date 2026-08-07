@@ -169,6 +169,24 @@ subdomainsRouter.get("/:subdomain/config", async (req, res) => {
           [],
         openingHours: config.content?.openingHours || config.openingHours || {},
         menuItems: config.content?.menuItems || config.menuItems || [],
+        /**
+         * Die Legende MUSS hier stehen, sonst zeigt die veröffentlichte Seite
+         * dem Gast "a1, f" statt "Weizen, Milch".
+         *
+         * Diese Antwort ist eine Positivliste: Was nicht aufgezählt ist, fällt
+         * still weg — auch wenn es in configData steht. Genau das ist der
+         * Legende passiert. In der Vorschau des Konfigurators war sie da, auf
+         * der Live-Seite nie; der Unterschied fällt niemandem auf, der nur die
+         * Vorschau ansieht.
+         *
+         * Seit die Erkennung über ein Modell strukturiert, bringt fast jede
+         * Karte eine Legende mit (gemessen 7.8.2026: statt 9 % nun praktisch
+         * alle) — der Fehler wäre also von einem Randfall zum Normalfall
+         * geworden. Bei einer Kennzeichnungspflicht ist ein nicht aufgelöstes
+         * Kürzel für einen Gast mit Unverträglichkeit wertlos.
+         */
+        allergenLegend:
+          config.content?.allergenLegend || config.allergenLegend || undefined,
         gallery: config.content?.gallery || config.gallery || [],
         reservationsEnabled:
           config.features?.reservationsEnabled ??

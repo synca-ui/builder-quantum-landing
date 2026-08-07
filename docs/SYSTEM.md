@@ -71,7 +71,37 @@ Der entscheidende Unterschied zu einem Dashboard: Es gibt **eine Entscheidung
 pro Aufgabe**, nicht zwölf Diagramme. `TaskDecision` hält fest, was der Wirt
 entschieden hat — die Aufgabe selbst wird jedes Mal neu berechnet.
 
-### 2.3 Die Stempelkarte
+### 2.3 Vom Konto zum ersten Betrieb
+
+Ein frisch angemeldeter Wirt hat noch nichts: `GET /venues` liefert eine leere
+Liste, und jede betriebsgebundene Route antwortet ihm 403. Der Weg dorthin ist
+deshalb die einzige Weiche der App (`mobile/app/index.tsx`):
+
+```
+Anmeldung (Clerk)
+   └─ Betrieb bekannt?                  einstiegsWeiche(), features/onboarding/ablauf.ts
+        ├─ noch keine Antwort   → warten (nicht raten)
+        ├─ keiner               → Einrichtung
+        └─ vorhanden            → Start
+   └─ Einrichtung, vier Schritte        Betrieb · Google · Zeiten · Abschluss
+        └─ Betrieb anlegen               POST /venues   (Pflicht)
+        └─ Google verbinden              echte OAuth-URL, überspringbar
+        └─ Öffnungszeiten                PATCH /venues/:venueId, überspringbar
+        └─ Abschluss                     Häkchen NUR für serverseitig Belegtes
+```
+
+**Der Wartezustand ist keine Feinheit.** `GET /venues` läuft asynchron, ein
+Redirect entscheidet nur beim Mounten. Wer in diesem Moment rät, schickt jeden
+Wirt mit bestehendem Betrieb einmal falsch — ins Anlegen, wo ihn ein 409 erwartet.
+
+**Zwei Ablagen für Öffnungszeiten, und sie werden nicht abgeglichen.**
+`Business.openingHours` speist App und öffentliches Gastprofil.
+`Configuration.content.openingHours` speist die veröffentlichte Web-App
+(`server/routes/subdomains.ts`, `webapps.ts`). Wer in der App Zeiten ändert,
+ändert die Website **nicht** — der Bildschirm sagt das auch so. Und an Google
+gehen sie ebenfalls nicht; das schreibt kein Connector.
+
+### 2.4 Die Stempelkarte
 
 App-los für den Gast: Er scannt am Tisch einen QR-Code und legt die Karte in
 Apple oder Google Wallet. Kein Konto, keine Installation.
@@ -168,5 +198,4 @@ Damit dieses Dokument nicht mehr verspricht, als es hält:
 - **WhatsApp.** Datenmodell steht, Webhook und Versand nicht.
 - **Google und Meta im Echtbetrieb.** Kein Freigabezugang; bis dahin läuft alles
   gegen Attrappen.
-- **Onboarding der App.** Platzhalter.
 - **Rechtstexte.** Entwurf, nicht geprüft — blockiert den Google-Antrag.

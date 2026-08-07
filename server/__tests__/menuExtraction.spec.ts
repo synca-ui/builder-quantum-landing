@@ -1,18 +1,43 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { deflateSync } from "node:zlib";
 import {
   sniffType,
   parseJsonLdMenu,
   htmlToText,
   extractPdfText,
+  readPdfText,
+  findMenuLinks,
   extractMenuFromBuffer,
 } from "../services/menuExtraction";
 import { chooseUploadStrategy, extractTextFromResponse } from "../services/ocr";
+import { menuJobAntwort } from "../routes/menu";
 
 /**
  * Alles hier läuft ohne Netz. Geprüft wird das, woran die Erkennung in der
  * Praxis scheitert: falsch angekündigte Dateitypen, HTML ohne Struktur,
  * PDFs ohne Text – und die Frage, welcher Übertragungsweg für welche Größe gilt.
+ *
+ * Die Schlüssel werden dafür AKTIV entfernt, nicht bloß vorausgesetzt.
+ * Seit die Erkennung über ein Sprachmodell strukturiert (menuStructure.ts),
+ * ruft extractMenuFromBuffer bei gesetztem ANTHROPIC_API_KEY eine
+ * kostenpflichtige Schnittstelle auf. Die Zusage "ohne Netz" hing damit an der
+ * Umgebung dessen, der die Tests startet: Auf einem Rechner mit gesetztem
+ * Schlüssel wären sie langsam, wackelig und kostenpflichtig geworden – und
+ * hätten je nach Antwort andere Ergebnisse geliefert als in der Fertigung.
  */
+const gesicherteSchluessel: Record<string, string | undefined> = {};
+beforeAll(() => {
+  for (const name of ["ANTHROPIC_API_KEY", "GEMINI_API_KEY"]) {
+    gesicherteSchluessel[name] = process.env[name];
+    delete process.env[name];
+  }
+});
+afterAll(() => {
+  for (const [name, wert] of Object.entries(gesicherteSchluessel)) {
+    if (wert === undefined) delete process.env[name];
+    else process.env[name] = wert;
+  }
+});
 
 const pdfHeader = (rest = "") => Buffer.from(`%PDF-1.7\n${rest}`, "latin1");
 const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]);
@@ -21,6 +46,68 @@ const png = Buffer.concat([
   Buffer.from("PNG\r\n\x1a\n", "latin1"),
   Buffer.alloc(4),
 ]);
+
+/**
+ * Baut ein gültiges PDF, dessen Textstrom FlateDecode-komprimiert ist.
+ *
+ * Das ist der Normalfall bei echten Speisekarten – jede der sieben PDF-Karten
+ * im Messkorpus sieht so aus. Ein Test mit unkomprimiertem Text bewiese hier
+ * nichts: Den las auch die alte Fassung, und trotzdem kam bei jeder echten
+ * Karte null heraus.
+ *
+ * Bewusst von Hand statt mit einer Bibliothek, samt korrekter xref-Tabelle:
+ * Ein Testgerüst, das selbst eine PDF-Bibliothek braucht, prüft am Ende die
+ * Bibliothek und nicht uns.
+ */
+function komprimiertesPdf(inhalt: string): Buffer {
+  const zeilen = inhalt ? inhalt.split("\n") : [];
+  const strom = zeilen
+    .map((zeile, i) => {
+      const sicher = zeile.replace(/([\\()])/g, "\\$1");
+      return `BT /F1 12 Tf 50 ${760 - i * 20} Td (${sicher}) Tj ET`;
+    })
+    .join("\n");
+  const gepackt = deflateSync(Buffer.from(strom, "latin1"));
+
+  const objekte = [
+    "<</Type/Catalog/Pages 2 0 R>>",
+    "<</Type/Pages/Kids[3 0 R]/Count 1>>",
+    "<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]" +
+      "/Resources<</Font<</F1 5 0 R>>>>/Contents 4 0 R>>",
+    null, // 4 = der Strom, unten gesondert
+    "<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
+  ];
+
+  const teile: Buffer[] = [Buffer.from("%PDF-1.4\n", "latin1")];
+  const versatz: number[] = [];
+  let laenge = teile[0].length;
+
+  objekte.forEach((koerper, i) => {
+    versatz.push(laenge);
+    const stueck =
+      koerper === null
+        ? Buffer.concat([
+            Buffer.from(
+              `4 0 obj\n<</Length ${gepackt.length}/Filter/FlateDecode>>\nstream\n`,
+              "latin1",
+            ),
+            gepackt,
+            Buffer.from("\nendstream\nendobj\n", "latin1"),
+          ])
+        : Buffer.from(`${i + 1} 0 obj\n${koerper}\nendobj\n`, "latin1");
+    teile.push(stueck);
+    laenge += stueck.length;
+  });
+
+  const xrefAb = laenge;
+  const xref =
+    "xref\n0 6\n0000000000 65535 f \n" +
+    versatz.map((v) => `${String(v).padStart(10, "0")} 00000 n \n`).join("") +
+    `trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n${xrefAb}\n%%EOF\n`;
+  teile.push(Buffer.from(xref, "latin1"));
+
+  return Buffer.concat(teile);
+}
 
 describe("sniffType", () => {
   it("erkennt ein PDF an den ersten Bytes, auch wenn der Server etwas anderes behauptet", () => {
@@ -155,6 +242,88 @@ describe("extractPdfText", () => {
     // Texterkennung übernehmen.
     expect(extractPdfText(pdfHeader("nur binaerer Muell"))).toBe("");
   });
+
+  it("kommt an KOMPRIMIERTEN Text nicht heran – deshalb gibt es readPdfText", () => {
+    // Der Grund für diesen Test steht in menuExtraction.ts: An genau dieser
+    // Stelle scheiterten alle sieben echten PDF-Karten des Messkorpus. Bleibt
+    // diese Erwartung eines Tages nicht mehr leer, hat jemand den Notnagel
+    // erweitert – dann darf readPdfText darauf zurückfallen.
+    expect(extractPdfText(komprimiertesPdf("Wiener Schnitzel 18,90"))).toBe("");
+  });
+});
+
+describe("readPdfText", () => {
+  it("liest komprimierten Text – der Fall, an dem der Notnagel scheitert", async () => {
+    const pdf = komprimiertesPdf(
+      "AUS DEM SUPPENTOPF\nTAGESSUPPE 5,50 EUR\nWiener Schnitzel 18,90 EUR",
+    );
+    const { text, via } = await readPdfText(pdf);
+    expect(via).toBe("pdfjs");
+    expect(text).toContain("Wiener Schnitzel");
+    expect(text).toContain("18,90");
+  });
+
+  it("fällt auf den Notnagel zurück, wenn pdf.js die Datei nicht öffnen kann", async () => {
+    // Kein gültiges PDF-Gerüst, aber ein lesbarer unkomprimierter Textblock.
+    const { text, via } = await readPdfText(
+      pdfHeader("BT (Gulasch 16,50) Tj ET\n"),
+    );
+    expect(via).toBe("roh");
+    expect(text).toContain("Gulasch 16,50");
+  });
+
+  it("liefert leeren Text bei einem PDF ohne jeden Text", async () => {
+    // Abfotografierte Karte: hier MUSS die Texterkennung übernehmen dürfen.
+    const { text } = await readPdfText(komprimiertesPdf(""));
+    expect(text).toBe("");
+  });
+});
+
+describe("findMenuLinks", () => {
+  const basis = "https://gasthof.example/de/restaurant/speisekarten.html";
+
+  it("findet die verlinkte Karte und löst den relativen Pfad auf", () => {
+    // Genau dieser Fall kostete die erste echte Karte des Korpus 28 Gerichte:
+    // Die Seite hat 813 Zeichen Text und verlinkt das PDF mit "./files/".
+    const html = `<a href="./files/aktuelle_speisekarte_.pdf">Aktuelle Speisekarte</a>`;
+    expect(findMenuLinks(html, basis)).toEqual([
+      "https://gasthof.example/de/restaurant/files/aktuelle_speisekarte_.pdf",
+    ]);
+  });
+
+  it("stellt die Karte vor andere PDFs auf derselben Seite", () => {
+    // Ohne Bewertung folgt die Erkennung dem erstbesten PDF – und das ist auf
+    // halben Websites die Anfahrtsskizze.
+    const html = `
+      <a href="/anfahrt.pdf">Anfahrt</a>
+      <a href="/dl/hausprospekt.pdf">Prospekt</a>
+      <a href="/dl/speisekarte.pdf">Unsere Karte</a>`;
+    const links = findMenuLinks(html, basis);
+    expect(links[0]).toBe("https://gasthof.example/dl/speisekarte.pdf");
+  });
+
+  it("lässt Impressum und Datenschutz liegen, auch als PDF", () => {
+    const html = `<a href="/impressum.pdf">Impressum</a><a href="/datenschutz.pdf">Datenschutz</a>`;
+    expect(findMenuLinks(html, basis)).toEqual([]);
+  });
+
+  it("nimmt Bilder nur, wenn sie nach Karte klingen", () => {
+    // Ein Bild ohne Hinweis ist fast immer ein Foto der Terrasse.
+    const html = `<a href="/bilder/terrasse.jpg">Bild</a><a href="/tageskarte.jpg">Tageskarte</a>`;
+    expect(findMenuLinks(html, basis)).toEqual([
+      "https://gasthof.example/tageskarte.jpg",
+    ]);
+  });
+
+  it("ignoriert Anker, mailto und tel", () => {
+    const html = `<a href="#karte">Karte</a><a href="mailto:a@b.de">Speisekarte</a><a href="tel:123">Menü</a>`;
+    expect(findMenuLinks(html, basis)).toEqual([]);
+  });
+
+  it("nennt dieselbe Datei nur einmal", () => {
+    const html = `<a href="/speisekarte.pdf">Karte</a><a href="/speisekarte.pdf">Speisekarte ansehen</a>`;
+    expect(findMenuLinks(html, basis)).toHaveLength(1);
+  });
 });
 
 describe("extractMenuFromBuffer", () => {
@@ -244,5 +413,55 @@ describe("OCR-Anbieter: Entscheidungen ohne Netz", () => {
     expect(extractTextFromResponse({ candidates: [] })).toBe("");
     expect(extractTextFromResponse(null)).toBe("");
     expect(extractTextFromResponse({ candidates: [{ content: {} }] })).toBe("");
+  });
+});
+
+/**
+ * Die Antwort des Erkennungsauftrags.
+ *
+ * Der Anlass ist ein Loch, das eine Durchsicht am 7.8.2026 gefunden hat: Die
+ * Kürzel-Legende wurde aus der Karte gelesen, im MenuExtractionResult
+ * mitgeführt — und in res.json() schlicht nicht aufgeführt. Am Gericht kamen
+ * beim Wirt nur "a1" und "f" an, und was die bedeuten, legt jede Karte selbst
+ * fest. Der Fehler war unsichtbar: Gerichte, Preise und Kategorien stimmten.
+ */
+describe("menuJobAntwort", () => {
+  const basis = {
+    items: [{ id: "x", name: "Wiener Schnitzel", price: "18.90", allergens: ["a1", "f"] }],
+    source: "pdf_text" as const,
+    diagnostics: ["gelesen"],
+  };
+
+  it("reicht die Legende mit durch", () => {
+    const antwort = menuJobAntwort({
+      ...basis,
+      allergenLegend: { a1: "Weizen", f: "Milch/Laktose" },
+    });
+    expect(antwort.allergenLegend).toEqual({ a1: "Weizen", f: "Milch/Laktose" });
+  });
+
+  it("übersteht den Weg über die Leitung", () => {
+    // Genau die Stelle, an der es verlorenging: JSON.stringify/parse bildet
+    // ab, was der Client tatsächlich bekommt.
+    const antwort = menuJobAntwort({
+      ...basis,
+      allergenLegend: { a1: "Weizen" },
+    });
+    const beimClient = JSON.parse(JSON.stringify(antwort));
+    expect(beimClient.allergenLegend.a1).toBe("Weizen");
+    expect(beimClient.items[0].allergens).toEqual(["a1", "f"]);
+  });
+
+  it("lässt das Feld weg, wenn die Karte keine Legende hat", () => {
+    // Ein leeres Objekt läse sich wie "geprüft, nichts gefunden". Die
+    // Oberfläche zeigt dann das rohe Kürzel, statt eines zu erfinden.
+    expect(menuJobAntwort(basis)).not.toHaveProperty("allergenLegend");
+    expect(
+      menuJobAntwort({ ...basis, allergenLegend: {} }),
+    ).not.toHaveProperty("allergenLegend");
+  });
+
+  it("nennt die Zahl der Gerichte, nicht die der Zeilen", () => {
+    expect(menuJobAntwort(basis).count).toBe(1);
   });
 });

@@ -150,7 +150,17 @@ vi.hoisted(() => {
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     businessMember: { findUnique: vi.fn() },
-    channelConnection: { upsert: vi.fn(), findUniqueOrThrow: vi.fn(), update: vi.fn() },
+    channelConnection: {
+      upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      update: vi.fn(),
+      // Fuer GET /integrations - die Liste, die der App sagt, was wirklich
+      // verbunden ist. Der Mock gibt bewusst die VOLLE Zeile zurueck (mit
+      // verschluesselten Tokens), damit die Allowlist des `select` etwas zu
+      // beweisen hat: gegen einen Mock, der die Tokens gar nicht erst fuehrt,
+      // waere "es tritt kein Token aus" eine leere Behauptung.
+      findMany: vi.fn(),
+    },
     maitrReview: { upsert: vi.fn() },
     maitrEngagementPoint: { upsert: vi.fn() },
   },
@@ -304,6 +314,107 @@ afterEach(() => {
   logSpy.mockRestore();
   vi.unstubAllGlobals(); // globales fetch zurueckgeben
   vi.restoreAllMocks();
+});
+
+/* ═══ Schritt 0: Was ist ueberhaupt verbunden? ════════════════════════════ */
+
+/**
+ * `GET /integrations` - die Liste, auf die sich die App verlaesst.
+ *
+ * ANLASS: Diese Route hatte bis hierhin KEIN einziges Testauge auf sich, obwohl an
+ * ihr zwei Dinge haengen, die man nicht bemerkt, wenn sie kaputtgehen:
+ *
+ *  1. Sie ist die einzige EHRLICHE Auskunft darueber, ob ein Kanal verbunden ist.
+ *     Der Deep-Link nach dem Ruecksprung traegt zwar `status=connected` - das ist
+ *     aber eine Behauptung des Redirects, kein Beleg. Nur diese Liste sagt, was
+ *     wirklich in der Datenbank steht. Das Onboarding der App fragt sie deshalb
+ *     nach dem Anmeldefenster noch einmal.
+ *  2. Ihr `select` ist die Schranke, die die verschluesselten Tokens drinbehaelt.
+ *     Wer es zu `include` oder zur Vollzeile aendert, liefert `encAccessToken` und
+ *     `encRefreshToken` an die App aus - und der Fehler faellt niemandem auf, weil
+ *     die App die Felder schlicht ignoriert und alles weiter aussieht wie vorher.
+ */
+describe("Schritt 0 - GET /integrations sagt, was wirklich verbunden ist", () => {
+  /** Eine volle Datenbankzeile, wie Prisma sie OHNE `select` liefern wuerde. */
+  const volleZeile = {
+    id: "conn-1",
+    businessId: BETRIEB,
+    provider: "GOOGLE",
+    accountId: "accounts/1/locations/2",
+    status: "ACTIVE",
+    expiresAt: new Date("2026-09-01T10:00:00.000Z"),
+    scopes: ["https://www.googleapis.com/auth/business.manage"],
+    encAccessToken: "GEHEIM-zugriff",
+    encRefreshToken: "GEHEIM-erneuerung",
+  };
+
+  it("liefert genau die Felder, auf die der Client getippt ist - und keinen Token", async () => {
+    // Der Mock antwortet so, wie Prisma es taete: er wendet das `select` der Route
+    // wirklich an. Nur so misst der Test die Allowlist und nicht den Mock.
+    prismaMock.channelConnection.findMany.mockImplementation(
+      async ({ select }: { select?: Record<string, boolean> }) => {
+        if (!select) return [volleZeile];
+        const gefiltert: Record<string, unknown> = {};
+        for (const feld of Object.keys(select)) {
+          if (select[feld]) gefiltert[feld] = (volleZeile as Record<string, unknown>)[feld];
+        }
+        return [gefiltert];
+      },
+    );
+
+    const res = await request(api()).get("/api/maitr/integrations").query({ venueId: BETRIEB });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    // Feld fuer Feld, nicht `toMatchObject`: Ein zusaetzliches Feld soll auffallen.
+    expect(Object.keys(res.body[0]).sort()).toEqual([
+      "accountId",
+      "expiresAt",
+      "provider",
+      "scopes",
+      "status",
+    ]);
+    // Und noch einmal ausdruecklich fuer die beiden, um die es geht - damit der
+    // Grund im Testnamen steht, falls die Liste oben je jemand "aufraeumt".
+    const roh = JSON.stringify(res.body);
+    expect(roh).not.toContain("GEHEIM-zugriff");
+    expect(roh).not.toContain("GEHEIM-erneuerung");
+  });
+
+  it("fragt ausschliesslich den geprueften Betrieb ab", async () => {
+    prismaMock.channelConnection.findMany.mockResolvedValue([]);
+
+    await request(api()).get("/api/maitr/integrations").query({ venueId: BETRIEB });
+
+    const wo = prismaMock.channelConnection.findMany.mock.calls[0][0].where;
+    // Die Kennung stammt aus `req.venueId`, das `requireVenueAccess` gesetzt hat -
+    // nicht aus der Anfrage. Faellt das je auseinander, sieht ein Mitglied von
+    // Betrieb A die Kanaele von Betrieb B.
+    expect(wo).toEqual({ businessId: BETRIEB });
+  });
+
+  it("eine WhatsApp-Verbindung kommt mit - die Route filtert nicht nach Anbieter", async () => {
+    // Belegt die Enum-Breite, auf die der Client-Typ getippt sein muss. Waere er
+    // nur "GOOGLE" | "META", behandelte ein `if (provider === "GOOGLE") … else …`
+    // die WhatsApp-Zeile stillschweigend als Meta-Zeile.
+    prismaMock.channelConnection.findMany.mockResolvedValue([
+      { provider: "WHATSAPP", accountId: "49123", status: "ACTIVE", expiresAt: new Date(), scopes: [] },
+    ]);
+
+    const res = await request(api()).get("/api/maitr/integrations").query({ venueId: BETRIEB });
+
+    expect(res.status).toBe(200);
+    expect(res.body[0].provider).toBe("WHATSAPP");
+  });
+
+  it("ohne Mitgliedschaft: 403, und es wird gar nicht erst abgefragt", async () => {
+    angemeldetAls = "user-fremd";
+    prismaMock.channelConnection.findMany.mockResolvedValue([]);
+
+    const res = await request(api()).get("/api/maitr/integrations").query({ venueId: BETRIEB });
+
+    expect(res.status).toBe(403);
+    expect(prismaMock.channelConnection.findMany).not.toHaveBeenCalled();
+  });
 });
 
 /* ═══ Schritt 1: Die Autorisierungs-URL ═══════════════════════════════════ */

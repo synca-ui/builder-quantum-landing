@@ -1,0 +1,16 @@
+[
+ {"id":"waldhaus","restaurant":"Gasthof Waldhaus","url":"https://www.gasthofwaldhaus.de/files/waldhaus/downloads/Sommer%20Speisekarte%202024.pdf"},
+ {"id":"franziskaner","restaurant":"Zum Franziskaner Muenchen","url":"https://zum-franziskaner.de/images/speisekarten/speisekarte.pdf"},
+ {"id":"friedenau","restaurant":"Waldgaststaette Friedenau","url":"https://www.friedenau.bayern/wp-content/uploads/2025/10/Speisekarte-Herbst-Winter-2025-2026.pdf"},
+ {"id":"sperber","restaurant":"Sperber Braeu","url":"https://www.sperber-braeu.de/de/gasthof/speisekarte.html"},
+ {"id":"romero","restaurant":"Ristorante Romero Berlin","url":"https://www.ristorante-romero.de/speisekarte"},
+ {"id":"kreta","restaurant":"Restaurant Kreta Gehren","url":"https://www.restaurantkreta.de/Speisekarte/"},
+ {"id":"kreuzklappe","restaurant":"Kreuzklappe tuerkisch","url":"https://restaurant-kreuzklappe.de/speissekarte-2/speisekarte-deutsch/"},
+ {"id":"hashi","restaurant":"Hashi Nuernberg","url":"https://hashi-restaurant.de/SPEISEKARTE/HAUPTGERICHTE"},
+ {"id":"taj","restaurant":"TAJ Dorfen","url":"https://www.taj-dorfen.de/speisekarte/"},
+ {"id":"mittagstisch","restaurant":"Nuertingen Mittagstisch","url":"https://assets.ntz.de/mittag/Mittagstisch.pdf"},
+ {"id":"schwan","restaurant":"Zum Goldenen Schwan","url":"https://www.zum-goldenen-schwan.de/fileadmin/user_upload/pdf/Speisekarte_ab_01.10.2020.pdf"},
+ {"id":"bluemare","restaurant":"Blue Mare Hamburg","url":"https://bluemare-hamburg.de/wp-content/uploads/2023/11/3-Seiten-Speisekarte-winter-2023.pdf"},
+ {"id":"adler","restaurant":"Goldener Adler Oberried","url":"https://www.goldener-adler-oberried.de/pdf/Menuevorschlaege_Gaststube.pdf"},
+ {"id":"winkelhofer","restaurant":"Der Winkelhofer","url":"https://derwinkelhofer.at/media/upload/editor/files/Winkelhofer_Menuekarte.pdf"}
+]

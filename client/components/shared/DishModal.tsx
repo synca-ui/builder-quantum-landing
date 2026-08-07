@@ -13,7 +13,7 @@
  */
 
 import React, { memo, useCallback, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Camera } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { MenuItem } from "@/types/domain";
 
 // ============================================
@@ -47,6 +47,15 @@ export interface DishModalProps {
   onAddToCart?: (dish: MenuItem) => void;
   /** Preview-Modus (Editor) */
   isPreview?: boolean;
+  /**
+   * Was die Kuerzel am Gericht bedeuten, wie die Karte selbst es angibt:
+   * { "a1": "Weizen", "f": "Milch/Laktose" }.
+   *
+   * Kommt aus content.allergenLegend und ist je Betrieb verschieden — beim
+   * einen Wirt ist "f" die Milch, beim anderen "g". Fehlt die Legende, wird
+   * das Kuerzel roh angezeigt statt geraten.
+   */
+  allergenLegend?: Record<string, string>;
 }
 
 // ============================================
@@ -105,6 +114,7 @@ export const DishModal = memo(function DishModal({
   onSetImageIndex,
   onAddToCart,
   isPreview = false,
+  allergenLegend,
 }: DishModalProps) {
   // Scroll-Lock wenn Modal offen
   useEffect(() => {
@@ -182,26 +192,15 @@ export const DishModal = memo(function DishModal({
     });
   }
 
-  // Debug Log
-  console.log("[DishModal] Images:", {
-    dish: dish.name,
-    rawImageUrl: dish.imageUrl,
-    rawImage: dish.image,
-    rawImagesArray: dish.images,
-    normalizedImages: images,
-  });
-
   const hasImages = images.length > 0;
   const hasMultipleImages = images.length > 1;
   const currentImage = images[currentImageIndex] || "/placeholder.svg";
 
   // Preis formatieren
-  const formattedPrice =
-    typeof dish.price === "number"
-      ? `${dish.price.toFixed(2)}€`
-      : dish.price
-        ? `${dish.price}€`
-        : "";
+  const preisText = (wert: number | string | undefined): string =>
+    typeof wert === "number" ? `${wert.toFixed(2)}€` : wert ? `${wert}€` : "";
+
+  const formattedPrice = preisText(dish.price);
 
   // ============================================
   // RENDER: Modal mit Bildern
@@ -313,26 +312,29 @@ export const DishModal = memo(function DishModal({
             )}
           </div>
         ) : (
-          // ✅ Fallback wenn keine Bilder vorhanden
-          <div className="relative w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-            <div className="text-center text-gray-400">
-              <Camera className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-medium opacity-50">
-                Kein Bild verfügbar
-              </p>
-            </div>
-
-            {/* ✅ Close Button auch ohne Bild */}
+          /*
+           * Kein Bild -> kein Bildbereich. Vorher stand hier ein 192 px hoher
+           * grauer Kasten mit Kamerasymbol und "Kein Bild verfügbar". Der hat
+           * nichts gezeigt, aber den halben Bildschirm belegt und die
+           * Speisekarte ärmer aussehen lassen, als sie ist: Bei einer
+           * automatisch erkannten Karte hat FAST NIE ein Gericht ein Bild —
+           * der Wirt lädt sie später einzeln nach. Ein leerer Rahmen war damit
+           * der Normalfall, nicht die Ausnahme.
+           *
+           * Der Schließen-Knopf muss bleiben, er hing vorher am Bildbereich.
+           * Deshalb hier eine schmale Zeile statt gar nichts.
+           */
+          <div className="relative h-11">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onClose();
               }}
-              className="absolute top-3 right-3 w-10 h-10 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black/90 transition-colors shadow-xl z-[80]"
+              className="absolute top-0 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-colors z-[80]"
               aria-label="Schließen"
               style={{
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
+                backgroundColor: `${fontColor}12`,
+                color: fontColor,
               }}
             >
               <X className="w-5 h-5" />
@@ -382,6 +384,104 @@ export const DishModal = memo(function DishModal({
             >
               {dish.description}
             </p>
+          )}
+
+          {/*
+            Varianten und Aufpreise (A1.2): "große Portion 4,00", "mit extra
+            Käse 1,20", "Tasse".
+
+            Sie MÜSSEN hier stehen. Solange die Erkennung nach Regeln lief,
+            wurden Varianten fälschlich zu eigenen Gerichten — falsch, aber für
+            den Gast wenigstens sichtbar. Seit die Strukturierung über ein
+            Modell läuft, hängen sie korrekt als extras am Gericht — und ohne
+            diesen Block verschwänden sie damit vollständig von der Karte.
+            Die Verbesserung hätte den Wirt also Zeilen gekostet, die er vorher
+            hatte.
+          */}
+          {Array.isArray(dish.extras) && dish.extras.length > 0 && (
+            <div className="pt-1">
+              <p
+                className="text-xs font-semibold opacity-60 mb-1"
+                style={{ color: fontColor }}
+              >
+                Dazu wählbar
+              </p>
+              <ul className="space-y-1">
+                {dish.extras.map((extra, i) => (
+                  <li
+                    key={`${extra.name}-${i}`}
+                    className="flex items-baseline justify-between gap-3 text-sm"
+                    style={{ color: fontColor }}
+                  >
+                    <span className="opacity-90">{extra.name}</span>
+                    {extra.price ? (
+                      <span
+                        className="shrink-0 font-medium tabular-nums"
+                        style={{ color: priceColor }}
+                      >
+                        {preisText(extra.price)}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Ernährungs-Labels (A1.3): vegan, vegetarisch, glutenfrei … */}
+          {Array.isArray(dish.labels) && dish.labels.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {dish.labels.map((label) => (
+                <span
+                  key={label}
+                  className="px-2 py-0.5 text-xs font-medium capitalize"
+                  style={{
+                    backgroundColor: `${primaryColor}1f`,
+                    color: fontColor,
+                    borderRadius: "var(--radius-button, 6px)",
+                  }}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/*
+            Allergene und Zusatzstoffe (A1.3).
+            Ausgeschrieben, wenn die Karte eine Legende mitbringt — sonst das
+            rohe Kürzel. Nicht geraten: Was "f" bedeutet, legt jeder Betrieb
+            selbst fest, und eine falsche Allergenangabe ist schlimmer als
+            eine unaufgelöste.
+          */}
+          {Array.isArray(dish.allergens) && dish.allergens.length > 0 && (
+            <div className="pt-1">
+              <p
+                className="text-xs font-semibold opacity-60 mb-1"
+                style={{ color: fontColor }}
+              >
+                Allergene und Zusatzstoffe
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {dish.allergens.map((code) => {
+                  const klartext = allergenLegend?.[code.toLowerCase()];
+                  return (
+                    <span
+                      key={code}
+                      className="px-2 py-0.5 text-xs"
+                      style={{
+                        backgroundColor: `${fontColor}12`,
+                        color: fontColor,
+                        borderRadius: "var(--radius-button, 6px)",
+                      }}
+                      title={klartext ? `${klartext} (${code})` : `Kürzel ${code}`}
+                    >
+                      {klartext ?? code}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {/* Availability Warning */}

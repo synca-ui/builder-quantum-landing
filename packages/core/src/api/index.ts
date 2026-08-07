@@ -3,15 +3,59 @@ import type {
   CreateVenueInput,
   DailyBriefing,
   DailyTask,
+  Iso8601,
   Reservation,
   ServiceDay,
+  UpdateVenueInput,
   Venue,
 } from "../types";
+import type { ProviderId } from "../integrations";
 
 /**
  * Endpunkt-Wrapper. Dünne Schicht über `request()` - keine UI-Logik, kein State.
  * Web und Mobile rufen dieselben Funktionen auf.
  */
+
+/**
+ * Kennungen im Pfad IMMER kodieren.
+ *
+ * Die Kennungen sind heute uuids, in denen kein Sonderzeichen vorkommt - deshalb
+ * fiel es nicht auf. Sie kommen aber aus einer Serverantwort und nicht aus einer
+ * Konstanten: ein `/` oder `?` darin verschöbe den Aufruf auf eine andere Route
+ * oder hängte einen Query-Parameter an, und das fiele erst im Betrieb auf.
+ */
+function teil(wert: string): string {
+  return encodeURIComponent(wert);
+}
+
+/**
+ * Betriebs- und Integrationspfade an EINER Stelle - und damit prüfbar.
+ *
+ * Derselbe Anlass wie bei `LOYALTY_PFADE` weiter unten: Pfade sind schlichte
+ * Zeichenketten, weder Typecheck noch Build noch Testlauf bemerken einen
+ * Tippfehler darin. `server/__tests__/apiContract.spec.ts` prüfte bisher nur
+ * `API_PATHS` (`client/lib/apiPaths.ts`) und `LOYALTY_PFADE` - die Pfade von
+ * `venues.update`, `integrations.list` und `integrations.connectUrl` standen
+ * roh im Funktionsrumpf und fielen durchs Netz: ein Vertipper wäre typgrün,
+ * buildgrün, testgrün gewesen und erst im Betrieb ein 404. Die beiden älteren
+ * Pfade (`/venues`, `/venues/:slug/public`) haben dasselbe Problem, es ist dort
+ * nur noch nicht aufgefallen - deshalb stehen sie mit hier.
+ *
+ * Kennungen laufen durch `teil()`, aus demselben Grund wie bei `LOYALTY_PFADE`:
+ * sie kommen aus einer Serverantwort oder einem Aufrufparameter, nicht aus
+ * einer Konstanten. `provider` ist heute durch `ProviderId` auf "google"/"meta"
+ * eingeschränkt und bräuchte das Escaping streng genommen nicht - er läuft
+ * trotzdem durch `teil()`, damit diese Stelle nicht von einer Typprüfung
+ * abhängt, die sich unbemerkt ändern kann.
+ */
+export const BETRIEB_PFADE = {
+  /** Sammlung: GET (eigene Betriebe) und POST (neuen Betrieb anlegen) teilen sich den Pfad. */
+  betriebe: "/venues",
+  betrieb: (venueId: string) => `/venues/${teil(venueId)}`,
+  oeffentlich: (slug: string) => `/venues/${teil(slug)}/public`,
+  integrationen: "/integrations",
+  integrationVerbinden: (provider: ProviderId) => `/integrations/${teil(provider)}/connect`,
+} as const;
 
 export const briefing = {
   /** Tagesbriefing für den Start-Screen ("Guten Morgen, Café Goldstück"). */
@@ -61,7 +105,7 @@ export const reservations = {
 
 export const venues = {
   mine() {
-    return request<Venue[]>("/venues");
+    return request<Venue[]>(BETRIEB_PFADE.betriebe);
   },
 
   /**
@@ -77,12 +121,92 @@ export const venues = {
    *  - 422: Der Name taugt nicht als Adresse; nach einem anderen Namen fragen.
    */
   create(input: CreateVenueInput) {
-    return request<Venue>("/venues", { method: "POST", body: input });
+    return request<Venue>(BETRIEB_PFADE.betriebe, { method: "POST", body: input });
   },
 
   /** Oeffentliches Gast-Profil - ohne Anmeldung erreichbar. */
   publicProfile(slug: string, signal?: AbortSignal) {
-    return request<Venue>(`/venues/${slug}/public`, { anonymous: true, signal });
+    return request<Venue>(BETRIEB_PFADE.oeffentlich(slug), { anonymous: true, signal });
+  },
+
+  /**
+   * Betrieb ändern - Name, Kurzbeschreibung, Zeitzone, Öffnungszeiten. Nur die
+   * geänderten Felder schicken. Antwortet mit 200 und demselben Venue-Objekt wie
+   * `mine()`. Der Slug ändert sich NIE mit - siehe `UpdateVenueInput`.
+   *
+   * Fehlerfälle, die der Aufrufer behandeln sollte - alle kommen als `ApiError`
+   * (Texte wörtlich aus `server/maitr/middleware.ts` bzw. `ownerGuard` in
+   * `server/maitr/routes.ts`):
+   *  - 400 `venueId fehlt`: keine Betriebskennung in Pfad, Query oder Rumpf
+   *    (`requireVenueAccess`).
+   *  - 400 `Widersprüchliche venueId in Pfad, Query und Rumpf`: die genannten
+   *    Kennungen stimmen nicht überein (`requireVenueAccess`).
+   *  - 403 `Kein Zugriff auf diesen Betrieb`: der Anfragende ist kein Mitglied
+   *    dieses Betriebs (`requireVenueAccess`).
+   *  - 403 `nur_inhaber`: Mitglied, aber Personal - nur Inhaber oder Admin
+   *    dürfen den Betrieb ändern (`ownerGuard`).
+   *  - 422: Eingabe ungültig (z. B. unbekannte Zeitzone, Name zu kurz).
+   */
+  update(venueId: string, patch: UpdateVenueInput) {
+    return request<Venue>(BETRIEB_PFADE.betrieb(venueId), { method: "PATCH", body: patch });
+  },
+};
+
+/* ── Integrationen (Kanäle verbinden) ────────────────────────────────────── */
+
+/**
+ * Form von `GET /integrations`. Bewusst HIER beschrieben und nicht aus dem
+ * Server importiert - derselbe Grund wie bei den Stempelkarten-Typen weiter
+ * unten: `packages/core` ist die gemeinsame Sprache von Web und Mobile und darf
+ * nicht auf `server/` zeigen.
+ *
+ * `provider` kommt in GROSSSCHREIBUNG ("GOOGLE"/"META"/"WHATSAPP") - so
+ * speichert und liefert der Server ihn (Prisma-Enum `ChannelProvider`,
+ * ausgeliefert vom Handler von `integrationsRouter.get("/")` in
+ * server/maitr/routes.ts). Das ist eine ANDERE Schreibweise als `ProviderId`
+ * ("google"/"meta") aus `../integrations`: jene steuert die OAuth-Bausteine
+ * (Autorisierungs-URL, Scopes) und kennt WhatsApp nicht - dafür gibt es keinen
+ * eigenen Consent-Screen. Diese Form hier ist der gespeicherte
+ * Verbindungszustand und listet JEDE `ChannelConnection` des Betriebs, auch
+ * WHATSAPP-Zeilen: die Route filtert nicht nach Provider (siehe
+ * server/maitr/sync.ts und server/__tests__/maitrSyncWhatsApp.spec.ts, wo genau
+ * das schon einmal übersehen wurde). Tokens sind bewusst nicht Teil der Form -
+ * der Server liefert sie nie aus.
+ */
+export interface IntegrationConnection {
+  provider: "GOOGLE" | "META" | "WHATSAPP";
+  accountId: string;
+  status: "ACTIVE" | "EXPIRED" | "REVOKED";
+  expiresAt: Iso8601;
+  scopes: string[];
+}
+
+export const integrations = {
+  /**
+   * Verbundene Kanäle eines Betriebs. Leeres Array = noch nichts verbunden.
+   *
+   * Kann `provider: "WHATSAPP"`-Zeilen enthalten, auch ohne eigenen
+   * Connect-Fluss dafür - die Route liefert jede `ChannelConnection` des
+   * Betriebs ungefiltert aus. Ein Aufrufer, der nur "GOOGLE" und "META"
+   * unterscheidet, behandelt eine WhatsApp-Zeile sonst still als Meta-Zeile.
+   */
+  list(venueId: string, signal?: AbortSignal) {
+    return request<IntegrationConnection[]>(BETRIEB_PFADE.integrationen, { query: { venueId }, signal });
+  },
+
+  /**
+   * Autorisierungs-URL für den OAuth-Consent-Screen des Anbieters. `provider`
+   * kleingeschrieben ("google"/"meta") - so verlangt es die Route.
+   *
+   * Liefert NUR die URL. Ob danach wirklich eine Verbindung entsteht, sagt
+   * allein `list()` - der Rücksprung nach dem Consent-Screen läuft serverseitig
+   * über den Deep-Link zurück in die App, nicht über diesen Aufruf.
+   */
+  connectUrl(venueId: string, provider: ProviderId, signal?: AbortSignal) {
+    return request<{ url: string }>(BETRIEB_PFADE.integrationVerbinden(provider), {
+      query: { venueId },
+      signal,
+    });
   },
 };
 
@@ -220,18 +344,6 @@ export interface StampWirkung {
 }
 
 export type StampCardFilter = "alle" | "fastvoll" | "voll" | "eingeschlafen";
-
-/**
- * Kennungen im Pfad IMMER kodieren.
- *
- * Die Kennungen sind heute uuids, in denen kein Sonderzeichen vorkommt - deshalb
- * fiel es nicht auf. Sie kommen aber aus einer Serverantwort und nicht aus einer
- * Konstanten: ein `/` oder `?` darin verschöbe den Aufruf auf eine andere Route
- * oder hängte einen Query-Parameter an, und das fiele erst im Betrieb auf.
- */
-function teil(wert: string): string {
-  return encodeURIComponent(wert);
-}
 
 /**
  * Die zwölf Pfade der Stempelkarte an EINER Stelle - und damit prüfbar.

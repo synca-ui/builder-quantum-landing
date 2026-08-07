@@ -15,10 +15,12 @@ import { useConfiguratorStore } from "@/store/configuratorStore";
 import {
   suggestedConfigToDraft,
   describeDraft,
+  normalizeSocialLinks,
   type ConfiguratorDraft,
   type SuggestedConfig,
 } from "@shared/suggestedConfig";
 import { buildPublishConfig, countExternalImages } from "@shared/autoPublish";
+import { ErgebnisFarben } from "@/components/autoconfigurator/ErgebnisFarben";
 import {
   suggestSubdomain,
   nextSubdomainCandidate,
@@ -222,6 +224,12 @@ interface MenuJobPayload {
   items?: unknown;
   diagnostics?: unknown;
   error?: string;
+  /**
+   * Bedeutung der Kürzel, wie die erkannte Karte sie selbst angibt.
+   * Fehlt das Feld hier, fällt die Legende auf dem automatischen Weg still weg
+   * und der Gast liest "a1" statt "Weizen" — der Server liefert sie längst.
+   */
+  allergenLegend?: Record<string, string>;
 }
 
 /**
@@ -826,7 +834,23 @@ export default function AutoConfigurator() {
             content.openingHours = details.openingHours;
           }
 
-          return { ...current, business, content };
+          /*
+           * A3.3: Die sozialen Konten wurden bisher ausgelesen und dann
+           * weggeworfen. shared/siteDetails.ts findet sie im HTML,
+           * /api/site/details liefert sie mit — nur las sie hier niemand,
+           * und im Entwurf gab es kein Feld dafür. Der Publish-Endpunkt
+           * nimmt sie unter contact.socialMedia seit jeher entgegen.
+           *
+           * Vorhandenes gewinnt: Was der Wirt schon eingetragen hat, wird
+           * nicht von einem Fund aus dem HTML überschrieben.
+           */
+          const contact = { ...current.contact };
+          const gefunden = normalizeSocialLinks(details.social);
+          if (Object.keys(gefunden).length) {
+            contact.socialMedia = { ...gefunden, ...(contact.socialMedia ?? {}) };
+          }
+
+          return { ...current, business, content, contact };
         });
       } catch (err) {
         console.warn("[AutoKonfigurator] Website-Angaben nicht lesbar", err);
@@ -939,6 +963,21 @@ export default function AutoConfigurator() {
               ...current.content,
               menuItems: items,
               ...(categories.length ? { categories } : {}),
+              /**
+               * Die Legende MUSS mit übernommen werden, sonst steht am Gericht
+               * "a1, f" statt "Weizen, Milch".
+               *
+               * Sie wurde hier bisher stillschweigend fallengelassen: Der
+               * manuelle Weg über den Schritt "Speisekarte" nahm sie mit, der
+               * automatische nicht — dieselbe Datei, zwei Ergebnisse. Seit die
+               * Strukturierung über ein Modell läuft, bringt fast jede Karte
+               * eine Legende mit, und genau der automatische Modus ist der,
+               * den der Wirt zuerst benutzt.
+               */
+              ...(payload.allergenLegend &&
+              typeof payload.allergenLegend === "object"
+                ? { allergenLegend: payload.allergenLegend }
+                : {}),
             },
           };
         });
@@ -1822,9 +1861,23 @@ export default function AutoConfigurator() {
                       </p>
                     )}
                     <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                      Alles lässt sich danach im Konfigurator ändern.
+                      Speisekarte und Farben lassen sich gleich hier ändern,
+                      alles Weitere im Konfigurator.
                     </p>
                   </div>
+
+                  {/* A2.3: Farben direkt am Ergebnis, nicht erst nach 15
+                      Schritten im Konfigurator. */}
+                  {draft?.design && (
+                    <ErgebnisFarben
+                      design={draft.design}
+                      onChange={(design) =>
+                        setDraft((current) =>
+                          current ? { ...current, design } : current,
+                        )
+                      }
+                    />
+                  )}
 
                   {/* Speisekarte: der wichtigste Einzelposten. Deshalb eigener
                       Block mit eigenem Zustand statt einer Zeile in der Liste. */}

@@ -5,6 +5,9 @@ import {
   deriveCohesiveColors,
   markHighlights,
   contrastRatio,
+  softenBackground,
+  rgbZuHsl,
+  buntheit,
   FALLBACK_BUSINESS_TYPE,
 } from "./autoPublish";
 import {
@@ -264,5 +267,73 @@ describe("countExternalImages", () => {
   it("ist bei leerer oder fehlender Galerie still", () => {
     expect(countExternalImages(draftWith())).toBe(0);
     expect(countExternalImages(null)).toBe(0);
+  });
+});
+
+/**
+ * A4.1 aus dem Feedback vom 6.8.2026: "Hintergrundfarbe nie grell — immer eine
+ * weiche Farbe. Als Regel im Code, nicht als Zufall."
+ */
+describe("softenBackground", () => {
+  const hsl = (hex: string) => {
+    const raw = hex.replace("#", "");
+    return rgbZuHsl(
+      parseInt(raw.slice(0, 2), 16),
+      parseInt(raw.slice(2, 4), 16),
+      parseInt(raw.slice(4, 6), 16),
+    );
+  };
+  const buntheitVon = (hex: string) => {
+    const [, s2, l2] = hsl(hex);
+    return buntheit(s2, l2);
+  };
+
+  it("entschärft ein grelles Signalrot und behält den Farbton", () => {
+    // Genau dieser Fall entsteht, wenn der Scrape die Farbe eines Knopfes für
+    // die Markenfarbe hält.
+    expect(buntheitVon("#e01b24")).toBeGreaterThan(0.5); // vorher: grell
+    const weich = softenBackground("#e01b24")!;
+    expect(buntheitVon(weich)).toBeLessThanOrEqual(0.19);
+    expect(hsl(weich)[2]).toBeGreaterThanOrEqual(0.9);
+    // Der Farbton bleibt — die Marke muss erkennbar bleiben.
+    expect(Math.abs(hsl(weich)[0] - hsl("#e01b24")[0])).toBeLessThan(2);
+  });
+
+  it("entschärft auch grelles Grün, Blau, Magenta und Gelb", () => {
+    for (const grell of ["#00ff00", "#0000ff", "#ff00ff", "#ffff00"]) {
+      expect(buntheitVon(softenBackground(grell)!)).toBeLessThanOrEqual(0.19);
+    }
+  });
+
+  it("lässt eine dunkel gemeinte Seite dunkel", () => {
+    // Ein Steakhaus mit dunkelvioletter Seite soll nicht weiß werden.
+    const weich = softenBackground("#2a0080")!;
+    expect(hsl(weich)[2]).toBeLessThanOrEqual(0.2);
+    expect(buntheitVon(weich)).toBeLessThanOrEqual(0.19);
+  });
+
+  it("lässt bereits weiche Farben buchstabengleich", () => {
+    // Creme ist die echte Markenfarbe aus der ersten Veröffentlichung. Sie hat
+    // eine Sättigung von 0,55 und ist trotzdem weich — deshalb misst die Regel
+    // die Buntheit und nicht die Sättigung.
+    expect(softenBackground("#f1e5d0")).toBe("#f1e5d0");
+    expect(softenBackground("#FFFFFF")).toBe("#FFFFFF");
+    expect(softenBackground("#1a1220")).toBe("#1a1220");
+  });
+
+  it("kommt mit fehlenden und unsinnigen Werten klar", () => {
+    expect(softenBackground(undefined)).toBeUndefined();
+    expect(softenBackground("nicht-hex")).toBeUndefined();
+    expect(softenBackground("#12")).toBeUndefined();
+  });
+
+  it("greift auch über deriveCohesiveColors", () => {
+    // Der Weg, über den es im automatischen Modus tatsächlich läuft.
+    const out = deriveCohesiveColors({ backgroundColor: "#e01b24" });
+    expect(buntheitVon(out.backgroundColor!)).toBeLessThanOrEqual(0.19);
+    // Die Schrift ist auf dem ENTSCHÄRFTEN Grund lesbar, nicht auf dem alten.
+    expect(
+      contrastRatio(out.fontColor!, out.backgroundColor!),
+    ).toBeGreaterThanOrEqual(4.5);
   });
 });

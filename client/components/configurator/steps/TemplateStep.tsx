@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Eye, ChevronRight } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   useConfiguratorDesign,
@@ -122,9 +122,15 @@ export function TemplateStep({
                       </p>
                     </div>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <Eye className="w-5 h-5" />
-                  </button>
+                  {/*
+                    Hier stand ein Augen-Knopf ohne onClick. Er versprach eine
+                    eigene Vorschau und tat nichts — ein Klick darauf waehlte
+                    ueber die umschliessende Karte nur die Vorlage aus, wie
+                    jeder andere Klick auch. "Kein Knopf, der nichts tut":
+                    entfernt statt mit einer Funktion versehen, denn die
+                    Vorschau steht ohnehin permanent daneben (Configurator.tsx
+                    rendert sie in jedem Schritt).
+                  */}
                 </div>
               </div>
             );

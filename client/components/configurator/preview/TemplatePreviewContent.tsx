@@ -26,6 +26,7 @@ import {
 // ✅ Helper-Import aus zentraler Datei
 import { normalizeImageSrc, getPageLabel } from "@/lib/helpers";
 import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
+import { fontClassFor } from "@/lib/fontClass";
 
 // Shared Components - werden im Editor UND auf der Live-Seite verwendet
 import { Navigation } from "@/components/shared/Navigation";
@@ -91,6 +92,13 @@ export function TemplatePreviewContent() {
   const menuItems = useConfiguratorStore((s) => s.content.menuItems) || [];
   const categories = useConfiguratorStore((s) => s.content.categories) || [];
   const gallery = useConfiguratorStore((s) => s.content.gallery) || [];
+  /*
+   * Die Kuerzel-Legende der Karte. Ohne sie zeigt die Vorschau "(a1, f)",
+   * waehrend die veroeffentlichte Seite "Weizen, Milch" zeigt — eine
+   * Abweichung genau der Art, gegen die der Kommentar bei fontClass weiter
+   * unten argumentiert: Vorschau und Seite muessen identisch rendern.
+   */
+  const allergenLegend = useConfiguratorStore((s) => s.content.allergenLegend);
   const openingHours =
     useConfiguratorStore((s) => s.content.openingHours) || {};
 
@@ -269,12 +277,9 @@ export function TemplatePreviewContent() {
   // ==========================================
   // STYLE HELPERS
   // ==========================================
-  const fontClass =
-    fontFamily === "serif"
-      ? "font-serif"
-      : fontFamily === "mono"
-        ? "font-mono"
-        : "font-sans";
+  // Dieselbe Zuordnung wie AppRenderer — genau darum geht es hier:
+  // Vorschau und veroeffentlichte Seite muessen identisch rendern.
+  const fontClass = fontClassFor(fontFamily);
 
   // Memoized styles — Wrapper kommt aus dem geteilten Helper, damit Vorschau
   // und veröffentlichte Seite (AppRenderer) identisch rendern.
@@ -883,6 +888,7 @@ export function TemplatePreviewContent() {
             onSetImageIndex={setCurrentImageIndex}
             onAddToCart={addToCart}
             isPreview={true}
+            allergenLegend={allergenLegend}
           />
         </div>
       </div>

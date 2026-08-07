@@ -110,13 +110,10 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   );
   const handleDescriptionChange = useCallback(
     (value: string) => {
-      // Nutze hier die passende Action aus deinem Store (entweder setBusinessInfo oder updateUniqueDescription)
-      // Ich habe es so gelassen wie in deinem Snippet:
-      if (businessActions.setBusinessInfo) {
-        businessActions.setBusinessInfo({ uniqueDescription: value });
-      } else if ((businessActions as any).updateUniqueDescription) {
-        (businessActions as any).updateUniqueDescription(value);
-      }
+      // setBusinessInfo liegt fest im actions-Objekt des Stores, ist also
+      // immer da. Der frühere else-Zweig auf ein "updateUniqueDescription"
+      // war deshalb unerreichbar — und die Action existiert gar nicht.
+      businessActions.setBusinessInfo({ uniqueDescription: value });
     },
     [businessActions],
   );
