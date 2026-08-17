@@ -548,9 +548,9 @@ export default function JulianPortfolio() {
         </div>
         <div className="timeline">
           {[
-            { date: "2026 – Heute", company: "epilot", role: "Product Manager", desc: "Agiles Teamumfeld, Konzeption und Vorantreiben neuer Features, intensiver Kundenkontakt, Markt- und Nutzerresearch", active: true },
-            { date: "2026 – Heute", company: "Bodysoul Münster", role: "Spinning Coach", desc: "Planung und Durchführung von Spinning-Kursen, Motivation der Teilnehmer", active: true },
-            { date: "2024 – 2026", company: "Goldbeck GmbH", role: "Projektmanagement", desc: "Projektprozesse steuern, Sprint-Planung, Qualitätssicherung, KPI-Management", active: false },
+            { date: "2026", company: "Bodysoul Münster", role: "Spinning Coach", desc: "Planung und Durchführung von Spinning-Kursen, Motivation der Teilnehmer", active: false },
+            { date: "2025 – 2026", company: "epilot", role: "Product Manager", desc: "Agiles Teamumfeld, Konzeption und Vorantreiben neuer Features, intensiver Kundenkontakt, Markt- und Nutzerresearch", active: false },
+            { date: "2024 – 2025", company: "Goldbeck GmbH", role: "Projektmanagement", desc: "Projektprozesse steuern, Sprint-Planung, Qualitätssicherung, KPI-Management", active: false },
             { date: "2021 – 2024", company: "Europace AG", role: "Anwendungsbetreuer BaufiLead", desc: "Technischer Support BaufiLead und TAV, Partnerakquise, 2nd und 3rd-Level-Support", active: false },
             { date: "2019 – 2021", company: "Edeka", role: "Werkstudent", desc: "Erste Berufserfahrung parallel zum Studium", active: false },
           ].map((item) => (
