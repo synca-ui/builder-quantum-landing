@@ -480,7 +480,7 @@ export default function JulianPortfolio() {
           <div className="section-eyebrow">About me</div>
           <h2 className="section-title">Hey, ich bin<br />Julian.</h2>
           <p className="body-text">
-            23, aus Berlin, jetzt in Münster. Ich habe meinen Bachelor der
+            24, aus Berlin, jetzt in Münster. Ich habe meinen Bachelor der
             Wirtschaftsinformatik an der HTW Berlin abgeschlossen und bin gerade im
             Master an der FH Münster.
           </p>
