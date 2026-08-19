@@ -53,3 +53,39 @@
 
 /sw.js
   Cache-Control: public, max-age=0, must-revalidate
+
+# --------------------------------------------------------------------------
+# Marken- und App-Icons: NICHT unveraendlich.
+#
+# Die Regeln /*.png und /*.svg weiter oben setzen max-age=31536000 zusammen mit
+# "immutable". Fuer gehashte Bundle-Dateien ist das richtig, fuer diese hier
+# nicht: Sie haben FESTE Namen, aendern sich aber, wenn die Marke sich aendert.
+# "immutable" heisst, dass der Browser ein Jahr lang nicht einmal nachfragt -
+# jeder Besucher, der das alte Icon schon geladen hat, behaelt es.
+#
+# Genau das ist am 7.8.2026 aufgefallen, als das alte "M" durch das
+# Maitr-Zeichen ersetzt wurde. Deshalb hier eine Stunde mit Nachfrage: kurz
+# genug, dass eine Aenderung ankommt, lang genug, dass es nicht bei jedem
+# Seitenaufruf erneut geholt wird.
+# --------------------------------------------------------------------------
+
+/favicon.ico
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/icon-192.png
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/icon-512.png
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/icon-192-maskable.png
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/icon-512-maskable.png
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/brand/*
+  Cache-Control: public, max-age=3600, must-revalidate
