@@ -239,6 +239,24 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
+            {/*
+              Das Maitr-Zeichen (B2). Der Kopf trug bisher nur die Wortmarke;
+              das Zeichen fehlte ganz.
+
+              Die transparente Fassung, nicht die petrolfarbene Kachel: Die
+              Seite ist weiß (bg-white weiter unten), eine Kachel würde als
+              Klotz im Kopf sitzen. width/height stehen fest im Markup, damit
+              der Kopf beim Laden nicht springt.
+            */}
+            <img
+              src="/brand/maitr-icon-transparent.svg"
+              alt=""
+              aria-hidden="true"
+              width={36}
+              height={36}
+              className="w-9 h-9 shrink-0 mr-2 select-none"
+              draggable={false}
+            />
             <div className="relative group">
               {/* Wortmarke, keine Seitenüberschrift: das <h1> der Seite ist die
                   Hero-Headline weiter unten. Zwei <h1> pro Seite sind ein
@@ -249,7 +267,10 @@ const Navigation = () => {
                 Maitr
               </div>
               <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
+              {/* Der frühere Deko-Punkt über der Wortmarke ist entfallen: Das
+                  Maitr-Zeichen links bringt seinen eigenen Punkt mit, und das
+                  ist sein Erkennungsmerkmal. Zwei Punkte nebeneinander lesen
+                  sich als Versehen, nicht als Gestaltung. */}
             </div>
           </div>
 

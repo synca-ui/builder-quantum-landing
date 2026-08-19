@@ -33,6 +33,7 @@
  * Umgebungsvariable: ANTHROPIC_API_KEY.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { jsonSchemaOutputFormat } from "@anthropic-ai/sdk/helpers/json-schema";
 import type { ParsedMenuItem } from "../../shared/menuParser";
 
 /**
@@ -324,9 +325,15 @@ export async function structureMenuText(
     .stream({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      output_config: {
-        format: { type: "json_schema", schema: SCHEMA as unknown as Record<string, unknown> },
-      },
+      /**
+       * Über den SDK-Helfer, nicht von Hand zusammengesetzt: Er bringt das
+       * Schema in die kanonische Form der Structured Outputs (schließt jedes
+       * Objekt, erzwingt required, wirft nicht unterstützte Einschränkungen
+       * weg). Genau daran war die erste Fassung gescheitert — und zwar
+       * unsichtbar, weil Tests und Build grün blieben und die Kette in
+       * Produktion stumm auf die Regeln zurückgefallen wäre.
+       */
+      output_config: { format: jsonSchemaOutputFormat(SCHEMA as any) },
       messages: [{ role: "user", content: `${ANWEISUNG}\n\n---\n\n${gekuerzt}` }],
     })
     .finalMessage();
