@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { GoogleMark } from "../src/components/icons";
@@ -42,8 +42,15 @@ export default function LoginScreen() {
   //
   // Deshalb hier reaktiv statt einmalig. Im Demobetrieb ist das folgenlos: Dort
   // setzt erst der Knopf signedIn, und der navigiert ohnehin selbst.
+  //
+  // Ziel ist "/" und NICHT "/start": Dort steht die einzige Weiche der App, und
+  // sie entscheidet, ob dieses Konto schon einen Betrieb hat. Wer direkt nach
+  // "/start" springt, umgeht sie - und genau daran hing der Fehler, den das
+  // Onboarding beheben sollte: Ein frisch angemeldeter Wirt landete trotz allem
+  // in den Beispieldaten eines fremden Betriebs, weil die Anmeldung an der
+  // Weiche vorbeiführte.
   useEffect(() => {
-    if (signedIn) router.replace("/start");
+    if (signedIn) router.replace("/");
   }, [signedIn, router]);
 
   return hasRealAuth() ? <ClerkLogin /> : <DemoLogin />;
@@ -56,14 +63,16 @@ function DemoLogin() {
 
   const enter = () => {
     signIn();
-    router.replace("/start");
+    // Über die Weiche, nicht daran vorbei - siehe die Begründung oben. Im
+    // Demobetrieb gilt der Demo-Betrieb als vorhanden, sie schickt also direkt
+    // nach "/start"; das Onboarding poppt hier bewusst nicht auf.
+    router.replace("/");
   };
 
   return (
     <LoginForm
       onGoogle={enter}
       onApple={enter}
-      onEmail={enter}
       footnote="Demomodus · Anmeldung noch nicht verbunden"
     />
   );
@@ -100,7 +109,11 @@ function ClerkLogin() {
       // Der lokale Zustand steuert die Navigation der App; Clerk hält daneben die
       // Sitzung, aus der `mobileAuthAdapter.getToken()` das Bearer-Token zieht.
       signIn();
-      router.replace("/start");
+      // Und weiter über die Weiche: Ob dieses Konto schon einen Betrieb hat,
+      // weiß hier niemand - `GET /venues` läuft erst danach an. Ein Sprung nach
+      // "/start" nähme die Antwort vorweg, und für jeden neuen Wirt wäre sie
+      // falsch.
+      router.replace("/");
     } catch (error) {
       console.warn("[login] SSO fehlgeschlagen", error);
       toast.show("Anmeldung fehlgeschlagen. Bitte erneut versuchen.");
@@ -113,9 +126,6 @@ function ClerkLogin() {
     <LoginForm
       onGoogle={() => void start("oauth_google")}
       onApple={() => void start("oauth_apple")}
-      // Ein E-Mail-Weg ist noch nicht gebaut. Lieber ehrlich vertrösten, als
-      // jemanden scheinbar anzumelden, dessen Aufrufe die API dann mit 401 abweist.
-      onEmail={() => toast.show("E-Mail-Anmeldung folgt - bitte Google oder Apple nutzen.")}
       busy={busy !== null}
       footnote="Geschützt durch Clerk · OAuth & MFA"
     />
@@ -125,16 +135,13 @@ function ClerkLogin() {
 interface LoginFormProps {
   onGoogle: () => void;
   onApple: () => void;
-  onEmail: () => void;
   busy?: boolean;
   footnote: string;
 }
 
 /** Reine Darstellung - identisch in beiden Betriebsarten, damit das Layout nicht driftet. */
-function LoginForm({ onGoogle, onApple, onEmail, busy = false, footnote }: LoginFormProps) {
+function LoginForm({ onGoogle, onApple, busy = false, footnote }: LoginFormProps) {
   const theme = useTheme();
-  const router = useRouter();
-  const [email, setEmail] = useState("");
 
   return (
     <Screen surface="deep" scroll={false} contentStyle={styles.container}>
@@ -165,47 +172,35 @@ function LoginForm({ onGoogle, onApple, onEmail, busy = false, footnote }: Login
           onPress={onApple}
         />
 
-        <View style={styles.divider}>
-          <View style={[styles.rule, { backgroundColor: theme.colors.border }]} />
-          <Eyebrow tone="faint" style={{ letterSpacing: 0.53 }}>
-            oder
-          </Eyebrow>
-          <View style={[styles.rule, { backgroundColor: theme.colors.border }]} />
-        </View>
+        {/* KEIN E-Mail-Feld und kein „Weiter" mehr.
+            Beides stand hier, obwohl der E-Mail-Weg nie gebaut wurde: Der Knopf
+            zeigte nur einen kurzen Hinweis und meldete niemanden an. Im
+            Simulator gemessen sah das aus wie eine kaputte App - man tippt eine
+            Adresse ein, drückt einen farbigen Primärknopf, und nichts geschieht.
+            Ein Feld mit einem Knopf darunter IST ein Versprechen; eines, das
+            der Code nicht einlöst, gehört entfernt und nicht beschriftet.
+            Bei Google und Apple ist die erste Anmeldung ohnehin zugleich die
+            Registrierung, der Weg ist also vollständig - nur schmaler. */}
 
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="sofia@cafe-goldstueck.de"
-          placeholderTextColor={theme.colors.textFaint}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          accessibilityLabel="E-Mail-Adresse"
-          onSubmitEditing={onEmail}
-          style={[
-            theme.text.body,
-            styles.field,
-            { borderColor: theme.colors.border, color: theme.colors.textPrimary, fontSize: 15 },
-          ]}
-        />
-
-        <PillButton label="Weiter" disabled={busy} onPress={onEmail} />
-
+        {/* Kein eigener „Konto erstellen"-Weg mehr.
+            Vorher führte er in eine siebenteilige Einrichtung, die nichts
+            speicherte und am Ende `signIn()` OHNE Clerk-Sitzung rief: Der Nutzer
+            war danach lokal „angemeldet", hatte kein Konto, keinen Betrieb, und
+            jeder Aufruf endete 401 - eine Sackgasse, aus der nur das Löschen der
+            App herausführte.
+            Bei Google und Apple ist die erste Anmeldung ohnehin die Registrierung;
+            ein zweiter Knopf daneben würde eine Unterscheidung behaupten, die es
+            nicht gibt. Wer neu ist, meldet sich oben an und wird von der Weiche
+            in `app/index.tsx` ins Onboarding geschickt. */}
         <Text variant="bodySm" tone="secondary" style={styles.signupLine}>
-          Neu hier?{" "}
-          <Text
-            variant="bodySm"
-            tone="accent"
-            style={{ textDecorationLine: "underline" }}
-            onPress={() => router.push("/journey/willkommen")}
-          >
-            Konto erstellen
-          </Text>
+          Neu hier? Melde dich einfach oben an - dein Konto entsteht dabei.
         </Text>
       </Card>
 
-      <Eyebrow style={styles.footnote}>{footnote}</Eyebrow>
+      {/* `secondary` statt des Vorgabetons: Diese Zeile liegt auf dem
+          animierten Verlauf, nicht auf der Karte darüber - dort war sie im
+          Simulator kaum zu lesen. Siehe die Begründung an `textMuted`. */}
+      <Eyebrow tone="secondary" style={styles.footnote}>{footnote}</Eyebrow>
     </Screen>
   );
 }
@@ -218,20 +213,6 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 22,
     gap: 14,
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginVertical: 2,
-  },
-  rule: { flex: 1, height: 1 },
-  field: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingVertical: 15,
-    paddingHorizontal: 18,
-    minHeight: 52,
   },
   signupLine: { textAlign: "center", fontSize: 14 },
   footnote: { marginTop: 22, textAlign: "center", letterSpacing: 0.53 },

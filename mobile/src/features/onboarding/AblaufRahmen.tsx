@@ -10,15 +10,22 @@ import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
 import { useTheme } from "../../theme";
 
-export const JOURNEY_STEPS = 7;
-
-export interface JourneyFrameProps {
-  /** 1-basierter Schritt; `undefined` blendet die Fortschrittsleiste aus (Abschluss-Screen). */
+export interface AblaufRahmenProps {
+  /** 1-basierter Schritt; `undefined` blendet die Fortschrittsleiste aus (Abschluss). */
   step?: number;
+  /**
+   * Gesamtzahl der Schritte für die Fortschrittsleiste.
+   *
+   * Pflicht, sobald `step` gesetzt ist - hier stand einmal ein Vorgabewert von 7
+   * für eine Einrichtung, die es nicht mehr gibt. Ein Vorgabewert für eine
+   * Schrittzahl ist ohnehin die falsche Bequemlichkeit: Er stimmt genau so lange,
+   * wie niemand einen Schritt hinzufügt, und meldet danach still "5 / 4".
+   */
+  totalSteps?: number;
   title?: string;
   subtitle?: string;
   children: ReactNode;
-  primaryAction: { label: string; onPress: () => void };
+  primaryAction: { label: string; onPress: () => void; disabled?: boolean };
   /** Zweite Aktion als Textlink darunter. */
   secondaryAction?: { label: string; onPress: () => void };
   /** Kleingedrucktes statt Sekundäraktion, z. B. "Jederzeit widerrufbar". */
@@ -27,16 +34,20 @@ export interface JourneyFrameProps {
 }
 
 /**
- * Gemeinsames Gerüst der Anbindungsjourney (Screens 18-25).
+ * Gemeinsames Gerüst der vier Einrichtungsschritte und ihres Abschlusses.
  *
- * Alle acht Schritte teilen denselben Aufbau: Fortschritt oben, Titelblock, Inhalt,
- * Aktionen unten am Rand. Nur der Inhalt wechselt - deshalb liegt der Rest hier.
+ * Alle Schritte teilen denselben Aufbau: Fortschritt oben, Titelblock, Inhalt,
+ * Aktionen unten am Rand. Nur der Inhalt und die Schrittzahl wechseln - deshalb liegt
+ * der Rest hier (Grundsatz "erweitern, nicht duplizieren" statt eines zweiten,
+ * fast identischen Gerüsts für den neuen Ablauf).
  *
- * Anders als im Design-Dokument zeigt die Journey keine Tabbar: Während der Einrichtung
- * gibt es noch nichts zu wechseln, und eine nicht bedienbare Leiste führt in die Irre.
+ * Anders als im Design-Dokument zeigt keiner der beiden Flows eine Tabbar: Während
+ * der Einrichtung gibt es noch nichts zu wechseln, und eine nicht bedienbare Leiste
+ * führt in die Irre.
  */
-export function JourneyFrame({
+export function AblaufRahmen({
   step,
+  totalSteps,
   title,
   subtitle,
   children,
@@ -44,7 +55,7 @@ export function JourneyFrame({
   secondaryAction,
   footnote,
   surface = "canvas",
-}: JourneyFrameProps) {
+}: AblaufRahmenProps) {
   const theme = useTheme();
   const router = useRouter();
 
@@ -55,7 +66,7 @@ export function JourneyFrame({
   return (
     <Screen surface={surface} contentStyle={{ gap: 18, minHeight: "100%" }}>
       {canGoBack ? <NavHeader /> : null}
-      {step ? <StepDots current={step} total={JOURNEY_STEPS} /> : null}
+      {step ? <StepDots current={step} total={totalSteps ?? 1} /> : null}
 
       {title ? (
         <View style={{ marginTop: theme.spacing.sm }}>
@@ -77,7 +88,11 @@ export function JourneyFrame({
       {children}
 
       <View style={{ marginTop: "auto", paddingTop: theme.spacing.xl, gap: 10 }}>
-        <PillButton label={primaryAction.label} onPress={primaryAction.onPress} />
+        <PillButton
+          label={primaryAction.label}
+          onPress={primaryAction.onPress}
+          disabled={primaryAction.disabled}
+        />
 
         {secondaryAction ? (
           <Text
@@ -91,7 +106,16 @@ export function JourneyFrame({
         ) : null}
 
         {footnote ? (
-          <Eyebrow style={{ textAlign: "center" }}>{footnote}</Eyebrow>
+          // Auf `deep` steht die Zeile direkt auf dem animierten Verlauf statt auf
+          // einer Karte. Der Vorgabeton `muted` ist für weisse Flaechen abgewogen
+          // (siehe die Begruendung an `textMuted` in theme/colors.ts) und
+          // verschwindet dort fast - im Simulator war die Zeile kaum zu lesen.
+          <Eyebrow
+            tone={surface === "deep" ? "secondary" : "muted"}
+            style={{ textAlign: "center" }}
+          >
+            {footnote}
+          </Eyebrow>
         ) : null}
       </View>
     </Screen>

@@ -48,7 +48,7 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title={channel.name} />
+      <NavHeader title={channel.name} fallback="/kanaele" />
 
       <Card emphasis="strong" padding={theme.spacing.xl} style={{ gap: 14, borderRadius: 22 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>

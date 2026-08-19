@@ -20,7 +20,7 @@
       "versionCode": 1,
       "permissions": [],
       "adaptiveIcon": {
-        "backgroundColor": "#EAF1EE",
+        "backgroundColor": "#121820",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -63,6 +63,13 @@
     "experiments": {
       "typedRoutes": true,
       "onDemandFilesystem": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "45e8a5e4-fd02-4ab2-b79e-35bca5ec1d53"
+      }
+    },
+    "owner": "julianhallo22"
   }
 }

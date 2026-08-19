@@ -34,7 +34,7 @@ export function ConciergeScreen() {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="WhatsApp-Concierge" onBack={() => router.back()} />
+      <NavHeader title="WhatsApp-Concierge" fallback="/inbox" />
 
       <DarkPanel style={{ gap: 4 }}>
         <Eyebrow color={onDarkPanel.accent}>Automatisch erledigt · vor 20 Min</Eyebrow>

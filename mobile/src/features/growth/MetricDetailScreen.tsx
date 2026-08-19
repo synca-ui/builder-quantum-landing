@@ -28,7 +28,7 @@ export function MetricDetailScreen({ metricKey }: { metricKey?: string }) {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title={metric.label} />
+      <NavHeader title={metric.label} fallback="/wachstum" />
 
       <View style={{ gap: 2 }}>
         <Text variant="numeric" style={{ fontSize: 44, lineHeight: 48 }}>

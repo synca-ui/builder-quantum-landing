@@ -14,6 +14,7 @@ import { api, isCoreConfigured } from "@maitr/core";
 
 import { formatHour, type TimelineBooking, type TimelineTable } from "../components/ui/Timeline";
 import { serviceDays as seedDays, type ServiceDayFixture } from "../features/reservations/fixtures";
+import type { BetriebBekanntheit } from "../features/onboarding/ablauf";
 import { hasRealAuth, mobileAuthAdapter, subscribeToRealAuthSession } from "./auth";
 
 /**
@@ -50,6 +51,19 @@ export interface SessionUser {
    bedienbar halten (die Fixtures in `features/start/fixtures.ts` sind darauf
    gemünzt). Erst wenn `GET /venues` einen echten Betrieb meldet, wird sie ersetzt. */
 export const DEMO_VENUE_ID = "venue_goldstueck";
+
+/**
+ * Anfangswert für `venueKnown` (siehe dort): Im Demomodus steht sofort „bekannt" -
+ * dort IST der Demo-Betrieb die Wahrheit, es geht nie ein Aufruf raus, und die App
+ * muss ohne jede Konfiguration bedienbar bleiben. Im echten Anmeldebetrieb
+ * „unbekannt", bis `GET /venues` geantwortet hat (siehe der Effekt „Welcher Betrieb
+ * gehört zu dieser Anmeldung?" unten). Eigene Funktion statt einer Inline-Prüfung,
+ * weil derselbe Anfangswert an drei Stellen gebraucht wird: beim ersten Start, beim
+ * Abmelden und bei der Kontolöschung.
+ */
+function initialVenueKnown(): BetriebBekanntheit {
+  return hasRealAuth() ? "unbekannt" : "bekannt";
+}
 
 const DEMO_USER: SessionUser = {
   name: "Sofia Brandt",
@@ -413,6 +427,18 @@ interface StoreValue {
   /** true, sobald `venueId` von einem echten Betrieb stammt (nicht der Demokennung). */
   hasRealVenue: boolean;
   /**
+   * Kennt diese Anmeldung schon einen Betrieb - dritt-wertig, weil `venueId` allein
+   * die entscheidende Unterscheidung nicht hergibt: Eine LEERE Antwort von
+   * `GET /venues` sieht für `venueId` genauso aus wie eine Anfrage, die noch nicht
+   * gelaufen ist - in beiden Fällen bleibt es bei `DEMO_VENUE_ID`. Die Einstiegsweiche
+   * (`einstiegsWeiche` in `features/onboarding/ablauf.ts`) braucht aber genau diesen
+   * Unterschied: „unbekannt" heißt warten (die Antwort steht noch aus), „keiner"
+   * heißt ins Onboarding schicken, „bekannt" heißt durchlassen. Wortschatz absichtlich
+   * aus jenem Modul übernommen (`BetriebBekanntheit`), damit es nicht zwei Vokabeln
+   * für dieselbe Sache gibt.
+   */
+  venueKnown: BetriebBekanntheit;
+  /**
    * Echten Betrieb übernehmen - aus `GET /venues` oder frisch angelegt. Setzt neben der
    * Kennung auch den Namen im Betriebsprofil, damit nicht die halbe App weiter
    * „Café Goldstück" zeigt, während der Server einen anderen Betrieb meint.
@@ -598,6 +624,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     useState<Record<string, boolean>>(REVIEW_ANSWERED_SEED);
   const [posts, setPosts] = useState<Post[]>(POSTS_SEED);
   const [venueId, setVenueId] = useState<string>(DEMO_VENUE_ID);
+  const [venueKnown, setVenueKnown] = useState<BetriebBekanntheit>(initialVenueKnown);
   const [venueProfile, setVenueProfile] = useState<VenueProfile>(VENUE_PROFILE_SEED);
   const [channelMeta, setChannelMeta] =
     useState<Record<string, { account: string; since: string }>>(CHANNEL_META_SEED);
@@ -667,6 +694,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // stehen, lüde der nächste Anmelder für einen Wimpernschlag das Briefing eines
     // fremden Betriebs - bis die eigene Abfrage antwortet.
     setVenueId(DEMO_VENUE_ID);
+    // Dieselbe Lücke bei der Bekanntheit: bliebe sie auf „bekannt" stehen, sähe die
+    // Einstiegsweiche für den nächsten Anmelder für einen Wimpernschlag einen
+    // bestätigten Betrieb, der gar nicht seiner ist. Zurück auf den Anfangswert -
+    // im Demomodus sofort wieder „bekannt" (der Demo-Betrieb bleibt die Wahrheit),
+    // im echten Anmeldebetrieb „unbekannt", bis die nächste Anmeldung neu fragt.
+    setVenueKnown(initialVenueKnown());
     await mobileAuthAdapter.signOut();
   }, []);
 
@@ -762,6 +795,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const adoptVenue = useCallback<StoreValue["adoptVenue"]>((venue) => {
     if (!venue?.id) return;
     setVenueId(venue.id);
+    // Ein Betrieb wurde gerade bestätigt - aus `GET /venues` oder frisch angelegt.
+    setVenueKnown("bekannt");
     // Nur überschreiben, wenn der Server wirklich einen Namen mitschickt - ein leerer
     // Name würde sonst die Kopfzeile des Start-Screens leeren.
     const name = venue.name;
@@ -791,12 +826,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // Form prüfen, nicht nur den Erfolg (dieselbe Lehre wie in `useDailyBriefing`):
         // Ein HTTP 200 von einem fremden Dienst ist ebenfalls ein Erfolg.
         const first = Array.isArray(list) ? list[0] : undefined;
-        if (first?.id) adoptVenue(first);
+        if (first?.id) {
+          adoptVenue(first);
+        } else {
+          // Die Antwort ist da, und sie ist leer: an dieser Anmeldung hängt wirklich
+          // kein Betrieb - anders als „noch nicht gefragt" (siehe `venueKnown`).
+          // Die Einstiegsweiche schickt diesen Fall ins Onboarding.
+          setVenueKnown("keiner");
+        }
       })
       .catch(() => {
-        // Kein Netz, 401, noch kein Betrieb: die Demokennung bleibt stehen. Der
-        // Start-Screen zeigt dann seine Fixture samt „API nicht verbunden" - das ist
-        // der ehrliche Zustand, kein Absturz.
+        // Kein Netz, 401: die Demokennung bleibt stehen, und `venueKnown` bleibt
+        // ausdrücklich auf „unbekannt" - NICHT „keiner". „Ich konnte nicht fragen"
+        // ist nicht dasselbe wie „es gibt keinen"; wer das gleichsetzt, schickt einen
+        // Wirt mit bestehendem Betrieb ins Onboarding, der dort einen zweiten anlegen
+        // will und 409 bekommt. Der Start-Screen zeigt derweil seine Fixture samt
+        // „API nicht verbunden" - das ist der ehrliche Zustand, kein Absturz. Ein
+        // erneuter Versuch bleibt möglich, weil „unbekannt" keine Behauptung ist.
       });
 
     return () => {
@@ -1074,6 +1120,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setReviewAnswered(REVIEW_ANSWERED_SEED);
     setPosts(POSTS_SEED);
     setVenueId(DEMO_VENUE_ID);
+    // Frische Installation kennt noch keinen Betrieb - derselbe Anfangswert wie beim
+    // allerersten Start (siehe `initialVenueKnown`).
+    setVenueKnown(initialVenueKnown());
     setVenueProfile(VENUE_PROFILE_SEED);
     setInboxRead({});
     setDays(seedServiceDays());
@@ -1135,6 +1184,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // Demomodus zurück (Schlüssel entfernt), bliebe sonst die Kennung eines
         // Betriebs stehen, den dieses Gerät gar nicht mehr abfragen darf.
         if (typeof s.venueId === "string" && s.venueId && hasRealAuth()) setVenueId(s.venueId);
+        // `venueKnown` bewusst NICHT aus dem Schnappschuss übernommen (er landet gar
+        // nicht erst darin, siehe die Zusammenstellung weiter unten). Ein gespeichertes
+        // „bekannt" oder „keiner" wäre beim nächsten Start eine Behauptung über den
+        // SERVER, die niemand geprüft hat - der Netzabruf oben lief seither vielleicht
+        // gar nicht mehr, der Betrieb könnte zwischenzeitlich angelegt oder gelöscht
+        // worden sein. Bei „keiner" wiegt das doppelt schwer: die Einstiegsweiche
+        // schickt darauf sofort ins Onboarding, ganz ohne dass irgendetwas gefragt
+        // wurde. `initialVenueKnown()` bleibt also die einzige Quelle für den
+        // Anfangswert, und der echte Netzabruf (Effekt „Welcher Betrieb gehört zu
+        // dieser Anmeldung?") korrigiert ihn bei jedem Start neu.
         if (s.venueProfile) setVenueProfile(s.venueProfile);
         if (s.inboxRead) setInboxRead(s.inboxRead);
         if (s.days) setDays(s.days);
@@ -1296,6 +1355,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       createQuickPost,
       venueId,
       hasRealVenue: venueId !== DEMO_VENUE_ID,
+      venueKnown,
       adoptVenue,
       venueProfile,
       updateVenueProfile,
@@ -1350,6 +1410,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updatePost,
       createQuickPost,
       venueId,
+      venueKnown,
       adoptVenue,
       venueProfile,
       updateVenueProfile,

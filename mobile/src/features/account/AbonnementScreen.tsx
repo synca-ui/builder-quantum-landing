@@ -99,7 +99,7 @@ export function AbonnementScreen() {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Pläne" onBack={() => router.back()} />
+      <NavHeader title="Pläne" fallback="/konto" />
 
       <DarkPanel style={{ gap: 6 }}>
         <Eyebrow color={onDarkPanel.accent}>Was Maitr diesen Monat gebracht hat</Eyebrow>
