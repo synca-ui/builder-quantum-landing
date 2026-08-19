@@ -113,17 +113,27 @@
   <meta data-rh="true" name="twitter:image" content="https://www.maitr.de/og-image.png" />
 
   <!-- PWA Meta Tags -->
-  <meta name="theme-color" content="#0d9488" />
+  <meta name="theme-color" content="#1F7A72" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Maitr Builder" />
   <meta name="application-name" content="Maitr Builder" />
 
-  <!-- Favicon and Icons -->
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <!--
+    Favicon und App-Icons — das Maitr-Zeichen, nicht mehr das alte "M" mit
+    Türkis-Violett-Verlauf.
+
+    Reihenfolge ist Absicht: Moderne Browser bevorzugen die SVG-Fassung und
+    zeichnen sie in jeder Größe scharf; ältere greifen auf die .ico zurück, die
+    16, 32 und 48 Pixel enthält (eine einzelne 48er-Grafik wird in der Tab-Leiste
+    matschig heruntergerechnet). Petrol statt der transparenten Fassung, weil
+    das Zeichen sonst auf dunklen Tab-Leisten verschwindet.
+  -->
+  <link rel="icon" type="image/svg+xml" href="/brand/maitr-icon-petrol.svg" />
+  <link rel="icon" href="/favicon.ico" sizes="48x48" type="image/x-icon" />
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
 
