@@ -97,6 +97,7 @@ function ClerkLogin() {
       {Platform.OS === "ios" ? <AppleKnopf /> : null}
       <Trennlinie />
       <EmailAnmeldung />
+      <ShowcaseKnopf />
     </LoginRahmen>
   );
 }
@@ -145,6 +146,34 @@ function AppleKnopf() {
       disabled={busy}
       onPress={() => void start()}
     />
+  );
+}
+
+/**
+ * Einstieg in die Vorfuehrung.
+ *
+ * Bewusst unten, klein und ohne Farbe: Wer ein Konto hat, soll sich anmelden - der
+ * Showcase ist fuer Vorfuehrungen gedacht, nicht als bequemerer Nebenweg. Die
+ * Beschriftung nennt beim Namen, was passiert ("Beispieldaten"), damit niemand
+ * hinterher echte Zahlen zu sehen glaubt.
+ */
+function ShowcaseKnopf() {
+  const router = useRouter();
+  const { betreteShowcase } = useStore();
+
+  return (
+    <View style={styles.showcase}>
+      <PillButton
+        label="Showcase mit Beispieldaten ansehen"
+        variant="ghost"
+        onPress={() => {
+          betreteShowcase();
+          // Ueber die Weiche wie jede andere Anmeldung - sie kennt den
+          // Demo-Betrieb und schickt direkt weiter, ohne Onboarding.
+          router.replace("/");
+        }}
+      />
+    </View>
   );
 }
 
@@ -578,6 +607,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   formular: { gap: 14 },
+  showcase: { marginTop: 2 },
   hinweisZeile: { textAlign: "center", fontSize: 14 },
   trennlinie: { flexDirection: "row", alignItems: "center", gap: 12 },
   strich: { flex: 1, height: StyleSheet.hairlineWidth },

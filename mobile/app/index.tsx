@@ -33,14 +33,19 @@ import { useTheme } from "../src/theme";
  */
 export default function Index() {
   const theme = useTheme();
-  const { signedIn, venueKnown } = useStore();
+  const { signedIn, showcase, venueKnown } = useStore();
 
   const ziel = einstiegsWeiche({
     angemeldet: signedIn,
     // Ohne Clerk-Schlüssel gibt es kein Konto, an dem ein Betrieb hängen könnte.
     // Der Demobetrieb ist dort die Wahrheit und darf nicht ins Onboarding laufen -
     // die App muss ohne jede Konfiguration bedienbar bleiben.
-    echterAnmeldebetrieb: hasRealAuth(),
+    //
+    // Der Showcase zählt hier genauso: Er ist angemeldet, aber ohne Konto, und der
+    // Betriebsabruf unterbleibt bewusst. Ohne `&& !showcase` bliebe `venueKnown` auf
+    // „unbekannt" stehen und die Weiche antwortete für immer „warten" - die
+    // Vorführung endete auf einer leeren Fläche.
+    echterAnmeldebetrieb: hasRealAuth() && !showcase,
     betrieb: venueKnown,
   });
 

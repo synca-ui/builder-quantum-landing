@@ -379,8 +379,20 @@ const MENU_SEED: MenuItem[] = [];
 interface StoreValue {
   // Session
   signedIn: boolean;
+  /**
+   * Showcase: angemeldet OHNE Konto, alles aus den Beispieldaten.
+   *
+   * Getrennt von `hasRealAuth()` mit Absicht. Jenes ist zur Bauzeit festgelegt und
+   * MUSS ueber die Prozesslaufzeit konstant bleiben - Screens haengen ihre
+   * Komponentenwahl daran auf (siehe `lib/auth.ts`), ein Wechsel mittendrin braeche
+   * die Hook-Regeln. Der Showcase ist dagegen eine Laufzeitentscheidung des Nutzers
+   * und darf deshalb nur Datenquellen steuern, nie den Komponentenbaum.
+   */
+  showcase: boolean;
   user: SessionUser | null;
   signIn: () => void;
+  /** Showcase betreten: meldet lokal an, ohne Clerk und ohne Netzabruf. */
+  betreteShowcase: () => void;
   /**
    * Abmelden räumt BEIDE Wahrheiten: den lokalen Zustand und - im echten
    * Anmeldebetrieb - die Clerk-Sitzung im SecureStore. Deshalb asynchron: Wer
@@ -617,6 +629,11 @@ function uid(prefix: string): string {
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
+  const [showcase, setShowcase] = useState(false);
+  // Fuer das Clerk-Abo weiter unten: Dessen Effekt haengt bewusst an [] und darf sich
+  // nicht neu binden, kennt den Zustand also nur ueber diese Referenz.
+  const showcaseRef = useRef(showcase);
+  showcaseRef.current = showcase;
   const [channels, setChannels] = useState<Record<string, boolean>>(CHANNELS_SEED);
   const [profileDone, setProfileDone] = useState<Record<string, boolean>>(PROFILE_DONE_SEED);
   const [taskDone, setTaskDone] = useState<Record<string, boolean>>({});
@@ -675,6 +692,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(() => setSignedIn(true), []);
 
   /**
+   * Showcase betreten.
+   *
+   * Meldet lokal an und markiert den Lauf als Vorfuehrung. Es entsteht keine
+   * Clerk-Sitzung, also liefert `mobileAuthAdapter.getToken()` auch kein Token -
+   * jeder API-Aufruf liefe in ein 401. Deshalb unterbindet der Schalter zusaetzlich
+   * den Betriebsabruf weiter unten: Der Showcase soll Beispieldaten zeigen, nicht
+   * Fehlermeldungen.
+   */
+  const betreteShowcase = useCallback(() => {
+    setShowcase(true);
+    setSignedIn(true);
+  }, []);
+
+  /**
    * Abmelden - und zwar vollständig.
    *
    * Vorher setzte das hier nur `signedIn` auf false. Im Clerk-Betrieb blieb die
@@ -689,6 +720,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
    */
   const signOut = useCallback(async () => {
     setSignedIn(false);
+    // Der Showcase endet mit der Abmeldung - sonst startet die App erneut in der
+    // Vorfuehrung, obwohl der Nutzer sie gerade verlassen hat.
+    setShowcase(false);
     // Ohne Sitzung gibt es keinen eigenen Betrieb mehr. Bliebe die echte Kennung
     // stehen, lüde der nächste Anmelder für einen Wimpernschlag das Briefing eines
     // fremden Betriebs - bis die eigene Abfrage antwortet.
@@ -815,7 +849,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
      Im Demomodus passiert hier deshalb NICHTS: kein `fetch`, keine Clerk-Berührung,
      `venueId` bleibt `DEMO_VENUE_ID`, und die App startet wie bisher. */
   useEffect(() => {
-    if (!signedIn || !hasRealAuth() || !isCoreConfigured()) return;
+    // Vierte Bedingung: Im Showcase gibt es keine Clerk-Sitzung, der Aufruf koennte
+    // nur 401 liefern und die Vorfuehrung mit einem Fehler beginnen.
+    if (!signedIn || showcase || !hasRealAuth() || !isCoreConfigured()) return;
 
     let alive = true;
     api.venues
@@ -847,7 +883,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return () => {
       alive = false;
     };
-  }, [signedIn, adoptVenue]);
+  }, [signedIn, showcase, adoptVenue]);
 
   const connectChannelAs = useCallback(
     (id: string, account: string) => {
@@ -1167,7 +1203,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // Clerk-Sitzung die Wahrheit (siehe Effekt darunter); den Schnappschuss
         // trotzdem einzuspielen, würde ein Rennen zwischen zwei Quellen eröffnen -
         // je nachdem, wer zuerst antwortet, stünde die App angemeldet oder nicht.
-        if (typeof s.signedIn === "boolean" && !hasRealAuth()) setSignedIn(s.signedIn);
+        // Der Showcase ueberlebt den Neustart - auch im Clerk-Betrieb. Er ist die
+        // einzige Anmeldung, deren Wahrheit ausschliesslich hier auf dem Geraet
+        // liegt; ohne diese Zeile stuende der Vorfuehrende nach jedem Kaltstart
+        // wieder auf dem Login.
+        const imShowcase = typeof s.showcase === "boolean" && s.showcase;
+        if (imShowcase) setShowcase(true);
+        if (typeof s.signedIn === "boolean" && (!hasRealAuth() || imShowcase)) {
+          setSignedIn(s.signedIn);
+        }
         if (s.channels) setChannels(s.channels);
         if (s.channelMeta) setChannelMeta(s.channelMeta);
         if (s.profileDone) setProfileDone(s.profileDone);
@@ -1234,7 +1278,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     const unsubscribe = subscribeToRealAuthSession((signedInAtClerk) => {
       clearTimeout(notbremse);
-      setSignedIn(signedInAtClerk);
+      // Der Showcase ist die eine Anmeldung, ueber die Clerk nichts weiss - und
+      // deshalb auch nicht entscheiden darf.
+      //
+      // GEMESSENER FEHLER: Ohne diese Ausnahme wirkte der Showcase-Knopf tot. Er
+      // setzte `signedIn` korrekt auf true, dann meldete dieses Abo Millisekunden
+      // spaeter "keine Clerk-Sitzung" (die gibt es im Showcase ja nie), setzte
+      // `signedIn` zurueck auf false, und das Tabs-Layout warf sofort auf den Login.
+      // Von aussen sah es aus, als reagiere der Knopf nicht.
+      setSignedIn((vorher) => (showcaseRef.current ? vorher : signedInAtClerk));
       setSessionKnown(true);
     });
 
@@ -1253,6 +1305,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // also genau den Stand, der hier vorlag.
     pendingSnapshot.current = {
       signedIn,
+      showcase,
       channels,
       channelMeta,
       profileDone,
@@ -1274,6 +1327,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [
     flushSnapshot,
     signedIn,
+    showcase,
     channels,
     channelMeta,
     profileDone,
@@ -1334,8 +1388,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreValue>(
     () => ({
       signedIn,
+      showcase,
       user: signedIn ? DEMO_USER : null,
       signIn,
+      betreteShowcase,
       signOut,
       channels,
       connectChannel,
@@ -1391,7 +1447,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }),
     [
       signedIn,
+      showcase,
       signIn,
+      betreteShowcase,
       signOut,
       channels,
       connectChannel,
