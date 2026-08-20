@@ -35,7 +35,7 @@ const sections: DemoSection[] = [
     label: "Öffentlich",
     entries: [
       { no: "01", title: "Login", href: "/login" },
-      { no: "15", title: "Onboarding", href: "/onboarding" },
+      { no: "15", title: "Onboarding", href: "/onboarding/willkommen" },
     ],
   },
   {
@@ -67,16 +67,18 @@ const sections: DemoSection[] = [
     ],
   },
   {
-    label: "Journey",
+    // Vorher standen hier acht Einträge einer siebenteiligen „Journey", die den
+    // Betriebsnamen, die Adresse, die Öffnungszeiten und drei Häkchen fest
+    // verdrahtet hatte und nichts davon speicherte. Sie ist gelöscht, nicht
+    // repariert - derselbe Weg wie beim Bildschirm, der einmal „Belohnung
+    // gesendet" meldete, ohne dass je etwas rausging.
+    label: "Einrichtung",
     entries: [
-      { no: "18", title: "Willkommen · 1 / 7", href: "/journey/willkommen" },
-      { no: "19", title: "Betrieb finden · 2 / 7", href: "/journey/betrieb" },
-      { no: "20", title: "Google verbinden · 3 / 7", href: "/journey/google" },
-      { no: "21", title: "Öffnungszeiten · 4 / 7", href: "/journey/zeiten" },
-      { no: "22", title: "Tische einrichten · 5 / 7", href: "/journey/tische" },
-      { no: "23", title: "Kanäle verbinden · 6 / 7", href: "/journey/kanaele" },
-      { no: "24", title: "Fotos und Ton · 7 / 7", href: "/journey/medien" },
-      { no: "25", title: "Fertig · Live", href: "/journey/fertig" },
+      { no: "18", title: "Willkommen · 1 / 4", href: "/onboarding/willkommen" },
+      { no: "19", title: "Betrieb anlegen · 2 / 4", href: "/onboarding/betrieb" },
+      { no: "20", title: "Google verbinden · 3 / 4", href: "/onboarding/google" },
+      { no: "21", title: "Öffnungszeiten · 4 / 4", href: "/onboarding/zeiten" },
+      { no: "22", title: "Abschluss", href: "/onboarding/fertig" },
     ],
   },
 ];

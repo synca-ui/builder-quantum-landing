@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
+import { Share, View } from "react-native";
 import { useRouter } from "expo-router";
 import {
   api,
@@ -195,6 +195,25 @@ export function StampCardDetailScreen({ kartenId }: { kartenId: string }) {
     }
   }, [grund, kartenId, neuLaden, toast, venueId]);
 
+  /**
+   * Gast-Link teilen: Der Server bildet die signierte URL (das Secret bleibt
+   * dort), die App reicht sie in den System-Teilen-Dialog — als QR abfotografieren,
+   * per Nachricht schicken oder ausdrucken kann der Wirt sie von da aus selbst.
+   */
+  const gastLinkTeilen = useCallback(async () => {
+    try {
+      const { url } = await api.loyalty.guestLink(venueId, kartenId);
+      await Share.share({ message: url });
+    } catch (err) {
+      const status = (err as { status?: number })?.status;
+      toast.show(
+        status === 503
+          ? "Gast-Links sind auf dem Server nicht eingerichtet."
+          : "Gast-Link konnte nicht geladen werden.",
+      );
+    }
+  }, [kartenId, toast, venueId]);
+
   const anonymisieren = useCallback(async () => {
     if (!karte) return;
     setLaeuft("anonym");
@@ -370,6 +389,14 @@ export function StampCardDetailScreen({ kartenId }: { kartenId: string }) {
             onPress={() => void buchen("stempel")}
           />
         ) : null}
+
+        {/* Für jeden Kartenzustand sinnvoll: der Gast will seinen Stand sehen. */}
+        <PillButton
+          label="Gast-Link teilen"
+          variant="outline"
+          onPress={() => void gastLinkTeilen()}
+          accessibilityHint="Öffnet den Teilen-Dialog mit dem Link, unter dem der Gast seinen Stempelstand sieht."
+        />
 
         {voll ? (
           <PillButton

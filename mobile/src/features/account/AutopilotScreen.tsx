@@ -42,7 +42,7 @@ export function AutopilotScreen() {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Autopilot" onBack={() => router.back()} />
+      <NavHeader title="Autopilot" fallback="/konto" />
 
       <DarkPanel style={{ gap: 6 }}>
         <Eyebrow color={onDarkPanel.accent}>Von Maitr erledigt</Eyebrow>

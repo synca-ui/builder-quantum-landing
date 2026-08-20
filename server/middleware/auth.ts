@@ -60,3 +60,35 @@ export async function requireAuth(
     return res.status(401).json({ error: "User sync failed" });
   }
 }
+
+/**
+ * Wie requireAuth, blockiert aber nie: kein/ein ungültiger Token setzt
+ * req.user/req.userId einfach nicht, statt 401 zu antworten. Für Routen, die
+ * vor der Registrierung erreichbar sein müssen (z.B. Subdomain-Prüfung im
+ * Konfigurator), aber - WENN ein gültiger Token da ist - dessen verifizierte
+ * userId nutzen sollen statt einer vom Aufrufer im Body behaupteten.
+ */
+export async function optionalAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
+  const auth = req.headers.authorization || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!token) return next();
+
+  try {
+    const verified = await verifyClerkToken(token);
+    const prismaUser = await getOrCreateUser(verified.sub, verified.email);
+    req.user = {
+      id: prismaUser.id,
+      email: prismaUser.email,
+      clerkId: prismaUser.clerkId,
+    };
+    req.userId = prismaUser.id;
+  } catch (e) {
+    // Kein Fehler nach außen - der Aufrufer bleibt einfach unauthentifiziert.
+    console.warn("optionalAuth: Token vorhanden, aber ungültig:", e);
+  }
+  return next();
+}

@@ -21,7 +21,7 @@ describe("getTemplateWrapperStyle", () => {
     });
   });
 
-  it.each(["minimalist", "stylish", "cozy", "unbekannt"])(
+  it.each(["minimalist", "unbekannt"])(
     "rendert für '%s' die flache Flächenfarbe",
     (template) => {
       expect(getTemplateWrapperStyle(template, COLORS)).toEqual({
@@ -30,4 +30,20 @@ describe("getTemplateWrapperStyle", () => {
       });
     },
   );
+
+  it("rendert für 'stylish' den Editorial-Schleier über der Flächenfarbe", () => {
+    expect(getTemplateWrapperStyle("stylish", COLORS)).toEqual({
+      background:
+        "linear-gradient(180deg, #8B5CF61A 0%, transparent 220px), #EEF2FF",
+      color: "#000000",
+    });
+  });
+
+  it("rendert für 'cozy' den warmen Lichtschein über der Flächenfarbe", () => {
+    expect(getTemplateWrapperStyle("cozy", COLORS)).toEqual({
+      background:
+        "radial-gradient(1100px 420px at 50% -120px, #8B5CF64D 0%, transparent 70%), #EEF2FF",
+      color: "#000000",
+    });
+  });
 });

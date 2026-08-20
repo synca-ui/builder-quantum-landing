@@ -23,6 +23,7 @@ import creativeStudioRouter from "./creative-studio";
 import adminRouter from "./admin";
 import reservationsRouter from "./reservations";
 import publicReservationsRouter from "./publicReservations";
+import { publicStampcardsRouter } from "./publicStampcards";
 
 // Inline Demo Dashboard Router (to avoid build issues)
 const demoDashboardRouter = Router();
@@ -177,6 +178,7 @@ apiRouter.use("/demo/dashboard", demoDashboardRouter);
 
 // Public reservation routes (no auth required)
 apiRouter.use("/public/reservations", publicReservationsRouter);
+apiRouter.use("/public/stampcards", publicStampcardsRouter);
 
 // Maitr-Backend (Präsenzverwaltung Google/Meta) unter /api/maitr.
 //

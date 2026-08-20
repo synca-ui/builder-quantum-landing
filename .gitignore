@@ -59,3 +59,6 @@ PPFrama*.woff2
 # werden und sind daher NICHT ausgeschlossen - sie liegen bewusst eingecheckt unter
 # mobile/assets/fonts/, zusammen mit den beiden geforderten OFL.txt-Lizenztexten. Deshalb
 # hier auch KEIN pauschales *.ttf/*.otf: das wuerde die Markenschrift mit aussperren.
+
+# Lokale Codex-CLI-Konfiguration — enthält API-Keys, niemals committen
+.codex/

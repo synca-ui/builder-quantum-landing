@@ -51,7 +51,7 @@ export function ProfileManagementScreen({ focus }: { focus?: string }) {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Profil verwalten" />
+      <NavHeader title="Profil verwalten" fallback="/profil-check" />
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <Avatar initials="G" size={38} color="#4285F4" />

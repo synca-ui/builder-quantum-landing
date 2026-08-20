@@ -10,6 +10,8 @@ import {
   useConfiguratorStore,
   useConfiguratorActions,
 } from "@/store/configuratorStore";
+import { useAuth } from "@clerk/clerk-react";
+import { uploadImageFile } from "@/lib/mediaUpload";
 
 interface FeatureConfigStepProps {
   nextStep: () => void;
@@ -39,13 +41,14 @@ export function FeatureConfigStep({
     };
   }, []);
 
-  useEffect(() => {
-    if (!isMountedRef.current) return;
-
-    if (!pendingFeatureConfig) {
-      nextStep();
-    }
-  }, [pendingFeatureConfig, nextStep]);
+  // Frueher stand hier ein useEffect, das bei leerem pendingFeatureConfig
+  // selbst nextStep() aufrief. Das hatte zwei Folgen:
+  //   1. finish() setzte pending auf null UND rief nextStep() — der Effect
+  //      sprang ein zweites Mal weiter, "Domain waehlen" wurde uebersprungen.
+  //   2. Wer von "Domain waehlen" zurueckging, landete hier und wurde sofort
+  //      wieder vorgeschoben — der Zurueck-Button wirkte tot.
+  // Das Ueberspringen dieses Schritts ohne offene Feature-Konfiguration
+  // erledigt jetzt die Navigation im Configurator (nextStep/prevStep).
 
   const finish = () => {
     setPendingFeatureConfig(null);
@@ -73,11 +76,13 @@ export function FeatureConfigStep({
       case "onlineOrderingEnabled":
         return (
           <Card className="p-6">
-            <h4 className="text-lg font-bold mb-3">Online Ordering Settings</h4>
+            <h4 className="text-lg font-bold mb-3">
+              Online-Bestellung einrichten
+            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  POS Provider
+                  Kassensystem (POS)
                 </label>
                 <select
                   value={(storeState.features as any).posProvider || "none"}
@@ -86,15 +91,15 @@ export function FeatureConfigStep({
                   }
                   className="w-full p-2 border rounded"
                 >
-                  <option value="none">None</option>
+                  <option value="none">Keins</option>
                   <option value="sumup">SumUp</option>
                   <option value="shopify">Shopify POS</option>
-                  <option value="local">Local POS</option>
+                  <option value="local">Lokales Kassensystem</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Payment Options
+                  Zahlungsarten
                 </label>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {(["applePay", "googlePay", "card", "cash"] as const).map(
@@ -116,8 +121,15 @@ export function FeatureConfigStep({
                             })
                           }
                         />
-                        <span className="capitalize">
-                          {k.replace(/([A-Z])/g, " $1")}
+                        <span>
+                          {
+                            {
+                              applePay: "Apple Pay",
+                              googlePay: "Google Pay",
+                              card: "Karte",
+                              cash: "Bar",
+                            }[k]
+                          }
                         </span>
                       </label>
                     ),
@@ -126,7 +138,7 @@ export function FeatureConfigStep({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Order Options
+                  Bestellwege
                 </label>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   {(["delivery", "pickup", "table"] as const).map((k) => (
@@ -147,7 +159,15 @@ export function FeatureConfigStep({
                           })
                         }
                       />
-                      <span className="capitalize">{k}</span>
+                      <span>
+                        {
+                          {
+                            delivery: "Lieferung",
+                            pickup: "Abholung",
+                            table: "Am Tisch",
+                          }[k]
+                        }
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -166,7 +186,7 @@ export function FeatureConfigStep({
                       )
                     }
                   />
-                  <span>Require delivery address for delivery orders</span>
+                  <span>Lieferadresse bei Lieferbestellungen verlangen</span>
                 </label>
               </div>
             </div>
@@ -269,13 +289,13 @@ export function FeatureConfigStep({
       case "teamAreaEnabled":
         return (
           <Card className="p-6">
-            <h4 className="text-lg font-bold mb-3">Team Section Settings</h4>
+            <h4 className="text-lg font-bold mb-3">Team-Bereich einrichten</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium mb-1">Name</label>
                 <Input
                   type="text"
-                  placeholder="e.g. Alex"
+                  placeholder="z.B. Alex"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       const name = (e.target as HTMLInputElement).value.trim();
@@ -289,34 +309,93 @@ export function FeatureConfigStep({
                     }
                   }}
                 />
-                <p className="text-xs text-gray-400 mt-1">Press Enter to add</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Mit Enter hinzufügen
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Quick Roles
+                  Schnell-Rollen
                 </label>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  {["chef", "barista", "waiter"].map((r) => (
+                  {(
+                    [
+                      ["chef", "Koch"],
+                      ["barista", "Barista"],
+                      ["waiter", "Service"],
+                    ] as const
+                  ).map(([r, label]) => (
                     <button
                       key={r}
                       className="px-2 py-1 border rounded"
-                      onClick={() =>
+                      onClick={() => {
+                        const members =
+                          (storeState.features as any).teamMembers || [];
+                        // Keine stillen Duplikate: dieselbe Rolle nur einmal
+                        // per Schnell-Knopf anlegen.
+                        if (
+                          members.some((m: any) => m.role === r)
+                        ) {
+                          return;
+                        }
                         updateFeatureData("teamMembers", [
-                          ...((storeState.features as any).teamMembers || []),
-                          {
-                            name: r.charAt(0).toUpperCase() + r.slice(1),
-                            role: r,
-                            status: "off_duty",
-                          },
-                        ])
-                      }
+                          ...members,
+                          { name: label, role: r, status: "off_duty" },
+                        ]);
+                      }}
                     >
-                      + {r}
+                      + {label}
                     </button>
                   ))}
                 </div>
               </div>
             </div>
+
+            {/* Sichtbare Teamliste — vorher landeten Mitglieder nur im Store
+                und waren weder sichtbar noch löschbar. */}
+            {((storeState.features as any).teamMembers || []).length > 0 && (
+              <div className="mt-4 space-y-2">
+                <label className="block text-sm font-medium">Dein Team</label>
+                {((storeState.features as any).teamMembers || []).map(
+                  (m: any, idx: number) => (
+                    <div
+                      key={`${m.name}-${idx}`}
+                      className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm"
+                    >
+                      <div>
+                        <span className="font-medium">{m.name}</span>
+                        {m.role && (
+                          <span className="ml-2 text-gray-500">
+                            {(
+                              {
+                                chef: "Koch",
+                                barista: "Barista",
+                                waiter: "Service",
+                              } as Record<string, string>
+                            )[m.role] || m.role}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`${m.name} entfernen`}
+                        onClick={() =>
+                          updateFeatureData(
+                            "teamMembers",
+                            (
+                              (storeState.features as any).teamMembers || []
+                            ).filter((_: any, i: number) => i !== idx),
+                          )
+                        }
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ),
+                )}
+              </div>
+            )}
           </Card>
         );
 
@@ -513,6 +592,7 @@ function OffersStep({
   storeState,
   actions,
 }: OffersStepProps) {
+  const { getToken } = useAuth();
   const [newOffer, setNewOffer] = useState({
     name: "",
     description: "",
@@ -550,11 +630,16 @@ function OffersStep({
   const handleImageForNew = (files: FileList | null) => {
     if (!files || !files[0]) return;
     const file = files[0];
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setNewOffer((prev) => ({ ...prev, image: e.target?.result }));
-    };
-    reader.readAsDataURL(file);
+    // Dauerhafte Storage-URL statt data:-URL: Letztere überlebte zwar das
+    // Veröffentlichen, blähte die Konfiguration aber um ganze Bilddateien auf.
+    void (async () => {
+      try {
+        const url = await uploadImageFile(file, await getToken());
+        setNewOffer((prev) => ({ ...prev, image: url }));
+      } catch (e) {
+        console.error("[Offers] Upload fehlgeschlagen:", e);
+      }
+    })();
   };
 
   const offers = (storeState.payments as any).offers || [];
@@ -564,30 +649,30 @@ function OffersStep({
     <div className="py-8 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          Create Your Offers
+          Deine Angebote anlegen
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Add special offers and promotions to attract customers.
+          Lege Sonderangebote und Aktionen an, die Gäste anziehen.
         </p>
       </div>
 
       <div className="bg-white p-8 rounded-2xl shadow-lg border mb-8">
-        <h3 className="text-xl font-bold mb-6">Add New Offer</h3>
+        <h3 className="text-xl font-bold mb-6">Neues Angebot</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
-            placeholder="Offer Name (e.g., Lunch Special)"
+            placeholder="Name des Angebots (z.B. Mittagsmenü)"
             value={newOffer.name}
             onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
           />
           <Input
-            placeholder="Price (e.g., 9.99)"
+            placeholder="Preis (z.B. 9,99)"
             value={newOffer.price}
             onChange={(e) =>
               setNewOffer({ ...newOffer, price: e.target.value })
             }
           />
           <Textarea
-            placeholder="Description"
+            placeholder="Beschreibung"
             value={newOffer.description}
             onChange={(e) =>
               setNewOffer({ ...newOffer, description: e.target.value })
@@ -596,7 +681,7 @@ function OffersStep({
           />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Offer Image
+              Angebotsbild
             </label>
             <input
               type="file"
@@ -614,16 +699,93 @@ function OffersStep({
           </div>
         </div>
         <div className="mt-6 text-right">
-          <Button onClick={addOffer}>Add Offer</Button>
+          <Button onClick={addOffer}>Angebot hinzufügen</Button>
         </div>
       </div>
 
       <div className="bg-white p-8 rounded-2xl shadow-lg border mt-8">
-        <h3 className="text-xl font-bold mb-6">Customize Offer Banner</h3>
+        <h3 className="text-xl font-bold mb-2">Angebots-Banner anpassen</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Zeigt dein erstes Angebot direkt auf der Startseite — ein Klick
+          führt zur Angebote-Seite.
+        </p>
+
+        <div className="flex items-center gap-3 mb-6">
+          <Switch
+            id="offer-banner-enabled"
+            checked={!!offerBanner.enabled}
+            onCheckedChange={(v) =>
+              actions.payments.updatePaymentsAndOffers({
+                offerBanner: { ...offerBanner, enabled: v },
+              })
+            }
+          />
+          <label htmlFor="offer-banner-enabled" className="text-sm text-gray-700">
+            Banner auf der Startseite anzeigen
+          </label>
+        </div>
+
+        {!!offerBanner.enabled && (
+          <div className="mb-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bannergröße
+              </label>
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["small", "Klein"],
+                    ["medium", "Mittel"],
+                    ["large", "Groß"],
+                  ] as const
+                ).map(([val, label]) => {
+                  const active = (offerBanner.size || "medium") === val;
+                  return (
+                    <button
+                      key={val}
+                      type="button"
+                      className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                        active
+                          ? "bg-teal-500 text-white border-teal-500 shadow-md"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-teal-300"
+                      }`}
+                      onClick={() =>
+                        actions.payments.updatePaymentsAndOffers({
+                          offerBanner: { ...offerBanner, size: val },
+                        })
+                      }
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Klein: schmale Zeile · Mittel: Karte · Groß: mit Bild und Knopf
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bannertext (optional)
+              </label>
+              <Input
+                type="text"
+                placeholder="z.B. Nur diese Woche: Happy Hour bis 19 Uhr"
+                value={offerBanner.text || ""}
+                onChange={(e) =>
+                  actions.payments.updatePaymentsAndOffers({
+                    offerBanner: { ...offerBanner, text: e.target.value },
+                  })
+                }
+              />
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Background Color
+              Hintergrundfarbe
             </label>
             <Input
               type="color"
@@ -640,7 +802,7 @@ function OffersStep({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Text Color
+              Textfarbe
             </label>
             <Input
               type="color"
@@ -657,7 +819,7 @@ function OffersStep({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Button Color
+              Knopffarbe
             </label>
             <Input
               type="color"
@@ -677,7 +839,7 @@ function OffersStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Show Offers Page/Tab
+              Angebote-Seite anzeigen
             </label>
             <div className="flex items-center gap-2">
               <Switch
@@ -691,7 +853,7 @@ function OffersStep({
                 }}
               />
               <label htmlFor="offers-tab" className="text-sm text-gray-600">
-                Adds an Offers tab to your menu
+                Ergänzt einen Angebote-Tab in deiner Navigation
               </label>
             </div>
           </div>
@@ -699,7 +861,7 @@ function OffersStep({
       </div>
 
       <div>
-        <h3 className="text-xl font-bold mb-6">Your Offers</h3>
+        <h3 className="text-xl font-bold mb-6">Deine Angebote</h3>
         <div className="space-y-4">
           {offers.map((offer: any, index: number) => (
             <div
@@ -716,7 +878,7 @@ function OffersStep({
                 )}
                 <div>
                   <p className="font-semibold">{offer.name}</p>
-                  <p className="text-sm text-gray-600">${offer.price}</p>
+                  <p className="text-sm text-gray-600">{offer.price} €</p>
                 </div>
               </div>
               <Button variant="ghost" onClick={() => removeOffer(index)}>

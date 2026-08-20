@@ -13,6 +13,7 @@ import {
   normalizeSubdomain,
 } from "../../shared/subdomain";
 import { ingestGallery } from "../services/imageIngest";
+import { oeffentlicheSiteFelder } from "../utils/publicSiteView";
 
 // ============================================
 // VALIDATION HELPERS
@@ -22,6 +23,15 @@ interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
+}
+
+/** Signalisiert dem äußeren Handler in POST /apps/publish, dass die
+ * mitgeschickte configId nicht dem angemeldeten Nutzer gehört. */
+class PublishOwnershipError extends Error {
+  constructor() {
+    super("Configuration gehört nicht diesem Nutzer");
+    this.name = "PublishOwnershipError";
+  }
 }
 
 /**
@@ -406,6 +416,19 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       // Update or create Configuration if we have an ID
       let configuration = null;
       if (configId) {
+        // ANLASS: configId kam ungeprüft aus dem Request-Body direkt in ein
+        // `update({ where: { id: configId } })` - jeder eingeloggte Nutzer
+        // konnte mit einer eigenen freien Subdomain plus einer erratenen/
+        // fremden configId die Configuration eines anderen Betriebs
+        // überschreiben (Name, Menü, Kontaktdaten, Galerie) und veröffentlichen.
+        // Erst die Subdomain wurde auf Fremdbesitz geprüft, die configId nie.
+        const owned = await tx.configuration.findFirst({
+          where: { id: configId, userId },
+          select: { id: true },
+        });
+        if (!owned) {
+          throw new PublishOwnershipError();
+        }
         configuration = await tx.configuration.update({
           where: { id: configId },
           data: {
@@ -484,6 +507,15 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       stage: "complete",
     });
   } catch (error) {
+    if (error instanceof PublishOwnershipError) {
+      await audit("webapp_publish_ownership_denied", userId, false, error.message);
+      return res.status(403).json({
+        success: false,
+        error: "Kein Zugriff auf diese Configuration",
+        stage: "ownership_check",
+      });
+    }
+
     console.error("[Publish] Fatal error:", error);
     await audit(
       "webapp_publish_failed",
@@ -512,9 +544,35 @@ webAppsRouter.post("/apps/legacy-publish", async (req, res) => {
   const publishedUrl = `https://${subdomain}.${baseDomain}`;
   const previewUrl = `${process.env.SITE_URL || `https://${baseDomain}`}/site/${subdomain}`;
 
-  // Fire-and-forget DB upsert
-  prisma.webApp
-    .upsert({
+  // Gehört diese Adresse dem Anfragenden - oder gibt es sie noch gar nicht?
+  //
+  // ANLASS: Hier stand ein `upsert({ where: { subdomain }, update: { configData } })`
+  // ohne jede Besitzprüfung. `requireAuth` stellt nur fest, dass überhaupt ein
+  // Konto dahintersteht. Gemessen: Ein frisch registriertes Konto OHNE jede
+  // Mitgliedschaft konnte damit den Inhalt jeder fremden Kundenwebsite
+  // überschreiben - die Subdomains stehen öffentlich im Netz, man musste nur
+  // eine kennen. Die daneben liegende Route `POST /apps/publish` weist genau
+  // denselben Versuch mit 409 ab; die Prüfung existierte also, sie fehlte nur
+  // an dieser Stelle.
+  //
+  // Kein Upsert mehr: Anlegen und Ändern sind hier zwei verschiedene Rechte.
+  // Neu anlegen darf jeder für eine freie Adresse, ändern nur der Besitzer.
+  const vorhanden = await prisma.webApp.findUnique({
+    where: { subdomain },
+    select: { userId: true },
+  });
+
+  if (vorhanden && vorhanden.userId !== userId) {
+    // Dieselbe Antwort wie bei `POST /apps/publish` - und bewusst dieselbe wie
+    // für eine Adresse, die es gibt: Wer nicht Besitzer ist, soll aus der
+    // Antwort nicht ablesen können, ob eine Adresse vergeben ist.
+    return res.status(409).json({ error: "Subdomain bereits vergeben" });
+  }
+
+  // Nicht mehr fire-and-forget: Ein abgelehnter Schreibversuch blieb sonst
+  // unbemerkt, und der Aufrufer bekam trotzdem eine Erfolgsmeldung mitsamt URL.
+  try {
+    await prisma.webApp.upsert({
       where: { subdomain },
       create: {
         userId,
@@ -523,8 +581,11 @@ webAppsRouter.post("/apps/legacy-publish", async (req, res) => {
         configData: config,
       },
       update: { configData: config },
-    })
-    .catch((e) => console.error("legacy publish failed", e));
+    });
+  } catch (e) {
+    console.error("legacy publish failed", e);
+    return res.status(500).json({ error: "Veröffentlichen fehlgeschlagen" });
+  }
 
   return res.json({ subdomain, publishedUrl, previewUrl });
 });
@@ -571,12 +632,26 @@ publicAppsRouter.get("/public/apps/:subdomain", async (req, res) => {
     const { subdomain } = req.params;
     const app = await prisma.webApp.findUnique({
       where: { subdomain },
-      select: { configData: true },
+      select: { id: true, configData: true, publishedAt: true, updatedAt: true },
     });
     if (!app) {
       return res.status(404).json({ error: "Not found" });
     }
-    return res.json({ config: app.configData });
+    // ANLASS: Hier stand `{ config: app.configData }` - eine Durchreiche der
+    // gesamten Json-Spalte, ungeprüft. Gemessen kamen so u.a. eine
+    // Stripe-Kundenkennung, eine private Telefonnummer, Vorjahresumsatz,
+    // Postleitzahl, Koordinaten und die interne userId heraus - alles Felder,
+    // die IRGENDWANN einmal in `configData` gelandet waren, keines davon für
+    // einen Gast bestimmt. `oeffentlicheSiteFelder` (server/utils/publicSiteView.ts)
+    // ist dieselbe Positivliste, die auch `GET /api/subdomains/:subdomain/config`
+    // benutzt.
+    return res.json({
+      config: oeffentlicheSiteFelder(app.configData, {
+        id: app.id,
+        publishedAt: app.publishedAt,
+        updatedAt: app.updatedAt,
+      }),
+    });
   } catch (e) {
     console.error("public app error", e);
     return res.status(500).json({ error: "Internal server error" });

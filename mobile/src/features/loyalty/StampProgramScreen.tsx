@@ -270,7 +270,7 @@ export function StampProgramScreen() {
           title="Für diesen Bildschirm braucht es zuerst deinen Betrieb"
           message="Die Stempelkarte gehört zu einem Betrieb - Karten, Stempel und Prämien hängen daran. Leg ihn an, danach steht sie hier."
         />
-        <PillButton label="Betrieb anlegen" onPress={() => router.push("/onboarding")} />
+        <PillButton label="Betrieb anlegen" onPress={() => router.push("/onboarding/betrieb")} />
       </Rahmen>
     );
   }

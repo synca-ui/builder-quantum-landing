@@ -249,13 +249,25 @@ export const PageManagementSchema = z.object({
 });
 
 // Payment and Offers Schema
+//
+// Achtung, Form folgt dem Konfigurator: Der Angebote-Schritt
+// (FeatureConfigStep → OffersStep) erzeugt {id, name, price, image,
+// description}. Das frühere Schema verlangte stattdessen ein Pflichtfeld
+// "title" — jede Konfiguration mit auch nur EINEM Angebot fiel beim
+// Speichern mit 400 durch, und weil der Fehler clientseitig nur geloggt
+// wird, merkte es niemand.
 export const PaymentAndOffersSchema = z.object({
   paymentOptions: z.array(z.string()).optional(),
   offers: z
     .array(
       z.object({
         id: z.string(),
-        title: z.string(),
+        // Konfigurator-Form
+        name: z.string().optional(),
+        price: z.union([z.string(), z.number()]).optional(),
+        image: z.string().nullable().optional(),
+        // Alt-/Zusatzfelder
+        title: z.string().optional(),
         description: z.string().optional(),
         discount: z.number().optional(),
       }),
@@ -266,8 +278,14 @@ export const PaymentAndOffersSchema = z.object({
       enabled: z.boolean(),
       text: z.string().optional(),
       backgroundColor: z.string().optional(),
+      textColor: z.string().optional(),
+      buttonColor: z.string().optional(),
+      /** Bannergröße auf der Startseite: small | medium | large. */
+      size: z.string().optional(),
     })
     .optional(),
+  /** Schalter "Angebote-Tab in der Navigation zeigen" (OffersStep). */
+  offerPageEnabled: z.boolean().optional(),
 });
 
 // Integration Config Schema (flexible, no strict validation)

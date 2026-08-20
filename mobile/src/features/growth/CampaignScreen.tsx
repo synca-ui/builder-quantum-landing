@@ -51,7 +51,7 @@ export function CampaignScreen() {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Auslastung" onBack={() => router.back()} />
+      <NavHeader title="Auslastung" fallback="/wachstum" />
 
       <DarkPanel style={{ gap: 6 }}>
         <Eyebrow color={onDarkPanel.accent}>Ruhige Zeiten füllen</Eyebrow>

@@ -1,4 +1,4 @@
-import { TextInput, View } from "react-native";
+import { View } from "react-native";
 
 import { Chip } from "../../components/ui/Chip";
 import { Eyebrow } from "../../components/ui/Eyebrow";
@@ -15,64 +15,12 @@ import { useTheme } from "../../theme";
  * Ein neues Grundelement wäre das erst, wenn es ein zweiter Bereich benutzte.
  */
 
-export function TextFeld({
-  label,
-  wert,
-  onChange,
-  maxLength,
-  hinweis,
-  placeholder,
-  editable = true,
-  mehrzeilig = false,
-}: {
-  label: string;
-  wert: string;
-  onChange: (wert: string) => void;
-  maxLength?: number;
-  hinweis?: string;
-  placeholder?: string;
-  editable?: boolean;
-  mehrzeilig?: boolean;
-}) {
-  const theme = useTheme();
-  const rest = maxLength ? maxLength - wert.length : null;
-
-  return (
-    <View style={{ gap: 6 }}>
-      <Eyebrow>{label}</Eyebrow>
-      <TextInput
-        value={wert}
-        onChangeText={onChange}
-        editable={editable}
-        placeholder={placeholder}
-        placeholderTextColor={theme.colors.textFaint}
-        maxLength={maxLength}
-        multiline={mehrzeilig}
-        accessibilityLabel={label}
-        style={[
-          theme.text.body,
-          {
-            color: theme.colors.textPrimary,
-            borderWidth: 1,
-            borderColor: theme.colors.border,
-            borderRadius: theme.radius.tile,
-            paddingHorizontal: 14,
-            paddingVertical: 12,
-            minHeight: mehrzeilig ? 76 : theme.hitSize.minTouch,
-            opacity: editable ? 1 : 0.5,
-            textAlignVertical: mehrzeilig ? "top" : "center",
-          },
-        ]}
-      />
-      {rest !== null || hinweis ? (
-        <Text variant="bodySm" tone="muted" style={{ fontSize: 12.5 }}>
-          {hinweis ? `${hinweis}${rest !== null ? " · " : ""}` : ""}
-          {rest !== null ? `noch ${rest} Zeichen` : ""}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
+/**
+ * `TextFeld` wohnt seit dem Login in `components/ui/` - siehe den Vermerk oben:
+ * ein zweiter Bereich benutzt es jetzt. Hier nur noch weitergereicht, damit die
+ * Stempelkarten-Screens ihren Import behalten.
+ */
+export { TextFeld } from "../../components/ui/TextFeld";
 
 /**
  * Auswahl aus wenigen festen Werten statt eines freien Zahlenfeldes.

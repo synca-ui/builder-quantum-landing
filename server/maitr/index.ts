@@ -16,6 +16,7 @@ import {
   integrationsRouter,
   loyaltyRouter,
   publicRouter,
+  pushRouter,
   reservationsRouter,
   venuesRouter,
 } from "./routes";
@@ -36,6 +37,8 @@ maitrRouter.use("/integrations", integrationsRouter);
 // es gibt hier keinen öffentlichen Einstieg. Der sitzungslose Apple-Wallet-Pfad
 // (GET /v1/passes/...) wäre der einzige, der das nicht könnte; den gibt es nicht.
 maitrRouter.use("/loyalty", loyaltyRouter);
+// Push-Registrierung: user-scoped (Begruendung am Router in routes.ts).
+maitrRouter.use("/push", pushRouter);
 
 /**
  * Fehler-Middleware des Maitr-Routers. MUSS als Letztes am Router hängen — Express

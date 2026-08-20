@@ -89,6 +89,33 @@ export async function uploadImageToStorage(
   return `${url}/storage/v1/object/public/${BUCKET}/${objectPath}`;
 }
 
+/**
+ * Zeigt eine vom Client behauptete URL auf UNSEREN Storage, aber unter dem
+ * Präfix eines ANDEREN Nutzers?
+ *
+ * Objekte in diesem Bucket sind bewusst öffentlich lesbar (Restaurant-Fotos
+ * auf öffentlichen Seiten) - jeder darf jede Adresse *ansehen*. Wird eine
+ * fremde Adresse aber in die eigenen Daten *übernommen* (z.B. als
+ * MenuItem.imageUrl), täuscht das eine Herkunft vor, die nicht stimmt. Externe
+ * Adressen außerhalb unseres Buckets sind davon nicht betroffen - ein
+ * Restaurant darf durchaus auf ein Bild von anderswo verlinken.
+ */
+export function istFremdePrefixUrl(url: string, userId: string): boolean {
+  const base = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  if (!base) return false;
+  try {
+    const basisHost = new URL(base).host;
+    const ziel = new URL(url);
+    if (ziel.host !== basisHost) return false;
+    const praefix = `/storage/v1/object/public/${BUCKET}/`;
+    if (!ziel.pathname.startsWith(praefix)) return false;
+    const objectPath = ziel.pathname.slice(praefix.length);
+    return !objectPath.startsWith(`${userId}/`);
+  } catch {
+    return false;
+  }
+}
+
 /* ── Löschen ────────────────────────────────────────────────────────────────
  *
  * Alles, was dieser Server ablegt, liegt unter dem Präfix "<userId>/":

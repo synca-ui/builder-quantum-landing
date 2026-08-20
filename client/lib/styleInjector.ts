@@ -502,6 +502,78 @@ export interface TemplateDesignTokens {
  * Basiert auf TemplateRegistry.tsx und seed-templates.ts
  */
 const TEMPLATE_DESIGN_TOKENS: Record<string, TemplateDesignTokens> = {
+  riviera: {
+    borderRadius: {
+      card: "16px",
+      button: "12px",
+      input: "10px",
+      modal: "22px",
+    },
+    boxShadow: {
+      card: "0 2px 12px rgba(31, 46, 61, 0.08)",
+      cardHover: "0 10px 28px rgba(31, 46, 61, 0.14)",
+      button: "0 3px 12px rgba(30, 90, 126, 0.28)",
+      modal: "0 24px 64px rgba(31, 46, 61, 0.22)",
+    },
+    gradients: {
+      background: "none",
+      hero: "none",
+      overlay: "linear-gradient(to bottom, transparent, rgba(31,46,61,0.05))",
+    },
+    transitions: {
+      fast: "0.12s ease",
+      normal: "0.25s ease",
+      slow: "0.35s ease",
+    },
+  },
+  nocturne: {
+    borderRadius: {
+      card: "14px",
+      button: "10px",
+      input: "10px",
+      modal: "20px",
+    },
+    boxShadow: {
+      card: "0 10px 34px rgba(0, 0, 0, 0.45)",
+      cardHover: "0 18px 50px rgba(0, 0, 0, 0.55)",
+      button: "0 4px 18px rgba(200, 155, 60, 0.35)",
+      modal: "0 32px 80px rgba(0, 0, 0, 0.6)",
+    },
+    gradients: {
+      background: "none",
+      hero: "none",
+      overlay: "linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.55))",
+    },
+    transitions: {
+      fast: "0.15s ease",
+      normal: "0.25s ease",
+      slow: "0.4s ease",
+    },
+  },
+  verde: {
+    borderRadius: {
+      card: "16px",
+      button: "12px",
+      input: "10px",
+      modal: "22px",
+    },
+    boxShadow: {
+      card: "0 2px 10px rgba(34, 48, 31, 0.07)",
+      cardHover: "0 8px 24px rgba(34, 48, 31, 0.12)",
+      button: "0 3px 12px rgba(47, 94, 67, 0.25)",
+      modal: "0 24px 64px rgba(34, 48, 31, 0.2)",
+    },
+    gradients: {
+      background: "none",
+      hero: "none",
+      overlay: "linear-gradient(to bottom, transparent, rgba(34,48,31,0.05))",
+    },
+    transitions: {
+      fast: "0.12s ease",
+      normal: "0.25s ease",
+      slow: "0.35s ease",
+    },
+  },
   minimalist: {
     borderRadius: {
       card: "8px",

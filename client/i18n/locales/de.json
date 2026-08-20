@@ -121,7 +121,13 @@
     "cozyDesc": "Warme, freundliche Ästhetik mit abgerundeten Elementen und authentischen Fotos.",
     "selected": "Ausgewählt: {{name}}",
     "selectedLabel": "Ausgewählt",
-    "useThis": "Dieses Template verwenden"
+    "useThis": "Dieses Template verwenden",
+    "nocturne": "Mitternacht",
+    "nocturneDesc": "Dunkel und edel — für Bars, Weinbars und Abendküche.",
+    "verde": "Verde",
+    "verdeDesc": "Frisch und botanisch — für Cafés, Brunch und grüne Küche.",
+    "riviera": "Riviera",
+    "rivieraDesc": "Mediterran und leicht — für Küstenküche, Fisch und Sommerterrassen."
   },
   "business": {
     "name": "Geschäftsname",
@@ -372,7 +378,12 @@
     "socialSharing": "Social Media Teilen",
     "socialImage": "Social Media Bild",
     "analytics": "Analytics & Tracking",
-    "searchPreview": "Suchergebnis-Vorschau"
+    "searchPreview": "Suchergebnis-Vorschau",
+    "metaTitleHint": "Erscheint als Überschrift in Google-Ergebnissen",
+    "metaDescriptionPlaceholder": "Beschreibe dein Geschäft in ein bis zwei Sätzen …",
+    "metaDescriptionHint": "Erscheint als Beschreibungstext in Google-Ergebnissen",
+    "keywordsPlaceholder": "z.B. Restaurant München, italienische Küche, Pizza",
+    "keywordsHint": "Begriffe, unter denen dich Gäste suchen — durch Kommas getrennt"
   },
   "footer": {
     "poweredBy": "Erstellt mit Maitr",

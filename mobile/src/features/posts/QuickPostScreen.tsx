@@ -59,7 +59,7 @@ export function QuickPostScreen() {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Schnell posten" onBack={() => router.back()} />
+      <NavHeader title="Schnell posten" fallback="/beitraege" />
 
       <Text variant="body" tone="secondary" style={{ fontSize: 15, lineHeight: 22 }}>
         Foto-Stimmung wählen, ein, zwei Worte — Maitr textet und plant zur stärksten Stunde.

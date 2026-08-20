@@ -88,19 +88,70 @@ export function ReviewIcon({ size = 17, color = "currentColor", strokeWidth = de
  * Google-Marke: vier Quadrate im 2x2-Raster, wie im Login-Screen.
  * Feste Markenfarben - die dürfen sich nicht mit dem Theme ändern.
  */
+/**
+ * Googles Bildmarke - das vierfarbige „G".
+ *
+ * ANLASS: Hier standen vier Quadrate in einem 2x2-Raster, eingefärbt mit
+ * Googles Farben. Das ist die Form der Bildmarke von MICROSOFT, nicht von
+ * Google. Sie saß damals am Knopf „Weiter mit Google" und an zwei Stellen des
+ * Onboardings - im Simulator fiel es sofort auf. Der Anmeldeknopf ist inzwischen
+ * entfernt (siehe app/login.tsx); die Marke steht nur noch im Onboarding, wo es
+ * um das Google-Business-Profil geht.
+ *
+ * Warum das mehr ist als ein Schönheitsfehler: Google gibt die Gestaltung
+ * dieses Knopfes verbindlich vor, und die Einhaltung wird bei der
+ * OAuth-Verifizierung geprüft - also bei genau dem Antrag, der für die
+ * Business-Profile-Freigabe ohnehin auf dem kritischen Pfad liegt. Zwei fremde
+ * Bildmarken zu vermischen wäre auch für sich genommen nichts, was man
+ * einreicht.
+ *
+ * Die vier Pfade sind die offizielle Marke in ihrem 48er-Raster; sie darf für
+ * genau diesen Zweck verwendet werden. NICHT umfärben, nicht verzerren, nicht
+ * in eine eigene Form setzen - dieselben Richtlinien verbieten das.
+ */
 export function GoogleMark({ size = 16 }: Pick<IconProps, "size">) {
-  const tile = size / 2 - 1;
   return (
-    <Svg width={size} height={size} viewBox="0 0 16 16">
-      <Rect x="0" y="0" width={tile} height={tile} rx="1" fill="#EA4335" />
-      <Rect x={tile + 2} y="0" width={tile} height={tile} rx="1" fill="#4285F4" />
-      <Rect x="0" y={tile + 2} width={tile} height={tile} rx="1" fill="#FBBC05" />
-      <Rect x={tile + 2} y={tile + 2} width={tile} height={tile} rx="1" fill="#34A853" />
+    <Svg width={size} height={size} viewBox="0 0 48 48">
+      <Path
+        fill="#4285F4"
+        d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"
+      />
+      <Path
+        fill="#34A853"
+        d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"
+      />
+      <Path
+        fill="#FBBC05"
+        d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"
+      />
+      <Path
+        fill="#EA4335"
+        d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"
+      />
     </Svg>
   );
 }
 
 /** Stern - Bewertungen und Journey-Liste. */
+/**
+ * Apple-Wortzeichen für den Anmeldeknopf.
+ *
+ * Anders als die übrigen Icons eine gefüllte Fläche statt einer Outline - so gibt
+ * Apple die Marke vor, und ein nachgezeichneter Umriss wäre eine Abwandlung, die
+ * die Richtlinien für „Sign in with Apple" nicht zulassen. Die Farbe erbt es
+ * trotzdem, damit der Knopf in beiden Themes stimmt.
+ */
+export function AppleMark({ size = 16, color = "currentColor" }: Pick<IconProps, "size" | "color">) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path
+        fill={color}
+        d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
+      />
+    </Svg>
+  );
+}
+
 export function StarIcon({ size = 14, color = "currentColor", strokeWidth = defaults.strokeWidth }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -130,6 +181,24 @@ export function CheckIcon({ size = 18, color = "currentColor", strokeWidth = 2 }
 }
 
 /** Uhr - leerer Tag, Servicezeiten. */
+/**
+ * Warnzeichen fuer Fehlermeldungen.
+ *
+ * Der Toast zeigte bis dahin bei JEDER Meldung ein Haekchen - auch bei
+ * „Anmeldung fehlgeschlagen". Ein Erfolgssymbol an einer Fehlermeldung ist
+ * schlimmer als gar keines: Es widerspricht dem Text, und gelesen wird das
+ * Symbol zuerst.
+ */
+export function AlertIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={strokeWidth} />
+      <Line x1={12} y1={7.5} x2={12} y2={13} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1={12} y1={16.4} x2={12} y2={16.5} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function ClockIcon({ size = 30, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -189,6 +258,36 @@ export function CalendarIcon({ size = 22, color = "currentColor", strokeWidth = 
 }
 
 /** Auge - Profilaufrufe / Reichweite (Start-Kennzahl). */
+/**
+ * Durchgestrichenes Auge - „Passwort wieder verbergen".
+ *
+ * Dieselbe Form wie `EyeIcon` plus Schraegstrich, damit der Schalter beim
+ * Umschalten nicht die Silhouette wechselt und ruhig bleibt.
+ */
+export function EyeOffIcon({ size = 18, color = "currentColor", strokeWidth = 1.5 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth={strokeWidth} />
+      <Line
+        x1="4"
+        y1="20"
+        x2="20"
+        y2="4"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 export function EyeIcon({ size = 18, color = "currentColor", strokeWidth = 1.5 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

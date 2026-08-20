@@ -350,6 +350,24 @@ export default function Configurator() {
 
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  const featureConfigIndex = useMemo(
+    () => CONFIGURATOR_STEPS_CONFIG.findIndex((s) => s.id === "feature-config"),
+    [],
+  );
+
+  /**
+   * "Feature konfigurieren" ist kein eigenständiger Schritt, sondern die
+   * Detailansicht einer auf "Optionale Features" angeklickten Kachel. Ohne
+   * offene Kachel gibt es dort nichts zu sehen — der Schritt wird deshalb in
+   * beide Richtungen übersprungen. Früher erledigte das ein useEffect in der
+   * Step-Komponente selbst; der sprang zusätzlich zum regulären nextStep() und
+   * hat "Domain wählen" komplett verschluckt.
+   */
+  const skipsFeatureConfig = useCallback(
+    (target: number) => featureConfigIndex >= 0 && target === featureConfigIndex,
+    [featureConfigIndex],
+  );
+
   const nextStep = useCallback(async () => {
     // Verhindere Preview-Updates während Transition
     setIsTransitioning(true);
@@ -359,11 +377,23 @@ export default function Configurator() {
     // Kurze Delay für stabile Transition
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    nextStepStore();
+    const target = currentStep + 1;
+    if (!pendingFeatureConfig && skipsFeatureConfig(target)) {
+      setCurrentStep(target + 1);
+    } else {
+      nextStepStore();
+    }
 
     // Re-enable Preview nach Step-Wechsel
     setTimeout(() => setIsTransitioning(false), 100);
-  }, [nextStepStore, actions.history]);
+  }, [
+    nextStepStore,
+    actions.history,
+    currentStep,
+    pendingFeatureConfig,
+    skipsFeatureConfig,
+    setCurrentStep,
+  ]);
 
   const prevStep = useCallback(async () => {
     // Verhindere Preview-Updates während Transition
@@ -374,11 +404,23 @@ export default function Configurator() {
     // Kurze Delay für stabile Transition
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    prevStepStore();
+    const target = currentStep - 1;
+    if (!pendingFeatureConfig && skipsFeatureConfig(target)) {
+      setCurrentStep(Math.max(target - 1, 0));
+    } else {
+      prevStepStore();
+    }
 
     // Re-enable Preview nach Step-Wechsel
     setTimeout(() => setIsTransitioning(false), 100);
-  }, [prevStepStore, actions.history]);
+  }, [
+    prevStepStore,
+    actions.history,
+    currentStep,
+    pendingFeatureConfig,
+    skipsFeatureConfig,
+    setCurrentStep,
+  ]);
 
   const handleStart = useCallback(() => setCurrentStep(0), [setCurrentStep]);
 
@@ -427,7 +469,12 @@ export default function Configurator() {
         <LivePhoneFrame widthClass="w-[360px]" heightClass="h-[740px]">
           <PhonePortal>
             <div
-              className={`transition-opacity duration-100 ${
+              // min-h-full: Ohne Höhe endete diese Hülle mit dem Inhalt —
+              // auf kurzen Seiten (eine Angebots-Karte, wenige Galeriebilder)
+              // brach der Seitenhintergrund mitten im Telefon ab und darunter
+              // schien der weiße Geräterahmen durch. Auf dunklen Templates
+              // sah das aus wie ein Renderfehler.
+              className={`min-h-full flex flex-col transition-opacity duration-100 ${
                 isTransitioning ? "opacity-50" : "opacity-100"
               }`}
             >

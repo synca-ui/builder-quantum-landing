@@ -37,7 +37,7 @@ export function BenchmarkScreen() {
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
-      <NavHeader title="Köln-Index" onBack={() => router.back()} />
+      <NavHeader title="Köln-Index" fallback="/wachstum" />
 
       <DarkPanel style={{ gap: 4 }}>
         <Eyebrow color={onDarkPanel.accent}>Ehrenfeld · anonymer Vergleich</Eyebrow>

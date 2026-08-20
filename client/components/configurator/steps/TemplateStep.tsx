@@ -23,19 +23,23 @@ const TEMPLATES = [
     color: "bg-indigo-500",
     previewColor: "border-indigo-400 bg-indigo-50/30",
   },
+  // Bewusst nur helle Templates im Picker — dunkel stellt man sich über die
+  // freien Farben selbst ein. Die früheren Templates "Stilvoll", "Gemütlich"
+  // und das dunkle "Mitternacht" bleiben als Alt-Bestand im Renderer
+  // lauffähig (IDs stylish/cozy/nocturne), erscheinen hier aber nicht mehr.
   {
-    id: "stylish",
-    nameKey: "templates.stylish",
-    descriptionKey: "templates.stylishDesc",
-    color: "bg-slate-500",
-    previewColor: "border-slate-400 bg-slate-50/30",
+    id: "riviera",
+    nameKey: "templates.riviera",
+    descriptionKey: "templates.rivieraDesc",
+    color: "bg-sky-700",
+    previewColor: "border-sky-500 bg-sky-50/30",
   },
   {
-    id: "cozy",
-    nameKey: "templates.cozy",
-    descriptionKey: "templates.cozyDesc",
-    color: "bg-orange-300",
-    previewColor: "border-orange-400 bg-orange-50/30",
+    id: "verde",
+    nameKey: "templates.verde",
+    descriptionKey: "templates.verdeDesc",
+    color: "bg-emerald-700",
+    previewColor: "border-emerald-500 bg-emerald-50/30",
   },
 ];
 

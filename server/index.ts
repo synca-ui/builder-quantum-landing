@@ -8,8 +8,9 @@ import { fileURLToPath } from "url";
 // zieht also weder Prisma noch sonst etwas mit.
 import { asyncHandler, type AsyncRequestHandler } from "./maitr/asyncHandler";
 import helmet from "helmet";
-import rateLimit, { ipKeyGenerator } from "express-rate-limit";
-import { globalLimiter, strictLimiter } from "./middleware/rateLimit";
+import rateLimit from "express-rate-limit";
+import { globalLimiter, strictLimiter, limitKey } from "./middleware/rateLimit";
+import { appleWebServiceRouter } from "./wallet/appleWebService";
 import { requireAuth } from "./middleware/auth";
 import { apiRouter } from "./routes";
 import { scraperJobRouter } from "./routes/scraperJob";
@@ -37,18 +38,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteRateLimiter = rateLimit({
   windowMs: 60_000,
   limit: 60,
-  // Der Schluessel muss ueber ipKeyGenerator laufen, nicht ueber eine eigene
-  // Normalisierung. Das Update auf express-rate-limit 8.6.2 schliesst nur den
-  // EINGEBAUTEN Schluessel (GHSA-46wh-pxpv-q5gq); ein eigener keyGenerator
-  // umgeht diesen Fix vollstaendig und blieb hier offen.
-  // Die vermiedene Falle: das blosse Strippen der eckigen Klammern liess
-  // "::ffff:1.2.3.4" stehen, waehrend derselbe Klient ueber IPv4 als "1.2.3.4"
-  // zaehlte - auf einem Dual-Stack-Host (Railway) also zwei getrennte Zaehler
-  // und damit die doppelte Rate. ipKeyGenerator faltet die IPv4-abgebildete
-  // Form auf die IPv4-Adresse zurueck und fasst echtes IPv6 zum /56-Praefix
-  // zusammen, sodass ein Angreifer sich nicht ueber sein eigenes Praefix
-  // beliebig viele Zaehler ausstellen kann.
-  keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? "")}-${req.params.subdomain ?? ""}`,
+  // Der Schluessel kommt aus `limitKey` (server/middleware/rateLimit.ts) und
+  // NICHT aus einer eigenen Normalisierung: Das Update auf
+  // express-rate-limit 8.6.2 schliesst nur den EINGEBAUTEN Schluessel
+  // (GHSA-46wh-pxpv-q5gq), ein eigener keyGenerator umgeht diesen Fix
+  // vollstaendig. `limitKey` faltet die Adresse ueber `ipKeyGenerator` (siehe
+  // die ausfuehrliche Begruendung dort) und nimmt, wo vorhanden, gleich die
+  // Kontokennung statt der Adresse.
+  //
+  // Die Subdomain bleibt Teil des Schluessels: Gedrosselt werden soll das
+  // Durchprobieren VIELER Adressen, nicht der wiederholte Aufruf derselben.
+  keyGenerator: (req) => `${limitKey(req)}-${req.params.subdomain ?? ""}`,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Zu viele Anfragen für diese Seite." },
@@ -58,6 +58,8 @@ const siteRateLimiter = rateLimit({
 const reservationLimiter = rateLimit({
   windowMs: 5 * 60_000, // 5 Minuten
   limit: 20,
+  // Wie ueberall: ueber `limitKey`, nicht ueber den Rohwert von `req.ip`.
+  keyGenerator: limitKey,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Zu viele Reservierungsanfragen. Bitte warte einen Moment." },
@@ -235,8 +237,58 @@ export function globalErrorHandler(
   });
 }
 
+/**
+ * Wie viele Proxys VOR dieser Anwendung stehen.
+ *
+ * ANLASS: Hier stand nichts, Express nahm also `false` an - und `req.ip` war
+ * damit die Adresse der Gegenstelle, also des Proxys. `netlify.toml` leitet
+ * `/api/*` mit `force = true` an Railway weiter (Zeilen 74-76): Fuer JEDEN
+ * Nutzer stand in `req.ip` dieselbe Adresse. Saemtliche Drosseln waren dadurch
+ * ein einziger Eimer fuer die ganze Plattform - zehn Aufrufe von einem Rechner
+ * legten die `strictLimiter`-Endpunkte fuer alle Kunden still. Die sorgfaeltige
+ * IPv6-Normalisierung weiter unten normalisierte die Adresse des Proxys.
+ *
+ * WARUM EINE ZAHL UND AUSDRUECKLICH NICHT `true`
+ *
+ * `true` heisst "glaube dem X-Forwarded-For vollstaendig". Der Railway-Dienst
+ * ist unter seiner eigenen Adresse oeffentlich erreichbar, also auch OHNE den
+ * Umweg ueber Netlify. Ein Angreifer haengt dort einen beliebigen
+ * `X-Forwarded-For` an und sucht sich seinen Zaehler selbst aus - die Drossel
+ * waere wieder wirkungslos, diesmal ohne dass es auffiele.
+ *
+ * WARUM DIE VORGABE 1 IST
+ *
+ * Eine zu HOHE Zahl ist gefaehrlich (der Angreifer faelscht die ueberzaehligen
+ * Spruenge selbst), eine zu niedrige nur ungenau. Die beiden Wege haben
+ * unterschiedlich viele Spruenge - ueber Netlify zwei, unmittelbar auf Railway
+ * einen -, und die Zahl muss zum KUERZESTEN passen, sonst ist sie fuer diesen
+ * Weg zu hoch. 1 ist deshalb die sichere Vorgabe: Der unmittelbare Nachbar ist
+ * immer echt.
+ *
+ * `TRUST_PROXY_HOPS` erlaubt das Nachziehen, ohne den Code zu aendern - aber
+ * erst, nachdem gemessen wurde, was in Produktion wirklich ankommt (siehe
+ * `docs/SICHERHEIT-BETRIEB.md`). Solange der Railway-Dienst unmittelbar
+ * erreichbar ist, gehoert die Zahl auf 1.
+ */
+function proxySpruenge(): number {
+  const roh = process.env.TRUST_PROXY_HOPS;
+  if (roh === undefined) return 1;
+  const zahl = Number(roh);
+  if (!Number.isInteger(zahl) || zahl < 0 || zahl > 10) {
+    console.warn(
+      `[api] TRUST_PROXY_HOPS="${roh}" ist keine brauchbare Zahl - es bleibt bei 1.`,
+    );
+    return 1;
+  }
+  return zahl;
+}
+
 export function createServer() {
   const app = express();
+
+  // MUSS vor allen Drosseln stehen: Sie lesen `req.ip`, und der Wert haengt an
+  // dieser Einstellung.
+  app.set("trust proxy", proxySpruenge());
 
   // Security Headers (Helmet)
   // CSP disabled per default to prevent breaking extensive client functionalities
@@ -287,6 +339,12 @@ export function createServer() {
   // subscriptions, subdomains, dashboard, demo, instagram, n8n, etc.)
   // Public reservations get their own rate-limiter here before the router handles them
   app.use("/api/public/reservations", reservationLimiter);
+  // Gast-Stempelkarten teilen sich den Limiter: gleiche Angriffsfläche
+  // (unauthentifiziertes Raten von Kennungen).
+  app.use("/api/public/stampcards", reservationLimiter);
+  // Apples PassKit-Web-Service: sitzungslos, eigenes Auth-Modell (ApplePass-
+  // Token je Karte). Gleicher Limiter — unauthentifizierte Kennungs-Rater.
+  app.use("/api/wallet", reservationLimiter, appleWebServiceRouter);
   app.use("/api", apiRouter);
 
   // Public site serving – rate-limited against enumeration attacks

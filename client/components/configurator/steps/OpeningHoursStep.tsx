@@ -114,7 +114,7 @@ export function OpeningHoursStep({
 
       <div className="space-y-6">
         <Card className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-3">Text color</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-3">Textfarbe</h3>
           <div className="flex items-center space-x-4">
             <input
               type="color"
@@ -123,10 +123,10 @@ export function OpeningHoursStep({
                 actions.design.updateDesign({ fontColor: e.target.value })
               }
               className="w-12 h-10 rounded cursor-pointer border"
-              aria-label="Opening hours text color"
+              aria-label="Textfarbe der Öffnungszeiten"
             />
             <span className="text-sm text-gray-600">
-              This controls the color of the Opening Hours text in the preview.
+              Bestimmt die Farbe der Öffnungszeiten in der Vorschau.
             </span>
           </div>
         </Card>
@@ -226,9 +226,10 @@ export function OpeningHoursStep({
                           updateDayHours(day, { closed: !hours.closed })
                         }
                       >
-                        {hours.closed
-                          ? t("hours.closed").slice(0, 2)
-                          : t("hours.open").slice(0, 3)}
+                        {/* Nicht abschneiden: .slice() machte aus
+                            "Geschlossen"/"Geöffnet" die Fragmente
+                            "Ge"/"Geö". Der Button darf mitwachsen. */}
+                        {hours.closed ? t("hours.closed") : t("hours.open")}
                       </Button>
                       {!hours.closed && (
                         <>

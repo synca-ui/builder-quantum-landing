@@ -14,11 +14,15 @@ const path = require("path");
  *     or directory: …/Antigravity"). Wir umschließen die Command-Substitution mit
  *     Anführungszeichen (pbxproj der App).
  *  2) Pods (EXConstants): die Phase "[CP-User] Generate app.config …" ruft
- *     `bash -l -c "$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh"`. Die äusseren
- *     Quotes schützen nur die Übergabe an `bash -c`; `bash -c` zerlegt den Pfad danach
- *     selbst am Leerzeichen. → den Pfad INNERHALB des `bash -c`-Kommandos zusätzlich
- *     quoten. Da das Pods-Projekt erst `pod install` erzeugt, hängen wir diesen Fix in
- *     den `post_install`-Hook der generierten Podfile ein.
+ *     `get-app-config-ios.sh`. Dieses Skript macht intern `basename $PROJECT_DIR` OHNE
+ *     Anführungszeichen; beim Leerzeichen im Pfad liefert basename dadurch "Antigravity"
+ *     statt "Pods", die Pods-Prüfung schlägt fehl und es steigt mit exit 0 aus, ohne die
+ *     app.config zu schreiben. Da der Code 0 ist, meldet Xcode keinen Fehler - das Archiv
+ *     gilt als fehlerfrei, aber Constants.expoConfig ist im Release null und expo-linking
+ *     wirft beim Start (App stürzt beim Öffnen ab). → wir ersetzen den Aufruf durch
+ *     scripts/generate-expo-app-config.sh, das vollständig quotet und laut abbricht.
+ *     Da das Pods-Projekt erst `pod install` erzeugt, hängen wir das in den
+ *     `post_install`-Hook der generierten Podfile ein.
  */
 
 // (1) App-pbxproj: Command-Substitution der RN-Bundle-Phase quoten.
@@ -50,18 +54,22 @@ function withBundleScriptFix(config) {
 
 // (2) Podfile: post_install-Hook einhängen, der das EXConstants-get-app-config-Skript quotet.
 const PODFILE_ANCHOR = "post_install do |installer|\n";
-const PODFILE_MARKER = "get-app-config-ios.sh"; // schon gepatcht?
-// Ruby, das direkt hinter `post_install do |installer|` eingefügt wird. Setzt die
-// shell_script-Phase auf die fertig gequotete Variante:
-//   bash -l -c "\"$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh\""
+const PODFILE_MARKER = "generate-expo-app-config.sh"; // schon gepatcht?
+// Ruby, das direkt hinter `post_install do |installer|` eingefügt wird. Lenkt die
+// app.config-Phase auf unser eigenes Skript um (siehe oben, Punkt 2).
 const PODFILE_PATCH = [
   "post_install do |installer|",
-  "    # Leerzeichen-im-Pfad-Fix (siehe withSpacePathFix.js): den EXConstants-app.config-",
-  "    # Aufruf so quoten, dass bash -c den Pfad nicht am Leerzeichen zerteilt.",
+  "    # Leerzeichen-im-Pfad-Fix (siehe withSpacePathFix.js): expo-constants'",
+  "    # get-app-config-ios.sh zerlegt $PROJECT_DIR am Leerzeichen (basename ohne",
+  "    # Quotes), steigt still mit exit 0 aus und laesst die app.config weg. Im",
+  "    # Release ist Constants.expoConfig dann null und die App stuerzt beim Start",
+  "    # ab - ohne dass Xcode einen Fehler meldet. Wir rufen stattdessen unser",
+  "    # eigenes, vollstaendig gequotetes Skript auf, das laut abbricht.",
   "    installer.pods_project.targets.each do |t|",
   "      t.build_phases.each do |ph|",
   "        next unless ph.respond_to?(:shell_script) && ph.shell_script.to_s.include?('get-app-config-ios.sh')",
-  "        ph.shell_script = 'bash -l -c \"\\\"$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh\\\"\"'",
+  "        ph.shell_path = '/bin/bash'",
+  "        ph.shell_script = '\"$PROJECT_DIR/../../scripts/generate-expo-app-config.sh\" \"$PODS_TARGET_SRCROOT/..\" \"$PROJECT_DIR/../..\" \"$CONFIGURATION_BUILD_DIR/EXConstants.bundle\"'",
   "      end",
   "    end",
   "",

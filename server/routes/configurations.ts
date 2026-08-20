@@ -23,6 +23,14 @@ async function authorizeUserBusiness(
   businessId: string | undefined | null,
 ): Promise<boolean> {
   if (!businessId) return true;
+  // ANLASS: Ohne diese Prüfung reicht ein JSON-Body wie
+  // {"businessId":{"not":"x"}} - `!businessId` ist bei einem Objekt falsch
+  // (truthy), und das Objekt landet unverändert im Prisma-`where`. Dort matcht
+  // `{ not: "x" }` jede reale Mitgliedschaft des Aufrufers und lässt den
+  // Check fälschlich durch, obwohl kein echtes businessId geprüft wurde.
+  // Dieselbe Bugklasse ist in betriebskennung.ts und maitr/middleware.ts
+  // (resolveVenue) bereits mit genau dieser Guard geschlossen.
+  if (typeof businessId !== "string") return false;
 
   const membership = await prisma.businessMember.findFirst({
     where: { userId, businessId },
@@ -218,13 +226,29 @@ export async function saveConfiguration(req: Request, res: Response) {
         }
       }
 
-      // Update configuration
-      const updated = await prisma.configuration.update({
-        where: { id: configData.id },
+      // Update configuration. updateMany statt update: die Besitzprüfung
+      // steckt so in derselben WHERE-Klausel wie der Schreibzugriff, nicht
+      // nur im vorgelagerten findFirst oben (defense in depth - Prisma's
+      // update() akzeptiert userId ohnehin nicht als WhereUniqueInput, weil
+      // hier kein @@unique([id, userId]) existiert).
+      const { count } = await prisma.configuration.updateMany({
+        where: { id: configData.id, userId },
         data: {
           ...mapConfigToDatabase(configData, selectedTemplate),
           updatedAt: new Date(),
         },
+      });
+      if (count === 0) {
+        await audit(
+          "config_update_failed",
+          configData.id,
+          false,
+          "Configuration not found",
+        );
+        return res.status(404).json({ error: "Configuration not found" });
+      }
+      const updated = await prisma.configuration.findFirstOrThrow({
+        where: { id: configData.id, userId },
       });
 
       await audit("config_updated", updated.id, true);
@@ -377,8 +401,10 @@ export async function deleteConfiguration(req: Request, res: Response) {
       where: { configId: id },
     });
 
-    await prisma.configuration.delete({
-      where: { id },
+    // deleteMany statt delete: Besitz steckt in derselben WHERE-Klausel wie
+    // der Löschvorgang selbst, nicht nur im findFirst oben.
+    await prisma.configuration.deleteMany({
+      where: { id, userId },
     });
 
     await audit("config_deleted", id, true);
@@ -470,13 +496,18 @@ export async function publishConfiguration(req: Request, res: Response) {
       });
     }
 
-    const published = await prisma.configuration.update({
-      where: { id },
+    // updateMany statt update: Besitz steckt in derselben WHERE-Klausel wie
+    // der Schreibzugriff, nicht nur im findFirst oben.
+    await prisma.configuration.updateMany({
+      where: { id, userId },
       data: {
         status: "published",
         publishedUrl: `https://${subdomain}.maitr.de`,
         updatedAt: new Date(),
       },
+    });
+    const published = await prisma.configuration.findFirstOrThrow({
+      where: { id, userId },
     });
 
     const webApp = await prisma.webApp.upsert({
@@ -579,9 +610,24 @@ export async function getPublishedSite(req: Request, res: Response) {
       });
     }
 
+    // ANLASS (Mandanten-Audit, öffentliche Endpunkte): Diese Route ist ohne
+    // jede Anmeldung erreichbar (siehe server/index.ts) und lieferte hier
+    // bisher zusätzlich `userId: config.userId || "published"` sowie
+    // `reservationEmail`/`reservationNotificationEmail` aus - die Adresse, an
+    // die Buchungsbenachrichtigungen für den BETRIEB gehen
+    // (ReservationsStep.tsx defaultet sie sogar auf die Konto-Mailadresse des
+    // Wirts). Alle drei sind unten ABSICHTLICH nicht mehr Teil der Liste.
+    //
+    // Bewusst NICHT auf `oeffentlicheSiteFelder` (server/utils/publicSiteView.ts)
+    // umgestellt, obwohl diese Route inhaltlich dasselbe tut wie
+    // `GET /api/subdomains/:subdomain/config`: Diese Liste trägt eigene
+    // Marken-Vorgabewerte (z. B. `priceColor` → "#059669"), die dort fehlen.
+    // Eine gemeinsame Funktion hätte eine der beiden Vorgaben stillschweigend
+    // überschrieben - genau die Funktionsänderung, die hier ausdrücklich NICHT
+    // passieren soll. Die Feldliste bleibt darum eigenständig, nur um die drei
+    // genannten Felder gekürzt.
     const flatConfig = {
       id: webApp.id,
-      userId: config.userId || "published",
       businessName: config.business?.name || config.businessName || "",
       businessType: config.business?.type || config.businessType || "",
       location: config.business?.location || config.location || "",
@@ -620,6 +666,10 @@ export async function getPublishedSite(req: Request, res: Response) {
         [],
       openingHours: config.content?.openingHours || config.openingHours || {},
       menuItems: config.content?.menuItems || config.menuItems || [],
+      // Muss mit dabei sein, sonst zeigt die Seite einem Gast mit
+      // Unverträglichkeit "a1, f" statt "Weizen, Milch" (siehe subdomains.ts).
+      allergenLegend:
+        config.content?.allergenLegend || config.allergenLegend || undefined,
       gallery: config.content?.gallery || config.gallery || [],
       reservationsEnabled:
         config.features?.reservationsEnabled ??
@@ -656,9 +706,7 @@ export async function getPublishedSite(req: Request, res: Response) {
         config.features?.reservationButtonShape ||
         config.reservationButtonShape ||
         "pill",
-      reservationEmail: config.features?.reservationEmail || config.reservationEmail,
       reservationFormStyle: config.features?.reservationFormStyle || config.reservationFormStyle || "classic",
-      reservationNotificationEmail: config.features?.reservationNotificationEmail || config.reservationNotificationEmail,
       reservationTimeSlotInterval: config.features?.reservationTimeSlotInterval || config.reservationTimeSlotInterval || 30,
       reservationDaysAhead: config.features?.reservationDaysAhead || config.reservationDaysAhead || 7,
       timeSlots: config.features?.timeSlots || config.timeSlots || [],

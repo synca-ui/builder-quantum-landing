@@ -1,7 +1,8 @@
 import { Router, Request, Response, NextFunction } from "express";
 import prisma from "../db/prisma";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, optionalAuth } from "../middleware/auth";
 import { getCachedSite, setCachedSite } from "../utils/siteCache";
+import { oeffentlicheSiteFelder } from "../utils/publicSiteView";
 
 
 export const subdomainsRouter = Router();
@@ -124,101 +125,26 @@ subdomainsRouter.get("/:subdomain/config", async (req, res) => {
     }
 
     // Return config in format expected by Site.tsx
-    const config = webApp.configData as any;
-
+    //
+    // ANLASS: Hier stand die Feldliste von Hand, mit `userId: config.userId ||
+    // "published"` mittendrin - eine interne Kontokennung, öffentlich ohne
+    // jede Anmeldung abrufbar. `oeffentlicheSiteFelder`
+    // (server/utils/publicSiteView.ts) ist dieselbe Positivliste, die auch
+    // `GET /api/webapps/public/apps/:subdomain` benutzt - EINE geprüfte Liste
+    // statt zweier auseinanderlaufender. Die Legende (allergenLegend) und
+    // alles andere, was Site.tsx bisher von hier bekam, steht weiterhin drin;
+    // nur `userId` nicht mehr.
+    //
+    // `GET /api/sites/:subdomain` (server/routes/configurations.ts) trägt
+    // eigene Marken-Vorgabewerte, die hier nie galten, und benutzt darum
+    // bewusst NICHT dieselbe Funktion - siehe Kommentar dort.
     return res.json({
       success: true,
-      data: {
-        // Flatten nested structure for compatibility
+      data: oeffentlicheSiteFelder(webApp.configData, {
         id: webApp.id,
-        userId: config.userId || "published",
-        businessName: config.business?.name || config.businessName || "",
-        businessType: config.business?.type || config.businessType || "",
-        location: config.business?.location || config.location || "",
-        slogan: config.business?.slogan || config.slogan || "",
-        uniqueDescription:
-          config.business?.uniqueDescription || config.uniqueDescription || "",
-        template: config.design?.template || config.template || "modern",
-        primaryColor:
-          config.design?.primaryColor || config.primaryColor || "#111827",
-        secondaryColor:
-          config.design?.secondaryColor || config.secondaryColor || "#6B7280",
-        fontFamily:
-          config.design?.fontFamily || config.fontFamily || "sans-serif",
-        backgroundColor:
-          config.design?.backgroundColor || config.backgroundColor,
-        fontColor: config.design?.fontColor || config.fontColor,
-        priceColor: config.design?.priceColor || config.priceColor,
-        headerFontColor:
-          config.design?.headerFontColor || config.headerFontColor,
-        headerBackgroundColor:
-          config.design?.headerBackgroundColor || config.headerBackgroundColor,
-        headerFontSize:
-          config.design?.headerFontSize || config.headerFontSize || 24,
-        logo: config.design?.logo || config.business?.logo?.url || config.logo,
-        // Store-Form ist pages.selectedPages/customPages (siehe
-        // client/types/domain.ts PageManagement) — alte Schlüssel als Fallback.
-        selectedPages:
-          config.pages?.selectedPages ||
-          config.pages?.selected ||
-          config.selectedPages || ["home"],
-        customPages:
-          config.pages?.customPages ||
-          config.pages?.custom ||
-          config.customPages ||
-          [],
-        openingHours: config.content?.openingHours || config.openingHours || {},
-        menuItems: config.content?.menuItems || config.menuItems || [],
-        /**
-         * Die Legende MUSS hier stehen, sonst zeigt die veröffentlichte Seite
-         * dem Gast "a1, f" statt "Weizen, Milch".
-         *
-         * Diese Antwort ist eine Positivliste: Was nicht aufgezählt ist, fällt
-         * still weg — auch wenn es in configData steht. Genau das ist der
-         * Legende passiert. In der Vorschau des Konfigurators war sie da, auf
-         * der Live-Seite nie; der Unterschied fällt niemandem auf, der nur die
-         * Vorschau ansieht.
-         *
-         * Seit die Erkennung über ein Modell strukturiert, bringt fast jede
-         * Karte eine Legende mit (gemessen 7.8.2026: statt 9 % nun praktisch
-         * alle) — der Fehler wäre also von einem Randfall zum Normalfall
-         * geworden. Bei einer Kennzeichnungspflicht ist ein nicht aufgelöstes
-         * Kürzel für einen Gast mit Unverträglichkeit wertlos.
-         */
-        allergenLegend:
-          config.content?.allergenLegend || config.allergenLegend || undefined,
-        gallery: config.content?.gallery || config.gallery || [],
-        reservationsEnabled:
-          config.features?.reservationsEnabled ??
-          config.reservationsEnabled ??
-          false,
-        maxGuests: config.features?.maxGuests || config.maxGuests || 10,
-        onlineOrdering:
-          config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
-        onlineStore:
-          config.features?.onlineStore ?? config.onlineStore ?? false,
-        teamArea: config.features?.teamArea ?? config.teamArea ?? false,
-        contactMethods:
-          config.contact?.contactMethods ||
-          config.contact?.methods ||
-          config.contactMethods ||
-          [],
-        socialMedia:
-          config.contact?.socialMedia ||
-          config.contact?.social ||
-          config.socialMedia ||
-          {},
-        email: config.contact?.email || config.email || "",
-        phone: config.contact?.phone || config.phone || "",
-        offers: config.offers || [],
-        offerBanner: config.offerBanner,
-        reservationButtonColor: config.reservationButtonColor,
-        reservationButtonTextColor: config.reservationButtonTextColor,
-        reservationButtonShape: config.reservationButtonShape,
-        homepageDishImageVisibility: config.homepageDishImageVisibility,
         publishedAt: webApp.publishedAt,
         updatedAt: webApp.updatedAt,
-      },
+      }),
     });
   } catch (error) {
     console.error("[Subdomains] Get config error:", error);
@@ -335,9 +261,17 @@ function validateSubdomainFormat(subdomain: string): {
  * POST /api/subdomains/validate
  * Check if a subdomain is available
  */
-subdomainsRouter.post("/validate", async (req, res) => {
+subdomainsRouter.post("/validate", optionalAuth, async (req, res) => {
   try {
-    const { subdomain, userId } = req.body;
+    const { subdomain } = req.body;
+    // ANLASS: userId kam bisher ungeprüft aus dem Body und entschied, ob die
+    // Antwort "owned" statt "taken" war - jeder konnte jede interne userId
+    // behaupten und so herausfinden, ob genau dieser Nutzer eine bestimmte
+    // Subdomain besitzt (Mitgliedschafts-Orakel). Die Route muss vor der
+    // Registrierung erreichbar bleiben (Konfigurator-Vorschau), deshalb kein
+    // requireAuth - aber WENN ein gültiger Token mitkommt, zählt nur dessen
+    // verifizierte userId, nie eine vom Body behauptete.
+    const userId = req.userId;
 
     if (!subdomain) {
       return res.status(400).json({

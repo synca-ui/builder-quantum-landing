@@ -79,6 +79,11 @@ export default defineConfig({
       ),
       "@": path.resolve(__dirname, "./client"),
       "@shared": path.resolve(__dirname, "./shared"),
+      // Gleicher Alias wie in vite.config.ts: @maitr/core ist kein
+      // installiertes Paket, sondern packages/core/src — ohne den Eintrag
+      // scheitert der SSR-Build am ersten Client-Import daraus (so geschehen
+      // mit @maitr/core/reservierungsSlots im Reservierungsformular).
+      "@maitr/core": path.resolve(__dirname, "./packages/core/src"),
     },
     dedupe: ["react", "react-dom"],
   },

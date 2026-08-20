@@ -26,6 +26,8 @@ import {
 // ✅ Helper-Import aus zentraler Datei
 import { normalizeImageSrc, getPageLabel } from "@/lib/helpers";
 import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
+import { WEEKDAY_LABELS } from "@/lib/weekdays";
+import { isFeatureDeliverable } from "@/lib/featureAvailability";
 import { fontClassFor } from "@/lib/fontClass";
 
 // Shared Components - werden im Editor UND auf der Live-Seite verwendet
@@ -36,6 +38,9 @@ import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { CategoryFilter } from "@/components/shared/CategoryFilter";
 import ReservationFormModern from "@/components/dynamic/ReservationFormModern";
+import { OffersSection } from "@/components/shared/OffersSection";
+import { OfferBanner } from "@/components/shared/OfferBanner";
+import { AboutSection } from "@/components/shared/AboutSection";
 
 import { ReservationButton } from "@/components/ui/ReservationButton";
 import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
@@ -43,6 +48,12 @@ import type {
   MenuItem,
   OpeningHours as OpeningHoursType,
 } from "@/types/domain";
+
+// Stabile Fallback-Referenzen: Diese Werte landen in useEffect-Dependencies
+// (ReservationFormModern). Ein Inline-`|| []` erzeugte bei jedem Render eine
+// neue Referenz — der Effect feuerte endlos.
+const FALLBACK_TIME_SLOTS = ["12:00", "13:00", "18:00", "19:00"];
+const FALLBACK_OPENING_HOURS = {} as const;
 
 // ============================================
 // MAIN COMPONENT
@@ -100,19 +111,51 @@ export function TemplatePreviewContent() {
    */
   const allergenLegend = useConfiguratorStore((s) => s.content.allergenLegend);
   const openingHours =
-    useConfiguratorStore((s) => s.content.openingHours) || {};
+    useConfiguratorStore((s) => s.content.openingHours) ||
+    FALLBACK_OPENING_HOURS;
 
   // Contact fields
-  const contactMethods =
+  const rawContactMethods =
     useConfiguratorStore((s) => s.contact.contactMethods) || [];
+  const contactPhone = useConfiguratorStore((s) => s.contact.phone);
+  const contactEmail = useConfiguratorStore((s) => s.contact.email);
+  const socialMedia = useConfiguratorStore((s) => s.contact.socialMedia);
+
+  /**
+   * Telefon und E-Mail liegen im Store neben contactMethods (contact.phone /
+   * contact.email) und fehlten deshalb auf der Kontaktseite komplett — der
+   * Gast sah weder Rufnummer noch Mailadresse. Hier zusammenführen, ohne
+   * Doppel, falls sie doch schon als contactMethod hinterlegt sind.
+   */
+  const contactMethods = useMemo(() => {
+    const list = [...rawContactMethods] as ContactMethodObject[];
+    const has = (type: string, value: string) =>
+      list.some((m) => m.type === type || m.value === value);
+
+    if (contactPhone && !has("phone", contactPhone)) {
+      list.unshift({ type: "phone", value: contactPhone });
+    }
+    if (contactEmail && !has("email", contactEmail)) {
+      list.push({ type: "email", value: contactEmail });
+    }
+    return list;
+  }, [rawContactMethods, contactPhone, contactEmail]);
 
   // Typ-Definition für ContactMethod Objekte (Store speichert diese tatsächlich als Objekte)
-  type ContactMethodObject = { type: "phone" | "email"; value: string };
+  // "address" gehört dazu: der Kontakt-Schritt legt die Anschrift als eigenen
+  // contactMethod ab, Telefon und E-Mail dagegen als contact.phone/.email.
+  type ContactMethodObject = {
+    type: "phone" | "email" | "address";
+    value: string;
+  };
 
   // Feature fields
-  const onlineOrdering = useConfiguratorStore(
-    (s) => s.features.onlineOrderingEnabled,
-  );
+  // Solange es keinen Gast-Checkout gibt, ist der Warenkorb eine Sackgasse —
+  // Vorschau und Live-Seite spielen die Bestell-Bedienelemente deshalb
+  // gemeinsam nicht aus (eine Quelle: client/lib/featureAvailability.ts).
+  const onlineOrdering =
+    useConfiguratorStore((s) => s.features.onlineOrderingEnabled) &&
+    isFeatureDeliverable("onlineOrderingEnabled");
   const reservationsEnabled = useConfiguratorStore(
     (s) => s.features.reservationsEnabled,
   );
@@ -128,6 +171,9 @@ export function TemplatePreviewContent() {
     useConfiguratorStore((s) => s.features.reservationFormStyle) || "classic";
   const maxGuests = 
     useConfiguratorStore((s) => s.features.maxGuests) || 10;
+  const timeSlots =
+    useConfiguratorStore((s) => (s.features as any).timeSlots) ||
+    FALLBACK_TIME_SLOTS;
 
   // Pages fields
   const selectedPages =
@@ -136,6 +182,16 @@ export function TemplatePreviewContent() {
   // Payment/Offers fields
   const offerBannerEnabled =
     useConfiguratorStore((s) => s.payments?.offerBanner?.enabled) || false;
+  const offerBanner =
+    useConfiguratorStore((s) => s.payments?.offerBanner) || {};
+  const offerPageEnabled =
+    useConfiguratorStore((s) => (s.payments as any)?.offerPageEnabled) || false;
+  const offers = useConfiguratorStore((s) => (s.payments as any)?.offers) || [];
+  const teamMembers =
+    useConfiguratorStore((s) => (s.features as any)?.teamMembers) || [];
+  const teamAreaEnabled = useConfiguratorStore(
+    (s) => (s.features as any)?.teamAreaEnabled,
+  );
 
   // ==========================================
   // Build deduplicated menu with labels + AUTO-DISCOVERY
@@ -181,14 +237,30 @@ export function TemplatePreviewContent() {
       menuSet.add("reservations");
     }
 
-    // Dynamisch: Angebote nur wenn Banner aktiviert
-    if (offerBannerEnabled && !menuSet.has("offers")) {
+    // Dynamisch: Angebote, wenn der Angebote-Tab ODER das Banner aktiv ist.
+    // Der Schalter im Angebote-Schritt schreibt offerPageEnabled — vorher
+    // hörte die Navigation nur auf offerBanner.enabled, der Tab konnte
+    // also nie erscheinen.
+    if ((offerPageEnabled || offerBannerEnabled) && !menuSet.has("offers")) {
       menuArray.push({ id: "offers", label: "Angebote" });
       menuSet.add("offers");
     }
 
     return menuArray;
-  }, [location, reservationsEnabled]);
+    // Alle gelesenen Werte gehoeren in die Deps. Vorher standen hier nur
+    // location und reservationsEnabled — die Navigation wurde einmal gebaut
+    // und danach nie mehr: abgewaehlte Seiten blieben stehen, neu gewaehlte
+    // tauchten nie auf.
+  }, [
+    selectedPages,
+    menuItems,
+    gallery,
+    contactMethods,
+    location,
+    reservationsEnabled,
+    offerBannerEnabled,
+    offerPageEnabled,
+  ]);
 
   // ==========================================
   // LOCAL STATE
@@ -341,6 +413,13 @@ export function TemplatePreviewContent() {
             </div>
           )}
         </div>
+
+        {/* Angebots-Banner — geteilt mit der Live-Seite */}
+        <OfferBanner
+          offers={offers as any[]}
+          banner={offerBanner as any}
+          onShowOffers={() => navigateToPage("offers")}
+        />
 
         {/* Highlights Section - nutzt DishCard Shared Component */}
         <div>
@@ -590,6 +669,8 @@ export function TemplatePreviewContent() {
                   <div className="p-2 bg-current/5 rounded-full">
                     {m.type === "phone" ? (
                       <Phone className="w-4 h-4" />
+                    ) : m.type === "address" ? (
+                      <MapPin className="w-4 h-4" />
                     ) : (
                       <Mail className="w-4 h-4" />
                     )}
@@ -615,7 +696,7 @@ export function TemplatePreviewContent() {
                     className="flex justify-between text-xs py-2 border-b border-current/5 last:border-0"
                   >
                     <span className="capitalize opacity-80 font-medium">
-                      {day}
+                      {WEEKDAY_LABELS[day] ?? day}
                     </span>
                     <span className="font-bold">
                       {hours.closed
@@ -633,15 +714,23 @@ export function TemplatePreviewContent() {
           </div>
         </div>
 
-        {/* Social Links - Platzhalter */}
-        <div className="flex justify-center gap-6 py-6 opacity-80 text-sm">
-          <span className="cursor-pointer hover:opacity-100 transition-all">
-            Instagram
-          </span>
-          <span className="cursor-pointer hover:opacity-100 transition-all">
-            Facebook
-          </span>
-        </div>
+        {/* Social Links — nur die Kanäle zeigen, die auch gepflegt sind.
+            Vorher standen Instagram UND Facebook immer da, selbst wenn das
+            Feld leer war: ein toter Link auf der Seite des Betriebs. */}
+        {(socialMedia?.instagram || socialMedia?.facebook) && (
+          <div className="flex justify-center gap-6 py-6 opacity-80 text-sm">
+            {socialMedia?.instagram && (
+              <span className="cursor-pointer hover:opacity-100 transition-all">
+                Instagram
+              </span>
+            )}
+            {socialMedia?.facebook && (
+              <span className="cursor-pointer hover:opacity-100 transition-all">
+                Facebook
+              </span>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -683,6 +772,8 @@ export function TemplatePreviewContent() {
         <div className="w-full max-w-lg mx-auto animate-in fade-in duration-300 px-2 pointer-events-none opacity-80">
           <ReservationFormModern
             configId="preview"
+            previewSlots={timeSlots}
+            previewOpeningHours={openingHours as any}
             businessName={businessName}
             primaryColor={primaryColor}
             buttonColor={reservationButtonColor || primaryColor}
@@ -803,6 +894,30 @@ export function TemplatePreviewContent() {
         return renderGalleryPage();
       case "reservations":
         return renderReservationsPage();
+      // Geteilte Seiten mit der Live-Seite — vorher 404 in beiden Renderern.
+      case "offers":
+        return (
+          <OffersSection
+            offers={offers as any[]}
+            titleClass={styles.titleClass}
+            bodyClass={styles.bodyClass}
+            priceColor={priceColor}
+            fontColor={fontColor}
+          />
+        );
+      case "about":
+        return (
+          <AboutSection
+            businessName={businessName}
+            description={uniqueDescription}
+            team={teamMembers as any[]}
+            showTeam={!!teamAreaEnabled}
+            titleClass={styles.titleClass}
+            bodyClass={styles.bodyClass}
+            primaryColor={primaryColor}
+            fontColor={fontColor}
+          />
+        );
       default:
         return (
           <div className="p-10 text-center opacity-50 pt-20">
@@ -817,7 +932,7 @@ export function TemplatePreviewContent() {
   // ==========================================
   return (
     <div
-      className="h-full w-full relative flex flex-col transition-colors duration-300 overflow-hidden pointer-events-auto select-none"
+      className="flex-1 h-full w-full relative flex flex-col transition-colors duration-300 overflow-hidden pointer-events-auto select-none"
       style={styles.wrapper}
       onWheel={(e) => e.stopPropagation()}
     >
@@ -827,7 +942,10 @@ export function TemplatePreviewContent() {
         businessType={businessType}
         logo={logo?.url || null}
         headerFontColor={headerFontColor}
-        headerFontSize="2xl"
+        // Store-Wert durchreichen — vorher stand hier fest "2xl", die
+        // Einstellung "Header Schriftgröße" wirkte deshalb nur auf der
+        // veröffentlichten Seite (AppRenderer), nie in der Vorschau.
+        headerFontSize={headerFontSize}
         headerBackgroundColor={headerBackgroundColor}
         backgroundColor={backgroundColor}
         onlineOrdering={onlineOrdering}

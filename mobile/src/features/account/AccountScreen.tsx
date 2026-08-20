@@ -59,9 +59,9 @@ export function AccountScreen() {
    *
    * Erst warten, dann navigieren - nicht umgekehrt. `signOut()` beendet im echten
    * Anmeldebetrieb auch die Clerk-Sitzung im SecureStore (Store → `lib/auth.ts`).
-   * Wer sofort auf den Login springt, kann dort „Weiter mit Google" antippen,
-   * während die alte Sitzung noch steht - der SSO-Flow liefe dann gegen eine
-   * bereits aktive Sitzung.
+   * Wer sofort auf den Login springt, kann dort erneut eine Anmeldung starten,
+   * während die alte Sitzung noch steht - Apple-Dialog wie Passworteingabe liefen
+   * dann gegen eine bereits aktive Sitzung.
    *
    * Der Sperrschalter verhindert zusätzlich den doppelten Tipp; der Nutzer sieht
    * ihn im Label.

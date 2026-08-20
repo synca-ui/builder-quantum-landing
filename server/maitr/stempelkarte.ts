@@ -31,12 +31,18 @@
  *    NOCH NICHT EINGESPIELT).
  *
  * ─── WAS HIER BEWUSST NICHT STEHT ───────────────────────────────────────────
- * Kein Sendepfad, kein "alle benachrichtigen", kein Push. Der Apple-Wallet-Push
- * traegt keinen Text (er sagt dem Geraet nur "hol den Pass neu"), und es gibt im
- * Repo weder Passbau noch APNs-Client. Der Bildschirm bekommt dafuer den ehrlichen
- * Zustand aus `walletReadiness()` und keinen Knopf, der ins Leere greift.
+ * Kein Sendepfad, kein "alle benachrichtigen". Der Apple-Wallet-Push traegt
+ * keinen Text (er sagt dem Geraet nur "hol den Pass neu"); Passbau, APNs und
+ * Google-Save-Link liegen in server/wallet/ — diese Datei bleibt die reine
+ * Fachlogik, und die Routen stossen den Versand NACH der Buchung an.
  */
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+// Pass-Token: dieselbe AES-256-GCM-Huelle wie die OAuth-Tokens des Moduls.
+// Alias-Namen, damit an der Verwendungsstelle steht, WAS verschluesselt wird.
+import {
+  encryptToken as verschluesselePassToken,
+  decryptToken as entschluesselePassToken,
+} from "./security";
 import { zuE164 } from "../../shared/telefon";
 import { prisma } from "../db/prisma";
 import { walletReadiness, type WalletReadiness } from "../wallet/env";
@@ -402,7 +408,7 @@ export interface Uebersicht {
  * einmal zu behaupten: hier steht die eine Stelle, die der Wallet-Pfad umlegt,
  * sobald er existiert.
  */
-export const PASSAUSGABE_GEBAUT = false;
+export const PASSAUSGABE_GEBAUT = true;
 
 /** Bereitschaft plus die Frage, ob ueberhaupt schon Paesse ausgegeben werden. */
 export interface WalletZustand extends WalletReadiness {
@@ -1080,6 +1086,196 @@ async function toKartenDetail(venueId: string, k: KarteMitProgramm): Promise<Kar
     eingeloestAm: iso(k.redeemedAt),
     gast: toGast(k.guest),
     walletGeraete,
+  };
+}
+
+/**
+ * Gast-Sicht auf eine Karte — die EINE Ausnahme von Regel 2 dieses Moduls.
+ *
+ * Alle anderen Lesewege fuehren `businessId` aus der geprueften Venue-
+ * Mitgliedschaft in der WHERE-Klausel, weil die Kennung im Pfad kein Geheimnis
+ * ist. HIER ist die Kennung allein ebenfalls kein Zutritt: Die oeffentliche
+ * Route (server/routes/publicStampcards.ts) verlangt zusaetzlich eine
+ * HMAC-Signatur ueber die cardId, die nur der Betreiber erzeugen und als
+ * QR/Link an SEINEN Gast weitergeben kann. Erst Signatur + uuid zusammen
+ * oeffnen die Karte — raten reicht nicht, und ein Token der einen Karte
+ * taugt nicht fuer eine andere.
+ *
+ * Die Antwort traegt bewusst KEINE Personendaten (kein Gastname, kein
+ * Telefon) und keine Betreiber-Kennzahlen — nur, was auf einer Stempelkarte
+ * aus Pappe auch stuende: Betrieb, Stand, Ziel, Praemie, Status.
+ */
+export interface GastKartenSicht {
+  betriebsName: string;
+  stand: number;
+  max: number;
+  rewardText: string;
+  status: KartenStatus;
+}
+
+interface GastKartenRow {
+  id: string;
+  status: KartenStatus;
+  maxStamps: number;
+  rewardText: string | null;
+  program: { rewardText: string } | null;
+  business: { name: string } | null;
+}
+
+export async function karteFuerGastLesen(
+  cardId: string,
+): Promise<GastKartenSicht | null> {
+  const karte = await db.stampCard.findFirst<GastKartenRow>({
+    where: { id: cardId },
+    select: {
+      id: true,
+      status: true,
+      maxStamps: true,
+      rewardText: true,
+      program: { select: { rewardText: true } },
+      business: { select: { name: true } },
+    },
+  });
+  if (!karte) return null;
+
+  // Gleiches Prinzip wie ueberall: der Stand kommt aus dem Hauptbuch,
+  // nicht aus dem Lese-Cache.
+  const summe = await db.stampEvent.aggregate<{
+    _sum: { delta: number | null };
+  }>({
+    where: { stampCardId: cardId },
+    _sum: { delta: true },
+  });
+
+  return {
+    betriebsName: karte.business?.name ?? "",
+    stand: summe._sum?.delta ?? 0,
+    max: karte.maxStamps,
+    rewardText: karte.rewardText ?? karte.program?.rewardText ?? "",
+    status: karte.status,
+  };
+}
+
+/**
+ * Wallet-Ausstattung einer Karte sicherstellen: serialNumber + verschluesseltes
+ * authenticationToken, GEMEINSAM gesetzt (Schema-Kommentar) und nur einmal.
+ * Rueckgabe ist der KLARTEXT des Tokens — er wandert in pass.json; die
+ * Datenbank kennt ihn nur AES-256-GCM-verschluesselt (encryptToken).
+ *
+ * Gleiche Zugriffs-Ausnahme wie karteFuerGastLesen: aufgerufen wird das nur
+ * hinter dem signierten Gast-Link (publicStampcards) — die HMAC-Signatur ist
+ * der Riegel, nicht die Venue-Mitgliedschaft.
+ */
+export async function passAusstattungSichern(
+  cardId: string,
+): Promise<{ serialNumber: string; authToken: string } | null> {
+  const karte = await db.stampCard.findFirst<{
+    id: string;
+    serialNumber: string | null;
+    encAuthToken: string | null;
+  }>({
+    where: { id: cardId },
+    select: { id: true, serialNumber: true, encAuthToken: true },
+  });
+  if (!karte) return null;
+
+  if (karte.serialNumber && karte.encAuthToken) {
+    return {
+      serialNumber: karte.serialNumber,
+      authToken: entschluesselePassToken(karte.encAuthToken),
+    };
+  }
+
+  const serialNumber = randomUUID();
+  const authToken = randomBytes(24).toString("base64url");
+  await db.stampCard.updateMany({
+    where: { id: cardId, serialNumber: null },
+    data: {
+      serialNumber,
+      encAuthToken: verschluesselePassToken(authToken),
+    },
+  });
+  // Falls parallel ein zweiter Abruf gewonnen hat: dessen Werte lesen statt
+  // mit den eigenen weiterzuarbeiten, die nie geschrieben wurden.
+  const endgueltig = await db.stampCard.findFirst<{
+    serialNumber: string | null;
+    encAuthToken: string | null;
+  }>({
+    where: { id: cardId },
+    select: { serialNumber: true, encAuthToken: true },
+  });
+  if (!endgueltig?.serialNumber || !endgueltig.encAuthToken) return null;
+  return {
+    serialNumber: endgueltig.serialNumber,
+    authToken: entschluesselePassToken(endgueltig.encAuthToken),
+  };
+}
+
+/** Alles, was Passbau und Apple-Web-Service zu einer Serial brauchen. */
+export interface WalletKartenDaten {
+  cardId: string;
+  businessId: string;
+  programId: string;
+  betriebsName: string;
+  stand: number;
+  max: number;
+  rewardText: string;
+  status: KartenStatus;
+  authToken: string;
+  contentChangedAt: Date;
+  passUpdateSeq: number;
+}
+
+export async function walletKartenDaten(
+  serialNumber: string,
+): Promise<WalletKartenDaten | null> {
+  const karte = await db.stampCard.findFirst<{
+    id: string;
+    businessId: string;
+    programId: string;
+    status: KartenStatus;
+    maxStamps: number;
+    rewardText: string | null;
+    encAuthToken: string | null;
+    contentChangedAt: Date;
+    passUpdateSeq: number;
+    program: { rewardText: string } | null;
+    business: { name: string } | null;
+  }>({
+    where: { serialNumber },
+    select: {
+      id: true,
+      businessId: true,
+      programId: true,
+      status: true,
+      maxStamps: true,
+      rewardText: true,
+      encAuthToken: true,
+      contentChangedAt: true,
+      passUpdateSeq: true,
+      program: { select: { rewardText: true } },
+      business: { select: { name: true } },
+    },
+  });
+  if (!karte || !karte.encAuthToken) return null;
+
+  const summe = await db.stampEvent.aggregate<{ _sum: { delta: number | null } }>({
+    where: { stampCardId: karte.id },
+    _sum: { delta: true },
+  });
+
+  return {
+    cardId: karte.id,
+    businessId: karte.businessId,
+    programId: karte.programId,
+    betriebsName: karte.business?.name ?? "",
+    stand: summe._sum?.delta ?? 0,
+    max: karte.maxStamps,
+    rewardText: karte.rewardText ?? karte.program?.rewardText ?? "",
+    status: karte.status,
+    authToken: entschluesselePassToken(karte.encAuthToken),
+    contentChangedAt: karte.contentChangedAt,
+    passUpdateSeq: karte.passUpdateSeq,
   };
 }
 

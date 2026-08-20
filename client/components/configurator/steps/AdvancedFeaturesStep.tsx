@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { isFeatureDeliverable } from "@/lib/featureAvailability";
 import {
   ArrowLeft,
   ChevronRight,
@@ -85,6 +86,12 @@ export function AdvancedFeaturesStep({
   const handleFeatureClick = (featureId: string, enabled: boolean) => {
     const willEnable = !enabled;
 
+    // „Bald verfügbar": Aktivieren gesperrt, Deaktivieren (Alt-Configs)
+    // bleibt möglich — niemand soll auf einem toten Feature sitzenbleiben.
+    if (willEnable && !isFeatureDeliverable(featureId)) {
+      return;
+    }
+
     actions.features.updateFeatureFlags({ [featureId]: willEnable } as any);
 
     if (
@@ -113,13 +120,16 @@ export function AdvancedFeaturesStep({
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {featureList.map((feature) => {
           const isEnabled = (features as any)[feature.id];
+          const deliverable = isFeatureDeliverable(feature.id);
           return (
             <Card
               key={feature.id}
-              className={`cursor-pointer transition-all duration-300 border-2 ${
-                isEnabled
-                  ? "border-teal-500 bg-teal-50"
-                  : "border-gray-200 hover:border-teal-300"
+              className={`transition-all duration-300 border-2 ${
+                !deliverable && !isEnabled
+                  ? "border-gray-200 opacity-60 cursor-not-allowed"
+                  : isEnabled
+                    ? "border-teal-500 bg-teal-50 cursor-pointer"
+                    : "border-gray-200 hover:border-teal-300 cursor-pointer"
               }`}
               onClick={() => handleFeatureClick(feature.id, isEnabled)}
             >
@@ -136,7 +146,14 @@ export function AdvancedFeaturesStep({
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
                   {t(feature.titleKey)}
                 </h3>
-                {feature.premium && (
+                {!deliverable && (
+                  <div className="mb-2">
+                    <span className="px-2 py-1 bg-gray-200 text-gray-600 text-xs font-bold rounded-full">
+                      Bald verfügbar
+                    </span>
+                  </div>
+                )}
+                {feature.premium && deliverable && (
                   <div className="mb-2">
                     <span className="px-2 py-1 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold rounded-full">
                       Premium

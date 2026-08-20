@@ -28,7 +28,7 @@ interface DomainHostingStepProps {
 
 interface SubdomainValidationResult {
   available: boolean;
-  reason?: "invalid" | "reserved" | "taken" | "pending" | "owned";
+  reason?: "invalid" | "reserved" | "taken" | "pending" | "owned" | "unknown";
   error?: string;
   suggestions?: string[];
   subdomain?: string;
@@ -38,13 +38,23 @@ interface SubdomainValidationResult {
 // Check subdomain availability via API
 async function checkSubdomainAvailability(
   subdomain: string,
-  userId?: string | null,
+  // ANLASS: Der Server liest die "gehört mir schon"-Antwort seit der
+  // IDOR-Härtung nur noch aus einem verifizierten Bearer-Token, nicht mehr
+  // aus einem im Body behaupteten userId (server/routes/subdomains.ts,
+  // optionalAuth). Ohne Token bekommt ein angemeldeter Nutzer beim erneuten
+  // Prüfen seiner eigenen veröffentlichten Subdomain fälschlich "taken" statt
+  // "owned" - deshalb hier statt der alten userId ein Clerk-Token holen.
+  getToken?: () => Promise<string | null>,
 ): Promise<SubdomainValidationResult> {
   try {
+    const token = await getToken?.();
     const response = await fetch("/api/subdomains/validate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subdomain, userId }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ subdomain }),
     });
 
     if (!response.ok) {
@@ -54,10 +64,14 @@ async function checkSubdomainAvailability(
     return await response.json();
   } catch (error) {
     console.error("[Subdomain] Validation error:", error);
+    // "unknown" statt "invalid": Eine nicht erreichbare Prüfung sagt nichts
+    // über die Subdomain aus. Als "invalid" gemeldet, sperrte sie den
+    // Weiter-Button — ein Aussetzer des Endpunkts hielt den Nutzer dann im
+    // Konfigurator fest. Beim Veröffentlichen prüft der Server ohnehin.
     return {
       available: false,
-      reason: "invalid",
-      error: "Fehler bei der Überprüfung. Bitte versuche es erneut.",
+      reason: "unknown",
+      error: "Verfügbarkeit konnte nicht geprüft werden.",
     };
   }
 }
@@ -78,7 +92,7 @@ export function DomainHostingStep({
   getDisplayedDomain,
 }: DomainHostingStepProps) {
   const { t } = useTranslation();
-  const { userId } = useAuth();
+  const { getToken } = useAuth();
   const business = useConfiguratorStore((s) => s.business);
   const actions = useConfiguratorActions();
 
@@ -137,7 +151,7 @@ export function DomainHostingStep({
       setValidationError(null);
       setValidationSuggestions([]);
 
-      const result = await checkSubdomainAvailability(subdomain, userId);
+      const result = await checkSubdomainAvailability(subdomain, getToken);
 
       // Only update if this is still the current subdomain
       if (subdomain === currentSubdomain) {
@@ -153,6 +167,8 @@ export function DomainHostingStep({
             reserved: "reserved",
             taken: "taken",
             pending: "taken",
+            // Prüfung nicht erreichbar: Hinweis zeigen, aber nicht blockieren.
+            unknown: "idle",
           };
           setValidationStatus(
             statusMap[result.reason || "invalid"] || "invalid",
@@ -165,7 +181,7 @@ export function DomainHostingStep({
         setLastCheckedSubdomain(subdomain);
       }
     },
-    [currentSubdomain, userId],
+    [currentSubdomain, getToken],
   );
 
   // Debounce effect - also validates on mount if subdomain exists

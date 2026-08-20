@@ -59,12 +59,17 @@ target 'Maitr' do
   )
 
   post_install do |installer|
-    # Leerzeichen-im-Pfad-Fix (siehe withSpacePathFix.js): den EXConstants-app.config-
-    # Aufruf so quoten, dass bash -c den Pfad nicht am Leerzeichen zerteilt.
+    # Leerzeichen-im-Pfad-Fix (siehe withSpacePathFix.js): expo-constants'
+    # get-app-config-ios.sh zerlegt $PROJECT_DIR am Leerzeichen (basename ohne
+    # Quotes), steigt still mit exit 0 aus und laesst die app.config weg. Im
+    # Release ist Constants.expoConfig dann null und die App stuerzt beim Start
+    # ab - ohne dass Xcode einen Fehler meldet. Wir rufen stattdessen unser
+    # eigenes, vollstaendig gequotetes Skript auf, das laut abbricht.
     installer.pods_project.targets.each do |t|
       t.build_phases.each do |ph|
         next unless ph.respond_to?(:shell_script) && ph.shell_script.to_s.include?('get-app-config-ios.sh')
-        ph.shell_script = 'bash -l -c "\"$PODS_TARGET_SRCROOT/../scripts/get-app-config-ios.sh\""'
+        ph.shell_path = '/bin/bash'
+        ph.shell_script = '"$PROJECT_DIR/../../scripts/generate-expo-app-config.sh" "$PODS_TARGET_SRCROOT/.." "$PROJECT_DIR/../.." "$CONFIGURATION_BUILD_DIR/EXConstants.bundle"'
       end
     end
 

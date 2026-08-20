@@ -124,11 +124,14 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
   }, [prevStep]);
 
   // FIX: Nutze jetzt die Prop 'nextStep' statt navigationActions
+  // isValid MUSS in den Deps stehen: nextStep ist stabil, ohne isValid friert
+  // der Callback auf dem Wert des ersten Renders ein (leeres Formular = false)
+  // und "Weiter" bleibt dauerhaft wirkungslos.
   const handleNextStep = useCallback(() => {
     if (isValid) {
       nextStep();
     }
-  }, [nextStep]);
+  }, [nextStep, isValid]);
 
   return (
     <div className="py-8 max-w-xl mx-auto">
@@ -292,7 +295,10 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
               placeholder={t("business.locationPlaceholder")}
               value={business.location || ""}
               onChange={handleLocationChange} // FIX: Use the stable handler
-              className="w-full pl-10 px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+              // pl-10 MUSS hinter px-4 stehen: tailwind-merge wirft die
+              // fruehere der beiden kollidierenden Klassen weg, sonst
+              // ueberdeckt das MapPin-Icon das erste Zeichen der Eingabe.
+              className="w-full px-4 py-3 pl-10 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
               autoComplete="address-level2"
               debounceMs={300}
             />

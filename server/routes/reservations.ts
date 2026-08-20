@@ -2,7 +2,8 @@ import { Router, Request, Response } from "express";
 import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { z } from "zod";
-import { sendReservationConfirmation } from "../utils/email";
+import { sendReservationConfirmation, sendReservationDeclined } from "../utils/email";
+import { AKTIONS_SECRET, reservierungsAktionsToken } from "./publicReservations";
 
 const router = Router();
 
@@ -120,11 +121,20 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
  * PUT /api/dashboard/reservations/:id/status
  * Update reservation status
  */
+// Dieselben sechs Werte wie ReservationStatus in prisma/schema.prisma.
+const statusUpdateSchema = z.object({
+  status: z.enum(["PENDING", "CONFIRMED", "ARRIVED", "COMPLETED", "CANCELLED", "NO_SHOW"]),
+});
+
 router.put("/:id/status", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
-    const { status } = req.body;
+    // ANLASS: `status` kam bisher ungeprüft aus dem Body direkt in ein
+    // Prisma-`data`-Objekt - kein Enum-Wert erzeugt dort einen Laufzeitfehler
+    // statt eines sauberen 400. Andere Schreibpfade in dieser Datei validieren
+    // bereits mit zod (reservationSchema oben), dieser tat es nicht.
+    const { status } = statusUpdateSchema.parse(req.body);
 
     const reservation = await prisma.reservation.findUnique({
       where: { id: id as string },
@@ -154,12 +164,33 @@ router.put("/:id/status", requireAuth, async (req: Request, res: Response) => {
         reservation.id,
         reservation.reservationTime,
         reservation.guestCount,
+        reservation.business.name,
+        AKTIONS_SECRET
+          ? reservierungsAktionsToken(reservation.id, "manage", AKTIONS_SECRET)
+          : undefined,
+      );
+    }
+
+    // Lehnt der BETREIBER eine offene Anfrage ab, erfährt der Gast das jetzt
+    // per Mail — vorher blieb die Anfrage aus Gastsicht für immer offen.
+    if (
+      status === "CANCELLED" &&
+      reservation.status === "PENDING" &&
+      reservation.guestEmail
+    ) {
+      await sendReservationDeclined(
+        reservation.guestEmail,
+        reservation.guestName,
+        reservation.reservationTime,
         reservation.business.name
       );
     }
 
     res.json({ success: true, data: updated });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
     console.error("Error updating reservation status:", error);
     res.status(500).json({ error: "Failed to update reservation" });
   }
