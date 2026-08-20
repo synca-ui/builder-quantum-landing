@@ -19,6 +19,12 @@
  * TypeScript strukturell typisiert, bleiben die Ergebnisse den Domain-Typen
  * zuweisbar.
  */
+// Nur die Farb-Entschärfung, nichts Strukturelles: autoPublish importiert
+// seinerseits Typen und FALLBACK_TEMPLATE von hier. Der Kreis ist unkritisch,
+// weil beide Seiten die importierten Werte erst beim Aufruf benutzen, nie auf
+// Modulebene.
+import { softenBackground } from "./autoPublish";
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -321,6 +327,41 @@ const NIE_ALLEIN = new Set([
   "unser restaurant", "gastronomie",
 ]);
 
+/**
+ * Handlungsaufforderungen von Buttons und Widgets. Der n8n-Flow greift als
+ * "Namen" die erste große Überschrift der Seite – auf Baukasten-Seiten (Wix,
+ * Squarespace) ist das oft der Text des Reservierungs-Widgets. Nachgewiesen am
+ * echten Fall krawummel.de: businessName = "Reserviere hier online".
+ *
+ * Ein Kandidat wird abgelehnt, wenn JEDES seiner Wörter entweder ein
+ * Aufforderungsverb oder ein Füllwort ist – so bleibt "Gasthaus Zur Post"
+ * unangetastet, aber "Jetzt online reservieren" fällt durch.
+ */
+// Bewusst vollständige Flexionsendungen statt \w*: „buch\w*“ hätte auch den
+// Gasthof „Buchenhof“ getroffen.
+const CTA_VERBEN =
+  /^(reservier(e|en|t|ung(en)?)|bestell(e|en|t|ung(en)?)|buch(e|en|t|ung(en)?)|book(ing)?s?|order(s|ing)?|reserve|anfrage(n)?|kontaktier(e|en|t))$/i;
+const CTA_FUELLWOERTER = new Set([
+  "jetzt", "hier", "online", "direkt", "gleich", "einfach", "bequem",
+  "tisch", "einen", "deinen", "dein", "ihren", "ihr", "unseren", "unser",
+  "bei", "uns", "now", "here", "a", "your", "table",
+]);
+
+function istHandlungsaufforderung(name: string): boolean {
+  const woerter = name.split(/\s+/).filter(Boolean);
+  if (!woerter.length) return false;
+  let verbGesehen = false;
+  for (const wort of woerter) {
+    const klein = wort.toLowerCase().replace(/[.!?,]+$/, "");
+    if (CTA_VERBEN.test(klein)) {
+      verbGesehen = true;
+      continue;
+    }
+    if (!CTA_FUELLWOERTER.has(klein)) return false;
+  }
+  return verbGesehen;
+}
+
 /** Passende Anführungszeichenpaare, die einen ganzen Namen umschließen. */
 const KLAMMERPAARE: Array<[string, string]> = [
   ['"', '"'],
@@ -392,8 +433,30 @@ export function plausibleBusinessName(raw?: string): string | undefined {
   if (SEITEN_MOEBEL.has(klein) || NIE_ALLEIN.has(klein)) return undefined;
   // Ein Name ganz ohne Buchstaben ist keiner.
   if (!/[A-Za-zÄÖÜäöüß]/.test(name)) return undefined;
+  // "Reserviere hier online" ist ein Knopf, kein Betrieb.
+  if (istHandlungsaufforderung(name)) return undefined;
 
   return name;
+}
+
+/**
+ * Technik-Adressen, die der Scrape aus dem JavaScript der Seite fischt.
+ * Echter Fall krawummel.de: Der Flow lieferte
+ * "605a…9123@sentry-next.wixpress.com" – die Fehlerberichts-Adresse des
+ * Wix-Baukastens. So etwas darf nie als Kontakt des Betriebs erscheinen.
+ */
+const TECHNIK_EMAIL_DOMAINS =
+  /@([^\s@]*\.)?(sentry(-[a-z]+)?\.|wixpress\.com|wix\.com|example\.|localhost)/i;
+
+export function plausibleEmail(raw?: string): string | undefined {
+  const email = clean(raw);
+  if (!email) return undefined;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return undefined;
+  if (TECHNIK_EMAIL_DOMAINS.test(email)) return undefined;
+  // Ein lokaler Teil aus 20+ Hex-Zeichen ist eine Maschinen-ID, kein Postfach.
+  const lokal = email.split("@")[0];
+  if (/^[0-9a-f]{20,}$/i.test(lokal)) return undefined;
+  return email;
 }
 
 /**
@@ -470,6 +533,23 @@ function mapMenuItems(raw: SuggestedConfig["menuItems"]): MenuItem[] {
     .filter((x): x is MenuItem => x !== null);
 }
 
+/**
+ * Sortiert aus, was zwar als <img> auf der Seite steht, aber keine Galerie
+ * füllt. Nachgemessen am echten Fall krawummel.de (Wix): Zwischen den zehn
+ * "Galeriebildern" lagen zwei 30×30-Icons, ein Favicon und ein absichtlich
+ * unscharfer 141×94-Ladeplatzhalter (`blur_2` in der Wix-URL).
+ */
+export function istGalerieMuell(url: string): boolean {
+  // Favicons und Vektor-Icons.
+  if (/\.(ico|svg)(\?|$)/i.test(url.split("#")[0])) return true;
+  // Wix/Cloudinary-artige Zuschnitt-Parameter: winzig = Icon oder Thumbnail.
+  const fill = url.match(/\bw_(\d+),h_(\d+)\b/);
+  if (fill && Number(fill[1]) < 200 && Number(fill[2]) < 200) return true;
+  // Absichtlich unscharfe Ladeplatzhalter (LQIP).
+  if (/\bblur(_\d+)?\b/i.test(url)) return true;
+  return false;
+}
+
 function mapGallery(raw: SuggestedConfig["gallery"]): GalleryImage[] {
   if (!Array.isArray(raw)) return [];
   const seen = new Set<string>();
@@ -478,6 +558,7 @@ function mapGallery(raw: SuggestedConfig["gallery"]): GalleryImage[] {
     if (!isHttpUrl(url)) return;
     const trimmed = url.trim();
     if (seen.has(trimmed)) return;
+    if (istGalerieMuell(trimmed)) return;
     seen.add(trimmed);
     // ACHTUNG: Das sind FREMDE URLs von der gescrapten Seite. Sie werden hier
     // nur durchgereicht. Vor dem Veröffentlichen müssen die Bilder in den
@@ -516,7 +597,14 @@ export function suggestedConfigToDraft(
     design.secondaryColor = suggested.secondaryColor.trim();
   }
   if (isHex(suggested.backgroundColor)) {
-    design.backgroundColor = suggested.backgroundColor.trim();
+    // Dieselbe Entschärfung wie beim Direkt-Veröffentlichen: Der Scrape nimmt
+    // die auffälligste Stylesheet-Farbe (krawummel.de lieferte #bada55), und
+    // ohne diese Regel landete das grelle Grün über den Weg "Erst anpassen"
+    // als Seitenhintergrund auf der veröffentlichten Seite — während der Weg
+    // "Jetzt veröffentlichen" dieselbe Farbe längst abmilderte. Ein Scrape,
+    // zwei Ergebnisse; jetzt teilen beide Wege dieselbe Grundlage.
+    const roh = suggested.backgroundColor.trim();
+    design.backgroundColor = softenBackground(roh) ?? roh;
   }
   if (clean(suggested.fontFamily)) design.fontFamily = clean(suggested.fontFamily);
   if (clean(suggested.template)) {
@@ -549,7 +637,7 @@ export function suggestedConfigToDraft(
 
   const contact: Partial<ContactInfo> = {};
   const phone = clean(suggested.phone);
-  const email = clean(suggested.email);
+  const email = plausibleEmail(suggested.email);
   if (phone) contact.phone = phone;
   if (email) contact.email = email;
   const methods = [

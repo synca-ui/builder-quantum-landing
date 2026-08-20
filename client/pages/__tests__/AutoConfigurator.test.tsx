@@ -39,14 +39,24 @@ configure({ asyncUtilTimeout: 8000 });
 
 // Angemeldet – die globale Vorgabe in test/setupTests.ts ist abgemeldet, und
 // ohne Token bricht der Ablauf schon vor dem ersten Aufruf ab.
+//
+// STABILES Objekt statt Objektliteral im Rückgabewert: Seit der IDOR-Härtung
+// hängt die Subdomain-Verfügbarkeitsprüfung als Effect an `getToken`. Das
+// echte Clerk memoisiert diese Funktion; ein Mock, der bei jedem useAuth()
+// ein frisches Objekt baut, gibt ihr dagegen bei jedem Render eine neue
+// Identität – Effect → setAvailability → Render → neue Identität → Effect …
+// Die Suite hing damit endlos (14+ Minuten, nie fertig), obwohl kein einziger
+// Test rot war.
+const STABILE_AUTH = {
+  isLoaded: true,
+  isSignedIn: true,
+  userId: "user_test",
+  getToken: async () => "test-token",
+};
+const STABILER_USER = { isLoaded: true, isSignedIn: true, user: null };
 vi.mock("@clerk/clerk-react", () => ({
-  useAuth: () => ({
-    isLoaded: true,
-    isSignedIn: true,
-    userId: "user_test",
-    getToken: async () => "test-token",
-  }),
-  useUser: () => ({ isLoaded: true, isSignedIn: true, user: null }),
+  useAuth: () => STABILE_AUTH,
+  useUser: () => STABILER_USER,
   ClerkProvider: ({ children }: { children?: unknown }) => children,
   UserButton: () => null,
 }));

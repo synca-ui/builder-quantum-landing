@@ -16,6 +16,7 @@ import {
   suggestedConfigToDraft,
   describeDraft,
   normalizeSocialLinks,
+  plausibleBusinessName,
   type ConfiguratorDraft,
   type SuggestedConfig,
 } from "@shared/suggestedConfig";
@@ -821,6 +822,17 @@ export default function AutoConfigurator() {
           if (!current) return current;
           const business = { ...current.business };
 
+          // Namens-Rückfall: Der Scrape-Flow greift die erste Überschrift und
+          // liefert damit auch mal „Reserviere hier online“ — solche Kandidaten
+          // wirft plausibleBusinessName inzwischen raus, und der Entwurf steht
+          // ohne Namen da. JSON-LD `name` bzw. `og:site_name` pflegt der
+          // Betreiber dagegen bewusst; durch dieselbe Plausibilitätsprüfung
+          // geschickt, ist das der bessere zweite Versuch.
+          if (!business.name?.trim() && details.siteName) {
+            const name = plausibleBusinessName(String(details.siteName));
+            if (name) business.name = name;
+          }
+
           if (!business.location?.trim() && details.address) {
             business.location = details.address;
           }
@@ -1137,11 +1149,25 @@ export default function AutoConfigurator() {
               setDraft(nextDraft);
               const scrapedMenu = (nextDraft.content.menuItems ??
                 []) as ParsedMenuItem[];
-              // Subdomain aus dem gefundenen Namen vorschlagen. Schlägt das
-              // fehl (kein Name, oder nach dem Bereinigen zu kurz), bleibt das
-              // Feld leer und die Oberfläche verlangt eine Eingabe – besser
-              // als unter einem unbrauchbaren Namen zu veröffentlichen.
-              setSubdomain(suggestSubdomain(nextDraft.business.name) ?? "");
+              // Subdomain aus dem gefundenen Namen vorschlagen; ohne
+              // brauchbaren Namen (die CTA-Prüfung wirft z. B. „Reserviere
+              // hier online“ raus) aus dem Hostnamen der analysierten Seite —
+              // krawummel.de → „krawummel“. Erst wenn beides nichts hergibt,
+              // bleibt das Feld leer und die Oberfläche verlangt eine Eingabe.
+              const hostname = (() => {
+                try {
+                  return new URL(job.websiteUrl || websiteUrl).hostname
+                    .replace(/^www\./, "")
+                    .split(".")[0];
+                } catch {
+                  return undefined;
+                }
+              })();
+              setSubdomain(
+                suggestSubdomain(nextDraft.business.name) ??
+                  suggestSubdomain(hostname) ??
+                  "",
+              );
               setGenStatus("done");
 
               // Logo, Adresse und soziale Netze nachziehen. Der Scrape lässt
@@ -1434,6 +1460,16 @@ export default function AutoConfigurator() {
     // vorherigen Stand zurück, falls der Scrape danebenlag.
     pushHistory();
     applyScrapedDraft(draft);
+    // Die hier geprüfte Adresse mitnehmen. applyScrapedDraft setzt die Domain
+    // auf den Auslieferungszustand zurück (der Entwurf beschreibt einen neuen
+    // Betrieb) — ohne diese Zeile würde der Kopfzeilen-Publish im Konfigurator
+    // die Subdomain wieder still aus dem Geschäftsnamen ableiten, obwohl der
+    // Nutzer hier längst eine freie Adresse gewählt hat.
+    if (subdomain.trim() && availability.kind === "free") {
+      setBusinessInfo({
+        domain: { hasDomain: false, selectedDomain: subdomain.trim() },
+      });
+    }
     setCurrentStep(STEP_BUSINESS_INFO);
 
     toast({
@@ -1441,7 +1477,17 @@ export default function AutoConfigurator() {
       description: "Prüfe die Angaben und passe an, was nicht stimmt.",
     });
     navigate("/configurator/manual");
-  }, [draft, pushHistory, applyScrapedDraft, setCurrentStep, toast, navigate]);
+  }, [
+    draft,
+    pushHistory,
+    applyScrapedDraft,
+    subdomain,
+    availability,
+    setBusinessInfo,
+    setCurrentStep,
+    toast,
+    navigate,
+  ]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
