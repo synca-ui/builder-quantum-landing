@@ -679,9 +679,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
    *
    * Vorher setzte das hier nur `signedIn` auf false. Im Clerk-Betrieb blieb die
    * Sitzung damit im SecureStore gültig: Die App zeigte den Login, aber
-   * `mobileAuthAdapter.getToken()` lieferte weiter ein Bearer-Token, und ein
-   * erneutes „Weiter mit Google" startete den SSO-Flow gegen eine noch aktive
-   * Sitzung. Der eigentliche Abmeldevorgang liegt in `lib/auth.ts` (dort kennt man
+   * `mobileAuthAdapter.getToken()` lieferte weiter ein Bearer-Token, und eine
+   * erneute Anmeldung lief gegen eine noch aktive Sitzung. Der eigentliche Abmeldevorgang liegt in `lib/auth.ts` (dort kennt man
    * Clerk), hier wird er nur mit dem lokalen Zustand zusammengeführt.
    *
    * Reihenfolge mit Absicht: erst der lokale Merker, damit die Oberfläche sofort

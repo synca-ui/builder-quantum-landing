@@ -93,8 +93,10 @@ export function ReviewIcon({ size = 17, color = "currentColor", strokeWidth = de
  *
  * ANLASS: Hier standen vier Quadrate in einem 2x2-Raster, eingefärbt mit
  * Googles Farben. Das ist die Form der Bildmarke von MICROSOFT, nicht von
- * Google. Sie saß am Knopf „Weiter mit Google" und an zwei Stellen des
- * Onboardings - im Simulator fiel es sofort auf.
+ * Google. Sie saß damals am Knopf „Weiter mit Google" und an zwei Stellen des
+ * Onboardings - im Simulator fiel es sofort auf. Der Anmeldeknopf ist inzwischen
+ * entfernt (siehe app/login.tsx); die Marke steht nur noch im Onboarding, wo es
+ * um das Google-Business-Profil geht.
  *
  * Warum das mehr ist als ein Schönheitsfehler: Google gibt die Gestaltung
  * dieses Knopfes verbindlich vor, und die Einhaltung wird bei der
