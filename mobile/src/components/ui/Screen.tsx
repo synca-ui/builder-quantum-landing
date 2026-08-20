@@ -74,6 +74,13 @@ export function Screen({
       contentContainerStyle={[padding, contentStyle]}
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior="never"
+      // Ohne diese beiden ist jedes Formular halb unbedienbar, und zwar auf zwei
+      // Arten zugleich: Die Tastatur schiebt sich über das Feld, in das gerade
+      // getippt wird (am Login über das Passwortfeld), und ein Tipp auf den Knopf
+      // darunter schließt nur die Tastatur, statt den Knopf auszulösen - der
+      // erste Tipp geht immer verloren.
+      automaticallyAdjustKeyboardInsets
+      keyboardShouldPersistTaps="handled"
     >
       {children}
     </ScrollView>

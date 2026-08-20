@@ -128,7 +128,10 @@ function AppleKnopf() {
       // Den still schlucken: Wer selbst abbricht, braucht keine Fehlermeldung.
       if (istAbbruch(error)) return;
       console.warn("[login] Apple-Anmeldung fehlgeschlagen", error);
-      toast.show("Anmeldung mit Apple fehlgeschlagen. Bitte erneut versuchen.");
+      toast.show(
+        klartext(error) ?? "Anmeldung mit Apple fehlgeschlagen. Bitte erneut versuchen.",
+        "fehler",
+      );
     } finally {
       setBusy(false);
     }
@@ -209,7 +212,7 @@ function EmailAnmeldung() {
       // `needs_new_password` und `needs_identifier` führt dieser Screen nicht.
       // Lieber ehrlich sagen als stumm stehen bleiben.
       console.warn("[login] Anmeldung unvollständig", status);
-      toast.show("Anmeldung braucht einen weiteren Schritt. Bitte im Web anmelden.");
+      toast.show("Anmeldung braucht einen weiteren Schritt. Bitte im Web anmelden.", "fehler");
       return;
     }
 
@@ -220,7 +223,7 @@ function EmailAnmeldung() {
     );
 
     if (!faktor) {
-      toast.show("Zusätzliche Bestätigung nötig. Bitte im Web anmelden.");
+      toast.show("Zusätzliche Bestätigung nötig. Bitte im Web anmelden.", "fehler");
       return;
     }
 
@@ -251,11 +254,11 @@ function EmailAnmeldung() {
   const mitPasswortAnmelden = async () => {
     if (busy || !bereit) return;
     if (!email.includes("@")) {
-      toast.show("Bitte eine vollständige E-Mail-Adresse eingeben.");
+      toast.show("Bitte eine vollständige E-Mail-Adresse eingeben.", "fehler");
       return;
     }
     if (passwort.length < 8) {
-      toast.show("Das Passwort braucht mindestens acht Zeichen.");
+      toast.show("Das Passwort braucht mindestens acht Zeichen.", "fehler");
       return;
     }
 
@@ -274,12 +277,12 @@ function EmailAnmeldung() {
           await registrieren();
         } catch (registrierungsFehler) {
           console.warn("[login] Registrierung fehlgeschlagen", registrierungsFehler);
-          toast.show(klartext(registrierungsFehler) ?? "Konto konnte nicht angelegt werden.");
+          toast.show(klartext(registrierungsFehler) ?? "Konto konnte nicht angelegt werden.", "fehler");
         }
         return;
       }
       console.warn("[login] Anmeldung fehlgeschlagen", error);
-      toast.show(klartext(error) ?? "Anmeldung fehlgeschlagen. Bitte erneut versuchen.");
+      toast.show(klartext(error) ?? "Anmeldung fehlgeschlagen. Bitte erneut versuchen.", "fehler");
     } finally {
       setBusy(false);
     }
@@ -289,7 +292,7 @@ function EmailAnmeldung() {
   const codeAnfordern = async () => {
     if (busy || !bereit) return;
     if (!email.includes("@")) {
-      toast.show("Bitte eine vollständige E-Mail-Adresse eingeben.");
+      toast.show("Bitte eine vollständige E-Mail-Adresse eingeben.", "fehler");
       return;
     }
 
@@ -301,11 +304,11 @@ function EmailAnmeldung() {
       toast.show("Code verschickt. Schau in dein Postfach.");
     } catch (error) {
       if (istUnbekanntesKonto(error)) {
-        toast.show("Zu dieser Adresse gibt es kein Konto. Vergib ein Passwort, dann legen wir eins an.");
+        toast.show("Zu dieser Adresse gibt es kein Konto. Vergib ein Passwort, dann legen wir eins an.", "fehler");
         return;
       }
       console.warn("[login] Code anfordern fehlgeschlagen", error);
-      toast.show(klartext(error) ?? "Code konnte nicht verschickt werden.");
+      toast.show(klartext(error) ?? "Code konnte nicht verschickt werden.", "fehler");
     } finally {
       setBusy(false);
     }
@@ -324,7 +327,7 @@ function EmailAnmeldung() {
           return;
         }
         console.warn("[login] Registrierung unvollständig", ergebnis.status);
-        toast.show("Die Registrierung braucht noch Angaben. Bitte im Web fortfahren.");
+        toast.show("Die Registrierung braucht noch Angaben. Bitte im Web fortfahren.", "fehler");
         return;
       }
 
@@ -340,7 +343,7 @@ function EmailAnmeldung() {
       await weiterNachAnmeldung(ergebnis.status ?? "");
     } catch (error) {
       console.warn("[login] Code-Prüfung fehlgeschlagen", error);
-      toast.show(klartext(error) ?? "Der Code stimmt nicht. Bitte erneut versuchen.");
+      toast.show(klartext(error) ?? "Der Code stimmt nicht. Bitte erneut versuchen.", "fehler");
     } finally {
       setBusy(false);
     }
@@ -404,6 +407,7 @@ function EmailAnmeldung() {
         wert={passwort}
         onChange={setPasswort}
         placeholder="Mindestens acht Zeichen"
+        geheim
         autoCapitalize="none"
         // `password` statt `new-password`: Derselbe Bildschirm meldet an UND legt
         // an, und für Bestandsnutzer - die häufigere Gruppe - ist das Vorschlagen
@@ -478,20 +482,43 @@ function klartext(error: unknown): string | null {
     case "rate_limit_exceeded":
       return "Zu viele Versuche. Bitte einen Moment warten.";
     default:
-      return null;
+      break;
   }
+
+  // Kein bekannter Code: Bei „not authorized" liegt es nicht am Nutzer, sondern
+  // an der Anbieter-Konfiguration in Clerk (beim nativen Apple-Weg fehlt dort
+  // typischerweise die iOS-Bundle-ID). Das gehoert klar benannt, sonst versucht
+  // es jemand zehnmal mit demselben Ergebnis.
+  if (fehler.message?.toLowerCase().includes("not authorized")) {
+    return "Dieser Anmeldeweg ist noch nicht freigeschaltet. Bitte E-Mail und Passwort nutzen.";
+  }
+
+  return null;
 }
 
 interface ClerkFehler {
   code?: string;
+  message?: string;
 }
 
-/** Clerk verpackt seine Fehler in `errors[]`; alles andere ist ein Netz- oder Programmfehler. */
+/**
+ * Clerk verpackt seine Fehler ueblicherweise in `errors[]`.
+ *
+ * Der native Apple-Weg antwortet aber anders: `{ reason, sign_in_id }` ohne
+ * `errors`-Feld. Genau das lief ins Leere - der Nutzer sah nur „Anmeldung
+ * fehlgeschlagen", waehrend im Rohtext „You are not authorized to perform this
+ * request" stand, also ein Konfigurationsproblem und kein Bedienfehler.
+ */
 function clerkFehler(error: unknown): ClerkFehler | null {
   if (typeof error !== "object" || error === null) return null;
+
   const errors = (error as { errors?: unknown }).errors;
-  if (!Array.isArray(errors) || errors.length === 0) return null;
-  return errors[0] as ClerkFehler;
+  if (Array.isArray(errors) && errors.length > 0) return errors[0] as ClerkFehler;
+
+  const reason = (error as { reason?: unknown }).reason;
+  if (typeof reason === "string") return { message: reason };
+
+  return null;
 }
 
 /** „Zu dieser Adresse gibt es kein Konto" - das Signal zum Umschwenken auf Registrierung. */

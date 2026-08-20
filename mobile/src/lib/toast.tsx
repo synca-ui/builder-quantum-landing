@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { Animated, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CheckIcon } from "../components/icons";
+import { AlertIcon, CheckIcon } from "../components/icons";
 import { Text } from "../components/ui/Text";
 import { useTheme } from "../theme";
 
@@ -12,28 +12,40 @@ import { useTheme } from "../theme";
  * Das Design zeigt Feedback nicht explizit, aber ohne Rückmeldung wirkt jeder
  * Tap folgenlos. Ein dezenter, automatisch verschwindender Hinweis am unteren Rand
  * schließt die Lücke, ohne den ruhigen Look zu stören.
+ *
+ * Zwei Tonlagen, weil eine nicht reicht: Bis dahin bekam JEDE Meldung dieselbe
+ * dunkle Blase mit einem Häkchen - auch „Anmeldung fehlgeschlagen". Am Gerät
+ * gemessen las sich das wie eine Bestätigung, denn das Symbol nimmt man vor dem
+ * Text wahr. Fehler tragen jetzt die `destructive`-Farbe, ein Warnzeichen und
+ * stehen länger, weil man sie lesen muss statt nur zur Kenntnis zu nehmen.
  */
+export type ToastTon = "info" | "fehler";
+
 interface ToastValue {
-  show: (message: string) => void;
+  /** `tone` weglassen heißt „info" - alle bestehenden Aufrufe bleiben unverändert. */
+  show: (message: string, tone?: ToastTon) => void;
 }
 
 const ToastContext = createContext<ToastValue | null>(null);
 
+/** Bestätigungen dürfen weghuschen; Fehlermeldungen muss man lesen können. */
+const STANDZEIT: Record<ToastTon, number> = { info: 1900, fehler: 4200 };
+
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [message, setMessage] = useState<string | null>(null);
+  const [inhalt, setInhalt] = useState<{ message: string; ton: ToastTon } | null>(null);
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const show = useCallback(
-    (next: string) => {
-      setMessage(next);
+    (next: string, ton: ToastTon = "info") => {
+      setInhalt({ message: next, ton });
       if (hideTimer.current) clearTimeout(hideTimer.current);
       Animated.timing(opacity, { toValue: 1, duration: 160, useNativeDriver: true }).start();
       hideTimer.current = setTimeout(() => {
         Animated.timing(opacity, { toValue: 0, duration: 220, useNativeDriver: true }).start(
-          ({ finished }) => finished && setMessage(null),
+          ({ finished }) => finished && setInhalt(null),
         );
-      }, 1900);
+      }, STANDZEIT[ton]);
     },
     [opacity],
   );
@@ -47,14 +59,31 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ show }}>
       {children}
-      {message ? <ToastBubble message={message} opacity={opacity} /> : null}
+      {inhalt ? (
+        <ToastBubble message={inhalt.message} ton={inhalt.ton} opacity={opacity} />
+      ) : null}
     </ToastContext.Provider>
   );
 }
 
-function ToastBubble({ message, opacity }: { message: string; opacity: Animated.Value }) {
+function ToastBubble({
+  message,
+  ton,
+  opacity,
+}: {
+  message: string;
+  ton: ToastTon;
+  opacity: Animated.Value;
+}) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+
+  const fehler = ton === "fehler";
+  const hintergrund = fehler ? theme.colors.destructive : theme.colors.inkAction;
+  // Beide Flächen sind dunkel genug für Weiß; `onInkAction` ist im Dunkelmodus
+  // aber schwarz, und auf Rot wäre das unlesbar.
+  const schrift = fehler ? "#FFFFFF" : theme.colors.onInkAction;
+  const Symbol = fehler ? AlertIcon : CheckIcon;
 
   return (
     <Animated.View
@@ -67,12 +96,22 @@ function ToastBubble({ message, opacity }: { message: string; opacity: Animated.
       <Animated.View
         style={[
           styles.bubble,
-          { backgroundColor: theme.colors.inkAction },
+          // Runde Pille für kurze Bestätigungen, ruhigere Kante für längere
+          // Fehlertexte - eine 999er-Rundung sieht bei zwei Zeilen falsch aus.
+          fehler && styles.bubbleFehler,
+          { backgroundColor: hintergrund },
           theme.elevation.floating,
         ]}
       >
-        <CheckIcon size={16} color={theme.colors.onInkAction} strokeWidth={2.4} />
-        <Text variant="action" color={theme.colors.onInkAction} numberOfLines={1} style={{ fontSize: 15 }}>
+        <Symbol size={16} color={schrift} strokeWidth={2.4} />
+        <Text
+          variant="action"
+          color={schrift}
+          // Fehler brauchen Platz: Sätze wie „Für diese Adresse gibt es bereits
+          // ein Konto." wurden einzeilig mitten im Wort abgeschnitten.
+          numberOfLines={fehler ? 3 : 1}
+          style={[{ fontSize: 15 }, fehler && styles.textFehler]}
+        >
           {message}
         </Text>
       </Animated.View>
@@ -92,6 +131,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+    // Ohne Rand lief die Blase am Gerät bis an beide Bildschirmkanten - genau der
+    // Eindruck von „viel zu groß", den lange Meldungen erzeugten.
+    paddingHorizontal: 20,
   },
   bubble: {
     flexDirection: "row",
@@ -100,5 +142,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 12,
     paddingHorizontal: 18,
+  },
+  bubbleFehler: {
+    borderRadius: 18,
+    alignItems: "flex-start",
+    paddingVertical: 13,
+  },
+  textFehler: {
+    flexShrink: 1,
+    // Zeilenhöhe explizit: Bei mehrzeiligem Text klebten die Zeilen sonst
+    // aneinander, weil `variant="action"` auf eine Zeile ausgelegt ist.
+    lineHeight: 20,
   },
 });

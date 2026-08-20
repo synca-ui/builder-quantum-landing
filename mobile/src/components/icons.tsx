@@ -181,6 +181,24 @@ export function CheckIcon({ size = 18, color = "currentColor", strokeWidth = 2 }
 }
 
 /** Uhr - leerer Tag, Servicezeiten. */
+/**
+ * Warnzeichen fuer Fehlermeldungen.
+ *
+ * Der Toast zeigte bis dahin bei JEDER Meldung ein Haekchen - auch bei
+ * „Anmeldung fehlgeschlagen". Ein Erfolgssymbol an einer Fehlermeldung ist
+ * schlimmer als gar keines: Es widerspricht dem Text, und gelesen wird das
+ * Symbol zuerst.
+ */
+export function AlertIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={strokeWidth} />
+      <Line x1={12} y1={7.5} x2={12} y2={13} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1={12} y1={16.4} x2={12} y2={16.5} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function ClockIcon({ size = 30, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -240,6 +258,36 @@ export function CalendarIcon({ size = 22, color = "currentColor", strokeWidth = 
 }
 
 /** Auge - Profilaufrufe / Reichweite (Start-Kennzahl). */
+/**
+ * Durchgestrichenes Auge - „Passwort wieder verbergen".
+ *
+ * Dieselbe Form wie `EyeIcon` plus Schraegstrich, damit der Schalter beim
+ * Umschalten nicht die Silhouette wechselt und ruhig bleibt.
+ */
+export function EyeOffIcon({ size = 18, color = "currentColor", strokeWidth = 1.5 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth={strokeWidth} />
+      <Line
+        x1="4"
+        y1="20"
+        x2="20"
+        y2="4"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 export function EyeIcon({ size = 18, color = "currentColor", strokeWidth = 1.5 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
