@@ -1,6 +1,34 @@
 {
-  "extends": "expo/tsconfig.base",
+  // Frueher stand hier: "extends": "expo/tsconfig.base".
+  //
+  // Das Erben scheitert ueberall dort, wo mobile/node_modules fehlt - allen voran in
+  // der CI, die nur die Wurzel installiert (pnpm) und mobile/ (npm) nie anfasst. Die
+  // Specs unter mobile/ brachen dann schon beim Parsen ab ("failed to resolve
+  // extends: expo/tsconfig.base"), obwohl es reine Logiktests ohne React-Native-Import
+  // sind. Fuer eine Konfigurationszeile die komplette Expo-Toolchain in die CI zu
+  // ziehen, waere unverhaeltnismaessig.
+  //
+  // Darum stehen Expos Vorgaben jetzt woertlich hier. Quelle:
+  // node_modules/expo/tsconfig.base.json (Expo SDK 57), unveraendert uebernommen,
+  // damit ein SDK-Wechsel per Diff abgeglichen werden kann. Nachgewiesen identisch:
+  // `tsc --showConfig` liefert vorher wie nachher dieselben compilerOptions.
+  //
+  // Expos "exclude" ist bewusst nicht uebernommen - diese Datei hatte schon immer ein
+  // eigenes, das das geerbte ohnehin ersetzt hat.
   "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ESNext"],
+    "module": "preserve",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "customConditions": ["react-native"],
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "target": "ESNext",
+
     "strict": true,
     "paths": {
       "@maitr/core": ["../packages/core/src/index.ts"],
