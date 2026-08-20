@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,11 @@ import { Calendar, Clock, Users, MessageSquare, CheckCircle, XCircle } from "luc
 
 export default function ManageReservation() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  // Signierter Zugriffstoken aus dem Mail-Link (siehe gastZugriffErlaubt in
+  // server/routes/publicReservations.ts) - ohne ihn lehnt der Server GET/PUT ab.
+  const token = searchParams.get("t");
+  const tokenQuery = token ? `?t=${encodeURIComponent(token)}` : "";
   const [reservation, setReservation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +32,7 @@ export default function ManageReservation() {
 
   const fetchReservation = async () => {
     try {
-      const res = await fetch(`/api/public/reservations/${id}`);
+      const res = await fetch(`/api/public/reservations/${id}${tokenQuery}`);
       const data = await res.json();
       if (data.success) {
         setReservation(data.data);
@@ -50,7 +55,7 @@ export default function ManageReservation() {
   const handleUpdate = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/public/reservations/${id}`, {
+      const res = await fetch(`/api/public/reservations/${id}${tokenQuery}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,7 +83,7 @@ export default function ManageReservation() {
     
     try {
       setLoading(true);
-      const res = await fetch(`/api/public/reservations/${id}`, {
+      const res = await fetch(`/api/public/reservations/${id}${tokenQuery}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "CANCELLED" })

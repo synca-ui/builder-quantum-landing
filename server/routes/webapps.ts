@@ -25,6 +25,15 @@ interface ValidationResult {
   warnings: string[];
 }
 
+/** Signalisiert dem äußeren Handler in POST /apps/publish, dass die
+ * mitgeschickte configId nicht dem angemeldeten Nutzer gehört. */
+class PublishOwnershipError extends Error {
+  constructor() {
+    super("Configuration gehört nicht diesem Nutzer");
+    this.name = "PublishOwnershipError";
+  }
+}
+
 /**
  * Exportiert allein für den Test: Der automatische Modus baut seine
  * Konfiguration im Client zusammen (shared/autoPublish.ts) und erfährt erst
@@ -407,6 +416,19 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       // Update or create Configuration if we have an ID
       let configuration = null;
       if (configId) {
+        // ANLASS: configId kam ungeprüft aus dem Request-Body direkt in ein
+        // `update({ where: { id: configId } })` - jeder eingeloggte Nutzer
+        // konnte mit einer eigenen freien Subdomain plus einer erratenen/
+        // fremden configId die Configuration eines anderen Betriebs
+        // überschreiben (Name, Menü, Kontaktdaten, Galerie) und veröffentlichen.
+        // Erst die Subdomain wurde auf Fremdbesitz geprüft, die configId nie.
+        const owned = await tx.configuration.findFirst({
+          where: { id: configId, userId },
+          select: { id: true },
+        });
+        if (!owned) {
+          throw new PublishOwnershipError();
+        }
         configuration = await tx.configuration.update({
           where: { id: configId },
           data: {
@@ -485,6 +507,15 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       stage: "complete",
     });
   } catch (error) {
+    if (error instanceof PublishOwnershipError) {
+      await audit("webapp_publish_ownership_denied", userId, false, error.message);
+      return res.status(403).json({
+        success: false,
+        error: "Kein Zugriff auf diese Configuration",
+        stage: "ownership_check",
+      });
+    }
+
     console.error("[Publish] Fatal error:", error);
     await audit(
       "webapp_publish_failed",

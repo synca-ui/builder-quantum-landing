@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import prisma from "../db/prisma";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, optionalAuth } from "../middleware/auth";
 import { getCachedSite, setCachedSite } from "../utils/siteCache";
 import { oeffentlicheSiteFelder } from "../utils/publicSiteView";
 
@@ -261,9 +261,17 @@ function validateSubdomainFormat(subdomain: string): {
  * POST /api/subdomains/validate
  * Check if a subdomain is available
  */
-subdomainsRouter.post("/validate", async (req, res) => {
+subdomainsRouter.post("/validate", optionalAuth, async (req, res) => {
   try {
-    const { subdomain, userId } = req.body;
+    const { subdomain } = req.body;
+    // ANLASS: userId kam bisher ungeprüft aus dem Body und entschied, ob die
+    // Antwort "owned" statt "taken" war - jeder konnte jede interne userId
+    // behaupten und so herausfinden, ob genau dieser Nutzer eine bestimmte
+    // Subdomain besitzt (Mitgliedschafts-Orakel). Die Route muss vor der
+    // Registrierung erreichbar bleiben (Konfigurator-Vorschau), deshalb kein
+    // requireAuth - aber WENN ein gültiger Token mitkommt, zählt nur dessen
+    // verifizierte userId, nie eine vom Body behauptete.
+    const userId = req.userId;
 
     if (!subdomain) {
       return res.status(400).json({

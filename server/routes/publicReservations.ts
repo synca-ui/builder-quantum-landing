@@ -146,14 +146,14 @@ function oeffentlicheReservierungsAnsicht(reservation: {
  * bisher nur den Dashboard-Knopf) — das Feature degradiert, statt mit einem
  * erratbaren Token online zu gehen.
  */
-const AKTIONS_SECRET =
+export const AKTIONS_SECRET =
   process.env.RESERVATION_ACTION_SECRET ||
   process.env.MAITR_OAUTH_STATE_SECRET ||
   null;
 
 export function reservierungsAktionsToken(
   reservationId: string,
-  aktion: "confirm" | "decline",
+  aktion: "confirm" | "decline" | "manage",
   secret: string,
 ): string {
   return crypto
@@ -164,7 +164,7 @@ export function reservierungsAktionsToken(
 
 function tokenGueltig(
   reservationId: string,
-  aktion: "confirm" | "decline",
+  aktion: "confirm" | "decline" | "manage",
   token: string,
 ): boolean {
   if (!AKTIONS_SECRET) return false;
@@ -172,6 +172,24 @@ function tokenGueltig(
   const a = Buffer.from(erwartet, "utf8");
   const b = Buffer.from(token, "utf8");
   return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * ANLASS: GET/PUT /api/public/reservations/:id verlangten bisher nur die
+ * rohe UUID - anders als der Bestätigungs-Link (/:id/action) und der
+ * Stempelkarten-Link, die beide eine HMAC-Signatur verlangen. Wer die ID
+ * kannte (weitergeleitete Mail, Server-Log, Referer-Header), konnte fremde
+ * Reservierungen stornieren oder verschieben. Dieselbe Absicherung wie bei
+ * den Aktions-Links, nur mit aktion="manage" statt confirm/decline.
+ *
+ * Degradiert wie die Aktions-Links: Ohne AKTIONS_SECRET in der Umgebung
+ * bleibt es beim bisherigen Verhalten (nur die ID), statt den Endpunkt für
+ * jeden Aufrufer ohne Secret hart zu sperren.
+ */
+function gastZugriffErlaubt(reservationId: string, req: Request): boolean {
+  if (!AKTIONS_SECRET) return true;
+  const token = typeof req.query.t === "string" ? req.query.t : "";
+  return tokenGueltig(reservationId, "manage", token);
 }
 
 /** Kleine deutsche Antwortseite für den Mail-Klick (öffnet im Browser). */
@@ -315,7 +333,10 @@ router.get("/:id/action", async (req: Request, res: Response) => {
           reservation.id,
           reservation.reservationTime,
           reservation.guestCount,
-          reservation.business?.name ?? "dem Betrieb"
+          reservation.business?.name ?? "dem Betrieb",
+          AKTIONS_SECRET
+            ? reservierungsAktionsToken(reservation.id, "manage", AKTIONS_SECRET)
+            : undefined,
         );
       }
       return ablehnen(200, "Reservierung bestätigt ✓", `Der Gast bekommt jetzt eine Bestätigung per E-Mail.<br><br>${wer}<br>${wann}`);
@@ -341,6 +362,10 @@ router.get("/:id/action", async (req: Request, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!gastZugriffErlaubt(id as string, req)) {
+      return res.status(403).json({ error: "Ungültiger oder fehlender Zugriffstoken." });
+    }
 
     const reservation = await prisma.reservation.findUnique({
       where: { id: id as string },
@@ -434,7 +459,10 @@ router.post("/", async (req: Request, res: Response) => {
         reservation.id,
         reservation.reservationTime,
         reservation.guestCount,
-        config.business.name
+        config.business.name,
+        AKTIONS_SECRET
+          ? reservierungsAktionsToken(reservation.id, "manage", AKTIONS_SECRET)
+          : undefined,
       );
     }
 
@@ -490,6 +518,11 @@ router.post("/", async (req: Request, res: Response) => {
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!gastZugriffErlaubt(id as string, req)) {
+      return res.status(403).json({ error: "Ungültiger oder fehlender Zugriffstoken." });
+    }
+
     const validatedData = modifySchema.parse(req.body);
 
     const existing = await prisma.reservation.findUnique({

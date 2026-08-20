@@ -24,6 +24,10 @@ import {
   sendReservationDeclined,
 } from "../utils/email";
 import {
+  AKTIONS_SECRET,
+  reservierungsAktionsToken,
+} from "../routes/publicReservations";
+import {
   requireVenueAccess,
   resolveVenue,
   validateBody,
@@ -547,11 +551,20 @@ reservationsRouter.patch(
     }
 
     const zielStatus = status === "confirmed" ? "CONFIRMED" : "CANCELLED";
-    const updated = await prisma.reservation.update({
-      // where über die eindeutige id — die Zugehörigkeit ist oben bereits
-      // venue-gescoped geprüft.
-      where: { id },
+    // ANLASS: Der Besitz wurde oben per findFirst geprüft, das Update selbst
+    // lief aber über ein bloßes { id } - genau das Anti-Pattern, vor dem der
+    // Kommentar bei DELETE /:reservationId (unten) warnt. updateMany mit
+    // businessId in derselben WHERE-Klausel schließt die Lücke strukturell,
+    // nicht nur durch die vorgelagerte Prüfung.
+    const { count } = await prisma.reservation.updateMany({
+      where: { id, businessId: venueId },
       data: { status: zielStatus },
+    });
+    if (count === 0) {
+      return res.status(404).json({ error: "Reservierung nicht gefunden" });
+    }
+    const updated = await prisma.reservation.findFirstOrThrow({
+      where: { id, businessId: venueId },
     });
 
     // Gast informieren — nur beim ECHTEN Übergang aus PENDING, nicht bei
@@ -565,6 +578,9 @@ reservationsRouter.patch(
           existing.reservationTime,
           existing.guestCount,
           existing.business?.name ?? "dem Betrieb",
+          AKTIONS_SECRET
+            ? reservierungsAktionsToken(existing.id, "manage", AKTIONS_SECRET)
+            : undefined,
         );
       } else {
         await sendReservationDeclined(

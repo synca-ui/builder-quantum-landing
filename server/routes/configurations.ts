@@ -23,6 +23,14 @@ async function authorizeUserBusiness(
   businessId: string | undefined | null,
 ): Promise<boolean> {
   if (!businessId) return true;
+  // ANLASS: Ohne diese Prüfung reicht ein JSON-Body wie
+  // {"businessId":{"not":"x"}} - `!businessId` ist bei einem Objekt falsch
+  // (truthy), und das Objekt landet unverändert im Prisma-`where`. Dort matcht
+  // `{ not: "x" }` jede reale Mitgliedschaft des Aufrufers und lässt den
+  // Check fälschlich durch, obwohl kein echtes businessId geprüft wurde.
+  // Dieselbe Bugklasse ist in betriebskennung.ts und maitr/middleware.ts
+  // (resolveVenue) bereits mit genau dieser Guard geschlossen.
+  if (typeof businessId !== "string") return false;
 
   const membership = await prisma.businessMember.findFirst({
     where: { userId, businessId },
@@ -218,13 +226,29 @@ export async function saveConfiguration(req: Request, res: Response) {
         }
       }
 
-      // Update configuration
-      const updated = await prisma.configuration.update({
-        where: { id: configData.id },
+      // Update configuration. updateMany statt update: die Besitzprüfung
+      // steckt so in derselben WHERE-Klausel wie der Schreibzugriff, nicht
+      // nur im vorgelagerten findFirst oben (defense in depth - Prisma's
+      // update() akzeptiert userId ohnehin nicht als WhereUniqueInput, weil
+      // hier kein @@unique([id, userId]) existiert).
+      const { count } = await prisma.configuration.updateMany({
+        where: { id: configData.id, userId },
         data: {
           ...mapConfigToDatabase(configData, selectedTemplate),
           updatedAt: new Date(),
         },
+      });
+      if (count === 0) {
+        await audit(
+          "config_update_failed",
+          configData.id,
+          false,
+          "Configuration not found",
+        );
+        return res.status(404).json({ error: "Configuration not found" });
+      }
+      const updated = await prisma.configuration.findFirstOrThrow({
+        where: { id: configData.id, userId },
       });
 
       await audit("config_updated", updated.id, true);
@@ -377,8 +401,10 @@ export async function deleteConfiguration(req: Request, res: Response) {
       where: { configId: id },
     });
 
-    await prisma.configuration.delete({
-      where: { id },
+    // deleteMany statt delete: Besitz steckt in derselben WHERE-Klausel wie
+    // der Löschvorgang selbst, nicht nur im findFirst oben.
+    await prisma.configuration.deleteMany({
+      where: { id, userId },
     });
 
     await audit("config_deleted", id, true);
@@ -470,13 +496,18 @@ export async function publishConfiguration(req: Request, res: Response) {
       });
     }
 
-    const published = await prisma.configuration.update({
-      where: { id },
+    // updateMany statt update: Besitz steckt in derselben WHERE-Klausel wie
+    // der Schreibzugriff, nicht nur im findFirst oben.
+    await prisma.configuration.updateMany({
+      where: { id, userId },
       data: {
         status: "published",
         publishedUrl: `https://${subdomain}.maitr.de`,
         updatedAt: new Date(),
       },
+    });
+    const published = await prisma.configuration.findFirstOrThrow({
+      where: { id, userId },
     });
 
     const webApp = await prisma.webApp.upsert({
