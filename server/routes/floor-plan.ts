@@ -235,11 +235,28 @@ router.put("/plans/:id", requireAuth, async (req: Request, res: Response) => {
     const userId = req.userId;
     const planId = req.params.id;
 
+    // ANLASS: Diese Route hatte als einzige in der Datei keine
+    // Besitzprüfung - GET/POST /plans daneben prüfen beide über
+    // betriebskennung/geprueftesBetriebsrecht. Solange der Handler unten nur
+    // mockt, ist das folgenlos; sobald jemand die TODO umsetzt, ohne diesen
+    // Block zu übernehmen, wäre es ein betriebsübergreifender Schreibzugriff.
+    // Deshalb die Prüfung schon jetzt, auch ohne echten DB-Zugriff dahinter.
+    const rohKennung = betriebskennung(req);
+    if (!rohKennung) {
+      return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
+    }
+    const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+    if (!businessId) {
+      return res.status(403).json({ error: "Zugriff verweigert" });
+    }
+
     // Validate input
     const validated = floorPlanSchema.partial().parse(req.body);
 
     // For now, return mock success response
-    // TODO: Implement actual database update when schema is ready
+    // TODO: Implement actual database update when schema is ready - MUSS
+    // `where: { id: planId, businessId }` verwenden (die oben geprüfte
+    // Kennung), nicht nur `{ id: planId }`.
     const mockUpdated = {
       id: planId,
       ...validated,

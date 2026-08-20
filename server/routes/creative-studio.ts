@@ -11,6 +11,7 @@ import {
   betriebskennung,
   geprueftesBetriebsrecht,
 } from "../middleware/betriebskennung";
+import { istFremdePrefixUrl } from "../services/supabaseStorage";
 
 // Extend Request interface for TypeScript
 declare global {
@@ -336,6 +337,19 @@ router.post("/menu/items", requireAuth, async (req: Request, res: Response) => {
 
     // Validate input
     const validatedData = menuUpgradeSchema.parse(req.body);
+
+    // ANLASS: imageUrl akzeptierte jede beliebige URL, auch eine, die auf
+    // UNSEREN Storage-Bucket zeigt, aber unter dem Präfix eines fremden
+    // Nutzers liegt - die Speisekarte hätte dann vorgetäuscht, ein Bild aus
+    // dem eigenen Betrieb zu zeigen, das tatsächlich woanders hochgeladen
+    // wurde. Externe Adressen außerhalb unseres Buckets bleiben erlaubt.
+    for (const item of validatedData.items) {
+      if (item.imageUrl && istFremdePrefixUrl(item.imageUrl, req.userId!)) {
+        return res.status(400).json({
+          error: "imageUrl zeigt auf fremden Storage-Bereich",
+        });
+      }
+    }
 
     // Die Kategorie muss zu DIESEM Betrieb gehören, BEVOR irgendetwas
     // geschrieben wird. `MenuItem.categoryId` ist ein einspaltiger

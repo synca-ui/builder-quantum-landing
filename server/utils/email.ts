@@ -89,13 +89,21 @@ export async function sendReservationPending(
   reservationId: string,
   time: Date,
   guestCount: number,
-  businessName: string
+  businessName: string,
+  /**
+   * HMAC-Signatur über die Reservierungs-ID (siehe gastVerwaltungsToken in
+   * publicReservations.ts). Ohne Secret in der Umgebung bleibt der Parameter
+   * leer und der Link degradiert auf die bisherige, unsignierte Form.
+   */
+  manageToken?: string
 ) {
   if (!hasApiKey()) {
     console.warn("[Email] RESEND_API_KEY nicht gesetzt – E-Mail übersprungen.");
     return;
   }
-  const manageUrl = `${PUBLIC_URL}/r/${reservationId}`;
+  const manageUrl = manageToken
+    ? `${PUBLIC_URL}/r/${reservationId}?t=${manageToken}`
+    : `${PUBLIC_URL}/r/${reservationId}`;
   try {
     await resend.emails.send({
       from: FROM,
@@ -129,13 +137,16 @@ export async function sendReservationConfirmation(
   reservationId: string,
   time: Date,
   guestCount: number,
-  businessName: string
+  businessName: string,
+  manageToken?: string
 ) {
   if (!hasApiKey()) {
     console.warn("[Email] RESEND_API_KEY nicht gesetzt – E-Mail übersprungen.");
     return;
   }
-  const manageUrl = `${PUBLIC_URL}/r/${reservationId}`;
+  const manageUrl = manageToken
+    ? `${PUBLIC_URL}/r/${reservationId}?t=${manageToken}`
+    : `${PUBLIC_URL}/r/${reservationId}`;
   try {
     await resend.emails.send({
       from: FROM,

@@ -118,22 +118,34 @@ interface AvailabilityResponse {
 /**
  * Fragt den Server, ob eine Subdomain noch zu haben ist.
  *
- * Die eigene userId geht mit: Gehört die Adresse bereits dem angemeldeten
- * Nutzer, antwortet der Server mit available:true (reason "owned"). Ohne diese
- * Angabe würde erneutes Veröffentlichen derselben Seite fälschlich als
+ * Ein Bearer-Token geht mit: Gehört die Adresse bereits dem angemeldeten
+ * Nutzer, antwortet der Server mit available:true (reason "owned"). Ohne
+ * dieses Token würde erneutes Veröffentlichen derselben Seite fälschlich als
  * "vergeben" angezeigt — dabei aktualisiert der Publish-Endpunkt sie einfach.
+ *
+ * ANLASS für den Wechsel von userId auf ein Token: Hier ging bisher die
+ * Clerk-userId mit, der Server verglich sie aber gegen webApp.userId - die
+ * Prisma-Id (server/middleware/auth.ts). Beide sind unterschiedliche Werte,
+ * der Vergleich traf also nie zu - UND ein im Body behaupteter Wert liess
+ * sich beliebig fälschen (Mitgliedschafts-Orakel). Der Server prüft seit der
+ * IDOR-Härtung (server/routes/subdomains.ts, optionalAuth) nur noch die
+ * userId aus einem verifizierten Bearer-Token.
  */
 async function fetchAvailability(
   subdomain: string,
-  userId: string | null | undefined,
+  getToken: (() => Promise<string | null>) | undefined,
   signal: AbortSignal,
 ): Promise<AvailabilityState> {
   try {
+    const token = await getToken?.();
     const res = await fetch(SUBDOMAIN_VALIDATE_PATH, {
       method: "POST",
       signal,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subdomain, ...(userId ? { userId } : {}) }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ subdomain }),
     });
 
     // Der Endpunkt antwortet auch bei "nicht verfügbar" mit HTTP 200 und
@@ -503,7 +515,7 @@ export default function AutoConfigurator() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { toast } = useToast();
-  const { getToken, isSignedIn, userId } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** Beendet die laufende Abfrage-Schleife (Timer + offener Request). */
   const stopPollRef = useRef<(() => void) | null>(null);
@@ -615,14 +627,12 @@ export default function AutoConfigurator() {
   );
   // "Belegt" ist ein HINWEIS, kein Riegel.
   //
-  // Grund: Die Prüfung schickt die Clerk-userId mit, der Server vergleicht sie
-  // aber gegen webApp.userId — und das ist die Prisma-Id (middleware/auth.ts
-  // setzt req.user.id = prismaUser.id, User.clerkId ist ein separates Feld).
-  // Der "gehört dir bereits"-Zweig kann deshalb nie greifen: Die eigene, gerade
-  // erst veröffentlichte Adresse käme als "vergeben" zurück und der Nutzer
-  // stünde vor seiner eigenen Site und dürfte nicht weiter.
-  // Verbindlich entscheidet ohnehin der Publish-Endpunkt aus dem verifizierten
-  // Token; ein 409 fängt der Fehlerpfad sauber ab.
+  // fetchAvailability schickt seit der IDOR-Härtung ein verifiziertes
+  // Bearer-Token statt einer im Body behaupteten userId - der "gehört dir
+  // bereits"-Zweig greift also wieder. Trotzdem bewusst kein hartes Sperren:
+  // Verbindlich entscheidet ohnehin der Publish-Endpunkt aus demselben
+  // verifizierten Token; ein 409 fängt den seltenen Fall (Prüfung veraltet,
+  // Netzwerk-Hänger) im Fehlerpfad sauber ab.
   const canPublish =
     Boolean(publishPlan.config) &&
     subdomainCheck.valid &&
@@ -700,7 +710,7 @@ export default function AutoConfigurator() {
     availabilityAbortRef.current = controller;
 
     availabilityTimerRef.current = setTimeout(async () => {
-      const next = await fetchAvailability(subdomain, userId, controller.signal);
+      const next = await fetchAvailability(subdomain, getToken, controller.signal);
       if (controller.signal.aborted || !mountedRef.current) return;
       setAvailability(next);
     }, AVAILABILITY_DEBOUNCE_MS);
@@ -712,7 +722,7 @@ export default function AutoConfigurator() {
         availabilityTimerRef.current = null;
       }
     };
-  }, [subdomain, subdomainCheck.valid, userId]);
+  }, [subdomain, subdomainCheck.valid, getToken]);
 
   // ── Datei-Upload ─────────────────────────────────────────────────────────
   const handleFile = useCallback(

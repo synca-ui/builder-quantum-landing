@@ -1,10 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import type { AuthAdapter, AuthUser } from "@maitr/core";
 
 import { env } from "./env";
 
 const TOKEN_KEY = "maitr.auth.token";
 const USER_KEY = "maitr.auth.user";
+
+/**
+ * ANLASS: Der Demo-Fallback las/schrieb TOKEN_KEY bisher über AsyncStorage -
+ * unverschlüsselter Klartext-Speicher. Aktuell folgenlos, weil persistSession()
+ * (unten) im gesamten Baum nie aufgerufen wird (grep bestätigt das), aber eine
+ * Falle für den nächsten Umbau: würde der Demo-Login künftig echte
+ * Token-artige Werte über persistSession() ablegen, landeten sie unverschlüsselt
+ * auf dem Gerät, obwohl expo-secure-store bereits Abhängigkeit der App ist.
+ * USER_KEY bleibt bewusst in AsyncStorage - dort steht kein Geheimnis, nur ein
+ * Profil-Objekt.
+ */
 
 type ClerkExpo = typeof import("@clerk/clerk-expo");
 type ClerkTokenCache = typeof import("@clerk/clerk-expo/token-cache");
@@ -178,13 +190,13 @@ export const mobileAuthAdapter: AuthAdapter = {
         return null;
       }
     }
-    return AsyncStorage.getItem(TOKEN_KEY);
+    return SecureStore.getItemAsync(TOKEN_KEY);
   },
 
   async isSignedIn() {
     const instance = getClerkInstance();
     if (instance) return Boolean(instance.session);
-    return (await AsyncStorage.getItem(TOKEN_KEY)) !== null;
+    return (await SecureStore.getItemAsync(TOKEN_KEY)) !== null;
   },
 
   async getUser() {
@@ -209,7 +221,10 @@ export const mobileAuthAdapter: AuthAdapter = {
       return JSON.parse(raw) as AuthUser;
     } catch {
       // Beschädigter Eintrag: lieber abmelden als mit halbem State weiterlaufen.
-      await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+      await Promise.all([
+        SecureStore.deleteItemAsync(TOKEN_KEY),
+        AsyncStorage.removeItem(USER_KEY),
+      ]);
       return null;
     }
   },
@@ -225,14 +240,17 @@ export const mobileAuthAdapter: AuthAdapter = {
     }
     // Den lokalen Rest immer räumen - auch im Clerk-Betrieb, falls noch ein
     // Demo-Eintrag aus einer früheren Sitzung herumliegt.
-    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+    await Promise.all([
+      SecureStore.deleteItemAsync(TOKEN_KEY),
+      AsyncStorage.removeItem(USER_KEY),
+    ]);
   },
 };
 
 /** Nach erfolgreichem Login im Demomodus aufrufen. Im Clerk-Betrieb übernimmt Clerk. */
 export async function persistSession(token: string, user: AuthUser): Promise<void> {
-  await AsyncStorage.multiSet([
-    [TOKEN_KEY, token],
-    [USER_KEY, JSON.stringify(user)],
+  await Promise.all([
+    SecureStore.setItemAsync(TOKEN_KEY, token),
+    AsyncStorage.setItem(USER_KEY, JSON.stringify(user)),
   ]);
 }
