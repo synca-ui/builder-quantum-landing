@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { z } from "zod";
-import { sendReservationConfirmation } from "../utils/email";
+import { sendReservationConfirmation, sendReservationDeclined } from "../utils/email";
 
 const router = Router();
 
@@ -154,6 +154,21 @@ router.put("/:id/status", requireAuth, async (req: Request, res: Response) => {
         reservation.id,
         reservation.reservationTime,
         reservation.guestCount,
+        reservation.business.name
+      );
+    }
+
+    // Lehnt der BETREIBER eine offene Anfrage ab, erfährt der Gast das jetzt
+    // per Mail — vorher blieb die Anfrage aus Gastsicht für immer offen.
+    if (
+      status === "CANCELLED" &&
+      reservation.status === "PENDING" &&
+      reservation.guestEmail
+    ) {
+      await sendReservationDeclined(
+        reservation.guestEmail,
+        reservation.guestName,
+        reservation.reservationTime,
         reservation.business.name
       );
     }

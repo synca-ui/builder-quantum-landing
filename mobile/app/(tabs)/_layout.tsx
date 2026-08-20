@@ -6,6 +6,7 @@ import { Tabs } from "expo-router/js-tabs";
 
 import { MaitrTabBar } from "../../src/components/MaitrTabBar";
 import { useStore } from "../../src/lib/store";
+import { usePushRegistrierung } from "../../src/lib/pushRegistrierung";
 
 export const unstable_settings = {
   initialRouteName: "start",
@@ -34,6 +35,9 @@ export const unstable_settings = {
 export default function TabsLayout() {
   const router = useRouter();
   const { signedIn } = useStore();
+
+  // Push-Registrierung + Tap-Navigation (neue Reservierungsanfragen).
+  usePushRegistrierung();
 
   // Gegenstück zum reaktiven Redirect in app/login.tsx: Verliert die Sitzung zur
   // Laufzeit ihre Gültigkeit — abgelaufen, im Clerk-Dashboard beendet, auf einem

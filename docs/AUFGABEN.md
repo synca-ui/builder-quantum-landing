@@ -140,6 +140,70 @@ Machbarkeit ist noch nicht geprüft — das passiert vor dem Bauen, nicht danach
   Deep-Link-Test auf `/stempelkarte/<id>` und `/kanal/<id>` bestätigt oder
   widerlegt es in fünf Minuten
 
+### C10 — Fremde Bildmarken in der App. **erledigt 14.8.**
+
+- **C10.1** ~~Das „Google"-Icon war das Microsoft-Logo~~ `GoogleMark` zeichnete
+  vier Quadrate im 2×2-Raster — Microsofts Bildmarke — nur eingefärbt mit
+  Googles Farben (#EA4335/#4285F4/#FBBC05/#34A853). Es saß am Knopf „Weiter mit
+  Google" und an zwei Stellen des Onboardings. Ersetzt durch das echte
+  vierfarbige G. **Das war nicht kosmetisch:** Google gibt die Gestaltung dieses
+  Knopfes verbindlich vor, und die Einhaltung wird bei der OAuth-Verifizierung
+  geprüft — also bei genau dem Antrag, der ohnehin auf dem kritischen Pfad liegt
+
+- **C10.2** ~~Das App-Icon ist nicht von Maitr~~ **behoben 14.8.** — der Befund
+  war beim ersten Hinsehen zu breit formuliert und stimmt so nicht. Genauer:
+
+  | Ort | vorher | jetzt |
+  |---|---|---|
+  | `mobile/ios/.../AppIcon.appiconset/` | **war korrekt** (Nacht-Logo, seit 28.7.) | unverändert |
+  | `mobile/android/.../mipmap-*/` (5 Dichten × 5 Dateien) | Expo-Winkel **mit Konstruktionshilfslinien** | Nacht-Logo |
+  | `mobile/assets/*` | Expo-Winkel | Nacht-Logo |
+  | `values/colors.xml` → `iconBackground` | `#EAF1EE` (hell) | `#121820` |
+  | `app.json` → `adaptiveIcon.backgroundColor` | `#EAF1EE` | `#121820` |
+
+  **Warum es niemandem auffiel:** `expo-doctor` prüft Maße und Alphakanal, nie
+  den Inhalt — 1024×1024 ohne Alpha war erfüllt, also grün. Und weil native
+  Ordner im Repo liegen, **synchronisiert EAS Build `icon` aus `app.json`
+  überhaupt nicht** (expo-doctor sagt das wörtlich). Der iOS-Bau nahm deshalb den
+  guten nativen Katalog, der Android-Bau den schlechten.
+
+  **Die eigentliche Gefahr lag in der Zukunft:** Ein `expo prebuild` hätte das
+  gute iOS-Icon aus `mobile/assets/icon.png` überschrieben — also durch den
+  Expo-Winkel ersetzt. Seit alle drei Orte dasselbe Bild tragen, ist das weg.
+
+  Gewählt ist **Nacht** (`#121820`, weiße Welle, Punkt `#6FBFAE`). Quellen und
+  Rechenregeln: [docs/store/logo/README.md](store/logo/README.md)
+
+- **`[?]` Offen:** Die drei Maitr-Identitäten sind damit für die App vereinheitlicht,
+  für die **Website** aber nicht: `public/icon-512.png` zeigt weiterhin ein weißes
+  **M** auf einem Verlauf Teal → Violett. B2 nennt das ohnehin veraltet — dort
+  gehört dasselbe Zeichen hin
+
+### C9 — Befunde aus der App-Prüfung im Simulator (14.8.). **erledigt bis auf Layout**
+Die App wurde erstmals wirklich gestartet und bedient, nicht nur gelesen.
+Der Bau ist sauber (`Build Succeeded`, 0 Fehler), und der Fehlerweg trägt: Mit
+„Trattoria Vesuvio" gegen die **echte** Produktions-API getippt → 401 → rotes
+Feld und „Nicht angemeldet. Bitte neu anmelden.", Name bleibt stehen.
+
+- **C9.1** ~~Toter Knopf im Login~~ Unter dem E-Mail-Feld stand ein farbiger
+  Primärknopf „Weiter", der niemanden anmeldete — der E-Mail-Weg war nie gebaut.
+  Feld und Knopf sind **entfernt**; bei Google und Apple ist die erste Anmeldung
+  ohnehin die Registrierung
+- **C9.2** ~~Rat ohne Weg~~ „Bitte neu anmelden" wurde angezeigt, ohne dass der
+  Bildschirm eine Anmeldung anbot. Jetzt erscheint „Zur Anmeldung" — aber
+  **nicht** bei `nur_inhaber`: dort käme dieselbe Aushilfe wieder an, der Knopf
+  wäre eine Irreführung (`brauchtNeueAnmeldung`, 8 Tests)
+- **C9.3** ~~Unlesbare Fußzeilen~~ Sie lagen auf dem animierten Verlauf statt auf
+  einer Karte; der Vorgabeton ist für weiße Flächen abgewogen. Auf `deep` jetzt
+  dunkler — die Zeile in der Einleitung ist ganz **entfallen**, sie wiederholte
+  nur die Liste darüber
+- **C9.4** ~~„drei kurze Schritte" neben „1 / 4"~~ Die Einleitung ist keine
+  Aufgabe und trägt keine Fortschrittsleiste mehr. Drei Schritte, drei Punkte
+- **`[?]` Offen:** Schritt 2 ist zu drei Vierteln leer, und der Login wirkt seit
+  dem Entfernen des E-Mail-Feldes kopflastig. Für Store-Screenshots (E6) zu dünn
+- **`[?]` Offen:** Ein Test schlug einmal fehl und lief beim Wiederholen grün
+  durch; welcher, ließ sich nicht mehr feststellen. Flatterhaft, nicht geklärt
+
 ### C4 — Zweck schärfen
 - **C4.1** Übernimmt die App wirklich alle Aufgaben des Google Business Profiles
   und von Instagram? Lücken benennen

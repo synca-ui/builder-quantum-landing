@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { uploadImageFile } from "@/lib/mediaUpload";
+import { useAuth } from "@clerk/clerk-react";
 import { useState, useEffect } from "react"; // ✅ useState, useEffect für Debounce
 import { useDebounce } from "@/hooks/useDebounce"; // ✅ Debounce Hook
 import {
@@ -84,6 +86,7 @@ export function SEOOptimizationStep({
   prevStep,
   getDisplayedDomain,
 }: SEOOptimizationStepProps) {
+  const { getToken } = useAuth();
   const { t } = useTranslation();
   const business = useConfiguratorStore((s) => s.business);
   const publishing = useConfiguratorStore((s) => s.publishing);
@@ -125,7 +128,7 @@ export function SEOOptimizationStep({
               </label>
               {/* ✅ Debounced Input statt direkter Input */}
               <DebouncedSEOInput
-                placeholder={`${business.name} - ${business.slogan || "Best Local Business"}`}
+                placeholder={`${business.name} - ${business.slogan || "Dein Lokal vor Ort"}`}
                 value={metaTitle}
                 onChange={(value) =>
                   actions.publishing.updatePublishingInfo({
@@ -234,16 +237,25 @@ export function SEOOptimizationStep({
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          actions.publishing.updatePublishingInfo({
-                            socialMediaImage: file,
-                          } as any);
+                          // Dauerhafte URL statt File-Objekt: ein File
+                          // serialisiert beim Veröffentlichen zu {} — das
+                          // Social-Bild kam nie auf der Live-Seite an.
+                          void (async () => {
+                            const url = await uploadImageFile(
+                              file,
+                              await getToken(),
+                            );
+                            actions.publishing.updatePublishingInfo({
+                              socialMediaImage: url,
+                            } as any);
+                          })();
                         }
                       }}
                     />
                   </div>
                   <p className="text-xs text-gray-500">
-                    Image that appears when your web-app is shared on social
-                    media
+                    Bild, das erscheint, wenn deine Web-App in sozialen Medien
+                    geteilt wird
                   </p>
                 </div>
               )}
@@ -258,7 +270,7 @@ export function SEOOptimizationStep({
           </h3>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Google Analytics ID (Optional)
+              Google-Analytics-ID (optional)
             </label>
             <Input
               type="text"
@@ -272,7 +284,7 @@ export function SEOOptimizationStep({
               className="w-full"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Add your Google Analytics tracking ID to monitor website traffic
+              Hinterlege deine Google-Analytics-ID, um die Besucherzahlen deiner Website zu verfolgen
             </p>
           </div>
         </Card>
@@ -280,7 +292,7 @@ export function SEOOptimizationStep({
         <Card className="p-6 bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <Crown className="w-5 h-5 mr-2 text-orange-600" />
-            Premium SEO Optimization
+            Premium-SEO-Optimierung
           </h3>
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
@@ -300,19 +312,19 @@ export function SEOOptimizationStep({
                   htmlFor="seo-api"
                   className="text-sm font-bold text-gray-900 cursor-pointer"
                 >
-                  Enable AI-Powered SEO Optimization
+                  KI-gestützte SEO-Optimierung aktivieren
                 </label>
                 <p className="text-sm text-gray-700 mt-1">
-                  Our AI will automatically optimize your content, generate
-                  additional meta tags, create structured data, and monitor your
-                  search rankings.
+                  Unsere KI optimiert deine Inhalte automatisch, erzeugt zusätzliche
+                  Meta-Tags und strukturierte Daten und beobachtet deine
+                  Platzierung in der Suche.
                 </p>
                 <div className="mt-3">
                   <span className="text-lg font-bold text-orange-600">
-                    ${seoApiCost}/month
+                    {seoApiCost} €/Monat
                   </span>
                   <span className="text-sm text-gray-600 ml-2">
-                    (billed annually)
+                    (jährliche Abrechnung)
                   </span>
                 </div>
               </div>
@@ -353,12 +365,12 @@ export function SEOOptimizationStep({
             <div className="space-y-1">
               <h4 className="text-blue-600 text-lg hover:underline cursor-pointer">
                 {metaTitle ||
-                  `${business.name} - ${business.slogan || "Best Local Business"}`}
+                  `${business.name} - ${business.slogan || "Dein Lokal vor Ort"}`}
               </h4>
               <p className="text-green-700 text-sm">{displayDomain}</p>
               <p className="text-gray-700 text-sm">
                 {metaDescription ||
-                  `Discover ${business.name} ${business.location ? `in ${business.location}` : ""}. ${business.uniqueDescription || "Quality service and great experience await you."}`}
+                  `Entdecke ${business.name}${business.location ? ` in ${business.location}` : ""}. ${business.uniqueDescription || "Qualität und ein besonderes Erlebnis erwarten dich."}`}
               </p>
             </div>
           </div>

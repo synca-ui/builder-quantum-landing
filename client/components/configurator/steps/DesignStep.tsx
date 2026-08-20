@@ -48,11 +48,13 @@ const FONT_OPTIONS = [
     // (server/schemas/configuration.ts) laesst nur sans-serif|serif|monospace
     // zu. Mit "mono" scheiterte jedes manuelle Speichern an HTTP 400 — still,
     // weil der Fehler nur geloggt wurde.
+    // Beschriftung ehrlich halten: Das IST eine Monospace-Schrift. Als
+    // "Display / Bold & Kreativ" verkauft, bekam man eine Schreibmaschine.
     id: "monospace",
-    name: "Display",
+    name: "Monospace",
     class: "font-mono",
-    preview: "Bold & Kreativ",
-    description: "Auffällig und einzigartig",
+    preview: "Technisch & Klar",
+    description: "Markant wie gedruckt — für Bars und Konzepte mit Kante",
   },
 ];
 
@@ -105,9 +107,64 @@ const COLOR_PRESETS = [
   { primary: "#7C2D12", secondary: "#EA580C", bg: "#FFEDD5", name: "Autumn" },
   { primary: "#1F2937", secondary: "#374151", bg: "#F3F4F6", name: "Elegant" },
   { primary: "#BE185D", secondary: "#EC4899", bg: "#FDF2F8", name: "Berry" },
-  { primary: "#6366F1", secondary: "#8B5CF6", bg: "#EEF2FF", name: "Purple" },
+  // Kräftiger ins Violett gerückt — das alte #6366F1/#8B5CF6 lag optisch so
+  // dicht an "Ocean", dass zwei der acht Kacheln wie Duplikate wirkten.
+  { primary: "#7C3AED", secondary: "#C084FC", bg: "#F5F3FF", name: "Purple" },
   { primary: "#0891B2", secondary: "#06B6D4", bg: "#ECFEFF", name: "Sky" },
 ];
+
+/**
+ * Relative Luminanz + Kontrastverhältnis nach WCAG. Genutzt, um bei den
+ * frei wählbaren Farben vor unlesbaren Kombinationen zu warnen — bisher
+ * ließ sich z. B. schwarze Header-Schrift auf dunkelgrauem Header einstellen,
+ * ohne dass irgendetwas Alarm schlug.
+ */
+function relativeLuminance(hex: string): number {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return 1;
+  const [r, g, b] = [m[1], m[2], m[3]].map((c) => {
+    const v = parseInt(c, 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(hexA?: string, hexB?: string): number {
+  if (!hexA || !hexB) return 21;
+  const la = relativeLuminance(hexA);
+  const lb = relativeLuminance(hexB);
+  const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** Liesbare Textfarbe (schwarz/weiß) zu einer gegebenen Hintergrundfarbe. */
+function readableTextOn(hex: string): string {
+  return contrastRatio(hex, "#FFFFFF") >= contrastRatio(hex, "#000000")
+    ? "#FFFFFF"
+    : "#000000";
+}
+
+const ContrastWarning = ({
+  fg,
+  bg,
+  label,
+}: {
+  fg?: string;
+  bg?: string;
+  label: string;
+}) => {
+  const ratio = contrastRatio(fg, bg);
+  if (ratio >= 4.5) return null;
+  return (
+    <div className="mt-3 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+      <span aria-hidden>⚠️</span>
+      <span>
+        {label} (Kontrast {ratio.toFixed(1)}:1 — empfohlen sind mindestens
+        4,5:1).
+      </span>
+    </div>
+  );
+};
 
 // --- COMPONENTS ---
 const ColorInfoIcon = ({ tooltipKey }: { tooltipKey: string }) => (
@@ -227,7 +284,8 @@ interface DesignStepProps {
 export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
   const { t } = useTranslation();
   const design = useConfiguratorDesign();
-  const { design: designActions } = useConfiguratorActions();
+  const { design: designActions, features: featureActions } =
+    useConfiguratorActions();
 
   // Helper für Felder, die ggf. nicht im Basis-Typ sind
   const updateAny = (key: string, val: string) => {
@@ -244,9 +302,17 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
         primaryColor: preset.primary,
         secondaryColor: preset.secondary,
         backgroundColor: preset.bg,
-      });
+        // Auch Preis- und Buttonfarbe folgen dem Thema. Vorher blieben
+        // grüne Preise und ein blauer Reservieren-Button stehen — bei
+        // "Sunset" saß Grün auf Gold und Blau auf Rot.
+        priceColor: preset.primary,
+      } as any);
+      featureActions.updateFeatureFlags({
+        reservationButtonColor: preset.primary,
+        reservationButtonTextColor: readableTextOn(preset.primary),
+      } as any);
     },
-    [designActions],
+    [designActions, featureActions],
   );
 
   // Check Helper
@@ -363,6 +429,12 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
                 tooltipKey="font"
               />
             </div>
+
+            <ContrastWarning
+              fg={design.fontColor || "#000000"}
+              bg={design.backgroundColor || "#FFFFFF"}
+              label="Textfarbe und Hintergrundfarbe liegen zu dicht beieinander — der Inhalt wird schwer lesbar"
+            />
           </div>
 
           {/* --- HEADER/NAVIGATION CUSTOMIZATION --- */}
@@ -387,6 +459,12 @@ export function DesignStep({ nextStep, prevStep }: DesignStepProps) {
                 tooltipKey="headerBackground"
               />
             </div>
+
+            <ContrastWarning
+              fg={(design as any).headerFontColor || "#000000"}
+              bg={(design as any).headerBackgroundColor || "#FFFFFF"}
+              label="Header-Schrift und Header-Hintergrund liegen zu dicht beieinander — der Name deines Geschäfts wird unlesbar"
+            />
 
             {/* Header Font Size - Granular pixel options */}
             <div className="mt-6">

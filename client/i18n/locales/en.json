@@ -121,7 +121,13 @@
     "cozyDesc": "Warm, friendly aesthetic with rounded elements and authentic photography.",
     "selected": "Selected: {{name}}",
     "selectedLabel": "Selected",
-    "useThis": "Use This Template"
+    "useThis": "Use This Template",
+    "nocturne": "Midnight",
+    "nocturneDesc": "Dark and refined — for bars, wine bars and evening dining.",
+    "verde": "Verde",
+    "verdeDesc": "Fresh and botanical — for cafés, brunch and green cuisine.",
+    "riviera": "Riviera",
+    "rivieraDesc": "Mediterranean and light — for coastal cuisine, seafood and summer terraces."
   },
   "business": {
     "name": "Business Name",
@@ -372,7 +378,12 @@
     "socialSharing": "Social Media Sharing",
     "socialImage": "Social Media Image",
     "analytics": "Analytics & Tracking",
-    "searchPreview": "Search Result Preview"
+    "searchPreview": "Search Result Preview",
+    "metaTitleHint": "Shown as the headline in Google results",
+    "metaDescriptionPlaceholder": "Describe your business in one or two sentences …",
+    "metaDescriptionHint": "Shown as the description text in Google results",
+    "keywordsPlaceholder": "e.g. restaurant Munich, Italian cuisine, pizza",
+    "keywordsHint": "Terms your guests search for — separated by commas"
   },
   "footer": {
     "poweredBy": "Powered by Maitr",

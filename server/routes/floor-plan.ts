@@ -8,6 +8,7 @@ import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { z } from "zod";
 import QRCode from "qrcode"; // Use the Node.js qrcode library, not React component
+import { betriebskennung, geprueftesBetriebsrecht } from "../middleware/betriebskennung";
 
 // Extend Request interface for TypeScript
 declare global {
@@ -119,26 +120,17 @@ function checkTableOverlap(
 router.get("/plans", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    const businessId = req.query.businessId as string;
 
-    if (!businessId) {
-      return res.status(400).json({ error: "businessId is required" });
+    const rohKennung = betriebskennung(req);
+    if (!rohKennung) {
+      return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
     }
 
-    // Verify user owns this business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: {
-          some: {
-            userId,
-          },
-        },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: "Access denied" });
+    // Mitgliedschaft prüfen - ab hier ausschließlich die geprüfte Kennung
+    // benutzen, nie wieder den Rohwert aus der Anfrage.
+    const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+    if (!businessId) {
+      return res.status(403).json({ error: "Zugriff verweigert" });
     }
 
     // Get floor plans with table counts
@@ -184,26 +176,15 @@ router.get("/plans", requireAuth, async (req: Request, res: Response) => {
 router.post("/plans", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    const businessId = req.body.businessId as string;
 
-    if (!businessId) {
-      return res.status(400).json({ error: "businessId is required" });
+    const rohKennung = betriebskennung(req);
+    if (!rohKennung) {
+      return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
     }
 
-    // Verify user owns this business
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: {
-          some: {
-            userId,
-          },
-        },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: "Access denied" });
+    const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+    if (!businessId) {
+      return res.status(403).json({ error: "Zugriff verweigert" });
     }
 
     // Validate input

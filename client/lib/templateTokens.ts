@@ -39,12 +39,13 @@ export interface TemplateTokens {
 const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
   stylish: {
     colors: {
-      primary: "#d4a574",
-      secondary: "#2c2c2c",
-      background: "#fefdfb",
-      text: "#2c2c2c",
-      accent: "#f4e4d7",
-      border: "#e8dcc8",
+      // Boutique-Look: elegantes Gold auf warmem Creme, Charcoal als Kontrast.
+      primary: "#B08D57",
+      secondary: "#2C2620",
+      background: "#FBF7F0",
+      text: "#262019",
+      accent: "#F4E4D7",
+      border: "#E8DCC8",
     },
     spacing: {
       xs: "5px",
@@ -62,12 +63,13 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
 
   minimalist: {
     colors: {
-      primary: "#000000",
-      secondary: "#ffffff",
-      background: "#fafafa",
-      text: "#1a1a1a",
-      accent: "#e8e8e8",
-      border: "#d4d4d4",
+      // Editorial-Look: monochrom, viel Weißraum, keine Buntfarbe.
+      primary: "#171717",
+      secondary: "#525252",
+      background: "#FAFAFA",
+      text: "#171717",
+      accent: "#E8E8E8",
+      border: "#D4D4D4",
     },
     spacing: {
       xs: "4px",
@@ -85,12 +87,15 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
 
   modern: {
     colors: {
-      primary: "#0066ff",
-      secondary: "#000000",
-      background: "#ffffff",
-      text: "#1a1a1a",
-      accent: "#ff0066",
-      border: "#e0e0e0",
+      // Entspricht bewusst den globalen Design-Defaults (Indigo/Violett):
+      // "modern" ist das Start-Template — wer es wählt, sieht exakt das,
+      // was der Konfigurator ohnehin als Ausgangszustand zeigt.
+      primary: "#4F46E5",
+      secondary: "#7C3AED",
+      background: "#FFFFFF",
+      text: "#000000",
+      accent: "#EEF2FF",
+      border: "#E0E0E0",
     },
     spacing: {
       xs: "6px",
@@ -106,14 +111,96 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
     },
   },
 
+  /**
+   * "Mitternacht": dunkel und edel — Bars, Weinbars, Abendküche.
+   * Tiefes Nachtblau mit Messing-Akzent; hoher Kontrast, ruhige Flächen.
+   */
+  nocturne: {
+    colors: {
+      primary: "#C89B3C",
+      secondary: "#1B2733",
+      background: "#10151B",
+      text: "#F2EDE3",
+      accent: "#2A3644",
+      border: "#2E3947",
+    },
+    spacing: {
+      xs: "4px",
+      sm: "8px",
+      md: "16px",
+      lg: "32px",
+      xl: "64px",
+    },
+    typography: {
+      h1: { size: "46px", weight: 700, lineHeight: "1.15" },
+      h2: { size: "34px", weight: 600, lineHeight: "1.25" },
+      body: { size: "16px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
+  /**
+   * "Verde": frisch und botanisch — Cafés, Brunch, grüne Küche.
+   * Tiefes Blattgrün auf warmem Papierton, Serifen für den ruhigen Auftritt.
+   */
+  verde: {
+    colors: {
+      primary: "#2F5E43",
+      secondary: "#9DBD9C",
+      background: "#F7F5EC",
+      text: "#22301F",
+      accent: "#E4EAD9",
+      border: "#D9E0CD",
+    },
+    spacing: {
+      xs: "4px",
+      sm: "8px",
+      md: "16px",
+      lg: "32px",
+      xl: "64px",
+    },
+    typography: {
+      h1: { size: "46px", weight: 600, lineHeight: "1.2" },
+      h2: { size: "34px", weight: 500, lineHeight: "1.3" },
+      body: { size: "16px", weight: 400, lineHeight: "1.65" },
+    },
+  },
+
+  /**
+   * "Riviera": mediterran und leicht — Küstenküche, Fisch, Sommerterrassen.
+   * Tiefes Adriablau auf sandigem Papierton, Azur als Lichtakzent.
+   */
+  riviera: {
+    colors: {
+      primary: "#1E5A7E",
+      secondary: "#7FB6D9",
+      background: "#F9F6EF",
+      text: "#1F2E3D",
+      accent: "#E7F0F6",
+      border: "#D8E3EA",
+    },
+    spacing: {
+      xs: "4px",
+      sm: "8px",
+      md: "16px",
+      lg: "32px",
+      xl: "64px",
+    },
+    typography: {
+      h1: { size: "46px", weight: 600, lineHeight: "1.2" },
+      h2: { size: "34px", weight: 500, lineHeight: "1.3" },
+      body: { size: "16px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
   cozy: {
     colors: {
-      primary: "#8b6f47",
-      secondary: "#ffffff",
-      background: "#fdf9f3",
-      text: "#3d3d3d",
-      accent: "#d9c89e",
-      border: "#e2d5c3",
+      // Warm & freundlich: Terrakotta mit Aprikose auf cremigem Grund.
+      primary: "#B4633A",
+      secondary: "#E8A66B",
+      background: "#FDF4E7",
+      text: "#4A3628",
+      accent: "#D9C89E",
+      border: "#E2D5C3",
     },
     spacing: {
       xs: "4px",
@@ -138,6 +225,9 @@ const TEMPLATE_INTENT_MAP: Record<string, TemplateIntent> = {
   minimalist: "NARRATIVE", // intent: "NARRATIVE" in CSV
   cozy: "NARRATIVE", // intent: "NARRATIVE" in CSV
   modern: "COMMERCIAL", // intent: "COMMERCIAL" in CSV
+  nocturne: "VISUAL",
+  riviera: "VISUAL",
+  verde: "NARRATIVE",
 };
 
 /**
@@ -152,6 +242,53 @@ export function getTemplateTokens(templateId: string): TemplateTokens {
  */
 export function getTemplateIntent(templateId: string): TemplateIntent {
   return TEMPLATE_INTENT_MAP[templateId] || "NARRATIVE";
+}
+
+/**
+ * Design-Defaults, die ein Template beim Auswählen in den Design-Store
+ * schreibt. Vorher setzte updateTemplate nur design.template — die hier
+ * hinterlegten Paletten wurden nie angewandt, und alle vier Templates
+ * starteten mit denselben Standardfarben (in der Vorschau wie auf der
+ * veröffentlichten Seite, beide lesen den Design-Store).
+ *
+ * priceColor folgt der Primärfarbe — außer bei "modern", das bewusst dem
+ * bekannten Ausgangszustand des Konfigurators entspricht (grüne Preise).
+ */
+const TEMPLATE_FONT_FAMILY: Record<string, string> = {
+  minimalist: "sans-serif",
+  modern: "sans-serif",
+  stylish: "serif",
+  cozy: "serif",
+  nocturne: "sans-serif",
+  riviera: "serif",
+  verde: "serif",
+};
+
+export interface TemplateDesignDefaults {
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  fontColor: string;
+  priceColor: string;
+  headerFontColor: string;
+  headerBackgroundColor: string;
+  fontFamily: string;
+}
+
+export function getTemplateDesignDefaults(
+  templateId: string,
+): TemplateDesignDefaults {
+  const { colors } = getTemplateTokens(templateId);
+  return {
+    primaryColor: colors.primary,
+    secondaryColor: colors.secondary,
+    backgroundColor: colors.background,
+    fontColor: colors.text,
+    priceColor: templateId === "modern" ? "#059669" : colors.primary,
+    headerFontColor: colors.text,
+    headerBackgroundColor: colors.background,
+    fontFamily: TEMPLATE_FONT_FAMILY[templateId] || "sans-serif",
+  };
 }
 
 /**

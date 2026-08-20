@@ -366,11 +366,25 @@ export const LOYALTY_PFADE = {
   karten: "/loyalty/cards",
   karte: (cardId: string) => `/loyalty/cards/${teil(cardId)}`,
   ereignisse: (cardId: string) => `/loyalty/cards/${teil(cardId)}/events`,
+  gastLink: (cardId: string) => `/loyalty/cards/${teil(cardId)}/gast-link`,
   stempeln: (cardId: string) => `/loyalty/cards/${teil(cardId)}/stamps`,
   einloesen: (cardId: string) => `/loyalty/cards/${teil(cardId)}/redeem`,
   entwerten: (cardId: string) => `/loyalty/cards/${teil(cardId)}/void`,
   gastAnonymisieren: (guestId: string) => `/loyalty/guests/${teil(guestId)}/anonymize`,
 } as const;
+
+/**
+ * Push-Registrierung der Betreiber-App. Das Token gehört dem Konto, nicht
+ * einem Betrieb — deshalb ohne venueId. Registrieren ist idempotent (Upsert).
+ */
+export const push = {
+  register(input: { token: string; platform?: "ios" | "android" }) {
+    return request<void>("/push/register", { method: "POST", body: input });
+  },
+  unregister(input: { token: string }) {
+    return request<void>("/push/unregister", { method: "POST", body: input });
+  },
+};
 
 export const loyalty = {
   /** Programm, Wallet-Zustand und die eigene Rolle. `program: null` = noch nichts eingerichtet. */
@@ -457,6 +471,16 @@ export const loyalty = {
 
   card(venueId: string, cardId: string, signal?: AbortSignal) {
     return request<StampCardDetail>(LOYALTY_PFADE.karte(cardId), { query: { venueId }, signal });
+  },
+
+  /**
+   * Teilbarer Gast-Link der Karte (signierte URL für QR/Teilen-Dialog).
+   * 503, wenn der Server kein Link-Secret konfiguriert hat.
+   */
+  guestLink(venueId: string, cardId: string) {
+    return request<{ url: string }>(LOYALTY_PFADE.gastLink(cardId), {
+      query: { venueId },
+    });
   },
 
   events(venueId: string, cardId: string, limit?: number, signal?: AbortSignal) {

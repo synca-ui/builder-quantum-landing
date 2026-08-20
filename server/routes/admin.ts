@@ -7,6 +7,7 @@ import { Router, Request, Response } from "express";
 import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { z } from "zod";
+import { betriebskennung, geprueftesBetriebsrecht } from "../middleware/betriebskennung";
 
 
 const router = Router();
@@ -34,26 +35,21 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const userId = req.userId;
-      const businessId = req.query.businessId as string;
       const status = req.query.status as string;
       const date = req.query.date as string;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      if (!businessId) {
-        return res.status(400).json({ error: "businessId is required" });
+      const rohKennung = betriebskennung(req);
+      if (!rohKennung) {
+        return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
       }
 
-      // Verify business ownership
-      const business = await prisma.business.findFirst({
-        where: {
-          id: businessId,
-          members: { some: { userId } },
-        },
-      });
-
-      if (!business) {
-        return res.status(403).json({ error: "Access denied" });
+      // Mitgliedschaft prüfen - ab hier ausschließlich die geprüfte Kennung
+      // benutzen, nie wieder den Rohwert aus der Anfrage.
+      const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+      if (!businessId) {
+        return res.status(403).json({ error: "Zugriff verweigert" });
       }
 
       // Build filter conditions
@@ -140,22 +136,24 @@ router.put(
     try {
       const userId = req.userId;
       const reservationId = req.params.id;
-      const businessId = req.body.businessId;
 
-      if (!businessId) {
-        return res.status(400).json({ error: "businessId is required" });
+      const rohKennung = betriebskennung(req);
+      if (!rohKennung) {
+        return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
       }
 
-      // Verify business ownership
-      const business = await prisma.business.findFirst({
-        where: {
-          id: businessId,
-          members: { some: { userId } },
-        },
-      });
-
-      if (!business) {
-        return res.status(403).json({ error: "Access denied" });
+      // Mitgliedschaft prüfen, BEVOR irgendein Zugriff auf die Reservierung
+      // stattfindet. Hier lag die schwerste gemessene Lücke: `businessId` wurde
+      // roh aus dem Rumpf gelesen, VOR dem Zod-Parsen unten, das `status` und
+      // `notes` prüft, `businessId` aber unangetastet durchlässt. Mit
+      // `{"businessId":{"not":"zzz"}}` bestand die Besitzprüfung (fand den
+      // eigenen Betrieb des Angreifers) und dasselbe Objekt ging als freier
+      // Filter in `update({ where: { id, businessId } })` - Prisma ließ das zu,
+      // und die Reservierung eines fremden Kunden wurde storniert. Der Riegel
+      // steht jetzt VOR jedem Zugriff, nicht daneben.
+      const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+      if (!businessId) {
+        return res.status(403).json({ error: "Zugriff verweigert" });
       }
 
       // Validate input
@@ -200,18 +198,21 @@ router.put(
 router.get("/seo", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    const businessId = req.query.businessId as string;
 
-    if (!businessId) {
-      return res.status(400).json({ error: "businessId is required" });
+    const rohKennung = betriebskennung(req);
+    if (!rohKennung) {
+      return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
     }
 
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
+    const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+    if (!businessId) {
+      return res.status(403).json({ error: "Zugriff verweigert" });
+    }
+
+    // Zusatzfelder für die Checkliste erst jetzt holen, mit der bereits
+    // bestätigten Kennung - kein zweiter Weg mehr zur Anfrage zurück.
+    const business = await prisma.business.findUnique({
+      where: { id: businessId },
       include: {
         configurations: {
           take: 1,
@@ -221,7 +222,7 @@ router.get("/seo", requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!business) {
-      return res.status(403).json({ error: "Access denied" });
+      return res.status(403).json({ error: "Zugriff verweigert" });
     }
 
     const config = business.configurations?.[0] || null;
@@ -331,22 +332,26 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const userId = req.userId;
-      const businessId = req.query.businessId as string;
 
-      if (!businessId) {
-        return res.status(400).json({ error: "businessId is required" });
+      const rohKennung = betriebskennung(req);
+      if (!rohKennung) {
+        return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
       }
 
-      // Verify business ownership
-      const business = await prisma.business.findFirst({
-        where: {
-          id: businessId,
-          members: { some: { userId } },
-        },
+      const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+      if (!businessId) {
+        return res.status(403).json({ error: "Zugriff verweigert" });
+      }
+
+      // `business` erst jetzt mit der geprüften Kennung holen - die
+      // Kennzahlen unten (Name, Status, maitrScore) brauchen den vollen
+      // Datensatz, den `geprueftesBetriebsrecht` bewusst nicht mitliefert.
+      const business = await prisma.business.findUnique({
+        where: { id: businessId },
       });
 
       if (!business) {
-        return res.status(403).json({ error: "Access denied" });
+        return res.status(403).json({ error: "Zugriff verweigert" });
       }
 
       // Get latest analytics
@@ -421,22 +426,15 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const userId = req.userId;
-      const businessId = req.query.businessId as string;
 
-      if (!businessId) {
-        return res.status(400).json({ error: "businessId is required" });
+      const rohKennung = betriebskennung(req);
+      if (!rohKennung) {
+        return res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
       }
 
-      // Verify business ownership
-      const business = await prisma.business.findFirst({
-        where: {
-          id: businessId,
-          members: { some: { userId } },
-        },
-      });
-
-      if (!business) {
-        return res.status(403).json({ error: "Access denied" });
+      const businessId = await geprueftesBetriebsrecht(prisma, userId, rohKennung);
+      if (!businessId) {
+        return res.status(403).json({ error: "Zugriff verweigert" });
       }
 
       // Check various system components

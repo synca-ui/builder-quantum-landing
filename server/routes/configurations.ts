@@ -579,9 +579,24 @@ export async function getPublishedSite(req: Request, res: Response) {
       });
     }
 
+    // ANLASS (Mandanten-Audit, öffentliche Endpunkte): Diese Route ist ohne
+    // jede Anmeldung erreichbar (siehe server/index.ts) und lieferte hier
+    // bisher zusätzlich `userId: config.userId || "published"` sowie
+    // `reservationEmail`/`reservationNotificationEmail` aus - die Adresse, an
+    // die Buchungsbenachrichtigungen für den BETRIEB gehen
+    // (ReservationsStep.tsx defaultet sie sogar auf die Konto-Mailadresse des
+    // Wirts). Alle drei sind unten ABSICHTLICH nicht mehr Teil der Liste.
+    //
+    // Bewusst NICHT auf `oeffentlicheSiteFelder` (server/utils/publicSiteView.ts)
+    // umgestellt, obwohl diese Route inhaltlich dasselbe tut wie
+    // `GET /api/subdomains/:subdomain/config`: Diese Liste trägt eigene
+    // Marken-Vorgabewerte (z. B. `priceColor` → "#059669"), die dort fehlen.
+    // Eine gemeinsame Funktion hätte eine der beiden Vorgaben stillschweigend
+    // überschrieben - genau die Funktionsänderung, die hier ausdrücklich NICHT
+    // passieren soll. Die Feldliste bleibt darum eigenständig, nur um die drei
+    // genannten Felder gekürzt.
     const flatConfig = {
       id: webApp.id,
-      userId: config.userId || "published",
       businessName: config.business?.name || config.businessName || "",
       businessType: config.business?.type || config.businessType || "",
       location: config.business?.location || config.location || "",
@@ -620,6 +635,10 @@ export async function getPublishedSite(req: Request, res: Response) {
         [],
       openingHours: config.content?.openingHours || config.openingHours || {},
       menuItems: config.content?.menuItems || config.menuItems || [],
+      // Muss mit dabei sein, sonst zeigt die Seite einem Gast mit
+      // Unverträglichkeit "a1, f" statt "Weizen, Milch" (siehe subdomains.ts).
+      allergenLegend:
+        config.content?.allergenLegend || config.allergenLegend || undefined,
       gallery: config.content?.gallery || config.gallery || [],
       reservationsEnabled:
         config.features?.reservationsEnabled ??
@@ -656,9 +675,7 @@ export async function getPublishedSite(req: Request, res: Response) {
         config.features?.reservationButtonShape ||
         config.reservationButtonShape ||
         "pill",
-      reservationEmail: config.features?.reservationEmail || config.reservationEmail,
       reservationFormStyle: config.features?.reservationFormStyle || config.reservationFormStyle || "classic",
-      reservationNotificationEmail: config.features?.reservationNotificationEmail || config.reservationNotificationEmail,
       reservationTimeSlotInterval: config.features?.reservationTimeSlotInterval || config.reservationTimeSlotInterval || 30,
       reservationDaysAhead: config.features?.reservationDaysAhead || config.reservationDaysAhead || 7,
       timeSlots: config.features?.timeSlots || config.timeSlots || [],

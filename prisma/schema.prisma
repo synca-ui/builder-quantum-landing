@@ -33,6 +33,29 @@ model User {
   // Cascade waere hier fatal: ein Mitarbeiter koennte mit der Loeschung seines
   // Kontos genau die Zeilen tilgen, die einen Verdacht gegen ihn belegen.
   stampEvents     StampEvent[]
+  // Expo-Push-Tokens der Geraete dieses Nutzers. Cascade: ein Token ist reine
+  // Zustellinformation an ein Konto - mit dem Konto verliert es jeden Zweck.
+  pushTokens      PushToken[]
+}
+
+/// Expo-Push-Token eines Betreiber-Geraets (Maitr-App).
+///
+/// Ein Token gehoert dem NUTZERKONTO, nicht dem Betrieb: Wer in mehreren
+/// Betrieben Mitglied ist, bekommt auf demselben Geraet die Anfragen aller
+/// seiner Betriebe. Der Versand aufloest zur Sendezeit Betrieb -> Mitglieder
+/// -> Tokens (server/services/push.ts). `token` ist unique: meldet sich auf
+/// einem Geraet ein anderes Konto an, wandert das Token per Upsert mit -
+/// sonst bekaeme der Vorgaenger die Pushes des Nachfolgers.
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("unknown")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Business {

@@ -41,8 +41,13 @@ import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
 import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
+import { WEEKDAY_LABELS } from "@/lib/weekdays";
+import { isFeatureDeliverable } from "@/lib/featureAvailability";
 import { fontClassFor } from "@/lib/fontClass";
 import { CategoryFilter } from "@/components/shared/CategoryFilter"; // ✅ CategoryFilter Component
+import { OffersSection } from "@/components/shared/OffersSection";
+import { OfferBanner } from "@/components/shared/OfferBanner";
+import { AboutSection } from "@/components/shared/AboutSection";
 import ReservationFormModern from "./ReservationFormModern";
 
 interface AppRendererProps {
@@ -101,6 +106,48 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     features.reservationButtonShape,
   ]);
 
+  // Titel und Beschreibung der Seite gehören dem Betrieb, nicht Maitr.
+  // Vorher blieb auf veröffentlichten Seiten der statische Maitr-Titel aus
+  // index.html stehen — Browser-Tab, Lesezeichen und Teilen-Vorschau zeigten
+  // "Maitr – Restaurant-Web-App …" statt des Restaurants. Bevorzugt die im
+  // SEO-Schritt gepflegten Werte, sonst Name + Slogan.
+  useEffect(() => {
+    const publishing = (rawConfig as any)?.publishing || rawConfig || {};
+    const title =
+      publishing.metaTitle ||
+      `${business.name}${business.slogan ? ` – ${business.slogan}` : ""}`;
+    const description =
+      publishing.metaDescription || business.uniqueDescription || "";
+
+    const previousTitle = document.title;
+    document.title = title;
+
+    let meta = document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]',
+    );
+    const previousDescription = meta?.getAttribute("content") ?? null;
+    if (description) {
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = "description";
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute("content", description);
+    }
+
+    return () => {
+      document.title = previousTitle;
+      if (previousDescription !== null) {
+        meta?.setAttribute("content", previousDescription);
+      }
+    };
+  }, [
+    rawConfig,
+    business.name,
+    business.slogan,
+    business.uniqueDescription,
+  ]);
+
   // Browser-Chrome an die Site anpassen: theme-color färbt auf iOS/Android
   // die Statusleiste bzw. den Bereich unter der Notch. index.html liefert
   // statisch das Maitr-Teal (#0d9488) — auf einer veröffentlichten Kunden-
@@ -140,6 +187,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
   // Vorher kannte diese Stelle nur "monospace" und die Vorschau nur "mono";
   // die Auswahl "Display" sah dadurch live anders aus als im Konfigurator.
   const fontClass = fontClassFor(design.fontFamily);
+
+  // Bestell-Bedienelemente nur ausspielen, wenn das Feature end-to-end
+  // lieferbar ist — sonst legt der Gast in einen Warenkorb ohne Kasse.
+  const onlineOrderingActive =
+    features.onlineOrderingEnabled &&
+    isFeatureDeliverable("onlineOrderingEnabled");
 
   // Build deduplicated navigation menu + AUTO-DISCOVERY
   const navigationMenu = useMemo(() => {
@@ -193,7 +246,13 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       menuSet.add("reservations");
     }
 
-    if ((payments as any)?.offerBanner?.enabled && !menuSet.has("offers")) {
+    // offerPageEnabled ist der Schalter aus dem Angebote-Schritt; das Banner
+    // zählt weiterhin. Vorher hörte die Navigation nur auf das Banner.
+    if (
+      (((payments as any)?.offerPageEnabled ||
+        (payments as any)?.offerBanner?.enabled)) &&
+      !menuSet.has("offers")
+    ) {
       menuArray.push({ id: "offers", label: "Angebote" });
       menuSet.add("offers");
     }
@@ -313,9 +372,16 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         primaryColor={design.primaryColor}
         fontColor={design.fontColor}
         backgroundColor={design.backgroundColor}
-        onlineOrdering={features.onlineOrderingEnabled}
+        onlineOrdering={onlineOrderingActive}
         onOrderClick={() => navigateToPage("menu")}
         isPreview={false}
+      />
+
+      {/* Angebots-Banner — konfigurierbar im Angebote-Schritt (Größe/Farben) */}
+      <OfferBanner
+        offers={((payments as any)?.offers || []) as any[]}
+        banner={((payments as any)?.offerBanner || {}) as any}
+        onShowOffers={() => navigateToPage("offers")}
       />
 
       {/* Highlights Section - NUTZT DishCard Shared Component */}
@@ -366,7 +432,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
                   primaryColor={design.primaryColor}
                   backgroundColor={design.backgroundColor}
                   template={design.template}
-                  onlineOrdering={features.onlineOrderingEnabled}
+                  onlineOrdering={onlineOrderingActive}
                   onClick={() => openDishModal(item)}
                   onAddToCart={addToCart}
                   isPreview={false}
@@ -374,6 +440,27 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
               ));
             })()}
           </div>
+        </div>
+      )}
+
+      {/* "Jetzt bestellen" bei aktivierter Online-Bestellung.
+          Die Konfigurator-Vorschau zeigt diesen Knopf seit jeher unter dem
+          Hero (Primärfarbe, führt zur Speisekarte) — auf der veröffentlichten
+          Seite fehlte er komplett. Der Betreiber sah beim Einrichten also
+          einen Bestell-Einstieg, den seine Gäste nie bekamen. */}
+      {onlineOrderingActive && (
+        <div className="mb-6 md:mb-8 max-w-md mx-auto px-4">
+          <button
+            className="w-full py-3 px-6 font-bold text-base shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
+            style={{
+              backgroundColor: design.primaryColor,
+              borderRadius: "var(--radius-button, 9999px)",
+              boxShadow: "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
+            }}
+            onClick={() => navigateToPage("menu")}
+          >
+            Jetzt bestellen
+          </button>
         </div>
       )}
 
@@ -476,7 +563,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
               primaryColor={design.primaryColor}
               backgroundColor={design.backgroundColor}
               template={design.template}
-              onlineOrdering={features.onlineOrderingEnabled}
+              onlineOrdering={onlineOrderingActive}
               onClick={() => openDishModal(item)}
               onAddToCart={addToCart}
               isPreview={false}
@@ -512,6 +599,22 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
                     Adresse
                   </div>
                   <div className={styles.bodyClass}>{business.location}</div>
+                  {/* Straßenadresse aus dem Kontakt-Schritt: lag bisher nur
+                      in contactMethods und fehlte auf der Live-Seite komplett
+                      — die Vorschau zeigte sie, die veröffentlichte Seite
+                      nicht. */}
+                  {(contact.contactMethods || [])
+                    .filter(
+                      (m: any) =>
+                        m?.type === "address" &&
+                        m.value &&
+                        m.value !== business.location,
+                    )
+                    .map((m: any, i: number) => (
+                      <div key={i} className={styles.bodyClass}>
+                        {m.value}
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -558,7 +661,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
                   className="flex justify-between text-xs md:text-sm py-2 md:py-3 border-b border-current/5 last:border-0"
                 >
                   <span className="capitalize opacity-80 font-medium">
-                    {day}
+                    {WEEKDAY_LABELS[day] ?? day}
                   </span>
                   <span className="font-bold">
                     {hours.closed
@@ -743,6 +846,31 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         return renderGalleryPage();
       case "reservations":
         return renderReservationsPage();
+      // "Angebote" und "Über uns" standen in der Navigation, führten aber
+      // auf 404 — die Seiten existierten in keinem Renderer.
+      case "offers":
+        return (
+          <OffersSection
+            offers={((payments as any)?.offers || []) as any[]}
+            titleClass={styles.titleClass}
+            bodyClass={styles.bodyClass}
+            priceColor={design.priceColor}
+            fontColor={design.fontColor}
+          />
+        );
+      case "about":
+        return (
+          <AboutSection
+            businessName={business.name}
+            description={business.uniqueDescription}
+            team={((features as any)?.teamMembers || []) as any[]}
+            showTeam={!!(features as any)?.teamAreaEnabled}
+            titleClass={styles.titleClass}
+            bodyClass={styles.bodyClass}
+            primaryColor={design.primaryColor}
+            fontColor={design.fontColor}
+          />
+        );
       default:
         return (
           <div className="p-10 text-center opacity-50 pt-20">
@@ -765,7 +893,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         headerFontColor={design.headerFontColor}
         headerFontSize={design.headerFontSize}
         headerBackgroundColor={design.headerBackgroundColor}
-        onlineOrdering={features.onlineOrderingEnabled}
+        onlineOrdering={onlineOrderingActive}
         cartCount={cartItems.length}
         menuOpen={menuOpen}
         onToggleMenu={toggleMenu}
@@ -802,7 +930,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         backgroundColor={design.backgroundColor}
         priceColor={design.priceColor}
         primaryColor={design.primaryColor}
-        onlineOrdering={features.onlineOrderingEnabled}
+        onlineOrdering={onlineOrderingActive}
         onClose={closeDishModal}
         onPrevImage={prevImage}
         onNextImage={nextImage}

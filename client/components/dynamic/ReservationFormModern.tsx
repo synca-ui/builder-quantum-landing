@@ -5,6 +5,8 @@
  * Design: Personen → Datum → Uhrzeit → Kontaktdaten → Bestätigung
  */
 import React, { useState, useEffect } from "react";
+import { slotsFuerDatum } from "@maitr/core/reservierungsSlots";
+import type { OpeningHours } from "@maitr/core/types";
 import { CheckCircle, ChevronLeft, Loader2 } from "lucide-react";
 
 interface Slot {
@@ -15,6 +17,15 @@ interface Slot {
 
 interface ReservationFormModernProps {
   configId: string;
+  /**
+   * Vorschau-Modus des Konfigurators: Es gibt noch keine gespeicherte
+   * Konfiguration, also auch nichts zu fetchen. Die Zeitfenster kommen
+   * direkt aus dem Store und laufen durch DIESELBE Öffnungszeiten-Logik
+   * wie der Server (@maitr/core/reservierungsSlots) — vorher zeigte die
+   * Vorschau hier dauerhaft "Keine Zeitslots verfügbar".
+   */
+  previewSlots?: string[];
+  previewOpeningHours?: OpeningHours;
   businessName: string;
   primaryColor?: string;       // accent color (tiles)
   buttonColor?: string;        // button background color
@@ -29,6 +40,8 @@ type Step = "select" | "contact" | "success";
 
 export default function ReservationFormModern({
   configId,
+  previewSlots,
+  previewOpeningHours,
   businessName,
   primaryColor = "#14b8a6",
   buttonColor = "#111827",
@@ -84,8 +97,27 @@ export default function ReservationFormModern({
 
   // ── Fetch slots when date changes ──────────────────────────────────────────
   useEffect(() => {
-    if (!selectedDateISO || !configId) return;
+    if (!selectedDateISO) return;
     setSelectedSlot(null);
+
+    if (previewSlots) {
+      const gefiltert = slotsFuerDatum(
+        previewSlots,
+        previewOpeningHours ?? null,
+        selectedDateISO,
+      );
+      setSlots(
+        gefiltert.map((time) => ({
+          time,
+          datetime: `${selectedDateISO}T${time}:00.000Z`,
+          available: true,
+        })),
+      );
+      setLoadingSlots(false);
+      return;
+    }
+
+    if (!configId) return;
     setLoadingSlots(true);
     fetch(`/api/public/reservations/slots?configId=${encodeURIComponent(configId)}&date=${selectedDateISO}`)
       .then((r) => r.json())
@@ -94,7 +126,7 @@ export default function ReservationFormModern({
       })
       .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));
-  }, [selectedDateISO, configId]);
+  }, [selectedDateISO, configId, previewSlots, previewOpeningHours]);
 
   // ── Guest count pill options ───────────────────────────────────────────────
   const guestOptions = Array.from({ length: Math.min(maxGuests, 4) }, (_, i) => i + 1);

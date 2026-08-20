@@ -28,7 +28,7 @@ interface DomainHostingStepProps {
 
 interface SubdomainValidationResult {
   available: boolean;
-  reason?: "invalid" | "reserved" | "taken" | "pending" | "owned";
+  reason?: "invalid" | "reserved" | "taken" | "pending" | "owned" | "unknown";
   error?: string;
   suggestions?: string[];
   subdomain?: string;
@@ -54,10 +54,14 @@ async function checkSubdomainAvailability(
     return await response.json();
   } catch (error) {
     console.error("[Subdomain] Validation error:", error);
+    // "unknown" statt "invalid": Eine nicht erreichbare Prüfung sagt nichts
+    // über die Subdomain aus. Als "invalid" gemeldet, sperrte sie den
+    // Weiter-Button — ein Aussetzer des Endpunkts hielt den Nutzer dann im
+    // Konfigurator fest. Beim Veröffentlichen prüft der Server ohnehin.
     return {
       available: false,
-      reason: "invalid",
-      error: "Fehler bei der Überprüfung. Bitte versuche es erneut.",
+      reason: "unknown",
+      error: "Verfügbarkeit konnte nicht geprüft werden.",
     };
   }
 }
@@ -153,6 +157,8 @@ export function DomainHostingStep({
             reserved: "reserved",
             taken: "taken",
             pending: "taken",
+            // Prüfung nicht erreichbar: Hinweis zeigen, aber nicht blockieren.
+            unknown: "idle",
           };
           setValidationStatus(
             statusMap[result.reason || "invalid"] || "invalid",

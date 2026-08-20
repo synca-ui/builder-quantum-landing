@@ -7,6 +7,10 @@ import { Router, Request, Response } from "express";
 import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { z } from "zod";
+import {
+  betriebskennung,
+  geprueftesBetriebsrecht,
+} from "../middleware/betriebskennung";
 
 // Extend Request interface for TypeScript
 declare global {
@@ -61,29 +65,68 @@ const absenceSchema = z.object({
 });
 
 /**
+ * Betriebskennung lesen und die Mitgliedschaft prüfen.
+ *
+ * ANLASS: Hier stand an jeder Route `req.query.businessId as string` bzw.
+ * `req.body.businessId` - ein `as string` prüft zur Laufzeit nichts. Express
+ * parst mit `qs`, und `?businessId[not]=zzz` wird zu `{ businessId: { not:
+ * "zzz" } }`. Dieses Objekt bestand die Besitzprüfung (fand den EIGENEN
+ * Betrieb des Anfragenden über die dann wirkungslose Bedingung) und wurde
+ * danach als Kennung weiterbenutzt - `where: { businessId }` lieferte die
+ * Zeilen ALLER Betriebe. Siehe server/middleware/betriebskennung.ts für die
+ * volle Herleitung.
+ *
+ * Ab dem Rückgabewert dieser Funktion wird NUR NOCH die geprüfte Kennung
+ * benutzt, nie wieder ein Rohwert aus `req.query`/`req.body`. Bei Fehlschlag
+ * sendet die Funktion selbst die passende Antwort und liefert `null` - der
+ * Aufrufer muss dann nur noch `return`.
+ */
+async function geprueftesBusiness(
+  req: Request,
+  res: Response,
+): Promise<string | null> {
+  const kennung = betriebskennung(req);
+  if (!kennung) {
+    res.status(400).json({ error: "businessId fehlt oder ist ungültig" });
+    return null;
+  }
+  const businessId = await geprueftesBetriebsrecht(prisma, req.userId!, kennung);
+  if (!businessId) {
+    res.status(403).json({ error: "Kein Zugriff auf diesen Betrieb" });
+    return null;
+  }
+  return businessId;
+}
+
+/**
+ * Nur Inhaber/Admin. Siehe `ownerGuard` in server/maitr/routes.ts für dieselbe
+ * Abwägung: Dort hängen an `requireVenueAccess` (dem Äquivalent zu
+ * `geprueftesBusiness` hier) bewusst ALLE Lesewege und die alltäglichen
+ * Schreibwege, weil auch Aushilfen ihre Arbeit erledigen können müssen -
+ * erzwungen wird die Rolle nur an den Zugriffen, die eine HR- oder
+ * Gehaltsentscheidung sind.
+ *
+ * Gemessen: Eine Aushilfe (`BusinessMember.role` STAFF, der Vorgabewert des
+ * Modells) konnte über `POST /` Personal samt Gehalt (`hourlyRate`) und
+ * Berechtigungen anlegen. ADMIN ist mitgemeint: das ist die Plattformrolle,
+ * nicht eine Aushilfe.
+ */
+async function nurInhaber(businessId: string, userId: string): Promise<boolean> {
+  const mitgliedschaft = await prisma.businessMember.findUnique({
+    where: { userId_businessId: { userId, businessId } },
+    select: { role: true },
+  });
+  return mitgliedschaft?.role === "OWNER" || mitgliedschaft?.role === "ADMIN";
+}
+
+/**
  * GET /api/dashboard/staff
  * Get all staff members for a business
  */
 router.get("/", requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;
-    const businessId = req.query.businessId as string;
-
-    if (!businessId) {
-      return res.status(400).json({ error: "businessId is required" });
-    }
-
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: "Access denied" });
-    }
+    const businessId = await geprueftesBusiness(req, res);
+    if (!businessId) return;
 
     // Get staff with recent shifts and absences
     const staff = await (prisma as any).staff.findMany({
@@ -134,23 +177,13 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
  */
 router.post("/", requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;
-    const businessId = req.body.businessId;
+    const businessId = await geprueftesBusiness(req, res);
+    if (!businessId) return;
 
-    if (!businessId) {
-      return res.status(400).json({ error: "businessId is required" });
-    }
-
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: "Access denied" });
+    // Legt Gehalt und Berechtigungen einer neuen Person fest - eine
+    // Einstellungsentscheidung, keine Aushilfen-Aufgabe. Siehe `nurInhaber`.
+    if (!(await nurInhaber(businessId, req.userId!))) {
+      return res.status(403).json({ error: "nur_inhaber" });
     }
 
     // Validate input
@@ -178,29 +211,16 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
 /**
  * GET /api/dashboard/staff/shifts
  * Get shifts with optional date range filtering
+ *
+ * Kein Rollenriegel: Eine Aushilfe muss ihren eigenen Dienstplan sehen können.
  */
 router.get("/shifts", requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;
-    const businessId = req.query.businessId as string;
+    const businessId = await geprueftesBusiness(req, res);
+    if (!businessId) return;
+
     const startDate = req.query.startDate as string;
     const endDate = req.query.endDate as string;
-
-    if (!businessId) {
-      return res.status(400).json({ error: "businessId is required" });
-    }
-
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: "Access denied" });
-    }
 
     // Build date filter
     const dateFilter: any = {};
@@ -239,27 +259,37 @@ router.get("/shifts", requireAuth, async (req: Request, res: Response) => {
  */
 router.post("/shifts", requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = req.userId;
-    const businessId = req.body.businessId;
+    const businessId = await geprueftesBusiness(req, res);
+    if (!businessId) return;
 
-    if (!businessId) {
-      return res.status(400).json({ error: "businessId is required" });
-    }
-
-    // Verify business ownership
-    const business = await prisma.business.findFirst({
-      where: {
-        id: businessId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!business) {
-      return res.status(403).json({ error: "Access denied" });
+    // Weist einer Person Arbeitszeit zu und kann ihre Vergütung für diese
+    // Schicht überschreiben (`hourlyRate`) - eine Personaleinsatz- und
+    // Gehaltsentscheidung, keine Aushilfen-Aufgabe. Die Aushilfe darf ihren
+    // Plan nur SEHEN (siehe GET /shifts oben).
+    if (!(await nurInhaber(businessId, req.userId!))) {
+      return res.status(403).json({ error: "nur_inhaber" });
     }
 
     // Validate input
     const validatedData = shiftSchema.parse(req.body);
+
+    // Die Person muss zu DIESEM Betrieb gehören, BEVOR irgendetwas
+    // geschrieben oder mitgeliefert wird. `Shift.staffId` ist ein
+    // einspaltiger Fremdschlüssel ohne begleitendes `businessId` im Schema -
+    // die Bindung an den geprüften Betrieb gehört deshalb hierher (dasselbe
+    // Muster wie beim Tisch in server/maitr/routes.ts, POST /reservations/walk-in).
+    //
+    // Gemessen: Mit der `businessId` des eigenen Betriebs und einer `staffId`
+    // aus einem FREMDEN Betrieb antwortete diese Route 200 - und lieferte
+    // durch ihr `include` sofort Vorname, Nachname und Position der fremden
+    // Person mit.
+    const staffMitglied = await (prisma as any).staff.findFirst({
+      where: { id: validatedData.staffId, businessId },
+      select: { id: true },
+    });
+    if (!staffMitglied) {
+      return res.status(404).json({ error: "Mitarbeiter nicht gefunden" });
+    }
 
     // Check for conflicts
     const conflicts = await checkShiftConflicts(
@@ -310,33 +340,43 @@ router.post("/shifts", requireAuth, async (req: Request, res: Response) => {
 /**
  * POST /api/dashboard/staff/conflicts/check
  * Check for shift conflicts without creating
+ *
+ * Kein Rollenriegel: schreibt nichts, ist ein reiner Verfügbarkeitscheck.
  */
 router.post(
   "/conflicts/check",
   requireAuth,
   async (req: Request, res: Response) => {
     try {
-      const userId = req.userId;
-      const { businessId, staffId, startTime, endTime } = req.body;
+      const businessId = await geprueftesBusiness(req, res);
+      if (!businessId) return;
 
-      if (!businessId || !staffId || !startTime || !endTime) {
-        return res
-          .status(400)
-          .json({
-            error: "businessId, staffId, startTime, and endTime are required",
-          });
+      const { staffId, startTime, endTime } = req.body;
+
+      // `staffId` durchläuft hier - anders als bei POST /shifts - kein
+      // Zod-Schema, das eine Zeichenkette erzwingt. Derselbe Grund wie bei
+      // `businessId` in server/middleware/betriebskennung.ts gilt also auch
+      // hier: nur eine nicht-leere Zeichenkette gilt.
+      if (
+        typeof staffId !== "string" ||
+        staffId.length === 0 ||
+        !startTime ||
+        !endTime
+      ) {
+        return res.status(400).json({
+          error: "staffId, startTime und endTime sind erforderlich",
+        });
       }
 
-      // Verify business ownership
-      const business = await prisma.business.findFirst({
-        where: {
-          id: businessId,
-          members: { some: { userId } },
-        },
+      // Dieselbe Prüfung wie in POST /shifts: Gemessen taugte diese Route
+      // genauso als Orakel für fremdes Personal - und lieferte dabei zusätzlich
+      // deren Arbeitszeiten mit.
+      const staffMitglied = await (prisma as any).staff.findFirst({
+        where: { id: staffId, businessId },
+        select: { id: true },
       });
-
-      if (!business) {
-        return res.status(403).json({ error: "Access denied" });
+      if (!staffMitglied) {
+        return res.status(404).json({ error: "Mitarbeiter nicht gefunden" });
       }
 
       const conflicts = await checkShiftConflicts(

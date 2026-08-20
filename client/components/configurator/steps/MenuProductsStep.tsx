@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -49,16 +49,27 @@ const DebouncedMenuInput = ({
 }) => {
   const [localValue, setLocalValue] = useState(value);
   const debouncedValue = useDebounce(localValue, 400);
+  const lastPushedRef = useRef(value);
 
   useEffect(() => {
     setLocalValue(value);
+    lastPushedRef.current = value;
   }, [value]);
 
+  /**
+   * Nur melden, was der Nutzer hier wirklich getippt hat.
+   *
+   * Vorher lautete die Bedingung `debouncedValue !== value`. Nach dem
+   * Hinzufügen eines Gerichts setzt der Parent name/description auf "",
+   * debouncedValue hing aber noch 400 ms auf dem alten Text — die Bedingung
+   * war sofort wahr und schrieb den alten Text zurück. Ergebnis: Name und
+   * Beschreibung blieben nach dem Anlegen stehen.
+   */
   useEffect(() => {
-    if (debouncedValue !== value) {
-      onChange(debouncedValue);
-    }
-  }, [debouncedValue, value, onChange]);
+    if (debouncedValue === lastPushedRef.current) return;
+    lastPushedRef.current = debouncedValue;
+    onChange(debouncedValue);
+  }, [debouncedValue, onChange]);
 
   return (
     <Input

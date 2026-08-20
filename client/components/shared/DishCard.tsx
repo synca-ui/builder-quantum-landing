@@ -88,6 +88,26 @@ function getTemplateCardStyle(template: string): React.CSSProperties {
         background: "rgba(255,255,255,0.9)",
         border: "1px solid rgba(245,158,11,0.1)",
       };
+    case "nocturne":
+      // Dunkle, leicht erhabene Karte; Messing wirkt über priceColor.
+      return {
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.09)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+      };
+    case "riviera":
+      // Weiße Karte mit feiner Adriablau-Kante auf Sandton.
+      return {
+        background: "#FFFFFF",
+        border: "1px solid rgba(30,90,126,0.16)",
+      };
+    case "verde":
+      // Weiße Karte mit feiner Blattgrün-Kante auf Papierton.
+      return {
+        background: "#FFFFFF",
+        border: "1px solid rgba(47,94,67,0.14)",
+      };
     case "minimalist":
     default:
       return {

@@ -20,6 +20,10 @@ import { Prisma } from "@prisma/client";
 import { nextSubdomainCandidate, suggestSubdomain } from "../../shared/subdomain";
 import { prisma } from "../db/prisma";
 import {
+  sendReservationConfirmation,
+  sendReservationDeclined,
+} from "../utils/email";
+import {
   requireVenueAccess,
   resolveVenue,
   validateBody,
@@ -64,6 +68,12 @@ import {
   VERLAUF_VORGABE,
   type BuchungsErgebnis,
 } from "./stempelkarte";
+import {
+  STAMPCARD_LINK_SECRET,
+  gastKartenToken,
+} from "../routes/publicStampcards";
+import { istExpoPushToken } from "../services/push";
+import { passUpdatePushen } from "../wallet/update";
 
 const DAY_MS = 86_400_000;
 
@@ -391,6 +401,57 @@ publicRouter.get(
 
 /* ── Reservierungen ──────────────────────────────────────────────────────── */
 
+/**
+ * Push-Registrierung der Betreiber-App.
+ *
+ * USER-scoped, bewusst ohne venueGuard: Das Token gehört dem Gerät/Konto,
+ * nicht einem Betrieb — welcher Betrieb ein Ereignis auslöst, entscheidet
+ * der Versand (server/services/push.ts) zur Sendezeit über die
+ * Mitgliedschaften. Upsert über das unique Token: meldet sich auf einem
+ * Gerät ein anderes Konto an, wandert das Token mit, statt dass der
+ * Vorgänger fremde Pushes bekommt.
+ */
+const pushTokenSchema = z.object({
+  token: z.string().min(1).max(4096),
+  platform: z.enum(["ios", "android"]).optional(),
+});
+
+export const pushRouter = Router();
+
+pushRouter.post(
+  "/register",
+  validateBody(pushTokenSchema),
+  asyncHandler(async (req, res) => {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ error: "Nicht angemeldet" });
+    const { token, platform } = req.body as z.infer<typeof pushTokenSchema>;
+    if (!istExpoPushToken(token)) {
+      return res.status(400).json({ error: "Kein gültiges Expo-Push-Token" });
+    }
+    await prisma.pushToken.upsert({
+      where: { token },
+      update: { userId, platform: platform ?? "unknown" },
+      create: { userId, token, platform: platform ?? "unknown" },
+    });
+    return res.status(204).end();
+  }),
+);
+
+pushRouter.post(
+  "/unregister",
+  validateBody(z.object({ token: z.string().min(1).max(4096) })),
+  asyncHandler(async (req, res) => {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ error: "Nicht angemeldet" });
+    // Nur das EIGENE Token löschen — die userId in der WHERE-Klausel ist hier
+    // dieselbe Disziplin wie businessId überall sonst in diesem Modul.
+    await prisma.pushToken.deleteMany({
+      where: { token: (req.body as { token: string }).token, userId },
+    });
+    return res.status(204).end();
+  }),
+);
+
 export const reservationsRouter = Router();
 
 reservationsRouter.get(
@@ -446,6 +507,76 @@ reservationsRouter.post(
       },
     });
     return res.status(201).json(reservation);
+  }),
+);
+
+const statusSchema = z.object({
+  venueId: z.string().min(1),
+  status: z.enum(["confirmed", "cancelled"]),
+});
+
+/**
+ * PATCH /reservations/:id/status — Bestätigen/Ablehnen aus der Maitr-App.
+ *
+ * Bisher konnte die App Reservierungen nur lesen und anlegen; der Betreiber
+ * musste zum Bestätigen ins Web-Dashboard oder in die E-Mail. Gleiche Regeln
+ * wie überall in diesem Modul: businessId aus req.venueId in der WHERE-Klausel
+ * (Regel 2 aus stempelkarte.ts — die id im Pfad ist kein Geheimnis), und der
+ * Gast bekommt dieselben Mails wie auf allen anderen Bestätigungswegen.
+ */
+reservationsRouter.patch(
+  "/:id/status",
+  venueGuard,
+  validateBody(statusSchema),
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const id = String(req.params.id ?? "");
+    const { status } = req.body as z.infer<typeof statusSchema>;
+
+    const existing = await prisma.reservation.findFirst({
+      where: { id, businessId: venueId },
+      include: { business: { select: { name: true } } },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: "Reservierung nicht gefunden" });
+    }
+    if (["COMPLETED", "NO_SHOW"].includes(existing.status)) {
+      return res
+        .status(400)
+        .json({ error: "Diese Reservierung ist bereits abgeschlossen." });
+    }
+
+    const zielStatus = status === "confirmed" ? "CONFIRMED" : "CANCELLED";
+    const updated = await prisma.reservation.update({
+      // where über die eindeutige id — die Zugehörigkeit ist oben bereits
+      // venue-gescoped geprüft.
+      where: { id },
+      data: { status: zielStatus },
+    });
+
+    // Gast informieren — nur beim ECHTEN Übergang aus PENDING, nicht bei
+    // idempotenten Wiederholungen.
+    if (existing.status === "PENDING" && existing.guestEmail) {
+      if (zielStatus === "CONFIRMED") {
+        await sendReservationConfirmation(
+          existing.guestEmail,
+          existing.guestName,
+          existing.id,
+          existing.reservationTime,
+          existing.guestCount,
+          existing.business?.name ?? "dem Betrieb",
+        );
+      } else {
+        await sendReservationDeclined(
+          existing.guestEmail,
+          existing.guestName,
+          existing.reservationTime,
+          existing.business?.name ?? "dem Betrieb",
+        );
+      }
+    }
+
+    return res.json(toApiReservation(updated));
   }),
 );
 
@@ -1091,6 +1222,41 @@ loyaltyRouter.get(
   }),
 );
 
+/**
+ * GET /loyalty/cards/:cardId/gast-link — der teilbare Link fuer den Gast.
+ *
+ * Venue-gescoped wie alles hier: erst die Zugehoerigkeit der Karte pruefen,
+ * dann die signierte URL bilden. Das Secret bleibt Server-seitig; die App
+ * bekommt nur die fertige URL (fuer QR-Anzeige oder System-Teilen-Dialog).
+ * Ohne Secret: 503 mit klarer Ansage statt eines Links, der nie oeffnet.
+ */
+loyaltyRouter.get(
+  "/cards/:cardId/gast-link",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const cardId = String(req.params.cardId ?? "");
+
+    if (!STAMPCARD_LINK_SECRET) {
+      return res.status(503).json({
+        error:
+          "Gast-Links sind nicht konfiguriert (STAMPCARD_LINK_SECRET fehlt).",
+      });
+    }
+
+    const karte = await kartenDetail(venueId, cardId);
+    if (!karte) {
+      return res.status(404).json({ error: "Karte nicht gefunden" });
+    }
+
+    const basis = process.env.PUBLIC_URL || "https://www.maitr.de";
+    const token = gastKartenToken(cardId, STAMPCARD_LINK_SECRET);
+    return res.json({
+      url: `${basis}/karte/${cardId}?t=${token}`,
+    });
+  }),
+);
+
 loyaltyRouter.get(
   "/cards/:cardId",
   venueGuard,
@@ -1154,6 +1320,20 @@ const voidSchema = z
 const venueOnlySchema = z.object({ venueId: z.string().min(1) }).strict();
 
 /** Buchungsergebnis → HTTP. An einer Stelle, damit die drei Pfade nicht auseinanderlaufen. */
+
+/**
+ * Wallet-Paesse nach einer erfolgreichen Buchung anstossen — fire-and-forget,
+ * NACH der Transaktion: ein APNs-Schluckauf rollt keinen Stempel zurueck.
+ * Fachlogik (stempelkarte.ts) bleibt bewusst frei von Sendepfaden.
+ */
+function walletNachBuchung(ergebnis: { art: string }, cardId: string): void {
+  if (ergebnis.art === "ok") {
+    void passUpdatePushen(cardId).catch((err) =>
+      console.error("[Wallet] Update-Push:", err),
+    );
+  }
+}
+
 function buchungAntwort(res: Response, ergebnis: BuchungsErgebnis): Response {
   switch (ergebnis.art) {
     case "ok":
@@ -1217,17 +1397,17 @@ loyaltyRouter.post(
   validateBody(buchungSchema),
   loyaltyHandler(async (req, res) => {
     const { idempotencyKey, note, deviceLabel } = req.body as z.infer<typeof buchungSchema>;
-    return buchungAntwort(
-      res,
-      await stempelSetzen(venueOf(req), String(req.params.cardId ?? ""), {
-        idempotencyKey,
-        note,
-        deviceLabel,
-        // Wer gestempelt hat, kommt aus der SITZUNG, nie aus dem Rumpf - sonst wäre
-        // die Missbrauchsprüfung, für die das Hauptbuch gebaut ist, wertlos.
-        staffUserId: req.userId ?? null,
-      }),
-    );
+    const cardId = String(req.params.cardId ?? "");
+    const ergebnis = await stempelSetzen(venueOf(req), cardId, {
+      idempotencyKey,
+      note,
+      deviceLabel,
+      // Wer gestempelt hat, kommt aus der SITZUNG, nie aus dem Rumpf - sonst wäre
+      // die Missbrauchsprüfung, für die das Hauptbuch gebaut ist, wertlos.
+      staffUserId: req.userId ?? null,
+    });
+    walletNachBuchung(ergebnis, cardId);
+    return buchungAntwort(res, ergebnis);
   }),
 );
 
@@ -1237,15 +1417,15 @@ loyaltyRouter.post(
   validateBody(buchungSchema),
   loyaltyHandler(async (req, res) => {
     const { idempotencyKey, note, deviceLabel } = req.body as z.infer<typeof buchungSchema>;
-    return buchungAntwort(
-      res,
-      await praemieEinloesen(venueOf(req), String(req.params.cardId ?? ""), {
-        idempotencyKey,
-        note,
-        deviceLabel,
-        staffUserId: req.userId ?? null,
-      }),
-    );
+    const cardId = String(req.params.cardId ?? "");
+    const ergebnis = await praemieEinloesen(venueOf(req), cardId, {
+      idempotencyKey,
+      note,
+      deviceLabel,
+      staffUserId: req.userId ?? null,
+    });
+    walletNachBuchung(ergebnis, cardId);
+    return buchungAntwort(res, ergebnis);
   }),
 );
 
@@ -1257,10 +1437,10 @@ loyaltyRouter.post(
   validateBody(voidSchema),
   loyaltyHandler(async (req, res) => {
     const { grund } = req.body as z.infer<typeof voidSchema>;
-    return buchungAntwort(
-      res,
-      await karteEntwerten(venueOf(req), String(req.params.cardId ?? ""), grund, req.userId ?? null),
-    );
+    const cardId = String(req.params.cardId ?? "");
+    const ergebnis = await karteEntwerten(venueOf(req), cardId, grund, req.userId ?? null);
+    walletNachBuchung(ergebnis, cardId);
+    return buchungAntwort(res, ergebnis);
   }),
 );
 

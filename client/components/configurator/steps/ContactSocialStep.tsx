@@ -75,19 +75,19 @@ export function ContactSocialStep({
       id: "phone",
       icon: <Phone className="w-5 h-5" />,
       labelKey: "contact.phone",
-      placeholder: "+1 (555) 123-4567",
+      placeholder: "+49 89 1234567",
     },
     {
       id: "email",
       icon: <Mail className="w-5 h-5" />,
       labelKey: "contact.email",
-      placeholder: "hello@yourbusiness.com",
+      placeholder: "hallo@dein-lokal.de",
     },
     {
       id: "address",
       icon: <MapPin className="w-5 h-5" />,
       labelKey: "contact.address",
-      placeholder: "123 Main St, City, State",
+      placeholder: "Musterstraße 12, 80331 München",
     },
   ];
 
@@ -96,13 +96,13 @@ export function ContactSocialStep({
       id: "instagram",
       icon: <Instagram className="w-5 h-5" />,
       label: "Instagram",
-      placeholder: "@yourbusiness",
+      placeholder: "@deinlokal",
     },
     {
       id: "facebook",
       icon: <Facebook className="w-5 h-5" />,
       label: "Facebook",
-      placeholder: "facebook.com/yourbusiness",
+      placeholder: "facebook.com/deinlokal",
     },
   ];
 

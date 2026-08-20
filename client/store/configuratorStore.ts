@@ -8,6 +8,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { useMemo } from "react";
+import { getTemplateDesignDefaults } from "@/lib/templateTokens";
 import type {
   BusinessInfo,
   DesignConfig,
@@ -533,13 +534,71 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
 
       updateTemplate: (templateId) => {
         checkThrottleGuard("updateTemplate");
-        set((state) => ({
-          design: { ...state.design, template: templateId },
-          publishing: {
-            ...state.publishing,
-            updatedAt: new Date().toISOString(),
-          },
-        }));
+        set((state) => {
+          /**
+           * Beim Template-Wechsel die Palette des Templates übernehmen —
+           * aber nur für Felder, die der Nutzer nicht selbst verstellt hat.
+           * "Nicht verstellt" heißt: der aktuelle Wert entspricht noch dem
+           * Default des bisherigen Templates oder dem globalen Default.
+           * Eine eigene Farbwahl überlebt den Template-Wechsel also.
+           */
+          const prevDefaults = getTemplateDesignDefaults(
+            state.design.template || "modern",
+          );
+          const nextDefaults = getTemplateDesignDefaults(templateId);
+          const norm = (v: unknown) =>
+            typeof v === "string" ? v.toLowerCase() : v;
+
+          const design: DesignConfig = { ...state.design, template: templateId };
+          (
+            Object.keys(nextDefaults) as (keyof typeof nextDefaults)[]
+          ).forEach((key) => {
+            const current = norm((state.design as any)[key]);
+            const untouched =
+              current == null ||
+              current === norm(prevDefaults[key]) ||
+              current === norm((defaultDesignConfig as any)[key]);
+            if (untouched) {
+              (design as any)[key] = nextDefaults[key];
+            }
+          });
+
+          // Der Reservieren-Button gehört zum Gesamtbild des Templates: Ein
+          // Standard-Blau (#2563EB) auf Mitternacht oder Verde wirkt wie ein
+          // Fremdkörper. Gleiche Regel wie oben — nur übernehmen, wenn der
+          // Nutzer die Buttonfarbe nicht selbst verstellt hat.
+          const features = { ...state.features };
+          const currentBtn = norm(features.reservationButtonColor);
+          const btnUntouched =
+            currentBtn == null ||
+            currentBtn === "#2563eb" ||
+            currentBtn === norm(prevDefaults.primaryColor);
+          if (btnUntouched) {
+            features.reservationButtonColor = nextDefaults.primaryColor;
+            // Schwarz oder Weiß, je nachdem was auf der Primärfarbe lesbar ist
+            // (relative Luminanz; die exakte WCAG-Formel wäre hier Overkill).
+            const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
+              nextDefaults.primaryColor,
+            );
+            const lum = m
+              ? (0.2126 * parseInt(m[1], 16) +
+                  0.7152 * parseInt(m[2], 16) +
+                  0.0722 * parseInt(m[3], 16)) /
+                255
+              : 0;
+            features.reservationButtonTextColor =
+              lum > 0.55 ? "#000000" : "#FFFFFF";
+          }
+
+          return {
+            design,
+            features,
+            publishing: {
+              ...state.publishing,
+              updatedAt: new Date().toISOString(),
+            },
+          };
+        });
       },
 
       updatePrimaryColor: (color) => {

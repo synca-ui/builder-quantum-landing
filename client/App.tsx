@@ -53,6 +53,7 @@ const AGB = lazy(() => import("./pages/AGB"));
 const CheckDatenschutz = lazy(() => import("./pages/CheckDatenschutz"));
 const CheckImpressum = lazy(() => import("./pages/CheckImpressum"));
 const ManageReservation = lazy(() => import("./pages/ManageReservation"));
+const GastStempelkarte = lazy(() => import("./pages/GastStempelkarte"));
 const CookieBanner = lazy(() => import("./components/cookie-banner"));
 
 // Dashboard Pages (lazy loaded)
@@ -137,6 +138,8 @@ const App = () => {
                       {/* Public Routes */}
                       <Route path="/" element={<HostAwareRoot />} />
                       <Route path="/r/:id" element={<ManageReservation />} />
+                      {/* Gast-Stempelkarte: der QR/Link aus der Betreiber-App */}
+                      <Route path="/karte/:cardId" element={<GastStempelkarte />} />
 
                       {/*
                         App-Bereich: alles, was Clerk und/oder i18next braucht.

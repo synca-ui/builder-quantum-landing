@@ -31,10 +31,31 @@ type VenueResolution =
  *
  * Deshalb: Weichen zwei genannte Quellen voneinander ab, wird die Anfrage
  * abgewiesen statt stillschweigend eine davon bevorzugt.
+ *
+ * Dieselbe Abweisung gilt, wenn eine Quelle die Kennung zwar NENNT, sie aber
+ * nicht als Zeichenkette lesbar ist. Express parst Query und Rumpf mit `qs`:
+ * ein doppelter Parameter (`?venueId=a&venueId=a`) oder eine Klammerform
+ * (`?venueId[0]=a`, `?venueId[not]=zzz`) wird zu einem Array oder Objekt, nie
+ * zu einem String; im JSON-Rumpf kann dieselbe Stelle ebenso eine Zahl, `null`
+ * oder ein verschachteltes Objekt tragen. Der alte Filter (`typeof v ===
+ * "string"`) liess solche Werte still aus der Kandidatenliste fallen - übrig
+ * blieb dann die Kennung der jeweils anderen Quelle, und die Anfrage sah aus
+ * wie der gute Fall "genau eine Kennung in genau einer Quelle". Der
+ * Konfliktabbruch griff für genau diese Eingabeform nie. Deshalb zählt eine
+ * genannte, aber unlesbare Kennung ab jetzt selbst als Konflikt: Wer etwas
+ * schickt, das niemand lesen kann, bekommt das gesagt statt umgangen zu
+ * werden. Ein leerer String bleibt davon unberührt - das ist weiterhin
+ * gleichwertig zu "nicht angegeben", weil er als Zeichenkette lesbar ist, nur
+ * eben leer.
  */
 export function resolveVenue(req: Request): VenueResolution {
-  const kandidaten = [req.params?.venueId, req.query?.venueId, req.body?.venueId]
-    .filter((v): v is string => typeof v === "string" && v.length > 0);
+  const quellen = [req.params?.venueId, req.query?.venueId, req.body?.venueId];
+
+  if (quellen.some((v) => v !== undefined && typeof v !== "string")) {
+    return { venueId: null, conflict: true };
+  }
+
+  const kandidaten = quellen.filter((v): v is string => typeof v === "string" && v.length > 0);
 
   if (kandidaten.length === 0) return { venueId: null, conflict: false };
   const eindeutig = new Set(kandidaten);
