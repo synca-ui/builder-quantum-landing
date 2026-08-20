@@ -3,7 +3,7 @@ PODS:
   - DoubleConversion (1.1.6)
   - EXApplication (57.0.2):
     - ExpoModulesCore
-  - EXConstants (57.0.9):
+  - EXConstants (57.0.13):
     - ExpoModulesCore
   - EXJSONUtils (57.0.1)
   - EXManifests (57.0.1):
@@ -224,6 +224,8 @@ PODS:
     - ExpoModulesCore
   - ExpoCrypto (57.0.1):
     - ExpoModulesCore
+  - ExpoDevice (57.0.1):
+    - ExpoModulesCore
   - ExpoDomWebView (57.0.1):
     - ExpoModulesCore
   - ExpoFileSystem (57.0.1):
@@ -276,6 +278,8 @@ PODS:
   - ExpoModulesWorklets (57.0.7):
     - ExpoModulesCore
     - ExpoModulesJSI
+  - ExpoNotifications (57.0.13):
+    - ExpoModulesCore
   - ExpoRouter (57.0.8):
     - ExpoModulesCore
     - RNScreens
@@ -3315,6 +3319,7 @@ DEPENDENCIES:
   - ExpoAsset (from `../node_modules/expo/node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
+  - ExpoDevice (from `../node_modules/expo-device/ios`)
   - "ExpoDomWebView (from `../node_modules/@expo/dom-webview/ios`)"
   - ExpoFileSystem (from `../node_modules/expo/node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
@@ -3326,6 +3331,7 @@ DEPENDENCIES:
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoModulesJSI (from `../node_modules/expo-modules-jsi/apple`)
   - ExpoModulesWorklets (from `../node_modules/expo-modules-core`)
+  - ExpoNotifications (from `../node_modules/expo-notifications/ios`)
   - ExpoRouter (from `../node_modules/expo-router/ios`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
@@ -3455,6 +3461,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-blur/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-crypto/ios"
+  ExpoDevice:
+    :path: "../node_modules/expo-device/ios"
   ExpoDomWebView:
     :path: "../node_modules/@expo/dom-webview/ios"
   ExpoFileSystem:
@@ -3477,6 +3485,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-jsi/apple"
   ExpoModulesWorklets:
     :path: "../node_modules/expo-modules-core"
+  ExpoNotifications:
+    :path: "../node_modules/expo-notifications/ios"
   ExpoRouter:
     :path: "../node_modules/expo-router/ios"
   ExpoSecureStore:
@@ -3669,7 +3679,7 @@ SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   EXApplication: f62b1a7f8a6efe1d43f38bfbe98cf4acea9b9421
-  EXConstants: 4de2a921b65368dba903006a2106252512d6843e
+  EXConstants: 27830fdf6ed001b3c58164a76dc77623887173a0
   EXJSONUtils: 7a1683cfa2cbe6d11fca97097d51a496755b0287
   EXManifests: b9129302cc7af43d45c2f473fadb88e77f837273
   Expo: 0ca75c52b97fd7f0b5e77c43bb5633d139486a46
@@ -3680,6 +3690,7 @@ SPEC CHECKSUMS:
   ExpoAsset: 016142e2ad35df49e73aeca75bd2d7b377061758
   ExpoBlur: 0f2c616d5422a2b1a31e622d2add98784eed1ceb
   ExpoCrypto: 4272c8712a133905a00059ef6e109759fbda2cee
+  ExpoDevice: 5e5d4ece11404a66faa072ff6092f8f08efaface
   ExpoDomWebView: fa9c72fe29dd4649197a7ecb07ddd870d55c4eda
   ExpoFileSystem: 3030d5166d05eb90b8f40d433f6007797310861f
   ExpoFont: 17668fb7b4e06edf35e015183eb7bc09d83be637
@@ -3691,6 +3702,7 @@ SPEC CHECKSUMS:
   ExpoModulesCore: 8ab1dcd6ce24c276e3230d07e791755e332e25da
   ExpoModulesJSI: 6cb6d299ace493e7dd20ba94c99e8c4799b07afd
   ExpoModulesWorklets: c05df2d21365b00637ccd5e0259f1190e23f37b4
+  ExpoNotifications: ba5e63264247ad880549bc08b5ac3668459ef1f0
   ExpoRouter: d210b9d2d33df52e0528c558942436f6696dadb6
   ExpoSecureStore: bfe0879ff06a729a4a3ff4417ac4e1cd5f2aea04
   ExpoSplashScreen: 57dc730cbc8782e8b662e452a2379120b675b004
@@ -3786,6 +3798,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 2d945818608a5804c8a2df6530e23c0d88849797
 
-PODFILE CHECKSUM: 25aefe18dad7b04c44e3d93bd488e391939fc95a
+PODFILE CHECKSUM: 6a0eb9f21c585e54838c5bca26f2543f936e190e
 
 COCOAPODS: 1.16.2
