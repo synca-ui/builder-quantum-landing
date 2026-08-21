@@ -29,6 +29,7 @@ import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
 import { WEEKDAY_LABELS } from "@/lib/weekdays";
 import { isFeatureDeliverable } from "@/lib/featureAvailability";
 import { fontClassFor } from "@/lib/fontClass";
+import { heroTitel, heroUntertitel } from "@/lib/heroFallback";
 
 // Shared Components - werden im Editor UND auf der Live-Seite verwendet
 import { Navigation } from "@/components/shared/Navigation";
@@ -385,16 +386,28 @@ export function TemplatePreviewContent() {
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Hero Section */}
         <div className="text-center px-2 flex flex-col items-center">
+          {/* Rückfalltexte aus heroFallback.ts — dieselben wie auf der
+              veröffentlichten Seite (Hero.tsx), sonst verspricht die
+              Vorschau etwas anderes, als live steht. */}
           <h1 className={styles.titleClass} style={{ color: fontColor }}>
-            {slogan || "Willkommen"}
+            {heroTitel(slogan, businessName)}
           </h1>
-          <p
-            className={`${styles.bodyClass} max-w-[90%] text-center`}
-            style={{ color: fontColor }}
-          >
-            {uniqueDescription ||
-              "Wir bieten beste Qualität und eine tolle Atmosphäre."}
-          </p>
+          {(() => {
+            const untertitel = heroUntertitel(
+              uniqueDescription,
+              businessType,
+              location,
+            );
+            if (!untertitel) return null;
+            return (
+              <p
+                className={`${styles.bodyClass} max-w-[90%] text-center`}
+                style={{ color: fontColor }}
+              >
+                {untertitel}
+              </p>
+            );
+          })()}
 
           {onlineOrdering && (
             <div className="mt-4 w-full px-4">

@@ -13,6 +13,7 @@ import {
   suggestedConfigToDraft,
   plausibleBusinessName,
   plausibleEmail,
+  normalisiereAdresse,
   istGalerieMuell,
   normalizeSocialLinks,
   describeDraft,
@@ -400,6 +401,44 @@ describe("istGalerieMuell", () => {
     expect(draft.content.gallery?.map((g) => g.url)).toEqual([
       "https://www.krawummel.de/uploads/terrasse.jpg",
     ]);
+  });
+});
+
+/**
+ * Echter Fall krawummel.de: Google Places lieferte „62 Ludgeristraße,
+ * 48143 Münster“ — Hausnummer voran, und so stand es wörtlich auf der
+ * veröffentlichten Seite.
+ */
+describe("normalisiereAdresse", () => {
+  it("dreht Google-Places-Reihenfolge in die deutsche", () => {
+    expect(normalisiereAdresse("62 Ludgeristraße, 48143 Münster")).toBe(
+      "Ludgeristraße 62, 48143 Münster",
+    );
+    expect(normalisiereAdresse("12 Spiekerhof, 48143 Münster")).toBe(
+      "Spiekerhof 12, 48143 Münster",
+    );
+  });
+
+  it("lässt bereits richtige deutsche Adressen unangetastet", () => {
+    expect(normalisiereAdresse("Ludgeristraße 62, 48143 Münster")).toBe(
+      "Ludgeristraße 62, 48143 Münster",
+    );
+    expect(normalisiereAdresse("Am Markt 3")).toBe("Am Markt 3");
+  });
+
+  it("dreht NICHT, wenn keine deutsche Straße erkennbar ist", () => {
+    // US-Format bleibt, wie es ist — hier wäre Drehen falsch.
+    expect(normalisiereAdresse("123 Main Street, Springfield")).toBe(
+      "123 Main Street, Springfield",
+    );
+  });
+
+  it("wirkt in der Entwurfs-Abbildung", () => {
+    const d = suggestedConfigToDraft({
+      ...scraped,
+      location: "62 Ludgeristraße, 48143 Münster",
+    })!;
+    expect(d.business.location).toBe("Ludgeristraße 62, 48143 Münster");
   });
 });
 

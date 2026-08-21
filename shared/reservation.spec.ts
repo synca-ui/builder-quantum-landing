@@ -122,6 +122,53 @@ describe("detectReservation", () => {
   });
 });
 
+/**
+ * Echter Fall krawummel.de (21.08.2026): Gebucht wird über das Wix-eigene
+ * Reservierungsmodul auf der Seite selbst; gastronovi taucht NUR als
+ * Gutschein-Link auf. Die alte Erkennung lieferte null — und der n8n-Scrape
+ * meldete hasReservation:false, obwohl „Reserviere hier online“ groß auf der
+ * Startseite stand.
+ */
+describe("detectReservation – Baukasten-Modul und Gutschein-Links", () => {
+  const WIX_SEITE = `
+    <a href="https://services.gastronovi.com/restaurants/18919/reservation/widget/entry/voucher">Gutscheine</a>
+    <link href="https://static.parastorage.com/services/table-reservations-ooi/1.2801.0/ReservationAddOnViewerWidget.min.css" rel="stylesheet">
+  `;
+
+  it("erkennt das Wix-Reservierungsmodul und verlinkt auf die Seite selbst", () => {
+    const d = detectReservation(WIX_SEITE, "https://www.krawummel.de/");
+    expect(d).toMatchObject({
+      provider: "Wix Reservierungen",
+      url: "https://www.krawummel.de/",
+      source: "template",
+    });
+  });
+
+  it("wertet Gutschein-Links NIE als Reservierungsweg", () => {
+    // Nur der Voucher-Link, kein Widget: lieber nichts als ein
+    // „Tisch reservieren“-Knopf, der den Gutschein-Shop öffnet.
+    const nurGutschein =
+      '<a href="https://services.gastronovi.com/restaurants/18919/reservation/widget/entry/voucher">Gutscheine</a>';
+    expect(detectReservation(nurGutschein, "https://example.de/")).toBeNull();
+  });
+
+  it("erkennt einen echten gastronovi-Link", () => {
+    const d = detectReservation(
+      '<a href="https://services.gastronovi.com/restaurants/18919/reservation/widget/entry">Reservieren</a>',
+      "https://example.de/",
+    );
+    expect(d).toMatchObject({ provider: "gastronovi", source: "link" });
+  });
+
+  it("meldet ohne Modul und ohne Anbieter weiterhin nichts", () => {
+    // Die specs.tableReservations-Flags stehen auch auf Wix-Seiten OHNE
+    // Modul im HTML — sie dürfen nicht als Beleg zählen.
+    const ohneModul =
+      '<script>{"specs.tableReservations.isAreaEnabled":true}</script>';
+    expect(detectReservation(ohneModul, "https://example.de/")).toBeNull();
+  });
+});
+
 describe("describeReservation", () => {
   it("benennt den Anbieter", () => {
     const d = detectReservation(

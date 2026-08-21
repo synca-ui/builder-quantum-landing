@@ -437,7 +437,14 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     expect(menuItems.map((m: { name: string }) => m.name)).toContain("Töttchen");
   });
 
-  test("fragt nicht nach, wenn der Scrape eine brauchbare Karte hatte", async () => {
+  test("liest die Karte auch dann neu, wenn der Scrape eine brauchbare hatte", async () => {
+    // Geändert am 21.08.2026 (Echtfall krawummel.de): Der Scrape-Zweig fand
+    // dort zwei Limonaden mit dem Flascheninhalt als „Preis“ — formal
+    // brauchbar, inhaltlich Müll. Die Modell-Strukturierung ist dem
+    // Regex-Zweig so deutlich überlegen (98 % vs. 54 % im Messkorpus), dass
+    // sie IMMER läuft, sobald eine Menü-Adresse bekannt ist. Schlägt sie
+    // fehl, bleibt die Scrape-Karte stehen (recogniseMenu ersetzt nur bei
+    // Erfolg).
     stubFetch({
       suggested: {
         ...SUGGESTED_CONFIG,
@@ -450,9 +457,8 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     });
     renderPage();
     await runAnalysis();
-    // Kurz warten, damit ein versehentlicher Aufruf Zeit hätte aufzutauchen.
-    await new Promise((r) => setTimeout(r, 50));
-    expect(menuCalls()).toHaveLength(0);
+    await waitFor(() => expect(menuCalls().length).toBeGreaterThan(0));
+    expect(menuCalls()[0].body).toMatchObject({ url: MENU_URL });
   });
 
   test("liest neu, wenn der Scrape nur ein einzelnes Gericht fand", async () => {

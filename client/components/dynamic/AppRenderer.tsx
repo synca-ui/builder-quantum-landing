@@ -366,9 +366,13 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
             ? business.slogan
             : undefined
         } // ✅ FIX 4: Nur echten Slogan zeigen
-        description={
-          business.uniqueDescription || "Willkommen in unserem Geschäft!"
-        }
+        // Rückfalltexte macht Hero selbst (heroFallback.ts) — vorher stand
+        // hier „Willkommen in unserem Geschäft!“ unter dem „Willkommen“ der
+        // Überschrift, zweimal dieselbe Floskel.
+        description={business.uniqueDescription || undefined}
+        businessName={business.name}
+        businessType={business.type}
+        location={business.location}
         primaryColor={design.primaryColor}
         fontColor={design.fontColor}
         backgroundColor={design.backgroundColor}

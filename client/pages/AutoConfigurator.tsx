@@ -28,7 +28,6 @@ import {
   normalizeSubdomain,
   validateSubdomain,
 } from "@shared/subdomain";
-import { menuQuality, type ParsedMenuItem } from "@shared/menuParser";
 import { API_PATHS } from "@/lib/apiPaths";
 import type { DeploymentStage } from "@/lib/deployment";
 // Fortschritt und Erfolgsansicht kommen aus derselben Datei wie im manuellen
@@ -1147,8 +1146,6 @@ export default function AutoConfigurator() {
                 return;
               }
               setDraft(nextDraft);
-              const scrapedMenu = (nextDraft.content.menuItems ??
-                []) as ParsedMenuItem[];
               // Subdomain aus dem gefundenen Namen vorschlagen; ohne
               // brauchbaren Namen (die CTA-Prüfung wirft z. B. „Reserviere
               // hier online“ raus) aus dem Hostnamen der analysierten Seite —
@@ -1179,17 +1176,21 @@ export default function AutoConfigurator() {
               const site = job.websiteUrl || websiteUrl;
               if (site) void enrichFromSite(site);
 
-              // Speisekarte nachziehen, wenn der Scrape keine brauchbare
-              // geliefert hat.
+              // Speisekarte IMMER über die serverseitige Erkennung ziehen,
+              // sobald eine Menü-Adresse bekannt ist — nicht mehr nur, wenn
+              // das Scrape-Ergebnis unbrauchbar war.
               //
-              // Bewusst an der QUALITÄT festgemacht und nicht daran, ob
-              // überhaupt etwas da ist: Der Menü-Zweig des n8n-Flows lieferte
-              // durch den Binärfehler nie etwas (siehe server/services/gemini.ts),
-              // und selbst repariert liefe er über einen ungetesteten
-              // Regex-Ausdruck. Ein einzelnes Gericht aus einer zwölfseitigen
-              // Karte hieße "erkannt" und würde unseren geprüften Weg
-              // überspringen – deshalb entscheidet menuQuality.
-              if (!menuQuality(scrapedMenu).usable && job.menuUrl) {
+              // Am echten Fall krawummel.de nachgemessen (21.08.2026): Der
+              // Menü-Zweig des n8n-Flows fand in der Wix-Seite genau zwei
+              // Limonaden und trug als „Preis“ 0,33 ein — den Flascheninhalt.
+              // Der Haiku-Weg las aus derselben Adresse 21 Gerichte in sechs
+              // Kategorien mit echten Preisen. Die Strukturierung über das
+              // Modell ist dem Regex-Zweig so deutlich überlegen (98 % vs.
+              // 54 % im Messkorpus), dass ein „brauchbares“ Scrape-Ergebnis
+              // sie nicht mehr überspringen darf. Schlägt die Erkennung
+              // fehl, bleibt die Scrape-Karte einfach stehen — recogniseMenu
+              // ersetzt sie nur bei Erfolg.
+              if (job.menuUrl) {
                 void recogniseMenu({ url: job.menuUrl });
               }
               toast({

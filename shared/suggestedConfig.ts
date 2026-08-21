@@ -440,6 +440,39 @@ export function plausibleBusinessName(raw?: string): string | undefined {
 }
 
 /**
+ * Straßen-Erkennungsmerkmale für die Adress-Normalisierung. Bewusst deutsche
+ * Suffixe: Nur wo sicher eine deutsche Straße vorliegt, wird gedreht —
+ * "123 Main St" bleibt unangetastet.
+ */
+const STRASSEN_SUFFIX =
+  /(straße|strasse|str\.|weg|gasse|platz|allee|ring|damm|ufer|markt|hof|steig|chaussee|promenade)\b/i;
+
+/**
+ * Dreht Google-Places-Adressen in die deutsche Reihenfolge.
+ *
+ * Der Deep-Scrape übernimmt die Adresse aus der Places-Antwort, und die
+ * liefert für deutsche Betriebe gelegentlich „62 Ludgeristraße, 48143
+ * Münster“ (Hausnummer voran, echter Fall krawummel.de). So stand es dann
+ * wörtlich auf der veröffentlichten Seite.
+ */
+export function normalisiereAdresse(raw?: string): string | undefined {
+  const adresse = clean(raw);
+  if (!adresse) return undefined;
+
+  const [erstesSegment, ...rest] = adresse.split(",");
+  const gedreht = erstesSegment
+    .trim()
+    .match(/^(\d{1,4}(?:\s?[a-zA-Z])?)\s+(.+)$/);
+  if (gedreht && STRASSEN_SUFFIX.test(gedreht[2])) {
+    return [
+      `${gedreht[2].trim()} ${gedreht[1].replace(/\s+/g, "")}`,
+      ...rest.map((s) => s.trim()),
+    ].join(", ");
+  }
+  return adresse;
+}
+
+/**
  * Technik-Adressen, die der Scrape aus dem JavaScript der Seite fischt.
  * Echter Fall krawummel.de: Der Flow lieferte
  * "605a…9123@sentry-next.wixpress.com" – die Fehlerberichts-Adresse des
@@ -584,7 +617,9 @@ export function suggestedConfigToDraft(
   const name = plausibleBusinessName(suggested.businessName);
   if (name) business.name = name;
   if (clean(suggested.businessType)) business.type = clean(suggested.businessType);
-  if (clean(suggested.location)) business.location = clean(suggested.location);
+  if (clean(suggested.location)) {
+    business.location = normalisiereAdresse(suggested.location);
+  }
   if (clean(suggested.slogan)) business.slogan = clean(suggested.slogan);
   // Im Konfigurator heißt das Feld uniqueDescription.
   if (clean(suggested.description)) {

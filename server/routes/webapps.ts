@@ -294,6 +294,35 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
         }
         imageNotes = [...imageNotes, ...logoIngest.notes];
       }
+
+      // Gericht-Bilder genauso: Der Scrape übernimmt imageUrl aus JSON-LD
+      // der analysierten Seite. Galerie und Logo wurden längst kopiert —
+      // die Speisekarte, die ein Gast am häufigsten öffnet, hing weiter an
+      // fremdem Hosting.
+      const menuListe = config?.content?.menuItems ?? config?.menuItems;
+      if (Array.isArray(menuListe)) {
+        const mitBild = menuListe.filter(
+          (m: any) =>
+            typeof m?.imageUrl === "string" && /^https?:\/\//i.test(m.imageUrl),
+        );
+        if (mitBild.length) {
+          const dishIngest = await ingestGallery(
+            mitBild.map((m: any, i: number) => ({
+              id: String(m?.id ?? `dish-${i}`),
+              url: m.imageUrl,
+            })),
+            userId,
+          );
+          // ingestGallery liefert die Liste in unveränderter Reihenfolge –
+          // die Zuordnung läuft deshalb über den Index, nicht über ids
+          // (Scrape-ids sind nicht garantiert eindeutig).
+          mitBild.forEach((m: any, i: number) => {
+            const neu = dishIngest.gallery[i]?.url;
+            if (neu) m.imageUrl = neu;
+          });
+          imageNotes = [...imageNotes, ...dishIngest.notes];
+        }
+      }
     } catch (error) {
       // Der ganze Schritt ist eine Verbesserung, keine Voraussetzung.
       console.error("[Publish] Bildübernahme fehlgeschlagen:", error);
