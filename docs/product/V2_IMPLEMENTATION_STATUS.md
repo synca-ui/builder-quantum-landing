@@ -232,12 +232,20 @@ const menuResult = useLiquidMenu(menuItems, { now: new Date(), guests: 4 });
   - Input sanitization and email validation
   - Full TypeScript with proper interfaces
 
-- [x] Stripe webhook registration in server
-  - Added raw body parser for signature verification
-  - Registered `/api/webhooks/stripe` endpoint
-  - Added test endpoint `/api/webhooks/test`
+- [ ] **Stripe webhook registration in server — NICHT erfolgt** (Audit 27.07.2026)
+  - `server/webhooks/stripe.ts` existiert (584 Zeilen), hat aber **keinen einzigen
+    Aufrufer**: `/api/webhooks/stripe` ist nirgends registriert, auch kein Test-Endpunkt.
+  - Beim Mounten zwingend `express.raw()` **vor** `express.json()` setzen, sonst
+    scheitert die Signaturprüfung (gleiche Ursache wie beim Clerk-Webhook, dort behoben).
+  - Solange offen, ist Billing bewusst deaktiviert: `createCheckoutSession` antwortet
+    501, `cancelSubscription` verweigert das Kündigen von Stripe-Abos.
 
-### Data Flow (Stripe Integration - COMPLETE)
+### Data Flow (Stripe Integration — ENTWURF, nicht aktiv)
+
+> ⚠️ Der folgende Ablauf beschreibt das **Ziel**, nicht den Ist-Zustand. Es fehlen:
+> echte Price-IDs (aktuell `price_basic`/`price_pro`), `sessions.create`, der
+> gemountete Webhook und der Stripe-Aufruf beim Kündigen. `Subscription.plan` kann
+> deshalb faktisch nie ≠ `free` werden.
 
 ```
 Stripe Payment → Webhook → /api/orders/create
