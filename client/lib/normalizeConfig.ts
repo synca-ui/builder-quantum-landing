@@ -72,6 +72,9 @@ export interface FlatDatabaseConfig {
 
   // Features (flach aus schema.prisma)
   reservationsEnabled?: boolean;
+  /** Bestehendes Buchungssystem des Betriebs – verlinken statt ersetzen. */
+  reservationUrl?: string;
+  reservationProvider?: string;
   maxGuests?: number;
   notificationMethod?: string;
   reservationButtonColor?: string;
@@ -613,6 +616,13 @@ export function normalizeConfig(
         flatConfig.reservationsEnabled ??
         typeDefaults?.features?.reservationsEnabled ??
         DEFAULT_FEATURE_FLAGS.reservationsEnabled,
+      // Bestehendes Buchungssystem: fehlte hier — publicSiteView lieferte die
+      // Felder (seit dem Echtfall-Fix), aber diese Abbildung ließ sie fallen,
+      // und AppRenderer stellte doch wieder das eigene Formular neben das des
+      // Betriebs. Kein Default: undefined heißt „wir buchen selbst“.
+      reservationUrl: featuresObj.reservationUrl || flatConfig.reservationUrl || undefined,
+      reservationProvider:
+        featuresObj.reservationProvider || flatConfig.reservationProvider || undefined,
       maxGuests:
         featuresObj.maxGuests ??
         flatConfig.maxGuests ??

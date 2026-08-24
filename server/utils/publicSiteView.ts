@@ -104,6 +104,16 @@ export function oeffentlicheSiteFelder(
     homepageDishImageVisibility: config.homepageDishImageVisibility,
 
     reservationsEnabled: features.reservationsEnabled ?? config.reservationsEnabled ?? false,
+    // Das BESTEHENDE Buchungssystem des Betriebs (shared/reservation.ts):
+    // AppRenderer verlinkt dorthin statt ein eigenes Formular danebenzustellen.
+    // Die Felder fehlten hier — der Publish speicherte sie (nachgewiesen am
+    // Echtfall krawummel.de: „Wix Reservierungen“ stand in configData), aber
+    // die öffentliche Sicht ließ sie fallen, und die Live-Seite zeigte doch
+    // wieder das eigene Formular. Beides ist öffentlich unbedenklich: Es ist
+    // der Link, den die Website des Betriebs selbst jedem Gast zeigt.
+    reservationUrl: features.reservationUrl || config.reservationUrl || undefined,
+    reservationProvider:
+      features.reservationProvider || config.reservationProvider || undefined,
     maxGuests: features.maxGuests || config.maxGuests || 10,
     reservationButtonColor: features.reservationButtonColor || config.reservationButtonColor,
     reservationButtonTextColor:
