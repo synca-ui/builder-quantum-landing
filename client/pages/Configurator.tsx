@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { publishWebApp } from "@/lib/webapps";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Rocket,
   Settings,
@@ -216,6 +217,7 @@ export default function Configurator() {
   const business = useConfiguratorStore((s) => s.business); // <-- DIESE ZEILE HINZUFÜGEN
   const design = useConfiguratorStore((s) => s.design);
   const features = useConfiguratorStore((s) => s.features);
+  const { toast } = useToast();
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(
     () => persistence.getConfigId() || null,
   );
@@ -330,14 +332,40 @@ export default function Configurator() {
 
       const result = await publishWebApp(subdomain, config, token || undefined);
 
+      // Der Knopf veröffentlichte bisher WORTLOS: kein Erfolgshinweis, keine
+      // Adresse, kein Fehler. Beim Echtfall-Test am 21.08.2026 hat genau das
+      // dazu geführt, dass zwei Klicks unbemerkt publizierten — und zwar auf
+      // die Subdomain aus dem ALTEN Entwurf. Der Toast nennt deshalb immer
+      // das Ziel, damit ein falsches sofort auffällt.
       if (result.success) {
-        setPublishedUrl(result.publishedUrl);
+        const url = result.publishedUrl || `https://${subdomain}.maitr.de`;
+        setPublishedUrl(url);
         setSaveStatus("saved");
+        toast({
+          title: "Web-App veröffentlicht",
+          description: `Live unter ${url}`,
+        });
         setTimeout(() => setSaveStatus("idle"), 2000);
+      } else {
+        setSaveStatus("idle");
+        toast({
+          title: "Veröffentlichen fehlgeschlagen",
+          description:
+            result?.message ||
+            result?.error ||
+            "Der Server hat die Konfiguration nicht angenommen.",
+          variant: "destructive",
+        });
       }
     } catch (e) {
       console.error("Publishing failed", e);
       setSaveStatus("idle");
+      toast({
+        title: "Veröffentlichen fehlgeschlagen",
+        description:
+          "Der Server war nicht erreichbar oder hat abgelehnt. Bitte versuche es erneut.",
+        variant: "destructive",
+      });
     }
   }, [
     isSignedIn,
@@ -346,6 +374,7 @@ export default function Configurator() {
     actions.data,
     business.domain?.selectedDomain,
     business.name,
+    toast,
   ]);
 
   const [isTransitioning, setIsTransitioning] = useState(false);

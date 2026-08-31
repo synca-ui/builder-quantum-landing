@@ -12,6 +12,9 @@ import { describe, expect, it } from "vitest";
 import {
   suggestedConfigToDraft,
   plausibleBusinessName,
+  plausibleEmail,
+  normalisiereAdresse,
+  istGalerieMuell,
   normalizeSocialLinks,
   describeDraft,
   mergeSection,
@@ -292,6 +295,170 @@ describe("plausibleBusinessName", () => {
     expect(plausibleBusinessName(undefined)).toBeUndefined();
     expect(plausibleBusinessName("   ")).toBeUndefined();
     expect(plausibleBusinessName("123")).toBeUndefined();
+  });
+
+  it("verwirft Handlungsaufforderungen von Buttons und Widgets", () => {
+    // Echter Fall krawummel.de (Wix): Der Flow griff den Text des
+    // Reservierungs-Widgets als Betriebsnamen.
+    expect(plausibleBusinessName("Reserviere hier online")).toBeUndefined();
+    expect(plausibleBusinessName("Jetzt online reservieren")).toBeUndefined();
+    expect(plausibleBusinessName("Tisch reservieren")).toBeUndefined();
+    expect(plausibleBusinessName("Jetzt bestellen")).toBeUndefined();
+    expect(plausibleBusinessName("Online bestellen")).toBeUndefined();
+    expect(plausibleBusinessName("Book a table")).toBeUndefined();
+    expect(plausibleBusinessName("Order online now")).toBeUndefined();
+  });
+
+  it("hält echte Namen von der Aufforderungs-Regel fern", () => {
+    // Enthält ein Wort außerhalb von Verb+Füllwörtern → kein Knopf.
+    expect(plausibleBusinessName("Gasthaus Zur Bestellung")).toBe(
+      "Gasthaus Zur Bestellung",
+    );
+    expect(plausibleBusinessName("Buchenhof")).toBe("Buchenhof");
+    expect(plausibleBusinessName("Restaurant Bestella")).toBe(
+      "Restaurant Bestella",
+    );
+  });
+});
+
+/**
+ * Echter Fall krawummel.de: Der Flow fischte die Sentry-Fehlerberichtsadresse
+ * des Wix-Baukastens aus dem JavaScript der Seite und lieferte sie als
+ * Kontakt-E-Mail des Betriebs.
+ */
+describe("plausibleEmail", () => {
+  it("verwirft Technik-Adressen aus Baukasten-JavaScript", () => {
+    expect(
+      plausibleEmail("605a7baede844d278b89dc95ae0a9123@sentry-next.wixpress.com"),
+    ).toBeUndefined();
+    expect(plausibleEmail("abc@sentry.io")).toBeUndefined();
+    expect(plausibleEmail("kontakt@o123.ingest.sentry.io")).toBeUndefined();
+    expect(plausibleEmail("info@example.com")).toBeUndefined();
+  });
+
+  it("verwirft Maschinen-IDs als lokalen Teil", () => {
+    expect(
+      plausibleEmail("0123456789abcdef01234567@irgendein-dienst.de"),
+    ).toBeUndefined();
+  });
+
+  it("lässt echte Adressen durch", () => {
+    expect(plausibleEmail("info@grosser-kiepenkerl.de")).toBe(
+      "info@grosser-kiepenkerl.de",
+    );
+    expect(plausibleEmail("  reservierung@krawummel.de ")).toBe(
+      "reservierung@krawummel.de",
+    );
+  });
+
+  it("verwirft alles, was keine Adresse ist", () => {
+    expect(plausibleEmail("")).toBeUndefined();
+    expect(plausibleEmail("kein-at-zeichen")).toBeUndefined();
+    expect(plausibleEmail(undefined)).toBeUndefined();
+  });
+});
+
+/**
+ * Echter Fall krawummel.de: Zwischen den zehn "Galeriebildern" lagen zwei
+ * 30×30-Icons, das generische Wix-Favicon und ein absichtlich unscharfer
+ * Ladeplatzhalter (blur_2, 141×94).
+ */
+describe("istGalerieMuell", () => {
+  it("erkennt Icons, Favicons und Ladeplatzhalter", () => {
+    expect(
+      istGalerieMuell(
+        "https://static.wixstatic.com/media/0fdef751.png/v1/fill/w_30,h_30,al_c,q_85/0fdef751.png",
+      ),
+    ).toBe(true);
+    expect(
+      istGalerieMuell(
+        "https://static.wixstatic.com/media/x.jpg/v1/fill/w_141,h_94,al_c,q_80,usm_0.66_1.00_0.01,blur_2/x.jpg",
+      ),
+    ).toBe(true);
+    expect(istGalerieMuell("https://static.parastorage.com/client/pfavico.ico")).toBe(true);
+    expect(istGalerieMuell("https://example.org/logo.svg")).toBe(true);
+  });
+
+  it("lässt echte Fotos durch", () => {
+    expect(
+      istGalerieMuell(
+        "https://static.wixstatic.com/media/y.jpg/v1/fill/w_410,h_461,al_c,q_80/y.jpg",
+      ),
+    ).toBe(false);
+    expect(
+      istGalerieMuell("https://www.krawummel.de/uploads/terrasse.jpg"),
+    ).toBe(false);
+  });
+
+  it("wirkt in der Galerie-Abbildung", () => {
+    const draft = suggestedConfigToDraft({
+      gallery: [
+        "https://static.wixstatic.com/icon.png/v1/fill/w_30,h_30/icon.png",
+        "https://www.krawummel.de/uploads/terrasse.jpg",
+        "https://static.parastorage.com/client/pfavico.ico",
+      ],
+    } as SuggestedConfig)!;
+    expect(draft.content.gallery?.map((g) => g.url)).toEqual([
+      "https://www.krawummel.de/uploads/terrasse.jpg",
+    ]);
+  });
+});
+
+/**
+ * Echter Fall krawummel.de: Google Places lieferte „62 Ludgeristraße,
+ * 48143 Münster“ — Hausnummer voran, und so stand es wörtlich auf der
+ * veröffentlichten Seite.
+ */
+describe("normalisiereAdresse", () => {
+  it("dreht Google-Places-Reihenfolge in die deutsche", () => {
+    expect(normalisiereAdresse("62 Ludgeristraße, 48143 Münster")).toBe(
+      "Ludgeristraße 62, 48143 Münster",
+    );
+    expect(normalisiereAdresse("12 Spiekerhof, 48143 Münster")).toBe(
+      "Spiekerhof 12, 48143 Münster",
+    );
+  });
+
+  it("lässt bereits richtige deutsche Adressen unangetastet", () => {
+    expect(normalisiereAdresse("Ludgeristraße 62, 48143 Münster")).toBe(
+      "Ludgeristraße 62, 48143 Münster",
+    );
+    expect(normalisiereAdresse("Am Markt 3")).toBe("Am Markt 3");
+  });
+
+  it("dreht NICHT, wenn keine deutsche Straße erkennbar ist", () => {
+    // US-Format bleibt, wie es ist — hier wäre Drehen falsch.
+    expect(normalisiereAdresse("123 Main Street, Springfield")).toBe(
+      "123 Main Street, Springfield",
+    );
+  });
+
+  it("wirkt in der Entwurfs-Abbildung", () => {
+    const d = suggestedConfigToDraft({
+      ...scraped,
+      location: "62 Ludgeristraße, 48143 Münster",
+    })!;
+    expect(d.business.location).toBe("Ludgeristraße 62, 48143 Münster");
+  });
+});
+
+describe("Hintergrund-Entschärfung im Entwurf", () => {
+  it("mildert grelle Scrape-Hintergründe ab (ein Scrape, ein Ergebnis)", () => {
+    // krawummel.de lieferte #bada55 — über "Erst anpassen" landete das roh
+    // auf der veröffentlichten Seite, während "Jetzt veröffentlichen"
+    // dieselbe Farbe abmilderte.
+    const draft = suggestedConfigToDraft({
+      backgroundColor: "#bada55",
+    } as SuggestedConfig)!;
+    expect(draft.design.backgroundColor).toBeDefined();
+    expect(draft.design.backgroundColor!.toLowerCase()).not.toBe("#bada55");
+  });
+
+  it("lässt weiche Farben buchstabengleich stehen", () => {
+    const draft = suggestedConfigToDraft({
+      backgroundColor: "#FBF7F0",
+    } as SuggestedConfig)!;
+    expect(draft.design.backgroundColor).toBe("#FBF7F0");
   });
 });
 

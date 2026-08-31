@@ -39,14 +39,24 @@ configure({ asyncUtilTimeout: 8000 });
 
 // Angemeldet – die globale Vorgabe in test/setupTests.ts ist abgemeldet, und
 // ohne Token bricht der Ablauf schon vor dem ersten Aufruf ab.
+//
+// STABILES Objekt statt Objektliteral im Rückgabewert: Seit der IDOR-Härtung
+// hängt die Subdomain-Verfügbarkeitsprüfung als Effect an `getToken`. Das
+// echte Clerk memoisiert diese Funktion; ein Mock, der bei jedem useAuth()
+// ein frisches Objekt baut, gibt ihr dagegen bei jedem Render eine neue
+// Identität – Effect → setAvailability → Render → neue Identität → Effect …
+// Die Suite hing damit endlos (14+ Minuten, nie fertig), obwohl kein einziger
+// Test rot war.
+const STABILE_AUTH = {
+  isLoaded: true,
+  isSignedIn: true,
+  userId: "user_test",
+  getToken: async () => "test-token",
+};
+const STABILER_USER = { isLoaded: true, isSignedIn: true, user: null };
 vi.mock("@clerk/clerk-react", () => ({
-  useAuth: () => ({
-    isLoaded: true,
-    isSignedIn: true,
-    userId: "user_test",
-    getToken: async () => "test-token",
-  }),
-  useUser: () => ({ isLoaded: true, isSignedIn: true, user: null }),
+  useAuth: () => STABILE_AUTH,
+  useUser: () => STABILER_USER,
   ClerkProvider: ({ children }: { children?: unknown }) => children,
   UserButton: () => null,
 }));
@@ -427,7 +437,14 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     expect(menuItems.map((m: { name: string }) => m.name)).toContain("Töttchen");
   });
 
-  test("fragt nicht nach, wenn der Scrape eine brauchbare Karte hatte", async () => {
+  test("liest die Karte auch dann neu, wenn der Scrape eine brauchbare hatte", async () => {
+    // Geändert am 21.08.2026 (Echtfall krawummel.de): Der Scrape-Zweig fand
+    // dort zwei Limonaden mit dem Flascheninhalt als „Preis“ — formal
+    // brauchbar, inhaltlich Müll. Die Modell-Strukturierung ist dem
+    // Regex-Zweig so deutlich überlegen (98 % vs. 54 % im Messkorpus), dass
+    // sie IMMER läuft, sobald eine Menü-Adresse bekannt ist. Schlägt sie
+    // fehl, bleibt die Scrape-Karte stehen (recogniseMenu ersetzt nur bei
+    // Erfolg).
     stubFetch({
       suggested: {
         ...SUGGESTED_CONFIG,
@@ -440,9 +457,8 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     });
     renderPage();
     await runAnalysis();
-    // Kurz warten, damit ein versehentlicher Aufruf Zeit hätte aufzutauchen.
-    await new Promise((r) => setTimeout(r, 50));
-    expect(menuCalls()).toHaveLength(0);
+    await waitFor(() => expect(menuCalls().length).toBeGreaterThan(0));
+    expect(menuCalls()[0].body).toMatchObject({ url: MENU_URL });
   });
 
   test("liest neu, wenn der Scrape nur ein einzelnes Gericht fand", async () => {

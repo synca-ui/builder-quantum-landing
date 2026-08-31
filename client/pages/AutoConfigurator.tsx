@@ -16,6 +16,7 @@ import {
   suggestedConfigToDraft,
   describeDraft,
   normalizeSocialLinks,
+  plausibleBusinessName,
   type ConfiguratorDraft,
   type SuggestedConfig,
 } from "@shared/suggestedConfig";
@@ -27,7 +28,6 @@ import {
   normalizeSubdomain,
   validateSubdomain,
 } from "@shared/subdomain";
-import { menuQuality, type ParsedMenuItem } from "@shared/menuParser";
 import { API_PATHS } from "@/lib/apiPaths";
 import type { DeploymentStage } from "@/lib/deployment";
 // Fortschritt und Erfolgsansicht kommen aus derselben Datei wie im manuellen
@@ -821,6 +821,17 @@ export default function AutoConfigurator() {
           if (!current) return current;
           const business = { ...current.business };
 
+          // Namens-Rückfall: Der Scrape-Flow greift die erste Überschrift und
+          // liefert damit auch mal „Reserviere hier online“ — solche Kandidaten
+          // wirft plausibleBusinessName inzwischen raus, und der Entwurf steht
+          // ohne Namen da. JSON-LD `name` bzw. `og:site_name` pflegt der
+          // Betreiber dagegen bewusst; durch dieselbe Plausibilitätsprüfung
+          // geschickt, ist das der bessere zweite Versuch.
+          if (!business.name?.trim() && details.siteName) {
+            const name = plausibleBusinessName(String(details.siteName));
+            if (name) business.name = name;
+          }
+
           if (!business.location?.trim() && details.address) {
             business.location = details.address;
           }
@@ -1135,13 +1146,25 @@ export default function AutoConfigurator() {
                 return;
               }
               setDraft(nextDraft);
-              const scrapedMenu = (nextDraft.content.menuItems ??
-                []) as ParsedMenuItem[];
-              // Subdomain aus dem gefundenen Namen vorschlagen. Schlägt das
-              // fehl (kein Name, oder nach dem Bereinigen zu kurz), bleibt das
-              // Feld leer und die Oberfläche verlangt eine Eingabe – besser
-              // als unter einem unbrauchbaren Namen zu veröffentlichen.
-              setSubdomain(suggestSubdomain(nextDraft.business.name) ?? "");
+              // Subdomain aus dem gefundenen Namen vorschlagen; ohne
+              // brauchbaren Namen (die CTA-Prüfung wirft z. B. „Reserviere
+              // hier online“ raus) aus dem Hostnamen der analysierten Seite —
+              // krawummel.de → „krawummel“. Erst wenn beides nichts hergibt,
+              // bleibt das Feld leer und die Oberfläche verlangt eine Eingabe.
+              const hostname = (() => {
+                try {
+                  return new URL(job.websiteUrl || websiteUrl).hostname
+                    .replace(/^www\./, "")
+                    .split(".")[0];
+                } catch {
+                  return undefined;
+                }
+              })();
+              setSubdomain(
+                suggestSubdomain(nextDraft.business.name) ??
+                  suggestSubdomain(hostname) ??
+                  "",
+              );
               setGenStatus("done");
 
               // Logo, Adresse und soziale Netze nachziehen. Der Scrape lässt
@@ -1153,17 +1176,21 @@ export default function AutoConfigurator() {
               const site = job.websiteUrl || websiteUrl;
               if (site) void enrichFromSite(site);
 
-              // Speisekarte nachziehen, wenn der Scrape keine brauchbare
-              // geliefert hat.
+              // Speisekarte IMMER über die serverseitige Erkennung ziehen,
+              // sobald eine Menü-Adresse bekannt ist — nicht mehr nur, wenn
+              // das Scrape-Ergebnis unbrauchbar war.
               //
-              // Bewusst an der QUALITÄT festgemacht und nicht daran, ob
-              // überhaupt etwas da ist: Der Menü-Zweig des n8n-Flows lieferte
-              // durch den Binärfehler nie etwas (siehe server/services/gemini.ts),
-              // und selbst repariert liefe er über einen ungetesteten
-              // Regex-Ausdruck. Ein einzelnes Gericht aus einer zwölfseitigen
-              // Karte hieße "erkannt" und würde unseren geprüften Weg
-              // überspringen – deshalb entscheidet menuQuality.
-              if (!menuQuality(scrapedMenu).usable && job.menuUrl) {
+              // Am echten Fall krawummel.de nachgemessen (21.08.2026): Der
+              // Menü-Zweig des n8n-Flows fand in der Wix-Seite genau zwei
+              // Limonaden und trug als „Preis“ 0,33 ein — den Flascheninhalt.
+              // Der Haiku-Weg las aus derselben Adresse 21 Gerichte in sechs
+              // Kategorien mit echten Preisen. Die Strukturierung über das
+              // Modell ist dem Regex-Zweig so deutlich überlegen (98 % vs.
+              // 54 % im Messkorpus), dass ein „brauchbares“ Scrape-Ergebnis
+              // sie nicht mehr überspringen darf. Schlägt die Erkennung
+              // fehl, bleibt die Scrape-Karte einfach stehen — recogniseMenu
+              // ersetzt sie nur bei Erfolg.
+              if (job.menuUrl) {
                 void recogniseMenu({ url: job.menuUrl });
               }
               toast({
@@ -1434,6 +1461,16 @@ export default function AutoConfigurator() {
     // vorherigen Stand zurück, falls der Scrape danebenlag.
     pushHistory();
     applyScrapedDraft(draft);
+    // Die hier geprüfte Adresse mitnehmen. applyScrapedDraft setzt die Domain
+    // auf den Auslieferungszustand zurück (der Entwurf beschreibt einen neuen
+    // Betrieb) — ohne diese Zeile würde der Kopfzeilen-Publish im Konfigurator
+    // die Subdomain wieder still aus dem Geschäftsnamen ableiten, obwohl der
+    // Nutzer hier längst eine freie Adresse gewählt hat.
+    if (subdomain.trim() && availability.kind === "free") {
+      setBusinessInfo({
+        domain: { hasDomain: false, selectedDomain: subdomain.trim() },
+      });
+    }
     setCurrentStep(STEP_BUSINESS_INFO);
 
     toast({
@@ -1441,7 +1478,17 @@ export default function AutoConfigurator() {
       description: "Prüfe die Angaben und passe an, was nicht stimmt.",
     });
     navigate("/configurator/manual");
-  }, [draft, pushHistory, applyScrapedDraft, setCurrentStep, toast, navigate]);
+  }, [
+    draft,
+    pushHistory,
+    applyScrapedDraft,
+    subdomain,
+    availability,
+    setBusinessInfo,
+    setCurrentStep,
+    toast,
+    navigate,
+  ]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
 

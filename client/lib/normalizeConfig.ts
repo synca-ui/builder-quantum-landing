@@ -72,6 +72,9 @@ export interface FlatDatabaseConfig {
 
   // Features (flach aus schema.prisma)
   reservationsEnabled?: boolean;
+  /** Bestehendes Buchungssystem des Betriebs – verlinken statt ersetzen. */
+  reservationUrl?: string;
+  reservationProvider?: string;
   maxGuests?: number;
   notificationMethod?: string;
   reservationButtonColor?: string;
@@ -302,7 +305,17 @@ function normalizeGallery(gallery: unknown): GalleryImage[] {
 }
 
 /**
- * Normalisiert OpeningHours aus verschiedenen Formaten
+ * Normalisiert OpeningHours aus verschiedenen Formaten.
+ *
+ * Fehlt ein Tag in einer ansonsten gepflegten Woche, ist das ein RUHETAG.
+ * Vorher wurde er als „09:00–22:00 geöffnet“ erfunden — nachgewiesen am
+ * Echtfall krawummel.de: Der Scrape ließ den Montag korrekt weg (Ruhetag),
+ * und die veröffentlichte Seite zeigte Gästen am Montag „Offen · 09:00–22:00“.
+ * Falsche Öffnungszeiten sind schlimmer als keine (siehe shared/siteDetails).
+ *
+ * Ist GAR KEIN Tag vorhanden, liefert die Funktion weiterhin {} und der
+ * Aufrufer greift zu den Standardzeiten — eine Woche komplett aus Ruhetagen
+ * wäre für einen frisch angelegten manuellen Entwurf genauso falsch.
  */
 function normalizeOpeningHours(hours: unknown): OpeningHours {
   const parsed = safeParseJSON<Record<string, unknown>>(hours, {});
@@ -317,6 +330,9 @@ function normalizeOpeningHours(hours: unknown): OpeningHours {
   ];
 
   const normalized: OpeningHours = {};
+  const vorhandeneTage = days.filter((day) => parsed[day]);
+  if (!vorhandeneTage.length) return normalized;
+
   for (const day of days) {
     const dayData = parsed[day] as Record<string, unknown> | undefined;
     if (dayData) {
@@ -326,7 +342,7 @@ function normalizeOpeningHours(hours: unknown): OpeningHours {
         closed: dayData.closed === true,
       };
     } else {
-      normalized[day] = { open: "09:00", close: "22:00", closed: false };
+      normalized[day] = { open: "", close: "", closed: true };
     }
   }
   return normalized;
@@ -613,6 +629,13 @@ export function normalizeConfig(
         flatConfig.reservationsEnabled ??
         typeDefaults?.features?.reservationsEnabled ??
         DEFAULT_FEATURE_FLAGS.reservationsEnabled,
+      // Bestehendes Buchungssystem: fehlte hier — publicSiteView lieferte die
+      // Felder (seit dem Echtfall-Fix), aber diese Abbildung ließ sie fallen,
+      // und AppRenderer stellte doch wieder das eigene Formular neben das des
+      // Betriebs. Kein Default: undefined heißt „wir buchen selbst“.
+      reservationUrl: featuresObj.reservationUrl || flatConfig.reservationUrl || undefined,
+      reservationProvider:
+        featuresObj.reservationProvider || flatConfig.reservationProvider || undefined,
       maxGuests:
         featuresObj.maxGuests ??
         flatConfig.maxGuests ??

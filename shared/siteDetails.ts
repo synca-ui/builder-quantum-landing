@@ -34,6 +34,13 @@ export interface SiteSocial {
 }
 
 export interface SiteDetails {
+  /**
+   * Name des Betriebs, wie die Seite selbst ihn angibt: JSON-LD `name`,
+   * sonst `og:site_name`. Beide Quellen pflegt der Betreiber (bzw. sein
+   * Baukasten) bewusst — anders als die erste Seitenüberschrift, aus der der
+   * Scrape-Flow schon „HERZLICH“ und „Reserviere hier online“ gemacht hat.
+   */
+  siteName?: string;
   /** Absolute Adresse des Logos, falls eines gefunden wurde. */
   logoUrl?: string;
   /** Einzeilig zusammengesetzt, z.B. "Spiekerhof 45, 48143 Münster". */
@@ -282,6 +289,10 @@ export function extractSiteDetails(html: string, baseUrl: string): SiteDetails {
   );
 
   if (business) {
+    if (typeof business.name === "string" && business.name.trim()) {
+      details.siteName = business.name.trim();
+    }
+
     const address = formatAddress(business.address);
     if (address) details.address = address;
 
@@ -314,6 +325,9 @@ export function extractSiteDetails(html: string, baseUrl: string): SiteDetails {
   }
 
   // ── Metaangaben ──────────────────────────────────────────────────────────
+  if (!details.siteName) {
+    details.siteName = meta(html, "og:site_name");
+  }
   if (!details.description) {
     details.description = meta(html, "og:description") ?? meta(html, "description");
   }

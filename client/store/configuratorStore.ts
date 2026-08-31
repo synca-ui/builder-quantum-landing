@@ -1079,11 +1079,21 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
        */
       applyScrapedDraft: (draft) => {
         checkThrottleGuard("applyScrapedDraft");
+        // Grundlage sind die DEFAULTS, nicht der bisherige Zustand: Der
+        // Entwurf beschreibt einen ANDEREN Betrieb. Beim Mischen über den
+        // alten Zustand überlebte alles, wofür der Scrape nichts lieferte —
+        // nachgewiesen am echten Fall krawummel.de: Slogan („Echte
+        // italienische Küche seit 1987“), Beschreibung und Logo des
+        // Trattoria-Demo-Entwurfs standen auf der Seite des vegetarischen
+        // Cafés, und die alte Domain-Wahl bestimmte still das Publish-Ziel.
+        // Die Oberfläche verspricht ohnehin „Dein bisheriger Entwurf wird
+        // ersetzt“, und „Rückgängig“ holt ihn zurück (pushHistory beim
+        // Aufrufer).
         set((state) => ({
-          business: { ...state.business, ...draft.business },
-          design: { ...state.design, ...draft.design },
+          business: { ...defaultBusinessInfo, ...draft.business },
+          design: { ...defaultDesignConfig, ...draft.design },
           content: {
-            ...state.content,
+            ...defaultContentData,
             ...(draft.content.menuItems?.length
               ? { menuItems: draft.content.menuItems }
               : {}),
@@ -1093,14 +1103,17 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
             ...(draft.content.categories?.length
               ? { categories: draft.content.categories }
               : {}),
+            ...(draft.content.allergenLegend
+              ? { allergenLegend: draft.content.allergenLegend }
+              : {}),
             // Tage, für die der Scrape keine Zeiten geliefert hat, behalten den
             // Standard – sonst stünde die Woche danach halb leer da.
             openingHours: {
-              ...state.content.openingHours,
+              ...defaultContentData.openingHours,
               ...(draft.content.openingHours ?? {}),
             },
           },
-          contact: { ...state.contact, ...draft.contact },
+          contact: { ...defaultContactInfo, ...draft.contact },
           publishing: {
             ...state.publishing,
             updatedAt: new Date().toISOString(),

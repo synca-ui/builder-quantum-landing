@@ -10,6 +10,7 @@
 
 import React, { memo } from "react";
 import { ArrowRight } from "lucide-react";
+import { heroTitel, heroUntertitel } from "@/lib/heroFallback";
 
 // ============================================
 // TYPES
@@ -20,6 +21,14 @@ export interface HeroProps {
   slogan?: string;
   /** Beschreibungstext */
   description?: string;
+  /**
+   * Für die Rückfalltexte (client/lib/heroFallback.ts): Ohne Slogan trägt
+   * der Name die Überschrift, ohne Beschreibung wird „Café in Münster“
+   * gezeigt — oder gar nichts, statt einer Floskel.
+   */
+  businessName?: string;
+  businessType?: string;
+  location?: string;
   /** Primärfarbe für Buttons */
   primaryColor: string;
   /** Schriftfarbe */
@@ -69,6 +78,9 @@ function getButtonRadius(shape: "rounded" | "pill" | "square"): string {
 export const Hero = memo(function Hero({
   slogan,
   description,
+  businessName,
+  businessType,
+  location,
   primaryColor,
   fontColor,
   backgroundColor,
@@ -98,7 +110,7 @@ export const Hero = memo(function Hero({
       className={`text-center py-8 px-4 flex flex-col items-center ${className}`}
       style={{ color: fontColor }}
     >
-      {/* Slogan / Headline */}
+      {/* Slogan / Headline — ohne Slogan trägt der Betriebsname den Hero. */}
       <h1
         className="text-3xl font-bold mb-4 leading-tight max-w-[90%]"
         style={{
@@ -108,20 +120,26 @@ export const Hero = memo(function Hero({
           lineHeight: "var(--font-h1-line, 1.2)",
         }}
       >
-        {slogan || "Willkommen"}
+        {heroTitel(slogan, businessName)}
       </h1>
 
-      {/* Description */}
-      <p
-        className="max-w-[90%] text-center opacity-80 leading-relaxed"
-        style={{
-          color: fontColor,
-          fontSize: "var(--font-body-size, 1rem)",
-          lineHeight: "var(--font-body-line, 1.6)",
-        }}
-      >
-        {description || "Wir bieten beste Qualität und eine tolle Atmosphäre."}
-      </p>
+      {/* Description — Rückfall „Café in Münster“, sonst gar keine Zeile. */}
+      {(() => {
+        const untertitel = heroUntertitel(description, businessType, location);
+        if (!untertitel) return null;
+        return (
+          <p
+            className="max-w-[90%] text-center opacity-80 leading-relaxed"
+            style={{
+              color: fontColor,
+              fontSize: "var(--font-body-size, 1rem)",
+              lineHeight: "var(--font-body-line, 1.6)",
+            }}
+          >
+            {untertitel}
+          </p>
+        );
+      })()}
 
       {/* CTA Buttons */}
       <div className="mt-6 w-full px-4 space-y-3">

@@ -114,6 +114,16 @@ const PROVIDERS: ProviderSpec[] = [
     name: "resengo",
     hosts: /resengo\.com/i,
   },
+  {
+    // Bewusst NUR Link-Erkennung, kein idPattern: Am echten Fall krawummel.de
+    // stand die gastronovi-Kennung ausschließlich in einem GUTSCHEIN-Link
+    // (…/restaurants/18919/reservation/widget/entry/voucher). Daraus eine
+    // Reservierungsadresse zu bauen wäre geraten — der Betrieb reserviert
+    // dort über das Wix-Modul (siehe Weg 3 unten), gastronovi nur für
+    // Gutscheine.
+    name: "gastronovi",
+    hosts: /gastronovi\.(?:com|de)/i,
+  },
 ];
 
 /**
@@ -168,7 +178,12 @@ export function detectReservation(
   const { links, embeds } = collectUrls(html);
 
   const linkTo = (spec: ProviderSpec): string | undefined => {
-    const href = links.find((h) => spec.hosts.test(h));
+    // Gutschein-Einstiege sind NIE der Reservierungsweg — ein „Tisch
+    // reservieren“-Knopf, der den Gutschein-Shop öffnet, ist schlimmer als
+    // gar keiner (echter Fall: gastronovi-Voucher-Link auf krawummel.de).
+    const href = links.find(
+      (h) => spec.hosts.test(h) && !/voucher|gutschein/i.test(h),
+    );
     return href ? toAbsolute(href, baseUrl) : undefined;
   };
 
@@ -221,6 +236,26 @@ export function detectReservation(
   for (const spec of PROVIDERS) {
     const url = linkTo(spec);
     if (url) return { provider: spec.name, url, source: "link" };
+  }
+
+  // ── Weg 3: das Baukasten-eigene Buchungsmodul ───────────────────────────
+  //
+  // Wix-Seiten mit installiertem Reservierungsmodul laden dessen
+  // Viewer-Assets („table-reservations-ooi“, ReservationAddOnViewerWidget).
+  // Der Gast bucht dann direkt AUF der alten Seite — unser „Tisch
+  // reservieren“ verlinkt dorthin, statt ein zweites System danebenzustellen
+  // (dieselbe Doppelbuchungs-Logik wie bei OpenTable & Co.).
+  //
+  // Bewusst NICHT an den „specs.tableReservations.…“-Flags festgemacht: Das
+  // sind Wix-Plattform-Experimente, die auch ohne installiertes Modul im
+  // HTML stehen können. Die Viewer-Assets laden nur, wenn das Modul wirklich
+  // auf der Seite sitzt (echter Fall krawummel.de, „Reserviere hier online“).
+  if (/table-reservations-ooi|ReservationAddOnViewerWidget/i.test(html)) {
+    return {
+      provider: "Wix Reservierungen",
+      url: baseUrl,
+      source: "template",
+    };
   }
 
   return null;

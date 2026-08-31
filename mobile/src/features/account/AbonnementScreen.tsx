@@ -93,8 +93,11 @@ export function AbonnementScreen() {
       toast.show("Das ist dein aktueller Plan");
       return;
     }
+    // Die Abrechnung ist noch nicht angebunden (Stripe-Checkout offen). Der Wechsel
+    // schaltet hier nur die Vorschau um - das sagen wir auch so, statt eine Buchung
+    // zu suggerieren. Sobald Billing live ist: echten Checkout aufrufen.
     setPlan(plan.id);
-    toast.show(`Auf ${plan.name} gewechselt`);
+    toast.show(`${plan.name} als Vorschau aktiv · Abrechnung kommt später`);
   };
 
   return (

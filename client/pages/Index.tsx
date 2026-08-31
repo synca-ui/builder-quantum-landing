@@ -239,24 +239,6 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            {/*
-              Das Maitr-Zeichen (B2). Der Kopf trug bisher nur die Wortmarke;
-              das Zeichen fehlte ganz.
-
-              Die transparente Fassung, nicht die petrolfarbene Kachel: Die
-              Seite ist weiß (bg-white weiter unten), eine Kachel würde als
-              Klotz im Kopf sitzen. width/height stehen fest im Markup, damit
-              der Kopf beim Laden nicht springt.
-            */}
-            <img
-              src="/brand/maitr-icon-transparent.svg"
-              alt=""
-              aria-hidden="true"
-              width={36}
-              height={36}
-              className="w-9 h-9 shrink-0 mr-2 select-none"
-              draggable={false}
-            />
             <div className="relative group">
               {/* Wortmarke, keine Seitenüberschrift: das <h1> der Seite ist die
                   Hero-Headline weiter unten. Zwei <h1> pro Seite sind ein
@@ -267,10 +249,7 @@ const Navigation = () => {
                 Maitr
               </div>
               <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
-              {/* Der frühere Deko-Punkt über der Wortmarke ist entfallen: Das
-                  Maitr-Zeichen links bringt seinen eigenen Punkt mit, und das
-                  ist sein Erkennungsmerkmal. Zwei Punkte nebeneinander lesen
-                  sich als Versehen, nicht als Gestaltung. */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
             </div>
           </div>
 
@@ -825,6 +804,12 @@ function IndexContent() {
               Flexible Preise für Unternehmen jeder Größe. Klein starten, mit
               dir wachsen.
             </p>
+            {/* Solange der Stripe-Checkout nicht live ist: ehrlich benennen, dass
+                noch nichts abgerechnet wird. Entfernen, sobald Billing aktiv ist. */}
+            <p className="mt-6 inline-block rounded-full bg-amber-50 border border-amber-200 px-5 py-2 text-sm font-semibold text-amber-900">
+              Die Abrechnung ist noch nicht freigeschaltet — aktuell nutzt du Maitr
+              kostenlos.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -903,17 +888,21 @@ function IndexContent() {
                         ))}
                       </ul>
 
-                      <Button
-                        className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
-                          ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
-                          : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
-                          }`}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <span>{plan.cta}</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </div>
-                      </Button>
+                      {/* Fuehrt zum echten Produkteinstieg (wie der Hero-CTA). Vorher
+                          war der Button ohne onClick/href komplett wirkungslos. */}
+                      <a href="/mode-selection" className="block">
+                        <Button
+                          className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
+                            ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+                            : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
+                            }`}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span>{plan.cta}</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </div>
+                        </Button>
+                      </a>
                     </>
                   )}
                 </CardContent>

@@ -675,6 +675,18 @@ export async function getPublishedSite(req: Request, res: Response) {
         config.features?.reservationsEnabled ??
         config.reservationsEnabled ??
         false,
+      // Bestehendes Buchungssystem des Betriebs (shared/reservation.ts).
+      // Diese Route ist die Quelle der Edge-Injection für *.maitr.de — die
+      // Felder fehlten hier UND in publicSiteView (dort seit dem Echtfall-Fix
+      // enthalten): configData trug „Wix Reservierungen“, die Live-Seite
+      // stellte trotzdem das eigene Formular daneben. Öffentlich unbedenklich:
+      // Es ist der Buchungslink, den die Website des Betriebs selbst zeigt.
+      reservationUrl:
+        config.features?.reservationUrl || config.reservationUrl || undefined,
+      reservationProvider:
+        config.features?.reservationProvider ||
+        config.reservationProvider ||
+        undefined,
       maxGuests: config.features?.maxGuests || config.maxGuests || 10,
       onlineOrdering:
         config.features?.onlineOrdering ?? config.onlineOrdering ?? false,
