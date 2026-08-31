@@ -704,8 +704,16 @@ export async function getPublishedSite(req: Request, res: Response) {
         {},
       email: config.contact?.email || config.email || "",
       phone: config.contact?.phone || config.phone || "",
-      offers: config.offers || [],
-      offerBanner: config.offerBanner,
+      // Diese Route ist die Quelle der Edge-Injection für *.maitr.de. Hier
+      // stand nur die FLACHE Form — der Konfigurator legt Angebote aber unter
+      // `payments` ab, und der Publish erzeugt für sie keine flache Kopie.
+      // Gemessen an bella12: `offers: []`, `offerBanner: null`, obwohl das
+      // Angebot „Mittagstisch" gespeichert war.
+      offers: config.payments?.offers || config.offers || [],
+      offerBanner: config.payments?.offerBanner || config.offerBanner,
+      // Schalter „Angebote-Seite anzeigen" — daran hängt der Navigationspunkt.
+      offerPageEnabled:
+        config.payments?.offerPageEnabled ?? config.offerPageEnabled ?? false,
       reservationButtonColor:
         config.features?.reservationButtonColor ||
         config.reservationButtonColor ||

@@ -194,17 +194,32 @@ export interface PageManagement {
  */
 export interface PaymentAndOffers {
   paymentOptions?: string[];
+  /**
+   * Was der Angebote-Schritt (FeatureConfigStep → OffersStep) tatsächlich
+   * anlegt: {id, name, price, image, description}. `title`/`discount` sind die
+   * Altform aus früheren Konfigurationen und bleiben deshalb erlaubt —
+   * dieselbe Doppelform, die PaymentAndOffersSchema serverseitig akzeptiert.
+   */
   offers?: Array<{
     id: string;
-    title: string;
+    name?: string;
+    price?: string | number;
+    image?: string | null;
     description?: string;
+    title?: string;
     discount?: number;
   }>;
   offerBanner?: {
     enabled: boolean;
+    /** "small" | "medium" | "large" — Auswahl "Bannergröße" im Schritt. */
+    size?: string;
     text?: string;
     backgroundColor?: string;
+    textColor?: string;
+    buttonColor?: string;
   };
+  /** Schalter "Angebote-Seite anzeigen" — ergänzt den Angebote-Tab. */
+  offerPageEnabled?: boolean;
 }
 
 /**

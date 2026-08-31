@@ -427,6 +427,17 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
         config?.customPages ||
         [],
 
+      // Angebote — MUSS hier stehen, aus demselben Grund wie das Logo und der
+      // Buchungslink: Ein Feld, das flatConfig nicht kennt, liegt in configData
+      // nur in der verschachtelten Form. Genau daran gingen die Angebote
+      // verloren, weil die öffentlichen Feldlisten die flache Form lasen. Die
+      // lesen inzwischen beide Formen; diese Kopie hält die flache am Leben,
+      // die ältere Zeilen und der Legacy-Publish-Pfad ablegen.
+      offers: config?.payments?.offers || config?.offers || [],
+      offerBanner: config?.payments?.offerBanner || config?.offerBanner,
+      offerPageEnabled:
+        config?.payments?.offerPageEnabled ?? config?.offerPageEnabled ?? false,
+
       // SEO
       seoTitle: config?.seo?.title || "",
       seoDescription: config?.seo?.description || "",

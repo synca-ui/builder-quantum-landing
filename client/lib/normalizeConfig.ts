@@ -108,6 +108,7 @@ export interface FlatDatabaseConfig {
   paymentOptions?: unknown;
   offers?: unknown;
   offerBanner?: unknown;
+  offerPageEnabled?: boolean;
 
   // Logo
   logo?: unknown;
@@ -220,6 +221,7 @@ const DEFAULT_PAYMENT_AND_OFFERS: PaymentAndOffers = {
     text: undefined,
     backgroundColor: undefined,
   },
+  offerPageEnabled: false,
 };
 
 // ============================================
@@ -754,6 +756,14 @@ export function normalizeConfig(
               DEFAULT_PAYMENT_AND_OFFERS.offerBanner,
             )
           : DEFAULT_PAYMENT_AND_OFFERS.offerBanner,
+      // Der Schalter "Angebote-Seite anzeigen" fehlte hier. AppRenderer liest
+      // payments.offerPageEnabled, um den Navigationspunkt "Angebote" zu
+      // setzen — nach dieser Normalisierung war er auf der veröffentlichten
+      // Seite IMMER undefined, und der Tab erschien nur, solange zusätzlich
+      // das Banner an war.
+      offerPageEnabled:
+        (paymentsObj.offerPageEnabled ?? flatConfig.offerPageEnabled ?? false) ===
+        true,
     },
 
     // ========== INTEGRATIONS ==========
@@ -876,6 +886,7 @@ export function denormalizeConfig(config: Configuration): FlatDatabaseConfig {
     paymentOptions: config.payments.paymentOptions,
     offers: config.payments.offers,
     offerBanner: config.payments.offerBanner,
+    offerPageEnabled: config.payments.offerPageEnabled,
 
     // Integrations
     integrations: config.integrations,
