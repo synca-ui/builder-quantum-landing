@@ -152,6 +152,15 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
   // die Statusleiste bzw. den Bereich unter der Notch. index.html liefert
   // statisch das Maitr-Teal (#0d9488) — auf einer veröffentlichten Kunden-
   // Seite muss dort die Header-Farbe der Site stehen.
+  //
+  // theme-color allein REICHT NICHT. Nachgemessen an bella12.maitr.de auf dem
+  // iPhone: Das Meta stand korrekt auf #F9F6EF, der Streifen unter der Notch
+  // war trotzdem weiß. Grund ist der Dokument-Hintergrund — mobile Safari malt
+  // den Bereich über dem Seitenanfang (und beim Überziehen unten) mit der
+  // Canvas-Farbe, und die kommt aus html/body. Die trägt hier
+  // `body { @apply bg-background }` aus client/global.css, also Weiß; die
+  // Header-Farbe steckt nur in einem <div> weiter innen und reicht nie bis
+  // unter die Notch. Deshalb wird sie zusätzlich auf das Dokument gelegt.
   useEffect(() => {
     const headerColor = design.headerBackgroundColor || design.backgroundColor;
     let meta = document.querySelector<HTMLMetaElement>(
@@ -165,10 +174,21 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     }
     meta.setAttribute("content", headerColor);
 
+    const html = document.documentElement;
+    const body = document.body;
+    const previousHtmlBg = html.style.backgroundColor;
+    const previousBodyBg = body.style.backgroundColor;
+    if (headerColor) {
+      html.style.backgroundColor = headerColor;
+      body.style.backgroundColor = headerColor;
+    }
+
     return () => {
       if (previous !== null) {
         meta?.setAttribute("content", previous);
       }
+      html.style.backgroundColor = previousHtmlBg;
+      body.style.backgroundColor = previousBodyBg;
     };
   }, [design.headerBackgroundColor, design.backgroundColor]);
 
