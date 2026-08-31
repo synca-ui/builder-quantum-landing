@@ -205,6 +205,15 @@ const LABEL_MUSTER: Array<[RegExp, string]> = [
 // Gericht steht, sagt nichts mehr.
 
 /**
+ * Die vereinheitlichten Label-Namen, in der Reihenfolge von LABEL_MUSTER.
+ *
+ * Für Oberflächen, die Labels von Hand setzen lassen: Wer hier eine eigene
+ * Liste pflegt, driftet vom Erkennungsweg ab — dann stünden "Vegan" und
+ * "vegan" als zwei verschiedene Labels nebeneinander.
+ */
+export const LABEL_NAMEN: readonly string[] = LABEL_MUSTER.map(([, name]) => name);
+
+/**
  * Liest die Ernährungs-Labels aus einer Zeile.
  *
  * Bewusst über den ganzen Text und nicht nur über Klammern: Karten schreiben

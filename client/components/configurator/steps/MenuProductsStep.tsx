@@ -24,6 +24,8 @@ import {
 import { normalizeImageSrc } from "@/lib/configurator-data";
 import { uploadImageFile } from "@/lib/mediaUpload";
 import { extractMenuFromFile } from "@/lib/menuExtract";
+import { parseAllergenKuerzel } from "@/lib/allergenKuerzel";
+import { LABEL_NAMEN } from "@shared/menuParser";
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import type { MenuItem } from "@/types/domain";
@@ -82,6 +84,85 @@ const DebouncedMenuInput = ({
   );
 };
 
+/**
+ * Ernährungs-Labels als anklickbare Chips — dieselben fünf, die die
+ * Erkennung vergibt (LABEL_NAMEN). Freitext gäbe es hier bewusst nicht:
+ * "Vegan", "vegan" und "veg." wären drei verschiedene Labels, und der Gast
+ * filtert dann an zweien vorbei.
+ */
+const LabelAuswahl = ({
+  aktiv,
+  onToggle,
+}: {
+  aktiv: string[];
+  onToggle: (label: string) => void;
+}) => (
+  <div className="flex flex-wrap gap-2">
+    {LABEL_NAMEN.map((label) => {
+      const gesetzt = aktiv.includes(label);
+      return (
+        <button
+          key={label}
+          type="button"
+          onClick={() => onToggle(label)}
+          className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize border transition-colors ${
+            gesetzt
+              ? "bg-teal-500 border-teal-500 text-white"
+              : "bg-white border-gray-300 text-gray-600 hover:border-teal-400 hover:text-teal-600"
+          }`}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+);
+
+/**
+ * Kürzel-Eingabe für ein bestehendes Gericht, mit Verzögerung zum Store.
+ *
+ * Eine eigene Komponente statt DebouncedMenuInput, weil der Wert beim
+ * Zurückschreiben NORMALISIERT wird ("A1; F" → "a1, f"): DebouncedMenuInput
+ * setzt sein Feld auf jeden neuen value-Prop zurück und würde damit mitten im
+ * Tippen aus "a1, " wieder "a1" machen — das Komma für das nächste Kürzel
+ * verschwände unter dem Finger. Hier wird das Feld nur zurückgesetzt, wenn
+ * sich die Kürzel INHALTLICH von außen ändern (etwa durch einen Karten-Scan).
+ */
+const AllergenKuerzelInput = ({
+  value,
+  onCommit,
+}: {
+  value: string[];
+  onCommit: (kuerzel: string[]) => void;
+}) => {
+  const [text, setText] = useState(value.join(", "));
+  const debounced = useDebounce(text, 400);
+  const lastCommittedRef = useRef(value.join(","));
+
+  useEffect(() => {
+    if (value.join(",") === lastCommittedRef.current) return;
+    lastCommittedRef.current = value.join(",");
+    setText(value.join(", "));
+  }, [value]);
+
+  useEffect(() => {
+    const kuerzel = parseAllergenKuerzel(debounced);
+    if (kuerzel.join(",") === lastCommittedRef.current) return;
+    lastCommittedRef.current = kuerzel.join(",");
+    onCommit(kuerzel);
+  }, [debounced, onCommit]);
+
+  return (
+    <Input
+      type="text"
+      placeholder="a1, f, g"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      className="h-8 text-sm"
+    />
+  );
+};
+
 export function MenuProductsStep({
   nextStep,
   prevStep,
@@ -99,6 +180,10 @@ export function MenuProductsStep({
     description: "",
     price: "",
     category: "",
+    // Kürzel als Rohtext, geparst erst beim Anlegen — während des Tippens
+    // soll "a1, " nicht unter den Fingern zu "a1" normalisiert werden.
+    allergens: "",
+    labels: [] as string[],
     images: [] as { url: string; alt: string; file?: File }[],
   });
 
@@ -152,12 +237,15 @@ export function MenuProductsStep({
 
   const addMenuItem = () => {
     if (newItem.name && newItem.price) {
+      const allergens = parseAllergenKuerzel(newItem.allergens);
       const itemToAdd: MenuItem = {
         id: Date.now().toString(),
         name: newItem.name,
         description: newItem.description,
         price: newItem.price,
         category: newItem.category || undefined,
+        ...(allergens.length ? { allergens } : {}),
+        ...(newItem.labels.length ? { labels: newItem.labels } : {}),
         image: newItem.images?.[0],
         images: newItem.images,
       };
@@ -167,6 +255,8 @@ export function MenuProductsStep({
         description: "",
         price: "",
         category: "",
+        allergens: "",
+        labels: [],
         images: [],
       });
     }
@@ -816,6 +906,41 @@ export function MenuProductsStep({
             </div>
           </div>
         </div>
+        <div className="mt-4 grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Allergene &amp; Zusatzstoffe
+            </label>
+            <Input
+              type="text"
+              placeholder="a1, f, g"
+              value={newItem.allergens}
+              onChange={(e) =>
+                setNewItem((prev) => ({ ...prev, allergens: e.target.value }))
+              }
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Die Kürzel deiner Karte, durch Komma getrennt. Was sie bedeuten,
+              kommt aus der Legende der eingelesenen Karte.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Labels
+            </label>
+            <LabelAuswahl
+              aktiv={newItem.labels}
+              onToggle={(label) =>
+                setNewItem((prev) => ({
+                  ...prev,
+                  labels: prev.labels.includes(label)
+                    ? prev.labels.filter((l) => l !== label)
+                    : [...prev.labels, label],
+                }))
+              }
+            />
+          </div>
+        </div>
         <div className="mt-4">
           <label className="block text-sm font-bold text-gray-700 mb-2">
             {t("menu.images")}
@@ -947,6 +1072,55 @@ export function MenuProductsStep({
                 <div className="text-xs text-gray-500">
                   {Array.isArray(item.images) ? item.images.length : 0}{" "}
                   {t("menu.images")}
+                </div>
+              </div>
+
+              {/*
+                Allergene und Labels am Gericht KORRIGIERBAR machen.
+
+                Bis hierher überlebten sie nur den Karten-Import; eine falsche
+                KI-Angabe blieb stehen, und bei von Hand angelegten Gerichten
+                fehlten sie ganz. Gerade bei Allergenen ist das heikel: Eine
+                falsche Angabe ist schlimmer als keine.
+              */}
+              <div className="mt-4 pt-4 border-t border-gray-100 grid md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">
+                    Allergene &amp; Zusatzstoffe (Kürzel)
+                  </p>
+                  <AllergenKuerzelInput
+                    value={item.allergens ?? []}
+                    onCommit={(kuerzel) =>
+                      actions.content.updateMenuItem(item.id, {
+                        allergens: kuerzel.length ? kuerzel : undefined,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">
+                    Labels
+                  </p>
+                  <LabelAuswahl
+                    aktiv={item.labels ?? []}
+                    onToggle={(label) => {
+                      // Vom AKTUELLEN Store-Stand ausgehen, nicht vom
+                      // Render-Abbild: Zwei schnelle Klicks auf verschiedene
+                      // Chips landen sonst im selben Abbild, und der zweite
+                      // macht den ersten rückgängig — dasselbe Muster wie
+                      // bei handleUploadImagesForItem.
+                      const aktuell = useConfiguratorStore
+                        .getState()
+                        .content.menuItems.find((i) => i.id === item.id);
+                      const vorher = aktuell?.labels ?? [];
+                      const nachher = vorher.includes(label)
+                        ? vorher.filter((l) => l !== label)
+                        : [...vorher, label];
+                      actions.content.updateMenuItem(item.id, {
+                        labels: nachher.length ? nachher : undefined,
+                      });
+                    }}
+                  />
                 </div>
               </div>
 

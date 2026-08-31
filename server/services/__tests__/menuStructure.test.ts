@@ -100,6 +100,40 @@ describe("zuGerichten", () => {
     expect(items[0].allergens).toEqual(["a1", "d"]);
   });
 
+  test("liest Ernährungs-Labels aus Name und Beschreibung", () => {
+    // Das Schema hat bewusst kein labels-Feld: "vegan" steht wörtlich im
+    // Text, das findet ein Muster deterministisch — das Modell müsste es nur
+    // abschreiben und könnte sich dabei irren. Vor diesem Test gingen die
+    // Labels auf dem KI-Weg schlicht verloren: Anzeige und Datenmodell waren
+    // da, aber kein Import füllte sie.
+    const { items } = zuGerichten(
+      {
+        gerichte: [
+          { name: "Gemüsecurry (vegan)", preis: "14.50", kategorie: "Hauptgerichte", variante_von: "", beschreibung: "", allergene: [] },
+          { name: "Käsespätzle", preis: "12.00", kategorie: "", variante_von: "", beschreibung: "vegetarisch, mit Röstzwiebeln", allergene: [] },
+        ],
+      },
+      "t",
+    );
+    expect(items[0].labels).toEqual(["vegan"]);
+    expect(items[1].labels).toEqual(["vegetarisch"]);
+  });
+
+  test("die Rubrik färbt NICHT auf die Labels ab", () => {
+    // Unter der Rubrik "Vegetarisch" steht auch mal ein Gericht mit Speck.
+    // Ein Label aus der Rubrik wäre eine Falschaussage gegenüber dem Gast —
+    // derselbe Grund, aus dem der Regel-Parser die Rubrik ausklammert.
+    const { items } = zuGerichten(
+      {
+        gerichte: [
+          { name: "Spätzlepfanne", preis: "11.00", kategorie: "Vegetarisch & Vegan", variante_von: "", beschreibung: "mit Speck", allergene: [] },
+        ],
+      },
+      "t",
+    );
+    expect(items[0].labels).toBeUndefined();
+  });
+
   test("lässt den Preis weg, statt ihn zu erfinden", () => {
     // Mittagstisch nach Wochentagen hat keine Einzelpreise. Eine 0 dort wäre
     // eine Falschaussage gegenüber dem Gast.
