@@ -39,6 +39,7 @@ import {
   TooManyJobsError,
 } from "../services/menuJobs";
 import { ocrConfigured, configuredProviders, MAX_DOCUMENT_BYTES } from "../services/ocr";
+import { menuN8nConfigured } from "../services/menuN8n";
 
 /** Passend zur größten Karte, die im Feld aufgetaucht ist (21 MB). */
 const MAX_UPLOAD_BYTES = 32 * 1024 * 1024;
@@ -74,7 +75,15 @@ export const menuRouter = Router();
  * Schlüssel und kein Modellname preisgegeben, nur ein Boolean.
  */
 menuRouter.get("/health", (_req: Request, res: Response) => {
-  res.json({ ocrConfigured: ocrConfigured(), providers: configuredProviders() });
+  res.json({
+    ocrConfigured: ocrConfigured(),
+    providers: configuredProviders(),
+    // Ob der n8n-Flow dem Bildweg vorgeschaltet ist. Ohne diese Angabe ist von
+    // außen nicht zu sehen, welcher der beiden Wege eine Karte gelesen hat --
+    // und genau das ist die erste Frage, wenn ein Ergebnis anders aussieht als
+    // gestern.
+    n8n: menuN8nConfigured(),
+  });
 });
 
 menuRouter.post(
