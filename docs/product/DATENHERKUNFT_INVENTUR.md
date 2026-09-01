@@ -12,6 +12,38 @@ je ein zweiter Prüfer versucht, jede "ist befüllbar"-Behauptung zu widerlegen.
 
 ---
 
+---
+
+## KORREKTUR vom 31.08.2026 — der schwerwiegendste Befund war falsch
+
+Dieser Bericht führt als Blocker Nummer eins: *„Migration
+`20260805_add_loyalty_wallet_whatsapp` ist laut Code-Kommentar nicht eingespielt …
+falls der Kommentar stimmt, antwortet die Stempelkarte heute produktiv mit 503."*
+
+**Er stimmt nicht.** Gegen die Neon-Produktivdatenbank geprüft (lesend, nur
+Systemkatalog):
+
+```
+Wed Aug 05  20260805_add_loyalty_wallet_whatsapp   eingespielt
+Thu Aug 06  20260806_add_stampcard_reward_snapshot eingespielt
+```
+
+Die Tabellen `StampCard`, `StampEvent`, `StampProgram`, `WalletDeviceRegistration`
+sowie die vier WhatsApp-Tabellen existieren. **Die Stempelkarte funktioniert in
+Produktion.**
+
+Die Quelle des Irrtums war ein Kommentar in `server/maitr/routes.ts`, der seinen
+eigenen Zustand überlebt hatte und weiterhin „nach heutigem Stand NICHT eingespielt"
+behauptete. Der Prüfagent hat ihn korrekt zitiert — nur war die zitierte Aussage
+veraltet. Der Kommentar ist inzwischen berichtigt und trägt jetzt ein Datum.
+
+Was das für den Rest des Berichts heißt: Die **Zählungen bleiben gültig** (sie
+stammen aus Code und Schema, nicht aus jenem Kommentar). Nur die Dringlichkeit
+verschiebt sich — der einzige Bereich mit echten Daten ist gesund, und die Lücke
+liegt dort, wo sie der Bericht ohnehin verortet: bei allem anderen.
+
+---
+
 # Maitr Mobile: Anzeige vs. Datenquelle — Gesamtübersicht
 
 ## 1. Wie groß ist die Lücke

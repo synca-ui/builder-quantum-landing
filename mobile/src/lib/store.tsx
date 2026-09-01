@@ -455,7 +455,12 @@ interface StoreValue {
    * Kennung auch den Namen im Betriebsprofil, damit nicht die halbe App weiter
    * „Café Goldstück" zeigt, während der Server einen anderen Betrieb meint.
    */
-  adoptVenue: (venue: { id: string; name?: string }) => void;
+  adoptVenue: (venue: {
+    id: string;
+    name?: string;
+    tagline?: string;
+    tags?: string[];
+  }) => void;
 
   // Betriebsprofil (Google Business / Instagram)
   venueProfile: VenueProfile;
@@ -834,6 +839,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // Name würde sonst die Kopfzeile des Start-Screens leeren.
     const name = venue.name;
     if (name) setVenueProfile((v) => (v.name === name ? v : { ...v, name }));
+
+    // Slogan und Merkmale kommen aus derselben Antwort (`toApiVenue` in
+    // server/maitr/routes.ts liefert tagline und tags mit) und wurden hier bisher
+    // weggeworfen - die Screens zeigten weiter die Beispieldaten.
+    //
+    // Anders als beim Namen wird hier AUCH eine leere Antwort übernommen, und das
+    // ist der Punkt: `adoptVenue` läuft ausschließlich mit echten Serverdaten
+    // (GET /venues, POST /venues, der 409-Rumpf). Wer noch keinen Slogan gepflegt
+    // hat, soll ein leeres Feld sehen und nicht den des Demo-Cafés. Genau diese
+    // Verwechslung ist im Auto-Konfigurator schon einmal teuer geworden: Slogan und
+    // Beschreibung eines Demo-Betriebs standen auf der Seite eines fremden Cafés.
+    const tagline = venue.tagline;
+    const tags = venue.tags;
+    if (tagline !== undefined || tags !== undefined) {
+      setVenueProfile((v) => ({
+        ...v,
+        ...(tagline !== undefined ? { tagline } : {}),
+        ...(tags !== undefined ? { tags } : {}),
+      }));
+    }
   }, []);
 
   /* ── Welcher Betrieb gehört zu dieser Anmeldung? ────────────────────────────
