@@ -60,10 +60,18 @@ function maxBytes(): number {
 /**
  * Wie lange auf n8n gewartet wird.
  *
- * Eine mehrseitige Karte braucht dort gemessen 100 Sekunden (4,2-MB-PDF,
- * 105 Gerichte). Die Grenze muss darüber liegen, aber deutlich unter der
- * Gesamtfrist des Clients (300 s in client/lib/menuExtract.ts), damit im
- * Fehlerfall noch Zeit für die eigene Kette bleibt.
+ * Eine mehrseitige Karte braucht dort gemessen 123 Sekunden (4,2-MB-PDF,
+ * 112 Gerichte, 31 Allergen-Kürzel, Stand 01.09.2026). Die Grenze muss
+ * darüber liegen, aber deutlich unter der Gesamtfrist des Clients (300 s in
+ * client/lib/menuExtract.ts), damit im Fehlerfall noch Zeit für die eigene
+ * Kette bleibt.
+ *
+ * Die 180 s sind so gewählt, dass auch ein Lauf MIT Wiederholung hineinpasst:
+ * Der HTTP-Knoten im Flow versucht es dreimal mit 5 s Abstand, und ein
+ * Aussetzer von Gemini (503 „high demand") kommt in unter zwei Sekunden
+ * zurück — ein Fehlversuch plus voller zweiter Lauf sind rund 130 s. Hängt
+ * dagegen schon der erste Versuch, greift diese Grenze und die eigene Kette
+ * übernimmt; genau dafür ist sie da.
  */
 function timeoutMs(): number {
   const wert = Number(process.env.N8N_MENU_TIMEOUT_MS);
