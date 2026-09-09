@@ -1,4 +1,6 @@
 import "./global.css";
+// Poppins und Space Grotesk selbst gehostet — siehe client/lib/siteFonts.ts.
+import "./lib/siteFonts";
 
 import { lazy, Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
