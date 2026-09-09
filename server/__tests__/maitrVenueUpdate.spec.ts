@@ -229,7 +229,10 @@ describe("PATCH /venues/:venueId - Profil ändern", () => {
       });
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
-    expect(res.body).toEqual({
+    // toMatchObject: Die Inhaber-Sicht (toOwnerVenue) traegt seit der
+    // Veroeffentlichungs-Anbindung zusaetzlich slug, Farben, Kontakt - je
+    // nachdem, was die Zeile hat. Geprueft wird hier der Vertragskern.
+    expect(res.body).toMatchObject({
       id: "biz-1",
       name: "Café Neu",
       timezone: "Europe/Vienna",
@@ -287,8 +290,9 @@ describe("PATCH /venues/:venueId - Profil ändern", () => {
 
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect(betriebe[0].slug).toBe("cafe-mueller");
-    // Der Slug ist auch nicht Teil der Vertragsform - GET /venues gibt ihn nie preis.
-    expect(res.body).not.toHaveProperty("slug");
+    // Die Inhaber-Sicht zeigt den Slug (lesend, fuer den Link zur Web-App) -
+    // aber er bleibt der alte, auch in der Antwort.
+    expect(res.body.slug).toBe("cafe-mueller");
   });
 
   it("ein leeres Patch-Objekt wird abgewiesen (422)", async () => {

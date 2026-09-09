@@ -218,6 +218,7 @@ interface MitgliedZeile {
 
 let nutzer: { id: string }[];
 let vorlagen: { id: string }[];
+let menuLoeschungen: string[] = [];
 let betriebe: BetriebZeile[];
 let mitglieder: MitgliedZeile[];
 let auditEintraege: { action: string; success: boolean; errorMessage?: string }[];
@@ -231,6 +232,16 @@ function txSpiegel() {
     template: {
       findUnique: async ({ where }: { where: { id: string } }) =>
         vorlagen.find((t) => t.id === where.id) ?? null,
+    },
+    // Speisekarte (BusinessService Step 2b): beim Veroeffentlichen ersetzt.
+    // Der Mock nimmt die Schreibzugriffe entgegen, prueft sie aber nicht - das
+    // tut server/__tests__/businessProfil.spec.ts fuer die Abbildung.
+    menuCategory: {
+      deleteMany: async (args: { where: { businessId: string } }) => {
+        menuLoeschungen.push(args.where.businessId);
+        return { count: 0 };
+      },
+      create: async ({ data }: { data: Record<string, unknown> }) => data,
     },
     business: {
       // findUnique/create/update statt upsert: BusinessService trennt seit der
@@ -334,6 +345,7 @@ function txSpiegel() {
 }
 
 beforeEach(() => {
+  menuLoeschungen = [];
   vi.clearAllMocks();
   nutzer = [{ id: ICH }];
   // Die vier Vorlagen aus prisma/seed.ts.
@@ -465,6 +477,30 @@ const KONFIG = {
 };
 
 describe("POST /api/apps/publish legt den Betrieb wirklich an", () => {
+  it("löscht die Speisekarte des Betriebs NICHT, wenn die Seite keine hat", async () => {
+    // Haus Töller ist genau dieser Fall: veröffentlicht ohne erkannte Karte.
+    // `speisekarteAusConfig` liefert dann ein LEERES Feld - und ein leeres
+    // Feld ist wahr. Ohne die Längenprüfung in BusinessService hätte das
+    // Veröffentlichen die Speisekarte des Betriebs abgeräumt.
+    const ohneKarte = { ...KONFIG, content: { menuItems: [] } };
+    const res = await request(app())
+      .post("/api/apps/publish")
+      .send({ subdomain: "ohne-karte", config: ohneKarte });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(menuLoeschungen).toEqual([]);
+  });
+
+  it("ersetzt die Speisekarte, wenn die Seite eine mitbringt", async () => {
+    const res = await request(app())
+      .post("/api/apps/publish")
+      .send({ subdomain: "mit-karte", config: KONFIG });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    // Genau einmal geleert, und zwar für den angelegten Betrieb.
+    expect(menuLoeschungen).toHaveLength(1);
+  });
+
   it("Veröffentlichen erzeugt Betrieb und Mitgliedschaft", async () => {
     const res = await request(app())
       .post("/api/apps/publish")

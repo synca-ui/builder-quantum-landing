@@ -2,6 +2,10 @@ import { Router, Request, Response } from "express";
 import { requireAuth } from "../middleware/auth";
 import prisma from "../db/prisma";
 import { ensureUserBusiness } from "../services/BusinessService";
+import {
+  betriebsprofilAusConfig,
+  speisekarteAusConfig,
+} from "../services/businessProfil";
 import { createAuditLogger } from "../utils/audit";
 // Subdomain-Regeln liegen in shared/, weil der automatische Modus im Client
 // selbst Vorschläge ableiten muss. Lägen sie weiterhin nur hier, würde er
@@ -14,6 +18,7 @@ import {
 } from "../../shared/subdomain";
 import { ingestGallery } from "../services/imageIngest";
 import { oeffentlicheSiteFelder } from "../utils/publicSiteView";
+import { invalidateSite } from "../utils/siteCache";
 
 // ============================================
 // VALIDATION HELPERS
@@ -208,6 +213,11 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
 
     // Hinweise, die der Nutzer in der Antwort sehen soll.
     let businessNotes: string[] = [];
+    // Der Betrieb, der zu dieser Web-App gehört - für die Antwort und für die
+    // Verknüpfung Configuration.businessId weiter unten.
+    let businessId: string | null = null;
+    // Vor Stage 4 gerechnet, weil das Profil die veröffentlichte Adresse trägt.
+    const baseDomainFuerProfil = process.env.PUBLIC_BASE_DOMAIN || "maitr.de";
     try {
       const businessName =
         config?.business?.name || config?.businessName || "Unnamed Business";
@@ -218,13 +228,29 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       // ohne Vorlagenbezug entstanden, wenn er entstanden wäre.
       const templateId =
         config?.design?.template || config?.template || undefined;
-      await ensureUserBusiness(userId, businessName, templateId, {
-        primaryColor:
-          config?.design?.primaryColor || config?.primaryColor || "#000000",
-        secondaryColor:
-          config?.design?.secondaryColor || config?.secondaryColor || "#ffffff",
-        fontFamily: config?.design?.fontFamily || config?.fontFamily || "sans",
+      // Das ganze Profil mitgeben, nicht nur Name und Farben: Damit findet die
+      // Maitr-App den Betrieb mit Slogan, Adresse, Öffnungszeiten, Logo und
+      // Speisekarte vor - dieselben Angaben, die die Web-App zeigt. Vorher kam
+      // dort ein Betrieb an, der nur seinen Namen kannte.
+      const profil = betriebsprofilAusConfig(config, {
+        publishedUrl: `https://${subdomain}.${baseDomainFuerProfil}`,
       });
+      const speisekarte = speisekarteAusConfig(config);
+      const betrieb = await ensureUserBusiness(
+        userId,
+        businessName,
+        templateId,
+        {
+          primaryColor:
+            config?.design?.primaryColor || config?.primaryColor || "#000000",
+          secondaryColor:
+            config?.design?.secondaryColor || config?.secondaryColor || "#ffffff",
+          fontFamily: config?.design?.fontFamily || config?.fontFamily || "sans",
+        },
+        profil,
+        speisekarte,
+      );
+      businessId = betrieb.businessId;
     } catch (error) {
       // Hier stand "Non-fatal - continue without business link". Das war der
       // Grund, warum niemand etwas gemerkt hat: Ohne Betrieb gibt es keine
@@ -492,6 +518,11 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
             contactMethods: flatConfig.contactMethods,
             socialMedia: flatConfig.socialMedia,
             selectedPages: flatConfig.selectedPages,
+            // Die Verknüpfung zum Betrieb der App. Das Feld gab es im Schema
+            // seit jeher (Configuration.businessId), gesetzt hat es nie
+            // jemand - und ohne sie ließ sich eine veröffentlichte Seite nur
+            // über die userId einem Betrieb zuordnen.
+            ...(businessId ? { businessId } : {}),
             updatedAt: now,
           },
         });
@@ -525,6 +556,20 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       return { configuration, webApp };
     });
 
+    // ============ STAGE 4.5: ZWISCHENSPEICHER LEEREN ============
+    //
+    // MUSS hier stehen, direkt nach dem Schreiben. Ohne diesen Aufruf liefert
+    // GET /api/sites/:subdomain bis zu 60 Sekunden die VORHERIGE Fassung -
+    // ausgerechnet in dem Moment, in dem die Erfolgsansicht den QR-Code zeigt
+    // und der Wirt seine frisch veroeffentlichte Seite aufruft. Seit dem
+    // Anpassen-Interface (aendern -> erneut veroeffentlichen -> nachsehen) ist
+    // das der Regelfall und nicht mehr die Ausnahme.
+    //
+    // Der CDN-Cache davor (s-maxage=60) bleibt davon unberuehrt; den kann der
+    // Server nicht leeren. Er faellt aber nur an, wenn zwischendurch wirklich
+    // jemand die Seite abgerufen hat.
+    invalidateSite(subdomain);
+
     // ============ STAGE 5: AUDIT & RESPOND ============
     const elapsed = Date.now() - startTime;
     console.log(`[Publish] ✅ Published ${subdomain} in ${elapsed}ms`);
@@ -538,6 +583,9 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
       previewUrl,
       webAppId: result.webApp.id,
       configId: result.configuration?.id || configId,
+      // Der Betrieb, der jetzt in der Maitr-App auf dieses Konto wartet.
+      // null, wenn Stage 3 scheiterte (siehe businessNotes).
+      businessId,
       publishedAt: now.toISOString(),
       elapsed,
       // Anmerkungen der Bildübernahme gehören dazu: Bleibt ein Bild extern,
@@ -626,6 +674,10 @@ webAppsRouter.post("/apps/legacy-publish", async (req, res) => {
     console.error("legacy publish failed", e);
     return res.status(500).json({ error: "Veröffentlichen fehlgeschlagen" });
   }
+
+  // Wie im regulaeren Publish-Pfad: sonst liefert die oeffentliche Route bis
+  // zu 60 Sekunden die vorherige Fassung.
+  invalidateSite(subdomain);
 
   return res.json({ subdomain, publishedUrl, previewUrl });
 });

@@ -9,6 +9,29 @@
 
 import prisma from "../db/prisma";
 import { nextSubdomainCandidate, suggestSubdomain } from "../../shared/subdomain";
+import type { BusinessProfil, SpeisekartenKategorie } from "./businessProfil";
+
+/**
+ * Nur die gesetzten Profilfelder, in der Form der Business-Spalten. Ein
+ * `undefined` sagt Prisma "Spalte nicht anfassen" - genau das Verhalten, das
+ * eine erneute Veröffentlichung mit weniger Daten braucht.
+ */
+function profilFelder(profil?: BusinessProfil): Record<string, unknown> {
+  if (!profil) return {};
+  const felder: Record<string, unknown> = {};
+  if (profil.tagline !== undefined) felder.tagline = profil.tagline;
+  if (profil.description !== undefined) felder.description = profil.description;
+  if (profil.cuisine !== undefined) felder.cuisine = profil.cuisine;
+  if (profil.logoUrl !== undefined) felder.logoUrl = profil.logoUrl;
+  if (profil.openingHours !== undefined) felder.openingHours = profil.openingHours;
+  if (profil.socialLinks !== undefined) felder.socialLinks = profil.socialLinks;
+  if (profil.contactInfo !== undefined) felder.contactInfo = profil.contactInfo;
+  if (profil.postalCode !== undefined) felder.postalCode = profil.postalCode;
+  if (profil.latitude !== undefined) felder.latitude = profil.latitude;
+  if (profil.longitude !== undefined) felder.longitude = profil.longitude;
+  if (profil.tags !== undefined) felder.tags = profil.tags;
+  return felder;
+}
 
 export interface BusinessSetupResult {
   userId: string;
@@ -43,6 +66,20 @@ export async function ensureUserBusiness(
     secondaryColor?: string;
     fontFamily?: string;
   },
+  /**
+   * Alles, was die Maitr-App über den Betrieb wissen soll (server/services/
+   * businessProfil.ts). Nur GESETZTE Felder werden geschrieben - ein
+   * fehlendes Feld lässt den Bestand in Ruhe, damit eine erneute
+   * Veröffentlichung ohne Logo nicht das vorhandene Logo löscht.
+   */
+  profil?: BusinessProfil,
+  /**
+   * Die Speisekarte der Web-App. `undefined` = nicht anfassen; ein leeres
+   * Feld = die Karte des Betriebs ist leer. Die Tabellen MenuCategory/MenuItem
+   * werden beim Veröffentlichen komplett ersetzt - sie haben in diesem Repo
+   * keinen anderen Schreibweg, die Web-App ist die Wahrheit über die Karte.
+   */
+  speisekarte?: SpeisekartenKategorie[],
 ): Promise<BusinessSetupResult> {
   const businessSlug = generateBusinessSlug(businessName);
   // Nur zum Wiederfinden von Zeilen, die vor der Vereinheitlichung entstanden
@@ -185,6 +222,7 @@ export async function ensureUserBusiness(
         primaryColor: designTokens?.primaryColor || "#000000",
         secondaryColor: designTokens?.secondaryColor || "#ffffff",
         fontFamily: designTokens?.fontFamily || "sans",
+        ...profilFelder(profil),
       };
 
       let business: { id: string; name: string; slug: string };
@@ -247,6 +285,37 @@ export async function ensureUserBusiness(
           business = await tx.business.create({
             data: { slug: kandidat, ...gemeinsameFelder, status: "DRAFT" },
             select: { id: true, name: true, slug: true },
+          });
+        }
+      }
+
+      // Step 2b: Speisekarte ersetzen. Kategorien löschen reicht - die
+      // Positionen hängen per onDelete: Cascade daran (prisma/schema.prisma).
+      //
+      // NUR bei einer NICHT LEEREN Karte. `speisekarteAusConfig` liefert für
+      // eine Web-App ohne Speisekarte ein leeres Feld - und ein leeres Feld
+      // ist in JavaScript wahr. Ohne diese Bedingung hätte das Veröffentlichen
+      // einer Seite ohne Karte (Haus Töller ist genau so ein Fall) die
+      // Speisekarte des Betriebs GELÖSCHT. "Keine Karte mitgeschickt" heisst
+      // nicht "der Betrieb hat keine Karte" - das Löschen bleibt dem
+      // Konfigurator vorbehalten, der die Karte auch anzeigt.
+      if (speisekarte?.length) {
+        await tx.menuCategory.deleteMany({ where: { businessId: business.id } });
+        for (const [i, kategorie] of speisekarte.entries()) {
+          await tx.menuCategory.create({
+            data: {
+              businessId: business.id,
+              name: kategorie.name,
+              sortOrder: i,
+              items: {
+                create: kategorie.items.map((item) => ({
+                  name: item.name,
+                  description: item.description,
+                  price: item.price,
+                  imageUrl: item.imageUrl,
+                })),
+              },
+            },
           });
         }
       }

@@ -521,7 +521,13 @@ function mapOpeningHours(
     // Ohne Zeiten ist der Eintrag wertlos – dann lieber den Standard des
     // Konfigurators stehen lassen, als "undefined" hineinzuschreiben.
     if (!open || !close) continue;
-    out[day] = { open, close, closed: entry.closed === true };
+    // schema.org-Konvention für einen Ruhetag: opens UND closes "00:00". Der
+    // Deep-Scrape-Flow reicht sie ungeprüft durch (haus-toeller.de: Sonntag
+    // als 00:00–00:00 mit closed:false) – als Öffnungstag gelesen, stand der
+    // Ruhetag als „Offen“ auf der Web-App. Dieselbe Regel wie in
+    // shared/openingHours.ts parseSchemaOpeningHours.
+    const ruhetag = entry.closed === true || (open === "00:00" && close === "00:00");
+    out[day] = { open, close, closed: ruhetag };
   }
   return Object.keys(out).length ? out : undefined;
 }

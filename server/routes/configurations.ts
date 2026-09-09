@@ -714,18 +714,27 @@ export async function getPublishedSite(req: Request, res: Response) {
       // Schalter „Angebote-Seite anzeigen" — daran hängt der Navigationspunkt.
       offerPageEnabled:
         config.payments?.offerPageEnabled ?? config.offerPageEnabled ?? false,
+      // KEINE Ersatzfarben mehr. Hier standen "#94e3fe" (hellblau), Schrift
+      // schwarz und Form "pill" als Vorgabe - und weil das wahre Werte sind,
+      // hebelten sie den Rueckfall des Renderers aus
+      // (`features.reservationButtonColor || design.primaryColor`,
+      // client/components/dynamic/AppRenderer.tsx). Jede automatisch
+      // veroeffentlichte Seite mit Reservierung bekam damit einen hellblauen
+      // Pillen-Knopf in eine Bordeaux- oder Creme-Palette gesetzt. Bleibt das
+      // Feld leer, waehlt der Renderer die Markenfarbe; wer im Konfigurator
+      // eine Farbe setzt, schickt sie ohnehin mit.
       reservationButtonColor:
         config.features?.reservationButtonColor ||
         config.reservationButtonColor ||
-        "#94e3fe",
+        undefined,
       reservationButtonTextColor:
         config.features?.reservationButtonTextColor ||
         config.reservationButtonTextColor ||
-        "#000000",
+        undefined,
       reservationButtonShape:
         config.features?.reservationButtonShape ||
         config.reservationButtonShape ||
-        "pill",
+        undefined,
       reservationFormStyle: config.features?.reservationFormStyle || config.reservationFormStyle || "classic",
       reservationTimeSlotInterval: config.features?.reservationTimeSlotInterval || config.reservationTimeSlotInterval || 30,
       reservationDaysAhead: config.features?.reservationDaysAhead || config.reservationDaysAhead || 7,

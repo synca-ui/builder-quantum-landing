@@ -52,8 +52,12 @@ export async function handleSubdomainRequest(
       return next();
     }
 
-    // Check LRU cache first — avoids DB round-trip for repeated subdomain requests
-    const cached = getCachedSite(subdomain);
+    // Check LRU cache first — avoids DB round-trip for repeated subdomain requests.
+    // Bereich "roh": Hier liegt die gespeicherte configData, NICHT die
+    // gefilterte Feldliste der oeffentlichen API. Beide teilten sich frueher
+    // einen Schluessel, und dann beantwortete GET /api/sites/:subdomain seine
+    // Anfrage aus dem rohen Datensatz (siehe server/utils/siteCache.ts).
+    const cached = getCachedSite(subdomain, "roh");
     if (cached) {
       (req as any).subdomainConfig = cached.data;
       (req as any).subdomain = subdomain;
@@ -77,7 +81,7 @@ export async function handleSubdomainRequest(
     }
 
     // Store in cache for subsequent requests
-    setCachedSite(subdomain, webApp.configData, webApp.id);
+    setCachedSite(subdomain, webApp.configData, webApp.id, "roh");
 
     // Attach the config to the request for potential SSR or API use
     (req as any).subdomainConfig = webApp.configData;
