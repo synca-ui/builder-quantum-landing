@@ -59,114 +59,11 @@ import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 import { configurationApi, type Configuration } from "@/lib/api";
 import { usePersistence } from "@/lib/stepPersistence";
+// Die Schrittliste liegt in client/lib/configuratorSteps.ts, damit der
+// automatische Modus gezielt in einen Schritt springen kann, ohne Indizes zu
+// raten (siehe Kopfkommentar dort).
+import { CONFIGURATOR_STEPS_CONFIG } from "@/lib/configuratorSteps";
 
-const CONFIGURATOR_STEPS_CONFIG = [
-  {
-    id: "template",
-    title: "Choose your template",
-    phase: 0,
-    phaseTitle: "Template Selection",
-    component: "template",
-  },
-  {
-    id: "business-info",
-    title: "Tell us about your business",
-    phase: 1,
-    phaseTitle: "Business Information",
-    component: "business-info",
-  },
-  {
-    id: "design-customization",
-    title: "Design Customization",
-    phase: 2,
-    phaseTitle: "Design Customization",
-    component: "design-customization",
-  },
-  {
-    id: "page-structure",
-    title: "Select your pages",
-    phase: 3,
-    phaseTitle: "Content Structure",
-    component: "page-structure",
-  },
-  {
-    id: "opening-hours",
-    title: "Set your opening hours",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "opening-hours",
-  },
-  {
-    id: "menu-products",
-    title: "Add your menu or products",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "menu-products",
-  },
-  {
-    id: "reservations",
-    title: "Setup reservations",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "reservations",
-  },
-  {
-    id: "contact-social",
-    title: "Contact & social media",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "contact-social",
-  },
-  {
-    id: "media-gallery",
-    title: "Upload your photos",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "media-gallery",
-  },
-  {
-    id: "advanced-features",
-    title: "Optional features",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "advanced-features",
-  },
-  {
-    id: "feature-config",
-    title: "Configure feature",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "feature-config",
-  },
-  {
-    id: "domain-hosting",
-    title: "Choose your domain",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "domain-hosting",
-  },
-  {
-    id: "seo-optimization",
-    title: "SEO Optimization",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "seo-optimization",
-  },
-  {
-    id: "preview-adjustments",
-    title: "Preview & final tweaks",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "preview-adjustments",
-  },
-  {
-    id: "publish",
-    title: "Publish your website",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "publish",
-  },
-];
 
 function ShareQRButton({
   url,
@@ -216,6 +113,16 @@ export default function Configurator() {
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
   const business = useConfiguratorStore((s) => s.business); // <-- DIESE ZEILE HINZUFÜGEN
   const design = useConfiguratorStore((s) => s.design);
+  // Ob die Web-App schon einmal online war. Entscheidet nur über die
+  // Wortwahl des Erfolgshinweises: "veroeffentlicht" bei der ersten,
+  // "aktualisiert" bei jeder weiteren - sonst liest sich jedes Speichern
+  // wie eine neue Seite, obwohl dieselbe Adresse ueberschrieben wird.
+  const istVeroeffentlicht = useConfiguratorStore(
+    (s) => s.publishing.status === "published",
+  );
+  const updatePublishingInfo = useConfiguratorStore(
+    (s) => s.updatePublishingInfo,
+  );
   const features = useConfiguratorStore((s) => s.features);
   const { toast } = useToast();
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(
@@ -346,8 +253,18 @@ export default function Configurator() {
         setPublishedUrl(url);
         setSaveStatus("saved");
         toast({
-          title: "Web-App veröffentlicht",
+          title: istVeroeffentlicht
+            ? "Web-App aktualisiert"
+            : "Web-App veröffentlicht",
           description: `Live unter ${url}`,
+        });
+        // Damit der automatische Modus die bestehende Seite kennt, wenn man
+        // ihn erneut oeffnet - und damit der Hinweis oben beim naechsten Mal
+        // "aktualisiert" sagt.
+        updatePublishingInfo({
+          status: "published",
+          publishedUrl: url,
+          publishedAt: new Date().toISOString(),
         });
         setTimeout(() => setSaveStatus("idle"), 2000);
       } else {
@@ -379,6 +296,8 @@ export default function Configurator() {
     business.domain?.selectedDomain,
     business.name,
     toast,
+    istVeroeffentlicht,
+    updatePublishingInfo,
   ]);
 
   const [isTransitioning, setIsTransitioning] = useState(false);

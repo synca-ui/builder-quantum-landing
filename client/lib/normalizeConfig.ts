@@ -421,9 +421,42 @@ function normalizeSocialMedia(social: unknown): Record<string, string> {
 function normalizeLogo(logo: unknown): BusinessInfo["logo"] {
   if (!logo) return undefined;
 
-  const parsed = safeParseJSON<Record<string, unknown>>(logo, {});
-  if (parsed.url && typeof parsed.url === "string") {
-    return { url: parsed.url };
+  // Drei Formen kommen wirklich vor:
+  //   { url: "https://…" }        das Objekt aus dem Konfigurator
+  //   '{"url":"https://…"}'       als JSON abgelegte Altzeilen
+  //   "https://…"                 die blosse Adresse
+  //
+  // Die dritte ist der REGELFALL und war die einzige, die nicht ging: Beide
+  // öffentlichen Feldlisten des Servers liefern das Logo so
+  // (`logo: business.logo?.url` in server/routes/configurations.ts und
+  // server/utils/publicSiteView.ts). Sie lief durch safeParseJSON,
+  // JSON.parse("https://…") warf, und das Logo verschwand von JEDER
+  // ausgelieferten Seite - mit einer Warnung in der Konsole des Gastes als
+  // einzigem Hinweis.
+  //
+  // Reihenfolge ist wichtig: erst parsen, dann als Adresse lesen. Andersherum
+  // wäre '{"url":"…"}' als Adresse durchgegangen und hätte eine Altzeile
+  // kaputtgemacht.
+  if (typeof logo === "object") {
+    const url = (logo as Record<string, unknown>).url;
+    return typeof url === "string" && url.trim() ? { url: url.trim() } : undefined;
+  }
+
+  if (typeof logo === "string") {
+    const roh = logo.trim();
+    if (!roh) return undefined;
+    if (roh.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(roh) as Record<string, unknown>;
+        return typeof parsed?.url === "string" && parsed.url.trim()
+          ? { url: parsed.url.trim() }
+          : undefined;
+      } catch {
+        console.warn("[normalizeConfig] Logo ist kein gültiges JSON:", roh);
+        return undefined;
+      }
+    }
+    return { url: roh };
   }
 
   return undefined;
@@ -437,7 +470,19 @@ function normalizeLogo(logo: unknown): BusinessInfo["logo"] {
  * HAUPTFUNKTION: Transformiert flache DB-Daten zu verschachtelter Configuration
  *
  * @param flatConfig - Flache Daten aus NeonDB/Prisma
- * @param applyDefaults - Ob businessType-Defaults angewendet werden sollen
+ * @param applyDefaults - Ob businessType-Defaults angewendet werden sollen.
+ *   FÜR DIE VERÖFFENTLICHTE SEITE MUSS DAS `false` SEIN.
+ *
+ *   Die Vorgabe `true` füllt leere Felder mit den Musterdaten des
+ *   Geschäftstyps (client/lib/businessTypeDefaults.ts). In der Vorschau des
+ *   Konfigurators ist das ein Vorschlag, den der Wirt vor sich sieht und
+ *   überschreibt. Auf der ausgelieferten Seite ist es eine Erfindung: Ein
+ *   automatisch veröffentlichter Betrieb ohne erkannte Speisekarte
+ *   (businessType "bar") bekam damit „Mojito 9,50 · Aperol Spritz 8,50 · Old
+ *   Fashioned 11,00" und die Öffnungszeiten 18:00–02:00 auf seine echte
+ *   Web-App — Gerichte, die es dort nie gab, zu Preisen, die niemand gesetzt
+ *   hat. Dieselbe Fehlerklasse wie die erfundenen Öffnungszeiten aus
+ *   Commit 30004bd, nur eine Ebene höher.
  * @returns Vollständig normalisierte Configuration
  *
  * @example
@@ -590,9 +635,16 @@ export function normalizeConfig(
         const normalized = normalizeOpeningHours(
           contentObj.openingHours || flatConfig.openingHours,
         );
-        return Object.keys(normalized).length > 0
-          ? normalized
-          : typeDefaults?.openingHours || DEFAULT_CONTENT_DATA.openingHours;
+        if (Object.keys(normalized).length > 0) return normalized;
+        // Ohne Musterdaten bleibt LEER auch leer. `DEFAULT_CONTENT_DATA` als
+        // letzter Rückfall hätte hier "Mo-So 09:00-22:00 geöffnet" behauptet -
+        // also genau das, was applyDefaults=false verhindern soll. Die
+        // Anzeige kommt damit klar: OpeningHours blendet sich bei leeren
+        // Zeiten aus bzw. schreibt "Keine Angabe" (client/components/shared/
+        // OpeningHours.tsx), und der Renderer prüft die Länge, bevor er die
+        // Liste zeigt.
+        if (!applyDefaults) return {};
+        return typeDefaults?.openingHours || DEFAULT_CONTENT_DATA.openingHours;
       })(),
       categories:
         categories.length > 0

@@ -112,6 +112,77 @@ interface VenueRow {
    * geht; eine kaputte oder fremd geformte Zeile darf ihn nicht sprengen.
    */
   openingHours?: unknown;
+  // Nur für die ANGEMELDETE Sicht (toOwnerVenue) - alle optional, weil
+  // `POST /venues` sie nicht kennt und Altzeilen sie nicht tragen.
+  slug?: string;
+  description?: string | null;
+  cuisine?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string;
+  secondaryColor?: string;
+  postalCode?: string | null;
+  maitrScore?: number;
+  socialLinks?: unknown;
+  contactInfo?: unknown;
+}
+
+/** Nur nicht-leere Zeichenketten, alles andere fällt weg. */
+function feld(wert: unknown): string | undefined {
+  return typeof wert === "string" && wert.trim() ? wert.trim() : undefined;
+}
+
+/**
+ * Die Sicht des INHABERS auf seinen Betrieb - `GET /venues` und die Antworten
+ * von `POST /venues` und `PATCH /venues/:venueId`, alle hinter requireAuth.
+ *
+ * Erweitert `toApiVenue` um das, was die Veröffentlichung der Web-App am
+ * Betrieb hinterlässt (server/services/businessProfil.ts): Logo, Farben,
+ * Beschreibung, Kontakt, Adresse, soziale Netze, Score. Bewusst eine ZWEITE
+ * Funktion und keine Erweiterung der ersten: `toApiVenue` bedient das
+ * unangemeldete Gastprofil, und dort gehören Postleitzahl, Telefon und E-Mail
+ * nicht hin (siehe die Warnung am Modell in prisma/schema.prisma).
+ */
+function toOwnerVenue(b: VenueRow): Venue {
+  const venue = toApiVenue(b);
+  const kontakt =
+    b.contactInfo && typeof b.contactInfo === "object"
+      ? (b.contactInfo as Record<string, unknown>)
+      : {};
+  const adresse = feld(kontakt.address);
+  if (adresse) {
+    // "Weyerstraße 96, 50676 Köln" → Straße / Ort. Ohne Komma bleibt alles
+    // in `street` - lieber eine volle Zeile als eine geratene Aufteilung.
+    const komma = adresse.indexOf(",");
+    if (komma > 0) {
+      venue.street = adresse.slice(0, komma).trim();
+      venue.city = adresse.slice(komma + 1).trim();
+    } else {
+      venue.street = adresse;
+    }
+  }
+  const social =
+    b.socialLinks && typeof b.socialLinks === "object"
+      ? Object.fromEntries(
+          Object.entries(b.socialLinks as Record<string, unknown>).filter(
+            (e): e is [string, string] => typeof e[1] === "string" && Boolean(e[1]),
+          ),
+        )
+      : undefined;
+  return {
+    ...venue,
+    slug: feld(b.slug),
+    description: feld(b.description),
+    cuisine: feld(b.cuisine),
+    logoUrl: feld(b.logoUrl),
+    primaryColor: feld(b.primaryColor),
+    secondaryColor: feld(b.secondaryColor),
+    phone: feld(kontakt.phone),
+    email: feld(kontakt.email),
+    website: feld(kontakt.website),
+    postalCode: feld(b.postalCode),
+    socialLinks: social && Object.keys(social).length ? social : undefined,
+    maitrScore: typeof b.maitrScore === "number" ? b.maitrScore : undefined,
+  };
 }
 
 /**
@@ -187,8 +258,48 @@ venuesRouter.get(
     const memberships = await prisma.businessMember.findMany({
       where: { userId: req.userId! },
       include: { business: true },
+      // Zuletzt veröffentlichter Betrieb zuerst. Die App übernimmt den ERSTEN
+      // Eintrag (mobile/src/lib/store.tsx) - ohne Reihenfolge war das bei
+      // mehreren Betrieben Zufall, und wer gerade eine Web-App veröffentlicht
+      // hatte, sah in der App womöglich einen alten Testbetrieb. Jede
+      // Veröffentlichung aktualisiert `Business.updatedAt` (BusinessService).
+      orderBy: { business: { updatedAt: "desc" } },
     });
-    res.json(memberships.map((m) => toApiVenue(m.business)));
+    res.json(memberships.map((m) => toOwnerVenue(m.business)));
+  }),
+);
+
+/**
+ * GET /venues/:venueId/menu - die Speisekarte, wie sie beim Veröffentlichen der
+ * Web-App entstand (BusinessService, Step 2b). Nur lesen: Gepflegt wird die
+ * Karte im Konfigurator, und die Web-App ist die Wahrheit darüber. Hinter
+ * `venueGuard`, damit auch das Personal sie sehen kann.
+ */
+venuesRouter.get(
+  "/:venueId/menu",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = venueOf(req);
+    const kategorien = await prisma.menuCategory.findMany({
+      where: { businessId: venueId },
+      orderBy: { sortOrder: "asc" },
+      include: { items: { orderBy: { createdAt: "asc" } } },
+    });
+    res.json({
+      categories: kategorien.map((k) => ({
+        id: k.id,
+        name: k.name,
+        items: k.items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          description: i.description ?? undefined,
+          // Decimal → Zahl. Prisma liefert Decimal.js-Objekte, JSON würde
+          // daraus eine Zeichenkette machen.
+          price: Number(i.price),
+          imageUrl: i.imageUrl ?? undefined,
+        })),
+      })),
+    });
   }),
 );
 
@@ -344,7 +455,7 @@ venuesRouter.post(
             where: { userId },
             include: { business: true },
           });
-          if (bestehend) return { venue: toApiVenue(bestehend.business), schonVorhanden: true };
+          if (bestehend) return { venue: toOwnerVenue(bestehend.business), schonVorhanden: true };
 
           const business = await tx.business.create({
             data: {
@@ -361,7 +472,7 @@ venuesRouter.post(
           await tx.businessMember.create({
             data: { userId, businessId: business.id, role: "OWNER" },
           });
-          return { venue: toApiVenue(business), schonVorhanden: false };
+          return { venue: toOwnerVenue(business), schonVorhanden: false };
         });
 
         if (ergebnis.schonVorhanden) {
@@ -1093,7 +1204,7 @@ venuesRouter.patch(
     }
 
     const business = await prisma.business.update({ where: { id: venueId }, data });
-    return res.json(toApiVenue(business));
+    return res.json(toOwnerVenue(business));
   }),
 );
 

@@ -102,8 +102,10 @@ export default function HostAwareRoot() {
 
         const result = await response.json();
         if (result.success && result.data) {
-          // Normalisieren direkt nach dem Fetch, nicht beim Render
-          const normalized = normalizeConfig(result.data);
+          // Normalisieren direkt nach dem Fetch, nicht beim Render.
+          // applyDefaults=false wie im AppRenderer: die ausgelieferte Seite
+          // eines echten Betriebs bekommt keine Musterdaten untergeschoben.
+          const normalized = normalizeConfig(result.data, false);
           sessionCache = { subdomain: SUBDOMAIN, config: normalized };
           setConfig(normalized);
         }

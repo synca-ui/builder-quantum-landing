@@ -8,6 +8,7 @@ import type {
   ServiceDay,
   UpdateVenueInput,
   Venue,
+  VenueMenu,
 } from "../types";
 import type { ProviderId } from "../integrations";
 
@@ -52,6 +53,8 @@ export const BETRIEB_PFADE = {
   /** Sammlung: GET (eigene Betriebe) und POST (neuen Betrieb anlegen) teilen sich den Pfad. */
   betriebe: "/venues",
   betrieb: (venueId: string) => `/venues/${teil(venueId)}`,
+  /** Speisekarte des Betriebs, wie sie beim Veröffentlichen der Web-App entstand. */
+  speisekarte: (venueId: string) => `/venues/${teil(venueId)}/menu`,
   oeffentlich: (slug: string) => `/venues/${teil(slug)}/public`,
   integrationen: "/integrations",
   integrationVerbinden: (provider: ProviderId) => `/integrations/${teil(provider)}/connect`,
@@ -63,16 +66,27 @@ export const briefing = {
     return request<DailyBriefing>("/briefing/today", { query: { venueId }, signal });
   },
 
-  /** Aufgabe freigeben (Bewertung antworten, Beitrag einplanen). */
-  approveTask(taskId: string) {
-    return request<DailyTask>(`/briefing/tasks/${taskId}/approve`, { method: "POST" });
+  /**
+   * Aufgabe freigeben (Bewertung antworten, Beitrag einplanen).
+   *
+   * `venueId` MITSCHICKEN, sobald sie bekannt ist: Der Server leitet den Betrieb
+   * sonst aus den Mitgliedschaften ab - und lehnt mit 400 "venueId fehlt" ab,
+   * sobald ein Konto mehr als einen Betrieb hat (jede veröffentlichte Web-App
+   * mit neuem Namen legt einen an). Der grüne Knopf wäre dann tot.
+   */
+  approveTask(taskId: string, venueId?: string) {
+    return request<DailyTask>(`/briefing/tasks/${teil(taskId)}/approve`, {
+      method: "POST",
+      ...(venueId ? { query: { venueId } } : {}),
+    });
   },
 
-  /** Entwurf vor der Freigabe anpassen. */
-  updateDraft(taskId: string, draft: string) {
-    return request<DailyTask>(`/briefing/tasks/${taskId}`, {
+  /** Entwurf vor der Freigabe anpassen. `venueId` wie bei `approveTask`. */
+  updateDraft(taskId: string, draft: string, venueId?: string) {
+    return request<DailyTask>(`/briefing/tasks/${teil(taskId)}`, {
       method: "PATCH",
       body: { draft },
+      ...(venueId ? { query: { venueId } } : {}),
     });
   },
 };
@@ -104,8 +118,18 @@ export const reservations = {
 };
 
 export const venues = {
+  /**
+   * Eigene Betriebe, zuletzt veröffentlichter zuerst. Der erste Eintrag ist
+   * der, den die App übernimmt - wer gerade eine Web-App veröffentlicht hat,
+   * sieht also genau diesen Betrieb.
+   */
   mine() {
     return request<Venue[]>(BETRIEB_PFADE.betriebe);
+  },
+
+  /** Speisekarte des Betriebs - nur lesen, gepflegt wird sie im Konfigurator. */
+  menu(venueId: string, signal?: AbortSignal) {
+    return request<VenueMenu>(BETRIEB_PFADE.speisekarte(venueId), { signal });
   },
 
   /**

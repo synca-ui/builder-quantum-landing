@@ -35,6 +35,33 @@ const RESERVED_SUBDOMAINS = new Set([
   "staging", "dev", "preview", "check"
 ]);
 
+/**
+ * Macht aus einem Wert ein JavaScript-Literal, das in einem `<script>`-Block
+ * sicher ist.
+ *
+ * ANLASS: Hier stand `JSON.stringify(config).replace(/<\/script>/gi, …)`. Das
+ * greift zu kurz - der HTML-Parser beendet einen Script-Block bei `</script`
+ * gefolgt von Leerzeichen, `/` oder `>`. Ein Betriebsname wie
+ *   Adler</script ><script>…
+ * (der Scrape übernimmt Namen aus fremdem HTML, siehe og:site_name) wäre also
+ * durch die Ersetzung gerutscht und hätte bei JEDEM Besucher der Subdomain
+ * fremdes JavaScript ausgeführt. Die Subdomain selbst stand zudem roh in
+ * einem doppelt gequoteten JS-String.
+ *
+ * Ein `<` als \u003c zu schreiben beendet die ganze Fehlerklasse: ohne `<`
+ * gibt es kein Tag, egal in welcher Schreibweise. `>` und `&` gehen aus
+ * demselben Grund mit. U+2028/U+2029 sind in JSON erlaubt, in JavaScript-Quelltext aber
+ * Zeilenumbrüche - unescaped brechen sie den Block syntaktisch auf.
+ */
+function fuerScriptBlock(wert: unknown): string {
+  return JSON.stringify(wert)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export default async function handler(req: Request, context: Context) {
   const host = req.headers.get("host") ?? "";
   const accept = req.headers.get("accept") ?? "";
@@ -95,18 +122,12 @@ export default async function handler(req: Request, context: Context) {
   // ── Config in <head> injizieren ──────────────────────────────────────────
   const originalHtml = await response.text();
 
-  // Sicheres JSON-Encoding (verhindert XSS durch </script> in Config-Daten)
-  const safeConfig = JSON.stringify(config).replace(
-    /<\/script>/gi,
-    "<\\/script>",
-  );
-
   const injectedHtml = originalHtml.replace(
     "<head>",
     `<head>
 <script>
-  window.__MAITR_CONFIG__=${safeConfig};
-  window.__MAITR_SUBDOMAIN__="${subdomain}";
+  window.__MAITR_CONFIG__=${fuerScriptBlock(config)};
+  window.__MAITR_SUBDOMAIN__=${fuerScriptBlock(subdomain)};
 </script>`,
   );
 

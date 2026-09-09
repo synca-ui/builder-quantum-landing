@@ -173,10 +173,16 @@ export function parseSchemaOpeningHours(node: unknown): WeekHours {
     const open = normalizeTime(String(e?.opens ?? ""));
     const close = normalizeTime(String(e?.closes ?? ""));
     if (!open || !close) continue;
+    // schema.org-Konvention für einen Ruhetag: opens UND closes auf "00:00"
+    // (Google: "To show a business is closed all day, set both opens and
+    // closes properties to 00:00"). Bisher wurde das als „geöffnet 00:00–00:00"
+    // gelesen – am echten Fall haus-toeller.de stand der Sonntag (Ruhetag)
+    // damit als offener Tag in der Web-App. Ein Ruhetag bleibt ein Ruhetag.
+    const ruhetag = open === "00:00" && close === "00:00";
     const raw = e?.dayOfWeek;
     for (const day of Array.isArray(raw) ? raw : raw ? [raw] : []) {
       const key = normalizeDay(String(day));
-      if (key) out[key] = { open, close, closed: false };
+      if (key) out[key] = { open, close, closed: ruhetag };
     }
   }
 

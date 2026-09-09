@@ -75,7 +75,11 @@ interface AppRendererProps {
 export const AppRenderer: React.FC<AppRendererProps> = ({
   config: rawConfig,
 }) => {
-  const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
+  // applyDefaults=false: Dies ist die AUSGELIEFERTE Seite eines echten
+  // Betriebs. Musterdaten des Geschäftstyps gehören in die Vorschau des
+  // Konfigurators, nicht ins Netz — sonst stehen dort Gerichte und
+  // Öffnungszeiten, die niemand eingetragen hat (Begründung an der Funktion).
+  const config = useMemo(() => normalizeConfig(rawConfig, false), [rawConfig]);
   const { business, design, content, features, contact, pages, payments } =
     config;
 
@@ -938,8 +942,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       <button
         className="w-full py-3 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
         style={{
-          backgroundColor: features.reservationButtonColor,
-          color: features.reservationButtonTextColor,
+          // Rückfall auf die Markenfarbe wie an den anderen beiden Stellen
+          // (Zeile 504). Ohne ihn wäre dieser Knopf durchsichtig, seit der
+          // Server keine Ersatzfarbe mehr unterschiebt.
+          backgroundColor:
+            features.reservationButtonColor || design.primaryColor,
+          color: features.reservationButtonTextColor || "#FFFFFF",
           borderRadius:
             features.reservationButtonShape === "pill"
               ? "9999px"
