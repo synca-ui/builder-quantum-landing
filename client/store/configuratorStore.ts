@@ -25,6 +25,7 @@ import type {
 } from "@/types/domain";
 import { getBusinessTypeDefaults } from "@/lib/businessTypeDefaults";
 import type { ConfiguratorDraft } from "@shared/suggestedConfig";
+import type { PublishConfig } from "@shared/autoPublish";
 
 // ============================================
 // EMERGENCY THROTTLE GUARD (to detect infinite loops)
@@ -190,7 +191,20 @@ interface ConfiguratorState {
   getFullConfiguration: () => any;
   loadConfiguration: (config: Partial<Configuration>) => void;
   applyScrapedDraft: (draft: ConfiguratorDraft) => void;
+  applyPublishedConfig: (
+    config: PublishConfig,
+    options?: PublishedConfigOptions,
+  ) => void;
   clearAllData: () => void;
+}
+
+/** Was beim Übernehmen einer veröffentlichten Fassung zusätzlich feststeht. */
+export interface PublishedConfigOptions {
+  /** Die tatsächlich benutzte Adresse, z. B. "haus-toeller". */
+  subdomain?: string;
+  publishedUrl?: string;
+  previewUrl?: string;
+  publishedAt?: string;
 }
 
 /**
@@ -1121,6 +1135,114 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }));
       },
 
+      /**
+       * Übernimmt die VERÖFFENTLICHTE Fassung - das, was gerade online ging.
+       *
+       * ANLASS: Nach dem automatischen Veröffentlichen konnte man zwar in den
+       * Konfigurator wechseln, aber dort stand nicht die Seite, die man eben
+       * gesehen hatte. `applyScrapedDraft` bekommt den ENTWURF, und zwischen
+       * Entwurf und Veröffentlichung liegt `buildPublishConfig`
+       * (shared/autoPublish.ts): abgeleitete Farben, markierte Aushängeschilder,
+       * erkanntes Buchungssystem. Drei Abweichungen waren nachgewiesen:
+       *
+       *  - Preisfarbe fiel auf das Store-Grün (#059669) und die Kopfzeile auf
+       *    Weiß zurück, weil `deriveCohesiveColors` nur im Publish-Pfad läuft.
+       *  - Für Tage ohne Zeiten schob der Entwurfspfad "09:00-22:00 geöffnet"
+       *    unter - aus einem Ruhetag wurde ein Öffnungstag (derselbe Fehler,
+       *    den Commit 30004bd im Renderer behoben hat, hier an der Quelle).
+       *  - `features` blieben unangetastet: der erkannte Buchungslink fehlte,
+       *    und die Reservierungseinstellung des VORIGEN Entwurfs blieb stehen.
+       *
+       * Wer danach über die Kopfzeile erneut veröffentlicht, schickt
+       * `getFullConfiguration()` - und das muss dieselbe Seite ergeben. Sonst
+       * macht "anpassen" die Seite kaputt, ohne dass jemand etwas angepasst hat.
+       *
+       * Grundlage sind wie bei `applyScrapedDraft` die Defaults und nicht der
+       * bisherige Zustand: Die Fassung beschreibt einen anderen Betrieb.
+       */
+      applyPublishedConfig: (config, options = {}) => {
+        checkThrottleGuard("applyPublishedConfig");
+        set((state) => {
+          const veroeffentlichteZeiten = config.content?.openingHours ?? {};
+          // Alle sieben Tage füllen, damit der Öffnungszeiten-Schritt eine
+          // vollständige Woche zeigt - fehlende Tage aber als RUHETAG, nicht
+          // mit erfundenen Zeiten. Die Uhrzeiten daneben sind nur der Vorschlag
+          // für den Fall, dass der Wirt den Tag öffnet; solange `closed` steht,
+          // liest der Renderer sie nicht (client/lib/normalizeConfig.ts).
+          const openingHours = Object.fromEntries(
+            Object.entries(defaultContentData.openingHours).map(
+              ([tag, standard]) => [
+                tag,
+                veroeffentlichteZeiten[tag] ?? { ...standard, closed: true },
+              ],
+            ),
+          ) as ContentData["openingHours"];
+
+          return {
+            business: {
+              ...defaultBusinessInfo,
+              ...config.business,
+              // Die Adresse gehört nicht in die Fassung, die an den Server geht
+              // - sie steht daneben im Publish-Aufruf. Ohne sie hier leitete der
+              // manuelle Weg beim nächsten Veröffentlichen wieder eine neue aus
+              // dem Betriebsnamen ab, statt die bestehende zu aktualisieren.
+              ...(options.subdomain
+                ? {
+                    domain: {
+                      hasDomain: false,
+                      selectedDomain: options.subdomain,
+                    },
+                  }
+                : {}),
+            },
+            design: { ...defaultDesignConfig, ...config.design },
+            content: {
+              ...defaultContentData,
+              ...config.content,
+              openingHours,
+            },
+            features: {
+              ...defaultFeatureFlags,
+              // Der Reservierungsknopf trägt die MARKENFARBE, nicht das
+              // Store-Blau (#2563EB). Die veröffentlichte Fassung kennt gar
+              // keine Knopffarbe (siehe PublishConfig["features"]) - der
+              // Renderer nimmt dort die Primärfarbe. Ohne diese Zeile stünde
+              // im Konfigurator ein Blau, das beim nächsten Veröffentlichen
+              // mitginge, und der Knopf wechselte die Farbe, ohne dass jemand
+              // etwas geändert hätte.
+              reservationButtonColor:
+                config.design?.primaryColor ??
+                defaultFeatureFlags.reservationButtonColor,
+              reservationButtonTextColor: "#FFFFFF",
+              ...(config.features ?? {}),
+            },
+            contact: { ...defaultContactInfo, ...config.contact },
+            // Seiten und Angebote kennt die veröffentlichte Fassung nicht
+            // (buildPublishConfig setzt sie bewusst nicht - der Renderer blendet
+            // Speisekarte, Galerie und Kontakt selbst ein, sobald Daten da sind).
+            // Auf die Vorgabe zurücksetzen statt stehen lassen: Sonst gälten
+            // hier weiter die Seiten und Angebote des VORIGEN Betriebs.
+            pages: { ...defaultPageManagement },
+            payments: { ...defaultPaymentAndOffers },
+            publishing: {
+              ...state.publishing,
+              // Nur behaupten, was wirklich passiert ist: Ohne Adresse wurde
+              // hier nichts veröffentlicht (der Weg "erst anpassen").
+              ...(options.publishedUrl
+                ? {
+                    status: "published" as const,
+                    publishedUrl: options.publishedUrl,
+                    previewUrl: options.previewUrl,
+                    publishedAt:
+                      options.publishedAt ?? new Date().toISOString(),
+                  }
+                : {}),
+              updatedAt: new Date().toISOString(),
+            },
+          };
+        });
+      },
+
       clearAllData: () => {
         checkThrottleGuard("clearAllData");
 
@@ -1287,6 +1409,7 @@ export const useConfiguratorActions = () => {
         getFullConfiguration: store.getFullConfiguration,
         loadConfiguration: store.loadConfiguration,
         applyScrapedDraft: store.applyScrapedDraft,
+        applyPublishedConfig: store.applyPublishedConfig,
         clearAllData: store.clearAllData,
       },
     }),
