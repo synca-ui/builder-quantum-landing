@@ -26,6 +26,13 @@ import {
 // ✅ Helper-Import aus zentraler Datei
 import { normalizeImageSrc, getPageLabel } from "@/lib/helpers";
 import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
+import {
+  getTemplateLayout,
+  heroKicker,
+  kategorieVon,
+  kategorienReihenfolge,
+  waehleHighlights,
+} from "@/lib/templateLayout";
 import { WEEKDAY_LABELS } from "@/lib/weekdays";
 import { isFeatureDeliverable } from "@/lib/featureAvailability";
 import { fontClassFor } from "@/lib/fontClass";
@@ -35,6 +42,9 @@ import { heroTitel, heroUntertitel } from "@/lib/heroFallback";
 import { Navigation } from "@/components/shared/Navigation";
 import { MenuOverlay } from "@/components/shared/MenuOverlay";
 import { DishCard } from "@/components/shared/DishCard";
+import { DishList } from "@/components/shared/DishList";
+import { Hero } from "@/components/shared/Hero";
+import { ReservationCta } from "@/components/shared/ReservationCta";
 import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { CategoryFilter } from "@/components/shared/CategoryFilter";
@@ -352,7 +362,15 @@ export function TemplatePreviewContent() {
   // ==========================================
   // Dieselbe Zuordnung wie AppRenderer — genau darum geht es hier:
   // Vorschau und veroeffentlichte Seite muessen identisch rendern.
-  const fontClass = fontClassFor(fontFamily);
+  const fontClass = fontClassFor(fontFamily, template);
+  // Layoutformen des Templates — dieselbe Quelle wie die Live-Seite
+  // (client/lib/templateLayout.ts). Bestand: layout.eigen === false.
+  const layout = getTemplateLayout(template);
+  // Kategorienreihenfolge für Filter und Liste — dieselbe Regel wie live.
+  const kategorien = useMemo(
+    () => kategorienReihenfolge(categories, menuItems),
+    [categories, menuItems],
+  );
 
   // Memoized styles — Wrapper kommt aus dem geteilten Helper, damit Vorschau
   // und veröffentlichte Seite (AppRenderer) identisch rendern.
@@ -365,10 +383,14 @@ export function TemplatePreviewContent() {
       }),
       page: `px-5 pt-10 pb-20 min-h-full ${fontClass}`, // Increased pt-2 to pt-10
       titleClass: `text-3xl font-bold mb-2 text-center leading-tight`,
+      // Papier-Templates: Seitentitel in der Display-Schrift — wie live.
+      titleStyle: layout.eigen
+        ? { fontFamily: "var(--font-template-display)" }
+        : undefined,
       bodyClass: `text-sm opacity-90 leading-relaxed`,
       nav: `!sticky !top-0 w-full z-[100] px-5 pt-12 pb-3 flex items-center justify-between border-b border-black/5 transition-all bg-white backdrop-blur-md shadow-sm`, // Forced sticky with !important
     }),
-    [backgroundColor, fontColor, secondaryColor, template, fontFamily],
+    [backgroundColor, fontColor, secondaryColor, template, fontFamily, layout.eigen],
   );
 
   // ==========================================
@@ -382,9 +404,52 @@ export function TemplatePreviewContent() {
         ? menuItems
         : getBusinessTypeDefaults(businessType).menuItems;
 
+    // Reservieren-Aufruf der Papier-Templates — Position wie auf der
+    // Live-Seite (AppRenderer): geteilte Leiste zwischen Hero und Liste,
+    // Block und Textlink unter der Liste.
+    const eigenerCta =
+      reservationsEnabled && layout.eigen ? (
+        <ReservationCta
+          template={template}
+          primaryColor={primaryColor}
+          fontColor={fontColor}
+          backgroundColor={backgroundColor}
+          buttonColor={reservationButtonColor}
+          buttonTextColor={reservationButtonTextColor}
+          onReservation={() => navigateToPage("reservations")}
+          onMenu={() => navigateToPage("menu")}
+        />
+      ) : null;
+
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Hero Section */}
+        {/* Hero Section — Templates mit eigenem Layout nutzen dieselbe
+            Hero-Komponente wie die Live-Seite (AppRenderer). */}
+        {layout.eigen ? (
+          <Hero
+            slogan={slogan && slogan.trim() !== "" ? slogan : undefined}
+            description={uniqueDescription || undefined}
+            businessName={businessName}
+            businessType={businessType}
+            location={location}
+            primaryColor={primaryColor}
+            fontColor={fontColor}
+            backgroundColor={backgroundColor}
+            secondaryColor={secondaryColor}
+            template={template}
+            bandImage={gallery[0]?.url ?? null}
+            kicker={heroKicker(
+              template,
+              businessType,
+              openingHours,
+              undefined,
+              uniqueDescription,
+            )}
+            onlineOrdering={onlineOrdering}
+            onOrderClick={() => navigateToPage("menu")}
+            isPreview={true}
+          />
+        ) : (
         <div className="text-center px-2 flex flex-col items-center">
           {/* Rückfalltexte aus heroFallback.ts — dieselben wie auf der
               veröffentlichten Seite (Hero.tsx), sonst verspricht die
@@ -426,6 +491,9 @@ export function TemplatePreviewContent() {
             </div>
           )}
         </div>
+        )}
+
+        {layout.cta === "geteilt" && eigenerCta}
 
         {/* Angebots-Banner — geteilt mit der Live-Seite */}
         <OfferBanner
@@ -434,8 +502,30 @@ export function TemplatePreviewContent() {
           onShowOffers={() => navigateToPage("offers")}
         />
 
-        {/* Highlights Section - nutzt DishCard Shared Component */}
+        {/* Highlights Section - nutzt DishCard Shared Component.
+            Templates mit eigenem Layout: geteilte DishList, identisch mit der
+            Live-Seite (templateLayout.ts). */}
         <div>
+          {layout.eigen ? (
+            <DishList
+              template={template}
+              modus="highlights"
+              alle={displayItems}
+              anzeigen={waehleHighlights(displayItems, layout.highlights)}
+              categories={kategorien}
+              onAlle={() => navigateToPage("menu")}
+              fontColor={fontColor}
+              priceColor={priceColor}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+              backgroundColor={backgroundColor}
+              onlineOrdering={onlineOrdering}
+              onItemClick={openDishModal}
+              onAddToCart={addToCart}
+              isPreview={true}
+            />
+          ) : (
+          <>
           <div className="flex items-center justify-between mb-4 px-1">
             <h3
               className="uppercase tracking-widest font-bold opacity-60 text-[10px]"
@@ -493,9 +583,11 @@ export function TemplatePreviewContent() {
               ));
             })()}
           </div>
+          </>
+          )}
 
           {/* Reservation Button - Dynamic Component */}
-          {reservationsEnabled && (
+          {reservationsEnabled && !layout.eigen && (
             <div className="mt-8 w-full px-4">
               <ReservationButton
                 color={reservationButtonColor}
@@ -510,6 +602,8 @@ export function TemplatePreviewContent() {
           )}
         </div>
 
+        {layout.cta !== "geteilt" && eigenerCta}
+
         {/* Opening Hours - nutzt OpeningHours Shared Component */}
         <OpeningHours
           hours={openingHours as OpeningHoursType}
@@ -522,20 +616,26 @@ export function TemplatePreviewContent() {
 
   // ✅ ORIGINAL MENU PAGE (Fallback)
   const renderMenuPage = () => {
+    // Papier-Templates: Rubrik über dieselbe Regel wie Reiter und Gruppen
+    // (kategorieVon — Gerichte ohne Kategorie unter „Sonstiges“), wie live.
     const filteredItems = activeMenuCategory
-      ? menuItems.filter((item) => item.category === activeMenuCategory)
+      ? menuItems.filter(
+          (item) =>
+            (layout.eigen ? kategorieVon(item) : item.category) ===
+            activeMenuCategory,
+        )
       : menuItems;
 
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         {/* Page Title */}
-        <h2 className={styles.titleClass}>Speisekarte</h2>
+        <h2 className={styles.titleClass} style={styles.titleStyle}>Speisekarte</h2>
 
         {/* Category Filter - NUR wenn Kategorien existieren */}
-        {categories.length > 0 && (
+        {(layout.eigen ? kategorien : categories).length > 0 && (
           <div className="sticky top-0 z-20 pb-4 -mx-4 px-4">
             <CategoryFilter
-              categories={categories}
+              categories={layout.eigen ? kategorien : categories}
               activeCategory={activeMenuCategory}
               onCategoryChange={(category) => {
                 console.log("[MenuPage] Category changed:", category);
@@ -546,11 +646,34 @@ export function TemplatePreviewContent() {
               allLabel="Alle"
               maxVisible={5}
               isPreview={true}
+              template={template}
+              accentColor={primaryColor}
             />
           </div>
         )}
 
-        {/* Menu Items List */}
+        {/* Menu Items List — Templates mit eigenem Layout: geteilte DishList,
+            identisch mit der Live-Seite (AppRenderer, templateLayout.ts). */}
+        {layout.eigen && filteredItems.length > 0 ? (
+          <DishList
+            template={template}
+            modus="karte"
+            alle={menuItems}
+            anzeigen={filteredItems}
+            categories={kategorien}
+            gruppieren={!activeMenuCategory}
+            fontColor={fontColor}
+            priceColor={priceColor}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+            backgroundColor={backgroundColor}
+            onlineOrdering={onlineOrdering}
+            onItemClick={openDishModal}
+            onAddToCart={addToCart}
+            isPreview={true}
+            className="pb-4"
+          />
+        ) : (
         <div className="space-y-3">
           {filteredItems.length > 0 ? (
             <>
@@ -638,6 +761,7 @@ export function TemplatePreviewContent() {
             </div>
           )}
         </div>
+        )}
 
         {/* Item Count Info */}
         {filteredItems.length > 0 && (
@@ -657,7 +781,7 @@ export function TemplatePreviewContent() {
   const renderContactPage = () => {
     return (
       <div className="space-y-8 animate-in fade-in duration-300">
-        <h2 className={styles.titleClass}>Kontakt</h2>
+        <h2 className={styles.titleClass} style={styles.titleStyle}>Kontakt</h2>
         <div
           className="p-6 border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm"
           style={{ borderRadius: "var(--radius-card, 16px)" }}
@@ -751,7 +875,7 @@ export function TemplatePreviewContent() {
   const renderGalleryPage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
-        <h2 className={styles.titleClass}>Galerie</h2>
+        <h2 className={styles.titleClass} style={styles.titleStyle}>Galerie</h2>
         <div className="grid grid-cols-2 gap-3">
           {(gallery.length > 0 ? gallery : [1, 2, 3, 4, 5, 6]).map(
             (img: any, i: number) => (
@@ -812,7 +936,7 @@ export function TemplatePreviewContent() {
               style={{ color: primaryColor }}
             />
           </div>
-          <h2 className={styles.titleClass}>Reservierung</h2>
+          <h2 className={styles.titleClass} style={styles.titleStyle}>Reservierung</h2>
           <p className={`${styles.bodyClass} opacity-70`}>
             Buchen Sie Ihren Tisch online
           </p>
@@ -968,6 +1092,8 @@ export function TemplatePreviewContent() {
         onNavigateHome={() => navigateToPage("home")}
         isPreview={true}
         className={styles.nav}
+        template={template}
+        accentColor={primaryColor}
       />
 
       {/* Menu Overlay - SHARED COMPONENT */}
@@ -1007,6 +1133,7 @@ export function TemplatePreviewContent() {
         >
           <DishModal
             dish={selectedDish}
+            template={template}
             currentImageIndex={currentImageIndex}
             fontColor={fontColor}
             backgroundColor={backgroundColor}

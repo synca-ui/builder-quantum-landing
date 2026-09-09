@@ -16,6 +16,11 @@ const TYP_LABEL: Record<string, string> = {
   bar: "Bar",
 };
 
+/** Lesbares Label der Betriebsart („Café“), oder undefined bei Unbekanntem. */
+export function typLabel(businessType?: string): string | undefined {
+  return TYP_LABEL[businessType?.trim().toLowerCase() ?? ""];
+}
+
 /**
  * Zieht den Ortsnamen aus einer Adresszeile.
  *

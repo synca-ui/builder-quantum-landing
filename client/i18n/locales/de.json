@@ -127,7 +127,15 @@
     "verde": "Verde",
     "verdeDesc": "Frisch und botanisch — für Cafés, Brunch und grüne Küche.",
     "riviera": "Riviera",
-    "rivieraDesc": "Mediterran und leicht — für Küstenküche, Fisch und Sommerterrassen."
+    "rivieraDesc": "Mediterran und leicht — für Küstenküche, Fisch und Sommerterrassen.",
+    "presse": "Bistrokarte",
+    "presseDesc": "Papierweiß, Serifentitel, Preise über Punktlinien — für Bistros, Weinlokale und Häuser mit Handschrift.",
+    "kiosk": "Aushang",
+    "kioskDesc": "Strenges Raster, ein Bildband, numeriertes Register — für Läden mit kleiner, wechselnder Karte.",
+    "izakaya": "Zettel",
+    "izakayaDesc": "Gerichte in Rahmenkästen wie auf dem Bestellzettel — für Izakayas, Tapas-Bars und Sharing-Küchen.",
+    "morgen": "Frühstückskarte",
+    "morgenDesc": "Ruhige Linienkarte in Kobalt und Elfenbein, gegliedert nach Tageszeit — für Cafés mit wechselnder Karte."
   },
   "business": {
     "name": "Geschäftsname",

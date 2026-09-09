@@ -192,6 +192,119 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
     },
   },
 
+  /**
+   * "Bistrokarte" (presse): gesetzte Karte auf Papier — Bistros, Weinlokale,
+   * Häuser mit Handschrift. Keine Kacheln, keine Bilder: Gerichte führen
+   * über eine Punktlinie zu ihrem Preis. Rot trägt nur Auszeichnungen.
+   */
+  presse: {
+    colors: {
+      primary: "#A81E14",
+      secondary: "#A79A85",
+      background: "#FBF7F0",
+      text: "#14110D",
+      accent: "#1F5130",
+      border: "#DED5C6",
+    },
+    spacing: {
+      xs: "4px",
+      sm: "8px",
+      md: "18px",
+      lg: "36px",
+      xl: "72px",
+    },
+    typography: {
+      h1: { size: "44px", weight: 400, lineHeight: "1.02" },
+      h2: { size: "30px", weight: 400, lineHeight: "1.15" },
+      body: { size: "16px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
+  /**
+   * "Aushang" (kiosk): strenges Raster auf Graupapier — kleine, wechselnde
+   * Karten. Ein Bildband oben, danach ein numeriertes Register auf
+   * Haarlinien. Orange erreicht nur 3,2:1 auf dem Grund und trägt deshalb
+   * ausschließlich Ziffern, Marker und Versalien — nie Fließtext.
+   */
+  kiosk: {
+    colors: {
+      primary: "#E8541F",
+      secondary: "#D9D8D3",
+      background: "#F1F0EC",
+      text: "#17181A",
+      accent: "#2F5DBE",
+      border: "#D9D8D3",
+    },
+    spacing: {
+      xs: "4px",
+      sm: "8px",
+      md: "14px",
+      lg: "28px",
+      xl: "56px",
+    },
+    typography: {
+      h1: { size: "34px", weight: 700, lineHeight: "1.0" },
+      h2: { size: "26px", weight: 700, lineHeight: "1.1" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Zettel" (izakaya): Bestellzettel — Izakayas, Tapas-Bars, Sharing-Küchen.
+   * Gerichte stehen in eckigen Rahmenkästen 2×2, jeder mit Nummer, Bild und
+   * Preis. Tomatenrot nur für Nummern, Stempel und die Reservierung.
+   */
+  izakaya: {
+    colors: {
+      primary: "#9C2B22",
+      secondary: "#D8CFBE",
+      background: "#F5F0E6",
+      text: "#1E1B16",
+      accent: "#2C4A52",
+      border: "#1E1B16",
+    },
+    spacing: {
+      xs: "4px",
+      sm: "8px",
+      md: "14px",
+      lg: "28px",
+      xl: "56px",
+    },
+    typography: {
+      h1: { size: "40px", weight: 800, lineHeight: "0.98" },
+      h2: { size: "28px", weight: 700, lineHeight: "1.05" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Frühstückskarte" (morgen): Tagescafés, deren Karte sich mit der Uhrzeit
+   * ändert. Ruhige Grotesk auf Elfenbein, Kobalt-Serife kursiv für
+   * Zeitfenster und Preise. Keine Flächen, nur Linien.
+   */
+  morgen: {
+    colors: {
+      primary: "#0F4C81",
+      secondary: "#DAD6CC",
+      background: "#F7F5EF",
+      text: "#1A1F26",
+      accent: "#D9A21B",
+      border: "#DAD6CC",
+    },
+    spacing: {
+      xs: "4px",
+      sm: "8px",
+      md: "16px",
+      lg: "32px",
+      xl: "64px",
+    },
+    typography: {
+      h1: { size: "44px", weight: 400, lineHeight: "1.0" },
+      h2: { size: "30px", weight: 400, lineHeight: "1.15" },
+      body: { size: "16px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
   cozy: {
     colors: {
       // Warm & freundlich: Terrakotta mit Aprikose auf cremigem Grund.
@@ -228,6 +341,11 @@ const TEMPLATE_INTENT_MAP: Record<string, TemplateIntent> = {
   nocturne: "VISUAL",
   riviera: "VISUAL",
   verde: "NARRATIVE",
+  // Die vier Papier-Templates: keine Schatten, kein Glas, keine Animationen.
+  presse: "NARRATIVE",
+  kiosk: "NARRATIVE",
+  izakaya: "NARRATIVE",
+  morgen: "NARRATIVE",
 };
 
 /**
@@ -262,7 +380,43 @@ const TEMPLATE_FONT_FAMILY: Record<string, string> = {
   nocturne: "sans-serif",
   riviera: "serif",
   verde: "serif",
+  presse: "serif",
+  kiosk: "sans-serif",
+  izakaya: "sans-serif",
+  // morgen: Fließtext ist Grotesk (Manrope), die Serife trägt nur
+  // Überschriften, Zeitfenster und Preise — das regelt templateLayout.ts.
+  morgen: "sans-serif",
 };
+
+/**
+ * Preise in der Textfarbe statt der Primärfarbe: Auf der gesetzten Karte
+ * (presse), dem Aushang (kiosk) und dem Zettel (izakaya) ist die Buntfarbe
+ * für Nummern, Marker und Auszeichnung reserviert — Preise sind Text.
+ * Kiosk-Orange erreicht ohnehin nur 3,2:1 und dürfte keinen Preis tragen.
+ */
+const PREIS_IN_TEXTFARBE = new Set(["presse", "kiosk", "izakaya"]);
+
+/**
+ * Feature-Vorgaben eines Templates — heute nur die Form des Reservieren-
+ * Knopfs. Die Papier-Templates sind eckig; ein abgerundeter Knopf darunter
+ * sähe aus wie ein Fremdkörper. Der Store übernimmt den Wert nur, wenn der
+ * Nutzer die Form nicht selbst verstellt hat (gleiche Regel wie bei den
+ * Farben, siehe configuratorStore.updateTemplate).
+ */
+export type ReservationButtonShape = "rounded" | "pill" | "square";
+
+const TEMPLATE_BUTTON_SHAPE: Record<string, ReservationButtonShape> = {
+  presse: "square",
+  kiosk: "square",
+  izakaya: "square",
+  morgen: "square",
+};
+
+export function getTemplateButtonShape(
+  templateId: string,
+): ReservationButtonShape {
+  return TEMPLATE_BUTTON_SHAPE[templateId] || "rounded";
+}
 
 export interface TemplateDesignDefaults {
   primaryColor: string;
@@ -284,7 +438,12 @@ export function getTemplateDesignDefaults(
     secondaryColor: colors.secondary,
     backgroundColor: colors.background,
     fontColor: colors.text,
-    priceColor: templateId === "modern" ? "#059669" : colors.primary,
+    priceColor:
+      templateId === "modern"
+        ? "#059669"
+        : PREIS_IN_TEXTFARBE.has(templateId)
+          ? colors.text
+          : colors.primary,
     headerFontColor: colors.text,
     headerBackgroundColor: colors.background,
     fontFamily: TEMPLATE_FONT_FAMILY[templateId] || "sans-serif",

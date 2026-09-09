@@ -40,7 +40,16 @@ import { DishCard } from "@/components/shared/DishCard";
 import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
+import { DishList } from "@/components/shared/DishList";
+import { ReservationCta } from "@/components/shared/ReservationCta";
 import { getTemplateWrapperStyle } from "@/lib/templateWrapperStyle";
+import {
+  getTemplateLayout,
+  heroKicker,
+  kategorieVon,
+  kategorienReihenfolge,
+  waehleHighlights,
+} from "@/lib/templateLayout";
 import { WEEKDAY_LABELS } from "@/lib/weekdays";
 import { isFeatureDeliverable } from "@/lib/featureAvailability";
 import { fontClassFor } from "@/lib/fontClass";
@@ -82,6 +91,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       headerFontColor: design.headerFontColor,
       headerFontSize: design.headerFontSize,
       headerBackgroundColor: design.headerBackgroundColor,
+      fontFamily: design.fontFamily,
     } as any);
 
     return () => {
@@ -206,7 +216,10 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
   // Font Class — gemeinsame Zuordnung mit der Vorschau, siehe client/lib/fontClass.ts.
   // Vorher kannte diese Stelle nur "monospace" und die Vorschau nur "mono";
   // die Auswahl "Display" sah dadurch live anders aus als im Konfigurator.
-  const fontClass = fontClassFor(design.fontFamily);
+  const fontClass = fontClassFor(design.fontFamily, design.template);
+  // Layoutformen des Templates — dieselbe Quelle wie die Vorschau
+  // (client/lib/templateLayout.ts). Bestand: layout.eigen === false.
+  const layout = getTemplateLayout(design.template);
 
   // Bestell-Bedienelemente nur ausspielen, wenn das Feature end-to-end
   // lieferbar ist — sonst legt der Gast in einen Warenkorb ohne Kasse.
@@ -338,13 +351,26 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     return Array.from(cats);
   }, [content.menuItems]);
 
+  /**
+   * Kategorienreihenfolge für die geteilte DishList: erst die gepflegte Liste
+   * (content.categories — dieselbe, die die Vorschau liest), dann was nur an
+   * Gerichten hängt. Sonst gruppiert die Live-Seite in Auftrittsfolge und die
+   * Vorschau in gepflegter Folge — und beide zeigen dieselbe Karte anders.
+   */
+  const kategorien = useMemo(
+    () => kategorienReihenfolge(content.categories, content.menuItems),
+    [content.categories, content.menuItems],
+  );
+
   // Gefilterte Menu Items
   const filteredMenuItems = useMemo(() => {
     if (!activeMenuCategory) return content.menuItems;
-    return content.menuItems.filter(
-      (item: any) => item.category === activeMenuCategory,
+    // Papier-Templates: Rubrik über dieselbe Regel wie Reiter und Gruppen
+    // (kategorieVon — Gerichte ohne Kategorie unter „Sonstiges“).
+    return content.menuItems.filter((item: any) =>
+      (layout.eigen ? kategorieVon(item) : item.category) === activeMenuCategory,
     );
-  }, [content.menuItems, activeMenuCategory]);
+  }, [content.menuItems, activeMenuCategory, layout.eigen]);
 
   // Template-spezifische Styles mit Desktop-Optimierung.
   // Wrapper aus dem geteilten Helper — vorher fehlte hier der
@@ -359,6 +385,11 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       }),
       page: `published-safe-top px-5 md:px-8 lg:px-12 pt-24 md:pt-28 pb-16 min-h-screen ${fontClass} max-w-7xl mx-auto`,
       titleClass: `text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-center leading-tight`,
+      // Papier-Templates: Seitentitel in der Display-Schrift des Templates,
+      // wie Hero und Kategorie-Überschriften — nicht in der Fließtextschrift.
+      titleStyle: layout.eigen
+        ? { fontFamily: "var(--font-template-display)" }
+        : undefined,
       bodyClass: `text-sm md:text-base opacity-90 leading-relaxed`,
       nav: `fixed top-0 left-0 right-0 z-50 px-5 md:px-8 lg:px-12 py-4 md:py-5 flex items-center justify-between border-b border-black/5 transition-all backdrop-blur-md`,
     }),
@@ -368,6 +399,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       design.secondaryColor,
       design.fontColor,
       fontClass,
+      layout.eigen,
     ],
   );
 
@@ -377,7 +409,28 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
   // RENDER FUNCTIONS
   // ============================================
 
-  const renderHomePage = () => (
+  const renderHomePage = () => {
+    // Reservieren-Aufruf der Papier-Templates. Die geteilte Leiste (presse,
+    // kiosk) steht wie im Entwurf zwischen Hero und Liste, Block (izakaya)
+    // und Textlink (morgen) unter der Liste — dieselbe Regel wie in der
+    // Vorschau, der Paritätstest prüft die Reihenfolge.
+    const eigenerCta =
+      features.reservationsEnabled && layout.eigen ? (
+        <ReservationCta
+          template={design.template}
+          primaryColor={design.primaryColor}
+          fontColor={design.fontColor}
+          backgroundColor={design.backgroundColor}
+          buttonColor={features.reservationButtonColor}
+          buttonTextColor={features.reservationButtonTextColor}
+          reservationUrl={features.reservationUrl}
+          reservationProvider={features.reservationProvider}
+          onReservation={() => navigateToPage("reservations")}
+          onMenu={() => navigateToPage("menu")}
+        />
+      ) : null;
+
+    return (
     <div className="space-y-8 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* ✅ Hero Component - Ersetzt inline Hero-Section */}
       <Hero
@@ -396,10 +449,22 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         primaryColor={design.primaryColor}
         fontColor={design.fontColor}
         backgroundColor={design.backgroundColor}
+        secondaryColor={design.secondaryColor}
+        template={design.template}
+        bandImage={content.gallery?.[0]?.url ?? null}
+        kicker={heroKicker(
+          design.template,
+          business.type,
+          content.openingHours,
+          undefined,
+          business.uniqueDescription,
+        )}
         onlineOrdering={onlineOrderingActive}
         onOrderClick={() => navigateToPage("menu")}
         isPreview={false}
       />
+
+      {layout.cta === "geteilt" && eigenerCta}
 
       {/* Angebots-Banner — konfigurierbar im Angebote-Schritt (Größe/Farben) */}
       <OfferBanner
@@ -408,8 +473,30 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         onShowOffers={() => navigateToPage("offers")}
       />
 
+      {/* Highlights — Templates mit eigenem Layout: geteilte DishList,
+          identisch mit der Konfigurator-Vorschau (templateLayout.ts). */}
+      {content.menuItems.length > 0 && layout.eigen && (
+        <DishList
+          template={design.template}
+          modus="highlights"
+          alle={content.menuItems}
+          anzeigen={waehleHighlights(content.menuItems, layout.highlights)}
+          categories={kategorien}
+          onAlle={() => navigateToPage("menu")}
+          fontColor={design.fontColor}
+          priceColor={design.priceColor}
+          primaryColor={design.primaryColor}
+          secondaryColor={design.secondaryColor}
+          backgroundColor={design.backgroundColor}
+          onlineOrdering={onlineOrderingActive}
+          onItemClick={openDishModal}
+          onAddToCart={addToCart}
+          isPreview={false}
+        />
+      )}
+
       {/* Highlights Section - NUTZT DishCard Shared Component */}
-      {content.menuItems.length > 0 && (
+      {content.menuItems.length > 0 && !layout.eigen && (
         <div>
           <div className="flex items-center justify-between mb-4 md:mb-8 px-1">
             <h3
@@ -428,24 +515,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
             {(() => {
-              // ✅ Smart Highlight-Logik: Zeige markierte Highlights, fülle mit zufälligen auf
-              const selectedHighlights = content.menuItems.filter(
-                (item: MenuItem) => (item as any).isHighlight,
-              );
-
-              const remainingSlots = Math.max(0, 3 - selectedHighlights.length);
-
-              // Zufällige Gerichte zum Auffüllen
-              const randomFiller = content.menuItems
-                .filter((item: MenuItem) => !(item as any).isHighlight)
-                .sort(() => 0.5 - Math.random())
-                .slice(0, remainingSlots);
-
-              // Kombiniere und limitiere auf 3
-              const highlightsToShow = [
-                ...selectedHighlights,
-                ...randomFiller,
-              ].slice(0, 3);
+              // Markierte Highlights zuerst, dann in Karten-Reihenfolge
+              // aufgefüllt — dieselbe Auswahl wie in der Vorschau. Vorher
+              // stand hier .sort(() => 0.5 - Math.random()): Der Gast sah
+              // bei jedem Render andere Gerichte als der Betreiber beim
+              // Einrichten.
+              const highlightsToShow = waehleHighlights(content.menuItems, 3);
 
               return highlightsToShow.map((item: MenuItem, i: number) => (
                 <DishCard
@@ -472,7 +547,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
           Hero (Primärfarbe, führt zur Speisekarte) — auf der veröffentlichten
           Seite fehlte er komplett. Der Betreiber sah beim Einrichten also
           einen Bestell-Einstieg, den seine Gäste nie bekamen. */}
-      {onlineOrderingActive && (
+      {onlineOrderingActive && !layout.eigen && (
         <div className="mb-6 md:mb-8 max-w-md mx-auto px-4">
           <button
             className="w-full py-3 px-6 font-bold text-base shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
@@ -493,7 +568,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
           führt der Knopf dorthin statt in unser eigenes Formular. Beides
           anzubieten hieße: Buchungen laufen durch zwei Systeme, die voneinander
           nichts wissen – derselbe Tisch würde zweimal vergeben. */}
+      {layout.cta !== "geteilt" && eigenerCta}
       {features.reservationsEnabled &&
+        !layout.eigen &&
         (() => {
           const buttonStyle = {
             backgroundColor:
@@ -554,17 +631,18 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         isPreview={false}
       />
     </div>
-  );
+    );
+  };
 
   // ✅ ORIGINAL MENU PAGE (Fallback)
   const renderMenuPage = () => (
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300">
-      <h2 className={styles.titleClass}>Speisekarte</h2>
+      <h2 className={styles.titleClass} style={styles.titleStyle}>Speisekarte</h2>
 
       {/* ✅ CategoryFilter Component - Shared Component statt inline Code */}
-      {allCategories.length > 0 && (
+      {(layout.eigen ? kategorien : allCategories).length > 0 && (
         <CategoryFilter
-          categories={allCategories}
+          categories={layout.eigen ? kategorien : allCategories}
           activeCategory={activeMenuCategory}
           onCategoryChange={setActiveMenuCategory}
           fontColor={design.fontColor}
@@ -572,10 +650,35 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
           allLabel="Alle"
           isPreview={false}
           className="md:justify-center"
+          template={design.template}
+          accentColor={design.primaryColor}
         />
       )}
 
-      {/* Menu Items - NUTZT DishCard Shared Component */}
+      {/* Speisekarte — Templates mit eigenem Layout: geteilte DishList,
+          gruppiert nach Kategorie solange kein Filter aktiv ist; identisch
+          mit der Konfigurator-Vorschau (templateLayout.ts). */}
+      {layout.eigen && filteredMenuItems.length > 0 ? (
+        <DishList
+          template={design.template}
+          modus="karte"
+          alle={content.menuItems}
+          anzeigen={filteredMenuItems}
+          categories={kategorien}
+          gruppieren={!activeMenuCategory}
+          fontColor={design.fontColor}
+          priceColor={design.priceColor}
+          primaryColor={design.primaryColor}
+          secondaryColor={design.secondaryColor}
+          backgroundColor={design.backgroundColor}
+          onlineOrdering={onlineOrderingActive}
+          onItemClick={openDishModal}
+          onAddToCart={addToCart}
+          isPreview={false}
+          className="pb-4"
+        />
+      ) : (
+      /* Menu Items - NUTZT DishCard Shared Component */
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-4">
         {filteredMenuItems.length > 0 ? (
           filteredMenuItems.map((item: MenuItem, i: number) => (
@@ -599,12 +702,13 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 
   const renderContactPage = () => (
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-300">
-      <h2 className={styles.titleClass}>Kontakt</h2>
+      <h2 className={styles.titleClass} style={styles.titleStyle}>Kontakt</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         {/* Linke Spalte: Kontaktdaten */}
@@ -733,7 +837,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
 
   const renderGalleryPage = () => (
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300">
-      <h2 className={styles.titleClass}>Galerie</h2>
+      <h2 className={styles.titleClass} style={styles.titleStyle}>Galerie</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         {(content.gallery.length > 0
           ? content.gallery
@@ -793,7 +897,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
             style={{ color: design.primaryColor }}
           />
         </div>
-        <h2 className={styles.titleClass}>Reservierung</h2>
+        <h2 className={styles.titleClass} style={styles.titleStyle}>Reservierung</h2>
         <p className={`${styles.bodyClass} opacity-70`}>
           Buchen Sie Ihren Tisch online
         </p>
@@ -924,6 +1028,8 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         onNavigateHome={() => navigateToPage("home")}
         isPreview={false}
         className={styles.nav}
+        template={design.template}
+        accentColor={design.primaryColor}
       />
 
       {/* ✅ MENU OVERLAY - Shared Component statt Inline Code */}
@@ -949,6 +1055,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       {/* ✅ DISH MODAL - Shared Component statt Inline Code */}
       <DishModal
         dish={selectedDish}
+        template={design.template}
         currentImageIndex={currentImageIndex}
         fontColor={design.fontColor}
         backgroundColor={design.backgroundColor}

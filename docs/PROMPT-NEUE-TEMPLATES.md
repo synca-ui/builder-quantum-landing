@@ -23,18 +23,28 @@ Beide Renderer (Konfigurator-Vorschau `TemplatePreviewContent` und
 veröffentlichte Seite `AppRenderer`) lesen dieselben geteilten Komponenten
 und denselben Design-Store. Was du definierst, sieht der Gast später exakt so.
 
-## Die vier bestehenden Templates (davon musst du dich absetzen)
+## Die sechs bestehenden Templates (davon musst du dich absetzen)
 
 | ID | Charakter | Primär | Sekundär | Hintergrund | Schrift |
 |----|-----------|--------|----------|-------------|---------|
 | `modern` | Kräftig, kommerziell, Verlauf über die ganze Seite | `#4F46E5` | `#7C3AED` | `#FFFFFF` | sans-serif |
 | `minimalist` | Editorial, monochrom, flache Liste statt Karten | `#171717` | `#525252` | `#FAFAFA` | sans-serif |
-| `riviera` | Mediterran & leicht, Adriablau auf Sand — Küstenküche, Fisch | `#1E5A7E` | `#7FB6D9` | `#F9F6EF` | serif |
-| `verde` | Frisch & botanisch, Blattgrün auf Papier — Cafés, Brunch | `#2F5E43` | `#9DBD9C` | `#F7F5EC` | serif |
+| `presse` | Bistrokarte: Serife, Punktlinien zum Preis, Doppellinie, keine Bilder | `#A81E14` | `#A79A85` | `#FBF7F0` | serif (Newsreader) |
+| `kiosk` | Aushang: Bildband, numeriertes Register, Ziffernspalte; Orange nur an Ziffern | `#E8541F` | `#D9D8D3` | `#F1F0EC` | sans-serif (Space Grotesk) |
+| `izakaya` | Zettel: Rahmenkästen 2×2 mit Nummer, Bild und Preis; Rot nur für Nummern/Stempel | `#9C2B22` | `#D8CFBE` | `#F5F0E6` | sans-serif (Bricolage Grotesque) |
+| `morgen` | Frühstückskarte: Linien, kursive Kobalt-Serife für Zeitfenster und Preise | `#0F4C81` | `#DAD6CC` | `#F7F5EF` | sans-serif (Manrope) + Newsreader |
 
-(„Riviera" und „Verde" haben „Stilvoll" und „Gemütlich" ersetzt; deren IDs
-`stylish`/`cozy` sowie das dunkle `nocturne` existieren nur noch als
-Alt-Bestand im Renderer.)
+(„Riviera" und „Verde" sind aus dem Picker genommen; ihre IDs `riviera`/`verde`
+existieren wie `stylish`/`cozy`/`nocturne` nur noch als Alt-Bestand im
+Renderer, veröffentlichte Seiten ändern sich nicht.)
+
+**Seit den Papier-Templates gibt es eine zweite Ebene:** Ein Template kann
+über `client/lib/templateLayout.ts` eigene Layoutformen mitbringen (Zeilen-
+form in `DishCard`, Listen-Leisten und Kategorie-Überschriften in `DishList`,
+Hero-, Kopfzeilen-, Filter- und Reservieren-Varianten). Beide Renderer lesen
+ausschließlich diese Quelle; `templateParitaet.test.tsx` vergleicht das
+erzeugte HTML von Vorschau und Live-Seite. Ein neues Template ohne eigene
+Formen braucht dort keinen Eintrag — es rendert wie die Bestands-Templates.
 
 **Produktentscheidung: KEINE dunklen Templates im Picker** — dunkel stellt
 sich der Betrieb über die freien Farben selbst ein. Neue Templates müssen

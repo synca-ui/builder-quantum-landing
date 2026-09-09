@@ -198,6 +198,16 @@ const TEMPLATE_MAP: Record<string, string> = {
   modern: "modern",
   stylish: "stylish",
   cozy: "cozy",
+  // Die vier Papier-Templates — unter ID und unter dem Namen im Picker.
+  presse: "presse",
+  bistrokarte: "presse",
+  kiosk: "kiosk",
+  aushang: "kiosk",
+  izakaya: "izakaya",
+  zettel: "izakaya",
+  morgen: "morgen",
+  frühstückskarte: "morgen",
+  fruehstueckskarte: "morgen",
 };
 
 /**

@@ -6,9 +6,14 @@
  * Wird verwendet in:
  * - TemplatePreviewContent.tsx (Editor)
  * - AppRenderer.tsx (Live-Seite)
+ *
+ * Templates mit eigenem Layout (templateLayout.ts) bekommen statt der
+ * Pillen Reiter mit Unterstrich (presse, morgen) oder eckige Marken
+ * (kiosk, izakaya). Bestands-Templates rendern unverändert.
  */
 
 import React, { memo, useRef, useEffect, useState } from "react";
+import { getTemplateLayout } from "@/lib/templateLayout";
 
 // ============================================
 // TYPES
@@ -25,6 +30,10 @@ export interface CategoryFilterProps {
   fontColor: string;
   /** Hintergrundfarbe */
   backgroundColor: string;
+  /** Akzentfarbe aktiver Reiter (Templates mit eigenem Layout) */
+  accentColor?: string;
+  /** Template-ID für Layout-Varianten */
+  template?: string;
   /** Label für "Alle" Button */
   allLabel?: string;
   /** Maximale Anzahl sichtbarer Kategorien */
@@ -45,6 +54,8 @@ export const CategoryFilter = memo(function CategoryFilter({
   onCategoryChange,
   fontColor,
   backgroundColor,
+  accentColor,
+  template,
   allLabel = "Alle",
   maxVisible = 5,
   isPreview = false,
@@ -101,13 +112,94 @@ export const CategoryFilter = memo(function CategoryFilter({
     : categories.slice(0, maxVisible);
   const versteckt = categories.length - maxVisible;
 
+  const layout = getTemplateLayout(template);
+  const variante = layout.filter;
+  const akzent = accentColor || fontColor;
+
+  /**
+   * Klasse und Style eines Reiters. `gestrichelt` gilt für den Auf-/Zuklapp-
+   * Knopf. Die Pillen (Bestand) sind Zeichen für Zeichen die bisherigen.
+   */
+  const reiter = (
+    aktiv: boolean,
+    gestrichelt = false,
+  ): { className: string; style: React.CSSProperties } => {
+    if (variante === "tabs") {
+      return {
+        className:
+          "px-1 py-2 text-[11px] uppercase tracking-[0.16em] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-opacity hover:opacity-100",
+        style: {
+          color: aktiv ? akzent : fontColor,
+          opacity: aktiv ? 1 : 0.6,
+          borderBottom: aktiv ? `2px solid ${akzent}` : "2px solid transparent",
+          borderStyle: gestrichelt ? "none none dashed none" : undefined,
+          borderRadius: 0,
+          marginBottom: "-1px",
+        },
+      };
+    }
+    if (variante === "eckig") {
+      const staerke = layout.linie === "kraeftig" ? "1.5px" : "1px";
+      return {
+        className:
+          "px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] font-bold whitespace-nowrap cursor-pointer shrink-0 transition-colors",
+        style: {
+          backgroundColor: aktiv ? fontColor : "transparent",
+          color: aktiv ? backgroundColor : fontColor,
+          border: `${staerke} ${gestrichelt ? "dashed" : "solid"} ${fontColor}`,
+          borderRadius: 0,
+          opacity: gestrichelt ? 0.8 : 1,
+        },
+      };
+    }
+    // chips (Bestand)
+    if (gestrichelt) {
+      return {
+        className:
+          "px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0",
+        style: {
+          backgroundColor: "transparent",
+          color: fontColor,
+          borderRadius: "var(--radius-button, 9999px)",
+          border: `1px dashed ${fontColor}40`,
+          opacity: 0.8,
+        },
+      };
+    }
+    return {
+      className:
+        "px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0",
+      style: {
+        backgroundColor: aktiv ? fontColor : "transparent",
+        color: aktiv ? backgroundColor : fontColor,
+        borderRadius: "var(--radius-button, 9999px)",
+        border: aktiv ? "none" : `1px solid ${fontColor}20`,
+        boxShadow: aktiv
+          ? "var(--shadow-button, 0 2px 8px rgba(0,0,0,0.1))"
+          : "none",
+        opacity: aktiv ? 1 : 0.7,
+      },
+    };
+  };
+
+  const containerKlasse =
+    variante === "tabs"
+      ? "flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2"
+      : "flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2";
+  const containerStyle: React.CSSProperties =
+    variante === "tabs" ? { borderBottom: `1px solid ${fontColor}26` } : {};
+
+  const alle = reiter(activeCategory === null);
+
   return (
     <div
       ref={scrollContainerRef}
-      className={`flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2 ${className}`}
+      className={`${containerKlasse} ${className}`}
       role="tablist"
       aria-label="Kategorien filtern"
+      data-filter-variant={layout.eigen ? variante : undefined}
       style={{
+        ...containerStyle,
         // Smooth scroll
         scrollBehavior: "smooth",
         WebkitOverflowScrolling: "touch",
@@ -119,18 +211,8 @@ export const CategoryFilter = memo(function CategoryFilter({
       {/* "Alle" Button */}
       <button
         onClick={() => handleCategoryClick(null)}
-        className={`px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0`}
-        style={{
-          backgroundColor: activeCategory === null ? fontColor : "transparent",
-          color: activeCategory === null ? backgroundColor : fontColor,
-          borderRadius: "var(--radius-button, 9999px)",
-          border: activeCategory === null ? "none" : `1px solid ${fontColor}20`,
-          boxShadow:
-            activeCategory === null
-              ? "var(--shadow-button, 0 2px 8px rgba(0,0,0,0.1))"
-              : "none",
-          opacity: activeCategory === null ? 1 : 0.7,
-        }}
+        className={alle.className}
+        style={alle.style}
         role="tab"
         aria-selected={activeCategory === null}
         data-category="all"
@@ -141,22 +223,14 @@ export const CategoryFilter = memo(function CategoryFilter({
       {/* Kategorie Buttons */}
       {visibleCategories.map((category) => {
         const isActive = activeCategory === category;
+        const r = reiter(isActive);
 
         return (
           <button
             key={category}
             onClick={() => handleCategoryClick(category)}
-            className={`px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0`}
-            style={{
-              backgroundColor: isActive ? fontColor : "transparent",
-              color: isActive ? backgroundColor : fontColor,
-              borderRadius: "var(--radius-button, 9999px)",
-              border: isActive ? "none" : `1px solid ${fontColor}20`,
-              boxShadow: isActive
-                ? "var(--shadow-button, 0 2px 8px rgba(0,0,0,0.1))"
-                : "none",
-              opacity: isActive ? 1 : 0.7,
-            }}
+            className={r.className}
+            style={r.style}
             role="tab"
             aria-selected={isActive}
             data-category={category}
@@ -170,23 +244,21 @@ export const CategoryFilter = memo(function CategoryFilter({
         Auf-/Zuklappen. Muss ein <button> sein: Als <div> war es ein toter
         Hinweis, und die Kategorien dahinter blieben unerreichbar.
       */}
-      {versteckt > 0 && (
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="px-4 py-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all hover:scale-105 shrink-0"
-          style={{
-            backgroundColor: "transparent",
-            color: fontColor,
-            borderRadius: "var(--radius-button, 9999px)",
-            border: `1px dashed ${fontColor}40`,
-            opacity: 0.8,
-          }}
-          aria-expanded={expanded}
-        >
-          {expanded ? "weniger" : `+${versteckt} mehr`}
-        </button>
-      )}
+      {versteckt > 0 &&
+        (() => {
+          const r = reiter(false, true);
+          return (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className={r.className}
+              style={r.style}
+              aria-expanded={expanded}
+            >
+              {expanded ? "weniger" : `+${versteckt} mehr`}
+            </button>
+          );
+        })()}
     </div>
   );
 });

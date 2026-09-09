@@ -23,6 +23,8 @@
  * eine andere Schrift wäre genau der Fehler, den diese Datei behebt.
  */
 
+import { getTemplateLayout } from "./templateLayout";
+
 /** Der eine Wert je Schriftfamilie, den auch das Zod-Schema des Servers kennt. */
 export type FontFamily = "sans-serif" | "serif" | "monospace";
 
@@ -36,8 +38,19 @@ const KLASSEN: Record<string, string> = {
   "sans serif": "font-sans",
 };
 
-/** Tailwind-Klasse zur gespeicherten Schriftfamilie. Unbekanntes -> font-sans. */
-export function fontClassFor(fontFamily?: string | null): string {
+/**
+ * Tailwind-Klasse zur gespeicherten Schriftfamilie. Unbekanntes -> font-sans.
+ *
+ * Templates mit eigenem Layout (templateLayout.ts) bringen ihre Schriften
+ * selbst mit: Dort liefert `.font-template` (global.css) den Stapel aus der
+ * CSS-Variable --font-template, die styleInjector.ts aus Template UND
+ * Nutzerwahl setzt. Ohne Template-Angabe gilt weiter die Tailwind-Klasse.
+ */
+export function fontClassFor(
+  fontFamily?: string | null,
+  template?: string | null,
+): string {
+  if (template && getTemplateLayout(template).eigen) return "font-template";
   if (!fontFamily) return "font-sans";
   return KLASSEN[String(fontFamily).trim().toLowerCase()] ?? "font-sans";
 }

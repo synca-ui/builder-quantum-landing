@@ -18,7 +18,9 @@ import {
   Utensils,
   Wine,
   Store,
+  LayoutGrid,
 } from "lucide-react";
+import { getTemplateLayout } from "@/lib/templateLayout";
 
 // ============================================
 // TYPES
@@ -59,6 +61,10 @@ export interface NavigationProps {
   className?: string;
   /** Hintergrundfarbe der Seite (Fallback für Sticky Header) */
   backgroundColor?: string;
+  /** Template-ID für Kopfzeilen-Varianten (templateLayout.ts) */
+  template?: string;
+  /** Akzentfarbe („Menü“-Label, Stempel-Logo) — Primärfarbe des Designs */
+  accentColor?: string;
 }
 
 // ============================================
@@ -100,8 +106,33 @@ export const Navigation = memo(function Navigation({
   onCartClick,
   isPreview = false,
   className = "",
+  template,
+  accentColor,
 }: NavigationProps) {
   const fontClass = getHeaderFontClass(headerFontSize);
+
+  // Kopfzeilen-Variante des Templates (Bestand: "standard" — unverändert).
+  const variante = getTemplateLayout(template).nav;
+  const eigen = variante !== "standard";
+  const display = eigen ? { fontFamily: "var(--font-template-display)" } : {};
+  const unterkante: React.CSSProperties =
+    variante === "doppellinie"
+      ? { borderBottom: `3px double ${headerFontColor}` }
+      : variante === "versal" || variante === "serif"
+        ? { borderBottom: `1px solid ${headerFontColor}` }
+        : variante === "stempel"
+          ? { borderBottom: "none" }
+          : {};
+  const nameKlasse =
+    variante === "versal"
+      ? "uppercase tracking-[0.22em] text-xs font-bold cursor-pointer truncate hover:opacity-80 transition-opacity"
+      : variante === "doppellinie" || variante === "serif"
+        ? `font-medium cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`
+        : variante === "stempel"
+          ? `font-extrabold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`
+          : `font-bold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+  const MenuIcon =
+    variante === "versal" || variante === "stempel" ? LayoutGrid : Menu;
 
   // Im Preview-Modus: Klicks abfangen aber visuell darstellen
   const handleHomeClick = () => {
@@ -164,7 +195,9 @@ export const Navigation = memo(function Navigation({
         ...(isPreview
           ? {}
           : { paddingTop: "calc(1rem + env(safe-area-inset-top, 0px))" }),
+        ...unterkante,
       }}
+      data-nav-variant={eigen ? variante : undefined}
     >
       {/* Left: Logo + Business Name */}
       <div className="flex items-center gap-2 overflow-hidden">
@@ -181,6 +214,20 @@ export const Navigation = memo(function Navigation({
               e.currentTarget.style.display = "none";
             }}
           />
+        ) : variante === "stempel" ? (
+          // Zettel: Stempelkasten in der Akzentfarbe mit dem Anfangsbuchstaben.
+          <div
+            className="w-8 h-8 shrink-0 flex items-center justify-center font-extrabold text-sm"
+            style={{
+              ...display,
+              backgroundColor: accentColor || headerFontColor,
+              color: "#FFFFFF",
+              borderRadius: 0,
+            }}
+            aria-hidden
+          >
+            {(businessName || "M").trim().charAt(0).toUpperCase()}
+          </div>
         ) : (
           // ✅ FIX: Icon als Placeholder
           <div
@@ -198,9 +245,9 @@ export const Navigation = memo(function Navigation({
         )}
 
         <span
-          className={`font-bold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`}
+          className={nameKlasse}
           onClick={handleHomeClick}
-          style={{ color: headerFontColor }}
+          style={{ ...display, color: headerFontColor }}
         >
           {businessName || "Mein Restaurant"}
         </span>
@@ -236,11 +283,27 @@ export const Navigation = memo(function Navigation({
         {/* Hamburger Menu Toggle */}
         <button
           onClick={handleMenuToggle}
-          className="p-1 active:scale-90 transition-transform hover:opacity-80"
+          className={`p-1 active:scale-90 transition-transform hover:opacity-80${
+            eigen ? " flex items-center gap-2" : ""
+          }`}
           aria-label={menuOpen ? "Menü schließen" : "Menü öffnen"}
           aria-expanded={menuOpen}
         >
-          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {eigen && (
+            // Gesetzte Karten schreiben „Menü“ dazu — wie auf dem Aushang.
+            <span
+              className="text-[10px] uppercase tracking-[0.22em] font-bold"
+              style={{ color: accentColor || headerFontColor }}
+              aria-hidden
+            >
+              {menuOpen ? "Zu" : "Menü"}
+            </span>
+          )}
+          {menuOpen ? (
+            <X className={eigen ? "w-5 h-5" : "w-6 h-6"} />
+          ) : (
+            <MenuIcon className={eigen ? "w-5 h-5" : "w-6 h-6"} />
+          )}
         </button>
       </div>
     </nav>

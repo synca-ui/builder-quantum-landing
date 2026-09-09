@@ -24,22 +24,41 @@ const TEMPLATES = [
     previewColor: "border-indigo-400 bg-indigo-50/30",
   },
   // Bewusst nur helle Templates im Picker — dunkel stellt man sich über die
-  // freien Farben selbst ein. Die früheren Templates "Stilvoll", "Gemütlich"
-  // und das dunkle "Mitternacht" bleiben als Alt-Bestand im Renderer
-  // lauffähig (IDs stylish/cozy/nocturne), erscheinen hier aber nicht mehr.
+  // freien Farben selbst ein. Die früheren Templates "Stilvoll", "Gemütlich",
+  // "Mitternacht", "Riviera" und "Verde" bleiben als Alt-Bestand im Renderer
+  // lauffähig (IDs stylish/cozy/nocturne/riviera/verde) — veröffentlichte
+  // Seiten ändern sich nicht —, erscheinen hier aber nicht mehr.
+  //
+  // Die vier Papier-Templates bringen eigene Layoutformen mit
+  // (client/lib/templateLayout.ts): Punktlinien, Register, Rahmenkästen,
+  // Linienkarte. Vorschau und Live-Seite lesen dieselbe Quelle.
   {
-    id: "riviera",
-    nameKey: "templates.riviera",
-    descriptionKey: "templates.rivieraDesc",
-    color: "bg-sky-700",
-    previewColor: "border-sky-500 bg-sky-50/30",
+    id: "presse",
+    nameKey: "templates.presse",
+    descriptionKey: "templates.presseDesc",
+    color: "bg-red-800",
+    previewColor: "border-red-700 bg-amber-50/40",
   },
   {
-    id: "verde",
-    nameKey: "templates.verde",
-    descriptionKey: "templates.verdeDesc",
-    color: "bg-emerald-700",
-    previewColor: "border-emerald-500 bg-emerald-50/30",
+    id: "kiosk",
+    nameKey: "templates.kiosk",
+    descriptionKey: "templates.kioskDesc",
+    color: "bg-orange-600",
+    previewColor: "border-neutral-800 bg-neutral-100/60",
+  },
+  {
+    id: "izakaya",
+    nameKey: "templates.izakaya",
+    descriptionKey: "templates.izakayaDesc",
+    color: "bg-red-900",
+    previewColor: "border-stone-800 bg-stone-100/60",
+  },
+  {
+    id: "morgen",
+    nameKey: "templates.morgen",
+    descriptionKey: "templates.morgenDesc",
+    color: "bg-blue-900",
+    previewColor: "border-blue-800 bg-stone-50",
   },
 ];
 
@@ -71,7 +90,20 @@ export function TemplateStep({
     if (design.template) nextStep();
   };
 
-  const selectedTemplate = TEMPLATES.find((t) => t.id === design.template);
+  /**
+   * Gewähltes Template — auch wenn es nicht mehr im Picker steht (riviera,
+   * verde, stylish …). Vorher verschwand dann die Fußleiste mit dem
+   * Weiter-Knopf, und wer eine bestehende Konfiguration öffnete, kam nur
+   * weiter, indem er ein anderes Template wählte — was seine Palette
+   * überschrieb. Der Name kommt aus den i18n-Keys, die für den Alt-Bestand
+   * stehen bleiben; fehlt auch der, steht die ID selbst da.
+   */
+  const selectedTemplate = design.template
+    ? TEMPLATES.find((t) => t.id === design.template) ?? {
+        id: design.template,
+        nameKey: `templates.${design.template}`,
+      }
+    : undefined;
 
   return (
     <div className="max-w-4xl mx-auto py-4">

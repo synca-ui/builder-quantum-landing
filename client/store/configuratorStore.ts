@@ -8,7 +8,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { useMemo } from "react";
-import { getTemplateDesignDefaults } from "@/lib/templateTokens";
+import {
+  getTemplateButtonShape,
+  getTemplateDesignDefaults,
+} from "@/lib/templateTokens";
 import type {
   BusinessInfo,
   DesignConfig,
@@ -588,6 +591,21 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
               : 0;
             features.reservationButtonTextColor =
               lum > 0.55 ? "#000000" : "#FFFFFF";
+          }
+
+          // Form des Knopfs: Die Papier-Templates sind eckig, alles andere
+          // abgerundet. Wieder nur, wenn der Nutzer nichts verstellt hat —
+          // „unverstellt“ heißt: globaler Default oder Vorgabe des bisherigen
+          // Templates.
+          const prevShape = getTemplateButtonShape(
+            state.design.template || "modern",
+          );
+          // Nur „noch nie gesetzt“ oder „entspricht der Vorgabe des
+          // bisherigen Templates“ gilt als unverstellt. Ein Nutzer, der auf
+          // einem Papier-Template bewusst „rounded“ wählt, behält es.
+          const currentShape = features.reservationButtonShape;
+          if (currentShape == null || currentShape === prevShape) {
+            features.reservationButtonShape = getTemplateButtonShape(templateId);
           }
 
           return {

@@ -127,7 +127,15 @@
     "verde": "Verde",
     "verdeDesc": "Fresh and botanical — for cafés, brunch and green cuisine.",
     "riviera": "Riviera",
-    "rivieraDesc": "Mediterranean and light — for coastal cuisine, seafood and summer terraces."
+    "rivieraDesc": "Mediterranean and light — for coastal cuisine, seafood and summer terraces.",
+    "presse": "Bistro card",
+    "presseDesc": "Paper white, serif headings, prices led by dotted rules — for bistros, wine bars and houses with a signature.",
+    "kiosk": "Notice board",
+    "kioskDesc": "A strict grid, one image band, a numbered index — for shops with a short, changing menu.",
+    "izakaya": "Ticket",
+    "izakayaDesc": "Dishes in framed boxes like an order ticket — for izakayas, tapas bars and sharing kitchens.",
+    "morgen": "Breakfast card",
+    "morgenDesc": "A quiet ruled card in cobalt and ivory, arranged by time of day — for cafés whose menu changes with the clock."
   },
   "business": {
     "name": "Business Name",

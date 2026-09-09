@@ -151,6 +151,14 @@
     }
   }
 
+  /* Schrift eines Templates mit eigenem Layout (client/lib/templateLayout.ts).
+     styleInjector.ts setzt --font-template aus Template UND gewählter
+     Schriftfamilie; fontClassFor() liefert diese Klasse statt font-sans & Co.
+     Vorschau und veröffentlichte Seite lesen dieselbe Variable. */
+  .font-template {
+    font-family: var(--font-template, inherit);
+  }
+
   /* Optimized Animations for Performance */
   @keyframes subtle-float {
     0%,

@@ -11,10 +11,32 @@
  * Wer eine Palette ändert, ändert diese Zusicherung mit — bewusst.
  */
 import { describe, expect, it } from "vitest";
-import { getTemplateDesignDefaults } from "../templateTokens";
+import { getTemplateDesignDefaults, getTemplateTokens } from "../templateTokens";
 
 /** Templates, die der Picker anbietet (TemplateStep.tsx). */
-const PICKER_TEMPLATES = ["minimalist", "modern", "riviera", "verde"];
+const PICKER_TEMPLATES = [
+  "minimalist",
+  "modern",
+  "presse",
+  "kiosk",
+  "izakaya",
+  "morgen",
+];
+
+/**
+ * Ohne diese Prüfung wäre der Wächter falsch grün: Fehlt einem Template der
+ * Eintrag in TEMPLATE_TOKENS, liefert getTemplateDesignDefaults still die
+ * Minimalist-Palette — und die besteht jeden Kontrasttest.
+ */
+describe("Picker-Templates haben eine eigene Palette", () => {
+  const rueckfall = getTemplateTokens("__gibt_es_nicht__");
+  it.each(PICKER_TEMPLATES.filter((id) => id !== "minimalist"))(
+    "'%s' fällt nicht auf Minimalist zurück",
+    (id) => {
+      expect(getTemplateTokens(id)).not.toBe(rueckfall);
+    },
+  );
+});
 
 function luminance(hex: string): number {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);

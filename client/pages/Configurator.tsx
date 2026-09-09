@@ -268,6 +268,9 @@ export default function Configurator() {
       headerFontColor: design.headerFontColor || "#5e30eb",
       headerBackgroundColor: design.headerBackgroundColor || "#FFFFFF",
       headerFontSize: design.headerFontSize || "3xl",
+      // Ohne Schriftfamilie fiele --font-template auf den Sans-Stapel: Die
+      // Vorschau zeigte presse in Manrope, die Live-Seite in Newsreader.
+      fontFamily: design.fontFamily,
       reservationButtonColor: features.reservationButtonColor || "#94e3fe",
       reservationButtonTextColor:
         features.reservationButtonTextColor || "#000000",
@@ -281,6 +284,7 @@ export default function Configurator() {
   }, [
     // Alle Werte hinzufügen, die eine Live-Aktualisierung auslösen sollen
     design.template,
+    design.fontFamily,
     design.primaryColor,
     design.secondaryColor,
     design.backgroundColor,

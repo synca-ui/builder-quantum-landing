@@ -14,6 +14,9 @@ import {
   hexToRgb,
   type TemplateIntent,
 } from "./templateTokens";
+import { getTemplateLayout, templateSchriftFuer } from "./templateLayout";
+// Selbst gehostete Schriften der Papier-Templates (@font-face aus fontsource).
+import "./templateFonts";
 
 export interface UserColorOverrides {
   primaryColor: string;
@@ -502,6 +505,54 @@ export interface TemplateDesignTokens {
  * Basiert auf TemplateRegistry.tsx und seed-templates.ts
  */
 const TEMPLATE_DESIGN_TOKENS: Record<string, TemplateDesignTokens> = {
+  // Die vier Papier-Templates: Papier hat keine Rundungen und wirft keine
+  // Schatten. Nur der Modal bekommt einen Schatten, damit er als Blatt über
+  // dem Blatt lesbar bleibt. Was die Gerichte-Zeilen zeichnen (Punktlinie,
+  // Rahmen, Haarlinie), steht in DishCard nach templateLayout.ts.
+  presse: {
+    borderRadius: { card: "0px", button: "0px", input: "0px", modal: "2px" },
+    boxShadow: {
+      card: "none",
+      cardHover: "none",
+      button: "none",
+      modal: "0 24px 64px rgba(20, 17, 13, 0.24)",
+    },
+    gradients: { background: "none", hero: "none", overlay: "none" },
+    transitions: { fast: "0.1s ease", normal: "0.18s ease", slow: "0.24s ease" },
+  },
+  kiosk: {
+    borderRadius: { card: "0px", button: "0px", input: "0px", modal: "0px" },
+    boxShadow: {
+      card: "none",
+      cardHover: "none",
+      button: "none",
+      modal: "0 24px 64px rgba(23, 24, 26, 0.28)",
+    },
+    gradients: { background: "none", hero: "none", overlay: "none" },
+    transitions: { fast: "0.1s ease", normal: "0.18s ease", slow: "0.24s ease" },
+  },
+  izakaya: {
+    borderRadius: { card: "0px", button: "2px", input: "0px", modal: "2px" },
+    boxShadow: {
+      card: "none",
+      cardHover: "none",
+      button: "none",
+      modal: "0 24px 64px rgba(30, 27, 22, 0.28)",
+    },
+    gradients: { background: "none", hero: "none", overlay: "none" },
+    transitions: { fast: "0.1s ease", normal: "0.18s ease", slow: "0.24s ease" },
+  },
+  morgen: {
+    borderRadius: { card: "0px", button: "0px", input: "0px", modal: "4px" },
+    boxShadow: {
+      card: "none",
+      cardHover: "none",
+      button: "none",
+      modal: "0 24px 64px rgba(26, 31, 38, 0.22)",
+    },
+    gradients: { background: "none", hero: "none", overlay: "none" },
+    transitions: { fast: "0.12s ease", normal: "0.2s ease", slow: "0.3s ease" },
+  },
   riviera: {
     borderRadius: {
       card: "16px",
@@ -710,7 +761,10 @@ export interface StyleInjectionConfig {
   reservationButtonShape?: string;
   borderRadiusCard?: string;
   boxShadowCard?: string;
+  /** Gewählte Schriftfamilie (sans-serif | serif | monospace) — für --font-template. */
+  fontFamily?: string;
 }
+
 
 /**
  * HAUPTFUNKTION: Injiziert globale Styles basierend auf Configuration
@@ -747,9 +801,20 @@ export function injectGlobalStyles(
   // Vollständige CSS generieren
   const css = generateGlobalStyles(templateId, userColors);
 
+  // Schriften des Templates: Fließtext folgt der Nutzerwahl (Gattung), das
+  // Template liefert den konkreten Stapel; Display und Ziffern folgen nur dem
+  // Template. Gelesen von der Utility .font-template (global.css) und den
+  // geteilten Komponenten. Bestands-Templates nutzen weiter font-sans & Co.
+  const layout = getTemplateLayout(templateId);
+
   // Design-Token CSS-Variablen generieren
   const tokenVars = `
     :root {
+      /* Schrift-Tokens (templateLayout.ts) */
+      --font-template: ${templateSchriftFuer(templateId, config.fontFamily)};
+      --font-template-display: ${layout.schrift.display};
+      --font-template-mono: ${layout.schrift.mono};
+
       /* Shape Tokens */
       --radius-card: ${config.borderRadiusCard || designTokens.borderRadius.card};
       --radius-button: ${designTokens.borderRadius.button};

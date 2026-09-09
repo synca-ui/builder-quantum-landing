@@ -15,6 +15,7 @@
 import React, { memo, useCallback, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { MenuItem } from "@/types/domain";
+import { formatPreis, getTemplateLayout } from "@/lib/templateLayout";
 
 // ============================================
 // TYPES
@@ -33,6 +34,8 @@ export interface DishModalProps {
   priceColor: string;
   /** Primärfarbe für Buttons */
   primaryColor: string;
+  /** Template-ID — Preisschreibweise wie in der Karte (templateLayout.ts) */
+  template?: string;
   /** Online-Bestellung aktiviert? */
   onlineOrdering?: boolean;
   /** Modal schließen */
@@ -107,6 +110,7 @@ export const DishModal = memo(function DishModal({
   backgroundColor,
   priceColor,
   primaryColor,
+  template,
   onlineOrdering = false,
   onClose,
   onPrevImage,
@@ -196,9 +200,11 @@ export const DishModal = memo(function DishModal({
   const hasMultipleImages = images.length > 1;
   const currentImage = images[currentImageIndex] || "/placeholder.svg";
 
-  // Preis formatieren
+  // Preis formatieren — dieselbe Schreibweise wie in der Karte darunter:
+  // Bestand "8.50€", Papier-Templates "8,50" bzw. "9" (templateLayout.ts).
+  const preisFormat = getTemplateLayout(template).preis;
   const preisText = (wert: number | string | undefined): string =>
-    typeof wert === "number" ? `${wert.toFixed(2)}€` : wert ? `${wert}€` : "";
+    formatPreis(wert, preisFormat);
 
   const formattedPrice = preisText(dish.price);
 
