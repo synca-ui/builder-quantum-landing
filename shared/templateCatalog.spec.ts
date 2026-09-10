@@ -34,7 +34,10 @@ import {
   templateNameKey,
 } from "./templateCatalog";
 import { suggestedConfigToDraft } from "./suggestedConfig";
-import { getTemplateTokens } from "../client/lib/templateTokens";
+import {
+  TEMPLATE_IDS,
+  getTemplateTokens,
+} from "../client/lib/templateTokens";
 import { EIGENE_TEMPLATES } from "../client/lib/templateLayout";
 import { TemplateStep } from "../client/components/configurator/steps/TemplateStep";
 import { useConfiguratorStore } from "../client/store/configuratorStore";
@@ -49,16 +52,13 @@ describe("Katalog — Grundform", () => {
     expect(new Set(ALLE_TEMPLATE_IDS).size).toBe(ALLE_TEMPLATE_IDS.length);
   });
 
-  it("kennt zu jeder ID eine Palette in templateTokens.ts", () => {
-    // getTemplateTokens fällt bei Unbekanntem still auf "minimalist" zurück.
-    // Eine ID im Katalog ohne eigene Palette bekäme also unbemerkt die
-    // falsche — deshalb hier über die Gleichheit mit minimalist geprüft.
-    for (const id of ALLE_TEMPLATE_IDS) {
-      if (id === "minimalist") continue;
-      expect(getTemplateTokens(id)).not.toEqual(
-        getTemplateTokens("minimalist"),
-      );
-    }
+  it("führt genau die Vorlagen, für die es eine Palette gibt", () => {
+    // client/lib/templateTokens.ts leitet TEMPLATE_IDS aus seinen Paletten ab;
+    // der Paritätstest (templateParitaet.test.tsx) prüft jede davon. Beide
+    // Listen müssen dieselben sein: Eine Palette ohne Katalogeintrag bekäme
+    // keine Zeile in der Datenbank, ein Katalogeintrag ohne Palette bekäme
+    // über getTemplateTokens still die von "minimalist".
+    expect([...ALLE_TEMPLATE_IDS].sort()).toEqual([...TEMPLATE_IDS].sort());
   });
 
   it("enthält jede Vorlage mit eigenem Layout", () => {

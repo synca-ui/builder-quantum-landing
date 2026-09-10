@@ -22,9 +22,11 @@ import {
  * Bewusst nur helle Templates im Picker — dunkel stellt man sich über die
  * freien Farben selbst ein. Die früheren Templates "Stilvoll", "Gemütlich",
  * "Mitternacht", "Riviera" und "Verde" bleiben als Alt-Bestand im Renderer
- * lauffähig (IDs stylish/cozy/nocturne/riviera/verde) — veröffentlichte
- * Seiten ändern sich nicht —, erscheinen hier aber nicht mehr. Im Katalog
- * tragen sie `imPicker: false`.
+ * lauffähig (IDs stylish/cozy/nocturne/riviera/verde), erscheinen hier aber
+ * nicht mehr; im Katalog tragen sie `imPicker: false`. Ihre veröffentlichten
+ * Seiten rendern seit der Zusammenlegung der Codepfade wie die
+ * Konfigurator-Vorschau: Bilder an den Gerichten, Kategorie-Überschriften
+ * statt Spaltenraster.
  *
  * Die vier Papier-Templates bringen eigene Layoutformen mit
  * (client/lib/templateLayout.ts): Punktlinien, Register, Rahmenkästen,

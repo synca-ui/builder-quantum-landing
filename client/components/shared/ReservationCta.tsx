@@ -1,10 +1,13 @@
 /**
  * Shared ReservationCta Component
  *
- * Reservieren-Aufruf der Startseite für Templates mit eigenem Layout
- * (templateLayout.ts): geteilte Leiste (presse, kiosk), voller Block
- * (izakaya) oder Textlink (morgen). Bestands-Templates rendern hier nichts —
- * Vorschau und Live-Seite behalten dort ihre bisherigen Knöpfe.
+ * Reservieren-Aufruf der Startseite — für ALLE Templates (templateLayout.ts):
+ * geteilte Leiste (presse, kiosk), voller Block (izakaya), Textlink (morgen)
+ * und der gefüllte Knopf mit Kalenderzeichen für den Bestand („standard“).
+ * Vorher hatten Vorschau und Live-Seite für den Bestand zwei verschiedene
+ * eigene Knöpfe: die Vorschau den ReservationButton (eckige Form = keine
+ * Rundung), die Live-Seite einen eigenen Block (eckige Form = 0,5 rem) ohne
+ * Kalenderzeichen.
  *
  * Wird verwendet in:
  * - TemplatePreviewContent.tsx (Editor)
@@ -17,6 +20,11 @@
 
 import React, { memo } from "react";
 import { getTemplateLayout } from "@/lib/templateLayout";
+import {
+  reservationButtonKlassen,
+  ReservationButtonInhalt,
+  type ReservationShape,
+} from "@/components/ui/ReservationButton";
 
 export interface ReservationCtaProps {
   template: string;
@@ -31,6 +39,8 @@ export interface ReservationCtaProps {
    */
   buttonColor?: string;
   buttonTextColor?: string;
+  /** Knopfform aus dem Reservierungs-Schritt — gilt für die Bestandsform. */
+  buttonShape?: ReservationShape;
   /** Externes Buchungssystem: Link statt eigenem Formular. */
   reservationUrl?: string;
   reservationProvider?: string;
@@ -50,6 +60,7 @@ export const ReservationCta = memo(function ReservationCta({
   backgroundColor,
   buttonColor,
   buttonTextColor,
+  buttonShape = "rounded",
   reservationUrl,
   reservationProvider,
   onReservation,
@@ -58,7 +69,6 @@ export const ReservationCta = memo(function ReservationCta({
   className = "",
 }: ReservationCtaProps) {
   const layout = getTemplateLayout(template);
-  if (!layout.eigen) return null;
 
   // Zweite Zelle: der Aushang sagt „Ganze Karte“, die Bistrokarte „Karte“.
   const karteLabel =
@@ -103,12 +113,41 @@ export const ReservationCta = memo(function ReservationCta({
   const anbieter =
     reservationUrl && reservationProvider ? (
       <p
-        className="mt-2 text-[10px] uppercase tracking-[0.14em] opacity-60"
+        className={
+          layout.cta === "standard"
+            ? "mt-2 text-center text-xs opacity-70"
+            : "mt-2 text-[10px] uppercase tracking-[0.14em] opacity-60"
+        }
         style={{ color: fontColor }}
       >
         über {reservationProvider}
       </p>
     ) : null;
+
+  // Bestand: derselbe Knopf, den die Vorschau schon immer zeigte —
+  // Kalenderzeichen, Form aus dem Reservierungs-Schritt, volle Breite.
+  if (layout.cta === "standard") {
+    return (
+      <div
+        className={`mt-8 w-full max-w-md mx-auto px-4 ${className}`}
+        data-template-cta={template}
+      >
+        {aktion(
+          <ReservationButtonInhalt>{LABEL}</ReservationButtonInhalt>,
+          reservationButtonKlassen(
+            buttonShape,
+            "md",
+            "w-full shadow-lg block text-center",
+          ),
+          {
+            backgroundColor: buttonColor || primaryColor,
+            color: buttonTextColor || "#FFFFFF",
+          },
+        )}
+        {anbieter}
+      </div>
+    );
+  }
 
   if (layout.cta === "block") {
     return (
