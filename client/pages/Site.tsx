@@ -28,7 +28,7 @@ import { configurationApi, type Configuration } from "@/lib/api";
 import ReservationButton from "@/components/ui/ReservationButton";
 import { RestaurantJsonLd } from "@/components/seo/RestaurantJsonLd";
 import { formatOfferPrice } from "@/components/shared/OffersSection";
-import { defaultTemplates } from "@/components/template/TemplateRegistry";
+import { TEMPLATE_REGISTRY } from "@shared/templateCatalog";
 
 // Shared configuration
 const fontOptions = [
@@ -37,8 +37,12 @@ const fontOptions = [
   { id: "display", class: "font-mono" },
 ];
 
-// Use canonical template definitions from TemplateRegistry
-const templates = defaultTemplates;
+// Vorlagen kommen aus dem gemeinsamen Katalog (shared/templateCatalog.ts).
+// Vorher lag hier eine eigene Liste in TemplateRegistry.tsx, die nur vier
+// Vorlagen kannte und eigene, von client/lib/templateTokens.ts abweichende
+// Farben mitbrachte: Wer presse/kiosk/izakaya/morgen veröffentlichte, bekam
+// hier stillschweigend die Palette von "minimalist" als Rückfall.
+const templates = TEMPLATE_REGISTRY;
 
 const FALLBACK_CONFIG: Configuration = {
   id: "fallback",
@@ -171,7 +175,6 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
   const selectedIdForSwitch = formData.template || "modern";
   const selectedTemplateDef =
     templates.find((t) => t.id === selectedIdForSwitch) || templates[0];
-  const mockup = selectedTemplateDef.mockup || templates[0].mockup;
   const baseTemplateStyle = selectedTemplateDef.style;
 
   const themeOverride =

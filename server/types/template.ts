@@ -1,7 +1,10 @@
 /**
  * Server-side Template Type Definitions
- * Mirrors client/components/template/TemplateRegistry.tsx for type safety
- * This ensures consistency between frontend and backend template handling
+ *
+ * Gegenstueck zu shared/templateCatalog.ts: Der Katalog schreibt die Zeilen
+ * der Tabelle `Template`, diese Typen beschreiben, wie TemplateEngine sie
+ * wieder ausliest. Wer eines der JSON-Felder aendert, muss beide Seiten
+ * anfassen — shared/templateCatalog.spec.ts prueft, dass sie zusammenpassen.
  */
 
 // Design Tokens JSON structure from Prisma
@@ -32,6 +35,12 @@ export interface DesignTokens {
 export interface TemplateLayout {
   intent: string;
   navigation: string;
+  /**
+   * Betriebsarten, fuer die die Vorlage gedacht ist. Steht bewusst hier und
+   * nicht in `category`: `category` ist eine einzelne Spalte fuer die grobe
+   * Einordnung ("GASTRONOMY"), die Betriebsarten sind eine Liste.
+   */
+  businessTypes?: string[];
   sections?: string[];
   typography?: {
     headingFont: string;

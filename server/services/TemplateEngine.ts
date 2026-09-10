@@ -18,9 +18,11 @@ import type {
   DesignTokens,
   TemplateLayout,
   TemplatePreview,
-} from "./template";
+} from "../types/template";
 import prisma from "../db/prisma";
-import type { JsonValue } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+type JsonValue = Prisma.JsonValue;
 
 class TemplateEngine {
   private static instance: TemplateEngine;
@@ -94,15 +96,22 @@ class TemplateEngine {
           : { thumbnail: "bg-white", features: [] },
       );
 
-      // Map Prisma category array to businessTypes for backward compatibility
-      const businessTypes = Array.isArray(prismaTemplate.category)
-        ? prismaTemplate.category
+      // Betriebsarten stehen im layout-JSON (shared/templateCatalog.ts
+      // schreibt sie dort hin). Vorher las diese Zeile `category` und prüfte
+      // auf ein Array — `category` ist im Schema aber ein einzelner String,
+      // die Liste war also IMMER leer, und GET /api/templates behauptete von
+      // jeder Vorlage, sie passe zu keiner Betriebsart.
+      const businessTypes = Array.isArray(layout.businessTypes)
+        ? layout.businessTypes
         : [];
 
       // Build style object from tokens with defensive fallbacks
       const style = {
         background: tokens.colors?.background || "#ffffff",
-        accent: tokens.colors?.accent || "#000000",
+        // Primaerfarbe, nicht die Zierfarbe: client/pages/Site.tsx benutzt
+        // `accent` als Rueckfall fuer die Nutzer-Primaerfarbe. Gleiche
+        // Bedeutung wie `style.accent` in shared/templateCatalog.ts.
+        accent: tokens.colors?.primary || "#000000",
         text: tokens.colors?.text || "#000000",
         secondary: tokens.colors?.secondary || "#ffffff",
         layout: layout.intent || "narrative",
@@ -173,13 +182,14 @@ class TemplateEngine {
         databaseUrl: process.env.DATABASE_URL ? "configured" : "NOT CONFIGURED",
       });
 
+      // Nach Kategorie laesst sich in SQL filtern, nach Betriebsart nicht:
+      // die Betriebsarten stehen im layout-JSON. Hier stand frueher
+      // `where.category = { has: ... }` — `has` gibt es nur fuer Listenfelder,
+      // `category` ist ein String. Der Aufruf mit ?businessType= waere also
+      // mit einem Prisma-Fehler abgebrochen; er kam bloss nie vor.
       const where: any = {};
-
-      // Filter by business type using Prisma's array contains operator
-      if (filter?.businessType) {
-        where.category = {
-          has: filter.businessType,
-        };
+      if (filter?.category) {
+        where.category = filter.category;
       }
 
       // Execute Prisma query with detailed error handling
@@ -225,7 +235,11 @@ class TemplateEngine {
         }
       });
 
-      return templates;
+      if (!filter?.businessType) return templates;
+      const gesucht = filter.businessType.toLowerCase();
+      return templates.filter((t) =>
+        t.businessTypes.some((art) => art.toLowerCase() === gesucht),
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
