@@ -29,7 +29,7 @@ export interface BusinessInfo {
  * Template selection, colors, typography
  */
 export interface DesignConfig {
-  template: string; // template id from TemplateRegistry
+  template: string; // Vorlagen-ID aus shared/templateCatalog.ts
 
   // Main Colors
   primaryColor: string; // hex - Buttons, CTAs, Links, Akzente

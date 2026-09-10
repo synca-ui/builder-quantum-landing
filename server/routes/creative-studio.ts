@@ -137,7 +137,11 @@ router.get("/templates", requireAuth, async (req: Request, res: Response) => {
       data: {
         currentTemplate: business?.template,
         availableTemplates: templates,
-        categories: ["Modern", "Stylish", "Cozy"],
+        // Hier stand fest verdrahtet ["Modern", "Stylish", "Cozy"] — das
+        // waren Vorlagen-NAMEN, keine Kategorien, und zwei davon stehen im
+        // Konfigurator längst nicht mehr zur Wahl. Die Kategorien kommen
+        // jetzt aus den Zeilen, die diese Antwort ohnehin mitschickt.
+        categories: [...new Set(templates.map((t) => t.category))],
       },
     });
   } catch (error) {

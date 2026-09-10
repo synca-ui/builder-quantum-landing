@@ -179,17 +179,18 @@ export interface ConfiguratorDraft {
 
 /**
  * Die Vorlagen-Namen laufen auseinander: Der Flow vergibt
- * "minimalist" | "bold" | "classic", die TemplateRegistry kennt aber
- * "minimalist" | "modern" | "stylish" | "cozy". Zwei der drei Werte gäbe es
+ * "minimalist" | "bold" | "classic", der Vorlagenkatalog
+ * (shared/templateCatalog.ts) führt andere IDs. Zwei der drei Werte gäbe es
  * also gar nicht, ein direktes Durchreichen würde die Vorschau brechen.
  *
- * "bold" -> "modern", weil dessen Beschreibung in der Registry wörtlich
+ * "bold" -> "modern", weil dessen Beschreibung im Katalog wörtlich
  * "Contemporary design with bold colors" lautet. "classic" -> "cozy" als
  * nächstliegende Entsprechung.
  *
- * Sauberer wäre, beide Seiten auf dasselbe Vokabular zu bringen – entweder gibt
- * der Flow direkt Registry-IDs aus, oder die Registry bekommt die fehlenden
- * Vorlagen. Bis dahin übersetzt diese Tabelle.
+ * Sauberer wäre, beide Seiten auf dasselbe Vokabular zu bringen – der Flow
+ * gäbe direkt Katalog-IDs aus. Bis dahin übersetzt diese Tabelle; dass jedes
+ * Ziel eine Vorlage ist, die es wirklich gibt, prüft
+ * shared/templateCatalog.spec.ts.
  */
 const TEMPLATE_MAP: Record<string, string> = {
   minimalist: "minimalist",

@@ -10,24 +10,17 @@
  *   – Preisfarbe auf Seitenhintergrund ≥ 3:1 (Preise sind groß/fett)
  * Wer eine Palette ändert, ändert diese Zusicherung mit — bewusst.
  */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { PICKER_TEMPLATES as KATALOG_PICKER } from "../../../shared/templateCatalog";
 import { getTemplateDesignDefaults, getTemplateTokens } from "../templateTokens";
 import { textAufFarbe } from "../templateLayout";
 
 /**
- * Templates, die der Picker anbietet — aus TemplateStep.tsx gelesen, nicht
- * abgeschrieben: Ein Template, das im Picker steht, aber hier fehlt, wäre
- * ungeprüft. Vorher war das eine gepflegte Liste mit sechs Einträgen.
+ * Templates, die der Picker anbietet — aus shared/templateCatalog.ts, der
+ * einen Liste, aus der auch Picker, Seed und API lesen. Ein Template, das
+ * dort imPicker steht, aber hier fehlte, wäre ungeprüft.
  */
-const PICKER_TEMPLATES = Array.from(
-  readFileSync(
-    resolve(process.cwd(), "client/components/configurator/steps/TemplateStep.tsx"),
-    "utf8",
-  ).matchAll(/^\s*id: "([a-z]+)",$/gm),
-  (m) => m[1],
-);
+const PICKER_TEMPLATES = KATALOG_PICKER.map((e) => e.id);
 
 describe("Picker-Liste", () => {
   it("umfasst die sechs bisherigen und die zehn neuen Templates", () => {

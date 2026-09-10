@@ -6,137 +6,39 @@ import {
   useConfiguratorDesign,
   useConfiguratorActions,
 } from "@/store/configuratorStore";
+import {
+  PICKER_TEMPLATES,
+  templateBeschreibungsKey,
+  templateNameKey,
+} from "@shared/templateCatalog";
 
-// Template data with translation keys
-const TEMPLATES = [
-  {
-    id: "minimalist",
-    nameKey: "templates.minimalist",
-    descriptionKey: "templates.minimalistDesc",
-    color: "bg-emerald-500",
-    previewColor: "border-emerald-400 bg-emerald-50/30",
-  },
-  {
-    id: "modern",
-    nameKey: "templates.modern",
-    descriptionKey: "templates.modernDesc",
-    color: "bg-indigo-500",
-    previewColor: "border-indigo-400 bg-indigo-50/30",
-  },
-  // Bewusst nur helle Templates im Picker — dunkel stellt man sich über die
-  // freien Farben selbst ein. Die früheren Templates "Stilvoll", "Gemütlich",
-  // "Mitternacht", "Riviera" und "Verde" bleiben als Alt-Bestand im Renderer
-  // lauffähig (IDs stylish/cozy/nocturne/riviera/verde), erscheinen hier aber
-  // nicht mehr. Ihre veröffentlichten Seiten rendern seit der Zusammenlegung
-  // der Codepfade wie die Konfigurator-Vorschau: Bilder an den Gerichten,
-  // Kategorie-Überschriften statt Spaltenraster.
-  //
-  // Die vier Papier-Templates bringen eigene Layoutformen mit
-  // (client/lib/templateLayout.ts): Punktlinien, Register, Rahmenkästen,
-  // Linienkarte. Vorschau und Live-Seite lesen dieselbe Quelle.
-  {
-    id: "presse",
-    nameKey: "templates.presse",
-    descriptionKey: "templates.presseDesc",
-    color: "bg-red-800",
-    previewColor: "border-red-700 bg-amber-50/40",
-  },
-  {
-    id: "kiosk",
-    nameKey: "templates.kiosk",
-    descriptionKey: "templates.kioskDesc",
-    color: "bg-orange-600",
-    previewColor: "border-neutral-800 bg-neutral-100/60",
-  },
-  {
-    id: "izakaya",
-    nameKey: "templates.izakaya",
-    descriptionKey: "templates.izakayaDesc",
-    color: "bg-red-900",
-    previewColor: "border-stone-800 bg-stone-100/60",
-  },
-  {
-    id: "morgen",
-    nameKey: "templates.morgen",
-    descriptionKey: "templates.morgenDesc",
-    color: "bg-blue-900",
-    previewColor: "border-blue-800 bg-stone-50",
-  },
-  // Zweite Runde — zehn Templates, jedes für eine andere Art Betrieb
-  // (client/lib/templateLayout.ts: Fotokachel, Sticker, Strichlinie,
-  // Haarlinie, Schild, Mittelachse, Etikett, Preisschild, Kreisbild,
-  // Karteikarte). Alle hell, alle Kontraste nachgerechnet.
-  {
-    id: "vitrine",
-    nameKey: "templates.vitrine",
-    descriptionKey: "templates.vitrineDesc",
-    color: "bg-teal-700",
-    previewColor: "border-teal-600 bg-white",
-  },
-  {
-    id: "gelato",
-    nameKey: "templates.gelato",
-    descriptionKey: "templates.gelatoDesc",
-    color: "bg-pink-600",
-    previewColor: "border-pink-400 bg-orange-50/60",
-  },
-  {
-    id: "brauhaus",
-    nameKey: "templates.brauhaus",
-    descriptionKey: "templates.brauhausDesc",
-    color: "bg-amber-800",
-    previewColor: "border-amber-800 bg-amber-50/60",
-  },
-  {
-    id: "ramen",
-    nameKey: "templates.ramen",
-    descriptionKey: "templates.ramenDesc",
-    color: "bg-red-600",
-    previewColor: "border-neutral-900 bg-neutral-50",
-  },
-  {
-    id: "imbiss",
-    nameKey: "templates.imbiss",
-    descriptionKey: "templates.imbissDesc",
-    color: "bg-yellow-400",
-    previewColor: "border-neutral-900 bg-yellow-50",
-  },
-  {
-    id: "konditorei",
-    nameKey: "templates.konditorei",
-    descriptionKey: "templates.konditoreiDesc",
-    color: "bg-rose-800",
-    previewColor: "border-rose-300 bg-rose-50/60",
-  },
-  {
-    id: "roesterei",
-    nameKey: "templates.roesterei",
-    descriptionKey: "templates.roestereiDesc",
-    color: "bg-orange-800",
-    previewColor: "border-stone-700 bg-stone-100/60",
-  },
-  {
-    id: "markt",
-    nameKey: "templates.markt",
-    descriptionKey: "templates.marktDesc",
-    color: "bg-green-700",
-    previewColor: "border-green-600 bg-green-50/40",
-  },
-  {
-    id: "aperitivo",
-    nameKey: "templates.aperitivo",
-    descriptionKey: "templates.aperitivoDesc",
-    color: "bg-orange-600",
-    previewColor: "border-orange-400 bg-orange-50/60",
-  },
-  {
-    id: "hofladen",
-    nameKey: "templates.hofladen",
-    descriptionKey: "templates.hofladenDesc",
-    color: "bg-lime-800",
-    previewColor: "border-lime-700 bg-lime-50/40",
-  },
-];
+/**
+ * Die angebotenen Vorlagen kommen aus shared/templateCatalog.ts — derselben
+ * Liste, aus der prisma/seed.ts die Tabelle `Template` füllt und aus der
+ * GET /api/templates antwortet. Vorher stand hier eine eigene Liste; sie lief
+ * gegen den Seed auseinander, und wer eine der neueren Vorlagen wählte, bekam
+ * beim Speichern 400 "Invalid template" von server/routes/configurations.ts.
+ *
+ * Bewusst nur helle Templates im Picker — dunkel stellt man sich über die
+ * freien Farben selbst ein. Die früheren Templates "Stilvoll", "Gemütlich",
+ * "Mitternacht", "Riviera" und "Verde" bleiben als Alt-Bestand im Renderer
+ * lauffähig (IDs stylish/cozy/nocturne/riviera/verde), erscheinen hier aber
+ * nicht mehr; im Katalog tragen sie `imPicker: false`. Ihre veröffentlichten
+ * Seiten rendern seit der Zusammenlegung der Codepfade wie die
+ * Konfigurator-Vorschau: Bilder an den Gerichten, Kategorie-Überschriften
+ * statt Spaltenraster.
+ *
+ * Die vier Papier-Templates bringen eigene Layoutformen mit
+ * (client/lib/templateLayout.ts): Punktlinien, Register, Rahmenkästen,
+ * Linienkarte. Vorschau und Live-Seite lesen dieselbe Quelle.
+ */
+const TEMPLATES = PICKER_TEMPLATES.map((eintrag) => ({
+  id: eintrag.id,
+  nameKey: templateNameKey(eintrag.id),
+  descriptionKey: templateBeschreibungsKey(eintrag.id),
+  color: eintrag.punkt,
+  previewColor: eintrag.auswahl,
+}));
 
 interface TemplateStepProps {
   nextStep: () => void;
@@ -175,10 +77,10 @@ export function TemplateStep({
    * stehen bleiben; fehlt auch der, steht die ID selbst da.
    */
   const selectedTemplate = design.template
-    ? TEMPLATES.find((t) => t.id === design.template) ?? {
+    ? (TEMPLATES.find((t) => t.id === design.template) ?? {
         id: design.template,
-        nameKey: `templates.${design.template}`,
-      }
+        nameKey: templateNameKey(design.template),
+      })
     : undefined;
 
   return (

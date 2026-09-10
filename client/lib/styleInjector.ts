@@ -468,7 +468,7 @@ function generateIntentSpecificStyles(intent: TemplateIntent): string {
 
 // ============================================
 // TEMPLATE TOKEN REGISTRY
-// Design-DNA aus TemplateRegistry.tsx extrahiert
+// Design-DNA je Vorlage — Formen, Schatten, Verläufe, Übergänge
 // ============================================
 
 export interface TemplateDesignTokens {
@@ -502,7 +502,7 @@ export interface TemplateDesignTokens {
 
 /**
  * Design-DNA Token Registry pro Template
- * Basiert auf TemplateRegistry.tsx und seed-templates.ts
+ * Die IDs stammen aus shared/templateCatalog.ts
  */
 const TEMPLATE_DESIGN_TOKENS: Record<string, TemplateDesignTokens> = {
   // Die vier Papier-Templates: Papier hat keine Rundungen und wirft keine
