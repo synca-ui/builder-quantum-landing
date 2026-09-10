@@ -10,7 +10,9 @@
  * Templates mit eigenem Layout (templateLayout.ts) bekommen eigene Formen:
  * gesetzte Karte mit Kicker (presse), Bildband mit Versal-Titel (kiosk),
  * Rahmenkasten mit Seitenlabel (izakaya), Serifen-Titel mit kursivem
- * Kobalt-Wort (morgen). Bestands-Templates rendern unverändert.
+ * Kobalt-Wort (morgen). Die Bestands-Templates behalten ihre zentrierte
+ * Form — sie kommt jetzt aber auch in der Vorschau von hier, die vorher ein
+ * eigenes Inline-Markup mit anderen Größen und Abständen rendete.
  */
 
 import React, { memo } from "react";
@@ -320,12 +322,13 @@ export const Hero = memo(function Hero({
   }
 
   // ==========================================
-  // Bestands-Templates — unverändert
+  // Bestands-Templates — Kachel-Optik, gleiche Komponente
   // ==========================================
   return (
     <section
       className={`text-center py-8 px-4 flex flex-col items-center ${className}`}
       style={{ color: fontColor }}
+      data-template-hero={template || "standard"}
     >
       {/* Slogan / Headline — ohne Slogan trägt der Betriebsname den Hero. */}
       <h1

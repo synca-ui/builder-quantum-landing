@@ -2,7 +2,7 @@
  * AppRenderer.tsx - PRODUCTION VERSION
  *
  * ✅ Pixel-perfekte Visual Parity mit TemplatePreviewContent.tsx
- * ✅ Nutzt Shared Components (Navigation, DishCard, DishModal, OpeningHours, MenuOverlay)
+ * ✅ Nutzt Shared Components (Navigation, DishList, DishModal, OpeningHours, MenuOverlay)
  * ✅ CSS Variable Injection via StyleInjector
  * ✅ Mobile & Desktop Responsive Design
  * ✅ Zero Syntax Errors
@@ -16,7 +16,6 @@ import {
   Mail,
   Instagram,
   Facebook,
-  ArrowRight,
   Camera,
   Calendar,
   Users,
@@ -36,7 +35,6 @@ import normalizeConfig from "@/lib/normalizeConfig"; // ✅ FIX 1: Import zentra
 // ============================================
 import { Navigation } from "@/components/shared/Navigation";
 import { MenuOverlay } from "@/components/shared/MenuOverlay";
-import { DishCard } from "@/components/shared/DishCard";
 import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { Hero } from "@/components/shared/Hero"; // ✅ Hero Component
@@ -346,20 +344,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     );
   }, [selectedDish?.images]);
 
-  // Kategorien extrahieren
-  const allCategories = useMemo(() => {
-    const cats = new Set<string>();
-    content.menuItems.forEach((item: any) => {
-      if (item.category) cats.add(item.category);
-    });
-    return Array.from(cats);
-  }, [content.menuItems]);
-
   /**
-   * Kategorienreihenfolge für die geteilte DishList: erst die gepflegte Liste
+   * Kategorienreihenfolge für Reiter und Liste: erst die gepflegte Liste
    * (content.categories — dieselbe, die die Vorschau liest), dann was nur an
-   * Gerichten hängt. Sonst gruppiert die Live-Seite in Auftrittsfolge und die
-   * Vorschau in gepflegter Folge — und beide zeigen dieselbe Karte anders.
+   * Gerichten hängt. Vorher las die Live-Seite die Kategorien aus den
+   * Gerichten und die Vorschau aus der Pflege: dieselbe Karte hatte hier
+   * andere Reiter in anderer Reihenfolge als im Konfigurator.
    */
   const kategorien = useMemo(
     () => kategorienReihenfolge(content.categories, content.menuItems),
@@ -369,12 +359,12 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
   // Gefilterte Menu Items
   const filteredMenuItems = useMemo(() => {
     if (!activeMenuCategory) return content.menuItems;
-    // Papier-Templates: Rubrik über dieselbe Regel wie Reiter und Gruppen
-    // (kategorieVon — Gerichte ohne Kategorie unter „Sonstiges“).
-    return content.menuItems.filter((item: any) =>
-      (layout.eigen ? kategorieVon(item) : item.category) === activeMenuCategory,
+    // Rubrik über dieselbe Regel wie Reiter und Gruppen (kategorieVon —
+    // Gerichte ohne Kategorie unter „Sonstiges“).
+    return content.menuItems.filter(
+      (item: any) => kategorieVon(item) === activeMenuCategory,
     );
-  }, [content.menuItems, activeMenuCategory, layout.eigen]);
+  }, [content.menuItems, activeMenuCategory]);
 
   // Template-spezifische Styles mit Desktop-Optimierung.
   // Wrapper aus dem geteilten Helper — vorher fehlte hier der
@@ -414,25 +404,26 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
   // ============================================
 
   const renderHomePage = () => {
-    // Reservieren-Aufruf der Papier-Templates. Die geteilte Leiste (presse,
-    // kiosk) steht wie im Entwurf zwischen Hero und Liste, Block (izakaya)
-    // und Textlink (morgen) unter der Liste — dieselbe Regel wie in der
-    // Vorschau, der Paritätstest prüft die Reihenfolge.
-    const eigenerCta =
-      features.reservationsEnabled && layout.eigen ? (
-        <ReservationCta
-          template={design.template}
-          primaryColor={design.primaryColor}
-          fontColor={design.fontColor}
-          backgroundColor={design.backgroundColor}
-          buttonColor={features.reservationButtonColor}
-          buttonTextColor={features.reservationButtonTextColor}
-          reservationUrl={features.reservationUrl}
-          reservationProvider={features.reservationProvider}
-          onReservation={() => navigateToPage("reservations")}
-          onMenu={() => navigateToPage("menu")}
-        />
-      ) : null;
+    // Reservieren-Aufruf, für jedes Template aus derselben Komponente. Die
+    // geteilte Leiste (presse, kiosk) steht wie im Entwurf zwischen Hero und
+    // Liste, Block (izakaya), Textlink (morgen) und der gefüllte Knopf des
+    // Bestands unter der Liste — dieselbe Regel wie in der Vorschau, der
+    // Paritätstest prüft die Reihenfolge.
+    const reservieren = features.reservationsEnabled ? (
+      <ReservationCta
+        template={design.template}
+        primaryColor={design.primaryColor}
+        fontColor={design.fontColor}
+        backgroundColor={design.backgroundColor}
+        buttonColor={features.reservationButtonColor}
+        buttonTextColor={features.reservationButtonTextColor}
+        buttonShape={features.reservationButtonShape}
+        reservationUrl={features.reservationUrl}
+        reservationProvider={features.reservationProvider}
+        onReservation={() => navigateToPage("reservations")}
+        onMenu={() => navigateToPage("menu")}
+      />
+    ) : null;
 
     return (
     <div className="space-y-8 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -468,7 +459,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         isPreview={false}
       />
 
-      {layout.cta === "geteilt" && eigenerCta}
+      {layout.cta === "geteilt" && reservieren}
 
       {/* Angebots-Banner — konfigurierbar im Angebote-Schritt (Größe/Farben) */}
       <OfferBanner
@@ -477,15 +468,18 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         onShowOffers={() => navigateToPage("offers")}
       />
 
-      {/* Highlights — Templates mit eigenem Layout: geteilte DishList,
-          identisch mit der Konfigurator-Vorschau (templateLayout.ts). */}
-      {content.menuItems.length > 0 && layout.eigen && (
+      {/* Highlights — geteilte DishList, identisch mit der Konfigurator-
+          Vorschau (templateLayout.ts). Auch der Bestand geht hier durch:
+          Vorher stand hier ein eigenes Raster ohne Bilder, während die
+          Vorschau eine gestapelte Liste zeigte. */}
+      {content.menuItems.length > 0 && (
         <DishList
           template={design.template}
           modus="highlights"
           alle={content.menuItems}
           anzeigen={waehleHighlights(content.menuItems, layout.highlights)}
           categories={kategorien}
+          bildSichtbarkeit={content.homepageDishImageVisibility}
           onAlle={() => navigateToPage("menu")}
           fontColor={design.fontColor}
           priceColor={design.priceColor}
@@ -499,131 +493,13 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         />
       )}
 
-      {/* Highlights Section - NUTZT DishCard Shared Component */}
-      {content.menuItems.length > 0 && !layout.eigen && (
-        <div>
-          <div className="flex items-center justify-between mb-4 md:mb-8 px-1">
-            <h3
-              className="uppercase tracking-widest font-bold opacity-60 text-[10px] md:text-xs"
-              style={{ color: design.fontColor }}
-            >
-              Highlights
-            </h3>
-            <span
-              className="text-[10px] md:text-xs font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1 transition-opacity"
-              onClick={() => navigateToPage("menu")}
-            >
-              Alle anzeigen <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {(() => {
-              // Markierte Highlights zuerst, dann in Karten-Reihenfolge
-              // aufgefüllt — dieselbe Auswahl wie in der Vorschau. Vorher
-              // stand hier .sort(() => 0.5 - Math.random()): Der Gast sah
-              // bei jedem Render andere Gerichte als der Betreiber beim
-              // Einrichten.
-              const highlightsToShow = waehleHighlights(content.menuItems, 3);
-
-              return highlightsToShow.map((item: MenuItem, i: number) => (
-                <DishCard
-                  key={item.id || i}
-                  item={item}
-                  fontColor={design.fontColor}
-                  priceColor={design.priceColor}
-                  primaryColor={design.primaryColor}
-                  backgroundColor={design.backgroundColor}
-                  template={design.template}
-                  onlineOrdering={onlineOrderingActive}
-                  onClick={() => openDishModal(item)}
-                  onAddToCart={addToCart}
-                  isPreview={false}
-                />
-              ));
-            })()}
-          </div>
-        </div>
-      )}
-
-      {/* "Jetzt bestellen" bei aktivierter Online-Bestellung.
-          Die Konfigurator-Vorschau zeigt diesen Knopf seit jeher unter dem
-          Hero (Primärfarbe, führt zur Speisekarte) — auf der veröffentlichten
-          Seite fehlte er komplett. Der Betreiber sah beim Einrichten also
-          einen Bestell-Einstieg, den seine Gäste nie bekamen. */}
-      {onlineOrderingActive && !layout.eigen && (
-        <div className="mb-6 md:mb-8 max-w-md mx-auto px-4">
-          <button
-            className="w-full py-3 px-6 font-bold text-base shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
-            style={{
-              backgroundColor: design.primaryColor,
-              borderRadius: "var(--radius-button, 9999px)",
-              boxShadow: "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
-            }}
-            onClick={() => navigateToPage("menu")}
-          >
-            Jetzt bestellen
-          </button>
-        </div>
-      )}
-
-      {/* Reservierungsbutton.
-          Hat der Betrieb ein BESTEHENDES Buchungssystem (OpenTable, Quandoo …),
-          führt der Knopf dorthin statt in unser eigenes Formular. Beides
-          anzubieten hieße: Buchungen laufen durch zwei Systeme, die voneinander
-          nichts wissen – derselbe Tisch würde zweimal vergeben. */}
-      {layout.cta !== "geteilt" && eigenerCta}
-      {features.reservationsEnabled &&
-        !layout.eigen &&
-        (() => {
-          const buttonStyle = {
-            backgroundColor:
-              features.reservationButtonColor || design.primaryColor,
-            color: features.reservationButtonTextColor || "#FFFFFF",
-            borderRadius:
-              features.reservationButtonShape === "pill"
-                ? "9999px"
-                : features.reservationButtonShape === "square"
-                  ? "0.5rem"
-                  : "0.75rem",
-          };
-          const buttonClass =
-            "block w-full text-center py-3 md:py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105";
-
-          return (
-            <div className="mt-8 md:mt-12 mb-6 md:mb-10 max-w-md mx-auto">
-              {features.reservationUrl ? (
-                <a
-                  href={features.reservationUrl}
-                  target="_blank"
-                  // noopener ist hier Pflicht: Ohne das kann die geöffnete
-                  // fremde Seite über window.opener auf unsere zugreifen.
-                  rel="noopener noreferrer"
-                  className={buttonClass}
-                  style={buttonStyle}
-                >
-                  Tisch reservieren
-                </a>
-              ) : (
-                <button
-                  className={buttonClass}
-                  style={buttonStyle}
-                  onClick={() => navigateToPage("reservations")}
-                >
-                  Tisch reservieren
-                </button>
-              )}
-              {features.reservationUrl && features.reservationProvider && (
-                <p
-                  className="mt-2 text-center text-xs opacity-70"
-                  style={{ color: design.fontColor }}
-                >
-                  über {features.reservationProvider}
-                </p>
-              )}
-            </div>
-          );
-        })()}
+      {/* Reservieren. Hat der Betrieb ein BESTEHENDES Buchungssystem
+          (OpenTable, Quandoo …), führt der Aufruf dorthin statt in unser
+          eigenes Formular — beides anzubieten hieße: Buchungen laufen durch
+          zwei Systeme, die voneinander nichts wissen, und derselbe Tisch
+          würde zweimal vergeben. Die Form kommt aus ReservationCta, damit
+          hier derselbe Knopf steht wie in der Vorschau. */}
+      {layout.cta !== "geteilt" && reservieren}
 
       {/* Öffnungszeiten & Location - NUTZT OpeningHours Shared Component */}
       <OpeningHours
@@ -644,9 +520,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       <h2 className={styles.titleClass} style={styles.titleStyle}>Speisekarte</h2>
 
       {/* ✅ CategoryFilter Component - Shared Component statt inline Code */}
-      {(layout.eigen ? kategorien : allCategories).length > 0 && (
+      {kategorien.length > 0 && (
         <CategoryFilter
-          categories={layout.eigen ? kategorien : allCategories}
+          categories={kategorien}
           activeCategory={activeMenuCategory}
           onCategoryChange={setActiveMenuCategory}
           fontColor={design.fontColor}
@@ -659,16 +535,19 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
         />
       )}
 
-      {/* Speisekarte — Templates mit eigenem Layout: geteilte DishList,
-          gruppiert nach Kategorie solange kein Filter aktiv ist; identisch
-          mit der Konfigurator-Vorschau (templateLayout.ts). */}
-      {layout.eigen && filteredMenuItems.length > 0 ? (
+      {/* Speisekarte — geteilte DishList, gruppiert nach Kategorie solange
+          kein Filter aktiv ist; identisch mit der Konfigurator-Vorschau
+          (templateLayout.ts). Der Bestand zeigte hier bisher ein flaches
+          Raster ohne Überschriften und ohne Bilder, die Vorschau eine
+          gruppierte Liste mit Bildern — versprochen war die Vorschau. */}
+      {filteredMenuItems.length > 0 ? (
         <DishList
           template={design.template}
           modus="karte"
           alle={content.menuItems}
           anzeigen={filteredMenuItems}
           categories={kategorien}
+          bildSichtbarkeit={content.homepageDishImageVisibility}
           gruppieren={!activeMenuCategory}
           fontColor={design.fontColor}
           priceColor={design.priceColor}
@@ -682,30 +561,9 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
           className="pb-4"
         />
       ) : (
-      /* Menu Items - NUTZT DishCard Shared Component */
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-4">
-        {filteredMenuItems.length > 0 ? (
-          filteredMenuItems.map((item: MenuItem, i: number) => (
-            <DishCard
-              key={item.id || i}
-              item={item}
-              fontColor={design.fontColor}
-              priceColor={design.priceColor}
-              primaryColor={design.primaryColor}
-              backgroundColor={design.backgroundColor}
-              template={design.template}
-              onlineOrdering={onlineOrderingActive}
-              onClick={() => openDishModal(item)}
-              onAddToCart={addToCart}
-              isPreview={false}
-            />
-          ))
-        ) : (
-          <div className="col-span-full text-center py-8 opacity-50 text-sm md:text-base">
-            Keine Artikel in dieser Kategorie
-          </div>
-        )}
-      </div>
+        <div className="text-center py-8 opacity-50 text-sm md:text-base">
+          Keine Artikel in dieser Kategorie
+        </div>
       )}
     </div>
   );

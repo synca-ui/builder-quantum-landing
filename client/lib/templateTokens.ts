@@ -349,6 +349,15 @@ const TEMPLATE_INTENT_MAP: Record<string, TemplateIntent> = {
 };
 
 /**
+ * Alle Template-IDs, die es gibt: die im Picker angebotenen und der
+ * Alt-Bestand, dessen veröffentlichte Seiten weiterlaufen. Diese Registry ist
+ * die Liste, gegen die der Paritätstest jedes Template prüft — ein neues
+ * Template ist damit automatisch dabei, statt in einem zweiten Array zu
+ * fehlen und ungeprüft zu bleiben.
+ */
+export const TEMPLATE_IDS = Object.keys(TEMPLATE_TOKENS);
+
+/**
  * Gibt die Design-Tokens für ein Template zurück
  */
 export function getTemplateTokens(templateId: string): TemplateTokens {

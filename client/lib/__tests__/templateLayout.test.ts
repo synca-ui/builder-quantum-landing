@@ -26,6 +26,7 @@ import {
   templateSchriftFuer,
   textAufFarbe,
   waehleHighlights,
+  zeigeBilder,
 } from "../templateLayout";
 import {
   getTemplateDesignDefaults,
@@ -95,6 +96,25 @@ describe("laufendeNummer", () => {
     expect(laufendeNummer(8)).toBe("09");
     expect(laufendeNummer(11)).toBe("12");
     expect(laufendeNummer(99)).toBe("100");
+  });
+});
+
+describe("zeigeBilder", () => {
+  it("Bestand zeigt Bilder, die Papierformen nur der Zettel", () => {
+    for (const id of ["minimalist", "modern", "riviera", "verde", "izakaya"]) {
+      expect(zeigeBilder(id)).toBe(true);
+    }
+    for (const id of ["presse", "kiosk", "morgen"]) {
+      expect(zeigeBilder(id)).toBe(false);
+    }
+  });
+
+  it("„hidden“ nimmt die Bilder überall raus, jeder andere Wert lässt sie zu", () => {
+    expect(zeigeBilder("minimalist", "hidden")).toBe(false);
+    expect(zeigeBilder("izakaya", "hidden")).toBe(false);
+    expect(zeigeBilder("minimalist", "visible")).toBe(true);
+    expect(zeigeBilder("minimalist", undefined)).toBe(true);
+    expect(zeigeBilder("minimalist", "")).toBe(true);
   });
 });
 

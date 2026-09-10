@@ -1,12 +1,13 @@
 /**
  * Shared DishList Component
  *
- * Gerichte-Liste für Templates mit eigenem Layout (templateLayout.ts):
- * Leiste mit Zähler, Kategorie-Überschriften, laufende Nummern, Raster
- * 2×2 oder Spalte. Vorschau und veröffentlichte Seite rufen sie mit
- * denselben Daten auf — deshalb sehen beide dasselbe. Bestands-Templates
- * gehen nicht durch diese Komponente; ihre Listen liegen unverändert in
- * TemplatePreviewContent bzw. AppRenderer.
+ * Gerichte-Liste ALLER Templates (templateLayout.ts): Leiste mit Zähler,
+ * Kategorie-Überschriften, laufende Nummern, Raster 2×2 oder Spalte für die
+ * Papierformen — gestapelte Kachel-Karten mit „Highlights / Alle“-Leiste für
+ * den Bestand. Vorschau und veröffentlichte Seite rufen sie mit denselben
+ * Daten auf, deshalb sehen beide dasselbe. Vorher hatte der Bestand zwei
+ * getrennte Listen (Vorschau gruppiert mit Überschriften, Live-Seite ein
+ * flaches Raster) — der Betreiber sah nicht, was seine Gäste bekamen.
  *
  * Wird verwendet in:
  * - TemplatePreviewContent.tsx (Editor)
@@ -14,12 +15,14 @@
  */
 
 import React, { memo } from "react";
+import { ArrowRight } from "lucide-react";
 import type { MenuItem } from "@/types/domain";
 import { DishCard } from "./DishCard";
 import {
   getTemplateLayout,
   gruppiereNachKategorie,
   laufendeNummer,
+  zeigeBilder,
   type Kategoriegruppe,
 } from "@/lib/templateLayout";
 
@@ -37,6 +40,8 @@ export interface DishListProps {
   modus: "highlights" | "karte";
   /** Startseite: Sprung zur ganzen Karte. */
   onAlle?: () => void;
+  /** content.homepageDishImageVisibility — „hidden“ nimmt die Bilder raus. */
+  bildSichtbarkeit?: string | null;
   fontColor: string;
   priceColor: string;
   primaryColor: string;
@@ -68,6 +73,7 @@ export const DishList = memo(function DishList({
   gruppieren = false,
   modus,
   onAlle,
+  bildSichtbarkeit,
   fontColor,
   priceColor,
   primaryColor,
@@ -106,6 +112,31 @@ export const DishList = memo(function DishList({
   // ---- Leiste über den Highlights (kiosk: Register, izakaya: Heute) ----
   const leiste = (() => {
     if (modus !== "highlights") return null;
+    // Bestand: die Leiste, die die Vorschau seit jeher über den Highlights
+    // zeigt — „Alle“ ist jetzt ein Knopf, vorher ein <span> mit onClick, den
+    // die Tastatur nicht erreichte.
+    if (!layout.eigen) {
+      return (
+        <div className="flex items-center justify-between mb-4 px-1">
+          <h3
+            className="uppercase tracking-widest font-bold opacity-60 text-[10px]"
+            style={{ color: fontColor }}
+          >
+            Highlights
+          </h3>
+          {onAlle && (
+            <button
+              type="button"
+              onClick={onAlle}
+              aria-label="Ganze Karte anzeigen"
+              className="text-[10px] font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1"
+            >
+              Alle <ArrowRight className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      );
+    }
     if (layout.ueberschrift === "registerLeiste") {
       const von = positionen.length ? laufendeNummer(Math.min(...positionen)) : "00";
       const bis = positionen.length ? laufendeNummer(Math.max(...positionen)) : "00";
@@ -193,6 +224,16 @@ export const DishList = memo(function DishList({
             </span>
           </h3>
         );
+      case "unterstrichen":
+        // Bestand: fette Zeile mit feiner Linie, wie in der Vorschau.
+        return (
+          <h3
+            className={`text-lg font-bold mb-3 pb-2 border-b ${erste ? "" : "mt-6"}`}
+            style={{ color: fontColor, borderColor: `${fontColor}20` }}
+          >
+            {g.kategorie}
+          </h3>
+        );
       case "kapitaelchen":
       default:
         return (
@@ -220,7 +261,7 @@ export const DishList = memo(function DishList({
         backgroundColor={backgroundColor}
         template={template}
         onlineOrdering={onlineOrdering}
-        showImage={layout.bilder === "kachel"}
+        showImage={zeigeBilder(template, bildSichtbarkeit)}
         onClick={onItemClick ? () => onItemClick(item) : undefined}
         onAddToCart={onAddToCart}
         isPreview={isPreview}
@@ -228,7 +269,9 @@ export const DishList = memo(function DishList({
     ));
 
   const liste = (items: MenuItem[]) =>
-    layout.raster === "kacheln2" ? (
+    layout.raster === "gestapelt" ? (
+      <div className="space-y-3">{karten(items)}</div>
+    ) : layout.raster === "kacheln2" ? (
       <div
         className="grid grid-cols-2"
         style={{ borderTop: linie, borderLeft: linie }}

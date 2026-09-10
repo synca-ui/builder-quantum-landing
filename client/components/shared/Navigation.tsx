@@ -111,7 +111,9 @@ export const Navigation = memo(function Navigation({
 }: NavigationProps) {
   const fontClass = getHeaderFontClass(headerFontSize);
 
-  // Kopfzeilen-Variante des Templates (Bestand: "standard" — unverändert).
+  // Kopfzeilen-Variante des Templates (Bestand: "standard" — dieselbe Form
+  // wie bisher). Das Attribut steht bei jedem Template, damit der
+  // Paritätstest Vorschau und Live-Seite überall vergleichen kann.
   const variante = getTemplateLayout(template).nav;
   const eigen = variante !== "standard";
   const display = eigen ? { fontFamily: "var(--font-template-display)" } : {};
@@ -197,7 +199,7 @@ export const Navigation = memo(function Navigation({
           : { paddingTop: "calc(1rem + env(safe-area-inset-top, 0px))" }),
         ...unterkante,
       }}
-      data-nav-variant={eigen ? variante : undefined}
+      data-nav-variant={variante}
     >
       {/* Left: Logo + Business Name */}
       <div className="flex items-center gap-2 overflow-hidden">

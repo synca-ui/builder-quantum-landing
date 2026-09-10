@@ -1,13 +1,19 @@
 /**
- * Parität Vorschau ↔ Live-Seite für die Templates mit eigenem Layout.
+ * Parität Vorschau ↔ Live-Seite — für JEDES Template.
  *
  * Das Versprechen des Konfigurators ist: Was die iPhone-Vorschau zeigt,
- * bekommt der Gast. Für presse, kiosk, izakaya und morgen liegt alles
- * Sichtbare — Hero, Gerichte-Liste, Reservieren-Aufruf, Kopfzeilen-Form — in
- * geteilten Komponenten, die beide Renderer mit denselben Daten aufrufen.
- * Dieser Test rendert dieselbe Konfiguration einmal durch AppRenderer (Live)
- * und einmal durch TemplatePreviewContent (Vorschau, über den Store) und
- * vergleicht das erzeugte HTML dieser Bausteine Zeichen für Zeichen.
+ * bekommt der Gast. Alles Sichtbare — Hero, Gerichte-Liste, Reservieren-
+ * Aufruf, Kopfzeile, Kategorie-Reiter — liegt in geteilten Komponenten, die
+ * beide Renderer mit denselben Daten aufrufen. Dieser Test rendert dieselbe
+ * Konfiguration einmal durch AppRenderer (Live) und einmal durch
+ * TemplatePreviewContent (Vorschau, über den Store) und vergleicht das
+ * erzeugte HTML dieser Bausteine Zeichen für Zeichen.
+ *
+ * Er läuft über die Template-Registry (TEMPLATE_IDS), nicht über eine
+ * gepflegte Liste: die vier Papier-Templates, die zwei im Picker und der
+ * Alt-Bestand (stylish, cozy, nocturne, riviera, verde), dessen
+ * veröffentlichte Seiten weiterlaufen. Ein neues Template ist damit
+ * automatisch geprüft, statt in einem zweiten Array zu fehlen.
  *
  * Bricht er, zeigt die Vorschau etwas anderes als die veröffentlichte Seite.
  */
@@ -17,12 +23,15 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AppRenderer } from "../AppRenderer";
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
 import { useConfiguratorStore } from "@/store/configuratorStore";
-import { EIGENE_TEMPLATES, getTemplateLayout } from "@/lib/templateLayout";
-import { getTemplateDesignDefaults } from "@/lib/templateTokens";
+import { formatPreis, getTemplateLayout, zeigeBilder } from "@/lib/templateLayout";
+import { getTemplateDesignDefaults, TEMPLATE_IDS } from "@/lib/templateTokens";
 import type { MenuItem } from "@/types/domain";
 
+/** Bild an einem Gericht — es entscheidet sich an der Bilder-Regel. */
+const BILD = "https://bilder.example/karaage.jpg";
+
 const ITEMS: MenuItem[] = [
-  { id: "m1", name: "Karaage", description: "Yuzu-Mayo", price: 8.5, category: "Kleine Teller" },
+  { id: "m1", name: "Karaage", description: "Yuzu-Mayo", price: 8.5, category: "Kleine Teller", imageUrl: BILD },
   { id: "m2", name: "Nasu Dengaku", description: "Miso, Aubergine", price: 7, category: "Kleine Teller", isHighlight: true },
   { id: "m3", name: "Gyoza, 6 Stk.", description: "Schwein, Lauch", price: 7.5, category: "Kleine Teller" },
   { id: "m4", name: "Highball", description: "Toki, Soda", price: 9, category: "Getränke" },
@@ -71,7 +80,7 @@ function farben(template: string) {
   };
 }
 
-function liveConfig(template: string) {
+function liveConfig(template: string, bilder: string = "visible") {
   return {
     template,
     businessName: BETRIEB.name,
@@ -84,12 +93,13 @@ function liveConfig(template: string) {
     categories: KATEGORIEN,
     gallery: [],
     openingHours: HOURS,
+    homepageDishImageVisibility: bilder,
     reservationsEnabled: true,
     selectedPages: [],
   };
 }
 
-function vorschauStore(template: string) {
+function vorschauStore(template: string, bilder: string = "visible") {
   useConfiguratorStore.getState().resetConfig();
   useConfiguratorStore.setState((s: any) => ({
     business: { ...s.business, ...BETRIEB },
@@ -100,6 +110,7 @@ function vorschauStore(template: string) {
       categories: KATEGORIEN,
       gallery: [],
       openingHours: HOURS,
+      homepageDishImageVisibility: bilder,
     },
     features: { ...s.features, reservationsEnabled: true },
     pages: { ...s.pages, selectedPages: [] },
@@ -123,7 +134,12 @@ function zurKarte(container: HTMLElement) {
   fireEvent.click(knopf!);
 }
 
-describe.each(EIGENE_TEMPLATES)("Template '%s': Vorschau = Live", (template) => {
+const KARTE = '[data-template-list][data-modus="karte"]';
+const HIGHLIGHTS = '[data-template-list][data-modus="highlights"]';
+
+describe.each(TEMPLATE_IDS)("Template '%s': Vorschau = Live", (template) => {
+  const layout = getTemplateLayout(template);
+
   beforeEach(() => {
     vorschauStore(template);
     // jsdom kennt scrollIntoView nicht; CategoryFilter ruft es nach einem
@@ -135,11 +151,7 @@ describe.each(EIGENE_TEMPLATES)("Template '%s': Vorschau = Live", (template) => 
     const live = render(<AppRenderer config={liveConfig(template)} />);
     const vorschau = render(<TemplatePreviewContent />);
 
-    for (const selector of [
-      "[data-template-hero]",
-      '[data-template-list][data-modus="highlights"]',
-      "[data-template-cta]",
-    ]) {
+    for (const selector of ["[data-template-hero]", HIGHLIGHTS, "[data-template-cta]"]) {
       const l = html(live.container, selector);
       const v = html(vorschau.container, selector);
       expect(l, `${selector} fehlt auf der Live-Seite`).not.toBeNull();
@@ -147,14 +159,10 @@ describe.each(EIGENE_TEMPLATES)("Template '%s': Vorschau = Live", (template) => 
     }
 
     // Reihenfolge der Bausteine: geteilte Leiste (presse, kiosk) zwischen
-    // Hero und Liste, Block/Textlink (izakaya, morgen) unter der Liste —
-    // und in beiden Renderern gleich.
+    // Hero und Liste, Block, Textlink und der gefüllte Knopf des Bestands
+    // unter der Liste — und in beiden Renderern gleich.
     const reihenfolge = (c: HTMLElement) =>
-      [
-        "[data-template-hero]",
-        "[data-template-cta]",
-        '[data-template-list][data-modus="highlights"]',
-      ].sort((a, b) => {
+      ["[data-template-hero]", "[data-template-cta]", HIGHLIGHTS].sort((a, b) => {
         const ea = c.querySelector(a)!;
         const eb = c.querySelector(b)!;
         return ea.compareDocumentPosition(eb) & Node.DOCUMENT_POSITION_FOLLOWING
@@ -162,22 +170,18 @@ describe.each(EIGENE_TEMPLATES)("Template '%s': Vorschau = Live", (template) => 
           : 1;
       });
     const soll =
-      getTemplateLayout(template).cta === "geteilt"
-        ? ["[data-template-hero]", "[data-template-cta]", '[data-template-list][data-modus="highlights"]']
-        : ["[data-template-hero]", '[data-template-list][data-modus="highlights"]', "[data-template-cta]"];
+      layout.cta === "geteilt"
+        ? ["[data-template-hero]", "[data-template-cta]", HIGHLIGHTS]
+        : ["[data-template-hero]", HIGHLIGHTS, "[data-template-cta]"];
     expect(reihenfolge(live.container)).toEqual(soll);
     expect(reihenfolge(vorschau.container)).toEqual(soll);
 
     // Kopfzeile: gleiche Variante (die Positionierung unterscheidet sich
     // absichtlich — sticky im Rahmen, fixed auf der Seite).
-    expect(
-      vorschau.container.querySelector("[data-nav-variant]")?.getAttribute("data-nav-variant"),
-    ).toBe(
-      live.container.querySelector("[data-nav-variant]")?.getAttribute("data-nav-variant"),
-    );
-    expect(live.container.querySelector("[data-nav-variant]")?.getAttribute("data-nav-variant")).not.toBe(
-      "standard",
-    );
+    const nav = (c: HTMLElement) =>
+      c.querySelector("[data-nav-variant]")?.getAttribute("data-nav-variant");
+    expect(nav(live.container)).toBe(layout.nav);
+    expect(nav(vorschau.container)).toBe(nav(live.container));
   });
 
   test("Speisekarte: gruppierte Liste und Filter-Variante sind identisch", () => {
@@ -187,16 +191,14 @@ describe.each(EIGENE_TEMPLATES)("Template '%s': Vorschau = Live", (template) => 
     zurKarte(live.container);
     zurKarte(vorschau.container);
 
-    const selector = '[data-template-list][data-modus="karte"]';
-    const l = html(live.container, selector);
+    const l = html(live.container, KARTE);
     expect(l, "Karte fehlt auf der Live-Seite").not.toBeNull();
-    expect(html(vorschau.container, selector)).toBe(l);
+    expect(html(vorschau.container, KARTE)).toBe(l);
 
-    expect(
-      vorschau.container.querySelector("[data-filter-variant]")?.getAttribute("data-filter-variant"),
-    ).toBe(
-      live.container.querySelector("[data-filter-variant]")?.getAttribute("data-filter-variant"),
-    );
+    const filter = (c: HTMLElement) =>
+      c.querySelector("[data-filter-variant]")?.getAttribute("data-filter-variant");
+    expect(filter(live.container)).toBe(layout.filter);
+    expect(filter(vorschau.container)).toBe(filter(live.container));
 
     // Reiter: gleiche Kategorien in gleicher Reihenfolge — gepflegte Liste
     // zuerst (auch die leere „Desserts“), nicht Auftrittsfolge der Gerichte.
@@ -209,41 +211,50 @@ describe.each(EIGENE_TEMPLATES)("Template '%s': Vorschau = Live", (template) => 
     expect(l).toContain("Sonstiges");
     expect(l).toContain("Tagessuppe");
 
-    // Seitentitel in der Display-Schrift — in beiden Renderern gleich.
+    // Preisschreibweise des Templates: „8.50€“ im Bestand, „8,50“ auf der
+    // gesetzten Karte — und beide Renderer schreiben sie gleich.
+    expect(l).toContain(formatPreis(8.5, layout.preis));
+
+    // Bilder: EINE Regel für beide Renderer (templateLayout.zeigeBilder).
+    // Vorher gab die Vorschau der Karte `showImage` mit und die Live-Seite nie.
+    expect(l!.includes(BILD)).toBe(zeigeBilder(template));
+
+    // Seitentitel: Papier-Templates in der Display-Schrift, Bestand ohne
+    // eigenen Stil — in beiden Renderern gleich.
     const titel = (c: HTMLElement) => c.querySelector("h2")?.getAttribute("style") ?? null;
-    expect(titel(live.container)).toContain("font-template-display");
     expect(titel(vorschau.container)).toBe(titel(live.container));
+    if (layout.eigen) expect(titel(live.container)).toContain("font-template-display");
+    else expect(titel(live.container)).toBeNull();
 
     // Aktiver Filter: flache Liste, in beiden Renderern identisch.
     fireEvent.click(live.container.querySelector('[data-category="Kleine Teller"]')!);
     fireEvent.click(vorschau.container.querySelector('[data-category="Kleine Teller"]')!);
-    const gefiltert = html(live.container, selector);
+    const gefiltert = html(live.container, KARTE);
     expect(gefiltert).not.toBe(l);
     expect(gefiltert).toContain("Karaage");
     expect(gefiltert).not.toContain("Highball");
     expect(gefiltert).not.toContain("Tagessuppe");
-    expect(html(vorschau.container, selector)).toBe(gefiltert);
+    expect(html(vorschau.container, KARTE)).toBe(gefiltert);
 
     // Filter „Sonstiges“: auch die Gerichte ohne Kategorie finden beide.
     fireEvent.click(live.container.querySelector('[data-category="Sonstiges"]')!);
     fireEvent.click(vorschau.container.querySelector('[data-category="Sonstiges"]')!);
-    const sonstige = html(live.container, selector);
+    const sonstige = html(live.container, KARTE);
     expect(sonstige).toContain("Tagessuppe");
     expect(sonstige).not.toContain("Karaage");
-    expect(html(vorschau.container, selector)).toBe(sonstige);
+    expect(html(vorschau.container, KARTE)).toBe(sonstige);
   });
-});
 
-describe("Bestand bleibt unberührt", () => {
-  test("riviera rendert weder DishList noch Template-Hero — das alte Markup gilt", () => {
-    const { container } = render(<AppRenderer config={liveConfig("riviera")} />);
-    expect(container.querySelector("[data-template-list]")).toBeNull();
-    expect(container.querySelector("[data-template-hero]")).toBeNull();
-    expect(container.querySelector("[data-template-cta]")).toBeNull();
-    // Kein neues Attribut, keine neue Klasse — Markup wie vor den Templates.
-    expect(container.querySelector("[data-nav-variant]")).toBeNull();
-    expect(container.querySelector("[data-filter-variant]")).toBeNull();
-    // Preise wie bisher: mit Punkt und Euro-Zeichen
-    expect(container.textContent).toContain("8.50€");
+  test("Bilder abgeschaltet: beide Renderer zeigen keine", () => {
+    vorschauStore(template, "hidden");
+    const live = render(<AppRenderer config={liveConfig(template, "hidden")} />);
+    const vorschau = render(<TemplatePreviewContent />);
+
+    zurKarte(live.container);
+    zurKarte(vorschau.container);
+
+    const l = html(live.container, KARTE);
+    expect(l).not.toContain(BILD);
+    expect(html(vorschau.container, KARTE)).toBe(l);
   });
 });
