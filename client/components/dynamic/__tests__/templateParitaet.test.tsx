@@ -24,7 +24,7 @@ import { AppRenderer } from "../AppRenderer";
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
 import { useConfiguratorStore } from "@/store/configuratorStore";
 import { formatPreis, getTemplateLayout, zeigeBilder } from "@/lib/templateLayout";
-import { getTemplateDesignDefaults, TEMPLATE_IDS } from "@/lib/templateTokens";
+import { getTemplateButtonShape, getTemplateDesignDefaults, TEMPLATE_IDS } from "@/lib/templateTokens";
 import type { MenuItem } from "@/types/domain";
 
 /** Bild an einem Gericht — es entscheidet sich an der Bilder-Regel. */
@@ -95,6 +95,7 @@ function liveConfig(template: string, bilder: string = "visible") {
     openingHours: HOURS,
     homepageDishImageVisibility: bilder,
     reservationsEnabled: true,
+    reservationButtonShape: getTemplateButtonShape(template),
     selectedPages: [],
   };
 }
@@ -116,7 +117,11 @@ function vorschauStore(template: string, bilder: string = "visible") {
       openingHours: HOURS,
       homepageDishImageVisibility: bilder,
     },
-    features: { ...s.features, reservationsEnabled: true },
+    features: {
+      ...s.features,
+      reservationsEnabled: true,
+      reservationButtonShape: getTemplateButtonShape(template),
+    },
     pages: { ...s.pages, selectedPages: [] },
   }));
 }
@@ -247,6 +252,21 @@ describe.each(TEMPLATE_IDS)("Template '%s': Vorschau = Live", (template) => {
     expect(sonstige).toContain("Tagessuppe");
     expect(sonstige).not.toContain("Karaage");
     expect(html(vorschau.container, KARTE)).toBe(sonstige);
+  });
+
+  test("Reservierungsseite: Formular und Knopf sind identisch", () => {
+    const live = render(<AppRenderer config={liveConfig(template)} />);
+    const vorschau = render(<TemplatePreviewContent />);
+    fireEvent.click(live.container.querySelector("[data-reservation-cta]")!);
+    fireEvent.click(vorschau.container.querySelector("[data-reservation-cta]")!);
+    const l = html(live.container, "[data-reservation-form]");
+    expect(l, "Reservierungsformular fehlt auf der Live-Seite").not.toBeNull();
+    expect(html(vorschau.container, "[data-reservation-form]")).toBe(l);
+    // Knopfform des Templates kommt an: eckig heißt 0 px, Pille 9999 px.
+    const knopf = live.container.querySelector("[data-reservation-form] button") as HTMLElement;
+    const form = getTemplateButtonShape(template);
+    if (form === "square") expect(knopf.style.borderRadius).toBe("0px");
+    if (form === "pill") expect(knopf.style.borderRadius).toBe("9999px");
   });
 
   test("Bilder abgeschaltet: beide Renderer zeigen keine", () => {

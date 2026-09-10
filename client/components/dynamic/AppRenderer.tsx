@@ -56,6 +56,7 @@ import { OffersSection } from "@/components/shared/OffersSection";
 import { OfferBanner } from "@/components/shared/OfferBanner";
 import { AboutSection } from "@/components/shared/AboutSection";
 import ReservationFormModern from "./ReservationFormModern";
+import { ReservationClassicForm } from "@/components/shared/ReservationClassicForm";
 
 interface AppRendererProps {
   config: any; // Akzeptiert flache DB-Daten oder verschachtelte Configuration
@@ -748,85 +749,18 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
       );
     }
 
-    // Classic Form (original)
+    // Klassische Seite — geteilt mit der Vorschau (ReservationClassicForm).
+    // Vorher hatte jeder Renderer sein eigenes Markup mit anderen Feldern
+    // und fester Rundung; der Paritätstest vergleicht die Seite jetzt mit.
     return (
-    <div className="space-y-6 md:space-y-10 animate-in fade-in duration-300 max-w-2xl mx-auto">
-      <div className="text-center">
-        <div
-          className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: `${design.primaryColor}20` }}
-        >
-          <CalendarCheck
-            className="w-8 h-8 md:w-10 md:h-10"
-            style={{ color: design.primaryColor }}
-          />
-        </div>
-        <h2 className={styles.titleClass} style={styles.titleStyle}>Reservierung</h2>
-        <p className={`${styles.bodyClass} opacity-70`}>
-          Buchen Sie Ihren Tisch online
-        </p>
-      </div>
-
-      <div className="space-y-4 md:space-y-5 p-4 md:p-8 rounded-2xl border border-current/10 bg-white/5">
-        <div>
-          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">
-            Datum
-          </label>
-          <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border border-current/10 bg-white/50">
-            <Calendar className="w-4 h-4 md:w-5 md:h-5 opacity-50" />
-            <span className="text-sm md:text-base">Datum wählen...</span>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">
-            Uhrzeit
-          </label>
-          <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border border-current/10 bg-white/50">
-            <Clock className="w-4 h-4 md:w-5 md:h-5 opacity-50" />
-            <span className="text-sm md:text-base">Zeit wählen...</span>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs md:text-sm font-bold mb-2 opacity-70">
-            Anzahl Gäste
-          </label>
-          <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border border-current/10 bg-white/50">
-            <Users className="w-4 h-4 md:w-5 md:h-5 opacity-50" />
-            <span className="text-sm md:text-base">2 Personen</span>
-          </div>
-        </div>
-      </div>
-
-      <button
-        className="w-full py-3 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-lg transition-transform active:scale-[0.98] hover:shadow-xl hover:scale-105"
-        style={{
-          // Rückfall auf die Markenfarbe wie an den anderen beiden Stellen
-          // (Zeile 504). Ohne ihn wäre dieser Knopf durchsichtig, seit der
-          // Server keine Ersatzfarbe mehr unterschiebt.
-          backgroundColor:
-            features.reservationButtonColor || design.primaryColor,
-          color: features.reservationButtonTextColor || "#FFFFFF",
-          borderRadius:
-            features.reservationButtonShape === "pill"
-              ? "9999px"
-              : features.reservationButtonShape === "square"
-                ? "0.5rem"
-                : "0.75rem",
-        }}
-      >
-        Reservierung anfragen
-      </button>
-
-      <div className="text-center opacity-60 text-xs md:text-sm space-y-1">
-        <p>Sie erhalten eine Bestätigung per E-Mail</p>
-        <p className="flex items-center justify-center gap-1">
-          <Phone className="w-3 h-3 md:w-4 md:h-4" />
-          Oder rufen Sie uns an
-        </p>
-      </div>
-    </div>
+      <ReservationClassicForm
+        primaryColor={design.primaryColor}
+        fontColor={design.fontColor}
+        buttonColor={features.reservationButtonColor || design.primaryColor}
+        buttonTextColor={features.reservationButtonTextColor || "#FFFFFF"}
+        buttonShape={(features.reservationButtonShape as any) || "rounded"}
+        titleStyle={styles.titleStyle}
+      />
     );
   };
 
