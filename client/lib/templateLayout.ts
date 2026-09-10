@@ -10,10 +10,15 @@
  * gleich aussehen muss, steht hier — und nur hier. Wer einen Wert ändert,
  * ändert Vorschau und Live-Seite gemeinsam; das ist der ganze Zweck.
  *
- * `eigen: true` heißt: das Template bringt eigene Listen-, Hero-, Kopf- und
- * Filterformen mit (DishList, Hero, Navigation, CategoryFilter lesen sie).
- * Die fünf Bestands-Templates bleiben bei `eigen: false` und rendern exakt
- * wie bisher — keine Zeile ihres Markups hängt an dieser Datei.
+ * `eigen: true` heißt: das Template bringt eigene Papierformen mit —
+ * Punktlinie, Register, Rahmenkasten. `eigen: false` ist die Kachel-Optik
+ * der Bestands-Templates (minimalist, modern, stylish, cozy, nocturne,
+ * riviera, verde). Beide gehen durch DIESELBEN Komponenten (DishList,
+ * DishCard, Hero, Navigation, CategoryFilter, ReservationCta); `eigen`
+ * wählt nur die Form, nicht den Codepfad. Vorher hatte der Bestand eigene
+ * Codepfade in Vorschau UND Live-Seite, und die wichen voneinander ab:
+ * Bilder nur im Konfigurator, Kategorien einmal gepflegt und einmal aus den
+ * Gerichten abgeleitet, zwei verschiedene Reservieren-Knöpfe.
  */
 import type { MenuItem, OpeningHours } from "@/types/domain";
 import { typLabel } from "./heroFallback";
@@ -44,9 +49,14 @@ export interface TemplateLayout {
   /** Wie viele Gerichte die Startseite als Highlights zeigt. */
   highlights: number;
   /** Anordnung der Gerichte. */
-  raster: "liste" | "kacheln2";
+  raster: "gestapelt" | "liste" | "kacheln2";
   /** Form der Kategorie-Überschrift. */
-  ueberschrift: "kapitaelchen" | "kursivLinie" | "registerLeiste" | "zettelLeiste";
+  ueberschrift:
+    | "unterstrichen"
+    | "kapitaelchen"
+    | "kursivLinie"
+    | "registerLeiste"
+    | "zettelLeiste";
   /** Hero der Startseite. */
   hero: "standard" | "presse" | "kiosk" | "izakaya" | "morgen";
   /** Kopfzeile. */
@@ -59,7 +69,12 @@ export interface TemplateLayout {
   linie: "haar" | "kraeftig";
   /** Letztes Wort der Hero-Überschrift kursiv setzen (gesetzte Karte). */
   kursivesLetztesWort: boolean;
-  /** Bilder an den Gerichten zeigen? (Bestand: Vorschau ja, Live nein) */
+  /**
+   * Bilder an den Gerichten zeigen? Die Papierformen tragen keine (presse,
+   * kiosk, morgen), Kachel und Zettel schon. Der Betreiber kann sie über
+   * content.homepageDishImageVisibility ganz abschalten — beides zusammen
+   * beantwortet `zeigeBilder`, und zwar für Vorschau und Live-Seite gleich.
+   */
   bilder: "kein" | "kachel";
   schrift: TemplateSchrift;
 }
@@ -84,8 +99,8 @@ const STANDARD: TemplateLayout = {
   nummeriert: false,
   preis: "euro",
   highlights: 3,
-  raster: "liste",
-  ueberschrift: "kapitaelchen",
+  raster: "gestapelt",
+  ueberschrift: "unterstrichen",
   hero: "standard",
   nav: "standard",
   filter: "chips",
@@ -222,6 +237,23 @@ export function templateSchriftFuer(
   if (k === "serif") return s.serif;
   if (k === "monospace" || k === "mono") return s.monospace;
   return s.sans;
+}
+
+/**
+ * Zeigt dieses Template Bilder an den Gerichten? EINE Regel für Vorschau und
+ * veröffentlichte Seite. Vorher gab die Vorschau der Speisekarte
+ * `showImage={true}` mit und die Live-Seite nie: Der Betreiber lud Fotos hoch,
+ * sah sie im Konfigurator und seine Gäste bekamen eine Karte ohne Bilder.
+ *
+ * `sichtbarkeit` ist content.homepageDishImageVisibility — „hidden“ schaltet
+ * die Bilder überall ab, jeder andere Wert (Vorgabe „visible“) lässt sie zu.
+ */
+export function zeigeBilder(
+  template: string | null | undefined,
+  sichtbarkeit?: string | null,
+): boolean {
+  if (getTemplateLayout(template).bilder !== "kachel") return false;
+  return String(sichtbarkeit ?? "visible").trim().toLowerCase() !== "hidden";
 }
 
 // ---------------------------------------------------------------------------

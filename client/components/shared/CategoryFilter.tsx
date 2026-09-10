@@ -9,7 +9,8 @@
  *
  * Templates mit eigenem Layout (templateLayout.ts) bekommen statt der
  * Pillen Reiter mit Unterstrich (presse, morgen) oder eckige Marken
- * (kiosk, izakaya). Bestands-Templates rendern unverändert.
+ * (kiosk, izakaya). Der Bestand behält seine Pillen („chips“); die Liste der
+ * Kategorien kommt jetzt in beiden Renderern aus kategorienReihenfolge.
  */
 
 import React, { memo, useRef, useEffect, useState } from "react";
@@ -197,7 +198,7 @@ export const CategoryFilter = memo(function CategoryFilter({
       className={`${containerKlasse} ${className}`}
       role="tablist"
       aria-label="Kategorien filtern"
-      data-filter-variant={layout.eigen ? variante : undefined}
+      data-filter-variant={variante}
       style={{
         ...containerStyle,
         // Smooth scroll

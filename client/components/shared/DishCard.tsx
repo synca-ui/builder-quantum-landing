@@ -10,7 +10,8 @@
  * Templates mit eigenem Layout (templateLayout.ts) rendern hier eigene
  * Zeilenformen: Punktlinie zum Preis (presse), numeriertes Register (kiosk),
  * Rahmenkasten (izakaya), Linienzeile (morgen). Die Bestands-Templates
- * laufen unverändert durch das Kachel-Markup weiter unten.
+ * behalten das Kachel-Markup weiter unten — beide Formen bekommen Vorschau
+ * und Live-Seite jetzt aber über dieselbe DishList mit denselben Props.
  *
  * Wird verwendet in:
  * - TemplatePreviewContent.tsx (Editor)
@@ -24,7 +25,9 @@ import type { MenuItem } from "@/types/domain";
 import {
   formatPreis,
   getTemplateLayout,
+  kategorieVon,
   laufendeNummer,
+  OHNE_KATEGORIE,
   textAufFarbe,
 } from "@/lib/templateLayout";
 
@@ -409,7 +412,10 @@ export const DishCard = memo(function DishCard({
   }
 
   // ==========================================
-  // Bestands-Templates (Kachel / minimalistische Zeile) — unverändert
+  // Bestands-Templates: Kachel bzw. minimalistische Zeile. Die Form ist die
+  // bisherige; neu ist nur, dass Vorschau UND Live-Seite sie mit denselben
+  // Props aufrufen (DishList) — vorher gab die Vorschau `showImage` mit und
+  // die veröffentlichte Seite nicht.
   // ==========================================
   return (
     <article
@@ -472,8 +478,12 @@ export const DishCard = memo(function DishCard({
             </p>
           )}
 
-          {/* Category Badge (optional) */}
-          {item.category && !isMinimalist && (
+          {/* Rubrik-Marke. Die Sammelrubrik bleibt stumm: normalizeConfig
+              schreibt Gerichten ohne Kategorie live „Sonstiges“ ins Feld, der
+              Konfigurator-Store lässt es leer — eine Marke, die nur die
+              veröffentlichte Seite trägt, ist genau die Abweichung, die hier
+              verschwinden soll. */}
+          {kategorieVon(item) !== OHNE_KATEGORIE && !isMinimalist && (
             <span
               className="inline-block mt-2 px-2 py-0.5 text-[10px] font-medium opacity-60"
               style={{
@@ -481,7 +491,7 @@ export const DishCard = memo(function DishCard({
                 borderRadius: "var(--radius-button, 4px)",
               }}
             >
-              {item.category}
+              {kategorieVon(item)}
             </span>
           )}
         </div>

@@ -17,7 +17,6 @@ import {
   Mail,
   Clock,
   Camera,
-  ArrowRight,
   Calendar,
   Users,
   CalendarCheck,
@@ -36,12 +35,10 @@ import {
 import { WEEKDAY_LABELS } from "@/lib/weekdays";
 import { isFeatureDeliverable } from "@/lib/featureAvailability";
 import { fontClassFor } from "@/lib/fontClass";
-import { heroTitel, heroUntertitel } from "@/lib/heroFallback";
 
 // Shared Components - werden im Editor UND auf der Live-Seite verwendet
 import { Navigation } from "@/components/shared/Navigation";
 import { MenuOverlay } from "@/components/shared/MenuOverlay";
-import { DishCard } from "@/components/shared/DishCard";
 import { DishList } from "@/components/shared/DishList";
 import { Hero } from "@/components/shared/Hero";
 import { ReservationCta } from "@/components/shared/ReservationCta";
@@ -121,6 +118,13 @@ export function TemplatePreviewContent() {
    * unten argumentiert: Vorschau und Seite muessen identisch rendern.
    */
   const allergenLegend = useConfiguratorStore((s) => s.content.allergenLegend);
+  /*
+   * Schalter „Bilder auf der Startseite" — dieselbe Quelle, aus der die
+   * veroeffentlichte Seite liest (content.homepageDishImageVisibility).
+   */
+  const dishImageVisibility = useConfiguratorStore(
+    (s) => (s.content as any).homepageDishImageVisibility,
+  );
   const openingHours =
     useConfiguratorStore((s) => s.content.openingHours) ||
     FALLBACK_OPENING_HOURS;
@@ -178,6 +182,16 @@ export function TemplatePreviewContent() {
     "#FFFFFF";
   const reservationButtonShape =
     useConfiguratorStore((s) => s.features.reservationButtonShape) || "rounded";
+  /*
+   * Fremdes Buchungssystem (OpenTable, Quandoo …): Steht eine Adresse da,
+   * fuehrt der Reservieren-Aufruf dorthin — in der Vorschau wie live.
+   */
+  const reservationUrl = useConfiguratorStore(
+    (s) => (s.features as any).reservationUrl,
+  );
+  const reservationProvider = useConfiguratorStore(
+    (s) => (s.features as any).reservationProvider,
+  );
   const reservationFormStyle = 
     useConfiguratorStore((s) => s.features.reservationFormStyle) || "classic";
   const maxGuests = 
@@ -404,96 +418,56 @@ export function TemplatePreviewContent() {
         ? menuItems
         : getBusinessTypeDefaults(businessType).menuItems;
 
-    // Reservieren-Aufruf der Papier-Templates — Position wie auf der
-    // Live-Seite (AppRenderer): geteilte Leiste zwischen Hero und Liste,
-    // Block und Textlink unter der Liste.
-    const eigenerCta =
-      reservationsEnabled && layout.eigen ? (
-        <ReservationCta
-          template={template}
-          primaryColor={primaryColor}
-          fontColor={fontColor}
-          backgroundColor={backgroundColor}
-          buttonColor={reservationButtonColor}
-          buttonTextColor={reservationButtonTextColor}
-          onReservation={() => navigateToPage("reservations")}
-          onMenu={() => navigateToPage("menu")}
-        />
-      ) : null;
+    // Reservieren-Aufruf, für jedes Template aus derselben Komponente —
+    // Position wie auf der Live-Seite (AppRenderer): geteilte Leiste zwischen
+    // Hero und Liste, Block, Textlink und der gefüllte Knopf des Bestands
+    // unter der Liste.
+    const reservieren = reservationsEnabled ? (
+      <ReservationCta
+        template={template}
+        primaryColor={primaryColor}
+        fontColor={fontColor}
+        backgroundColor={backgroundColor}
+        buttonColor={reservationButtonColor}
+        buttonTextColor={reservationButtonTextColor}
+        buttonShape={reservationButtonShape as "rounded" | "pill" | "square"}
+        reservationUrl={reservationUrl}
+        reservationProvider={reservationProvider}
+        onReservation={() => navigateToPage("reservations")}
+        onMenu={() => navigateToPage("menu")}
+      />
+    ) : null;
 
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Hero Section — Templates mit eigenem Layout nutzen dieselbe
-            Hero-Komponente wie die Live-Seite (AppRenderer). */}
-        {layout.eigen ? (
-          <Hero
-            slogan={slogan && slogan.trim() !== "" ? slogan : undefined}
-            description={uniqueDescription || undefined}
-            businessName={businessName}
-            businessType={businessType}
-            location={location}
-            primaryColor={primaryColor}
-            fontColor={fontColor}
-            backgroundColor={backgroundColor}
-            secondaryColor={secondaryColor}
-            template={template}
-            bandImage={gallery[0]?.url ?? null}
-            kicker={heroKicker(
-              template,
-              businessType,
-              openingHours,
-              undefined,
-              uniqueDescription,
-            )}
-            onlineOrdering={onlineOrdering}
-            onOrderClick={() => navigateToPage("menu")}
-            isPreview={true}
-          />
-        ) : (
-        <div className="text-center px-2 flex flex-col items-center">
-          {/* Rückfalltexte aus heroFallback.ts — dieselben wie auf der
-              veröffentlichten Seite (Hero.tsx), sonst verspricht die
-              Vorschau etwas anderes, als live steht. */}
-          <h1 className={styles.titleClass} style={{ color: fontColor }}>
-            {heroTitel(slogan, businessName)}
-          </h1>
-          {(() => {
-            const untertitel = heroUntertitel(
-              uniqueDescription,
-              businessType,
-              location,
-            );
-            if (!untertitel) return null;
-            return (
-              <p
-                className={`${styles.bodyClass} max-w-[90%] text-center`}
-                style={{ color: fontColor }}
-              >
-                {untertitel}
-              </p>
-            );
-          })()}
-
-          {onlineOrdering && (
-            <div className="mt-4 w-full px-4">
-              <button
-                className="w-full py-3 px-6 font-bold text-base shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
-                style={{
-                  backgroundColor: primaryColor,
-                  borderRadius: "var(--radius-button, 9999px)",
-                  boxShadow:
-                    "var(--shadow-button, 0 4px 14px rgba(0,0,0,0.15))",
-                }}
-                onClick={() => navigateToPage("menu")}
-              >
-                Jetzt bestellen
-              </button>
-            </div>
+        {/* Hero — dieselbe Komponente wie die Live-Seite (AppRenderer).
+            Vorher rendete die Vorschau für die Bestands-Templates eigenes
+            Inline-Markup mit anderen Größen und Abständen. */}
+        <Hero
+          slogan={slogan && slogan.trim() !== "" ? slogan : undefined}
+          description={uniqueDescription || undefined}
+          businessName={businessName}
+          businessType={businessType}
+          location={location}
+          primaryColor={primaryColor}
+          fontColor={fontColor}
+          backgroundColor={backgroundColor}
+          secondaryColor={secondaryColor}
+          template={template}
+          bandImage={gallery[0]?.url ?? null}
+          kicker={heroKicker(
+            template,
+            businessType,
+            openingHours,
+            undefined,
+            uniqueDescription,
           )}
-        </div>
-        )}
+          onlineOrdering={onlineOrdering}
+          onOrderClick={() => navigateToPage("menu")}
+          isPreview={true}
+        />
 
-        {layout.cta === "geteilt" && eigenerCta}
+        {layout.cta === "geteilt" && reservieren}
 
         {/* Angebots-Banner — geteilt mit der Live-Seite */}
         <OfferBanner
@@ -502,107 +476,28 @@ export function TemplatePreviewContent() {
           onShowOffers={() => navigateToPage("offers")}
         />
 
-        {/* Highlights Section - nutzt DishCard Shared Component.
-            Templates mit eigenem Layout: geteilte DishList, identisch mit der
-            Live-Seite (templateLayout.ts). */}
-        <div>
-          {layout.eigen ? (
-            <DishList
-              template={template}
-              modus="highlights"
-              alle={displayItems}
-              anzeigen={waehleHighlights(displayItems, layout.highlights)}
-              categories={kategorien}
-              onAlle={() => navigateToPage("menu")}
-              fontColor={fontColor}
-              priceColor={priceColor}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-              backgroundColor={backgroundColor}
-              onlineOrdering={onlineOrdering}
-              onItemClick={openDishModal}
-              onAddToCart={addToCart}
-              isPreview={true}
-            />
-          ) : (
-          <>
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h3
-              className="uppercase tracking-widest font-bold opacity-60 text-[10px]"
-              style={{ color: fontColor }}
-            >
-              Highlights
-            </h3>
-            <span
-              className="text-[10px] font-bold opacity-60 cursor-pointer hover:opacity-100 flex items-center gap-1"
-              onClick={() => navigateToPage("menu")}
-            >
-              Alle <ArrowRight className="w-3 h-3" />
-            </span>
-          </div>
+        {/* Highlights — geteilte DishList, identisch mit der Live-Seite
+            (AppRenderer, templateLayout.ts). */}
+        <DishList
+          template={template}
+          modus="highlights"
+          alle={displayItems}
+          anzeigen={waehleHighlights(displayItems, layout.highlights)}
+          categories={kategorien}
+          bildSichtbarkeit={dishImageVisibility}
+          onAlle={() => navigateToPage("menu")}
+          fontColor={fontColor}
+          priceColor={priceColor}
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
+          backgroundColor={backgroundColor}
+          onlineOrdering={onlineOrdering}
+          onItemClick={openDishModal}
+          onAddToCart={addToCart}
+          isPreview={true}
+        />
 
-          <div className="space-y-3">
-            {(() => {
-              // ✅ Smart Highlight-Logik: Zeige markierte Highlights, fülle mit zufälligen auf
-              const selectedHighlights = displayItems.filter(
-                (item: MenuItem) => (item as any).isHighlight,
-              );
-
-              const remainingSlots = Math.max(0, 3 - selectedHighlights.length);
-
-              // Auffüller in Menü-Reihenfolge. Früher stand hier ein
-              // .sort(() => 0.5 - Math.random()) – das lief bei JEDEM Render
-              // neu und ließ die Gerichte in der Vorschau bei jeder Eingabe
-              // die Plätze tauschen. In einer Live-Vorschau soll stehen, was
-              // der Nutzer konfiguriert hat, nicht bei jedem Frame etwas
-              // anderes.
-              const filler = displayItems
-                .filter((item: MenuItem) => !(item as any).isHighlight)
-                .slice(0, remainingSlots);
-
-              // Kombiniere und limitiere auf 3
-              const highlightsToShow = [...selectedHighlights, ...filler].slice(
-                0,
-                3,
-              );
-
-              return highlightsToShow.map((item: MenuItem, i: number) => (
-                <DishCard
-                  key={item.id || i}
-                  item={item}
-                  fontColor={fontColor}
-                  priceColor={priceColor}
-                  primaryColor={primaryColor}
-                  backgroundColor={backgroundColor}
-                  template={template}
-                  onlineOrdering={onlineOrdering}
-                  onClick={() => openDishModal(item)}
-                  onAddToCart={addToCart}
-                  isPreview={true}
-                />
-              ));
-            })()}
-          </div>
-          </>
-          )}
-
-          {/* Reservation Button - Dynamic Component */}
-          {reservationsEnabled && !layout.eigen && (
-            <div className="mt-8 w-full px-4">
-              <ReservationButton
-                color={reservationButtonColor}
-                textColor={reservationButtonTextColor}
-                shape={reservationButtonShape as "rounded" | "pill" | "square"}
-                className="w-full shadow-lg"
-                onClick={() => navigateToPage("reservations")}
-              >
-                Tisch reservieren
-              </ReservationButton>
-            </div>
-          )}
-        </div>
-
-        {layout.cta !== "geteilt" && eigenerCta}
+        {layout.cta !== "geteilt" && reservieren}
 
         {/* Opening Hours - nutzt OpeningHours Shared Component */}
         <OpeningHours
@@ -616,14 +511,10 @@ export function TemplatePreviewContent() {
 
   // ✅ ORIGINAL MENU PAGE (Fallback)
   const renderMenuPage = () => {
-    // Papier-Templates: Rubrik über dieselbe Regel wie Reiter und Gruppen
-    // (kategorieVon — Gerichte ohne Kategorie unter „Sonstiges“), wie live.
+    // Rubrik über dieselbe Regel wie Reiter und Gruppen (kategorieVon —
+    // Gerichte ohne Kategorie unter „Sonstiges“), wie live.
     const filteredItems = activeMenuCategory
-      ? menuItems.filter(
-          (item) =>
-            (layout.eigen ? kategorieVon(item) : item.category) ===
-            activeMenuCategory,
-        )
+      ? menuItems.filter((item) => kategorieVon(item) === activeMenuCategory)
       : menuItems;
 
     return (
@@ -632,10 +523,10 @@ export function TemplatePreviewContent() {
         <h2 className={styles.titleClass} style={styles.titleStyle}>Speisekarte</h2>
 
         {/* Category Filter - NUR wenn Kategorien existieren */}
-        {(layout.eigen ? kategorien : categories).length > 0 && (
+        {kategorien.length > 0 && (
           <div className="sticky top-0 z-20 pb-4 -mx-4 px-4">
             <CategoryFilter
-              categories={layout.eigen ? kategorien : categories}
+              categories={kategorien}
               activeCategory={activeMenuCategory}
               onCategoryChange={(category) => {
                 console.log("[MenuPage] Category changed:", category);
@@ -652,15 +543,17 @@ export function TemplatePreviewContent() {
           </div>
         )}
 
-        {/* Menu Items List — Templates mit eigenem Layout: geteilte DishList,
-            identisch mit der Live-Seite (AppRenderer, templateLayout.ts). */}
-        {layout.eigen && filteredItems.length > 0 ? (
+        {/* Speisekarte — geteilte DishList, identisch mit der Live-Seite
+            (AppRenderer, templateLayout.ts). Ohne aktiven Filter nach
+            Kategorie gruppiert. */}
+        {filteredItems.length > 0 ? (
           <DishList
             template={template}
             modus="karte"
             alle={menuItems}
             anzeigen={filteredItems}
             categories={kategorien}
+            bildSichtbarkeit={dishImageVisibility}
             gruppieren={!activeMenuCategory}
             fontColor={fontColor}
             priceColor={priceColor}
@@ -674,93 +567,30 @@ export function TemplatePreviewContent() {
             className="pb-4"
           />
         ) : (
-        <div className="space-y-3">
-          {filteredItems.length > 0 ? (
-            <>
-              {/* Items nach Kategorie gruppieren (optional) */}
-              {!activeMenuCategory && categories.length > 0
-                ? // Gruppierte Ansicht wenn "Alle" ausgewählt
-                categories.map((category) => {
-                  const categoryItems = menuItems.filter(
-                    (item) => item.category === category,
-                  );
-                  if (categoryItems.length === 0) return null;
-
-                  return (
-                    <div key={category} className="space-y-3">
-                      <h3
-                        className="text-lg font-bold mt-6 mb-3 pb-2 border-b"
-                        style={{
-                          color: fontColor,
-                          borderColor: `${fontColor}20`,
-                        }}
-                      >
-                        {category}
-                      </h3>
-                      {categoryItems.map((item) => (
-                        <DishCard
-                          key={item.id}
-                          item={item}
-                          fontColor={fontColor}
-                          priceColor={priceColor}
-                          primaryColor={primaryColor}
-                          backgroundColor={backgroundColor}
-                          template={template}
-                          onlineOrdering={onlineOrdering}
-                          showImage={true}
-                          onClick={() => openDishModal(item)}
-                          onAddToCart={addToCart}
-                          isPreview={true}
-                        />
-                      ))}
-                    </div>
-                  );
-                })
-                : // Flache Liste wenn Kategorie ausgewählt
-                filteredItems.map((item) => (
-                  <DishCard
-                    key={item.id}
-                    item={item}
-                    fontColor={fontColor}
-                    priceColor={priceColor}
-                    primaryColor={primaryColor}
-                    backgroundColor={backgroundColor}
-                    template={template}
-                    onlineOrdering={onlineOrdering}
-                    showImage={true}
-                    onClick={() => openDishModal(item)}
-                    onAddToCart={addToCart}
-                    isPreview={true}
-                  />
-                ))}
-            </>
-          ) : (
-            // Empty State
-            <div className="text-center py-16 opacity-50">
-              <div className="text-5xl mb-4">🍽️</div>
-              <p
-                className="text-base font-medium mb-2"
-                style={{ color: fontColor }}
+          // Leerzustand
+          <div className="text-center py-16 opacity-50">
+            <div className="text-5xl mb-4">🍽️</div>
+            <p
+              className="text-base font-medium mb-2"
+              style={{ color: fontColor }}
+            >
+              {activeMenuCategory
+                ? `Keine Gerichte in "${activeMenuCategory}"`
+                : "Noch keine Gerichte hinzugefügt"}
+            </p>
+            {activeMenuCategory && (
+              <button
+                onClick={() => setActiveMenuCategory(null)}
+                className="mt-4 px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                style={{
+                  borderColor: `${fontColor}30`,
+                  color: fontColor,
+                }}
               >
-                {activeMenuCategory
-                  ? `Keine Gerichte in "${activeMenuCategory}"`
-                  : "Noch keine Gerichte hinzugefügt"}
-              </p>
-              {activeMenuCategory && (
-                <button
-                  onClick={() => setActiveMenuCategory(null)}
-                  className="mt-4 px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                  style={{
-                    borderColor: `${fontColor}30`,
-                    color: fontColor,
-                  }}
-                >
-                  Alle anzeigen
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+                Alle anzeigen
+              </button>
+            )}
+          </div>
         )}
 
         {/* Item Count Info */}
