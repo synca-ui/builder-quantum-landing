@@ -760,6 +760,9 @@ export function TemplatePreviewContent() {
     // Klassische Seite — geteilt mit der Live-Seite (ReservationClassicForm).
     return (
       <ReservationClassicForm
+        previewSlots={timeSlots}
+        previewOpeningHours={openingHours as any}
+        maxGuests={maxGuests}
         primaryColor={primaryColor}
         fontColor={fontColor}
         buttonColor={reservationButtonColor || primaryColor}

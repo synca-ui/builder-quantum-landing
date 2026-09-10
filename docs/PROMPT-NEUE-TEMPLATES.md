@@ -79,8 +79,9 @@ Farbe verstellen, und Text auf dunkler Sekundärfläche weicht dann auf Weiß
 aus. `flaechenKontrast.test.tsx` prüft das mit Navy als Sekundärfarbe.
 
 **Reservierungsseite:** Der klassische Auftritt liegt in
-`client/components/shared/ReservationClassicForm.tsx`, das buchende
-„modern“-Formular in `ReservationFormModern.tsx`; beide lesen Rundungen aus
+`client/components/shared/ReservationClassicForm.tsx` und bucht seit dem
+10.09. über dieselbe Route wie das „modern“-Formular in
+`ReservationFormModern.tsx`; beide lesen Rundungen aus
 den Design-Tokens (`--radius-card`, `--radius-input`) und die Knopfform aus
 dem Reservierungs-Schritt. Der Paritätstest vergleicht auch diese Seite.
 

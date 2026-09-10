@@ -259,11 +259,15 @@ describe.each(TEMPLATE_IDS)("Template '%s': Vorschau = Live", (template) => {
     const vorschau = render(<TemplatePreviewContent />);
     fireEvent.click(live.container.querySelector("[data-reservation-cta]")!);
     fireEvent.click(vorschau.container.querySelector("[data-reservation-cta]")!);
-    const l = html(live.container, "[data-reservation-form]");
+    // Die Zeitfenster sind Daten, keine Form: live kommen sie vom Server
+    // (hier ohne Konfiguration keine), in der Vorschau aus dem Store. Alles
+    // andere am Formular muss Zeichen für Zeichen gleich sein.
+    const ohneZeiten = (h: string | null) => h?.replace(/<option[^>]*>[^<]*<\/option>/g, "") ?? null;
+    const l = ohneZeiten(html(live.container, "[data-reservation-form]"));
     expect(l, "Reservierungsformular fehlt auf der Live-Seite").not.toBeNull();
-    expect(html(vorschau.container, "[data-reservation-form]")).toBe(l);
+    expect(ohneZeiten(html(vorschau.container, "[data-reservation-form]"))).toBe(l);
     // Knopfform des Templates kommt an: eckig heißt 0 px, Pille 9999 px.
-    const knopf = live.container.querySelector("[data-reservation-form] button") as HTMLElement;
+    const knopf = live.container.querySelector('[data-reservation-form] button[type="submit"]') as HTMLElement;
     const form = getTemplateButtonShape(template);
     if (form === "square") expect(knopf.style.borderRadius).toBe("0px");
     if (form === "pill") expect(knopf.style.borderRadius).toBe("9999px");

@@ -754,6 +754,8 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
     // und fester Rundung; der Paritätstest vergleicht die Seite jetzt mit.
     return (
       <ReservationClassicForm
+        configId={(rawConfig as any).id || ""}
+        maxGuests={features.maxGuests}
         primaryColor={design.primaryColor}
         fontColor={design.fontColor}
         buttonColor={features.reservationButtonColor || design.primaryColor}
