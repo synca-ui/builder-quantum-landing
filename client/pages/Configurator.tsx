@@ -400,7 +400,7 @@ export default function Configurator() {
   // State (aktive Seite, Warenkorb, Scrollposition) zurück.
   const renderLivePreview = () => (
     <div className="flex flex-col items-center justify-start pt-2">
-      <div className="w-[280px] xl:w-[320px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
+      <div className="w-[280px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
@@ -411,10 +411,11 @@ export default function Configurator() {
       </div>
 
       <div
-        className={`relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-all duration-100 pointer-events-auto ${
-          isTransitioning
-            ? "opacity-90 scale-[0.745] xl:scale-[0.845]"
-            : "opacity-100"
+        // Der Rahmen ist 360 × 740 px und wird auf 75 % verkleinert — auf
+        // allen Fensterbreiten gleich. Vorher sprang er ab 1280 px auf 85 %
+        // und wirkte auf großen Bildschirmen zu dominant.
+        className={`relative z-10 transform origin-top scale-[0.75] transition-all duration-100 pointer-events-auto ${
+          isTransitioning ? "opacity-90 scale-[0.745]" : "opacity-100"
         }`}
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/10 to-purple-500/10 blur-3xl rounded-full opacity-30 -z-10" />
@@ -436,7 +437,7 @@ export default function Configurator() {
         </LivePhoneFrame>
       </div>
 
-      <div className="mt-[-80px] xl:mt-[-40px] text-center opacity-60 shrink-0">
+      <div className="mt-[-80px] text-center opacity-60 shrink-0">
         <p className="text-[10px] text-gray-400 font-medium">
           {t("nav.interactive")}
         </p>
