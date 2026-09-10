@@ -2,8 +2,11 @@
  * Shared ReservationCta Component
  *
  * Reservieren-Aufruf der Startseite — für ALLE Templates (templateLayout.ts):
- * geteilte Leiste (presse, kiosk), voller Block (izakaya), Textlink (morgen)
- * und der gefüllte Knopf mit Kalenderzeichen für den Bestand („standard“).
+ * geteilte Leiste (presse, kiosk, roesterei, markt), voller Block (izakaya),
+ * Textlink (morgen), Pille (vitrine, gelato, aperitivo), Rahmen (brauhaus,
+ * ramen, hofladen), Schild mit Schlagschatten (imbiss), Zierlinie
+ * (konditorei) und der gefüllte Knopf mit Kalenderzeichen für den Bestand
+ * („standard“).
  * Vorher hatten Vorschau und Live-Seite für den Bestand zwei verschiedene
  * eigene Knöpfe: die Vorschau den ReservationButton (eckige Form = keine
  * Rundung), die Live-Seite einen eigenen Block (eckige Form = 0,5 rem) ohne
@@ -19,7 +22,7 @@
  */
 
 import React, { memo } from "react";
-import { getTemplateLayout } from "@/lib/templateLayout";
+import { getTemplateLayout, textAufFarbe } from "@/lib/templateLayout";
 import {
   reservationButtonKlassen,
   ReservationButtonInhalt,
@@ -77,7 +80,9 @@ export const ReservationCta = memo(function ReservationCta({
   const linie =
     layout.linie === "kraeftig"
       ? `2px solid ${fontColor}`
-      : `1px solid ${fontColor}40`;
+      : layout.linie === "gestrichelt"
+        ? `1px dashed ${fontColor}80`
+        : `1px solid ${fontColor}40`;
   const caps =
     "uppercase tracking-[0.2em] text-[11px] font-bold whitespace-nowrap";
 
@@ -185,6 +190,89 @@ export const ReservationCta = memo(function ReservationCta({
           { color: primaryColor },
         )}
         {anbieter}
+      </div>
+    );
+  }
+
+  // ---- Zweite Runde ----
+
+  // rund: volle Pille in der Knopffarbe (vitrine, gelato, aperitivo).
+  if (layout.cta === "rund") {
+    const fuellung = buttonColor || primaryColor;
+    return (
+      <div className={className} data-template-cta={template}>
+        {aktion(
+          <>
+            <span>{LABEL}</span>
+            <span aria-hidden>→</span>
+          </>,
+          "w-full flex items-center justify-center gap-2 px-4 py-3.5 text-[14px] font-bold rounded-full transition-opacity hover:opacity-90 active:opacity-80",
+          {
+            backgroundColor: fuellung,
+            color: buttonTextColor || textAufFarbe(fuellung),
+          },
+        )}
+        {anbieter}
+      </div>
+    );
+  }
+
+  // rahmen: umrandeter Knopf in der Textfarbe — kräftig (brauhaus), Haarlinie
+  // (ramen) oder gestrichelt (hofladen) folgt der Linienstärke des Templates.
+  if (layout.cta === "rahmen") {
+    return (
+      <div className={className} data-template-cta={template}>
+        {aktion(
+          LABEL,
+          `w-full flex items-center justify-center px-4 py-3.5 ${caps} transition-opacity hover:opacity-80`,
+          {
+            border: linie,
+            color: fontColor,
+            borderRadius: "var(--radius-button, 0px)",
+          },
+        )}
+        {anbieter}
+      </div>
+    );
+  }
+
+  // schild: gefüllter Block mit dickem Rahmen und hartem Schlagschatten (imbiss).
+  if (layout.cta === "schild") {
+    const fuellung = buttonColor || primaryColor;
+    return (
+      <div className={`mr-1.5 mb-1.5 ${className}`} data-template-cta={template}>
+        {aktion(
+          <>
+            <span>{LABEL}</span>
+            <span aria-hidden>→</span>
+          </>,
+          `w-full flex items-center justify-between px-4 py-4 ${caps} transition-transform active:translate-x-0.5 active:translate-y-0.5`,
+          {
+            backgroundColor: fuellung,
+            color: buttonTextColor || textAufFarbe(fuellung),
+            border: `3px solid ${fontColor}`,
+            boxShadow: `5px 5px 0 ${fontColor}`,
+          },
+        )}
+        {anbieter}
+      </div>
+    );
+  }
+
+  // zierlinie: Textlink auf der Mittelachse zwischen zwei Haarlinien (konditorei).
+  if (layout.cta === "zierlinie") {
+    return (
+      <div className={className} data-template-cta={template}>
+        <div className="flex items-center gap-4">
+          <span aria-hidden className="flex-1 h-px" style={{ backgroundColor: fontColor, opacity: 0.25 }} />
+          {aktion(
+            LABEL,
+            `${caps} hover:opacity-80`,
+            { color: primaryColor },
+          )}
+          <span aria-hidden className="flex-1 h-px" style={{ backgroundColor: fontColor, opacity: 0.25 }} />
+        </div>
+        {anbieter && <div className="text-center">{anbieter}</div>}
       </div>
     );
   }

@@ -7,6 +7,11 @@
  *
  * WICHTIG: Keine harten Tailwind-Klassen für Rundungen/Schatten!
  * Nutzt CSS-Variablen aus styleInjector.ts
+ *
+ * Kopfzeilen-Varianten kommen aus templateLayout.ts (`nav`): Doppellinie,
+ * Versalien, Stempel, Serife für die Papier-Templates — Fett, Pille, Balken,
+ * Siegel, Schild, Mitte, Mono, Streifen, Kreis, Gestrichelt für die zweite
+ * Runde. „standard“ ist die Kachel-Kopfzeile des Bestands.
  */
 
 import React, { memo } from "react";
@@ -20,7 +25,7 @@ import {
   Store,
   LayoutGrid,
 } from "lucide-react";
-import { getTemplateLayout } from "@/lib/templateLayout";
+import { getTemplateLayout, initiale, textAufFarbe } from "@/lib/templateLayout";
 
 // ============================================
 // TYPES
@@ -63,7 +68,7 @@ export interface NavigationProps {
   backgroundColor?: string;
   /** Template-ID für Kopfzeilen-Varianten (templateLayout.ts) */
   template?: string;
-  /** Akzentfarbe („Menü“-Label, Stempel-Logo) — Primärfarbe des Designs */
+  /** Akzentfarbe („Menü“-Label, Stempel-Logo, Streifen) — Primärfarbe des Designs */
   accentColor?: string;
 }
 
@@ -116,25 +121,81 @@ export const Navigation = memo(function Navigation({
   // Paritätstest Vorschau und Live-Seite überall vergleichen kann.
   const variante = getTemplateLayout(template).nav;
   const eigen = variante !== "standard";
-  const display = eigen ? { fontFamily: "var(--font-template-display)" } : {};
-  const unterkante: React.CSSProperties =
-    variante === "doppellinie"
-      ? { borderBottom: `3px double ${headerFontColor}` }
-      : variante === "versal" || variante === "serif"
-        ? { borderBottom: `1px solid ${headerFontColor}` }
-        : variante === "stempel"
-          ? { borderBottom: "none" }
-          : {};
-  const nameKlasse =
-    variante === "versal"
-      ? "uppercase tracking-[0.22em] text-xs font-bold cursor-pointer truncate hover:opacity-80 transition-opacity"
-      : variante === "doppellinie" || variante === "serif"
-        ? `font-medium cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`
-        : variante === "stempel"
-          ? `font-extrabold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`
-          : `font-bold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+  const akzent = accentColor || headerFontColor;
+  const display: React.CSSProperties =
+    variante === "mono"
+      ? { fontFamily: "var(--font-template-mono)" }
+      : eigen
+        ? { fontFamily: "var(--font-template-display)" }
+        : {};
+  const unterkante: React.CSSProperties = (() => {
+    switch (variante) {
+      case "doppellinie":
+        return { borderBottom: `3px double ${headerFontColor}` };
+      case "versal":
+      case "serif":
+        return { borderBottom: `1px solid ${headerFontColor}` };
+      case "stempel":
+      case "fett":
+      case "pille":
+      case "kreis":
+        return { borderBottom: "none" };
+      case "balken":
+      case "schild":
+        return { borderBottom: `3px solid ${headerFontColor}` };
+      case "siegel":
+      case "mitte":
+      case "mono":
+        return { borderBottom: `1px solid ${headerFontColor}26` };
+      case "streifen":
+        return {
+          borderBottom: `1px solid ${headerFontColor}26`,
+          borderTop: `4px solid ${akzent}`,
+        };
+      case "gestrichelt":
+        return { borderBottom: `1px dashed ${headerFontColor}66` };
+      default:
+        return {};
+    }
+  })();
+  const nameKlasse = (() => {
+    switch (variante) {
+      case "versal":
+        return "uppercase tracking-[0.22em] text-xs font-bold cursor-pointer truncate hover:opacity-80 transition-opacity";
+      case "doppellinie":
+      case "serif":
+        return `font-medium cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+      case "stempel":
+        return `font-extrabold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+      case "fett":
+      case "streifen":
+      case "kreis":
+        return `font-extrabold tracking-tight cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+      case "pille":
+        return `font-bold cursor-pointer truncate px-3 py-1 rounded-full ${fontClass} hover:opacity-80 transition-opacity`;
+      case "balken":
+        return "uppercase tracking-[0.12em] text-xs font-bold cursor-pointer truncate hover:opacity-80 transition-opacity";
+      case "schild":
+        return "uppercase tracking-[0.08em] text-[11px] font-bold cursor-pointer truncate hover:opacity-80 transition-opacity";
+      case "mono":
+        return "uppercase tracking-[0.14em] text-xs font-bold cursor-pointer truncate hover:opacity-80 transition-opacity";
+      case "siegel":
+        return `font-medium tracking-tight cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+      case "mitte":
+        return `font-medium cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity absolute left-1/2 -translate-x-1/2 max-w-[55%]`;
+      case "gestrichelt":
+        return `font-medium cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+      default:
+        return `font-bold cursor-pointer truncate ${fontClass} hover:opacity-80 transition-opacity`;
+    }
+  })();
+  const nameStyle: React.CSSProperties =
+    variante === "pille" ? { backgroundColor: `${akzent}1A` } : {};
   const MenuIcon =
-    variante === "versal" || variante === "stempel" ? LayoutGrid : Menu;
+    variante === "versal" || variante === "stempel" || variante === "schild"
+      ? LayoutGrid
+      : Menu;
+  const zeichen = initiale(businessName || "M");
 
   // Im Preview-Modus: Klicks abfangen aber visuell darstellen
   const handleHomeClick = () => {
@@ -172,6 +233,91 @@ export const Navigation = memo(function Navigation({
   };
   // Business-Type Icon
   const BusinessIcon = businessType === "cafe" ? Coffee : Utensils;
+
+  /** Platzhalter links, wenn kein Logo da ist — je nach Kopfzeilen-Form. */
+  const platzhalter = (() => {
+    switch (variante) {
+      // Zettel: Stempelkasten in der Akzentfarbe mit dem Anfangsbuchstaben.
+      case "stempel":
+        return (
+          <div
+            className="w-8 h-8 shrink-0 flex items-center justify-center font-extrabold text-sm"
+            style={{
+              ...display,
+              backgroundColor: accentColor || headerFontColor,
+              color: "#FFFFFF",
+              borderRadius: 0,
+            }}
+            aria-hidden
+          >
+            {(businessName || "M").trim().charAt(0).toUpperCase()}
+          </div>
+        );
+      // Imbissbude: schwarzer Kasten, Buchstabe in der Kopfzeilenfarbe.
+      case "schild":
+        return (
+          <div
+            className="w-8 h-8 shrink-0 flex items-center justify-center font-bold text-sm"
+            style={{
+              ...display,
+              backgroundColor: headerFontColor,
+              color: headerBackgroundColor || backgroundColor,
+              borderRadius: 0,
+            }}
+            aria-hidden
+          >
+            {zeichen}
+          </div>
+        );
+      // Aperitivo: Kreis in der Akzentfarbe.
+      case "kreis":
+        return (
+          <div
+            className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-extrabold text-sm"
+            style={{ ...display, backgroundColor: akzent, color: textAufFarbe(akzent) }}
+            aria-hidden
+          >
+            {zeichen}
+          </div>
+        );
+      // Kaffeehaus: dünner Kreis, Buchstabe in der Serife.
+      case "mitte":
+        return (
+          <div
+            className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-base"
+            style={{ ...display, border: `1px solid ${headerFontColor}`, color: headerFontColor }}
+            aria-hidden
+          >
+            {zeichen}
+          </div>
+        );
+      // Purist: nur ein kleines rotes Quadrat vor dem Namen.
+      case "siegel":
+        return (
+          <span
+            className="w-2 h-2 shrink-0"
+            style={{ backgroundColor: akzent }}
+            aria-hidden
+          />
+        );
+      default:
+        // ✅ FIX: Icon als Placeholder
+        return (
+          <div
+            className="w-8 h-8 shrink-0 flex items-center justify-center transition-all hover:scale-110"
+            style={{
+              backgroundColor: `${headerFontColor}15`,
+              borderRadius: "var(--radius-button, 8px)",
+            }}
+          >
+            <BusinessIcon
+              className="w-4 h-4"
+              style={{ color: headerFontColor }}
+            />
+          </div>
+        );
+    }
+  })();
 
   return (
     <nav
@@ -216,40 +362,14 @@ export const Navigation = memo(function Navigation({
               e.currentTarget.style.display = "none";
             }}
           />
-        ) : variante === "stempel" ? (
-          // Zettel: Stempelkasten in der Akzentfarbe mit dem Anfangsbuchstaben.
-          <div
-            className="w-8 h-8 shrink-0 flex items-center justify-center font-extrabold text-sm"
-            style={{
-              ...display,
-              backgroundColor: accentColor || headerFontColor,
-              color: "#FFFFFF",
-              borderRadius: 0,
-            }}
-            aria-hidden
-          >
-            {(businessName || "M").trim().charAt(0).toUpperCase()}
-          </div>
         ) : (
-          // ✅ FIX: Icon als Placeholder
-          <div
-            className="w-8 h-8 shrink-0 flex items-center justify-center transition-all hover:scale-110"
-            style={{
-              backgroundColor: `${headerFontColor}15`,
-              borderRadius: "var(--radius-button, 8px)",
-            }}
-          >
-            <BusinessIcon
-              className="w-4 h-4"
-              style={{ color: headerFontColor }}
-            />
-          </div>
+          platzhalter
         )}
 
         <span
           className={nameKlasse}
           onClick={handleHomeClick}
-          style={{ ...display, color: headerFontColor }}
+          style={{ ...display, ...nameStyle, color: headerFontColor }}
         >
           {businessName || "Mein Restaurant"}
         </span>
@@ -295,7 +415,7 @@ export const Navigation = memo(function Navigation({
             // Gesetzte Karten schreiben „Menü“ dazu — wie auf dem Aushang.
             <span
               className="text-[10px] uppercase tracking-[0.22em] font-bold"
-              style={{ color: accentColor || headerFontColor }}
+              style={{ ...(variante === "mono" ? display : {}), color: akzent }}
               aria-hidden
             >
               {menuOpen ? "Zu" : "Menü"}

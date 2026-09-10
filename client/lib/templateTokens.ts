@@ -305,6 +305,226 @@ const TEMPLATE_TOKENS: Record<string, TemplateTokens> = {
     },
   },
 
+  // -------------------------------------------------------------------------
+  // Zweite Runde — zehn Templates, jedes für eine andere Art Betrieb. Alle
+  // hell (Produktentscheidung: dunkel stellt sich der Betrieb selbst ein),
+  // alle Kontraste nachgerechnet: Text ≥ 12:1, Preis ≥ 3:1, weiße
+  // Knopfschrift auf der Primärfarbe ≥ 4,5:1 (templateKontrast.test.ts).
+  // -------------------------------------------------------------------------
+
+  /**
+   * "Fotokarte" (vitrine): Bildkacheln in zwei Spalten, Name und Preis
+   * darunter — Küchen, die man zeigen kann. Weiß, Kohle, tiefes Petrol.
+   */
+  vitrine: {
+    colors: {
+      primary: "#0F6E64",
+      secondary: "#E6F0EE",
+      background: "#FFFFFF",
+      text: "#1C1C1E",
+      accent: "#D9A441",
+      border: "#E5E7EB",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "34px", weight: 800, lineHeight: "1.1" },
+      h2: { size: "26px", weight: 700, lineHeight: "1.2" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Eisdiele" (gelato): Pastell und runde Sticker-Karten — Eisdielen,
+   * Familienlokale. Erdbeere auf Vanillecreme, Pistazie als Fläche.
+   */
+  gelato: {
+    colors: {
+      primary: "#C93560",
+      secondary: "#BEE3C9",
+      background: "#FFF8F0",
+      text: "#3B2A2A",
+      accent: "#F9C74F",
+      border: "#F1E0D6",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "36px", weight: 700, lineHeight: "1.05" },
+      h2: { size: "26px", weight: 600, lineHeight: "1.15" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Gasthaus" (brauhaus): Egyptienne, Doppelrahmen, Strichlinien —
+   * Brauhäuser, Landgasthöfe. Kupfer auf gealtertem Papier, Stroh, Hopfen.
+   */
+  brauhaus: {
+    colors: {
+      primary: "#8C4A1F",
+      secondary: "#D8B98A",
+      background: "#F6EFE2",
+      text: "#2B1D12",
+      accent: "#4B6B3A",
+      border: "#C9B99A",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "36px", weight: 700, lineHeight: "1.1" },
+      h2: { size: "26px", weight: 700, lineHeight: "1.2" },
+      body: { size: "16px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
+  /**
+   * "Purist" (ramen): Weißraum, Haarlinien, ein rotes Siegel — Sushi,
+   * Ramen, reduzierte Küchen. Rot trägt nur Siegel, Marker und Knöpfe.
+   */
+  ramen: {
+    colors: {
+      primary: "#C8102E",
+      secondary: "#ECEBE4",
+      background: "#FAFAF7",
+      text: "#171717",
+      accent: "#2F3E46",
+      border: "#E2E1DA",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "36px", weight: 400, lineHeight: "1.1" },
+      h2: { size: "26px", weight: 400, lineHeight: "1.2" },
+      body: { size: "15px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
+  /**
+   * "Imbissbude" (imbiss): Schwarz auf Gelb, dicke Linien, Preis als
+   * Schild — Imbisse, Foodtrucks, Burgerläden. Primär IST die Textfarbe:
+   * Knöpfe und Blöcke sind schwarz, Gelb liegt als Fläche darunter.
+   */
+  imbiss: {
+    colors: {
+      primary: "#111111",
+      secondary: "#FFD23F",
+      background: "#FFFBEA",
+      text: "#111111",
+      accent: "#E63312",
+      border: "#111111",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "14px", lg: "28px", xl: "56px" },
+    typography: {
+      h1: { size: "30px", weight: 800, lineHeight: "1.0" },
+      h2: { size: "22px", weight: 700, lineHeight: "1.1" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Kaffeehaus" (konditorei): Mittelachse, kursive Serife, Zierlinie —
+   * Konditoreien, Patisserien. Himbeere auf Rosé-Creme, Gold als Akzent.
+   */
+  konditorei: {
+    colors: {
+      primary: "#8A3B4A",
+      secondary: "#EBD6D8",
+      background: "#FBF6F3",
+      text: "#3A2A2A",
+      accent: "#B08D57",
+      border: "#E6D6D3",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "44px", weight: 500, lineHeight: "1.05" },
+      h2: { size: "30px", weight: 500, lineHeight: "1.15" },
+      body: { size: "16px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
+  /**
+   * "Rösterei" (roesterei): Monospace-Etiketten mit Nummer und Rubrik,
+   * Highlights als Band — Röstereien, Specialty-Cafés. Sienna auf
+   * ungebleichtem Papier; Preise in der Textfarbe.
+   */
+  roesterei: {
+    colors: {
+      primary: "#B05532",
+      secondary: "#DDD5C7",
+      background: "#F4F1EA",
+      text: "#1F1B16",
+      accent: "#3E5C4B",
+      border: "#D6CFC2",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "30px", weight: 700, lineHeight: "1.1" },
+      h2: { size: "22px", weight: 700, lineHeight: "1.2" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Markthalle" (markt): Preisschild zuerst, dann das Gericht; grüner
+   * Streifen oben — Delis, Mittagstische, Marktstände. Marktgrün auf Weiß.
+   */
+  markt: {
+    colors: {
+      primary: "#1D7A46",
+      secondary: "#EAF3EC",
+      background: "#FFFFFF",
+      text: "#10251A",
+      accent: "#E8A33D",
+      border: "#DCE5DE",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "36px", weight: 800, lineHeight: "1.05" },
+      h2: { size: "26px", weight: 700, lineHeight: "1.15" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Aperitivo" (aperitivo): Koralle und Pfirsich, runde Karten mit
+   * Kreisbild — Cocktailbars bei Tag, Aperitivo-Abende. Preise in Navy,
+   * denn Koralle erreicht auf Pfirsichcreme nur 4,3:1.
+   */
+  aperitivo: {
+    colors: {
+      primary: "#CF4524",
+      secondary: "#FFD5C2",
+      background: "#FFF4EC",
+      text: "#1F2A44",
+      accent: "#1F2A44",
+      border: "#F1DACB",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "38px", weight: 800, lineHeight: "1.0" },
+      h2: { size: "28px", weight: 700, lineHeight: "1.1" },
+      body: { size: "15px", weight: 400, lineHeight: "1.55" },
+    },
+  },
+
+  /**
+   * "Hofcafé" (hofladen): Leinen, Salbei, gestrichelte Karteikarten —
+   * Hofcafés, Biergärten, regionale Küche. Blattgrün auf Leinen, Erde als Akzent.
+   */
+  hofladen: {
+    colors: {
+      primary: "#4E7A3A",
+      secondary: "#E4E8D3",
+      background: "#F8F6EE",
+      text: "#2A2E20",
+      accent: "#A9612B",
+      border: "#D5D8C2",
+    },
+    spacing: { xs: "4px", sm: "8px", md: "16px", lg: "32px", xl: "64px" },
+    typography: {
+      h1: { size: "40px", weight: 500, lineHeight: "1.08" },
+      h2: { size: "28px", weight: 500, lineHeight: "1.2" },
+      body: { size: "16px", weight: 400, lineHeight: "1.6" },
+    },
+  },
+
   cozy: {
     colors: {
       // Warm & freundlich: Terrakotta mit Aprikose auf cremigem Grund.
@@ -346,6 +566,18 @@ const TEMPLATE_INTENT_MAP: Record<string, TemplateIntent> = {
   kiosk: "NARRATIVE",
   izakaya: "NARRATIVE",
   morgen: "NARRATIVE",
+  // Zweite Runde: Rundungen und Schatten kommen aus TEMPLATE_DESIGN_TOKENS
+  // (styleInjector.ts), nicht aus dem Intent — kein Glas, keine Animationen.
+  vitrine: "NARRATIVE",
+  gelato: "NARRATIVE",
+  brauhaus: "NARRATIVE",
+  ramen: "NARRATIVE",
+  imbiss: "NARRATIVE",
+  konditorei: "NARRATIVE",
+  roesterei: "NARRATIVE",
+  markt: "NARRATIVE",
+  aperitivo: "NARRATIVE",
+  hofladen: "NARRATIVE",
 };
 
 /**
@@ -395,6 +627,19 @@ const TEMPLATE_FONT_FAMILY: Record<string, string> = {
   // morgen: Fließtext ist Grotesk (Manrope), die Serife trägt nur
   // Überschriften, Zeitfenster und Preise — das regelt templateLayout.ts.
   morgen: "sans-serif",
+  // Zweite Runde. "serif" heißt: der Fließtext läuft in der Serife des
+  // Templates (Bitter, Lora); bei konditorei trägt Cormorant nur Titel,
+  // Überschriften und Preise, der Fließtext bleibt Grotesk.
+  vitrine: "sans-serif",
+  gelato: "sans-serif",
+  brauhaus: "serif",
+  ramen: "sans-serif",
+  imbiss: "sans-serif",
+  konditorei: "sans-serif",
+  roesterei: "sans-serif",
+  markt: "sans-serif",
+  aperitivo: "sans-serif",
+  hofladen: "serif",
 };
 
 /**
@@ -403,7 +648,17 @@ const TEMPLATE_FONT_FAMILY: Record<string, string> = {
  * für Nummern, Marker und Auszeichnung reserviert — Preise sind Text.
  * Kiosk-Orange erreicht ohnehin nur 3,2:1 und dürfte keinen Preis tragen.
  */
-const PREIS_IN_TEXTFARBE = new Set(["presse", "kiosk", "izakaya"]);
+const PREIS_IN_TEXTFARBE = new Set([
+  "presse",
+  "kiosk",
+  "izakaya",
+  // Purist: Rot nur am Siegel. Rösterei: Sienna erreicht 4,4:1, ein Preis
+  // in Text-Schwarz ist die ehrlichere Wahl. Aperitivo: Koralle auf
+  // Pfirsichcreme 4,3:1 — Preise in Navy. Imbiss: Primär ist ohnehin Schwarz.
+  "ramen",
+  "roesterei",
+  "aperitivo",
+]);
 
 /**
  * Feature-Vorgaben eines Templates — heute nur die Form des Reservieren-
@@ -419,6 +674,18 @@ const TEMPLATE_BUTTON_SHAPE: Record<string, ReservationButtonShape> = {
   kiosk: "square",
   izakaya: "square",
   morgen: "square",
+  // Zweite Runde: Pille, wo die Karten rund sind; eckig, wo Linien und
+  // Rahmen das Bild bestimmen; abgerundet für Markt und Hofcafé.
+  vitrine: "pill",
+  gelato: "pill",
+  brauhaus: "square",
+  ramen: "square",
+  imbiss: "square",
+  konditorei: "square",
+  roesterei: "square",
+  markt: "rounded",
+  aperitivo: "pill",
+  hofladen: "rounded",
 };
 
 export function getTemplateButtonShape(

@@ -208,6 +208,27 @@ const TEMPLATE_MAP: Record<string, string> = {
   morgen: "morgen",
   frühstückskarte: "morgen",
   fruehstueckskarte: "morgen",
+  // Zweite Runde — unter ID und unter dem Namen im Picker.
+  vitrine: "vitrine",
+  fotokarte: "vitrine",
+  gelato: "gelato",
+  eisdiele: "gelato",
+  brauhaus: "brauhaus",
+  gasthaus: "brauhaus",
+  ramen: "ramen",
+  purist: "ramen",
+  imbiss: "imbiss",
+  imbissbude: "imbiss",
+  konditorei: "konditorei",
+  kaffeehaus: "konditorei",
+  roesterei: "roesterei",
+  rösterei: "roesterei",
+  markt: "markt",
+  markthalle: "markt",
+  aperitivo: "aperitivo",
+  hofladen: "hofladen",
+  hofcafé: "hofladen",
+  hofcafe: "hofladen",
 };
 
 /**

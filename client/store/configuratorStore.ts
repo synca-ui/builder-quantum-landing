@@ -149,6 +149,12 @@ interface ConfiguratorState {
    * Betrieb verschieden — deshalb Teil der Konfiguration und keine Konstante.
    */
   setAllergenLegend: (legend: Record<string, string>) => void;
+  /**
+   * Einen Eintrag aus der Legende streichen. setAllergenLegend fuehrt
+   * zusammen (zwei hochgeladene Karten sollen sich nicht gegenseitig die
+   * Legende loeschen) — Streichen braucht deshalb eine eigene Aktion.
+   */
+  removeAllergenLegendEntry: (code: string) => void;
 
   // Actions: Features Domain
   updateFeatureFlags: (flags: Partial<FeatureFlags>) => void;
@@ -812,6 +818,21 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }));
       },
 
+      removeAllergenLegendEntry: (code) => {
+        checkThrottleGuard("removeAllergenLegendEntry");
+        set((state) => {
+          const legend = { ...(state.content.allergenLegend ?? {}) };
+          delete legend[String(code).trim().toLowerCase()];
+          return {
+            content: { ...state.content, allergenLegend: legend },
+            publishing: {
+              ...state.publishing,
+              updatedAt: new Date().toISOString(),
+            },
+          };
+        });
+      },
+
       // ============================================
       // Features Domain Actions
       // ============================================
@@ -1380,6 +1401,7 @@ export const useConfiguratorActions = () => {
         updateOpeningHours: store.updateOpeningHours,
         setCategories: store.setCategories,
         setAllergenLegend: store.setAllergenLegend,
+        removeAllergenLegendEntry: store.removeAllergenLegendEntry,
       },
       features: {
         updateFeatureFlags: store.updateFeatureFlags,

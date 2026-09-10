@@ -357,7 +357,6 @@ export const DishModal = memo(function DishModal({
                 className="text-xl font-bold leading-tight"
                 style={{ color: fontColor }}
               >
-                {dish.emoji && <span className="mr-2">{dish.emoji}</span>}
                 {dish.name}
               </h2>
 

@@ -23,7 +23,7 @@ Beide Renderer (Konfigurator-Vorschau `TemplatePreviewContent` und
 veröffentlichte Seite `AppRenderer`) lesen dieselben geteilten Komponenten
 und denselben Design-Store. Was du definierst, sieht der Gast später exakt so.
 
-## Die sechs bestehenden Templates (davon musst du dich absetzen)
+## Die sechzehn bestehenden Templates (davon musst du dich absetzen)
 
 | ID | Charakter | Primär | Sekundär | Hintergrund | Schrift |
 |----|-----------|--------|----------|-------------|---------|
@@ -33,6 +33,16 @@ und denselben Design-Store. Was du definierst, sieht der Gast später exakt so.
 | `kiosk` | Aushang: Bildband, numeriertes Register, Ziffernspalte; Orange nur an Ziffern | `#E8541F` | `#D9D8D3` | `#F1F0EC` | sans-serif (Space Grotesk) |
 | `izakaya` | Zettel: Rahmenkästen 2×2 mit Nummer, Bild und Preis; Rot nur für Nummern/Stempel | `#9C2B22` | `#D8CFBE` | `#F5F0E6` | sans-serif (Bricolage Grotesque) |
 | `morgen` | Frühstückskarte: Linien, kursive Kobalt-Serife für Zeitfenster und Preise | `#0F4C81` | `#DAD6CC` | `#F7F5EF` | sans-serif (Manrope) + Newsreader |
+| `vitrine` | Fotokarte: Bildkacheln 4:3 in zwei Spalten, Name und Preis darunter; Pillen-Filter, Pillen-CTA | `#0F6E64` | `#E6F0EE` | `#FFFFFF` | sans-serif (Plus Jakarta Sans) |
+| `gelato` | Eisdiele: Pastellblock-Hero, Sticker-Karten mit Kreisbild, Preis in der Pille | `#C93560` | `#BEE3C9` | `#FFF8F0` | sans-serif (Manrope) + Fredoka |
+| `brauhaus` | Gasthaus: Doppelrahmen-Hero, Strichlinien zum Preis, Rauten-Ornament über Kategorien, Rahmen-CTA | `#8C4A1F` | `#D8B98A` | `#F6EFE2` | serif (Bitter) |
+| `ramen` | Purist: rotes Siegel mit Initiale, Haarlinien, kurzer Strich unterm Namen, gepunktete Filter | `#C8102E` | `#ECEBE4` | `#FAFAF7` | sans-serif (Instrument Sans) |
+| `imbiss` | Imbissbude: Schild-Hero mit hartem Schlagschatten, Kategorie-Balken, Preis als Schild | `#111111` | `#FFD23F` | `#FFFBEA` | sans-serif (Space Grotesk) + Unbounded |
+| `konditorei` | Kaffeehaus: Mittelachse, Zierlinie, kursive Serife, Preise in Kapitälchen, Zierlinien-CTA | `#8A3B4A` | `#EBD6D8` | `#FBF6F3` | sans-serif (Manrope) + Cormorant |
+| `roesterei` | Rösterei: Monospace-Kicker in Klammern, Etikett-Karten mit Nummer und Rubrik, Highlights als Band | `#B05532` | `#DDD5C7` | `#F4F1EA` | sans-serif (Manrope) + JetBrains Mono |
+| `markt` | Markthalle: grüner Streifen über der Kopfzeile, Preisschild zuerst, Versal-Überschriften mit Zähler | `#1D7A46` | `#EAF3EC` | `#FFFFFF` | sans-serif (Figtree) |
+| `aperitivo` | Aperitivo: Pfirsichkreis hinterm Titel, getönte Karten mit Kreisbild im 2er-Raster, Marker-Überschriften | `#CF4524` | `#FFD5C2` | `#FFF4EC` | sans-serif (Manrope) + Syne |
+| `hofladen` | Hofcafé: Stempel mit Betriebsart, gestrichelte Karteikarten, kursive Überschriften mit kurzem Strich | `#4E7A3A` | `#E4E8D3` | `#F8F6EE` | serif (Lora) |
 
 („Riviera" und „Verde" sind aus dem Picker genommen; ihre IDs `riviera`/`verde`
 existieren wie `stylish`/`cozy`/`nocturne` nur noch als Alt-Bestand im
@@ -43,18 +53,57 @@ Renderer, veröffentlichte Seiten ändern sich nicht.)
 form in `DishCard`, Listen-Leisten und Kategorie-Überschriften in `DishList`,
 Hero-, Kopfzeilen-, Filter- und Reservieren-Varianten). Beide Renderer lesen
 ausschließlich diese Quelle; `templateParitaet.test.tsx` vergleicht das
-erzeugte HTML von Vorschau und Live-Seite. Ein neues Template ohne eigene
-Formen braucht dort keinen Eintrag — es rendert wie die Bestands-Templates.
+erzeugte HTML von Vorschau und Live-Seite — für JEDES Template in
+`TEMPLATE_TOKENS`, automatisch. Ein neues Template ohne eigene Formen braucht
+dort keinen Eintrag — es rendert wie die Bestands-Templates.
+
+Seit der zweiten Runde (vitrine … hofladen, September 2026) sind alle Formen
+einzeln benannte Felder des Layouts: `dish`, `ueberschrift`, `leiste`,
+`highlightsGruppiert`, `zurKarte`, `raster`, `rasterHighlights`, `hero`,
+`nav`, `filter`, `cta`, `linie`, `kicker`, `knopf`. Wer ein Template mit
+eigenen Formen baut, ergänzt (1) den Eintrag in `LAYOUTS`, (2) je eine
+Verzweigung in `DishCard`, `DishList`, `Hero`, `Navigation`,
+`CategoryFilter`, `ReservationCta` für jede NEUE Form, (3) eine selbst
+gehostete Schrift in `templateFonts.ts` (fontsource-Paket; der Wächter
+`templateFonts.test.ts` prüft Paket, Import und Familiennamen), (4) die
+Bausteine unten. `templateLayout.test.ts` verlangt, dass jedes Template der
+zweiten Runde eine eigene Zeilenform, einen eigenen Hero und eine eigene
+Kopfzeile hat — zwei Templates, die sich nur in der Palette unterscheiden,
+sind ein Template mit zwei Paletten. Auch die Leiste über den Highlights ist
+je Template eigen (`leiste`), keine gemeinsame „Highlights / Alle“-Zeile.
+
+**Flächen in der Sekundärfarbe** (Hero-Blöcke, getönte Karten, Marker)
+rechnen ihre Textfarbe gegen die tatsächliche Fläche
+(`textAufFlaeche`, `mische` in templateLayout.ts) — der Betrieb darf jede
+Farbe verstellen, und Text auf dunkler Sekundärfläche weicht dann auf Weiß
+aus. `flaechenKontrast.test.tsx` prüft das mit Navy als Sekundärfarbe.
+
+**Kennzeichnung ist keine Gestaltungsfrage:** Jede Zeilenform zeigt die
+Allergen-/Zusatzstoff-Kürzel klein hinter dem Namen und die Ernährungs-
+Labels als gesperrte Zeile; die Speisekarte endet mit der Legende der
+verwendeten und erklärten Kürzel (`client/lib/kennzeichnung.ts`, LMIDV § 2).
+Wer eine neue Zeilenform baut, setzt `{kuerzel}` in die Überschrift und
+`{kennzeichnung}` unter die Beschreibung — `dishListLayout.test.tsx` prüft
+es für jede Form.
 
 **Produktentscheidung: KEINE dunklen Templates im Picker** — dunkel stellt
 sich der Betrieb über die freien Farben selbst ein. Neue Templates müssen
 hell sein.
 
-**Noch offene Richtungen im Sortiment:** Verspielt/Familiär (Eisdiele,
-Imbiss), Puristisch-Japanisch (Sushi, Ramen), Rustikal/Brauhaus.
-Das sind Vorschläge, keine Pflicht — begründe deine Wahl aus Gastro-Sicht.
+**Abgedeckte Richtungen:** Verspielt/Familiär (gelato), Imbiss/Street Food
+(imbiss), Puristisch-Japanisch (ramen), Rustikal/Brauhaus (brauhaus),
+Foto-orientiert (vitrine), Patisserie (konditorei), Specialty Coffee
+(roesterei), Deli/Mittagstisch (markt), Cocktailbar bei Tag (aperitivo),
+Hofcafé/Biergarten (hofladen). **Noch offen:** Pizzeria/Trattoria,
+Weinbar/Vinothek, Bäckerei mit Wochenplan, Kantine/Mensa, Fine Dining mit
+Menüfolge. Das sind Vorschläge, keine Pflicht — begründe deine Wahl aus
+Gastro-Sicht.
 
 ## Harte Regeln
+
+0. **Keine Emojis.** Kein Template rendert `item.emoji` — weder im Namen
+   noch als Bildplatzhalter (dort steht der Anfangsbuchstabe). Das Feld
+   bleibt im Datenmodell, wird aber nicht gezeigt.
 
 1. **Nur 6-stellige Hex-Farben** (`#RRGGBB`). Der Seitenhintergrund hängt
    Alpha-Suffixe an (`${secondaryColor}1A`), 3-stellige oder benannte Farben

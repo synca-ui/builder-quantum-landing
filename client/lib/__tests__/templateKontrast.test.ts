@@ -10,18 +10,47 @@
  *   – Preisfarbe auf Seitenhintergrund ≥ 3:1 (Preise sind groß/fett)
  * Wer eine Palette ändert, ändert diese Zusicherung mit — bewusst.
  */
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { getTemplateDesignDefaults, getTemplateTokens } from "../templateTokens";
+import { textAufFarbe } from "../templateLayout";
 
-/** Templates, die der Picker anbietet (TemplateStep.tsx). */
-const PICKER_TEMPLATES = [
-  "minimalist",
-  "modern",
-  "presse",
-  "kiosk",
-  "izakaya",
-  "morgen",
-];
+/**
+ * Templates, die der Picker anbietet — aus TemplateStep.tsx gelesen, nicht
+ * abgeschrieben: Ein Template, das im Picker steht, aber hier fehlt, wäre
+ * ungeprüft. Vorher war das eine gepflegte Liste mit sechs Einträgen.
+ */
+const PICKER_TEMPLATES = Array.from(
+  readFileSync(
+    resolve(process.cwd(), "client/components/configurator/steps/TemplateStep.tsx"),
+    "utf8",
+  ).matchAll(/^\s*id: "([a-z]+)",$/gm),
+  (m) => m[1],
+);
+
+describe("Picker-Liste", () => {
+  it("umfasst die sechs bisherigen und die zehn neuen Templates", () => {
+    expect(PICKER_TEMPLATES).toEqual([
+      "minimalist",
+      "modern",
+      "presse",
+      "kiosk",
+      "izakaya",
+      "morgen",
+      "vitrine",
+      "gelato",
+      "brauhaus",
+      "ramen",
+      "imbiss",
+      "konditorei",
+      "roesterei",
+      "markt",
+      "aperitivo",
+      "hofladen",
+    ]);
+  });
+});
 
 /**
  * Ohne diese Prüfung wäre der Wächter falsch grün: Fehlt einem Template der
@@ -72,6 +101,18 @@ describe.each(PICKER_TEMPLATES)("Palette '%s'", (id) => {
 
   it("Preisfarbe bleibt auf dem Hintergrund lesbar (≥ 3:1)", () => {
     expect(contrast(d.priceColor, d.backgroundColor)).toBeGreaterThanOrEqual(3);
+  });
+
+  it("Knopfschrift auf der Primärfarbe erreicht WCAG AA — Reservieren, Bestellen, Pillen", () => {
+    // Der Store wählt die Knopfschrift nach Luminanz (configuratorStore.
+    // updateTemplate), die Komponenten nach textAufFarbe — beide müssen auf
+    // der Vorgabe-Primärfarbe dieselbe Farbe wählen UND die muss lesen.
+    const schrift = textAufFarbe(d.primaryColor);
+    expect(contrast(schrift, d.primaryColor)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("bleibt hell — dunkel stellt sich der Betrieb selbst ein", () => {
+    expect(luminance(d.backgroundColor)).toBeGreaterThan(0.6);
   });
 
   it("verwendet nur 6-stellige Hexfarben (Alpha-Suffixe der Wrapper brauchen das)", () => {

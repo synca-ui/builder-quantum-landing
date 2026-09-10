@@ -23,7 +23,22 @@ describe("TemplateStep — Altbestand", () => {
     // Ohne initialisiertes i18n liefert t() den Key — reicht für die Struktur.
     expect(screen.queryByText("templates.riviera")).toBeNull();
     expect(screen.queryByText("templates.verde")).toBeNull();
-    for (const id of ["presse", "kiosk", "izakaya", "morgen"]) {
+    for (const id of [
+      "presse",
+      "kiosk",
+      "izakaya",
+      "morgen",
+      "vitrine",
+      "gelato",
+      "brauhaus",
+      "ramen",
+      "imbiss",
+      "konditorei",
+      "roesterei",
+      "markt",
+      "aperitivo",
+      "hofladen",
+    ]) {
       expect(screen.getByText(`templates.${id}`)).toBeInTheDocument();
     }
   });

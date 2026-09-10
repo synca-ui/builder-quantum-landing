@@ -8,13 +8,16 @@
  * - AppRenderer.tsx (Live-Seite)
  *
  * Templates mit eigenem Layout (templateLayout.ts) bekommen statt der
- * Pillen Reiter mit Unterstrich (presse, morgen) oder eckige Marken
- * (kiosk, izakaya). Der Bestand behält seine Pillen („chips“); die Liste der
- * Kategorien kommt jetzt in beiden Renderern aus kategorienReihenfolge.
+ * Pillen Reiter mit Unterstrich (presse, morgen), eckige Marken (kiosk,
+ * izakaya, brauhaus, imbiss), gefüllte Pillen (vitrine, gelato, markt,
+ * aperitivo), gepunktete Unterstriche (ramen), kursive Serife (konditorei),
+ * Monospace-Marken (roesterei) oder gestrichelte Pillen (hofladen). Der
+ * Bestand behält seine Pillen („chips“); die Liste der Kategorien kommt in
+ * beiden Renderern aus kategorienReihenfolge.
  */
 
 import React, { memo, useRef, useEffect, useState } from "react";
-import { getTemplateLayout } from "@/lib/templateLayout";
+import { getTemplateLayout, textAufFarbe } from "@/lib/templateLayout";
 
 // ============================================
 // TYPES
@@ -153,6 +156,73 @@ export const CategoryFilter = memo(function CategoryFilter({
         },
       };
     }
+    // ---- Zweite Runde ----
+    // Gefüllte Pillen: aktiv in der Akzentfarbe, sonst leicht getönt.
+    if (variante === "pillen" || variante === "pillenRahmen") {
+      const rahmen = variante === "pillenRahmen";
+      return {
+        className:
+          "px-3.5 py-1.5 text-[12px] font-semibold whitespace-nowrap cursor-pointer shrink-0 rounded-full transition-colors",
+        style: {
+          backgroundColor: aktiv ? akzent : rahmen ? "transparent" : `${fontColor}0F`,
+          color: aktiv ? textAufFarbe(akzent) : fontColor,
+          border: rahmen
+            ? `1px ${aktiv ? "solid" : "dashed"} ${aktiv ? akzent : `${fontColor}80`}`
+            : gestrichelt
+              ? `1px dashed ${fontColor}66`
+              : "1px solid transparent",
+          borderRadius: 9999,
+          opacity: gestrichelt ? 0.8 : 1,
+        },
+      };
+    }
+    // Purist: schlichter Text, aktiv mit gepunktetem Unterstrich.
+    if (variante === "punkte") {
+      return {
+        className:
+          "px-1 py-2 text-[12px] font-medium whitespace-nowrap cursor-pointer shrink-0 transition-opacity hover:opacity-100",
+        style: {
+          color: aktiv ? akzent : fontColor,
+          opacity: aktiv ? 1 : 0.6,
+          textDecoration: aktiv || gestrichelt ? "underline" : "none",
+          textDecorationStyle: "dotted",
+          textDecorationThickness: "2px",
+          textUnderlineOffset: "6px",
+          borderRadius: 0,
+        },
+      };
+    }
+    // Kaffeehaus: kursive Serife, aktiv mit Haarlinie darunter.
+    if (variante === "kursiv") {
+      return {
+        className:
+          "px-1 py-2 text-[15px] italic whitespace-nowrap cursor-pointer shrink-0 transition-opacity hover:opacity-100",
+        style: {
+          fontFamily: "var(--font-template-display)",
+          color: aktiv ? akzent : fontColor,
+          opacity: aktiv ? 1 : 0.65,
+          borderBottom: aktiv ? `1px solid ${akzent}` : "1px solid transparent",
+          borderStyle: gestrichelt ? "none none dashed none" : undefined,
+          borderRadius: 0,
+          marginBottom: "-1px",
+        },
+      };
+    }
+    // Rösterei: eckige Monospace-Marken auf Haarlinie.
+    if (variante === "monoEckig") {
+      return {
+        className:
+          "px-2.5 py-1.5 text-[10px] uppercase tracking-[0.14em] whitespace-nowrap cursor-pointer shrink-0 transition-colors",
+        style: {
+          fontFamily: "var(--font-template-mono)",
+          backgroundColor: aktiv ? fontColor : "transparent",
+          color: aktiv ? backgroundColor : fontColor,
+          border: `1px ${gestrichelt ? "dashed" : "solid"} ${aktiv ? fontColor : `${fontColor}66`}`,
+          borderRadius: "var(--radius-input, 4px)",
+          opacity: gestrichelt ? 0.8 : 1,
+        },
+      };
+    }
     // chips (Bestand)
     if (gestrichelt) {
       return {
@@ -184,11 +254,15 @@ export const CategoryFilter = memo(function CategoryFilter({
   };
 
   const containerKlasse =
-    variante === "tabs"
+    variante === "tabs" || variante === "kursiv"
       ? "flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2"
-      : "flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2";
+      : variante === "punkte"
+        ? "flex gap-4 overflow-x-auto no-scrollbar pb-1 -mx-2 px-2"
+        : "flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2";
   const containerStyle: React.CSSProperties =
-    variante === "tabs" ? { borderBottom: `1px solid ${fontColor}26` } : {};
+    variante === "tabs" || variante === "kursiv"
+      ? { borderBottom: `1px solid ${fontColor}26` }
+      : {};
 
   const alle = reiter(activeCategory === null);
 

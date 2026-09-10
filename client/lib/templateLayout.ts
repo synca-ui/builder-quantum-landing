@@ -10,20 +10,46 @@
  * gleich aussehen muss, steht hier — und nur hier. Wer einen Wert ändert,
  * ändert Vorschau und Live-Seite gemeinsam; das ist der ganze Zweck.
  *
- * `eigen: true` heißt: das Template bringt eigene Papierformen mit —
- * Punktlinie, Register, Rahmenkasten. `eigen: false` ist die Kachel-Optik
- * der Bestands-Templates (minimalist, modern, stylish, cozy, nocturne,
- * riviera, verde). Beide gehen durch DIESELBEN Komponenten (DishList,
- * DishCard, Hero, Navigation, CategoryFilter, ReservationCta); `eigen`
- * wählt nur die Form, nicht den Codepfad. Vorher hatte der Bestand eigene
- * Codepfade in Vorschau UND Live-Seite, und die wichen voneinander ab:
- * Bilder nur im Konfigurator, Kategorien einmal gepflegt und einmal aus den
- * Gerichten abgeleitet, zwei verschiedene Reservieren-Knöpfe.
+ * `eigen: true` heißt: das Template bringt eigene Formen mit —
+ * Punktlinie, Register, Rahmenkasten, Fotokachel, Sticker, Preisschild.
+ * `eigen: false` ist die Kachel-Optik der Bestands-Templates (minimalist,
+ * modern, stylish, cozy, nocturne, riviera, verde). Beide gehen durch
+ * DIESELBEN Komponenten (DishList, DishCard, Hero, Navigation,
+ * CategoryFilter, ReservationCta); `eigen` wählt nur die Form, nicht den
+ * Codepfad. Vorher hatte der Bestand eigene Codepfade in Vorschau UND
+ * Live-Seite, und die wichen voneinander ab: Bilder nur im Konfigurator,
+ * Kategorien einmal gepflegt und einmal aus den Gerichten abgeleitet, zwei
+ * verschiedene Reservieren-Knöpfe.
+ *
+ * Seit den zehn Templates der zweiten Runde (vitrine … hofladen) sind die
+ * Formen nicht mehr aus der Überschriftenform abgeleitet, sondern einzeln
+ * benannt: Leiste, Gruppierung, Kicker, Knopfschrift, Raster der
+ * Highlights. Ein neues Template ist damit ein Eintrag in LAYOUTS plus
+ * die Formen, die es tatsächlich neu mitbringt — nichts davon steht in
+ * einem Renderer.
  */
 import type { MenuItem, OpeningHours } from "@/types/domain";
 import { typLabel } from "./heroFallback";
 
-export type DishVariant = "tile" | "leader" | "register" | "box" | "ruled";
+export type DishVariant =
+  // Bestand und die vier Papier-Templates
+  | "tile"
+  | "leader"
+  | "register"
+  | "box"
+  | "ruled"
+  // Zweite Runde
+  | "foto" // vitrine: Bildkachel, Name und Preis darunter
+  | "sticker" // gelato: runde, getönte Karte mit Kreisbild und Preis-Pille
+  | "strich" // brauhaus: Strichlinie zum Preis, Egyptienne
+  | "hairline" // ramen: Haarlinie, kurzer roter Strich unterm Namen
+  | "schild" // imbiss: dicke Linie über der Zeile, Preis als Schild
+  | "zentriert" // konditorei: Mittelachse, Preis in Kapitälchen
+  | "etikett" // roesterei: Rahmenkarte mit Monospace-Kopfzeile
+  | "preisschild" // markt: Preisschild zuerst, dann das Gericht
+  | "kreis" // aperitivo: getönte Karte mit Kreisbild
+  | "karteikarte"; // hofladen: gestrichelte Karte
+
 export type PreisFormat = "euro" | "komma" | "kommaKurz";
 
 export interface TemplateSchrift {
@@ -48,25 +74,112 @@ export interface TemplateLayout {
   preis: PreisFormat;
   /** Wie viele Gerichte die Startseite als Highlights zeigt. */
   highlights: number;
-  /** Anordnung der Gerichte. */
-  raster: "gestapelt" | "liste" | "kacheln2";
+  /** Anordnung der Gerichte auf der Speisekarte. */
+  raster: "gestapelt" | "liste" | "kacheln2" | "kacheln2offen";
+  /** Anordnung der Highlights auf der Startseite — „band“ ist ein Streifen zum Wischen. */
+  rasterHighlights: "wieKarte" | "band";
   /** Form der Kategorie-Überschrift. */
   ueberschrift:
     | "unterstrichen"
     | "kapitaelchen"
     | "kursivLinie"
     | "registerLeiste"
-    | "zettelLeiste";
+    | "zettelLeiste"
+    | "fett"
+    | "rund"
+    | "ornament"
+    | "siegel"
+    | "block"
+    | "mittelachse"
+    | "meta"
+    | "schild"
+    | "marker"
+    | "blatt";
+  /**
+   * Leiste über den Highlights der Startseite. Jedes Template mit Leiste hat
+   * seine eigene — die App-artigen Templates teilten sich zuerst eine
+   * generische „Highlights / Alle ansehen“-Zeile, das war das Muster jeder
+   * Liefer-App und nicht das der Papier-Templates.
+   */
+  leiste:
+    | "keine"
+    | "highlights" // Bestand
+    | "register" // kiosk
+    | "heute" // izakaya
+    | "galerie" // vitrine
+    | "lieblinge" // gelato
+    | "schild" // imbiss
+    | "meta" // roesterei
+    | "tafel" // markt
+    | "favoriten"; // aperitivo
+  /** Highlights der Startseite unter Kategorie-Überschriften (wie die Karte)? */
+  highlightsGruppiert: boolean;
+  /** Textlink „Zur Karte“ unter den Highlights. */
+  zurKarte: boolean;
   /** Hero der Startseite. */
-  hero: "standard" | "presse" | "kiosk" | "izakaya" | "morgen";
+  hero:
+    | "standard"
+    | "presse"
+    | "kiosk"
+    | "izakaya"
+    | "morgen"
+    | "vitrine"
+    | "gelato"
+    | "brauhaus"
+    | "ramen"
+    | "imbiss"
+    | "konditorei"
+    | "roesterei"
+    | "markt"
+    | "aperitivo"
+    | "hofladen";
   /** Kopfzeile. */
-  nav: "standard" | "doppellinie" | "versal" | "stempel" | "serif";
+  nav:
+    | "standard"
+    | "doppellinie"
+    | "versal"
+    | "stempel"
+    | "serif"
+    | "fett"
+    | "pille"
+    | "balken"
+    | "siegel"
+    | "schild"
+    | "mitte"
+    | "mono"
+    | "streifen"
+    | "kreis"
+    | "gestrichelt";
   /** Kategorie-Filter auf der Speisekarte. */
-  filter: "chips" | "tabs" | "eckig";
+  filter:
+    | "chips"
+    | "tabs"
+    | "eckig"
+    | "pillen"
+    | "punkte"
+    | "kursiv"
+    | "monoEckig"
+    | "pillenRahmen";
   /** Reservieren-Aufruf auf der Startseite. */
-  cta: "standard" | "geteilt" | "block" | "textlink";
+  cta:
+    | "standard"
+    | "geteilt"
+    | "block"
+    | "textlink"
+    | "rund"
+    | "rahmen"
+    | "schild"
+    | "zierlinie";
   /** Linienstärke von Leisten, Rahmen und Trennern. */
-  linie: "haar" | "kraeftig";
+  linie: "haar" | "kraeftig" | "gestrichelt";
+  /**
+   * Kicker über der Hero-Überschrift: nichts, nur der Tageshinweis („bis
+   * 23 Uhr“) oder Betriebsart · Tageshinweis. Was daraus wird, rechnet
+   * heroKicker — in beiden Renderern gleich.
+   */
+  kicker: "keiner" | "hinweis" | "typHinweis";
+  /** Schrift der Knöpfe im Hero: Versalien mit Sperrung (Papier) oder normal. */
+  knopf: "versal" | "normal";
   /** Letztes Wort der Hero-Überschrift kursiv setzen (gesetzte Karte). */
   kursivesLetztesWort: boolean;
   /**
@@ -79,9 +192,12 @@ export interface TemplateLayout {
   schrift: TemplateSchrift;
 }
 
-// Schriftstapel. Poppins und Space Grotesk lädt index.html global; Newsreader,
-// Manrope und Bricolage Grotesque kommen selbst gehostet aus den fontsource-
-// Paketen (client/lib/templateFonts.ts) — kein Aufruf an Google-Server.
+// Schriftstapel. Poppins und Space Grotesk kommen über client/lib/siteFonts.ts,
+// alle anderen Familien selbst gehostet aus den fontsource-Paketen
+// (client/lib/templateFonts.ts) — kein Aufruf an Google-Server. Die Namen
+// mit „Variable“ sind die aus den @font-face-Regeln der Pakete; ein Tippfehler
+// hier fällt still auf den Systemstapel zurück, deshalb prüft
+// templateFonts.test.ts jede Familie gegen ihr Paket.
 const POPPINS = '"Poppins", system-ui, sans-serif';
 const SYSTEM_SERIF = 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
 const SYSTEM_MONO =
@@ -92,6 +208,37 @@ const MANROPE = '"Manrope Variable", "Manrope", "Helvetica Neue", Arial, sans-se
 const BRICOLAGE =
   '"Bricolage Grotesque Variable", "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif';
 const SPACE_GROTESK = '"Space Grotesk", "Helvetica Neue", Arial, sans-serif';
+const PLUS_JAKARTA =
+  '"Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif';
+const FREDOKA = '"Fredoka Variable", "Fredoka", "Nunito", "Helvetica Neue", Arial, sans-serif';
+const BITTER = '"Bitter Variable", "Bitter", "Roboto Slab", Georgia, serif';
+const INSTRUMENT =
+  '"Instrument Sans Variable", "Instrument Sans", "Helvetica Neue", Arial, sans-serif';
+const UNBOUNDED = '"Unbounded Variable", "Unbounded", "Arial Black", Impact, sans-serif';
+const CORMORANT =
+  '"Cormorant Variable", "Cormorant", "Cormorant Garamond", Garamond, Georgia, serif';
+const JETBRAINS =
+  '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
+const FIGTREE = '"Figtree Variable", "Figtree", "Helvetica Neue", Arial, sans-serif';
+const SYNE = '"Syne Variable", "Syne", "Helvetica Neue", Arial, sans-serif';
+const LORA = '"Lora Variable", "Lora", Georgia, "Times New Roman", serif';
+
+/** Familien, die templateFonts.ts einbinden muss — für den Wächtertest. */
+export const SELBST_GEHOSTETE_FAMILIEN = [
+  "Newsreader Variable",
+  "Manrope Variable",
+  "Bricolage Grotesque Variable",
+  "Plus Jakarta Sans Variable",
+  "Fredoka Variable",
+  "Bitter Variable",
+  "Instrument Sans Variable",
+  "Unbounded Variable",
+  "Cormorant Variable",
+  "JetBrains Mono Variable",
+  "Figtree Variable",
+  "Syne Variable",
+  "Lora Variable",
+];
 
 const STANDARD: TemplateLayout = {
   eigen: false,
@@ -100,12 +247,18 @@ const STANDARD: TemplateLayout = {
   preis: "euro",
   highlights: 3,
   raster: "gestapelt",
+  rasterHighlights: "wieKarte",
   ueberschrift: "unterstrichen",
+  leiste: "highlights",
+  highlightsGruppiert: false,
+  zurKarte: false,
   hero: "standard",
   nav: "standard",
   filter: "chips",
   cta: "standard",
   linie: "haar",
+  kicker: "keiner",
+  knopf: "normal",
   kursivesLetztesWort: false,
   bilder: "kachel",
   schrift: {
@@ -117,23 +270,42 @@ const STANDARD: TemplateLayout = {
   },
 };
 
+/** Gemeinsame Vorgaben der eigenen Layouts — jedes Template überschreibt, was es anders macht. */
+const EIGEN: Omit<TemplateLayout, "dish" | "hero" | "nav" | "schrift"> = {
+  eigen: true,
+  nummeriert: false,
+  preis: "komma",
+  highlights: 3,
+  raster: "liste",
+  rasterHighlights: "wieKarte",
+  ueberschrift: "kapitaelchen",
+  leiste: "keine",
+  highlightsGruppiert: false,
+  zurKarte: false,
+  filter: "tabs",
+  cta: "geteilt",
+  linie: "haar",
+  kicker: "hinweis",
+  knopf: "versal",
+  kursivesLetztesWort: false,
+  bilder: "kein",
+};
+
 const LAYOUTS: Record<string, TemplateLayout> = {
   /** Bistrokarte: Punktlinien, Serife, keine Bilder. */
   presse: {
-    eigen: true,
+    ...EIGEN,
     dish: "leader",
-    nummeriert: false,
     preis: "kommaKurz",
-    highlights: 3,
-    raster: "liste",
     ueberschrift: "kapitaelchen",
+    highlightsGruppiert: true,
+    zurKarte: true,
     hero: "presse",
     nav: "doppellinie",
     filter: "tabs",
     cta: "geteilt",
-    linie: "haar",
+    kicker: "typHinweis",
     kursivesLetztesWort: true,
-    bilder: "kein",
     schrift: {
       sans: MANROPE,
       serif: NEWSREADER,
@@ -144,20 +316,16 @@ const LAYOUTS: Record<string, TemplateLayout> = {
   },
   /** Aushang: Bildband, numeriertes Register, Monospace-Preise. */
   kiosk: {
-    eigen: true,
+    ...EIGEN,
     dish: "register",
     nummeriert: true,
-    preis: "komma",
-    highlights: 3,
-    raster: "liste",
     ueberschrift: "registerLeiste",
+    leiste: "register",
     hero: "kiosk",
     nav: "versal",
     filter: "eckig",
     cta: "geteilt",
     linie: "kraeftig",
-    kursivesLetztesWort: false,
-    bilder: "kein",
     schrift: {
       sans: SPACE_GROTESK,
       serif: SYSTEM_SERIF,
@@ -168,19 +336,18 @@ const LAYOUTS: Record<string, TemplateLayout> = {
   },
   /** Zettel: Rahmenkästen 2×2 mit Nummer, Bild und Preis. */
   izakaya: {
-    eigen: true,
+    ...EIGEN,
     dish: "box",
     nummeriert: true,
-    preis: "komma",
     highlights: 4,
     raster: "kacheln2",
     ueberschrift: "zettelLeiste",
+    leiste: "heute",
     hero: "izakaya",
     nav: "stempel",
     filter: "eckig",
     cta: "block",
     linie: "kraeftig",
-    kursivesLetztesWort: false,
     bilder: "kachel",
     schrift: {
       sans: BRICOLAGE,
@@ -192,25 +359,234 @@ const LAYOUTS: Record<string, TemplateLayout> = {
   },
   /** Frühstückskarte: Linien, kursive Kobalt-Serife für Zeitfenster und Preise. */
   morgen: {
-    eigen: true,
+    ...EIGEN,
     dish: "ruled",
-    nummeriert: false,
-    preis: "komma",
-    highlights: 3,
-    raster: "liste",
     ueberschrift: "kursivLinie",
+    highlightsGruppiert: true,
+    zurKarte: true,
     hero: "morgen",
     nav: "serif",
     filter: "tabs",
     cta: "textlink",
-    linie: "haar",
+    kicker: "keiner",
     kursivesLetztesWort: true,
-    bilder: "kein",
     schrift: {
       sans: MANROPE,
       serif: NEWSREADER,
       monospace: SYSTEM_MONO,
       display: NEWSREADER,
+      mono: SYSTEM_MONO,
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Zweite Runde — zehn Templates, jedes für eine andere Art Betrieb
+  // -------------------------------------------------------------------------
+
+  /** Fotokarte: Bildkacheln in zwei Spalten — Küchen, die man zeigen kann. */
+  vitrine: {
+    ...EIGEN,
+    dish: "foto",
+    highlights: 4,
+    raster: "kacheln2offen",
+    ueberschrift: "fett",
+    leiste: "galerie",
+    hero: "vitrine",
+    nav: "fett",
+    filter: "pillen",
+    cta: "rund",
+    kicker: "keiner",
+    knopf: "normal",
+    bilder: "kachel",
+    schrift: {
+      sans: PLUS_JAKARTA,
+      serif: SYSTEM_SERIF,
+      monospace: SYSTEM_MONO,
+      display: PLUS_JAKARTA,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Eisdiele: Pastell, Sticker-Karten mit Kreisbild, Preis in der Pille. */
+  gelato: {
+    ...EIGEN,
+    dish: "sticker",
+    raster: "gestapelt",
+    ueberschrift: "rund",
+    leiste: "lieblinge",
+    hero: "gelato",
+    nav: "pille",
+    filter: "pillen",
+    cta: "rund",
+    knopf: "normal",
+    bilder: "kachel",
+    schrift: {
+      sans: MANROPE,
+      serif: SYSTEM_SERIF,
+      monospace: SYSTEM_MONO,
+      display: FREDOKA,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Gasthaus: Egyptienne, Doppelrahmen, Strichlinien, Ornament-Überschriften. */
+  brauhaus: {
+    ...EIGEN,
+    dish: "strich",
+    ueberschrift: "ornament",
+    highlightsGruppiert: true,
+    zurKarte: true,
+    hero: "brauhaus",
+    nav: "balken",
+    filter: "eckig",
+    cta: "rahmen",
+    linie: "kraeftig",
+    kicker: "typHinweis",
+    schrift: {
+      sans: MANROPE,
+      serif: BITTER,
+      monospace: SYSTEM_MONO,
+      display: BITTER,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Purist: Weißraum, Haarlinien, ein rotes Siegel. */
+  ramen: {
+    ...EIGEN,
+    dish: "hairline",
+    ueberschrift: "siegel",
+    zurKarte: true,
+    hero: "ramen",
+    nav: "siegel",
+    filter: "punkte",
+    cta: "rahmen",
+    schrift: {
+      sans: INSTRUMENT,
+      serif: SYSTEM_SERIF,
+      monospace: SYSTEM_MONO,
+      display: INSTRUMENT,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Imbissbude: Schwarz auf Gelb, dicke Linien, Preis als Schild. */
+  imbiss: {
+    ...EIGEN,
+    dish: "schild",
+    ueberschrift: "block",
+    leiste: "schild",
+    hero: "imbiss",
+    nav: "schild",
+    filter: "eckig",
+    cta: "schild",
+    linie: "kraeftig",
+    schrift: {
+      sans: SPACE_GROTESK,
+      serif: SYSTEM_SERIF,
+      monospace: SYSTEM_MONO,
+      display: UNBOUNDED,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Kaffeehaus: Mittelachse, kursive Serife, Zierlinie. */
+  konditorei: {
+    ...EIGEN,
+    dish: "zentriert",
+    ueberschrift: "mittelachse",
+    highlightsGruppiert: true,
+    zurKarte: true,
+    hero: "konditorei",
+    nav: "mitte",
+    filter: "kursiv",
+    cta: "zierlinie",
+    kicker: "typHinweis",
+    kursivesLetztesWort: true,
+    schrift: {
+      sans: MANROPE,
+      serif: CORMORANT,
+      monospace: SYSTEM_MONO,
+      display: CORMORANT,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Rösterei: Monospace-Etiketten mit Nummer, Highlights als Band. */
+  roesterei: {
+    ...EIGEN,
+    dish: "etikett",
+    nummeriert: true,
+    highlights: 4,
+    rasterHighlights: "band",
+    ueberschrift: "meta",
+    leiste: "meta",
+    hero: "roesterei",
+    nav: "mono",
+    filter: "monoEckig",
+    cta: "geteilt",
+    schrift: {
+      sans: MANROPE,
+      serif: SYSTEM_SERIF,
+      monospace: JETBRAINS,
+      display: JETBRAINS,
+      mono: JETBRAINS,
+    },
+  },
+  /** Markthalle: Preisschild zuerst, grüner Streifen oben. */
+  markt: {
+    ...EIGEN,
+    dish: "preisschild",
+    ueberschrift: "schild",
+    leiste: "tafel",
+    hero: "markt",
+    nav: "streifen",
+    filter: "pillen",
+    cta: "geteilt",
+    kicker: "typHinweis",
+    knopf: "normal",
+    schrift: {
+      sans: FIGTREE,
+      serif: SYSTEM_SERIF,
+      monospace: SYSTEM_MONO,
+      display: FIGTREE,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Aperitivo: Koralle und Pfirsich, runde Karten mit Kreisbild. */
+  aperitivo: {
+    ...EIGEN,
+    dish: "kreis",
+    highlights: 4,
+    raster: "kacheln2offen",
+    ueberschrift: "marker",
+    leiste: "favoriten",
+    hero: "aperitivo",
+    nav: "kreis",
+    filter: "pillen",
+    cta: "rund",
+    knopf: "normal",
+    bilder: "kachel",
+    schrift: {
+      sans: MANROPE,
+      serif: SYSTEM_SERIF,
+      monospace: SYSTEM_MONO,
+      display: SYNE,
+      mono: SYSTEM_MONO,
+    },
+  },
+  /** Hofcafé: Leinen, gestrichelte Karteikarten, Stempel mit Betriebsart. */
+  hofladen: {
+    ...EIGEN,
+    dish: "karteikarte",
+    ueberschrift: "blatt",
+    highlightsGruppiert: true,
+    zurKarte: true,
+    hero: "hofladen",
+    nav: "gestrichelt",
+    filter: "pillenRahmen",
+    cta: "rahmen",
+    linie: "gestrichelt",
+    kursivesLetztesWort: true,
+    schrift: {
+      sans: MANROPE,
+      serif: LORA,
+      monospace: SYSTEM_MONO,
+      display: LORA,
       mono: SYSTEM_MONO,
     },
   },
@@ -296,6 +672,12 @@ export function laufendeNummer(index: number): string {
   return String(index + 1).padStart(2, "0");
 }
 
+/** Anfangsbuchstabe für Siegel, Stempel und Bildplatzhalter — „?“ ohne Namen. */
+export function initiale(name?: string | null): string {
+  const t = (name ?? "").trim();
+  return t ? t.charAt(0).toUpperCase() : "?";
+}
+
 /**
  * Highlights der Startseite: markierte Gerichte zuerst, dann in Karten-
  * Reihenfolge aufgefüllt. KEIN Zufall — die Live-Seite würfelte früher bei
@@ -370,6 +752,91 @@ export function textAufFarbe(hex: string): "#000000" | "#FFFFFF" {
   return weiss >= schwarz ? "#FFFFFF" : "#000000";
 }
 
+/** WCAG-Kontrastverhältnis zweier 6-stelliger Hexfarben (1 … 21). */
+export function kontrast(a: string, b: string): number {
+  const lum = (hex: string): number | null => {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return null;
+    const lin = (c: string) => {
+      const v = parseInt(c, 16) / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * lin(m[1]) + 0.7152 * lin(m[2]) + 0.0722 * lin(m[3]);
+  };
+  const la = lum(a);
+  const lb = lum(b);
+  if (la === null || lb === null) return 1;
+  const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** 6-stellige Hexfarbe mit Alpha (0 … 1) als 8-stellige: „#BEE3C9“ + 0,55 → „#BEE3C98C“. */
+export function mitAlpha(hex: string, alpha: number): string {
+  const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
+    .toString(16)
+    .padStart(2, "0")
+    .toUpperCase();
+  return `${hex}${a}`;
+}
+
+/**
+ * Welche Farbe eine halbtransparente Fläche tatsächlich hat: `oben` mit
+ * `alpha` über `unten`. Damit lässt sich der Kontrast eines Textes auf einer
+ * getönten Karte rechnen, statt ihn zu raten.
+ */
+export function mische(oben: string, unten: string, alpha: number): string {
+  const p = (hex: string) => {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : null;
+  };
+  const o = p(oben);
+  const u = p(unten);
+  if (!o || !u) return unten;
+  const a = Math.max(0, Math.min(1, alpha));
+  return (
+    "#" +
+    o
+      .map((c, i) =>
+        Math.round(c * a + u[i] * (1 - a))
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+      .toUpperCase()
+  );
+}
+
+/**
+ * Textfarbe auf einer Fläche: die bevorzugte (meist die Textfarbe des
+ * Designs), wenn sie darauf WCAG AA erreicht — sonst Schwarz oder Weiß, je
+ * nachdem, was auf der Fläche besser liest. Die Flächen in der Sekundärfarbe
+ * (Hero der Eisdiele und Imbissbude, Karten von Aperitivo und Eisdiele)
+ * tragen sonst mit dunkler Nutzer-Sekundärfarbe unlesbaren Text.
+ */
+export function textAufFlaeche(
+  flaeche: string,
+  bevorzugt: string,
+  mindestens = 4.5,
+): string {
+  return kontrast(bevorzugt, flaeche) >= mindestens
+    ? bevorzugt
+    : textAufFarbe(flaeche);
+}
+
+/**
+ * Hat das Gericht ein Bild? Nur die Frage, keine Adresse — DishCard löst die
+ * Adresse selbst auf (auch für Dateien aus dem Konfigurator). Die Fotokarte
+ * entscheidet damit, ob sie ein Fotoraster oder eine schlichte Liste zeigt.
+ */
+export function hatBild(item: Pick<MenuItem, "imageUrl" | "image">): boolean {
+  if (item.imageUrl) return true;
+  const img = item.image as unknown;
+  if (!img) return false;
+  if (typeof img === "string") return img !== "" && img !== "/placeholder.svg";
+  const o = img as { url?: string; file?: unknown };
+  return Boolean(o.url && o.url !== "/placeholder.svg") || Boolean(o.file);
+}
+
 export interface Kategoriegruppe {
   /** Immer belegt — Gerichte ohne Kategorie stehen unter OHNE_KATEGORIE. */
   kategorie: string;
@@ -440,15 +907,16 @@ export function heuteHinweis(
 }
 
 /**
- * Kicker über der Hero-Überschrift — EIN Rechenweg für beide Renderer.
- *   kiosk:    nur der Tageshinweis, als Marke im Bildband
- *   izakaya:  nur der Tageshinweis — die Betriebsart steht schon im
- *             vertikalen Seitenlabel des Rahmens
- *   presse:   „Restaurant · bis 23 Uhr“, aber die Betriebsart nur, wenn eine
- *             eigene Beschreibung da ist — sonst nennt die Unterzeile sie
- *             bereits („Restaurant in Leipzig“, heroFallback.ts) und sie
- *             stünde zweimal untereinander
- *   morgen, Bestand: nichts
+ * Kicker über der Hero-Überschrift — EIN Rechenweg für beide Renderer,
+ * gesteuert über `layout.kicker`:
+ *   hinweis:    nur der Tageshinweis (kiosk als Marke im Bildband, izakaya —
+ *               die Betriebsart steht schon im vertikalen Seitenlabel —,
+ *               gelato, ramen, imbiss, roesterei, aperitivo, hofladen)
+ *   typHinweis: „Restaurant · bis 23 Uhr“, aber die Betriebsart nur, wenn
+ *               eine eigene Beschreibung da ist — sonst nennt die Unterzeile
+ *               sie bereits („Restaurant in Leipzig“, heroFallback.ts) und sie
+ *               stünde zweimal untereinander (presse, brauhaus, konditorei, markt)
+ *   keiner:     nichts (morgen, vitrine, Bestand)
  */
 export function heroKicker(
   template: string | null | undefined,
@@ -458,9 +926,9 @@ export function heroKicker(
   beschreibung?: string | null,
 ): string | null {
   const layout = getTemplateLayout(template);
-  if (!layout.eigen || layout.hero === "morgen") return null;
+  if (layout.kicker === "keiner") return null;
   const hinweis = heuteHinweis(hours, jetzt);
-  if (layout.hero === "kiosk" || layout.hero === "izakaya") return hinweis;
+  if (layout.kicker === "hinweis") return hinweis;
   const typ = beschreibung?.trim() ? typLabel(businessType) : undefined;
   const teile = [typ, hinweis].filter(Boolean);
   return teile.length ? teile.join(" · ") : null;

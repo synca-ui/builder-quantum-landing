@@ -480,6 +480,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
           anzeigen={waehleHighlights(content.menuItems, layout.highlights)}
           categories={kategorien}
           bildSichtbarkeit={content.homepageDishImageVisibility}
+          allergenLegend={content.allergenLegend}
           onAlle={() => navigateToPage("menu")}
           fontColor={design.fontColor}
           priceColor={design.priceColor}
@@ -548,6 +549,7 @@ export const AppRenderer: React.FC<AppRendererProps> = ({
           anzeigen={filteredMenuItems}
           categories={kategorien}
           bildSichtbarkeit={content.homepageDishImageVisibility}
+          allergenLegend={content.allergenLegend}
           gruppieren={!activeMenuCategory}
           fontColor={design.fontColor}
           priceColor={design.priceColor}

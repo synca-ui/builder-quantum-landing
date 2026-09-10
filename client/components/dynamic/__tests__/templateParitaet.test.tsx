@@ -100,7 +100,11 @@ function liveConfig(template: string, bilder: string = "visible") {
 }
 
 function vorschauStore(template: string, bilder: string = "visible") {
-  useConfiguratorStore.getState().resetConfig();
+  // Ausgangszustand direkt setzen statt über resetConfig: Der Store hat einen
+  // Wächter gegen Endlosschleifen (checkThrottleGuard, > 50 Aktionen pro
+  // Sekunde), und dieser Test setzt ihn seit 21 Templates × 3 Fällen
+  // mehr als 60-mal in zwei Sekunden zurück — ab dem 51. Mal flog er raus.
+  useConfiguratorStore.setState(useConfiguratorStore.getInitialState(), true);
   useConfiguratorStore.setState((s: any) => ({
     business: { ...s.business, ...BETRIEB },
     design: { ...s.design, template, ...farben(template) },

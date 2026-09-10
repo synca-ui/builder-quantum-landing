@@ -62,6 +62,80 @@ const TEMPLATES = [
     color: "bg-blue-900",
     previewColor: "border-blue-800 bg-stone-50",
   },
+  // Zweite Runde — zehn Templates, jedes für eine andere Art Betrieb
+  // (client/lib/templateLayout.ts: Fotokachel, Sticker, Strichlinie,
+  // Haarlinie, Schild, Mittelachse, Etikett, Preisschild, Kreisbild,
+  // Karteikarte). Alle hell, alle Kontraste nachgerechnet.
+  {
+    id: "vitrine",
+    nameKey: "templates.vitrine",
+    descriptionKey: "templates.vitrineDesc",
+    color: "bg-teal-700",
+    previewColor: "border-teal-600 bg-white",
+  },
+  {
+    id: "gelato",
+    nameKey: "templates.gelato",
+    descriptionKey: "templates.gelatoDesc",
+    color: "bg-pink-600",
+    previewColor: "border-pink-400 bg-orange-50/60",
+  },
+  {
+    id: "brauhaus",
+    nameKey: "templates.brauhaus",
+    descriptionKey: "templates.brauhausDesc",
+    color: "bg-amber-800",
+    previewColor: "border-amber-800 bg-amber-50/60",
+  },
+  {
+    id: "ramen",
+    nameKey: "templates.ramen",
+    descriptionKey: "templates.ramenDesc",
+    color: "bg-red-600",
+    previewColor: "border-neutral-900 bg-neutral-50",
+  },
+  {
+    id: "imbiss",
+    nameKey: "templates.imbiss",
+    descriptionKey: "templates.imbissDesc",
+    color: "bg-yellow-400",
+    previewColor: "border-neutral-900 bg-yellow-50",
+  },
+  {
+    id: "konditorei",
+    nameKey: "templates.konditorei",
+    descriptionKey: "templates.konditoreiDesc",
+    color: "bg-rose-800",
+    previewColor: "border-rose-300 bg-rose-50/60",
+  },
+  {
+    id: "roesterei",
+    nameKey: "templates.roesterei",
+    descriptionKey: "templates.roestereiDesc",
+    color: "bg-orange-800",
+    previewColor: "border-stone-700 bg-stone-100/60",
+  },
+  {
+    id: "markt",
+    nameKey: "templates.markt",
+    descriptionKey: "templates.marktDesc",
+    color: "bg-green-700",
+    previewColor: "border-green-600 bg-green-50/40",
+  },
+  {
+    id: "aperitivo",
+    nameKey: "templates.aperitivo",
+    descriptionKey: "templates.aperitivoDesc",
+    color: "bg-orange-600",
+    previewColor: "border-orange-400 bg-orange-50/60",
+  },
+  {
+    id: "hofladen",
+    nameKey: "templates.hofladen",
+    descriptionKey: "templates.hofladenDesc",
+    color: "bg-lime-800",
+    previewColor: "border-lime-700 bg-lime-50/40",
+  },
 ];
 
 interface TemplateStepProps {

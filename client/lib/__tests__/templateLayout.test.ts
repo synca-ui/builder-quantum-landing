@@ -16,15 +16,20 @@ import {
   formatPreis,
   getTemplateLayout,
   gruppiereNachKategorie,
+  hatBild,
   heroKicker,
   heuteHinweis,
   kategorieVon,
   kategorienReihenfolge,
+  kontrast,
   laufendeNummer,
+  mische,
+  mitAlpha,
   OHNE_KATEGORIE,
   teileLetztesWort,
   templateSchriftFuer,
   textAufFarbe,
+  textAufFlaeche,
   waehleHighlights,
   zeigeBilder,
 } from "../templateLayout";
@@ -39,14 +44,70 @@ import { fontClassFor } from "../fontClass";
 import de from "../../i18n/locales/de.json";
 import en from "../../i18n/locales/en.json";
 
+/** Die vier Papier-Templates der ersten Runde. */
+const PAPIER = ["presse", "kiosk", "izakaya", "morgen"];
+/** Die zehn Templates der zweiten Runde. */
+const ZWEITE_RUNDE = [
+  "vitrine",
+  "gelato",
+  "brauhaus",
+  "ramen",
+  "imbiss",
+  "konditorei",
+  "roesterei",
+  "markt",
+  "aperitivo",
+  "hofladen",
+];
+
 describe("getTemplateLayout", () => {
-  it("kennt genau die vier Papier-Templates als eigene Layouts", () => {
-    expect(EIGENE_TEMPLATES.sort()).toEqual(
-      ["izakaya", "kiosk", "morgen", "presse"].sort(),
-    );
+  it("kennt genau die vierzehn Templates mit eigenen Formen", () => {
+    expect([...EIGENE_TEMPLATES].sort()).toEqual([...PAPIER, ...ZWEITE_RUNDE].sort());
     for (const id of EIGENE_TEMPLATES) {
       expect(getTemplateLayout(id).eigen).toBe(true);
     }
+  });
+
+  it("die Papier-Templates behalten ihre Formen — die Felder sind jetzt explizit statt abgeleitet", () => {
+    const presse = getTemplateLayout("presse");
+    expect(presse).toMatchObject({ leiste: "keine", highlightsGruppiert: true, zurKarte: true, kicker: "typHinweis", knopf: "versal" });
+    const kiosk = getTemplateLayout("kiosk");
+    expect(kiosk).toMatchObject({ leiste: "register", highlightsGruppiert: false, zurKarte: false, kicker: "hinweis" });
+    const izakaya = getTemplateLayout("izakaya");
+    expect(izakaya).toMatchObject({ leiste: "heute", highlightsGruppiert: false, zurKarte: false, kicker: "hinweis", raster: "kacheln2" });
+    const morgen = getTemplateLayout("morgen");
+    expect(morgen).toMatchObject({ leiste: "keine", highlightsGruppiert: true, zurKarte: true, kicker: "keiner" });
+    const bestand = getTemplateLayout("minimalist");
+    expect(bestand).toMatchObject({ leiste: "highlights", highlightsGruppiert: false, zurKarte: false, kicker: "keiner", raster: "gestapelt" });
+  });
+
+  it("jedes Template der zweiten Runde hat eine eigene Zeilenform, eigenen Hero und eigene Kopfzeile", () => {
+    const formen = new Set<string>();
+    const heroes = new Set<string>();
+    const koepfe = new Set<string>();
+    for (const id of ZWEITE_RUNDE) {
+      const l = getTemplateLayout(id);
+      formen.add(l.dish);
+      heroes.add(l.hero);
+      koepfe.add(l.nav);
+      expect(l.nav).not.toBe("standard");
+      expect(l.cta).not.toBe("standard");
+    }
+    expect(formen.size).toBe(ZWEITE_RUNDE.length);
+    expect(heroes.size).toBe(ZWEITE_RUNDE.length);
+    expect(koepfe.size).toBe(ZWEITE_RUNDE.length);
+    // Nur die Rösterei wischt ihre Highlights als Band
+    expect(getTemplateLayout("roesterei").rasterHighlights).toBe("band");
+    expect(getTemplateLayout("vitrine").rasterHighlights).toBe("wieKarte");
+  });
+
+  it("die fünf App-artigen Templates haben je eine eigene Leiste — nicht die des Bestands", () => {
+    const leisten = ["vitrine", "gelato", "imbiss", "markt", "aperitivo"].map(
+      (id) => getTemplateLayout(id).leiste,
+    );
+    expect(new Set(leisten).size).toBe(5);
+    expect(leisten).not.toContain("highlights");
+    expect(leisten).not.toContain("keine");
   });
 
   it.each(["minimalist", "modern", "riviera", "verde", "stylish", "cozy", "nocturne", "", undefined, null])(
@@ -216,6 +277,15 @@ describe("heuteHinweis / heroKicker", () => {
     expect(heroKicker("izakaya", "cafe", undefined, montag)).toBeNull();
     expect(heroKicker("morgen", "cafe", hours, montag)).toBeNull();
     expect(heroKicker("minimalist", "cafe", hours, montag)).toBeNull();
+    // Zweite Runde: nur Tageshinweis (gelato, ramen, roesterei …), Betriebsart
+    // dazu bei brauhaus/konditorei/markt mit Beschreibung, nichts bei vitrine.
+    expect(heroKicker("gelato", "cafe", hours, montag, "x")).toBe("bis 23 Uhr");
+    expect(heroKicker("roesterei", "cafe", hours, montag, "x")).toBe("bis 23 Uhr");
+    expect(heroKicker("brauhaus", "restaurant", hours, montag, "Deftig.")).toBe(
+      "Restaurant · bis 23 Uhr",
+    );
+    expect(heroKicker("markt", "restaurant", hours, montag)).toBe("bis 23 Uhr");
+    expect(heroKicker("vitrine", "restaurant", hours, montag, "x")).toBeNull();
   });
 });
 
@@ -227,6 +297,20 @@ describe("Schriften", () => {
     expect(templateSchriftFuer("izakaya", "sans-serif")).toContain("Bricolage");
     expect(templateSchriftFuer("morgen", "monospace")).toContain("monospace");
     expect(templateSchriftFuer("minimalist", "sans-serif")).toContain("Poppins");
+    // Zweite Runde
+    expect(templateSchriftFuer("vitrine", "sans-serif")).toMatch(/^"Plus Jakarta Sans Variable"/);
+    expect(templateSchriftFuer("brauhaus", "serif")).toMatch(/^"Bitter Variable"/);
+    expect(templateSchriftFuer("hofladen", "serif")).toMatch(/^"Lora Variable"/);
+    expect(templateSchriftFuer("roesterei", "monospace")).toMatch(/^"JetBrains Mono Variable"/);
+    expect(templateSchriftFuer("ramen", "sans-serif")).toMatch(/^"Instrument Sans Variable"/);
+    expect(templateSchriftFuer("markt", "sans-serif")).toMatch(/^"Figtree Variable"/);
+    // Display folgt dem Template, nicht der Nutzerwahl
+    expect(getTemplateLayout("konditorei").schrift.display).toMatch(/^"Cormorant Variable"/);
+    expect(getTemplateLayout("gelato").schrift.display).toMatch(/^"Fredoka Variable"/);
+    expect(getTemplateLayout("imbiss").schrift.display).toMatch(/^"Unbounded Variable"/);
+    expect(getTemplateLayout("aperitivo").schrift.display).toMatch(/^"Syne Variable"/);
+    // Konditorei: Fließtext bleibt Grotesk, nur Titel und Preise in der Serife
+    expect(templateSchriftFuer("konditorei", "sans-serif")).toMatch(/^"Manrope Variable"/);
   });
 
   it("nennt die selbst gehosteten Familien (fontsource) — kein Google-Aufruf", () => {
@@ -257,15 +341,43 @@ describe("Registrierung — jedes eigene Layout steht in jeder Registry", () => 
   const rueckfallTokens = getTemplateTokens("__gibt_es_nicht__");
   const rueckfallDesign = getTemplateDesignTokens("__gibt_es_nicht__");
 
+  /** Rundung der Karten: Papier und Linien eckig, Karten und Pillen rund. */
+  const KARTENRUNDUNG: Record<string, string> = {
+    vitrine: "14px",
+    gelato: "18px",
+    roesterei: "6px",
+    markt: "8px",
+    aperitivo: "16px",
+    hofladen: "6px",
+  };
+  const KNOPFFORM: Record<string, string> = {
+    vitrine: "pill",
+    gelato: "pill",
+    aperitivo: "pill",
+    markt: "rounded",
+    hofladen: "rounded",
+  };
+
   it.each(EIGENE_TEMPLATES)("'%s' hat eigene Palette, Design-Tokens, Intent, Schrift, Knopfform", (id) => {
     expect(getTemplateTokens(id)).not.toBe(rueckfallTokens);
     expect(getTemplateDesignTokens(id)).not.toBe(rueckfallDesign);
-    expect(getTemplateDesignTokens(id).borderRadius.card).toBe("0px");
+    expect(getTemplateDesignTokens(id).borderRadius.card).toBe(KARTENRUNDUNG[id] ?? "0px");
     expect(getTemplateIntent(id)).toBe("NARRATIVE");
     expect(["sans-serif", "serif", "monospace"]).toContain(
       getTemplateDesignDefaults(id).fontFamily,
     );
-    expect(getTemplateButtonShape(id)).toBe("square");
+    expect(getTemplateButtonShape(id)).toBe(KNOPFFORM[id] ?? "square");
+  });
+
+  it("Preise in der Textfarbe, wo die Buntfarbe zu schwach trägt", () => {
+    for (const id of ["ramen", "roesterei", "aperitivo", "presse", "kiosk", "izakaya"]) {
+      const d = getTemplateDesignDefaults(id);
+      expect(d.priceColor).toBe(d.fontColor);
+    }
+    for (const id of ["vitrine", "gelato", "brauhaus", "markt", "hofladen", "konditorei"]) {
+      const d = getTemplateDesignDefaults(id);
+      expect(d.priceColor).toBe(d.primaryColor);
+    }
   });
 
   it.each(EIGENE_TEMPLATES)("'%s' ist in beiden Sprachen benannt", (id) => {
@@ -323,6 +435,36 @@ describe("textAufFarbe", () => {
     expect(textAufFarbe("#A81E14")).toBe("#FFFFFF"); // Bistro-Rot
     expect(textAufFarbe("#FFFFFF")).toBe("#000000");
     expect(textAufFarbe("nix")).toBe("#FFFFFF");
+  });
+});
+
+describe("Flächen: kontrast, mische, mitAlpha, textAufFlaeche", () => {
+  it("rechnet WCAG-Kontrast und Mischfarben", () => {
+    expect(kontrast("#FFFFFF", "#000000")).toBeCloseTo(21, 0);
+    expect(kontrast("#FFFFFF", "#FFFFFF")).toBe(1);
+    expect(kontrast("nix", "#000000")).toBe(1);
+    expect(mische("#000000", "#FFFFFF", 0.5)).toBe("#808080");
+    expect(mische("#BEE3C9", "#FFF8F0", 0)).toBe("#FFF8F0");
+    expect(mische("#BEE3C9", "#FFF8F0", 1)).toBe("#BEE3C9");
+    expect(mitAlpha("#BEE3C9", 0.55)).toBe("#BEE3C98C");
+    expect(mitAlpha("#BEE3C9", 0.4)).toBe("#BEE3C966");
+  });
+
+  it("textAufFlaeche: Textfarbe, wenn sie trägt — sonst Schwarz oder Weiß", () => {
+    // Pistazie mit Schokolade: 9,7:1 → Textfarbe bleibt
+    expect(textAufFlaeche("#BEE3C9", "#3B2A2A")).toBe("#3B2A2A");
+    // Navy mit Schokolade: unlesbar → Weiß
+    expect(textAufFlaeche("#1F2A44", "#3B2A2A")).toBe("#FFFFFF");
+    // Gelb mit Weiß als Wunsch: → Schwarz
+    expect(textAufFlaeche("#FFD23F", "#FFFFFF")).toBe("#000000");
+  });
+
+  it("hatBild: nur echte Bilder, kein Platzhalter", () => {
+    expect(hatBild({ imageUrl: "https://x/y.jpg" })).toBe(true);
+    expect(hatBild({ image: { url: "https://x/y.jpg" } })).toBe(true);
+    expect(hatBild({ image: { url: "/placeholder.svg" } })).toBe(false);
+    expect(hatBild({ image: "" as any })).toBe(false);
+    expect(hatBild({})).toBe(false);
   });
 });
 

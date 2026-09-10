@@ -485,6 +485,7 @@ export function TemplatePreviewContent() {
           anzeigen={waehleHighlights(displayItems, layout.highlights)}
           categories={kategorien}
           bildSichtbarkeit={dishImageVisibility}
+          allergenLegend={allergenLegend}
           onAlle={() => navigateToPage("menu")}
           fontColor={fontColor}
           priceColor={priceColor}
@@ -554,6 +555,7 @@ export function TemplatePreviewContent() {
             anzeigen={filteredItems}
             categories={kategorien}
             bildSichtbarkeit={dishImageVisibility}
+          allergenLegend={allergenLegend}
             gruppieren={!activeMenuCategory}
             fontColor={fontColor}
             priceColor={priceColor}
