@@ -55,7 +55,9 @@ function app() {
   const a = express();
   a.use(express.json());
   a.use((req, _res, next) => {
-    if (angemeldetAls) (req as express.Request & { user?: { id: string } }).user = { id: angemeldetAls };
+    if (angemeldetAls) {
+      req.user = { id: angemeldetAls, email: `${angemeldetAls}@example.de`, clerkId: `clerk_${angemeldetAls}` };
+    }
     next();
   });
   a.post("/orders/create", handleCreateOrder);

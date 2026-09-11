@@ -1,9 +1,9 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import {
+import type {
   SchemaOrganization,
   RestaurantSchemaConfig,
-} from "../../shared/types/schema";
+} from "@shared/types/schema";
 import { generateRestaurantSchema } from "../../lib/schemaGenerator";
 
 interface RestaurantJsonLdProps {

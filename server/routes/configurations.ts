@@ -324,7 +324,7 @@ export async function getConfigurations(req: Request, res: Response) {
 /**
  * ✅ GET /api/configurations/:id - Get single configuration
  */
-export async function getConfiguration(req: Request, res: Response) {
+export async function getConfiguration(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
 
@@ -372,7 +372,7 @@ export async function getConfiguration(req: Request, res: Response) {
 /**
  * ✅ DELETE /api/configurations/:id
  */
-export async function deleteConfiguration(req: Request, res: Response) {
+export async function deleteConfiguration(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
@@ -432,7 +432,7 @@ export async function deleteConfiguration(req: Request, res: Response) {
  * ✅ POST /api/configurations/:id/publish
  * Veröffentlicht eine Konfiguration auf der gewählten Subdomain
  */
-export async function publishConfiguration(req: Request, res: Response) {
+export async function publishConfiguration(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
@@ -559,7 +559,7 @@ export async function publishConfiguration(req: Request, res: Response) {
  *   - ETag + 304 Not Modified → Client-Browser-Cache
  *   - Cache-Control: s-maxage=60 → Netlify CDN cacht für 60s
  */
-export async function getPublishedSite(req: Request, res: Response) {
+export async function getPublishedSite(req: Request<{ subdomain: string }>, res: Response) {
   const { subdomain } = req.params;
 
   try {
@@ -769,7 +769,7 @@ export async function getPublishedSite(req: Request, res: Response) {
 /**
  * ✅ POST /api/configurations/:id/preview - Set preview config
  */
-export async function setPreviewConfig(req: Request, res: Response) {
+export async function setPreviewConfig(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user?.id;
 

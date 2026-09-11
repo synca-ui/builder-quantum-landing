@@ -382,7 +382,7 @@ router.post("/tables", requireAuth, async (req: Request, res: Response) => {
  * PUT /api/dashboard/floor-plan/tables/:id
  * Update table position/properties
  */
-router.put("/tables/:id", requireAuth, async (req: Request, res: Response) => {
+router.put("/tables/:id", requireAuth, async (req: Request<{ id: string }>, res: Response) => {
   try {
     const userId = req.userId;
     const tableId = req.params.id;
@@ -456,7 +456,7 @@ router.delete(
 router.post(
   "/tables/:id/regenerate-qr",
   requireAuth,
-  async (req: Request, res: Response) => {
+  async (req: Request<{ id: string }>, res: Response) => {
     try {
       const userId = req.userId;
       const tableId = req.params.id;

@@ -108,6 +108,13 @@ const FALLBACK_CONFIG: Configuration = {
   },
   contactMethods: ["Email: contact@juju.cafe", "Phone: (555) 123-4567"],
   reservationsEnabled: true,
+  customPages: [],
+  maxGuests: 10,
+  notificationMethod: "email",
+  onlineOrdering: false,
+  onlineStore: false,
+  teamArea: false,
+  hasDomain: false,
 };
 
 // This is the main component that renders the site, now unified with the preview logic.
