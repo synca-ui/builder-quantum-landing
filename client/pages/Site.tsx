@@ -563,7 +563,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
       className={`min-h-screen relative ${fontClass}`}
       style={{ background: styles.userBackground, color: styles.userFontColor }}
     >
-      <RestaurantJsonLd config={formData} />
+      {formData.id !== FALLBACK_CONFIG.id && <RestaurantJsonLd config={formData} />}
       <div
         className="w-full bg-white"
         style={{ height: "max(env(safe-area-inset-top, 50px), 50px)" }}

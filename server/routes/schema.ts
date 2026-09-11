@@ -4,7 +4,7 @@ import {
   validateSchema,
   schemaToJsonString,
   hasEnoughDataForSchema,
-} from "../services/schemaGenerator";
+} from "../../shared/schemaGenerator";
 import { RestaurantSchemaConfig } from "../../shared/types/schema";
 
 /**
