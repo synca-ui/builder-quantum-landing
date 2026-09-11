@@ -246,7 +246,24 @@ export const configurationApi = {
     subdomain: string,
   ): Promise<ApiResponse<Configuration>> {
     try {
-      return await apiRequest<Configuration>(`/sites/${subdomain}`);
+      // GET /api/sites/:subdomain antwortet mit `{ success, data }`. apiRequest
+      // packt diese Form nicht aus und reicht die ganze Hülle durch – ohne das
+      // Auspacken hier fehlte jedes Feld, /site/:subdomain zeigte „Your Business“.
+      // Bewusst nur hier statt in apiRequest, um andere Aufrufer nicht zu ändern.
+      const res = await apiRequest<ApiResponse<Configuration>>(
+        `/sites/${subdomain}`,
+      );
+      if (!res.success) {
+        return { success: false, error: res.error };
+      }
+      const config = res.data?.data;
+      if (!config) {
+        return {
+          success: false,
+          error: "Published site response contained no configuration",
+        };
+      }
+      return { success: true, data: config, message: res.message };
     } catch (error) {
       console.warn("Failed to get published site:", error);
       return {
