@@ -133,9 +133,16 @@ export default function ReservationFormModern({
   const showPlus = maxGuests > 4;
 
   // ── Button border radius ───────────────────────────────────────────────────
+  // Rundungen folgen dem Template (styleInjector.ts): Auf den Papier- und
+  // Linien-Templates ist --radius-input 0, auf Eisdiele und Aperitivo 12 px.
   const btnRadius =
-    buttonShape === "pill" ? "9999px" : buttonShape === "square" ? "4px" : "10px";
-  const tileRadius = "10px";
+    buttonShape === "pill"
+      ? "9999px"
+      : buttonShape === "square"
+        ? "0px"
+        : "var(--radius-button, 10px)";
+  const tileRadius = "var(--radius-input, 10px)";
+  const cardRadius = "var(--radius-card, 16px)";
 
   // ── Styles ─────────────────────────────────────────────────────────────────
   const pill = (active: boolean) => ({
@@ -194,14 +201,14 @@ export default function ReservationFormModern({
   // ── Render: Success ────────────────────────────────────────────────────────
   if (step === "success") {
     return (
-      <div style={{ backgroundColor: bgColor, borderRadius: "16px", padding: "32px 24px", textAlign: "center", color: textColor }}>
+      <div style={{ backgroundColor: bgColor, borderRadius: cardRadius, padding: "32px 24px", textAlign: "center", color: textColor }}>
         <CheckCircle style={{ width: 56, height: 56, margin: "0 auto 16px", color: primaryColor }} />
         <h2 style={{ fontSize: "22px", fontWeight: "700", margin: "0 0 8px" }}>Anfrage gesendet!</h2>
         <p style={{ color: "#6B7280", fontSize: "15px", marginBottom: "24px" }}>
           Wir haben deine Reservierungsanfrage erhalten und melden uns bald.
           {form.guestEmail && " Eine Bestätigung wurde an deine E-Mail-Adresse gesendet."}
         </p>
-        <div style={{ backgroundColor: "#F3F4F6", borderRadius: "10px", padding: "16px", textAlign: "left", marginBottom: "24px" }}>
+        <div style={{ backgroundColor: "#F3F4F6", borderRadius: tileRadius, padding: "16px", textAlign: "left", marginBottom: "24px" }}>
           <p style={{ margin: "4px 0", fontSize: "14px" }}><strong>Gast:</strong> {form.guestName}</p>
           <p style={{ margin: "4px 0", fontSize: "14px" }}><strong>Personen:</strong> {guestCount}</p>
           <p style={{ margin: "4px 0", fontSize: "14px" }}><strong>Datum:</strong> {selectedDateISO}</p>
@@ -220,7 +227,7 @@ export default function ReservationFormModern({
   // ── Render: Contact step ───────────────────────────────────────────────────
   if (step === "contact") {
     return (
-      <div style={{ backgroundColor: bgColor, borderRadius: "16px", padding: "24px", color: textColor }}>
+      <div style={{ backgroundColor: bgColor, borderRadius: cardRadius, padding: "24px", color: textColor }}>
         <button
           onClick={() => setStep("select")}
           style={{ background: "none", border: "none", color: "#6B7280", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", marginBottom: "20px", padding: 0 }}
@@ -249,7 +256,7 @@ export default function ReservationFormModern({
                 value={(form as any)[key]}
                 onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
                 placeholder={placeholder}
-                style={{ width: "100%", padding: "12px 14px", borderRadius: "8px", border: "1.5px solid #E5E7EB", fontSize: "15px", color: textColor, backgroundColor: "#fff", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", padding: "12px 14px", borderRadius: tileRadius, border: "1.5px solid #E5E7EB", fontSize: "15px", color: textColor, backgroundColor: "#fff", outline: "none", boxSizing: "border-box" }}
               />
             </div>
           ))}
@@ -273,7 +280,7 @@ export default function ReservationFormModern({
 
   // ── Render: Selection step ─────────────────────────────────────────────────
   return (
-    <div style={{ backgroundColor: bgColor, borderRadius: "16px", padding: "24px", color: textColor }}>
+    <div style={{ backgroundColor: bgColor, borderRadius: cardRadius, padding: "24px", color: textColor }}>
       <h2 style={{ fontSize: "22px", fontWeight: "700", margin: "0 0 24px" }}>Tisch reservieren</h2>
 
       {/* Personen */}

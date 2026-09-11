@@ -3,6 +3,7 @@ import express from "express";
 import prisma from "../db/prisma";
 import { requireAuth } from "../middleware/auth";
 import { normalizeScraperJob } from "./scraper";
+import { websiteUrlSpellings } from "../utils/websiteUrl";
 
 const router = express.Router();
 
@@ -28,8 +29,12 @@ router.get("/score", async (req, res) => {
     // beiden Zeitstempel für die Dauer-Anzeige. Kontaktdaten, extractedData und
     // suggestedConfig bleiben ausdrücklich draußen — genau wegen ihnen ist
     // /full jetzt authentifiziert.
+    //
+    // Gesucht wird über alle Schreibweisen: Der Hook pollt mit dem eingetippten
+    // Link, n8n speichert die vereinheitlichte Form (und bis 11.09.2026 eine mit
+    // "/" am Ende). Ein exakter Vergleich lief zwei Minuten ins Leere.
     const job = await prisma.scraperJob.findFirst({
-      where: { websiteUrl },
+      where: { websiteUrl: { in: websiteUrlSpellings(websiteUrl) } },
       orderBy: { createdAt: "desc" },
       select: {
         maitrScore: true,

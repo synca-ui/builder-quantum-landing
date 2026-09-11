@@ -16,6 +16,7 @@ import { formatHour, type TimelineBooking, type TimelineTable } from "../compone
 import { serviceDays as seedDays, type ServiceDayFixture } from "../features/reservations/fixtures";
 import type { BetriebBekanntheit } from "../features/onboarding/ablauf";
 import { hasRealAuth, mobileAuthAdapter, subscribeToRealAuthSession } from "./auth";
+import { darfMenuUebernehmen, menuZeilenAusServer, profilAusVenue } from "./venueAdopt";
 
 /**
  * Zentraler App-Zustand der Demo.
@@ -837,29 +838,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setVenueKnown("bekannt");
     // Nur überschreiben, wenn der Server wirklich einen Namen mitschickt - ein leerer
     // Name würde sonst die Kopfzeile des Start-Screens leeren.
-    const name = venue.name;
-    if (name) setVenueProfile((v) => (v.name === name ? v : { ...v, name }));
-
-    // Slogan und Merkmale kommen aus derselben Antwort (`toApiVenue` in
-    // server/maitr/routes.ts liefert tagline und tags mit) und wurden hier bisher
-    // weggeworfen - die Screens zeigten weiter die Beispieldaten.
-    //
-    // Anders als beim Namen wird hier AUCH eine leere Antwort übernommen, und das
-    // ist der Punkt: `adoptVenue` läuft ausschließlich mit echten Serverdaten
-    // (GET /venues, POST /venues, der 409-Rumpf). Wer noch keinen Slogan gepflegt
-    // hat, soll ein leeres Feld sehen und nicht den des Demo-Cafés. Genau diese
-    // Verwechslung ist im Auto-Konfigurator schon einmal teuer geworden: Slogan und
-    // Beschreibung eines Demo-Betriebs standen auf der Seite eines fremden Cafés.
-    const tagline = venue.tagline;
-    const tags = venue.tags;
-    if (tagline !== undefined || tags !== undefined) {
-      setVenueProfile((v) => ({
-        ...v,
-        ...(tagline !== undefined ? { tagline } : {}),
-        ...(tags !== undefined ? { tags } : {}),
-      }));
-    }
+    if (!venue.name) return;
+    // Das ganze Profil übernehmen, nicht nur den Namen: Seit die Veröffentlichung
+    // der Web-App den Betrieb vollständig anlegt, bringt `GET /venues` Slogan,
+    // Adresse, Öffnungszeiten und Beschreibung mit. Der Server ist die Wahrheit -
+    // was er nicht liefert, bleibt leer statt Fixture (siehe venueAdopt.ts).
+    const profil = profilAusVenue(venue);
+    setVenueProfile((v) => ({ ...v, ...profil }));
   }, []);
+
+  /* ── Speisekarte des Betriebs übernehmen ────────────────────────────────────
+     Läuft nach `adoptVenue`, sobald ein echter Betrieb bekannt ist. Die Karte
+     entsteht beim Veröffentlichen der Web-App (server/services/businessProfil.ts)
+     und ist hier nur lesbar. Übernommen wird sie nur, wenn die lokale Karte leer
+     ist oder selbst vom Server stammt - eigene Einträge des Wirts bleiben. */
+  useEffect(() => {
+    if (venueKnown !== "bekannt" || !hasRealAuth() || !isCoreConfigured()) return;
+    const controller = new AbortController();
+    api.venues
+      .menu(venueId, controller.signal)
+      .then((karte) => {
+        if (controller.signal.aborted) return;
+        const zeilen = menuZeilenAusServer(karte);
+        if (!zeilen.length) return;
+        setMenu((lokal) => (darfMenuUebernehmen(lokal) ? zeilen : lokal));
+      })
+      .catch(() => {
+        // Keine Karte, kein Netz, 403: Die lokale Karte bleibt, wie sie ist.
+      });
+    return () => controller.abort();
+  }, [venueKnown, venueId]);
 
   /* ── Welcher Betrieb gehört zu dieser Anmeldung? ────────────────────────────
      Genau eine Stelle fragt das, und sie fragt es nur, wenn es etwas zu fragen gibt.

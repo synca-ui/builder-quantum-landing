@@ -26,7 +26,7 @@
  * dann die Zielseite). Der Rahmen selbst ist winzig; seine Abhängigkeiten holt
  * Vites Preload-Helfer parallel dazu.
  */
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
@@ -35,8 +35,16 @@ const CLERK_PUBLISHABLE_KEY = import.meta.env
   .VITE_CLERK_PUBLISHABLE_KEY as string;
 
 export default function AppAreaShell() {
+  const navigate = useNavigate();
+
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    // Keep Clerk's path-based login/signup steps inside the SPA. Without these
+    // callbacks, step navigation reloads the page and restarts the background video.
+    <ClerkProvider
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      routerPush={(to) => navigate(to)}
+      routerReplace={(to) => navigate(to, { replace: true })}
+    >
       <I18nextProvider i18n={i18n}>
         <Outlet />
       </I18nextProvider>

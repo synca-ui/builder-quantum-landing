@@ -59,114 +59,11 @@ import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 import { configurationApi, type Configuration } from "@/lib/api";
 import { usePersistence } from "@/lib/stepPersistence";
+// Die Schrittliste liegt in client/lib/configuratorSteps.ts, damit der
+// automatische Modus gezielt in einen Schritt springen kann, ohne Indizes zu
+// raten (siehe Kopfkommentar dort).
+import { CONFIGURATOR_STEPS_CONFIG } from "@/lib/configuratorSteps";
 
-const CONFIGURATOR_STEPS_CONFIG = [
-  {
-    id: "template",
-    title: "Choose your template",
-    phase: 0,
-    phaseTitle: "Template Selection",
-    component: "template",
-  },
-  {
-    id: "business-info",
-    title: "Tell us about your business",
-    phase: 1,
-    phaseTitle: "Business Information",
-    component: "business-info",
-  },
-  {
-    id: "design-customization",
-    title: "Design Customization",
-    phase: 2,
-    phaseTitle: "Design Customization",
-    component: "design-customization",
-  },
-  {
-    id: "page-structure",
-    title: "Select your pages",
-    phase: 3,
-    phaseTitle: "Content Structure",
-    component: "page-structure",
-  },
-  {
-    id: "opening-hours",
-    title: "Set your opening hours",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "opening-hours",
-  },
-  {
-    id: "menu-products",
-    title: "Add your menu or products",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "menu-products",
-  },
-  {
-    id: "reservations",
-    title: "Setup reservations",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "reservations",
-  },
-  {
-    id: "contact-social",
-    title: "Contact & social media",
-    phase: 4,
-    phaseTitle: "Business Details",
-    component: "contact-social",
-  },
-  {
-    id: "media-gallery",
-    title: "Upload your photos",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "media-gallery",
-  },
-  {
-    id: "advanced-features",
-    title: "Optional features",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "advanced-features",
-  },
-  {
-    id: "feature-config",
-    title: "Configure feature",
-    phase: 5,
-    phaseTitle: "Media & Advanced",
-    component: "feature-config",
-  },
-  {
-    id: "domain-hosting",
-    title: "Choose your domain",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "domain-hosting",
-  },
-  {
-    id: "seo-optimization",
-    title: "SEO Optimization",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "seo-optimization",
-  },
-  {
-    id: "preview-adjustments",
-    title: "Preview & final tweaks",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "preview-adjustments",
-  },
-  {
-    id: "publish",
-    title: "Publish your website",
-    phase: 6,
-    phaseTitle: "Publishing",
-    component: "publish",
-  },
-];
 
 function ShareQRButton({
   url,
@@ -216,6 +113,16 @@ export default function Configurator() {
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
   const business = useConfiguratorStore((s) => s.business); // <-- DIESE ZEILE HINZUFÜGEN
   const design = useConfiguratorStore((s) => s.design);
+  // Ob die Web-App schon einmal online war. Entscheidet nur über die
+  // Wortwahl des Erfolgshinweises: "veroeffentlicht" bei der ersten,
+  // "aktualisiert" bei jeder weiteren - sonst liest sich jedes Speichern
+  // wie eine neue Seite, obwohl dieselbe Adresse ueberschrieben wird.
+  const istVeroeffentlicht = useConfiguratorStore(
+    (s) => s.publishing.status === "published",
+  );
+  const updatePublishingInfo = useConfiguratorStore(
+    (s) => s.updatePublishingInfo,
+  );
   const features = useConfiguratorStore((s) => s.features);
   const { toast } = useToast();
   const [currentConfigId, setCurrentConfigId] = useState<string | null>(
@@ -268,7 +175,15 @@ export default function Configurator() {
       headerFontColor: design.headerFontColor || "#5e30eb",
       headerBackgroundColor: design.headerBackgroundColor || "#FFFFFF",
       headerFontSize: design.headerFontSize || "3xl",
-      reservationButtonColor: features.reservationButtonColor || "#94e3fe",
+      // Ohne Schriftfamilie fiele --font-template auf den Sans-Stapel: Die
+      // Vorschau zeigte presse in Manrope, die Live-Seite in Newsreader.
+      fontFamily: design.fontFamily,
+      // Kein Ersatzblau hier: styleInjector faellt bei leerem Wert selbst auf
+      // var(--color-primary) zurueck (client/lib/styleInjector.ts:77) — eine
+      // hier erzwungene Farbe hebelt genau das aus (derselbe Bug, der
+      // serverseitig fuer "#94e3fe" schon gefixt ist, server/routes/
+      // configurations.ts:717-729).
+      reservationButtonColor: features.reservationButtonColor,
       reservationButtonTextColor:
         features.reservationButtonTextColor || "#000000",
     });
@@ -281,6 +196,7 @@ export default function Configurator() {
   }, [
     // Alle Werte hinzufügen, die eine Live-Aktualisierung auslösen sollen
     design.template,
+    design.fontFamily,
     design.primaryColor,
     design.secondaryColor,
     design.backgroundColor,
@@ -342,8 +258,18 @@ export default function Configurator() {
         setPublishedUrl(url);
         setSaveStatus("saved");
         toast({
-          title: "Web-App veröffentlicht",
+          title: istVeroeffentlicht
+            ? "Web-App aktualisiert"
+            : "Web-App veröffentlicht",
           description: `Live unter ${url}`,
+        });
+        // Damit der automatische Modus die bestehende Seite kennt, wenn man
+        // ihn erneut oeffnet - und damit der Hinweis oben beim naechsten Mal
+        // "aktualisiert" sagt.
+        updatePublishingInfo({
+          status: "published",
+          publishedUrl: url,
+          publishedAt: new Date().toISOString(),
         });
         setTimeout(() => setSaveStatus("idle"), 2000);
       } else {
@@ -375,6 +301,8 @@ export default function Configurator() {
     business.domain?.selectedDomain,
     business.name,
     toast,
+    istVeroeffentlicht,
+    updatePublishingInfo,
   ]);
 
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -477,7 +405,7 @@ export default function Configurator() {
   // State (aktive Seite, Warenkorb, Scrollposition) zurück.
   const renderLivePreview = () => (
     <div className="flex flex-col items-center justify-start pt-2">
-      <div className="w-[280px] xl:w-[320px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
+      <div className="w-[280px] flex justify-between items-center mb-4 px-1 opacity-90 transition-opacity shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
@@ -488,10 +416,11 @@ export default function Configurator() {
       </div>
 
       <div
-        className={`relative z-10 transform origin-top scale-[0.75] xl:scale-[0.85] transition-all duration-100 pointer-events-auto ${
-          isTransitioning
-            ? "opacity-90 scale-[0.745] xl:scale-[0.845]"
-            : "opacity-100"
+        // Der Rahmen ist 360 × 740 px und wird auf 75 % verkleinert — auf
+        // allen Fensterbreiten gleich. Vorher sprang er ab 1280 px auf 85 %
+        // und wirkte auf großen Bildschirmen zu dominant.
+        className={`relative z-10 transform origin-top scale-[0.75] transition-all duration-100 pointer-events-auto ${
+          isTransitioning ? "opacity-90 scale-[0.745]" : "opacity-100"
         }`}
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/10 to-purple-500/10 blur-3xl rounded-full opacity-30 -z-10" />
@@ -513,7 +442,7 @@ export default function Configurator() {
         </LivePhoneFrame>
       </div>
 
-      <div className="mt-[-80px] xl:mt-[-40px] text-center opacity-60 shrink-0">
+      <div className="mt-[-80px] text-center opacity-60 shrink-0">
         <p className="text-[10px] text-gray-400 font-medium">
           {t("nav.interactive")}
         </p>

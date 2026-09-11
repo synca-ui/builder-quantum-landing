@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LivePhoneFrame } from "@/components/preview/LivePhoneFrame";
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
-import { defaultTemplates } from "@/components/template/TemplateRegistry";
+import { TEMPLATE_REGISTRY } from "@shared/templateCatalog";
 
 interface MobileCreativeStudioProps {
   onBack?: () => void;
@@ -33,7 +33,7 @@ export default function MobileCreativeStudio({
   >("preview");
   const [showFullPreview, setShowFullPreview] = useState(false);
 
-  const templates = defaultTemplates;
+  const templates = TEMPLATE_REGISTRY;
   const currentTemplate =
     templates.find((t) => t.id === selectedTemplate) || templates[0];
 

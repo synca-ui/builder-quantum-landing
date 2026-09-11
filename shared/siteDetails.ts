@@ -43,6 +43,12 @@ export interface SiteDetails {
   siteName?: string;
   /** Absolute Adresse des Logos, falls eines gefunden wurde. */
   logoUrl?: string;
+  /**
+   * Bilder, die die Seite in ihren strukturierten Daten als Aushängeschild
+   * nennt (`image` am Restaurant-Knoten), absolut und ohne Doppelte. Ergänzt
+   * die Galerie des Scrapes, der nur <img>-Tags einsammelt.
+   */
+  images?: string[];
   /** Einzeilig zusammengesetzt, z.B. "Spiekerhof 45, 48143 Münster". */
   address?: string;
   slogan?: string;
@@ -105,6 +111,32 @@ export function collectJsonLd(html: string): any[] {
     }
   }
   return out;
+}
+
+/**
+ * Löst eine Bildangabe aus JSON-LD zu einer Adresse auf.
+ *
+ * Drei Formen kommen vor: eine nackte Adresse, ein ImageObject mit `url` bzw.
+ * `contentUrl` – und ein Verweis `{"@id": "…#logo"}` auf einen Knoten, der
+ * anderswo im @graph steht. Die dritte Form ist die, die Baukästen und
+ * SEO-Plugins erzeugen (Yoast, Rank Math), und sie wurde bisher übergangen:
+ * haus-toeller.de führt sein Logo genau so, und der Entwurf bekam statt des
+ * Logos das og:image – ein Stimmungsfoto in der Kopfzeile.
+ */
+function resolveImageRef(ref: unknown, nodes: any[]): string | undefined {
+  if (typeof ref === "string") return ref.trim() || undefined;
+  if (!ref || typeof ref !== "object") return undefined;
+  const obj = ref as Record<string, unknown>;
+  const direct = obj.url ?? obj.contentUrl;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+  if (typeof obj["@id"] === "string") {
+    const ziel = nodes.find((n) => n?.["@id"] === obj["@id"] && n !== ref);
+    if (ziel) {
+      const url = ziel.url ?? ziel.contentUrl;
+      if (typeof url === "string" && url.trim()) return url.trim();
+    }
+  }
+  return undefined;
 }
 
 const hasType = (node: any, ...types: string[]): boolean => {
@@ -296,10 +328,24 @@ export function extractSiteDetails(html: string, baseUrl: string): SiteDetails {
     const address = formatAddress(business.address);
     if (address) details.address = address;
 
-    const logo =
-      typeof business.logo === "string" ? business.logo : business.logo?.url;
-    const fromLd = absolutize(logo, baseUrl);
+    const fromLd = absolutize(resolveImageRef(business.logo, nodes), baseUrl);
     if (fromLd) details.logoUrl = fromLd;
+
+    // Die Bilder, die der Betreiber selbst als Aushängeschild ausgezeichnet
+    // hat (`image` am Restaurant-Knoten). Der Scrape-Flow sammelt nur
+    // <img>-Tags der Startseite ein – eine Seite, die ihre Fotos per CSS oder
+    // <picture> einbindet, liefert ihm nichts, obwohl die Adressen sauber in
+    // den strukturierten Daten stehen (haus-toeller.de: drei Bilder dort,
+    // eines im Scrape).
+    const rohBilder: unknown[] = Array.isArray(business.image)
+      ? business.image
+      : [business.image];
+    const images: string[] = [];
+    for (const img of rohBilder) {
+      const url = absolutize(resolveImageRef(img, nodes), baseUrl);
+      if (url && !images.includes(url)) images.push(url);
+    }
+    if (images.length) details.images = images;
 
     if (typeof business.slogan === "string" && business.slogan.trim()) {
       details.slogan = business.slogan.trim();

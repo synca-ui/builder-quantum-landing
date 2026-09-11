@@ -27,7 +27,8 @@ import GalleryGrid from "@/components/sections/GalleryGrid";
 import { configurationApi, type Configuration } from "@/lib/api";
 import ReservationButton from "@/components/ui/ReservationButton";
 import { RestaurantJsonLd } from "@/components/seo/RestaurantJsonLd";
-import { defaultTemplates } from "@/components/template/TemplateRegistry";
+import { formatOfferPrice } from "@/components/shared/OffersSection";
+import { TEMPLATE_REGISTRY } from "@shared/templateCatalog";
 
 // Shared configuration
 const fontOptions = [
@@ -36,8 +37,12 @@ const fontOptions = [
   { id: "display", class: "font-mono" },
 ];
 
-// Use canonical template definitions from TemplateRegistry
-const templates = defaultTemplates;
+// Vorlagen kommen aus dem gemeinsamen Katalog (shared/templateCatalog.ts).
+// Vorher lag hier eine eigene Liste in TemplateRegistry.tsx, die nur vier
+// Vorlagen kannte und eigene, von client/lib/templateTokens.ts abweichende
+// Farben mitbrachte: Wer presse/kiosk/izakaya/morgen veröffentlichte, bekam
+// hier stillschweigend die Palette von "minimalist" als Rückfall.
+const templates = TEMPLATE_REGISTRY;
 
 const FALLBACK_CONFIG: Configuration = {
   id: "fallback",
@@ -106,20 +111,29 @@ const FALLBACK_CONFIG: Configuration = {
 };
 
 // This is the main component that renders the site, now unified with the preview logic.
+//
+// Das Banner hörte hier weder auf den Schalter „Banner auf der Startseite
+// anzeigen" (es erschien, sobald irgendein Angebot existierte) noch auf die
+// gewählte Größe, und es schrieb den Preis mit Dollarzeichen aus („$9,99")
+// unter einen Knopf „View Offer", der nichts tat. Aufgefallen ist das erst,
+// als die Angebote überhaupt bis zur veröffentlichten Seite durchkamen — die
+// öffentliche Feldliste hatte sie vorher fallen lassen.
+//
+// Diese Ansicht kennt keine Angebote-SEITE (der Seitenschalter unten kennt
+// nur home/menu/gallery/about/contact/settings), deshalb bleibt das Banner
+// hier bewusst ein Hinweis ohne Ziel statt eines Knopfes ins Leere. Der
+// Renderer der veröffentlichten Subdomain (AppRenderer) hat beides.
 const OffersBanner = ({ offers, styles, normalizeUrl, offerBanner }) => {
+  if (!offerBanner?.enabled) return null;
   if (!offers || offers.length === 0) return null;
 
   // For now, just display the first offer
   const offer = offers[0];
+  const preis = formatOfferPrice(offer.price);
 
   const bannerStyles = {
     backgroundColor: offerBanner?.backgroundColor || "#000000",
     color: offerBanner?.textColor || "#FFFFFF",
-  };
-
-  const buttonStyles = {
-    backgroundColor: offerBanner?.buttonColor || "#FFFFFF",
-    color: offerBanner?.backgroundColor || "#000000",
   };
 
   return (
@@ -133,11 +147,8 @@ const OffersBanner = ({ offers, styles, normalizeUrl, offerBanner }) => {
       )}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
         <h3 className="font-bold text-2xl">{offer.name}</h3>
-        <p className="text-lg">{offer.description}</p>
-        <p className="font-bold text-xl mt-2">${offer.price}</p>
-        <button className="mt-4 px-4 py-2 rounded-lg" style={buttonStyles}>
-          View Offer
-        </button>
+        <p className="text-lg">{offerBanner?.text || offer.description}</p>
+        {preis && <p className="font-bold text-xl mt-2">{preis}</p>}
       </div>
     </div>
   );
@@ -164,7 +175,6 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
   const selectedIdForSwitch = formData.template || "modern";
   const selectedTemplateDef =
     templates.find((t) => t.id === selectedIdForSwitch) || templates[0];
-  const mockup = selectedTemplateDef.mockup || templates[0].mockup;
   const baseTemplateStyle = selectedTemplateDef.style;
 
   const themeOverride =

@@ -11,10 +11,54 @@
  * Wer eine Palette ändert, ändert diese Zusicherung mit — bewusst.
  */
 import { describe, expect, it } from "vitest";
-import { getTemplateDesignDefaults } from "../templateTokens";
+import { PICKER_TEMPLATES as KATALOG_PICKER } from "../../../shared/templateCatalog";
+import { getTemplateDesignDefaults, getTemplateTokens } from "../templateTokens";
+import { textAufFarbe } from "../templateLayout";
 
-/** Templates, die der Picker anbietet (TemplateStep.tsx). */
-const PICKER_TEMPLATES = ["minimalist", "modern", "riviera", "verde"];
+/**
+ * Templates, die der Picker anbietet — aus shared/templateCatalog.ts, der
+ * einen Liste, aus der auch Picker, Seed und API lesen. Ein Template, das
+ * dort imPicker steht, aber hier fehlte, wäre ungeprüft.
+ */
+const PICKER_TEMPLATES = KATALOG_PICKER.map((e) => e.id);
+
+describe("Picker-Liste", () => {
+  it("umfasst die sechs bisherigen und die zehn neuen Templates", () => {
+    expect(PICKER_TEMPLATES).toEqual([
+      "minimalist",
+      "modern",
+      "presse",
+      "kiosk",
+      "izakaya",
+      "morgen",
+      "vitrine",
+      "gelato",
+      "brauhaus",
+      "ramen",
+      "imbiss",
+      "konditorei",
+      "roesterei",
+      "markt",
+      "aperitivo",
+      "hofladen",
+    ]);
+  });
+});
+
+/**
+ * Ohne diese Prüfung wäre der Wächter falsch grün: Fehlt einem Template der
+ * Eintrag in TEMPLATE_TOKENS, liefert getTemplateDesignDefaults still die
+ * Minimalist-Palette — und die besteht jeden Kontrasttest.
+ */
+describe("Picker-Templates haben eine eigene Palette", () => {
+  const rueckfall = getTemplateTokens("__gibt_es_nicht__");
+  it.each(PICKER_TEMPLATES.filter((id) => id !== "minimalist"))(
+    "'%s' fällt nicht auf Minimalist zurück",
+    (id) => {
+      expect(getTemplateTokens(id)).not.toBe(rueckfall);
+    },
+  );
+});
 
 function luminance(hex: string): number {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -50,6 +94,18 @@ describe.each(PICKER_TEMPLATES)("Palette '%s'", (id) => {
 
   it("Preisfarbe bleibt auf dem Hintergrund lesbar (≥ 3:1)", () => {
     expect(contrast(d.priceColor, d.backgroundColor)).toBeGreaterThanOrEqual(3);
+  });
+
+  it("Knopfschrift auf der Primärfarbe erreicht WCAG AA — Reservieren, Bestellen, Pillen", () => {
+    // Der Store wählt die Knopfschrift nach Luminanz (configuratorStore.
+    // updateTemplate), die Komponenten nach textAufFarbe — beide müssen auf
+    // der Vorgabe-Primärfarbe dieselbe Farbe wählen UND die muss lesen.
+    const schrift = textAufFarbe(d.primaryColor);
+    expect(contrast(schrift, d.primaryColor)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("bleibt hell — dunkel stellt sich der Betrieb selbst ein", () => {
+    expect(luminance(d.backgroundColor)).toBeGreaterThan(0.6);
   });
 
   it("verwendet nur 6-stellige Hexfarben (Alpha-Suffixe der Wrapper brauchen das)", () => {

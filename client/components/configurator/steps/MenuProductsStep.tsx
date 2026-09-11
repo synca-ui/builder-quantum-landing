@@ -12,10 +12,21 @@ import {
   Edit2,
   Check,
   Loader2,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  ergaenzeDehogaLegende,
+  fehlendeKuerzel,
+  kuerzelAnzeige,
+  labelText,
+  parseKuerzel,
+  sortiereKuerzel,
+  STANDARD_LABELS,
+} from "@/lib/kennzeichnung";
 import { Badge } from "@/components/ui/badge";
 import {
   useConfiguratorStore,
@@ -31,6 +42,257 @@ import type { MenuItem } from "@/types/domain";
 interface MenuProductsStepProps {
   nextStep: () => void;
   prevStep: () => void;
+}
+
+/**
+ * Kennzeichnung eines Gerichts: Ernährungs-Labels als Schalter, Allergen-
+ * und Zusatzstoff-Kürzel als Text. Bis hierher kamen beide Felder NUR aus
+ * der automatischen Erkennung — wer seine Karte von Hand pflegte, konnte
+ * kein Allergen eintragen, obwohl LMIV/LMIDV es für jedes Gericht verlangen.
+ *
+ * Die Kürzel werden erst beim Verlassen des Felds (oder mit Enter)
+ * übernommen: Jeder Tastendruck als Store-Aktion liefe in den
+ * Endlosschleifen-Wächter des Stores.
+ */
+function KennzeichnungFelder({
+  labels,
+  allergens,
+  onLabels,
+  onAllergens,
+  idPrefix,
+}: {
+  labels: string[];
+  allergens: string[];
+  onLabels: (labels: string[]) => void;
+  onAllergens: (codes: string[]) => void;
+  idPrefix: string;
+}) {
+  const vorgabe = allergens.map(kuerzelAnzeige).join(", ");
+  const [text, setText] = useState(vorgabe);
+  useEffect(() => setText(vorgabe), [vorgabe]);
+  const commit = () => onAllergens(parseKuerzel(text));
+  const eigene = labels.filter(
+    (l) => !(STANDARD_LABELS as readonly string[]).includes(labelText(l)),
+  );
+
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      <div>
+        <span className="block text-sm font-bold text-gray-700 mb-2">
+          Ernährungs-Labels
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {STANDARD_LABELS.map((l) => {
+            const aktiv = labels.map(labelText).includes(l);
+            return (
+              <button
+                type="button"
+                key={l}
+                aria-pressed={aktiv}
+                onClick={() =>
+                  onLabels(
+                    aktiv
+                      ? labels.filter((x) => labelText(x) !== l)
+                      : [...labels, l],
+                  )
+                }
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                  aktiv
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-green-400"
+                }`}
+              >
+                {l}
+              </button>
+            );
+          })}
+          {eigene.map((l) => (
+            <span
+              key={l}
+              className="px-3 py-1.5 rounded-full text-sm border bg-gray-50 text-gray-700 border-gray-300 flex items-center gap-1"
+            >
+              {l}
+              <button
+                type="button"
+                aria-label={`Label ${l} entfernen`}
+                onClick={() => onLabels(labels.filter((x) => x !== l))}
+                className="hover:text-red-600"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-1.5">
+          „glutenfrei“ ist eine geregelte Angabe (höchstens 20 mg/kg Gluten,
+          VO (EU) 828/2014) — nur setzen, wenn die Küche das sicherstellt.
+        </p>
+      </div>
+      <div>
+        <label
+          htmlFor={`${idPrefix}-allergene`}
+          className="block text-sm font-bold text-gray-700 mb-2"
+        >
+          Allergene und Zusatzstoffe (Kürzel)
+        </label>
+        <Input
+          id={`${idPrefix}-allergene`}
+          type="text"
+          value={text}
+          placeholder="z. B. A, C, G, 2"
+          onChange={(e) => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit();
+            }
+          }}
+          className="w-full bg-white"
+        />
+        <p className="text-xs text-gray-500 mt-1.5">
+          Kürzel wie auf deiner Karte, mit Komma getrennt. Was sie bedeuten,
+          steht in der Legende — sie erscheint unter der Speisekarte.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Legende der Kürzel: welches Kürzel steht für welchen Stoff. Sie erscheint
+ * unter der Speisekarte der Web-App — LMIDV § 2 erlaubt Kürzel nur, wenn
+ * ihre Bedeutung in derselben Karte gut lesbar erklärt ist. Die Zuordnung
+ * legt der Betrieb fest; die DEHOGA-Vorlage (Buchstaben für Allergene,
+ * Ziffern für Zusatzstoffe) ist ein Angebot und überschreibt nichts.
+ */
+function LegendeKarte() {
+  const legend = useConfiguratorStore((s) => s.content.allergenLegend) || {};
+  const menuItems = useConfiguratorStore((s) => s.content.menuItems);
+  const actions = useConfiguratorActions();
+  const [neuKuerzel, setNeuKuerzel] = useState("");
+  const [neuText, setNeuText] = useState("");
+
+  const codes = sortiereKuerzel(Object.keys(legend));
+  const fehlend = fehlendeKuerzel(legend, menuItems);
+
+  const setzen = (code: string, text: string) => {
+    const k = parseKuerzel(code)[0];
+    if (!k) return;
+    // setAllergenLegend führt zusammen — Streichen geht nur über die
+    // eigene Aktion, sonst käme der Eintrag beim nächsten Merge zurück.
+    if (text.trim()) actions.content.setAllergenLegend({ [k]: text.trim() });
+    else actions.content.removeAllergenLegendEntry(k);
+  };
+  const hinzufuegen = () => {
+    const k = parseKuerzel(neuKuerzel)[0];
+    if (!k || !neuText.trim()) return;
+    setzen(k, neuText);
+    setNeuKuerzel("");
+    setNeuText("");
+  };
+
+  return (
+    <Card className="p-6 mb-6 border-amber-100 bg-amber-50/40">
+      <div className="flex items-center gap-2 mb-2">
+        <Info className="w-5 h-5 text-amber-700" />
+        <h3 className="text-lg font-bold text-gray-900">
+          Allergene und Zusatzstoffe erklären (Legende)
+        </h3>
+      </div>
+      <p className="text-sm text-gray-600 mb-4">
+        Die 14 Hauptallergene müssen bei jedem Gericht erkennbar sein
+        (LMIV, LMIDV § 2). Kürzel sind erlaubt, wenn ihre Bedeutung in
+        derselben Karte gut lesbar steht — diese Legende erscheint unter
+        deiner Speisekarte. Allergene und Zusatzstoffe sollen unterscheidbar
+        bleiben, üblich sind Buchstaben für Allergene und Ziffern für
+        Zusatzstoffe.
+      </p>
+
+      {fehlend.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 mb-4 p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-800"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            An deinen Gerichten stehen Kürzel ohne Erklärung:{" "}
+            <strong>{fehlend.map(kuerzelAnzeige).join(", ")}</strong>. Gäste
+            sehen sie dann unerklärt — bitte unten ergänzen.
+          </span>
+        </div>
+      )}
+
+      {codes.length > 0 ? (
+        <div className="space-y-2 mb-4">
+          {codes.map((code) => (
+            <div key={code} className="flex items-center gap-2">
+              <span className="w-12 shrink-0 font-mono font-semibold text-gray-800">
+                {kuerzelAnzeige(code)}
+              </span>
+              <Input
+                type="text"
+                aria-label={`Bedeutung von ${kuerzelAnzeige(code)}`}
+                defaultValue={legend[code]}
+                onBlur={(e) => setzen(code, e.target.value)}
+                className="flex-1 bg-white"
+              />
+              <button
+                type="button"
+                aria-label={`Kürzel ${kuerzelAnzeige(code)} entfernen`}
+                onClick={() => setzen(code, "")}
+                className="p-1 text-gray-400 hover:text-red-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 italic mb-4">
+          Noch keine Legende. Übernimm die DEHOGA-Vorlage oder trage deine
+          eigenen Kürzel ein.
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          type="text"
+          aria-label="Neues Kürzel"
+          placeholder="Kürzel"
+          value={neuKuerzel}
+          onChange={(e) => setNeuKuerzel(e.target.value)}
+          className="w-24 bg-white"
+        />
+        <Input
+          type="text"
+          aria-label="Bedeutung des neuen Kürzels"
+          placeholder="Bedeutung, z. B. Glutenhaltiges Getreide"
+          value={neuText}
+          onChange={(e) => setNeuText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && hinzufuegen()}
+          className="flex-1 min-w-[12rem] bg-white"
+        />
+        <Button
+          type="button"
+          onClick={hinzufuegen}
+          disabled={!parseKuerzel(neuKuerzel).length || !neuText.trim()}
+          className="bg-amber-600 hover:bg-amber-700"
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            actions.content.setAllergenLegend(ergaenzeDehogaLegende(legend))
+          }
+        >
+          DEHOGA-Vorlage ergänzen
+        </Button>
+      </div>
+    </Card>
+  );
 }
 
 // Debounced Input Helper für Menu Items
@@ -100,6 +362,8 @@ export function MenuProductsStep({
     price: "",
     category: "",
     images: [] as { url: string; alt: string; file?: File }[],
+    labels: [] as string[],
+    allergens: [] as string[],
   });
 
   // Category management state
@@ -160,6 +424,8 @@ export function MenuProductsStep({
         category: newItem.category || undefined,
         image: newItem.images?.[0],
         images: newItem.images,
+        ...(newItem.labels.length ? { labels: newItem.labels } : {}),
+        ...(newItem.allergens.length ? { allergens: newItem.allergens } : {}),
       };
       actions.content.addMenuItem(itemToAdd);
       setNewItem({
@@ -168,6 +434,8 @@ export function MenuProductsStep({
         price: "",
         category: "",
         images: [],
+        labels: [],
+        allergens: [],
       });
     }
   };
@@ -739,6 +1007,8 @@ export function MenuProductsStep({
         )}
       </Card>
 
+      <LegendeKarte />
+
       <Card className="p-6 mb-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
           {t("menu.addNewItem")}
@@ -858,6 +1128,17 @@ export function MenuProductsStep({
             </div>
           )}
         </div>
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <KennzeichnungFelder
+            idPrefix="neu"
+            labels={newItem.labels}
+            allergens={newItem.allergens}
+            onLabels={(labels) => setNewItem((prev) => ({ ...prev, labels }))}
+            onAllergens={(allergens) =>
+              setNewItem((prev) => ({ ...prev, allergens }))
+            }
+          />
+        </div>
       </Card>
 
       {menuItems.length > 0 && (
@@ -949,6 +1230,37 @@ export function MenuProductsStep({
                   {t("menu.images")}
                 </div>
               </div>
+
+              {/* Kennzeichnung — zusammengeklappt zeigt die Zeile, was gesetzt ist */}
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-gray-700 select-none">
+                  <span className="font-semibold">Kennzeichnung</span>
+                  <span className="text-gray-500">
+                    {": "}
+                    {[
+                      ...(item.labels ?? []).map(labelText),
+                      ...(item.allergens ?? []).map(kuerzelAnzeige),
+                    ].join(" · ") || "keine Angaben"}
+                  </span>
+                </summary>
+                <div className="mt-3">
+                  <KennzeichnungFelder
+                    idPrefix={item.id}
+                    labels={item.labels ?? []}
+                    allergens={item.allergens ?? []}
+                    onLabels={(labels) =>
+                      actions.content.updateMenuItem(item.id, {
+                        labels: labels.length ? labels : undefined,
+                      } as any)
+                    }
+                    onAllergens={(allergens) =>
+                      actions.content.updateMenuItem(item.id, {
+                        allergens: allergens.length ? allergens : undefined,
+                      } as any)
+                    }
+                  />
+                </div>
+              </details>
 
               {/* ✅ HIGHLIGHT CHECKBOX */}
               <div className="mt-4 pt-4 border-t border-gray-100">

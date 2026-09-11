@@ -18,6 +18,7 @@ import prisma from "../db/prisma";
 import { Prisma } from "@prisma/client";
 import { requireAuth } from "../middleware/auth";
 import { createAuditLogger } from "../utils/audit";
+import { normalizeWebsiteUrl } from "../utils/websiteUrl";
 // Bewusst relativ statt über den "@shared"-Alias: vite.config.ts zieht den
 // Server-Baum über `await import("./server")` in die Auflösung der Config, und
 // dort ist der Alias nicht bekannt. Ein reiner Typ-Import (wie @shared/api in
@@ -45,6 +46,11 @@ function isValidUrl(url: string): boolean {
     return false;
   }
 }
+
+// Liegt in utils/websiteUrl.ts, weil auch /api/forward-to-n8n und
+// /api/scraper-job/score dieselbe Schreibweise brauchen. Setzt eine gültige URL
+// voraus – isValidUrl läuft davor.
+export { normalizeWebsiteUrl };
 
 /**
  * ✅ Get audit logger helper
@@ -264,7 +270,7 @@ export async function createScraperJob(req: Request, res: Response) {
     const {
       businessName,
       businessType = "restaurant",
-      websiteUrl,
+      websiteUrl: rawWebsiteUrl,
       mapsLink,
       menuFile,
     } = req.body;
@@ -293,7 +299,7 @@ export async function createScraperJob(req: Request, res: Response) {
       });
     }
 
-    if (!websiteUrl || typeof websiteUrl !== "string") {
+    if (!rawWebsiteUrl || typeof rawWebsiteUrl !== "string") {
       return res.status(400).json({
         success: false,
         error: "Invalid websiteUrl",
@@ -302,13 +308,21 @@ export async function createScraperJob(req: Request, res: Response) {
     }
 
     // Validate URL format
-    if (!isValidUrl(websiteUrl)) {
+    if (!isValidUrl(rawWebsiteUrl)) {
       return res.status(400).json({
         success: false,
         error: "Invalid URL format",
         message: "websiteUrl must be a valid URL (e.g., https://example.com)",
       });
     }
+
+    // Eine Schreibweise je Website. `websiteUrl` ist der Unique-Schlüssel der
+    // Tabelle – ohne Vereinheitlichung standen "https://kleiner-kiepenkerl.de"
+    // und "https://kleiner-kiepenkerl.de/" als ZWEI Zeilen in der Produktion,
+    // mit zwei Ergebnissen, zwei Besitzern und zwei Scrape-Läufen für dieselbe
+    // Seite. Host klein, Schrägstrich am Ende weg, Fragment weg; Pfad und
+    // Query bleiben (eine Unterseite ist eine andere Adresse).
+    const websiteUrl = normalizeWebsiteUrl(rawWebsiteUrl);
 
     // Der Auto-Konfigurator kennt beim Auslösen oft nur die URL, die Spalte
     // businessName ist aber NOT NULL. Der Hostname ist ein brauchbarer
