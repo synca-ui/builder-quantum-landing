@@ -178,7 +178,12 @@ export default function Configurator() {
       // Ohne Schriftfamilie fiele --font-template auf den Sans-Stapel: Die
       // Vorschau zeigte presse in Manrope, die Live-Seite in Newsreader.
       fontFamily: design.fontFamily,
-      reservationButtonColor: features.reservationButtonColor || "#94e3fe",
+      // Kein Ersatzblau hier: styleInjector faellt bei leerem Wert selbst auf
+      // var(--color-primary) zurueck (client/lib/styleInjector.ts:77) — eine
+      // hier erzwungene Farbe hebelt genau das aus (derselbe Bug, der
+      // serverseitig fuer "#94e3fe" schon gefixt ist, server/routes/
+      // configurations.ts:717-729).
+      reservationButtonColor: features.reservationButtonColor,
       reservationButtonTextColor:
         features.reservationButtonTextColor || "#000000",
     });
