@@ -1052,13 +1052,24 @@ export const loyaltyRouter = Router();
 /**
  * Wie `asyncHandler`, plus die eine Antwort, die dieser Bereich zusätzlich braucht.
  *
- * Die Loyalty-Tabellen liegen als Migrationsdatei vor und sind nach heutigem Stand
- * NICHT eingespielt (prisma/migrations/20260805_add_loyalty_wallet_whatsapp, dazu
- * 20260806_add_stampcard_reward_snapshot). Bis ein Mensch das tut, antwortet Postgres
- * mit 42P01. Das ist ein bekannter, vorübergehender Zustand - er gehört als 503 mit
- * einem benennbaren Grund beantwortet, nicht als 500. Ein 500 sähe aus wie ein
- * Absturz, und der Bildschirm könnte den Unterschied nicht machen: er würde einen
- * "Erneut versuchen"-Knopf anbieten, der nie hilft.
+ * STAND 31.08.2026: Die Loyalty-Tabellen SIND in der Produktivdatenbank vorhanden.
+ * Gegen Neon geprüft - `_prisma_migrations` führt 20260805_add_loyalty_wallet_whatsapp
+ * (05.08.) und 20260806_add_stampcard_reward_snapshot (06.08.) als eingespielt, und
+ * StampCard, StampEvent, StampProgram sowie WalletDeviceRegistration existieren.
+ *
+ * Hier stand zuvor das Gegenteil ("nach heutigem Stand NICHT eingespielt"). Der Satz
+ * hat überlebt, was er beschrieb, und dann echten Schaden angerichtet: Eine
+ * Bestandsaufnahme der Datenherkunft stufte daraufhin den einzigen Bereich der App
+ * mit echten Daten als "antwortet in Produktion vermutlich mit 503" ein - der
+ * schwerwiegendste Befund des ganzen Berichts, und er war falsch. Ein Kommentar, der
+ * eine Tatsache über die Produktion behauptet, muss ein Datum tragen; sonst liest ihn
+ * der Nächste als Gegenwart.
+ *
+ * Der 503-Weg bleibt trotzdem, denn er ist Vorsorge und nicht Diagnose: Läuft eine
+ * künftige Migration einer Auslieferung hinterher, antwortet Postgres mit 42P01. Das
+ * gehört als 503 mit benennbarem Grund beantwortet, nicht als 500. Ein 500 sähe aus
+ * wie ein Absturz, und der Bildschirm könnte den Unterschied nicht machen: er würde
+ * einen "Erneut versuchen"-Knopf anbieten, der nie hilft.
  *
  * Nur für diesen Router. Alles andere fliegt unverändert an die Fehler-Middleware.
  */

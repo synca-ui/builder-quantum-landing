@@ -472,6 +472,8 @@ const memoizedPersistenceAPI = {
   restoreToStep: stepPersistence.restoreToStep.bind(stepPersistence),
   clearAll: stepPersistence.clearAll.bind(stepPersistence),
   getSummary: stepPersistence.getSummary.bind(stepPersistence),
+  exportData: stepPersistence.exportData.bind(stepPersistence),
+  importData: stepPersistence.importData.bind(stepPersistence),
   setEnabled: stepPersistence.setEnabled.bind(stepPersistence),
   getEnabled: stepPersistence.getEnabled.bind(stepPersistence),
   getSessionId: stepPersistence.getSessionId.bind(stepPersistence),

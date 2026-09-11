@@ -11,6 +11,7 @@ import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import Index from "./Index";
 import { Loader2 } from "lucide-react";
 import normalizeConfig from "@/lib/normalizeConfig";
+import { RestaurantJsonLd } from "@/components/seo/RestaurantJsonLd";
 
 function detectSubdomain(): string | null {
   try {
@@ -153,16 +154,19 @@ export default function HostAwareRoot() {
   // Subdomain erkannt + Daten vorhanden → Nutzer-Website
   if (SUBDOMAIN && config) {
     return (
-      <Suspense
-        fallback={
-          <div className="h-screen flex items-center justify-center bg-white">
-            <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
-          </div>
-        }
-      >
-        {/* Config ist bereits normalisiert – AppRenderer bekommt direkt Configuration */}
-        <AppRenderer config={config} />
-      </Suspense>
+      <>
+        <RestaurantJsonLd config={config} />
+        <Suspense
+          fallback={
+            <div className="h-screen flex items-center justify-center bg-white">
+              <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
+            </div>
+          }
+        >
+          {/* Config ist bereits normalisiert – AppRenderer bekommt direkt Configuration */}
+          <AppRenderer config={config} />
+        </Suspense>
+      </>
     );
   }
 

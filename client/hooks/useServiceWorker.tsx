@@ -46,8 +46,8 @@ export function useServiceWorker() {
           });
       };
 
-      if ("requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(registerSW);
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(registerSW);
       } else {
         window.addEventListener("load", registerSW);
       }

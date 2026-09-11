@@ -131,8 +131,14 @@
     Produkte. Der zweite Eintrag beschreibt die Mobile-App, die das Google
     Unternehmensprofil verwaltet – dadurch ist der Zweck der App auch
     maschinenlesbar und nicht nur im Fließtext von #google-profil.
+
+    Die id ist der Anker, an dem netlify/edge-functions/inject-site-config.ts
+    den Block auf Kunden-Subdomains entfernt – dieselbe Datei wird dort
+    ausgeliefert, und die Seite eines Restaurants darf nicht behaupten, Maitr
+    zu sein. Nicht umbenennen, ohne die Edge-Function mitzuziehen (Test:
+    server/__tests__/edgeConfigInjection.spec.ts).
   -->
-  <script type="application/ld+json">
+  <script type="application/ld+json" id="maitr-jsonld">
     {
       "@context": "https://schema.org",
       "@graph": [
