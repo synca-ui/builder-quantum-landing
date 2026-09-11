@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { assertUrlAllowed, SafeFetchError } from "../services/safeFetch";
+import { normalizeWebsiteUrl } from "../utils/websiteUrl";
 
 /**
  * Weiterleitung an den n8n-Entry-Flow.
@@ -91,8 +92,13 @@ export async function handleForwardN8n(req: Request, res: Response) {
       headers: { "Content-Type": "application/json" },
       // Ausschliesslich die geprueften Felder, und `link` in der normalisierten
       // Form aus `assertUrlAllowed` - nicht der Rohwert aus der Anfrage.
+      //
+      // Zusaetzlich vereinheitlicht wie in POST /api/scraper: n8n upsertet exakt
+      // auf diesen String, und `URL.toString()` haengt an eine reine Domain ein
+      // "/" an. Die Landingpage pollt aber mit dem eingetippten Link ohne "/" –
+      // vom 20.08. bis 11.09.2026 fand sie deshalb nie ein Ergebnis.
       body: JSON.stringify({
-        link: adresse.toString(),
+        link: normalizeWebsiteUrl(adresse.toString()),
         timestamp: geprueft.data.timestamp,
       }),
     });

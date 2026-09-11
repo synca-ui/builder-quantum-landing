@@ -18,6 +18,7 @@ import prisma from "../db/prisma";
 import { Prisma } from "@prisma/client";
 import { requireAuth } from "../middleware/auth";
 import { createAuditLogger } from "../utils/audit";
+import { normalizeWebsiteUrl } from "../utils/websiteUrl";
 // Bewusst relativ statt über den "@shared"-Alias: vite.config.ts zieht den
 // Server-Baum über `await import("./server")` in die Auflösung der Config, und
 // dort ist der Alias nicht bekannt. Ein reiner Typ-Import (wie @shared/api in
@@ -46,23 +47,10 @@ function isValidUrl(url: string): boolean {
   }
 }
 
-/**
- * Vereinheitlicht die Schreibweise einer Website-Adresse (siehe Aufrufer).
- * Setzt eine gültige URL voraus – isValidUrl läuft davor.
- */
-export function normalizeWebsiteUrl(raw: string): string {
-  const u = new URL(raw.trim());
-  u.hostname = u.hostname.toLowerCase();
-  u.hash = "";
-  if (u.pathname.length > 1 && u.pathname.endsWith("/")) {
-    u.pathname = u.pathname.replace(/\/+$/, "");
-  }
-  let out = u.toString();
-  // Bei leerem Pfad hängt URL.toString() einen "/" an den Host – der soll weg,
-  // damit "https://example.de" und "https://example.de/" dieselbe Zeile sind.
-  if (u.pathname === "/" && !u.search) out = out.replace(/\/$/, "");
-  return out;
-}
+// Liegt in utils/websiteUrl.ts, weil auch /api/forward-to-n8n und
+// /api/scraper-job/score dieselbe Schreibweise brauchen. Setzt eine gültige URL
+// voraus – isValidUrl läuft davor.
+export { normalizeWebsiteUrl };
 
 /**
  * ✅ Get audit logger helper
