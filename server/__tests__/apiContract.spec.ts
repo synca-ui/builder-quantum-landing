@@ -84,6 +84,7 @@ const ERWARTETE_METHODEN: Record<keyof typeof BETRIEB_PFADE, string[]> = {
   oeffentlich: ["get"], // publicProfile()
   integrationen: ["get"], // integrations.list()
   integrationVerbinden: ["get"], // integrations.connectUrl()
+  integrationTrennen: ["delete"], // integrations.disconnect()
 };
 
 describe("API-Vertrag zwischen Client und Server", () => {
