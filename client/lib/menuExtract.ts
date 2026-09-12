@@ -99,13 +99,17 @@ export async function extractMenuFromFile(
     if (signal?.aborted) throw new Error("Abgebrochen");
     await schlafen(ABFRAGE_MS);
 
-    const res = await fetch(`${API_PATHS.extractMenu}/${encodeURIComponent(jobId)}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      signal,
-    });
+    const res = await fetch(
+      `${API_PATHS.extractMenu}/${encodeURIComponent(jobId)}`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        signal,
+      },
+    );
     const stand = await alsJson(res);
 
-    if (res.status === 404) throw new Error("Der Erkennungsauftrag ist nicht mehr auffindbar");
+    if (res.status === 404)
+      throw new Error("Der Erkennungsauftrag ist nicht mehr auffindbar");
     if (stand?.status === "running") continue;
     if (stand?.status === "failed") {
       throw new Error(stand?.error || "Die Erkennung ist fehlgeschlagen");
@@ -124,5 +128,27 @@ export async function extractMenuFromFile(
 
   throw new Error(
     "Die Erkennung hat zu lange gedauert. Bitte versuche es mit einem kleineren Bild noch einmal.",
+  );
+}
+
+/**
+ * Hinweis für die Oberfläche, wenn die Karte nur mit den Regeln gelesen wurde.
+ *
+ * Die Erkennung meldet auch dann "N Gerichte übernommen", wenn die
+ * Strukturierung durch das Modell ausgefallen ist (Schlüssel ungültig, Dienst
+ * nicht erreichbar) und `shared/menuParser.ts` als Rückfall lief. Der Rückfall
+ * liefert Preise zuverlässig, aber zerhackte Namen, eine einzige Rubrik und
+ * keine Legende — beim Live-Test am 12.09.2026 stand "Hauptsache:" als
+ * Gericht in der Karte, ohne dass die Oberfläche etwas gesagt hätte. Der
+ * Server schreibt den Grund in diagnostics; hier wird daraus ein Satz.
+ */
+export function erkennungsHinweis(diagnostics: string[]): string | null {
+  const rueckfall = diagnostics.some((zeile) =>
+    /^Strukturierung (fehlgeschlagen|übersprungen)/.test(zeile),
+  );
+  if (!rueckfall) return null;
+  return (
+    "Die Karte wurde nur grob gelesen, weil die Strukturierung nicht " +
+    "verfügbar war. Bitte Namen, Rubriken und Kürzel prüfen."
   );
 }

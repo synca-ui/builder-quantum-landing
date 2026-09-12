@@ -8,7 +8,6 @@ import {
 import { createAuditLogger } from "../utils/audit";
 import { getCachedSite, setCachedSite } from "../utils/siteCache";
 
-
 const router = Router();
 
 // ============================================
@@ -79,7 +78,7 @@ function generateSubdomain(businessName: string): string {
 /**
  * ✅ Helper: Map nested configuration to flat Prisma structure
  */
-function mapConfigToDatabase(
+export function mapConfigToDatabase(
   configData: Configuration,
   selectedTemplate?: string,
 ) {
@@ -112,10 +111,21 @@ function mapConfigToDatabase(
     reservationButtonColor: configData.features.reservationButtonColor,
     reservationButtonTextColor: configData.features.reservationButtonTextColor,
     reservationButtonShape: configData.features.reservationButtonShape,
-    reservationEmail: configData.features.reservationEmail,
     reservationFormStyle: configData.features.reservationFormStyle || "classic",
-    reservationNotificationEmail: configData.features.reservationNotificationEmail,
-    reservationTimeSlotInterval: configData.features.reservationTimeSlotInterval || 30,
+    // Der Reservierungs-Schritt schreibt in `features.reservationEmail`;
+    // im Prisma-Modell heißt die Spalte `reservationNotificationEmail`.
+    // Vorher wanderte `reservationEmail` als eigener Schlüssel in
+    // prisma.configuration.create() — das Feld gibt es dort nicht, Prisma
+    // warf "Unknown argument `reservationEmail`", und JEDES Speichern aus
+    // dem manuellen Konfigurator endete mit HTTP 500 (Live-Test 12.09.2026).
+    // Leere Zeichenkette wird zu undefined: sonst überschriebe "" eine
+    // gespeicherte Adresse, und Prisma kennt kein "nicht setzen" außer undefined.
+    reservationNotificationEmail:
+      configData.features.reservationNotificationEmail ||
+      configData.features.reservationEmail ||
+      undefined,
+    reservationTimeSlotInterval:
+      configData.features.reservationTimeSlotInterval || 30,
     reservationDaysAhead: configData.features.reservationDaysAhead || 7,
     timeSlots: configData.features.timeSlots || [],
     contactMethods: configData.contact.contactMethods,
@@ -324,7 +334,10 @@ export async function getConfigurations(req: Request, res: Response) {
 /**
  * ✅ GET /api/configurations/:id - Get single configuration
  */
-export async function getConfiguration(req: Request<{ id: string }>, res: Response) {
+export async function getConfiguration(
+  req: Request<{ id: string }>,
+  res: Response,
+) {
   const { id } = req.params;
   const userId = req.user!.id;
 
@@ -372,7 +385,10 @@ export async function getConfiguration(req: Request<{ id: string }>, res: Respon
 /**
  * ✅ DELETE /api/configurations/:id
  */
-export async function deleteConfiguration(req: Request<{ id: string }>, res: Response) {
+export async function deleteConfiguration(
+  req: Request<{ id: string }>,
+  res: Response,
+) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
@@ -432,7 +448,10 @@ export async function deleteConfiguration(req: Request<{ id: string }>, res: Res
  * ✅ POST /api/configurations/:id/publish
  * Veröffentlicht eine Konfiguration auf der gewählten Subdomain
  */
-export async function publishConfiguration(req: Request<{ id: string }>, res: Response) {
+export async function publishConfiguration(
+  req: Request<{ id: string }>,
+  res: Response,
+) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
@@ -559,7 +578,10 @@ export async function publishConfiguration(req: Request<{ id: string }>, res: Re
  *   - ETag + 304 Not Modified → Client-Browser-Cache
  *   - Cache-Control: s-maxage=60 → Netlify CDN cacht für 60s
  */
-export async function getPublishedSite(req: Request<{ subdomain: string }>, res: Response) {
+export async function getPublishedSite(
+  req: Request<{ subdomain: string }>,
+  res: Response,
+) {
   const { subdomain } = req.params;
 
   try {
@@ -570,7 +592,10 @@ export async function getPublishedSite(req: Request<{ subdomain: string }>, res:
       if (req.headers["if-none-match"] === cached.etag) {
         return res
           .set("ETag", cached.etag)
-          .set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
+          .set(
+            "Cache-Control",
+            "public, s-maxage=60, stale-while-revalidate=300",
+          )
           .set("X-Cache", "HIT")
           .status(304)
           .end();
@@ -655,8 +680,7 @@ export async function getPublishedSite(req: Request<{ subdomain: string }>, res:
       logo: config.design?.logo || config.business?.logo?.url || config.logo,
       // Store-Form ist pages.selectedPages/customPages — die alten Schlüssel
       // pages.selected/custom griffen nie, jede Site zeigte nur "home".
-      selectedPages:
-        config.pages?.selectedPages ||
+      selectedPages: config.pages?.selectedPages ||
         config.pages?.selected ||
         config.selectedPages || ["home"],
       customPages:
@@ -735,9 +759,18 @@ export async function getPublishedSite(req: Request<{ subdomain: string }>, res:
         config.features?.reservationButtonShape ||
         config.reservationButtonShape ||
         undefined,
-      reservationFormStyle: config.features?.reservationFormStyle || config.reservationFormStyle || "classic",
-      reservationTimeSlotInterval: config.features?.reservationTimeSlotInterval || config.reservationTimeSlotInterval || 30,
-      reservationDaysAhead: config.features?.reservationDaysAhead || config.reservationDaysAhead || 7,
+      reservationFormStyle:
+        config.features?.reservationFormStyle ||
+        config.reservationFormStyle ||
+        "classic",
+      reservationTimeSlotInterval:
+        config.features?.reservationTimeSlotInterval ||
+        config.reservationTimeSlotInterval ||
+        30,
+      reservationDaysAhead:
+        config.features?.reservationDaysAhead ||
+        config.reservationDaysAhead ||
+        7,
       timeSlots: config.features?.timeSlots || config.timeSlots || [],
       homepageDishImageVisibility: config.homepageDishImageVisibility,
       themeMode: config.themeMode,
@@ -756,7 +789,6 @@ export async function getPublishedSite(req: Request<{ subdomain: string }>, res:
       .set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
       .set("X-Cache", "MISS")
       .json({ success: true, data: flatConfig });
-
   } catch (error) {
     console.error("[Configurations] Get published site error:", error);
     return res.status(500).json({
@@ -769,7 +801,10 @@ export async function getPublishedSite(req: Request<{ subdomain: string }>, res:
 /**
  * ✅ POST /api/configurations/:id/preview - Set preview config
  */
-export async function setPreviewConfig(req: Request<{ id: string }>, res: Response) {
+export async function setPreviewConfig(
+  req: Request<{ id: string }>,
+  res: Response,
+) {
   const { id } = req.params;
   const userId = req.user?.id;
 

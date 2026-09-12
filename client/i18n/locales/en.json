@@ -155,7 +155,9 @@
     "aperitivo": "Aperitivo",
     "aperitivoDesc": "Coral and peach, rounded cards with a round image — for daytime cocktail bars, aperitivo nights and wine bars.",
     "hofladen": "Farm café",
-    "hofladenDesc": "Linen, sage green, dashed index cards and a stamp with the business type — for farm cafés, beer gardens and regional food."
+    "hofladenDesc": "Linen, sage green, dashed index cards and a stamp with the business type — for farm cafés, beer gardens and regional food.",
+    "filterAll": "All",
+    "filterLabel": "Which kind of place?"
   },
   "business": {
     "name": "Business Name",

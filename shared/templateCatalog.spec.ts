@@ -34,10 +34,7 @@ import {
   templateNameKey,
 } from "./templateCatalog";
 import { suggestedConfigToDraft } from "./suggestedConfig";
-import {
-  TEMPLATE_IDS,
-  getTemplateTokens,
-} from "../client/lib/templateTokens";
+import { TEMPLATE_IDS, getTemplateTokens } from "../client/lib/templateTokens";
 import { EIGENE_TEMPLATES } from "../client/lib/templateLayout";
 import { TemplateStep } from "../client/components/configurator/steps/TemplateStep";
 import { useConfiguratorStore } from "../client/store/configuratorStore";
@@ -87,11 +84,12 @@ describe("Picker — was der Konfigurator anbietet", () => {
 
     // Ohne initialisiertes i18n liefert t() den Schlüssel zurück. Das reicht:
     // geprüft wird, WELCHE Vorlagen dastehen und in welcher Reihenfolge.
-    // Gelesen wird das Kartenraster, nicht die ganze Seite — die Fußleiste
-    // nennt die gewählte Vorlage ein zweites Mal.
-    const karten = Array.from(container.querySelectorAll(".grid > div h3")).map(
-      (el) => el.textContent?.trim(),
-    );
+    // Gelesen wird der Kartentitel, nicht die ganze Seite — die Fußleiste
+    // nennt die gewählte Vorlage ein zweites Mal, und die Stilprobe in jeder
+    // Karte rendert echte Gerichtzeilen mit eigenen h3.
+    const karten = Array.from(
+      container.querySelectorAll("[data-vorlage-name]"),
+    ).map((el) => el.textContent?.trim());
 
     expect(karten).toEqual(PICKER_TEMPLATES.map((e) => templateNameKey(e.id)));
 

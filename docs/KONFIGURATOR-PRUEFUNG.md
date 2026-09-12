@@ -661,3 +661,38 @@ Schritt 1 (Produktentscheidung), `document.title`, Scraper-Doppelanalyse,
 - `tsc --noEmit`: 104 vorbestehende Fehler, keiner in den geprüften Dateien.
 - Kein Produktivcode geändert. n8n-Flow-Stand nicht live nachgeprüft
   (MCP-Server nicht erreichbar).
+
+## Runde 9 — Live-Test im echten Browser (12.09.2026)
+
+Erstmals nicht per Code-Audit, sondern angemeldet auf maitr.de (Konfiguration
+krawummel-test, Chrome-Erweiterung). Zwei Speisekarten als Bild hochgeladen:
+eine gerenderte Karte mit Allergen-Legende und Seite 1 der echten
+Reinert-Karte aus dem Messkorpus.
+
+- **K2 — BEHOBEN 12.09.** `POST /api/configurations` antwortete bei JEDEM
+  Speichern aus dem Kopf des Konfigurators mit HTTP 500:
+  `mapConfigToDatabase` gab `reservationEmail` weiter, das Feld gibt es im
+  Prisma-Modell `Configuration` nicht (nur `reservationNotificationEmail`).
+  Prisma warf „Unknown argument“, bei create() und updateMany(), seit
+  Commit 98e6770 (11.05.2026). Der Client fing den Fehler mit `console.error`
+  und zeigte NICHTS. Veröffentlichen läuft über `webapps/publish` mit eigenem
+  Mapping und blieb heil — darum vier Monate unbemerkt. Jetzt: Adresse aus
+  dem Reservierungs-Schritt landet in `reservationNotificationEmail`,
+  Wächter-Test `server/__tests__/configurationsMapping.spec.ts` prüft alle
+  Mapping-Schlüssel gegen `prisma/schema.prisma`, und ein gescheitertes
+  Speichern zeigt einen roten Toast.
+- **H3 — TEILWEISE (Schlüssel muss Julian setzen).** `ANTHROPIC_API_KEY` auf
+  Railway ist ungültig (401 „API key is invalid“). Gemini liest den Text,
+  die Strukturierung fällt auf `shared/menuParser.ts` zurück: „Hauptsache:“
+  als Gericht, alles in einer Rubrik, Legende geht verloren. Die Oberfläche
+  meldete nur „11 Gerichte übernommen“. Jetzt warnt `erkennungsHinweis()`
+  (client/lib/menuExtract.ts) sichtbar, sobald diagnostics den Rückfall
+  nennt. Mit gültigem Schlüssel: gerenderte Karte 14/14 Gerichte, alle
+  Preise, alle Kürzel, vegan/vegetarisch erkannt (gemessen am Bildweg).
+- **M7 — BEHOBEN 12.09.** Template-Wahl bestand aus 16 Textkarten ohne
+  Vorschau, der Weiter-Knopf stand nach drei Bildschirmhöhen. Jetzt trägt
+  jede Karte eine Stilprobe (echte `DishCard` in der Palette der Vorlage,
+  `TemplateStilprobe.tsx`), es gibt einen Filter nach Betriebsart aus
+  `businessTypes` des Katalogs, und die Leiste mit dem Knopf klebt unten.
+- Prüfstand: 1746 Tests grün (107 Dateien), `tsc` 0 Fehler, `vite build`
+  sauber, Stilproben und Filter im `vite preview` des Bundles gesichtet.
