@@ -139,6 +139,13 @@ interface ConfiguratorState {
   removeMenuItem: (id: string) => void;
   updateMenuItem: (id: string, updates: Partial<MenuItem>) => void;
   addGalleryImage: (image: GalleryImage) => void;
+  /**
+   * Mehrere Bilder in EINEM Zustandswechsel anhaengen — aus demselben Grund
+   * wie addMenuItems: checkThrottleGuard wirft ab 50 Aenderungen je Sekunde,
+   * und eine Dateiauswahl mit 51+ Fotos brach beim 51. mit "Infinite loop
+   * detected" ab (docs/KONFIGURATOR-PRUEFUNG.md, Runde 8).
+   */
+  addGalleryImages: (images: GalleryImage[]) => void;
   updateGalleryImage: (id: string, updates: Partial<GalleryImage>) => void;
   removeGalleryImage: (id: string) => void;
   updateOpeningHours: (hours: OpeningHours) => void;
@@ -577,19 +584,22 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           const norm = (v: unknown) =>
             typeof v === "string" ? v.toLowerCase() : v;
 
-          const design: DesignConfig = { ...state.design, template: templateId };
-          (
-            Object.keys(nextDefaults) as (keyof typeof nextDefaults)[]
-          ).forEach((key) => {
-            const current = norm((state.design as any)[key]);
-            const untouched =
-              current == null ||
-              current === norm(prevDefaults[key]) ||
-              current === norm((defaultDesignConfig as any)[key]);
-            if (untouched) {
-              (design as any)[key] = nextDefaults[key];
-            }
-          });
+          const design: DesignConfig = {
+            ...state.design,
+            template: templateId,
+          };
+          (Object.keys(nextDefaults) as (keyof typeof nextDefaults)[]).forEach(
+            (key) => {
+              const current = norm((state.design as any)[key]);
+              const untouched =
+                current == null ||
+                current === norm(prevDefaults[key]) ||
+                current === norm((defaultDesignConfig as any)[key]);
+              if (untouched) {
+                (design as any)[key] = nextDefaults[key];
+              }
+            },
+          );
 
           // Der Reservieren-Button gehört zum Gesamtbild des Templates: Ein
           // Standard-Blau (#2563EB) auf Mitternacht oder Verde wirkt wie ein
@@ -630,7 +640,8 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           // einem Papier-Template bewusst „rounded“ wählt, behält es.
           const currentShape = features.reservationButtonShape;
           if (currentShape == null || currentShape === prevShape) {
-            features.reservationButtonShape = getTemplateButtonShape(templateId);
+            features.reservationButtonShape =
+              getTemplateButtonShape(templateId);
           }
 
           return {
@@ -753,6 +764,21 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
         }));
       },
 
+      addGalleryImages: (neue) => {
+        if (!Array.isArray(neue) || neue.length === 0) return;
+        checkThrottleGuard("addGalleryImages");
+        set((state) => ({
+          content: {
+            ...state.content,
+            gallery: [...state.content.gallery, ...neue],
+          },
+          publishing: {
+            ...state.publishing,
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+      },
+
       // Nach erfolgreichem Upload wird die lokale blob:-Vorschau durch die
       // dauerhafte Storage-URL ersetzt (siehe client/lib/mediaUpload.ts).
       updateGalleryImage: (id, updates) => {
@@ -814,7 +840,10 @@ export const useConfiguratorStore = create<ConfiguratorState>()(
           // und Getraenke), soll nicht die Legende der ersten verlieren.
           content: {
             ...state.content,
-            allergenLegend: { ...(state.content.allergenLegend ?? {}), ...legend },
+            allergenLegend: {
+              ...(state.content.allergenLegend ?? {}),
+              ...legend,
+            },
           },
           publishing: {
             ...state.publishing,
@@ -1401,6 +1430,7 @@ export const useConfiguratorActions = () => {
         removeMenuItem: store.removeMenuItem,
         updateMenuItem: store.updateMenuItem,
         addGalleryImage: store.addGalleryImage,
+        addGalleryImages: store.addGalleryImages,
         updateGalleryImage: store.updateGalleryImage,
         removeGalleryImage: store.removeGalleryImage,
         updateOpeningHours: store.updateOpeningHours,

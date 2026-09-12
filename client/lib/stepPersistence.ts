@@ -304,6 +304,16 @@ export class StepPersistence {
   }
 
   /**
+   * Gemerkte Konfigurations-ID verwerfen — wenn der Server sie nicht mehr
+   * kennt (anderes Konto im selben Browser, Konfiguration gelöscht). Ohne
+   * das Verwerfen liefe jedes weitere Speichern in dieselbe 404.
+   */
+  clearConfigId(): void {
+    delete this.state.configId;
+    this.saveState();
+  }
+
+  /**
    * Set published URL
    */
   setPublishedUrl(url: string): void {
@@ -461,6 +471,7 @@ const memoizedPersistenceAPI = {
   saveStep: stepPersistence.saveStep.bind(stepPersistence),
   updateFormData: stepPersistence.updateFormData.bind(stepPersistence),
   setConfigId: stepPersistence.setConfigId.bind(stepPersistence),
+  clearConfigId: stepPersistence.clearConfigId.bind(stepPersistence),
   setPublishedUrl: stepPersistence.setPublishedUrl.bind(stepPersistence),
   getState: stepPersistence.getState.bind(stepPersistence),
   getFormData: stepPersistence.getFormData.bind(stepPersistence),

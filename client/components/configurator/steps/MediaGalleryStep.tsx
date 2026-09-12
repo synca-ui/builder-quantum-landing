@@ -13,6 +13,8 @@ import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import type { GalleryImage } from "@/types/domain";
 
+const UPLOAD_PARALLEL = 4;
+
 interface MediaGalleryStepProps {
   nextStep: () => void;
   prevStep: () => void;
@@ -29,23 +31,49 @@ export function MediaGalleryStep({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const handleFileUpload = (files: FileList | null) => {
-    if (files) {
-      const newFiles = Array.from(files);
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    if (!files || files.length === 0) return;
+    const newFiles = Array.from(files);
+    setSelectedFiles((prev) => [...prev, ...newFiles]);
 
-      newFiles.forEach((file) => {
-        const id = `${Date.now()}-${Math.random()}`;
-        // Sofortige lokale Vorschau; die blob:-URL überlebt aber weder Reload
-        // noch Veröffentlichung — deshalb direkt im Hintergrund hochladen und
-        // die URL durch die dauerhafte Storage-URL ersetzen.
-        actions.content.addGalleryImage({
-          id,
+    // Sofortige lokale Vorschau; die blob:-URL überlebt aber weder Reload
+    // noch Veröffentlichung — deshalb direkt im Hintergrund hochladen und
+    // die URL durch die dauerhafte Storage-URL ersetzen.
+    //
+    // Alle Bilder in EINEM Zustandswechsel: checkThrottleGuard im Store wirft
+    // ab 50 Änderungen je Sekunde. Eine Auswahl von 51+ Fotos brach vorher
+    // beim 51. Bild mit "Infinite loop detected" ab.
+    const neue = newFiles.map(
+      (file) =>
+        ({
+          id: `${Date.now()}-${Math.random()}`,
           url: URL.createObjectURL(file),
           alt: file.name,
-          file: file,
-        } as GalleryImage);
+          file,
+        }) as GalleryImage,
+    );
+    actions.content.addGalleryImages(neue);
 
-        void (async () => {
+    void ladeGestaffeltHoch(neue);
+  };
+
+  /**
+   * Höchstens UPLOAD_PARALLEL Uploads gleichzeitig. Zwei Gründe: 60 Dateien
+   * auf einmal an den Speicher zu schicken ist unfreundlich — und jede
+   * Fertigmeldung ist ein updateGalleryImage, das ebenfalls unter dem
+   * 50-je-Sekunde-Wächter steht. Gestaffelt kommen die Meldungen verteilt an.
+   */
+  const ladeGestaffeltHoch = async (bilder: GalleryImage[]) => {
+    const warteschlange = [...bilder];
+    const arbeiter = Array.from(
+      { length: Math.min(UPLOAD_PARALLEL, warteschlange.length) },
+      async () => {
+        for (
+          let bild = warteschlange.shift();
+          bild;
+          bild = warteschlange.shift()
+        ) {
+          const { id, file } = bild;
+          if (!file) continue;
           try {
             const url = await uploadImageFile(file, await getToken());
             actions.content.updateGalleryImage(id, { url, file: undefined });
@@ -55,9 +83,10 @@ export function MediaGalleryStep({
               `„${file.name}" konnte nicht hochgeladen werden — das Bild erscheint nicht auf der veröffentlichten Website.`,
             );
           }
-        })();
-      });
-    }
+        }
+      },
+    );
+    await Promise.all(arbeiter);
   };
 
   const removeImage = (id: string) => {
