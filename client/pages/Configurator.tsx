@@ -59,6 +59,7 @@ import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 import { type Configuration } from "@/lib/api";
 import { konfigurationSpeichern } from "@/lib/konfigurationSpeichern";
+import { warteAufUploads } from "@/lib/mediaUpload";
 import { usePersistence } from "@/lib/stepPersistence";
 // Die Schrittliste liegt in client/lib/configuratorSteps.ts, damit der
 // automatische Modus gezielt in einen Schritt springen kann, ohne Indizes zu
@@ -254,6 +255,9 @@ export default function Configurator() {
 
     try {
       const token = await getToken();
+      // Läuft noch ein Bild-Upload, stünde hier die blob:-Vorschau in der
+      // Konfiguration — und ginge live (Prüfung Runde 8, H2).
+      await warteAufUploads();
       const config = actions.data.getFullConfiguration();
       // Generiere Subdomain aus dem gewählten Namen oder Business-Namen
       const subdomain =

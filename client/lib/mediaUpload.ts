@@ -17,6 +17,7 @@
  * clientseitig verkleinertes data:-URL-Bild. Das ist größer als eine
  * Storage-URL, aber es ÜBERLEBT das Veröffentlichen — im Gegensatz zu blob:.
  */
+import { useSyncExternalStore } from "react";
 import { API_PATHS } from "@/lib/apiPaths";
 
 /** Längste Kante nach dem Verkleinern; reicht für Vollbild auf Mobilgeräten. */
@@ -53,6 +54,56 @@ export async function fileToCompressedDataUrl(file: File): Promise<string> {
   return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
 }
 
+// ---------------------------------------------------------------------------
+// Laufende Uploads verfolgen.
+//
+// Anlass (Prüfung Runde 8, H2): Wer direkt nach einer Bildauswahl auf
+// „Veröffentlichen" klickt, liest die Konfiguration, während der Upload noch
+// läuft — und die blob:-Vorschau geht live (leeres Bild für jeden Gast).
+// Der Zähler hier ist die eine Stelle, die alle fünf Upload-Orte (Logo,
+// Galerie, Gericht, Angebot, SEO) automatisch abdeckt, weil sie alle durch
+// uploadImageFile gehen.
+// ---------------------------------------------------------------------------
+let laufend = 0;
+const zuhoerer = new Set<() => void>();
+const wartende: Array<() => void> = [];
+
+function melde(): void {
+  for (const fn of zuhoerer) fn();
+  if (laufend === 0) {
+    for (const weiter of wartende.splice(0)) weiter();
+  }
+}
+
+/** Wie viele Uploads gerade laufen (0 = alles ist dauerhaft gespeichert). */
+export function anzahlLaufenderUploads(): number {
+  return laufend;
+}
+
+export function abonniereUploads(fn: () => void): () => void {
+  zuhoerer.add(fn);
+  return () => {
+    zuhoerer.delete(fn);
+  };
+}
+
+/** Löst auf, sobald kein Upload mehr läuft — sofort, wenn keiner läuft. */
+export function warteAufUploads(): Promise<void> {
+  if (laufend === 0) return Promise.resolve();
+  return new Promise((weiter) => {
+    wartende.push(weiter);
+  });
+}
+
+/** Für Komponenten: rendert neu, wenn sich die Zahl laufender Uploads ändert. */
+export function useLaufendeUploads(): number {
+  return useSyncExternalStore(
+    abonniereUploads,
+    anzahlLaufenderUploads,
+    () => 0,
+  );
+}
+
 /**
  * Lädt ein Bild hoch und gibt eine dauerhafte URL zurück.
  *
@@ -61,6 +112,20 @@ export async function fileToCompressedDataUrl(file: File): Promise<string> {
  *              verlangt Auth. Ohne Token greift direkt die Rückfallebene.
  */
 export async function uploadImageFile(
+  file: File,
+  token: string | null | undefined,
+): Promise<string> {
+  laufend++;
+  melde();
+  try {
+    return await uploadImageFileIntern(file, token);
+  } finally {
+    laufend--;
+    melde();
+  }
+}
+
+async function uploadImageFileIntern(
   file: File,
   token: string | null | undefined,
 ): Promise<string> {

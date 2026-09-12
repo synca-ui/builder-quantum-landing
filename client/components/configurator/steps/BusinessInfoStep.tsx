@@ -33,6 +33,9 @@ import { uploadImageFile } from "@/lib/mediaUpload";
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
+/** Was der Hinweistext unter dem Logo-Feld verspricht. */
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+
 // Business type options matching the original Configurator
 const BUSINESS_TYPES = [
   {
@@ -181,6 +184,15 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
+                    // „PNG, JPG bis 2MB" steht darunter — und gilt jetzt auch
+                    // (Runde 8, M3).
+                    if (file && file.size > LOGO_MAX_BYTES) {
+                      toast.error(
+                        `„${file.name}" ist größer als 2 MB. Bitte ein kleineres Logo wählen.`,
+                      );
+                      e.target.value = "";
+                      return;
+                    }
                     if (file) {
                       // Lokale Vorschau sofort; echte URL nach dem Upload —
                       // nur die überlebt Reload und Veröffentlichung.

@@ -413,8 +413,13 @@ export function MenuProductsStep({
     ? menuItems.filter((item) => (item as any).category === activeCategory)
     : menuItems;
 
+  // Preis muss eine Zahl ≥ 0 sein: Das Zahlenfeld lässt „-5" zu, und ein
+  // negativer Preis stand vorher anstandslos auf der Karte (Runde 8, M4).
+  const preisGueltig = (preis: string) =>
+    preis.trim() !== "" && Number.isFinite(Number(preis)) && Number(preis) >= 0;
+
   const addMenuItem = () => {
-    if (newItem.name && newItem.price) {
+    if (newItem.name && preisGueltig(newItem.price)) {
       const itemToAdd: MenuItem = {
         id: Date.now().toString(),
         name: newItem.name,
@@ -639,6 +644,8 @@ export function MenuProductsStep({
               descIdx !== -1 ? cells[descIdx] || "" : "",
             );
             const priceRaw = num(cells[priceIdx] || "");
+            // Negative Preise aus der CSV nicht übernehmen (Runde 8, M4).
+            if (priceRaw && Number(priceRaw) < 0) return null;
 
             const price = priceRaw
               ? isNaN(Number(priceRaw))
@@ -1108,6 +1115,7 @@ export function MenuProductsStep({
               <Input
                 type="number"
                 step="0.01"
+                min="0"
                 placeholder="9.99"
                 value={newItem.price}
                 onChange={(e) =>
@@ -1117,7 +1125,7 @@ export function MenuProductsStep({
               />
               <Button
                 onClick={addMenuItem}
-                disabled={!newItem.name || !newItem.price}
+                disabled={!newItem.name || !preisGueltig(newItem.price)}
                 className="ml-2 bg-teal-500 hover:bg-teal-600"
               >
                 <Plus className="w-4 h-4" />
