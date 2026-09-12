@@ -540,12 +540,7 @@ export function FeatureConfigStep({
 
       case "offersEnabled":
         return (
-          <OffersStep
-            onBack={goBack}
-            onContinue={finish}
-            storeState={storeState}
-            actions={actions}
-          />
+          <OffersStep storeState={storeState} actions={actions} />
         );
 
       default:
@@ -580,18 +575,11 @@ export function FeatureConfigStep({
 }
 
 interface OffersStepProps {
-  onBack?: () => void;
-  onContinue?: () => void;
   storeState: any;
   actions: any;
 }
 
-function OffersStep({
-  onBack,
-  onContinue,
-  storeState,
-  actions,
-}: OffersStepProps) {
+function OffersStep({ storeState, actions }: OffersStepProps) {
   const { getToken } = useAuth();
   const [newOffer, setNewOffer] = useState({
     name: "",
@@ -889,24 +877,14 @@ function OffersStep({
         </div>
       </div>
 
-      <div className="flex justify-between mt-8">
-        <Button
-          onClick={() => (onBack ? onBack() : undefined)}
-          variant="outline"
-          size="lg"
-        >
-          <ArrowLeft className="mr-2 w-5 h-5" />
-          Back
-        </Button>
-        <Button
-          onClick={() => (onContinue ? onContinue() : undefined)}
-          size="lg"
-          className="bg-gradient-to-r from-teal-500 to-purple-500"
-        >
-          Continue
-          <ChevronRight className="ml-2 w-5 h-5" />
-        </Button>
-      </div>
+      {/*
+        Hier stand eine ZWEITE Navigation mit den englischen Beschriftungen
+        "Back"/"Continue" — direkt über der übersetzten Leiste
+        "Zurück"/"Speichern & Weiter", die FeatureConfigStep unter jedem
+        Schritt rendert, und mit denselben Zielen (goBack/finish). Also zwei
+        Knopfpaare übereinander, davon eines unübersetzt. Die Leiste des
+        Elternschritts ist die richtige; diese ist ersatzlos weg.
+      */}
     </div>
   );
 }

@@ -70,6 +70,57 @@ export interface Venue {
   tags: string[];
   /** Fehlt, solange kein Wert gesetzt wurde. Änderung über `api.venues.update`. */
   openingHours?: OpeningHours;
+
+  /*
+   * Die folgenden Felder liefert NUR die angemeldete Liste (`GET /venues`) -
+   * das öffentliche Gastprofil (`GET /venues/:slug/public`) lässt sie weg,
+   * es bleibt bei seiner Allowlist. Sie stammen aus der Veröffentlichung der
+   * Web-App (server/routes/webapps.ts → ensureUserBusiness): Wer seine Seite
+   * über den Konfigurator veröffentlicht, findet den Betrieb in der App mit
+   * denselben Angaben vor, statt sie ein zweites Mal einzutippen.
+   */
+  /** Adresse des Betriebs in Maitr (Business.slug) - unveränderlich. */
+  slug?: string;
+  /** Längere Beschreibung ("Über uns"). */
+  description?: string;
+  /** Art des Betriebs, z. B. "restaurant", "cafe", "bar". */
+  cuisine?: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  phone?: string;
+  email?: string;
+  /** Die veröffentlichte Web-App, z. B. "https://haus-toeller.maitr.de". */
+  website?: string;
+  postalCode?: string;
+  socialLinks?: Partial<Record<"instagram" | "facebook" | "tiktok" | "website", string>>;
+  /** Präsenz-Score aus der Website-Analyse (0-100). */
+  maitrScore?: number;
+}
+
+/** Eine Position der Speisekarte, wie `GET /venues/:venueId/menu` sie liefert. */
+export interface VenueMenuItem {
+  id: string;
+  name: string;
+  description?: string;
+  /** In Euro; 0, wenn die Karte keinen Preis nennt ("auf Anfrage"). */
+  price: number;
+  imageUrl?: string;
+}
+
+export interface VenueMenuCategory {
+  id: string;
+  name: string;
+  items: VenueMenuItem[];
+}
+
+/**
+ * Die Speisekarte eines Betriebs, in der Reihenfolge der Karte. Sie entsteht
+ * beim Veröffentlichen der Web-App (dieselben Gerichte, die die Seite zeigt)
+ * und ist in der App nur lesbar - gepflegt wird sie im Konfigurator.
+ */
+export interface VenueMenu {
+  categories: VenueMenuCategory[];
 }
 
 /**

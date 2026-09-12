@@ -527,3 +527,19 @@ describe("normalizeSocialLinks", () => {
     });
   });
 });
+
+describe("suggestedConfigToDraft: Ruhetag nach schema.org-Konvention", () => {
+  it("liest einen Tag mit 00:00–00:00 als geschlossen, nicht als offen", () => {
+    // haus-toeller.de, Execution vom 04.09.2026: der Flow lieferte den Sonntag
+    // (Ruhetag) als open/close "00:00" mit closed:false.
+    const draft = suggestedConfigToDraft({
+      businessName: "Haus Töller",
+      openingHours: {
+        monday: { open: "17:00", close: "23:59", closed: false },
+        sunday: { open: "00:00", close: "00:00", closed: false },
+      },
+    } as any);
+    expect(draft?.content.openingHours?.monday?.closed).toBe(false);
+    expect(draft?.content.openingHours?.sunday?.closed).toBe(true);
+  });
+});

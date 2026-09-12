@@ -171,14 +171,21 @@ describe("POST /venues - der erste eigene Betrieb", () => {
       .send({ name: "Café Müller", description: "Kaffee und Kuchen" });
 
     expect(res.status, JSON.stringify(res.body)).toBe(201);
-    // Die Form aus @maitr/core/types#Venue, nicht die rohe Zeile (kein slug, keine
-    // Beschreibung - dieselbe Form, die GET /venues liefert).
-    expect(res.body).toEqual({
+    // Die Form aus @maitr/core/types#Venue, nicht die rohe Zeile - dieselbe
+    // Form, die GET /venues liefert. Seit die Veroeffentlichung der Web-App den
+    // Betrieb voll befuellt, traegt die Inhaber-Sicht zusaetzlich die Felder aus
+    // dem Profil (slug, Logo, Farben, Kontakt); ein frisch angelegter Betrieb
+    // hat davon nichts, deshalb bleibt der Vertragskern hier gleich.
+    expect(res.body).toMatchObject({
       id: "biz-1",
       name: "Café Müller",
       timezone: "Europe/Berlin",
       tags: [],
     });
+    // Nichts erfinden: Was die Zeile nicht hat, steht auch nicht in der Antwort.
+    expect(res.body.logoUrl).toBeUndefined();
+    expect(res.body.phone).toBeUndefined();
+    expect(res.body.openingHours).toBeUndefined();
 
     // Beides ist da - und die Mitgliedschaft hängt am ANGEMELDETEN Nutzer.
     expect(betriebe).toHaveLength(1);

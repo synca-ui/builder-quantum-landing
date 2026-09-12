@@ -201,6 +201,37 @@ export function softenBackground(hex?: string): string | undefined {
 }
 
 /**
+ * Unter diesem Kontrast sind Hintergrund und Primärfarbe für das Auge
+ * dieselbe Fläche – ein Knopf in der Primärfarbe verschwindet darauf.
+ */
+const MIN_PRIMARY_SEPARATION = 1.5;
+
+/**
+ * Setzt einen Hintergrund ab, der mit der Primärfarbe zusammenfällt.
+ *
+ * Gibt undefined zurück, wenn nichts zu tun ist (kein Hintergrund, keine
+ * Primärfarbe, oder beide unterscheiden sich ohnehin genug). Sonst denselben
+ * Farbton als hellen, weichen Grund – so hell wie softenBackground ihn für
+ * helle Seiten wählt, mit derselben Sättigungsgrenze.
+ */
+export function separateFromPrimary(
+  background?: string,
+  primary?: string,
+): string | undefined {
+  if (!background || !primary) return undefined;
+  const bg = hexZuRgb(background);
+  const pr = hexZuRgb(primary);
+  if (!bg || !pr) return undefined;
+  if (contrastRatio(background, primary) >= MIN_PRIMARY_SEPARATION) {
+    return undefined;
+  }
+  const [h, s] = rgbZuHsl(...pr);
+  const spielraum = 1 - Math.abs(2 * HELL_ZIEL - 1);
+  const saettigung = Math.min(s, MAX_BUNTHEIT / spielraum);
+  return rgbZuHex(...hslZuRgb(h, saettigung, HELL_ZIEL));
+}
+
+/**
  * Füllt die abgeleiteten Farben, wo der Scrape nur die Grundpalette liefert.
  *
  * Regeln: Kopfzeile auf dem Seitenhintergrund, Schrift darin in der
@@ -217,6 +248,16 @@ export function deriveCohesiveColors(
   // nie ausgeliefert wird, und die Kontrastprüfungen unten stimmen nicht mehr.
   const weich = softenBackground(out.backgroundColor);
   if (weich) out.backgroundColor = weich;
+  // Zusammengefallene Palette: Liefert das Stylesheet nur EINE Farbe, setzt
+  // der Scrape-Flow sie als Primär-, Sekundär- UND Hintergrundfarbe (gemessen
+  // an haus-toeller.de: dreimal #0a1b2e). Die Knöpfe der Web-App tragen die
+  // Primärfarbe auf dem Hintergrund – bei gleicher Farbe sind sie unsichtbar,
+  // und die Preise fielen auf den Lesbarkeits-Rückfall zurück. Hier wird der
+  // Hintergrund deshalb vom Primärton abgesetzt: derselbe Farbton, aber hell
+  // und weich, wie bei allen Vorlagen im Picker. Die Marke bleibt in Knöpfen
+  // und Kopfzeile erkennbar, die Fläche dahinter wird lesbar.
+  const abgesetzt = separateFromPrimary(out.backgroundColor, out.primaryColor);
+  if (abgesetzt) out.backgroundColor = abgesetzt;
   const background = out.backgroundColor ?? "#FFFFFF";
 
   if (!out.fontColor) out.fontColor = readableTextOn(background);

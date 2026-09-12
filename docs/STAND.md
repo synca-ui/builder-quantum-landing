@@ -95,8 +95,9 @@ Service-Layer mit Mock-Umschaltung über `ENABLE_PRODUCTION_APIS`.
 | Was | Wer | Wirkung |
 |---|---|---|
 | **Clerk → Configure → Native applications einschalten** | du | Ohne das ist **keine Anmeldung** möglich. `Business` hat in Produktion 0 Zeilen — es existiert noch kein einziger echter Betrieb. |
-| `MAITR_*`-Variablen in Railway setzen | du | Datei liegt bereit (Scratchpad `railway-maitr.env`): 5 echte Werte, 4 Platzhalter. Der Server startet damit nachweislich. |
-| Google „Business Profile API access" beantragen | du | ~60 Tage Vorlauf, ohne Freigabe ist die Quota **null**. Kritischer Pfad. |
+| ~~`MAITR_*`-Variablen in Railway setzen~~ | **erledigt 11.9.** (per Railway-MCP) | Alle neun gesetzt: 5 echte Werte, `GOOGLE_*`/`META_APP_*` als `PLATZHALTER-bis-…-freigabe`. Deploy `098ce993` grün, Server startet, `/api/maitr/venues` → 401. `MAITR_ENCRYPTION_KEY` **nie rotieren**, im Dashboard auf „sealed" stellen. |
+| `SUPABASE_SERVICE_ROLE_KEY` in Railway auf Projekt `qzsdrgvwoddqkvqxhxfi` umstellen | du | `SUPABASE_URL` zeigt seit 11.9. auf dieses Projekt; der Key ist sealed und stammt vermutlich vom gelöschten Vorgänger. Das Projekt pausiert auf dem Free-Tier nach Inaktivität (am 11.9. per MCP wieder hochgefahren). |
+| Google „Business Profile API access" beantragen | du | ~60 Tage Vorlauf, ohne Freigabe ist die Quota **null**. Kritischer Pfad. Die Widerrufs-Frage im Antrag ist seit 11.9. beantwortbar (AUFGABEN.md C6). |
 | Apple Developer Program (99 $) | du | Aktuelles Team ist ein kostenloses persönliches Team, damit ist keine Einreichung möglich. |
 | Datenschutzerklärung + Nutzungsbedingungen | ich, offen | Voraussetzung für den Google-OAuth-Zustimmungsbildschirm **und** beide Stores. Der Lauf ist am Sitzungslimit gescheitert und muss wiederholt werden. |
 | Store-Screenshots aus einem Release-Build | ich, offen | Der Release-Build scheiterte an voller Festplatte; Platz ist inzwischen da. |

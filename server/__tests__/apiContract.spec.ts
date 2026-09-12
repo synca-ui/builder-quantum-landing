@@ -79,9 +79,12 @@ const routes = routeEintraege.map((e) => e.path);
 const ERWARTETE_METHODEN: Record<keyof typeof BETRIEB_PFADE, string[]> = {
   betriebe: ["get", "post"], // mine() und create()
   betrieb: ["patch"], // update()
+  speisekarte: ["get"], // venues.menu() - die Karte der veroeffentlichten Web-App
+
   oeffentlich: ["get"], // publicProfile()
   integrationen: ["get"], // integrations.list()
   integrationVerbinden: ["get"], // integrations.connectUrl()
+  integrationTrennen: ["delete"], // integrations.disconnect()
 };
 
 describe("API-Vertrag zwischen Client und Server", () => {

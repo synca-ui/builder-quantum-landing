@@ -240,7 +240,7 @@ router.get("/business-types", async (req: Request, res: Response) => {
  * Example:
  * GET /api/templates/modern/ratings
  */
-router.get("/:id/ratings", async (req: Request, res: Response) => {
+router.get("/:id/ratings", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -318,7 +318,7 @@ router.get("/:id/ratings", async (req: Request, res: Response) => {
  * POST /api/templates/modern/rate
  * { "rating": 5, "comment": "Great template!" }
  */
-router.post("/:id/rate", requireAuth, async (req: Request, res: Response) => {
+router.post("/:id/rate", requireAuth, async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;

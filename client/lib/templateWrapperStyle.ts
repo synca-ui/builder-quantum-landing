@@ -64,5 +64,28 @@ export function getTemplateWrapperStyle(
       color: fontColor,
     };
   }
+  // "gelato": Pistazien-Schimmer oben rechts, wie eine Kugel hinterm Tresen.
+  if (template === "gelato") {
+    return {
+      background: `radial-gradient(620px 300px at 92% -90px, ${secondaryColor}73 0%, transparent 70%), ${backgroundColor}`,
+      color: fontColor,
+    };
+  }
+  // "aperitivo": Pfirsichlicht von links oben, wie die letzte Sonne auf der Terrasse.
+  if (template === "aperitivo") {
+    return {
+      background: `radial-gradient(700px 320px at 0% -110px, ${secondaryColor}59 0%, transparent 70%), ${backgroundColor}`,
+      color: fontColor,
+    };
+  }
+  // "konditorei": zarter Rosé-Schleier im Kopfbereich.
+  if (template === "konditorei") {
+    return {
+      background: `linear-gradient(180deg, ${secondaryColor}40 0%, transparent 200px), ${backgroundColor}`,
+      color: fontColor,
+    };
+  }
+  // vitrine, brauhaus, ramen, imbiss, roesterei, markt, hofladen und die
+  // Papier-Templates: flache Fläche — Papier, Leinen, Weiß.
   return { backgroundColor, color: fontColor };
 }

@@ -22,6 +22,7 @@ import {
 } from "@shared/suggestedConfig";
 import { buildPublishConfig, countExternalImages } from "@shared/autoPublish";
 import { ErgebnisFarben } from "@/components/autoconfigurator/ErgebnisFarben";
+import { NachVeroeffentlichung } from "@/components/autoconfigurator/NachVeroeffentlichung";
 import {
   suggestSubdomain,
   nextSubdomainCandidate,
@@ -493,6 +494,34 @@ const STEPS = [
 ];
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
+
+/**
+ * Macht aus der Menü-Adresse des Scrapes eine absolute Adresse.
+ *
+ * Relative Angaben ("/speisekarte/", "karte.pdf") werden gegen die analysierte
+ * Website aufgelöst; absolute bleiben, wie sie sind. Gibt es keine Website,
+ * an der sich eine relative Angabe festmachen ließe, kommt null zurück – die
+ * Erkennung braucht dann gar nicht erst zu starten.
+ */
+export function resolveMenuUrl(
+  menuUrl: string | null | undefined,
+  websiteUrl: string | null | undefined,
+): string | null {
+  const roh = menuUrl?.trim();
+  if (!roh) return null;
+  try {
+    return new URL(roh, websiteUrl || undefined).toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Wie viele Galeriebilder als "genug" gelten. Darunter werden die Bilder aus
+ * den strukturierten Daten der Website ergänzt (siehe enrichFromSite).
+ */
+const GALLERY_ENOUGH = 3;
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -581,15 +610,21 @@ export default function AutoConfigurator() {
   );
 
   // Konfigurator-Zustand: nur was für die Warnung und das Übernehmen nötig ist.
-  const applyScrapedDraft = useConfiguratorStore((s) => s.applyScrapedDraft);
+  // applyPublishedConfig statt applyScrapedDraft: Übernommen wird die Fassung,
+  // die veröffentlicht wurde, nicht der rohe Entwurf — Begründung an der
+  // Aktion selbst (client/store/configuratorStore.ts).
+  const applyPublishedConfig = useConfiguratorStore(
+    (s) => s.applyPublishedConfig,
+  );
   const pushHistory = useConfiguratorStore((s) => s.pushHistory);
   const setCurrentStep = useConfiguratorStore((s) => s.setCurrentStep);
-  // Damit der manuelle Konfigurator anschließend weiß, dass die Web-App schon
-  // live ist, und nicht ein zweites Mal veröffentlichen lässt.
-  const updatePublishingInfo = useConfiguratorStore(
-    (s) => s.updatePublishingInfo,
+  // Für die Rückkehr: Wer die Seite später erneut öffnet, soll nicht bei null
+  // anfangen, sondern seine bestehende Web-App weiter anpassen können.
+  const bestehendeVeroeffentlichung = useConfiguratorStore((s) =>
+    s.publishing.status === "published" && s.publishing.publishedUrl
+      ? s.publishing.publishedUrl
+      : null,
   );
-  const setBusinessInfo = useConfiguratorStore((s) => s.setBusinessInfo);
   const existingBusinessName = useConfiguratorStore((s) => s.business.name);
   const existingMenuCount = useConfiguratorStore(
     (s) => s.content.menuItems.length,
@@ -853,6 +888,22 @@ export default function AutoConfigurator() {
           const geliefert = Object.keys(details.openingHours ?? {}).length;
           if (geliefert > vorhanden) {
             content.openingHours = details.openingHours;
+          }
+
+          // Galerie auffüllen, wenn der Scrape wenig fand: Die Bilder aus den
+          // strukturierten Daten hat der Betreiber selbst als Aushängeschild
+          // ausgezeichnet. Nur ergänzen, nie ersetzen – und nichts doppelt.
+          const bilder = Array.isArray(details.images) ? details.images : [];
+          const galerie = content.gallery ?? [];
+          if (bilder.length && galerie.length < GALLERY_ENOUGH) {
+            const bekannt = new Set(galerie.map((g) => g.url));
+            const neu = bilder
+              .filter((url: string) => !bekannt.has(url))
+              .map((url: string, i: number) => ({
+                id: `site-img-${i}-${url.replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}`,
+                url,
+              }));
+            if (neu.length) content.gallery = [...galerie, ...neu];
           }
 
           /*
@@ -1190,8 +1241,14 @@ export default function AutoConfigurator() {
               // sie nicht mehr überspringen darf. Schlägt die Erkennung
               // fehl, bleibt die Scrape-Karte einfach stehen — recogniseMenu
               // ersetzt sie nur bei Erfolg.
-              if (job.menuUrl) {
-                void recogniseMenu({ url: job.menuUrl });
+              // Der Flow liefert die Menü-Adresse so, wie sie im HTML steht –
+              // am echten Fall haus-toeller.de war das "/speisekarte/". Roh an
+              // die Erkennung geschickt, scheitert sie an einer Adresse ohne
+              // Host, und die Karte fehlt auf der Web-App, obwohl sie da ist.
+              // Deshalb hier gegen die analysierte Website auflösen.
+              const menuUrl = resolveMenuUrl(job.menuUrl, site);
+              if (menuUrl) {
+                void recogniseMenu({ url: menuUrl });
               }
               toast({
                 title: "Analyse fertig",
@@ -1393,17 +1450,17 @@ export default function AutoConfigurator() {
         // ohne dass irgendetwas online gegangen wäre. pushHistory davor, damit
         // "Rückgängig" im Konfigurator den alten Stand zurückholt.
         pushHistory();
-        applyScrapedDraft(draft);
-        // Die tatsächlich benutzte Adresse festschreiben. ConfiguratorDraft hat
-        // kein domain-Feld, applyScrapedDraft kann sie also nicht mitbringen —
-        // ohne diese Zeile stünde der manuelle Konfigurator hinterher wieder
-        // ohne Subdomain da und würde beim nächsten Veröffentlichen eine neue
-        // aus dem Geschäftsnamen ableiten statt die bestehende zu aktualisieren.
-        setBusinessInfo({
-          domain: { hasDomain: false, selectedDomain: candidate },
-        });
-        updatePublishingInfo({
-          status: "published",
+        // Übernommen wird die VERÖFFENTLICHTE Fassung, nicht der Entwurf.
+        // `config` ist genau das, was eben an den Server ging — mit den
+        // abgeleiteten Farben, den markierten Aushängeschildern und dem
+        // erkannten Buchungssystem. Mit `applyScrapedDraft(draft)` stand im
+        // Konfigurator danach eine andere Seite als im Netz, und das nächste
+        // Veröffentlichen von dort hätte die Adresse mit einer grünen
+        // Preisfarbe, weißer Kopfzeile und erfundenen Öffnungstagen
+        // überschrieben. Die Adresse geht mit, damit der manuelle Weg dieselbe
+        // Subdomain aktualisiert statt eine neue abzuleiten.
+        applyPublishedConfig(config, {
+          subdomain: candidate,
           publishedUrl: url,
           previewUrl: payload.previewUrl,
           publishedAt: payload.publishedAt ?? new Date().toISOString(),
@@ -1449,28 +1506,27 @@ export default function AutoConfigurator() {
     getAuthToken,
     toast,
     pushHistory,
-    applyScrapedDraft,
-    updatePublishingInfo,
+    applyPublishedConfig,
   ]);
 
   // ── Entwurf übernehmen → Konfigurator ─────────────────────────────────────
   const applyDraftAndOpenConfigurator = useCallback(() => {
-    if (!draft) return;
+    const config = publishPlan.config;
+    if (!config) return;
 
     // Erst sichern, dann überschreiben: Im Konfigurator holt "Rückgängig" den
     // vorherigen Stand zurück, falls der Scrape danebenlag.
     pushHistory();
-    applyScrapedDraft(draft);
-    // Die hier geprüfte Adresse mitnehmen. applyScrapedDraft setzt die Domain
-    // auf den Auslieferungszustand zurück (der Entwurf beschreibt einen neuen
-    // Betrieb) — ohne diese Zeile würde der Kopfzeilen-Publish im Konfigurator
-    // die Subdomain wieder still aus dem Geschäftsnamen ableiten, obwohl der
-    // Nutzer hier längst eine freie Adresse gewählt hat.
-    if (subdomain.trim() && availability.kind === "free") {
-      setBusinessInfo({
-        domain: { hasDomain: false, selectedDomain: subdomain.trim() },
-      });
-    }
+    // Dieselbe Fassung wie beim Veröffentlichen (siehe publishDirectly): Wer
+    // "erst anpassen" wählt, soll im Konfigurator genau das sehen, was der
+    // andere Knopf online gestellt hätte — sonst führen die zwei Wege zu zwei
+    // verschiedenen Seiten. Die hier geprüfte Adresse geht mit, sofern sie frei
+    // ist; sonst leitete der Kopfzeilen-Publish später still eine neue ab.
+    const freieAdresse =
+      subdomain.trim() && availability.kind === "free"
+        ? subdomain.trim()
+        : undefined;
+    applyPublishedConfig(config, { subdomain: freieAdresse });
     setCurrentStep(STEP_BUSINESS_INFO);
 
     toast({
@@ -1479,16 +1535,31 @@ export default function AutoConfigurator() {
     });
     navigate("/configurator/manual");
   }, [
-    draft,
+    publishPlan.config,
     pushHistory,
-    applyScrapedDraft,
+    applyPublishedConfig,
     subdomain,
     availability,
-    setBusinessInfo,
     setCurrentStep,
     toast,
     navigate,
   ]);
+
+  /**
+   * Aus der Nachbearbeitung in einen bestimmten Schritt des Konfigurators.
+   *
+   * Der Zustand ist an dieser Stelle bereits die veröffentlichte Fassung
+   * (publishDirectly hat sie übernommen) — hier wird deshalb NICHTS mehr
+   * übernommen, nur navigiert. Ein erneutes Übernehmen würde Änderungen
+   * verwerfen, die der Nutzer zwischendurch im Konfigurator gemacht hat.
+   */
+  const oeffneSchritt = useCallback(
+    (index: number) => {
+      setCurrentStep(index);
+      navigate("/configurator/manual");
+    },
+    [setCurrentStep, navigate],
+  );
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -1519,17 +1590,20 @@ export default function AutoConfigurator() {
             onCopy={copyToClipboard}
             copied={copied}
           />
-          <div className="text-center mt-6 space-y-1.5">
-            <p className="text-sm text-gray-500">
-              Deine Web-App ist live. Inhalte kannst du jederzeit nachziehen —
-              die Adresse bleibt dieselbe.
-            </p>
-            <button
-              onClick={applyDraftAndOpenConfigurator}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 underline transition-colors"
-            >
-              Inhalte noch anpassen
-            </button>
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Deine Web-App ist live. Inhalte kannst du jederzeit nachziehen — die
+            Adresse bleibt dieselbe.
+          </p>
+          {/*
+            Direkt unter dem Glückwunsch, nicht auf einer Folgeseite: Der
+            häufigste nächste Wunsch ist "andere Vorlage", und der soll einen
+            Klick kosten, nicht eine Suche durch fünfzehn Schritte.
+          */}
+          <div className="mt-6">
+            <NachVeroeffentlichung
+              publishedUrl={publishedUrl}
+              onBereichOeffnen={oeffneSchritt}
+            />
           </div>
         </div>
       </div>
@@ -1568,6 +1642,25 @@ export default function AutoConfigurator() {
             extrahieren alles automatisch — Fotos, Speisekarte, Kontakt, Vibe.
           </p>
         </div>
+
+        {/*
+          Wiederkommen: Wer schon eine Web-App hat und diese Seite erneut
+          öffnet, sah bisher nur das leere Analyse-Formular — als gäbe es seine
+          Seite nicht. Der Weg zum Anpassen führte über den manuellen
+          Konfigurator, den man erst einmal finden muss. Nur solange keine neue
+          Analyse läuft: Wer gerade eine zweite Website analysiert, will die
+          alte Web-App nicht als Erstes sehen.
+        */}
+        {bestehendeVeroeffentlichung && genStatus === "idle" && (
+          <div className="mb-8">
+            <NachVeroeffentlichung
+              publishedUrl={bestehendeVeroeffentlichung}
+              onBereichOeffnen={oeffneSchritt}
+              titel="Deine Web-App ist live"
+              einleitung={`Erreichbar unter ${bestehendeVeroeffentlichung.replace(/^https?:\/\//, "")}. Du kannst jederzeit alles anpassen — oder unten eine neue Website analysieren.`}
+            />
+          </div>
+        )}
 
         {/* Zwei-Spalten-Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

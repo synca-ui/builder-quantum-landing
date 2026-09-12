@@ -56,4 +56,18 @@ export interface ChannelConnector {
   fetchReviews(tokens: ConnectionTokens, fetchImpl: FetchLike): Promise<ReviewRecord[]>;
   /** Reichweite-/Interaktions-Insights laden und normalisieren. */
   fetchEngagement(tokens: ConnectionTokens, fetchImpl: FetchLike): Promise<EngagementPoint[]>;
+  /**
+   * Die Freigabe BEIM ANBIETER widerrufen - das Gegenstück zu `buildAuthorizationUrl`.
+   *
+   * Liefert `true`, wenn der Anbieter den Widerruf bestätigt hat, `false`, wenn er
+   * ihn abgelehnt hat (typisch: Token bereits ungültig, weil der Betrieb die
+   * Freigabe schon in seinen Google-/Meta-Kontoeinstellungen entzogen hat).
+   * Netzfehler werfen. Der Aufrufer löscht die Verbindung lokal in JEDEM Fall -
+   * dieser Rückgabewert sagt nur, ob er dem Betrieb zusätzlich raten muss, die
+   * Freigabe beim Anbieter selbst zu prüfen.
+   */
+  revokeAccess(
+    tokens: Pick<ConnectionTokens, "accessToken" | "refreshToken">,
+    fetchImpl: FetchLike,
+  ): Promise<boolean>;
 }

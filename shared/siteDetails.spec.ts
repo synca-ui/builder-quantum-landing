@@ -289,3 +289,43 @@ describe("extractSiteDetails: Rückfall auf den Text", () => {
     );
   });
 });
+
+describe("extractSiteDetails: Verweise und Bilder aus dem @graph", () => {
+  const html = `<html><head><script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": ["Restaurant", "BarOrPub"],
+        "@id": "https://www.haus-toeller.de/#restaurant",
+        name: "Haus Töller",
+        logo: { "@id": "https://www.haus-toeller.de/#logo" },
+        image: [
+          "https://www.haus-toeller.de/assets/img/og-image.jpg",
+          "/assets/img/hero-1.webp",
+          { "@type": "ImageObject", url: "/assets/img/galerie-1.webp" },
+          "https://www.haus-toeller.de/assets/img/og-image.jpg",
+        ],
+      },
+      {
+        "@type": "ImageObject",
+        "@id": "https://www.haus-toeller.de/#logo",
+        url: "https://www.haus-toeller.de/assets/img/icon-512.png",
+      },
+    ],
+  })}</script><meta property="og:image" content="/assets/img/og-image.jpg"></head><body></body></html>`;
+
+  it("löst ein Logo auf, das nur als @id-Verweis am Betrieb hängt", () => {
+    const details = extractSiteDetails(html, "https://www.haus-toeller.de/");
+    // Vorher: og:image (ein Stimmungsfoto) statt des Logos.
+    expect(details.logoUrl).toBe("https://www.haus-toeller.de/assets/img/icon-512.png");
+  });
+
+  it("sammelt die ausgezeichneten Bilder absolut und ohne Doppelte", () => {
+    const details = extractSiteDetails(html, "https://www.haus-toeller.de/");
+    expect(details.images).toEqual([
+      "https://www.haus-toeller.de/assets/img/og-image.jpg",
+      "https://www.haus-toeller.de/assets/img/hero-1.webp",
+      "https://www.haus-toeller.de/assets/img/galerie-1.webp",
+    ]);
+  });
+});

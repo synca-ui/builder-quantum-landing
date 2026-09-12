@@ -27,7 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LivePhoneFrame } from "@/components/preview/LivePhoneFrame";
 import { TemplatePreviewContent } from "@/components/configurator/preview/TemplatePreviewContent";
-import { defaultTemplates } from "@/components/template/TemplateRegistry";
+import { TEMPLATE_REGISTRY } from "@shared/templateCatalog";
 import MobileCreativeStudio from "./MobileCreativeStudio";
 
 interface OptimizationSuggestion {
@@ -52,8 +52,10 @@ export default function DemoCreativeStudio() {
   );
   const [isMobileView, setIsMobileView] = useState(false);
 
-  // Use real templates from database/registry
-  const templates = defaultTemplates;
+  // Dieselbe Liste wie im Konfigurator und in der Datenbank
+  // (shared/templateCatalog.ts). Vorher zeigte das Demo-Dashboard vier
+  // Vorlagen, die es im Picker so nicht mehr gibt.
+  const templates = TEMPLATE_REGISTRY;
 
   // Check for mobile viewport
   useEffect(() => {
