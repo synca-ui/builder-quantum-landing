@@ -29,11 +29,16 @@ const DebouncedContactInput = ({
   placeholder,
   value,
   onChange,
+  type = "text",
+  autoComplete,
 }: {
   icon: React.ReactNode;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  /** tel/email: passende Tastatur auf dem Handy und Browser-Autofill (Runde 8). */
+  type?: "text" | "tel" | "email" | "url";
+  autoComplete?: string;
 }) => {
   const [localValue, setLocalValue] = useState(value);
   const debouncedValue = useDebounce(localValue, 400);
@@ -52,7 +57,8 @@ const DebouncedContactInput = ({
     <div className="relative">
       <div className="absolute left-3 top-3 text-gray-400">{icon}</div>
       <Input
-        type="text"
+        type={type}
+        autoComplete={autoComplete}
         placeholder={placeholder}
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
@@ -188,6 +194,20 @@ export function ContactSocialStep({
                   placeholder={method.placeholder}
                   value={getContactValue(method.id)}
                   onChange={(value) => updateContactValue(method.id, value)}
+                  type={
+                    method.id === "phone"
+                      ? "tel"
+                      : method.id === "email"
+                        ? "email"
+                        : "text"
+                  }
+                  autoComplete={
+                    method.id === "phone"
+                      ? "tel"
+                      : method.id === "email"
+                        ? "email"
+                        : undefined
+                  }
                 />
               </div>
             ))}

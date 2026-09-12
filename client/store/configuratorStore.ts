@@ -1405,7 +1405,11 @@ export const useConfiguratorUI = () =>
   useConfiguratorStore((state) => state.ui);
 
 export const useConfiguratorActions = () => {
-  const store = useConfiguratorStore();
+  // getState statt Hook: Die Aktionen sind stabile Funktionen und ändern sich
+  // nie. Ein Hook ohne Selector abonnierte den GESAMTEN Store — jede
+  // Schritt-Komponente rendert dann bei jeder Store-Änderung neu, obwohl sie
+  // nur Aktionen wollte (Prüfung Runde 8).
+  const store = useConfiguratorStore.getState();
 
   return useMemo(
     () => ({

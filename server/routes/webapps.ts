@@ -718,6 +718,11 @@ webAppsRouter.put("/apps/:id", async (req, res) => {
       },
     });
 
+    // Sonst liefert GET /api/sites/:subdomain bis zum Ablauf des Caches den
+    // alten Stand — in den aktiv genutzten Publish-Pfaden längst so gelöst,
+    // hier fehlte es (Runde 8).
+    if (updated?.subdomain) invalidateSite(updated.subdomain);
+
     return res.json(updated);
   } catch (e) {
     console.error("update app error", e);

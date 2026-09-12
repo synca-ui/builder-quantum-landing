@@ -539,7 +539,6 @@ export function TemplatePreviewContent() {
               categories={kategorien}
               activeCategory={activeMenuCategory}
               onCategoryChange={(category) => {
-                console.log("[MenuPage] Category changed:", category);
                 setActiveMenuCategory(category);
               }}
               fontColor={fontColor}

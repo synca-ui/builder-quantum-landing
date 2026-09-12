@@ -66,10 +66,6 @@ export const DebouncedInput = React.forwardRef<
     useEffect(() => {
       // Nur updaten wenn sich der externe Wert wirklich geändert hat
       if (value !== prevValueRef.current && value !== localValue) {
-        console.log("[DebouncedInput] External value changed:", {
-          from: prevValueRef.current,
-          to: value,
-        });
         setLocalValue(value);
         prevValueRef.current = value;
       }
@@ -92,10 +88,6 @@ export const DebouncedInput = React.forwardRef<
         if (newValue !== prevValueRef.current) {
           // Neues Timeout für Store-Update
           timeoutRef.current = setTimeout(() => {
-            console.log("[DebouncedInput] Triggering onChange:", {
-              from: prevValueRef.current,
-              to: newValue,
-            });
             prevValueRef.current = newValue;
             onChange(newValue);
           }, debounceMs);
@@ -114,10 +106,6 @@ export const DebouncedInput = React.forwardRef<
 
       // Nur onChange triggern wenn Wert sich geändert hat
       if (localValue !== prevValueRef.current) {
-        console.log("[DebouncedInput] Blur - immediate update:", {
-          from: prevValueRef.current,
-          to: localValue,
-        });
         prevValueRef.current = localValue;
         onChange(localValue);
       }
