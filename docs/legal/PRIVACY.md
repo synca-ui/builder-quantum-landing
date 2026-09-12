@@ -2,6 +2,15 @@
 
 Stand: 07.08.2026
 
+> **Hinweis 11.09.2026:** Die öffentliche Seite `client/pages/Datenschutz.tsx`
+> wurde für den Google-OAuth-Antrag überarbeitet (neuer Abschnitt 6 „Maitr-App
+> und verbundene Kanäle", KI-Dienste, Korrektur der drei unten genannten
+> Falschaussagen; Google Fonts sind auf maitr.de seit 10.09. selbst gehostet).
+> Der Blocker-Hinweis unten ist damit für die Web-Seite gegenstandslos. Dieser
+> Entwurf bleibt die ausführliche Fassung für die anwaltliche Prüfung; seine
+> `>>ENTSCHEIDUNG NOETIG<<`-Punkte gelten weiter. Abschnitt 3.13 ist überholt:
+> die App registriert seit 20.08. ein Expo-Push-Token (`PushToken`).
+
 >>ENTSCHEIDUNG NOETIG (BLOCKER): Diese Fassung ERSETZT den Inhalt von `client/pages/Datenschutz.tsx`. Diese Seite ist derzeit unter maitr.de/datenschutz online und enthält mindestens drei Aussagen, die der ausgelieferte Build widerlegt: „Google Fonts werden lokal eingebunden" (`client/pages/Datenschutz.tsx:261-266`, tatsächlich unbedingter Fremdabruf, siehe Abschnitt 3.12), eine pauschale Zusage abgeschlossener Auftragsverarbeitungsverträge mit allen Anbietern sowie eine Angabe zu einer IP-Anonymisierung nach 7 Tagen, die im geprüften Code nicht nachvollziehbar ist. Die alte Seite darf nicht parallel zu dieser Fassung bestehen bleiben — unter anderem, weil der Google-OAuth-Zustimmungsbildschirm genau diese URL verlinkt (`client/pages/Index.tsx:952`).<<
 
 ## 1. Verantwortlicher
@@ -179,14 +188,14 @@ Um Bewertungen, Beiträge und Reichweitendaten abzurufen, verbindet der Betrieb 
 - Verantwortlicher: der Betrieb (Inhaber der angebundenen Konten); maitr als technischer Dienstleister/Auftragsverarbeiter für die Token-Verwaltung.
 - Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertrag mit dem Gastronomen über die Verwaltung seines Profils).
 - Sicherheitsmaßnahme: Token werden vor dem Schreiben mit AES-256-GCM verschlüsselt (`MAITR_ENCRYPTION_KEY`).
-- Speicherdauer: kein aktiver Löschpfad für die Verbindung selbst gefunden, nur ein Statuswechsel auf EXPIRED bei Token-Fehlern; die Zeile bleibt bis zur Löschung des gesamten Betriebs bestehen.
-- Belege: `prisma/schema.prisma:939-1019`, `server/maitr/security.ts:15-34`, `server/maitr/sync.ts:45-68,173-178`, `server/maitr/routes.ts:1264-1266` (Redirect-URI), `:1321-1360` (Callback, Tokenablage).
-- >>ENTSCHEIDUNG NOETIG: Löschregel für nicht mehr benötigte Verbindungen festlegen.<<
+- Speicherdauer: bis der Betrieb die Verbindung trennt (siehe „Widerruf der Verbindung") oder der Betrieb gelöscht wird. Bei Token-Fehlern setzt der Abruf die Verbindung auf EXPIRED; die Token bleiben dann bis zum Trennen oder Wiederverbinden gespeichert.
+- Belege: `prisma/schema.prisma` (Modell `ChannelConnection`), `server/maitr/security.ts:15-34`, `server/maitr/sync.ts:45-68,173-178`, `server/maitr/routes.ts` (`integrationsRouter`: Redirect-URI, Callback, Tokenablage, Trennen).
 
-**Widerruf der Verbindung**: Die Schaltfläche „Verbindung trennen" in der App entfernt die Verbindung derzeit **nur aus der Ansicht des Geräts**. Die serverseitig gespeicherten, verschlüsselten Zugriffs- und Aktualisierungstoken werden dabei **nicht** gelöscht, die Verbindung bleibt mit Status `ACTIVE` bestehen, und der Datenabruf durch den Scheduler läuft weiter. Sie können Ihre Freigabe jederzeit unmittelbar bei Google (`myaccount.google.com/permissions`) bzw. Meta widerrufen; danach schlägt der Abruf fehl und die Verbindung wird auf „abgelaufen" (`EXPIRED`) gesetzt.
+**Widerruf der Verbindung**: Über „Verbindung trennen" in der App (Kanäle → Kanal) widerruft maitr die Freigabe unmittelbar beim Anbieter (Google: `oauth2/revoke` mit dem Aktualisierungstoken, wodurch der gesamte Grant erlischt; Meta: `DELETE /me/permissions`) und **löscht** anschließend die gespeicherten Zugriffs- und Aktualisierungstoken samt Verbindungsdatensatz. Der Datenabruf durch den Scheduler endet damit. Kann der Anbieter den Widerruf nicht bestätigen (Token bereits ungültig, Anbieter nicht erreichbar), werden die Token dennoch gelöscht, und die App weist den Betrieb darauf hin, die Freigabe zusätzlich in seinen Kontoeinstellungen beim Anbieter (Google: `myaccount.google.com/permissions`) zu prüfen. Unabhängig davon kann der Betrieb die Freigabe jederzeit dort selbst widerrufen; danach schlägt der Abruf fehl und die Verbindung wird auf „abgelaufen" (`EXPIRED`) gesetzt. Nur Inhaber des Betriebs können trennen.
 
-- Belege: `mobile/src/lib/store.tsx:814-821` (nur lokaler React-State, kein API-Aufruf), `mobile/src/features/growth/ChannelDetailScreen.tsx:106-109`; kein `channelConnection.delete` im gesamten `server/`-Verzeichnis (geprüft); Statuswechsel bei Fehlern: `server/maitr/sync.ts:69-72`.
-- >>ENTSCHEIDUNG NOETIG: Vor dem Google-OAuth-Antrag ist ein echter Trennen-Endpunkt zu bauen (Token-Revocation bei Google/Meta und Löschen der ChannelConnection-Zeile) und die App daran zu hängen. Bis dahin ist der Knopf irreführend und sollte entfernt oder umbenannt werden.<<
+Bereits abgerufene Bewertungen und Kennzahlen bleiben nach dem Trennen erhalten: Sie gehören zum Betrieb, nicht zur Verbindung (siehe 3.7), und werden mit dem Betrieb gelöscht.
+
+- Belege: `server/maitr/routes.ts` (`integrationsRouter.delete("/:provider")`), `packages/core/src/integrations/google.ts` und `meta.ts` (`revokeAccess`), `mobile/src/features/growth/ChannelDetailScreen.tsx`, geprüft in `server/__tests__/maitrIntegrationTrennen.spec.ts`.
 
 Google liefert im Gegenzug Bewertungen (Sterne, Text, Antwortzeitpunkt) und Reichweite-Kennzahlen zurück; Meta liefert Seiten-Empfehlungen (Erstellungszeitpunkt, Empfehlungstyp, Bewertungstext) und Insights (Impressionen, Profilaufrufe).
 

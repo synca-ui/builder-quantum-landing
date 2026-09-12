@@ -47,7 +47,7 @@ import {
   toApiState,
   type TaskDecisionRow,
 } from "./briefing";
-import { createState, encryptToken, verifyState } from "./security";
+import { createState, decryptToken, encryptToken, verifyState } from "./security";
 import { maitrEnv } from "./env";
 import { asyncHandler, type AsyncRequestHandler } from "./asyncHandler";
 import {
@@ -1103,7 +1103,7 @@ function rolleOf(req: Request): VenueRolle {
  *
  * Die Rolle wird NICHT in `requireVenueAccess` erzwungen: dort hängen auch alle
  * Lesewege und das Stempeln, und beides muss das Personal können. Erzwungen wird sie
- * an genau den drei Zugriffen, die entweder eine Zusage an den Gast ändern oder
+ * an genau den Zugriffen, die entweder eine Zusage an den Gast ändern oder
  * unumkehrbar sind.
  *
  * Vorher hing alles am blossen Wahrheitswert „Mitglied ja/nein". `BusinessMember.role`
@@ -1636,6 +1636,71 @@ integrationsRouter.get(
       select: { provider: true, accountId: true, status: true, expiresAt: true, scopes: true },
     });
     return res.json(connections);
+  }),
+);
+
+/**
+ * Verbindung trennen - das Gegenstück zu /connect, und die Antwort auf die Frage
+ * im Google-OAuth-Antrag „Wie widerrufen Nutzer den Zugriff?".
+ *
+ * Bis hierhin gab es diesen Endpunkt nicht: „Verbindung trennen" in der App
+ * löschte nur den lokalen Zustand des Geräts, die Token blieben serverseitig
+ * ACTIVE und der Scheduler zog weiter Daten (AUFGABEN.md C6). Damit war die Frage
+ * im Antrag nicht wahrheitsgemäß zu beantworten.
+ *
+ * REIHENFOLGE UND WARUM:
+ *  1. Beim Anbieter widerrufen, SOLANGE wir das Token noch haben. Danach ist es
+ *     unwiderruflich weg - ein Widerruf „später nachholen" ist dann unmöglich.
+ *  2. Die Zeile LÖSCHEN, nicht auf REVOKED setzen. `encAccessToken` ist NOT NULL;
+ *     eine REVOKED-Zeile hieße entweder „Token bleibt gespeichert" (genau das, was
+ *     der Knopf verspricht zu beenden) oder ein Platzhalter-Chiffrat, an dem
+ *     jeder spätere Leser stolpert. Beim Wiederverbinden legt der Callback per
+ *     upsert einfach neu an.
+ *
+ * Gelöscht wird in JEDEM Fall - auch wenn der Anbieter den Widerruf ablehnt oder
+ * nicht erreichbar ist. Sonst hinge der Wille des Betriebs, uns den Zugriff zu
+ * entziehen, an der Verfügbarkeit von Google. `providerRevoked: false` in der
+ * Antwort sagt der App, dass sie dem Betrieb raten soll, die Freigabe in seinen
+ * Google-/Meta-Kontoeinstellungen selbst zu prüfen.
+ *
+ * WAS BLEIBT (Entscheidung zu C6.4): Bereits geholte Bewertungen und
+ * Reichweitendaten. Sie gehören zum Betrieb, nicht zur Verbindung - die
+ * Bewertung eines Gastes wird nicht falsch, weil der Wirt den Kanal abhängt.
+ * Sie fallen mit dem Betrieb (Cascade), siehe docs/legal/PRIVACY.md 3.7.
+ *
+ * Nur der Inhaber: Trennen ist unumkehrbar (Token weg) und nimmt dem Betrieb
+ * einen Kanal - keine Aushilfe darf das.
+ */
+integrationsRouter.delete(
+  "/:provider",
+  venueGuard,
+  ownerGuard,
+  asyncHandler(async (req, res) => {
+    const provider = req.params.provider as ProviderId;
+    if (provider !== "google" && provider !== "meta") return res.status(400).json({ error: "Unbekannter Anbieter" });
+    const dbProvider = provider === "google" ? "GOOGLE" : "META";
+
+    const conn = await prisma.channelConnection.findUnique({
+      where: { businessId_provider: { businessId: venueOf(req), provider: dbProvider } },
+    });
+    if (!conn) return res.status(404).json({ error: "nicht_verbunden" });
+
+    let providerRevoked = false;
+    try {
+      providerRevoked = await connectors[provider].revokeAccess(
+        {
+          accessToken: decryptToken(conn.encAccessToken),
+          refreshToken: conn.encRefreshToken ? decryptToken(conn.encRefreshToken) : undefined,
+        },
+        fetchLike,
+      );
+    } catch (err) {
+      // Kein Abbruch: Der Betrieb will trennen, und das tun wir. Nur protokollieren.
+      console.warn(`[maitr] Widerruf bei ${provider} fehlgeschlagen:`, (err as Error).message);
+    }
+
+    await prisma.channelConnection.delete({ where: { id: conn.id } });
+    return res.json({ provider: dbProvider, providerRevoked });
   }),
 );
 

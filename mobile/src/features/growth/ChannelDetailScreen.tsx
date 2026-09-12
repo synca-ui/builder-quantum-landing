@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useRouter } from "expo-router";
+import { ApiError, api } from "@maitr/core";
+import type { ProviderId } from "@maitr/core/integrations";
 
 import { CheckIcon } from "../../components/icons";
 import { Avatar, StatusLabel } from "../../components/ui/Avatar";
@@ -16,7 +18,17 @@ import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 import { findChannel } from "./channels";
 
-type Phase = "idle" | "connecting" | "done";
+type Phase = "idle" | "connecting" | "disconnecting" | "done";
+
+/**
+ * Welche Server-Verbindung hinter einem Kanal der Oberfläche steht. Yelp & Co.
+ * haben keine - dort bleibt Trennen ein reiner Store-Vorgang.
+ */
+function serverProvider(channelId: string): ProviderId | null {
+  if (channelId === "google") return "google";
+  if (channelId === "instagram") return "meta";
+  return null;
+}
 
 /**
  * Verbinden- & Verwalten-Seite eines Kanals (aus Screen 11).
@@ -24,17 +36,59 @@ type Phase = "idle" | "connecting" | "done";
  * Nicht verbunden: zeigt Konto und Berechtigungen, „Verbinden" simuliert den
  * OAuth-Fluss (Spinner → verbunden) und schreibt in den Store. Verbunden: zeigt Konto,
  * Sync-Status, Zugang zur Profilpflege (Google/Instagram) und Trennen.
+ *
+ * TRENNEN IST ECHT, sobald ein echter Betrieb dahintersteht: `DELETE
+ * /integrations/:provider` widerruft die Freigabe bei Google/Meta und löscht die
+ * Token serverseitig. Vorher löschte der Knopf nur den Zustand dieses Geräts, und
+ * die Token blieben aktiv (AUFGABEN.md C6) - genau die Frage, die Google im
+ * OAuth-Antrag stellt („Wie widerrufen Nutzer den Zugriff?"). Der Store wird in
+ * jedem Fall bereinigt; der Server ist die Wahrheit, die Ansicht folgt ihr.
  */
 export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
-  const { channels, channelMeta, connectChannelAs, disconnectChannel } = useStore();
+  const { channels, channelMeta, connectChannelAs, disconnectChannel, venueId, hasRealVenue } =
+    useStore();
 
   const channel = findChannel(channelId);
   const connected = Boolean(channels[channel.id]);
   const meta = channelMeta[channel.id];
   const [phase, setPhase] = useState<Phase>("idle");
+
+  const disconnect = async () => {
+    const provider = serverProvider(channel.id);
+    if (hasRealVenue && provider) {
+      setPhase("disconnecting");
+      try {
+        const ergebnis = await api.integrations.disconnect(venueId, provider);
+        if (ergebnis.providerRevoked) {
+          toast.show(`${channel.name} getrennt`);
+        } else {
+          // Bei uns ist die Verbindung weg; der Anbieter hat den Widerruf aber nicht
+          // bestätigt (Token schon ungültig oder Anbieter nicht erreichbar).
+          toast.show(
+            `${channel.name} getrennt. Prüfe die Freigabe bitte auch in deinen ${channel.name}-Kontoeinstellungen.`,
+            "info",
+          );
+        }
+      } catch (err) {
+        // 404 = serverseitig gab es nichts zu trennen; die Ansicht war voraus.
+        // Alles andere ist ein echter Fehlschlag, und dann bleibt die Verbindung stehen -
+        // sonst zeigte die App „getrennt", während die Token weiter aktiv sind.
+        if (!(err instanceof ApiError && err.status === 404)) {
+          setPhase("idle");
+          toast.show("Trennen fehlgeschlagen. Bitte erneut versuchen.", "fehler");
+          return;
+        }
+        toast.show(`${channel.name} getrennt`);
+      }
+    } else {
+      toast.show(`${channel.name} getrennt`);
+    }
+    disconnectChannel(channel.id);
+    setPhase("idle");
+  };
 
   const connect = () => {
     setPhase("connecting");
@@ -103,13 +157,10 @@ export function ChannelDetailScreen({ channelId }: { channelId?: string }) {
       <View style={{ marginTop: theme.spacing.sm, gap: theme.spacing.md }}>
         {connected ? (
           <PillButton
-            label="Verbindung trennen"
+            label={phase === "disconnecting" ? "Wird getrennt …" : "Verbindung trennen"}
             variant="outline"
-            onPress={() => {
-              disconnectChannel(channel.id);
-              setPhase("idle");
-              toast.show(`${channel.name} getrennt`);
-            }}
+            disabled={phase === "disconnecting"}
+            onPress={() => void disconnect()}
           />
         ) : phase === "connecting" ? (
           <View
