@@ -690,10 +690,44 @@ export function MenuProductsStep({
     } catch {}
     if (!file) return;
 
+    /**
+     * Ohne Anmeldung gar nicht erst losschicken.
+     *
+     * Der manuelle Konfigurator ist absichtlich ohne Konto begehbar ("Ich will
+     * noch nicht live gehen" in der Modus-Auswahl). `POST /api/menu/extract`
+     * verlangt aber eine Anmeldung — der Endpunkt ruft eine kostenpflichtige
+     * Erkennung auf. Wer ohne Konto eine Karte hochlud, bekam deshalb
+     * ausgerechnet an der wichtigsten Stelle des Konfigurators
+     * "Die Erkennung konnte nicht gestartet werden (HTTP 401)": eine
+     * technische Meldung, die nicht sagt, was zu tun ist.
+     *
+     * getToken() liefert auch dann null, wenn die Sitzung abgelaufen ist —
+     * beides ist derselbe Fall und dieselbe Antwort.
+     *
+     * Die Wettfrist ist kein Schmuck. Clerk lädt sein Skript von
+     * clerk.maitr.de nach; kommt es nicht durch (Werbeblocker, gesperrte
+     * Domain, lokal die Produktionsschlüssel), reiht der Ersatz-Client die
+     * Anfrage nur ein: getToken() löst dann WEDER auf NOCH aus. Beobachtet am
+     * 31.08.2026 auf localhost — der Knopf öffnete den Dateidialog und tat
+     * danach nichts, ohne Meldung und ohne Ladeanzeige. Nach der Frist gilt
+     * dasselbe wie bei fehlender Anmeldung: sagen, was zu tun ist.
+     */
+    const token = await Promise.race([
+      getToken().catch(() => null),
+      new Promise<null>((fertig) => setTimeout(() => fertig(null), 4000)),
+    ]);
+    if (!token) {
+      toast.error(
+        "Zum Einlesen der Speisekarte bitte anmelden — alles andere kannst du auch ohne Konto ausprobieren.",
+        { duration: 8000 },
+      );
+      return;
+    }
+
     setMenuScanLaeuft(true);
     const meldung = toast.loading("Speisekarte wird gelesen …");
     try {
-      const ergebnis = await extractMenuFromFile(file, await getToken());
+      const ergebnis = await extractMenuFromFile(file, token);
 
       // Zuerst die Legende: Ohne sie stehen an den Gerichten nur Kuerzel wie
       // "a1", und die sind fuer einen Gast mit einer Unvertraeglichkeit

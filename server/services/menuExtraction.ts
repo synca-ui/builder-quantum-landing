@@ -22,6 +22,7 @@ import {
 import { safeFetch, SafeFetchError } from "./safeFetch";
 import { transcribeDocument, ocrConfigured, MAX_DOCUMENT_BYTES } from "./ocr";
 import { structureMenuText, menuStructureConfigured } from "./menuStructure";
+import { extractMenuViaN8n, menuN8nConfigured } from "./menuN8n";
 
 export type MenuSource =
   | "html_jsonld"
@@ -29,6 +30,8 @@ export type MenuSource =
   | "pdf_text"
   | "pdf_ocr"
   | "image_ocr"
+  /** Über den n8n-Flow gelesen – Bild oder abfotografiertes PDF. */
+  | "n8n_ocr"
   | "none";
 
 export interface MenuExtractionResult {
@@ -353,6 +356,45 @@ async function gerichteAus(
   }
 }
 
+/**
+ * Versucht den n8n-Weg und sagt, ob er getragen hat.
+ *
+ * Vorgeschaltet wird er NUR dort, wo sonst bezahlte Bilderkennung liefe: beim
+ * Foto und beim abfotografierten PDF. Ein PDF mit Textebene bleibt beim
+ * kostenlosen lokalen Weg — gemessen am 7.8.2026 brauchten sieben von acht
+ * PDF-Karten gar keine Erkennung.
+ *
+ * `null` heißt „nicht gelaufen oder nichts gebracht" und nie „Abbruch": Der
+ * Aufrufer macht dann mit der eigenen Kette weiter. Was passiert ist, steht in
+ * diagnostics — sonst wäre von außen nicht zu unterscheiden, ob der Flow gar
+ * nicht befragt wurde oder ob er die Karte nicht lesen konnte.
+ */
+async function ueberN8n(
+  buffer: Buffer,
+  mimeType: string,
+  dateiname: string,
+  diagnostics: string[],
+): Promise<MenuExtractionResult | null> {
+  if (!menuN8nConfigured()) return null;
+
+  const ergebnis = await extractMenuViaN8n(buffer, mimeType, dateiname);
+  if (!ergebnis) return null;
+
+  diagnostics.push(...ergebnis.diagnostics);
+  if (!ergebnis.items.length) {
+    diagnostics.push("n8n lieferte keine Gerichte — die eigene Kette übernimmt");
+    return null;
+  }
+
+  diagnostics.push(`${ergebnis.items.length} Gerichte über n8n`);
+  return {
+    items: ergebnis.items,
+    source: "n8n_ocr",
+    diagnostics,
+    ...(ergebnis.allergenLegend ? { allergenLegend: ergebnis.allergenLegend } : {}),
+  };
+}
+
 /** Erkennt eine Karte aus bereits vorliegenden Bytes. */
 export async function extractMenuFromBuffer(
   buffer: Buffer,
@@ -403,6 +445,14 @@ export async function extractMenuFromBuffer(
     }
 
     // Keine brauchbare Textebene -> die Karte ist vermutlich abfotografiert.
+    const pdfAusN8n = await ueberN8n(
+      buffer,
+      "application/pdf",
+      "speisekarte.pdf",
+      diagnostics,
+    );
+    if (pdfAusN8n) return pdfAusN8n;
+
     if (!ocrConfigured()) {
       diagnostics.push(
         "Texterkennung übersprungen: kein OCR-Anbieter eingerichtet (GEMINI_API_KEY oder ANTHROPIC_API_KEY setzen)",
@@ -436,13 +486,20 @@ export async function extractMenuFromBuffer(
   }
 
   if (kind === "image") {
+    const mime = contentType.startsWith("image/") ? contentType : "image/jpeg";
+
+    // Das Foto der Karte ist der Fall, für den der n8n-Flow gebaut wurde:
+    // Gemini liest und strukturiert in einem Aufruf, statt erst Text zu
+    // erkennen und ihn dann ein zweites Mal deuten zu lassen.
+    const bildAusN8n = await ueberN8n(buffer, mime, "speisekarte", diagnostics);
+    if (bildAusN8n) return bildAusN8n;
+
     if (!ocrConfigured()) {
       diagnostics.push(
         "Bild kann ohne eingerichteten OCR-Anbieter nicht gelesen werden",
       );
       return { items: [], source: "none", diagnostics };
     }
-    const mime = contentType.startsWith("image/") ? contentType : "image/jpeg";
     const ocr = await transcribeDocument(buffer, mime);
     diagnostics.push(`Texterkennung (${ocr.provider}): ${ocr.text.length} Zeichen`);
     diagnostics.push(...ocr.attempts.map((a) => `Versuch – ${a}`));
