@@ -474,7 +474,9 @@ describe("Kennzeichnung — Kürzel, Labels, Legende", () => {
     g: "Milch",
   };
 
-  test.each(["presse", "vitrine", "imbiss", "konditorei", "minimalist"])(
+  // ALLE Formen, nicht fünf: Ein Copy-Paste-Fehler in einer der elf anderen
+  // fiel vorher nicht auf (Prüfung Runde 8, M6).
+  test.each(EIGENE_TEMPLATES.concat("minimalist", "modern"))(
     "'%s': Kürzel hinter dem Namen, Labels als Zeile, Legende nur mit erklärten Kürzeln",
     (t) => {
       const { container } = render(
