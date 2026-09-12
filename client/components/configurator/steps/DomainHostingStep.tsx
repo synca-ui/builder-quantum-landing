@@ -291,10 +291,11 @@ export function DomainHostingStep({
       <div className="space-y-8">
         <div className="grid md:grid-cols-2 gap-6">
           <Card
-            className={`cursor-pointer transition-all duration-300 border-2 ${!hasDomain
+            className={`cursor-pointer transition-all duration-300 border-2 ${
+              !hasDomain
                 ? "border-teal-500 bg-teal-50"
                 : "border-gray-200 hover:border-teal-300"
-              }`}
+            }`}
             onClick={() =>
               actions.business.setBusinessInfo({
                 domain: { ...business.domain, hasDomain: false },
@@ -323,10 +324,11 @@ export function DomainHostingStep({
           </Card>
 
           <Card
-            className={`cursor-pointer transition-all duration-300 border-2 ${hasDomain
+            className={`cursor-pointer transition-all duration-300 border-2 ${
+              hasDomain
                 ? "border-teal-500 bg-teal-50"
                 : "border-gray-200 hover:border-teal-300"
-              }`}
+            }`}
             onClick={() =>
               actions.business.setBusinessInfo({
                 domain: { ...business.domain, hasDomain: true },
@@ -387,11 +389,12 @@ export function DomainHostingStep({
               {/* Validation Message */}
               {validationError && (
                 <div
-                  className={`flex items-center gap-2 text-sm ${validationStatus === "taken" ||
-                      validationStatus === "reserved"
+                  className={`flex items-center gap-2 text-sm ${
+                    validationStatus === "taken" ||
+                    validationStatus === "reserved"
                       ? "text-red-600"
                       : "text-orange-600"
-                    }`}
+                  }`}
                 >
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{validationError}</span>
@@ -427,15 +430,16 @@ export function DomainHostingStep({
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-teal-500" />
                   <span
-                    className={`font-mono text-sm font-medium ${validationStatus === "available" ||
-                        validationStatus === "owned"
+                    className={`font-mono text-sm font-medium ${
+                      validationStatus === "available" ||
+                      validationStatus === "owned"
                         ? "text-green-700"
                         : validationStatus === "taken" ||
-                          validationStatus === "reserved" ||
-                          validationStatus === "invalid"
+                            validationStatus === "reserved" ||
+                            validationStatus === "invalid"
                           ? "text-red-700"
                           : "text-gray-700"
-                      }`}
+                    }`}
                   >
                     https://{displayDomain}
                   </span>

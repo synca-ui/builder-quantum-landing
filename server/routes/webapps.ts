@@ -244,8 +244,11 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
           primaryColor:
             config?.design?.primaryColor || config?.primaryColor || "#000000",
           secondaryColor:
-            config?.design?.secondaryColor || config?.secondaryColor || "#ffffff",
-          fontFamily: config?.design?.fontFamily || config?.fontFamily || "sans",
+            config?.design?.secondaryColor ||
+            config?.secondaryColor ||
+            "#ffffff",
+          fontFamily:
+            config?.design?.fontFamily || config?.fontFamily || "sans",
         },
         profil,
         speisekarte,
@@ -596,7 +599,12 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof PublishOwnershipError) {
-      await audit("webapp_publish_ownership_denied", userId, false, error.message);
+      await audit(
+        "webapp_publish_ownership_denied",
+        userId,
+        false,
+        error.message,
+      );
       return res.status(403).json({
         success: false,
         error: "Kein Zugriff auf diese Configuration",
@@ -724,7 +732,12 @@ publicAppsRouter.get("/public/apps/:subdomain", async (req, res) => {
     const { subdomain } = req.params;
     const app = await prisma.webApp.findUnique({
       where: { subdomain },
-      select: { id: true, configData: true, publishedAt: true, updatedAt: true },
+      select: {
+        id: true,
+        configData: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
     });
     if (!app) {
       return res.status(404).json({ error: "Not found" });

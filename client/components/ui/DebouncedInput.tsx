@@ -17,11 +17,10 @@ import { Textarea } from "./textarea";
 // TYPES
 // ============================================
 
-interface DebouncedInputProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "value"
-  > {
+interface DebouncedInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+> {
   /** Aktueller Wert aus dem Store */
   value: string;
   /** Callback wenn der Wert sich ändert (debounced) */
@@ -188,8 +187,10 @@ DebouncedInput.displayName = "DebouncedInput";
  * Debounced Number Input
  * Für Preis-, Mengen- und Zahlen-Eingaben
  */
-interface DebouncedNumberInputProps
-  extends Omit<DebouncedInputProps, "value" | "onChange"> {
+interface DebouncedNumberInputProps extends Omit<
+  DebouncedInputProps,
+  "value" | "onChange"
+> {
   value: number | string;
   onChange: (value: number) => void;
   min?: number;

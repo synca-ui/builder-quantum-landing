@@ -19,10 +19,7 @@
  * als die, die er bekommt.
  */
 import { useCallback } from "react";
-import {
-  deriveCohesiveColors,
-  softenBackground,
-} from "@shared/autoPublish";
+import { deriveCohesiveColors, softenBackground } from "@shared/autoPublish";
 import type { DesignConfig } from "@shared/suggestedConfig";
 
 export interface ErgebnisFarbenProps {

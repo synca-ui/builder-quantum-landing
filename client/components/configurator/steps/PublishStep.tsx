@@ -475,20 +475,22 @@ export function PublishStep({
             {checklist.map((item) => (
               <div
                 key={item.id}
-                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${item.checked
+                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${
+                  item.checked
                     ? "bg-green-50 border-green-200"
                     : item.required
                       ? "bg-orange-50 border-orange-200"
                       : "bg-gray-50 border-gray-200"
-                  }`}
+                }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${item.checked
+                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                    item.checked
                       ? "bg-green-500"
                       : item.required
                         ? "bg-orange-300"
                         : "bg-gray-300"
-                    }`}
+                  }`}
                 >
                   {item.checked && <Check className="w-4 h-4 text-white" />}
                 </div>
@@ -564,10 +566,11 @@ export function PublishStep({
             }}
             disabled={isPublishing || !canPublish}
             size="lg"
-            className={`px-12 py-6 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${canPublish
+            className={`px-12 py-6 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${
+              canPublish
                 ? "bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 hover:scale-105"
                 : "bg-gray-300 cursor-not-allowed"
-              }`}
+            }`}
           >
             <Rocket className="mr-3 w-6 h-6" />
             Web-App veröffentlichen

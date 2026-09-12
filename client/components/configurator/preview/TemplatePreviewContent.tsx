@@ -193,10 +193,9 @@ export function TemplatePreviewContent() {
   const reservationProvider = useConfiguratorStore(
     (s) => (s.features as any).reservationProvider,
   );
-  const reservationFormStyle = 
+  const reservationFormStyle =
     useConfiguratorStore((s) => s.features.reservationFormStyle) || "classic";
-  const maxGuests = 
-    useConfiguratorStore((s) => s.features.maxGuests) || 10;
+  const maxGuests = useConfiguratorStore((s) => s.features.maxGuests) || 10;
   const timeSlots =
     useConfiguratorStore((s) => (s.features as any).timeSlots) ||
     FALLBACK_TIME_SLOTS;
@@ -405,7 +404,14 @@ export function TemplatePreviewContent() {
       bodyClass: `text-sm opacity-90 leading-relaxed`,
       nav: `!sticky !top-0 w-full z-[100] px-5 pt-12 pb-3 flex items-center justify-between border-b border-black/5 transition-all bg-white backdrop-blur-md shadow-sm`, // Forced sticky with !important
     }),
-    [backgroundColor, fontColor, secondaryColor, template, fontFamily, layout.eigen],
+    [
+      backgroundColor,
+      fontColor,
+      secondaryColor,
+      template,
+      fontFamily,
+      layout.eigen,
+    ],
   );
 
   // ==========================================
@@ -522,7 +528,9 @@ export function TemplatePreviewContent() {
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
         {/* Page Title */}
-        <h2 className={styles.titleClass} style={styles.titleStyle}>Speisekarte</h2>
+        <h2 className={styles.titleClass} style={styles.titleStyle}>
+          Speisekarte
+        </h2>
 
         {/* Category Filter - NUR wenn Kategorien existieren */}
         {kategorien.length > 0 && (
@@ -556,7 +564,7 @@ export function TemplatePreviewContent() {
             anzeigen={filteredItems}
             categories={kategorien}
             bildSichtbarkeit={dishImageVisibility}
-          allergenLegend={allergenLegend}
+            allergenLegend={allergenLegend}
             gruppieren={!activeMenuCategory}
             fontColor={fontColor}
             priceColor={priceColor}
@@ -614,7 +622,9 @@ export function TemplatePreviewContent() {
   const renderContactPage = () => {
     return (
       <div className="space-y-8 animate-in fade-in duration-300">
-        <h2 className={styles.titleClass} style={styles.titleStyle}>Kontakt</h2>
+        <h2 className={styles.titleClass} style={styles.titleStyle}>
+          Kontakt
+        </h2>
         <div
           className="p-6 border border-current/10 bg-white/5 space-y-6 backdrop-blur-sm shadow-sm"
           style={{ borderRadius: "var(--radius-card, 16px)" }}
@@ -708,7 +718,9 @@ export function TemplatePreviewContent() {
   const renderGalleryPage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-300">
-        <h2 className={styles.titleClass} style={styles.titleStyle}>Galerie</h2>
+        <h2 className={styles.titleClass} style={styles.titleStyle}>
+          Galerie
+        </h2>
         <div className="grid grid-cols-2 gap-3">
           {(gallery.length > 0 ? gallery : [1, 2, 3, 4, 5, 6]).map(
             (img: any, i: number) => (
@@ -750,7 +762,9 @@ export function TemplatePreviewContent() {
             textColor={fontColor}
             bgColor={backgroundColor}
             buttonTextColor={reservationButtonTextColor || "#ffffff"}
-            buttonShape={reservationButtonShape as "rounded" | "pill" | "square"}
+            buttonShape={
+              reservationButtonShape as "rounded" | "pill" | "square"
+            }
             maxGuests={maxGuests}
           />
         </div>

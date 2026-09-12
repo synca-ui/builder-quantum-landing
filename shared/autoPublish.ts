@@ -67,7 +67,13 @@ export interface PublishConfig {
 /** Relative Leuchtdichte nach WCAG. 0 = schwarz, 1 = weiß. */
 export function relativeLuminance(hex: string): number {
   const raw = hex.replace("#", "");
-  const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
+  const full =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : raw;
   const channel = (i: number) => {
     const v = parseInt(full.slice(i * 2, i * 2 + 2), 16) / 255;
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
@@ -95,7 +101,13 @@ const MIN_CONTRAST = 4.5;
 
 function hexZuRgb(hex: string): [number, number, number] | null {
   const raw = hex.replace("#", "").trim();
-  const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
+  const full =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : raw;
   if (!/^[0-9a-f]{6}$/i.test(full)) return null;
   return [
     parseInt(full.slice(0, 2), 16),
@@ -106,14 +118,23 @@ function hexZuRgb(hex: string): [number, number, number] | null {
 
 function rgbZuHex(r: number, g: number, b: number): string {
   const teil = (v: number) =>
-    Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+    Math.max(0, Math.min(255, Math.round(v)))
+      .toString(16)
+      .padStart(2, "0");
   return `#${teil(r)}${teil(g)}${teil(b)}`;
 }
 
 /** RGB (0–255) nach HSL (h in Grad, s und l als 0–1). */
-export function rgbZuHsl(r: number, g: number, b: number): [number, number, number] {
-  const rn = r / 255, gn = g / 255, bn = b / 255;
-  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+export function rgbZuHsl(
+  r: number,
+  g: number,
+  b: number,
+): [number, number, number] {
+  const rn = r / 255,
+    gn = g / 255,
+    bn = b / 255;
+  const max = Math.max(rn, gn, bn),
+    min = Math.min(rn, gn, bn);
   const l = (max + min) / 2;
   if (max === min) return [0, 0, l];
   const d = max - min;
@@ -126,7 +147,11 @@ export function rgbZuHsl(r: number, g: number, b: number): [number, number, numb
 }
 
 /** HSL zurück nach RGB. */
-export function hslZuRgb(h: number, s: number, l: number): [number, number, number] {
+export function hslZuRgb(
+  h: number,
+  s: number,
+  l: number,
+): [number, number, number] {
   if (s === 0) return [l * 255, l * 255, l * 255];
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
   const p = 2 * l - q;
@@ -290,12 +315,23 @@ export function deriveCohesiveColors(
  * nicht: Niemand wirbt auf der Startseite mit einer Cola.
  */
 const HIGHLIGHT_CATEGORIES = new Set([
-  "Hauptgerichte", "Fisch", "Vom Grill", "Schnitzel", "Vegetarisch",
-  "Pasta", "Pizza", "Burger", "Vorspeisen",
+  "Hauptgerichte",
+  "Fisch",
+  "Vom Grill",
+  "Schnitzel",
+  "Vegetarisch",
+  "Pasta",
+  "Pizza",
+  "Burger",
+  "Vorspeisen",
 ]);
 
 const DRINK_CATEGORIES = new Set([
-  "Getränke", "Weine", "Biere", "Cocktails", "Heißgetränke",
+  "Getränke",
+  "Weine",
+  "Biere",
+  "Cocktails",
+  "Heißgetränke",
 ]);
 
 /**

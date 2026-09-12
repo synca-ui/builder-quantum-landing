@@ -35,7 +35,8 @@ export function ReservationsStep({
     (s) => s.features.reservationEmail,
   );
   const { user } = useUser();
-  const reservationEmail = rawReservationEmail || user?.primaryEmailAddress?.emailAddress || "";
+  const reservationEmail =
+    rawReservationEmail || user?.primaryEmailAddress?.emailAddress || "";
 
   // Reservierungsbutton-Einstellungen aus Store laden
   const primaryColor = useConfiguratorStore((s) => s.design.primaryColor);
@@ -84,7 +85,9 @@ export function ReservationsStep({
   };
 
   const updateButtonShape = (shape: string) => {
-    actions.features.updateFeatureFlags({ reservationButtonShape: shape as "rounded" | "pill" | "square" });
+    actions.features.updateFeatureFlags({
+      reservationButtonShape: shape as "rounded" | "pill" | "square",
+    });
   };
 
   return (
@@ -127,23 +130,42 @@ export function ReservationsStep({
           <>
             {/* Form Style Selector */}
             <Card className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Formular-Stil</h3>
-              <p className="text-gray-500 text-sm mb-4">Wähle das Design für das Reservierungsformular auf deiner Website.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Formular-Stil
+              </h3>
+              <p className="text-gray-500 text-sm mb-4">
+                Wähle das Design für das Reservierungsformular auf deiner
+                Website.
+              </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { id: "classic", label: "Klassisch", desc: "Einfaches Formular mit Eingabefeldern" },
-                  { id: "modern", label: "Modern (Kacheln)", desc: "Personen → Datum → Uhrzeit als Kacheln" },
+                  {
+                    id: "classic",
+                    label: "Klassisch",
+                    desc: "Einfaches Formular mit Eingabefeldern",
+                  },
+                  {
+                    id: "modern",
+                    label: "Modern (Kacheln)",
+                    desc: "Personen → Datum → Uhrzeit als Kacheln",
+                  },
                 ].map((style) => (
                   <button
                     key={style.id}
-                    onClick={() => actions.features.updateFeatureFlags({ reservationFormStyle: style.id as "classic" | "modern" })}
+                    onClick={() =>
+                      actions.features.updateFeatureFlags({
+                        reservationFormStyle: style.id as "classic" | "modern",
+                      })
+                    }
                     className={`p-4 rounded-xl border-2 text-left transition-all ${
                       reservationFormStyle === style.id
                         ? "border-teal-500 bg-teal-50"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <p className="font-bold text-sm text-gray-900">{style.label}</p>
+                    <p className="font-bold text-sm text-gray-900">
+                      {style.label}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">{style.desc}</p>
                   </button>
                 ))}
@@ -203,11 +225,16 @@ export function ReservationsStep({
                           reservationEmail: e.target.value,
                         })
                       }
-                      placeholder={user?.primaryEmailAddress?.emailAddress || "email@beispiel.de"}
+                      placeholder={
+                        user?.primaryEmailAddress?.emailAddress ||
+                        "email@beispiel.de"
+                      }
                       className="w-full"
                     />
                     <p className="text-xs text-gray-500 mt-2">
-                      An diese E-Mail-Adresse werden Benachrichtigungen über neue Reservierungen gesendet. Standardmäßig wird die E-Mail deines Kontos verwendet.
+                      An diese E-Mail-Adresse werden Benachrichtigungen über
+                      neue Reservierungen gesendet. Standardmäßig wird die
+                      E-Mail deines Kontos verwendet.
                     </p>
                   </div>
                 )}

@@ -213,7 +213,9 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                             "Logo konnte nicht hochgeladen werden — es erscheint nicht auf der veröffentlichten Website.",
                             {
                               description:
-                                err instanceof Error ? err.message : String(err),
+                                err instanceof Error
+                                  ? err.message
+                                  : String(err),
                               duration: 12000,
                             },
                           );
@@ -259,10 +261,11 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
             {BUSINESS_TYPES.map((type) => (
               <Card
                 key={type.value}
-                className={`cursor-pointer transition-all duration-300 border-2 ${business.type === type.value
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  business.type === type.value
                     ? "border-teal-500 bg-teal-50"
                     : "border-gray-200 hover:border-teal-300"
-                  }`}
+                }`}
                 onClick={() => handleBusinessTypeChange(type.value)}
               >
                 <CardContent className="p-3 text-center">
