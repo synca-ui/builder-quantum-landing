@@ -11,9 +11,11 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { pruefeDomainFormat } from "@/lib/domainFormat";
 import {
   useConfiguratorStore,
   useConfiguratorActions,
@@ -111,6 +113,13 @@ export function DomainHostingStep({
     [],
   );
   const [lastCheckedSubdomain, setLastCheckedSubdomain] = useState<string>("");
+
+  // Rückmeldung des Knopfes „Prüfen“ bei der eigenen Domain. Bewusst nur eine
+  // FORMAT-Aussage: Besitz und DNS kann der Browser nicht prüfen.
+  const [domainFormatHinweis, setDomainFormatHinweis] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
 
   const hasDomain = business.domain?.hasDomain || false;
   const selectedDomain = business.domain?.selectedDomain || "";
@@ -475,32 +484,70 @@ export function DomainHostingStep({
                       type="text"
                       placeholder="z.B. mein-restaurant.de"
                       value={domainName}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setDomainFormatHinweis(null);
                         actions.business.setBusinessInfo({
                           domain: {
                             ...business.domain,
                             domainName: e.target.value,
                           },
-                        })
-                      }
+                        });
+                      }}
                       className="flex-1"
                     />
                     <Button
                       variant="outline"
+                      disabled={!domainName.trim()}
                       onClick={() => {
-                        if (domainName) {
-                          alert(
-                            `Domain ${domainName} ist bereit zur Verbindung!`,
-                          );
+                        const ergebnis = pruefeDomainFormat(domainName);
+
+                        if (!ergebnis.ok) {
+                          setDomainFormatHinweis({
+                            ok: false,
+                            text: ergebnis.grund,
+                          });
+                          toast.error("Diese Domain passt so nicht", {
+                            description: ergebnis.grund,
+                          });
+                          return;
                         }
+
+                        // Bewusst kein „bereit zur Verbindung“: Geprüft ist
+                        // nur die Schreibweise. Ob die Domain dir gehört und
+                        // auf uns zeigt, zeigt sich erst an den DNS-Einträgen
+                        // nach dem Veröffentlichen.
+                        const text = `Die Schreibweise von ${ergebnis.domain} ist gültig. Ob die Domain dir gehört und richtig verweist, prüfen wir nach dem Veröffentlichen anhand der DNS-Einträge unten.`;
+                        setDomainFormatHinweis({ ok: true, text });
+                        toast.success("Format sieht gültig aus", {
+                          description:
+                            "Die Verbindung selbst wird erst nach dem Veröffentlichen über die DNS-Einträge geprüft.",
+                        });
                       }}
                     >
                       Prüfen
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Gib eine Domain ein, die du bereits besitzt
-                  </p>
+                  {domainFormatHinweis ? (
+                    <p
+                      className={`text-xs mt-2 flex items-start gap-1.5 ${
+                        domainFormatHinweis.ok
+                          ? "text-green-700"
+                          : "text-red-600"
+                      }`}
+                      role="status"
+                    >
+                      {domainFormatHinweis.ok ? (
+                        <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      )}
+                      <span>{domainFormatHinweis.text}</span>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Gib eine Domain ein, die du bereits besitzt
+                    </p>
+                  )}
                 </div>
 
                 {domainName && (

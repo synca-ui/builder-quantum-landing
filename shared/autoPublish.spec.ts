@@ -6,6 +6,8 @@ import {
   markHighlights,
   contrastRatio,
   softenBackground,
+  separateFromPrimary,
+  relativeLuminance,
   rgbZuHsl,
   buntheit,
   FALLBACK_BUSINESS_TYPE,
@@ -186,7 +188,7 @@ describe("deriveCohesiveColors: Farben aus der gescrapten Palette", () => {
 });
 
 describe("markHighlights: die Aushängeschilder der Startseite", () => {
-  const dish = (id, category, price, description) => ({
+  const dish = (id: string, category: string, price: string, description?: string) => ({
     id, name: id, category, price, ...(description ? { description } : {}),
   });
 
@@ -335,5 +337,32 @@ describe("softenBackground", () => {
     expect(
       contrastRatio(out.fontColor!, out.backgroundColor!),
     ).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("separateFromPrimary: zusammengefallene Palette", () => {
+  it("setzt einen Hintergrund ab, der mit der Primärfarbe identisch ist", () => {
+    // haus-toeller.de: Stylesheet liefert nur #0a1b2e – dreimal dieselbe Farbe.
+    const bg = separateFromPrimary("#0a1b2e", "#0a1b2e")!;
+    expect(bg).toBeTruthy();
+    expect(contrastRatio(bg, "#0a1b2e")).toBeGreaterThanOrEqual(4.5);
+    // Hell und weich, wie die Vorlagen im Picker.
+    expect(relativeLuminance(bg)).toBeGreaterThan(0.8);
+  });
+
+  it("lässt einen Hintergrund in Ruhe, der sich von der Primärfarbe abhebt", () => {
+    expect(separateFromPrimary("#fdf4e7", "#b4633a")).toBeUndefined();
+    expect(separateFromPrimary(undefined, "#b4633a")).toBeUndefined();
+    expect(separateFromPrimary("#fdf4e7", undefined)).toBeUndefined();
+  });
+
+  it("deriveCohesiveColors: Knöpfe bleiben auf dem Hintergrund sichtbar", () => {
+    const design = deriveCohesiveColors({
+      primaryColor: "#0a1b2e",
+      secondaryColor: "#0a1b2e",
+      backgroundColor: "#0a1b2e",
+    });
+    expect(contrastRatio(design.primaryColor!, design.backgroundColor!)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(design.fontColor!, design.backgroundColor!)).toBeGreaterThanOrEqual(4.5);
   });
 });

@@ -170,3 +170,29 @@ describe("hoursQuality", () => {
     expect(hoursQuality({ monday: { open: "1", close: "2", closed: false } }).usable).toBe(false);
   });
 });
+
+describe("parseSchemaOpeningHours: Ruhetag nach schema.org-Konvention", () => {
+  it("liest opens/closes 00:00 als geschlossen, nicht als offen", () => {
+    // haus-toeller.de: Mo–Sa 17:00–23:59, Sonntag als 00:00/00:00 (Ruhetag).
+    const node = {
+      "@type": "Restaurant",
+      openingHoursSpecification: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["https://schema.org/Monday", "https://schema.org/Saturday"],
+          opens: "17:00",
+          closes: "23:59",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: "https://schema.org/Sunday",
+          opens: "00:00",
+          closes: "00:00",
+        },
+      ],
+    };
+    const out = parseSchemaOpeningHours(node);
+    expect(out.monday).toEqual({ open: "17:00", close: "23:59", closed: false });
+    expect(out.sunday.closed).toBe(true);
+  });
+});

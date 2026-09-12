@@ -29,7 +29,7 @@ export interface BusinessInfo {
  * Template selection, colors, typography
  */
 export interface DesignConfig {
-  template: string; // template id from TemplateRegistry
+  template: string; // Vorlagen-ID aus shared/templateCatalog.ts
 
   // Main Colors
   primaryColor: string; // hex - Buttons, CTAs, Links, Akzente
@@ -194,17 +194,32 @@ export interface PageManagement {
  */
 export interface PaymentAndOffers {
   paymentOptions?: string[];
+  /**
+   * Was der Angebote-Schritt (FeatureConfigStep → OffersStep) tatsächlich
+   * anlegt: {id, name, price, image, description}. `title`/`discount` sind die
+   * Altform aus früheren Konfigurationen und bleiben deshalb erlaubt —
+   * dieselbe Doppelform, die PaymentAndOffersSchema serverseitig akzeptiert.
+   */
   offers?: Array<{
     id: string;
-    title: string;
+    name?: string;
+    price?: string | number;
+    image?: string | null;
     description?: string;
+    title?: string;
     discount?: number;
   }>;
   offerBanner?: {
     enabled: boolean;
+    /** "small" | "medium" | "large" — Auswahl "Bannergröße" im Schritt. */
+    size?: string;
     text?: string;
     backgroundColor?: string;
+    textColor?: string;
+    buttonColor?: string;
   };
+  /** Schalter "Angebote-Seite anzeigen" — ergänzt den Angebote-Tab. */
+  offerPageEnabled?: boolean;
 }
 
 /**

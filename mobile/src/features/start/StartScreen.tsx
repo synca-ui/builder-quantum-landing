@@ -86,8 +86,11 @@ export function StartScreen() {
         return next;
       });
 
+      // Die Betriebskennung geht mit: Bei mehr als einem Betrieb je Konto
+      // (jede veröffentlichte Web-App mit neuem Namen legt einen an) lehnt der
+      // Server einen Aufruf ohne Kennung mit 400 ab - der grüne Knopf wäre tot.
       return api.briefing
-        .approveTask(task.id)
+        .approveTask(task.id, venueId)
         .then(() => {
           // Erst jetzt aus der Liste nehmen. Der Server hat bestätigt; das nächste
           // Briefing liefert die Aufgabe ohnehin nicht mehr aus.

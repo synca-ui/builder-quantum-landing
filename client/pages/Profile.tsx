@@ -84,7 +84,7 @@ export default function Profile() {
                 <span className="font-medium">User ID:</span> {user.id}
               </div>
               <div className="text-sm">
-                <span className="font-medium">Email:</span> {user.email}
+                <span className="font-medium">Email:</span> {user.primaryEmailAddress?.emailAddress}
               </div>
 
               <form onSubmit={onSubmit} className="space-y-3">

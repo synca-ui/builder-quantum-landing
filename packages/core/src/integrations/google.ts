@@ -26,6 +26,13 @@ export const GOOGLE_OAUTH: Omit<OAuthConfig, "clientId" | "redirectUri"> = {
   tokenEndpoint: "https://oauth2.googleapis.com/token",
 };
 
+/**
+ * Widerruf der Freigabe. Google nimmt hier Access- ODER Refresh-Token; ein
+ * Refresh-Token widerruft den ganzen Grant, ein Access-Token zieht sein
+ * Refresh-Token mit. Deshalb bevorzugt das Refresh-Token (siehe revokeAccess).
+ */
+export const GOOGLE_REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke";
+
 const REVIEWS_BASE = "https://mybusiness.googleapis.com/v4";
 const PERFORMANCE_BASE = "https://businessprofileperformance.googleapis.com/v1";
 
@@ -85,6 +92,21 @@ export const googleConnector: ChannelConnector = {
     if (!res.ok) throw new Error(`Google performance HTTP ${res.status}`);
     const body = (await res.json()) as GooglePerformanceResponse;
     return normalizeGoogleEngagement(body);
+  },
+
+  async revokeAccess(tokens, fetchImpl) {
+    // Das Token gehört in den Rumpf, nicht in die Query - Google akzeptiert beides,
+    // aber in der Query stünde es in jedem Zugriffslog auf dem Weg dorthin.
+    const body = new URLSearchParams({ token: tokens.refreshToken ?? tokens.accessToken });
+    const res = await fetchImpl(GOOGLE_REVOKE_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+    // 200 = widerrufen. 400 = Token schon ungültig (der Betrieb hat die Freigabe
+    // bereits selbst entzogen, oder sie ist abgelaufen). Kein Wurf: Der Aufrufer
+    // entscheidet, was er dem Betrieb daraus sagt.
+    return res.ok;
   },
 };
 

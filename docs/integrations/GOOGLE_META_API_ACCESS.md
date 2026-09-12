@@ -54,6 +54,12 @@ Datenquellen, die wir nutzen:
 5. **OAuth-Verifizierung** einreichen. `business.manage` gilt als *sensibler* Scope →
    Google verlangt App-Verifizierung (Datenschutz, Domain, Demo-Video). Erst danach
    dürfen beliebige Nutzer verbinden.
+   **Antwort auf „Wie widerrufen Nutzer den Zugriff?":** In der App unter Kanäle →
+   „Verbindung trennen". Maitr ruft `oauth2/revoke` mit dem Refresh-Token auf
+   (der gesamte Grant erlischt) und löscht die gespeicherten Token
+   (`DELETE /api/maitr/integrations/google`, nur Inhaber). Zusätzlich kann der
+   Nutzer die Freigabe jederzeit unter `myaccount.google.com/permissions`
+   entziehen. Belegt in `server/__tests__/maitrIntegrationTrennen.spec.ts`.
 6. **OAuth-Client-ID erstellen** (Anmeldedaten → OAuth-Client-ID, Typ *Webanwendung*),
    Redirect-URIs eintragen.
 7. **Flow implementieren**: Autorisierung → Code → Access-/Refresh-Token (mit

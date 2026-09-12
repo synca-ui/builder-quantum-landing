@@ -324,7 +324,7 @@ export async function getConfigurations(req: Request, res: Response) {
 /**
  * ✅ GET /api/configurations/:id - Get single configuration
  */
-export async function getConfiguration(req: Request, res: Response) {
+export async function getConfiguration(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
 
@@ -372,7 +372,7 @@ export async function getConfiguration(req: Request, res: Response) {
 /**
  * ✅ DELETE /api/configurations/:id
  */
-export async function deleteConfiguration(req: Request, res: Response) {
+export async function deleteConfiguration(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
@@ -432,7 +432,7 @@ export async function deleteConfiguration(req: Request, res: Response) {
  * ✅ POST /api/configurations/:id/publish
  * Veröffentlicht eine Konfiguration auf der gewählten Subdomain
  */
-export async function publishConfiguration(req: Request, res: Response) {
+export async function publishConfiguration(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user!.id;
   const audit = getAuditLogger(req);
@@ -559,7 +559,7 @@ export async function publishConfiguration(req: Request, res: Response) {
  *   - ETag + 304 Not Modified → Client-Browser-Cache
  *   - Cache-Control: s-maxage=60 → Netlify CDN cacht für 60s
  */
-export async function getPublishedSite(req: Request, res: Response) {
+export async function getPublishedSite(req: Request<{ subdomain: string }>, res: Response) {
   const { subdomain } = req.params;
 
   try {
@@ -704,20 +704,37 @@ export async function getPublishedSite(req: Request, res: Response) {
         {},
       email: config.contact?.email || config.email || "",
       phone: config.contact?.phone || config.phone || "",
-      offers: config.offers || [],
-      offerBanner: config.offerBanner,
+      // Diese Route ist die Quelle der Edge-Injection für *.maitr.de. Hier
+      // stand nur die FLACHE Form — der Konfigurator legt Angebote aber unter
+      // `payments` ab, und der Publish erzeugt für sie keine flache Kopie.
+      // Gemessen an bella12: `offers: []`, `offerBanner: null`, obwohl das
+      // Angebot „Mittagstisch" gespeichert war.
+      offers: config.payments?.offers || config.offers || [],
+      offerBanner: config.payments?.offerBanner || config.offerBanner,
+      // Schalter „Angebote-Seite anzeigen" — daran hängt der Navigationspunkt.
+      offerPageEnabled:
+        config.payments?.offerPageEnabled ?? config.offerPageEnabled ?? false,
+      // KEINE Ersatzfarben mehr. Hier standen "#94e3fe" (hellblau), Schrift
+      // schwarz und Form "pill" als Vorgabe - und weil das wahre Werte sind,
+      // hebelten sie den Rueckfall des Renderers aus
+      // (`features.reservationButtonColor || design.primaryColor`,
+      // client/components/dynamic/AppRenderer.tsx). Jede automatisch
+      // veroeffentlichte Seite mit Reservierung bekam damit einen hellblauen
+      // Pillen-Knopf in eine Bordeaux- oder Creme-Palette gesetzt. Bleibt das
+      // Feld leer, waehlt der Renderer die Markenfarbe; wer im Konfigurator
+      // eine Farbe setzt, schickt sie ohnehin mit.
       reservationButtonColor:
         config.features?.reservationButtonColor ||
         config.reservationButtonColor ||
-        "#94e3fe",
+        undefined,
       reservationButtonTextColor:
         config.features?.reservationButtonTextColor ||
         config.reservationButtonTextColor ||
-        "#000000",
+        undefined,
       reservationButtonShape:
         config.features?.reservationButtonShape ||
         config.reservationButtonShape ||
-        "pill",
+        undefined,
       reservationFormStyle: config.features?.reservationFormStyle || config.reservationFormStyle || "classic",
       reservationTimeSlotInterval: config.features?.reservationTimeSlotInterval || config.reservationTimeSlotInterval || 30,
       reservationDaysAhead: config.features?.reservationDaysAhead || config.reservationDaysAhead || 7,
@@ -752,7 +769,7 @@ export async function getPublishedSite(req: Request, res: Response) {
 /**
  * ✅ POST /api/configurations/:id/preview - Set preview config
  */
-export async function setPreviewConfig(req: Request, res: Response) {
+export async function setPreviewConfig(req: Request<{ id: string }>, res: Response) {
   const { id } = req.params;
   const userId = req.user?.id;
 

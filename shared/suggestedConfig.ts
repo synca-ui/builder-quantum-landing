@@ -179,17 +179,18 @@ export interface ConfiguratorDraft {
 
 /**
  * Die Vorlagen-Namen laufen auseinander: Der Flow vergibt
- * "minimalist" | "bold" | "classic", die TemplateRegistry kennt aber
- * "minimalist" | "modern" | "stylish" | "cozy". Zwei der drei Werte gäbe es
+ * "minimalist" | "bold" | "classic", der Vorlagenkatalog
+ * (shared/templateCatalog.ts) führt andere IDs. Zwei der drei Werte gäbe es
  * also gar nicht, ein direktes Durchreichen würde die Vorschau brechen.
  *
- * "bold" -> "modern", weil dessen Beschreibung in der Registry wörtlich
+ * "bold" -> "modern", weil dessen Beschreibung im Katalog wörtlich
  * "Contemporary design with bold colors" lautet. "classic" -> "cozy" als
  * nächstliegende Entsprechung.
  *
- * Sauberer wäre, beide Seiten auf dasselbe Vokabular zu bringen – entweder gibt
- * der Flow direkt Registry-IDs aus, oder die Registry bekommt die fehlenden
- * Vorlagen. Bis dahin übersetzt diese Tabelle.
+ * Sauberer wäre, beide Seiten auf dasselbe Vokabular zu bringen – der Flow
+ * gäbe direkt Katalog-IDs aus. Bis dahin übersetzt diese Tabelle; dass jedes
+ * Ziel eine Vorlage ist, die es wirklich gibt, prüft
+ * shared/templateCatalog.spec.ts.
  */
 const TEMPLATE_MAP: Record<string, string> = {
   minimalist: "minimalist",
@@ -198,6 +199,37 @@ const TEMPLATE_MAP: Record<string, string> = {
   modern: "modern",
   stylish: "stylish",
   cozy: "cozy",
+  // Die vier Papier-Templates — unter ID und unter dem Namen im Picker.
+  presse: "presse",
+  bistrokarte: "presse",
+  kiosk: "kiosk",
+  aushang: "kiosk",
+  izakaya: "izakaya",
+  zettel: "izakaya",
+  morgen: "morgen",
+  frühstückskarte: "morgen",
+  fruehstueckskarte: "morgen",
+  // Zweite Runde — unter ID und unter dem Namen im Picker.
+  vitrine: "vitrine",
+  fotokarte: "vitrine",
+  gelato: "gelato",
+  eisdiele: "gelato",
+  brauhaus: "brauhaus",
+  gasthaus: "brauhaus",
+  ramen: "ramen",
+  purist: "ramen",
+  imbiss: "imbiss",
+  imbissbude: "imbiss",
+  konditorei: "konditorei",
+  kaffeehaus: "konditorei",
+  roesterei: "roesterei",
+  rösterei: "roesterei",
+  markt: "markt",
+  markthalle: "markt",
+  aperitivo: "aperitivo",
+  hofladen: "hofladen",
+  hofcafé: "hofladen",
+  hofcafe: "hofladen",
 };
 
 /**
@@ -521,7 +553,13 @@ function mapOpeningHours(
     // Ohne Zeiten ist der Eintrag wertlos – dann lieber den Standard des
     // Konfigurators stehen lassen, als "undefined" hineinzuschreiben.
     if (!open || !close) continue;
-    out[day] = { open, close, closed: entry.closed === true };
+    // schema.org-Konvention für einen Ruhetag: opens UND closes "00:00". Der
+    // Deep-Scrape-Flow reicht sie ungeprüft durch (haus-toeller.de: Sonntag
+    // als 00:00–00:00 mit closed:false) – als Öffnungstag gelesen, stand der
+    // Ruhetag als „Offen“ auf der Web-App. Dieselbe Regel wie in
+    // shared/openingHours.ts parseSchemaOpeningHours.
+    const ruhetag = entry.closed === true || (open === "00:00" && close === "00:00");
+    out[day] = { open, close, closed: ruhetag };
   }
   return Object.keys(out).length ? out : undefined;
 }

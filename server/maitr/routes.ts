@@ -47,7 +47,7 @@ import {
   toApiState,
   type TaskDecisionRow,
 } from "./briefing";
-import { createState, encryptToken, verifyState } from "./security";
+import { createState, decryptToken, encryptToken, verifyState } from "./security";
 import { maitrEnv } from "./env";
 import { asyncHandler, type AsyncRequestHandler } from "./asyncHandler";
 import {
@@ -112,6 +112,77 @@ interface VenueRow {
    * geht; eine kaputte oder fremd geformte Zeile darf ihn nicht sprengen.
    */
   openingHours?: unknown;
+  // Nur für die ANGEMELDETE Sicht (toOwnerVenue) - alle optional, weil
+  // `POST /venues` sie nicht kennt und Altzeilen sie nicht tragen.
+  slug?: string;
+  description?: string | null;
+  cuisine?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string;
+  secondaryColor?: string;
+  postalCode?: string | null;
+  maitrScore?: number;
+  socialLinks?: unknown;
+  contactInfo?: unknown;
+}
+
+/** Nur nicht-leere Zeichenketten, alles andere fällt weg. */
+function feld(wert: unknown): string | undefined {
+  return typeof wert === "string" && wert.trim() ? wert.trim() : undefined;
+}
+
+/**
+ * Die Sicht des INHABERS auf seinen Betrieb - `GET /venues` und die Antworten
+ * von `POST /venues` und `PATCH /venues/:venueId`, alle hinter requireAuth.
+ *
+ * Erweitert `toApiVenue` um das, was die Veröffentlichung der Web-App am
+ * Betrieb hinterlässt (server/services/businessProfil.ts): Logo, Farben,
+ * Beschreibung, Kontakt, Adresse, soziale Netze, Score. Bewusst eine ZWEITE
+ * Funktion und keine Erweiterung der ersten: `toApiVenue` bedient das
+ * unangemeldete Gastprofil, und dort gehören Postleitzahl, Telefon und E-Mail
+ * nicht hin (siehe die Warnung am Modell in prisma/schema.prisma).
+ */
+function toOwnerVenue(b: VenueRow): Venue {
+  const venue = toApiVenue(b);
+  const kontakt =
+    b.contactInfo && typeof b.contactInfo === "object"
+      ? (b.contactInfo as Record<string, unknown>)
+      : {};
+  const adresse = feld(kontakt.address);
+  if (adresse) {
+    // "Weyerstraße 96, 50676 Köln" → Straße / Ort. Ohne Komma bleibt alles
+    // in `street` - lieber eine volle Zeile als eine geratene Aufteilung.
+    const komma = adresse.indexOf(",");
+    if (komma > 0) {
+      venue.street = adresse.slice(0, komma).trim();
+      venue.city = adresse.slice(komma + 1).trim();
+    } else {
+      venue.street = adresse;
+    }
+  }
+  const social =
+    b.socialLinks && typeof b.socialLinks === "object"
+      ? Object.fromEntries(
+          Object.entries(b.socialLinks as Record<string, unknown>).filter(
+            (e): e is [string, string] => typeof e[1] === "string" && Boolean(e[1]),
+          ),
+        )
+      : undefined;
+  return {
+    ...venue,
+    slug: feld(b.slug),
+    description: feld(b.description),
+    cuisine: feld(b.cuisine),
+    logoUrl: feld(b.logoUrl),
+    primaryColor: feld(b.primaryColor),
+    secondaryColor: feld(b.secondaryColor),
+    phone: feld(kontakt.phone),
+    email: feld(kontakt.email),
+    website: feld(kontakt.website),
+    postalCode: feld(b.postalCode),
+    socialLinks: social && Object.keys(social).length ? social : undefined,
+    maitrScore: typeof b.maitrScore === "number" ? b.maitrScore : undefined,
+  };
 }
 
 /**
@@ -187,8 +258,48 @@ venuesRouter.get(
     const memberships = await prisma.businessMember.findMany({
       where: { userId: req.userId! },
       include: { business: true },
+      // Zuletzt veröffentlichter Betrieb zuerst. Die App übernimmt den ERSTEN
+      // Eintrag (mobile/src/lib/store.tsx) - ohne Reihenfolge war das bei
+      // mehreren Betrieben Zufall, und wer gerade eine Web-App veröffentlicht
+      // hatte, sah in der App womöglich einen alten Testbetrieb. Jede
+      // Veröffentlichung aktualisiert `Business.updatedAt` (BusinessService).
+      orderBy: { business: { updatedAt: "desc" } },
     });
-    res.json(memberships.map((m) => toApiVenue(m.business)));
+    res.json(memberships.map((m) => toOwnerVenue(m.business)));
+  }),
+);
+
+/**
+ * GET /venues/:venueId/menu - die Speisekarte, wie sie beim Veröffentlichen der
+ * Web-App entstand (BusinessService, Step 2b). Nur lesen: Gepflegt wird die
+ * Karte im Konfigurator, und die Web-App ist die Wahrheit darüber. Hinter
+ * `venueGuard`, damit auch das Personal sie sehen kann.
+ */
+venuesRouter.get(
+  "/:venueId/menu",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = venueOf(req);
+    const kategorien = await prisma.menuCategory.findMany({
+      where: { businessId: venueId },
+      orderBy: { sortOrder: "asc" },
+      include: { items: { orderBy: { createdAt: "asc" } } },
+    });
+    res.json({
+      categories: kategorien.map((k) => ({
+        id: k.id,
+        name: k.name,
+        items: k.items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          description: i.description ?? undefined,
+          // Decimal → Zahl. Prisma liefert Decimal.js-Objekte, JSON würde
+          // daraus eine Zeichenkette machen.
+          price: Number(i.price),
+          imageUrl: i.imageUrl ?? undefined,
+        })),
+      })),
+    });
   }),
 );
 
@@ -344,7 +455,7 @@ venuesRouter.post(
             where: { userId },
             include: { business: true },
           });
-          if (bestehend) return { venue: toApiVenue(bestehend.business), schonVorhanden: true };
+          if (bestehend) return { venue: toOwnerVenue(bestehend.business), schonVorhanden: true };
 
           const business = await tx.business.create({
             data: {
@@ -361,7 +472,7 @@ venuesRouter.post(
           await tx.businessMember.create({
             data: { userId, businessId: business.id, role: "OWNER" },
           });
-          return { venue: toApiVenue(business), schonVorhanden: false };
+          return { venue: toOwnerVenue(business), schonVorhanden: false };
         });
 
         if (ergebnis.schonVorhanden) {
@@ -941,13 +1052,24 @@ export const loyaltyRouter = Router();
 /**
  * Wie `asyncHandler`, plus die eine Antwort, die dieser Bereich zusätzlich braucht.
  *
- * Die Loyalty-Tabellen liegen als Migrationsdatei vor und sind nach heutigem Stand
- * NICHT eingespielt (prisma/migrations/20260805_add_loyalty_wallet_whatsapp, dazu
- * 20260806_add_stampcard_reward_snapshot). Bis ein Mensch das tut, antwortet Postgres
- * mit 42P01. Das ist ein bekannter, vorübergehender Zustand - er gehört als 503 mit
- * einem benennbaren Grund beantwortet, nicht als 500. Ein 500 sähe aus wie ein
- * Absturz, und der Bildschirm könnte den Unterschied nicht machen: er würde einen
- * "Erneut versuchen"-Knopf anbieten, der nie hilft.
+ * STAND 31.08.2026: Die Loyalty-Tabellen SIND in der Produktivdatenbank vorhanden.
+ * Gegen Neon geprüft - `_prisma_migrations` führt 20260805_add_loyalty_wallet_whatsapp
+ * (05.08.) und 20260806_add_stampcard_reward_snapshot (06.08.) als eingespielt, und
+ * StampCard, StampEvent, StampProgram sowie WalletDeviceRegistration existieren.
+ *
+ * Hier stand zuvor das Gegenteil ("nach heutigem Stand NICHT eingespielt"). Der Satz
+ * hat überlebt, was er beschrieb, und dann echten Schaden angerichtet: Eine
+ * Bestandsaufnahme der Datenherkunft stufte daraufhin den einzigen Bereich der App
+ * mit echten Daten als "antwortet in Produktion vermutlich mit 503" ein - der
+ * schwerwiegendste Befund des ganzen Berichts, und er war falsch. Ein Kommentar, der
+ * eine Tatsache über die Produktion behauptet, muss ein Datum tragen; sonst liest ihn
+ * der Nächste als Gegenwart.
+ *
+ * Der 503-Weg bleibt trotzdem, denn er ist Vorsorge und nicht Diagnose: Läuft eine
+ * künftige Migration einer Auslieferung hinterher, antwortet Postgres mit 42P01. Das
+ * gehört als 503 mit benennbarem Grund beantwortet, nicht als 500. Ein 500 sähe aus
+ * wie ein Absturz, und der Bildschirm könnte den Unterschied nicht machen: er würde
+ * einen "Erneut versuchen"-Knopf anbieten, der nie hilft.
  *
  * Nur für diesen Router. Alles andere fliegt unverändert an die Fehler-Middleware.
  */
@@ -981,7 +1103,7 @@ function rolleOf(req: Request): VenueRolle {
  *
  * Die Rolle wird NICHT in `requireVenueAccess` erzwungen: dort hängen auch alle
  * Lesewege und das Stempeln, und beides muss das Personal können. Erzwungen wird sie
- * an genau den drei Zugriffen, die entweder eine Zusage an den Gast ändern oder
+ * an genau den Zugriffen, die entweder eine Zusage an den Gast ändern oder
  * unumkehrbar sind.
  *
  * Vorher hing alles am blossen Wahrheitswert „Mitglied ja/nein". `BusinessMember.role`
@@ -1093,7 +1215,7 @@ venuesRouter.patch(
     }
 
     const business = await prisma.business.update({ where: { id: venueId }, data });
-    return res.json(toApiVenue(business));
+    return res.json(toOwnerVenue(business));
   }),
 );
 
@@ -1514,6 +1636,71 @@ integrationsRouter.get(
       select: { provider: true, accountId: true, status: true, expiresAt: true, scopes: true },
     });
     return res.json(connections);
+  }),
+);
+
+/**
+ * Verbindung trennen - das Gegenstück zu /connect, und die Antwort auf die Frage
+ * im Google-OAuth-Antrag „Wie widerrufen Nutzer den Zugriff?".
+ *
+ * Bis hierhin gab es diesen Endpunkt nicht: „Verbindung trennen" in der App
+ * löschte nur den lokalen Zustand des Geräts, die Token blieben serverseitig
+ * ACTIVE und der Scheduler zog weiter Daten (AUFGABEN.md C6). Damit war die Frage
+ * im Antrag nicht wahrheitsgemäß zu beantworten.
+ *
+ * REIHENFOLGE UND WARUM:
+ *  1. Beim Anbieter widerrufen, SOLANGE wir das Token noch haben. Danach ist es
+ *     unwiderruflich weg - ein Widerruf „später nachholen" ist dann unmöglich.
+ *  2. Die Zeile LÖSCHEN, nicht auf REVOKED setzen. `encAccessToken` ist NOT NULL;
+ *     eine REVOKED-Zeile hieße entweder „Token bleibt gespeichert" (genau das, was
+ *     der Knopf verspricht zu beenden) oder ein Platzhalter-Chiffrat, an dem
+ *     jeder spätere Leser stolpert. Beim Wiederverbinden legt der Callback per
+ *     upsert einfach neu an.
+ *
+ * Gelöscht wird in JEDEM Fall - auch wenn der Anbieter den Widerruf ablehnt oder
+ * nicht erreichbar ist. Sonst hinge der Wille des Betriebs, uns den Zugriff zu
+ * entziehen, an der Verfügbarkeit von Google. `providerRevoked: false` in der
+ * Antwort sagt der App, dass sie dem Betrieb raten soll, die Freigabe in seinen
+ * Google-/Meta-Kontoeinstellungen selbst zu prüfen.
+ *
+ * WAS BLEIBT (Entscheidung zu C6.4): Bereits geholte Bewertungen und
+ * Reichweitendaten. Sie gehören zum Betrieb, nicht zur Verbindung - die
+ * Bewertung eines Gastes wird nicht falsch, weil der Wirt den Kanal abhängt.
+ * Sie fallen mit dem Betrieb (Cascade), siehe docs/legal/PRIVACY.md 3.7.
+ *
+ * Nur der Inhaber: Trennen ist unumkehrbar (Token weg) und nimmt dem Betrieb
+ * einen Kanal - keine Aushilfe darf das.
+ */
+integrationsRouter.delete(
+  "/:provider",
+  venueGuard,
+  ownerGuard,
+  asyncHandler(async (req, res) => {
+    const provider = req.params.provider as ProviderId;
+    if (provider !== "google" && provider !== "meta") return res.status(400).json({ error: "Unbekannter Anbieter" });
+    const dbProvider = provider === "google" ? "GOOGLE" : "META";
+
+    const conn = await prisma.channelConnection.findUnique({
+      where: { businessId_provider: { businessId: venueOf(req), provider: dbProvider } },
+    });
+    if (!conn) return res.status(404).json({ error: "nicht_verbunden" });
+
+    let providerRevoked = false;
+    try {
+      providerRevoked = await connectors[provider].revokeAccess(
+        {
+          accessToken: decryptToken(conn.encAccessToken),
+          refreshToken: conn.encRefreshToken ? decryptToken(conn.encRefreshToken) : undefined,
+        },
+        fetchLike,
+      );
+    } catch (err) {
+      // Kein Abbruch: Der Betrieb will trennen, und das tun wir. Nur protokollieren.
+      console.warn(`[maitr] Widerruf bei ${provider} fehlgeschlagen:`, (err as Error).message);
+    }
+
+    await prisma.channelConnection.delete({ where: { id: conn.id } });
+    return res.json({ provider: dbProvider, providerRevoked });
   }),
 );
 

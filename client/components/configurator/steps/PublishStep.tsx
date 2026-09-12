@@ -25,6 +25,8 @@ import {
   useConfiguratorActions,
 } from "@/store/configuratorStore";
 import { deploy, type DeploymentStage } from "@/lib/deployment";
+import { typLabel } from "@/lib/heroFallback";
+import { templateNameKey } from "@shared/templateCatalog";
 import type { Configuration } from "@/types/domain";
 
 interface PublishStepProps {
@@ -84,6 +86,20 @@ export function PublishStep({
     return name.includes(".") ? name : `${name}.maitr.de`;
   }, [getDisplayedDomain, business.domain?.selectedDomain, business.name]);
 
+  /**
+   * Anzeigename eines Templates — exakt der Name aus dem Picker in Schritt 1.
+   * Fehlt für eine (alte) Kennung ein i18n-Eintrag, gibt t() den Schlüssel
+   * zurück; dann ist die rohe Kennung ehrlicher als „templates.xy“.
+   */
+  const templateAnzeigename = useCallback(
+    (id: string) => {
+      const key = templateNameKey(id);
+      const name = t(key);
+      return name === key ? id : name;
+    },
+    [t],
+  );
+
   const liveUrl = getLiveUrl
     ? getLiveUrl()
     : publishing.publishedUrl || `https://${displayDomain}`;
@@ -102,8 +118,11 @@ export function PublishStep({
       {
         id: "business-type",
         label: "Geschäftstyp",
+        // typLabel kennt cafe/restaurant/bar und liefert genau die Schreibweise
+        // aus der Auswahl in Schritt 1 („Café“, nicht „Cafe“). Unbekannte Typen
+        // fallen auf die rohe Kennung zurück, statt zu verschwinden.
         description: business.type
-          ? `${business.type.charAt(0).toUpperCase()}${business.type.slice(1)}`
+          ? (typLabel(business.type) ?? business.type)
           : "Nicht ausgewählt",
         checked: !!business.type,
         required: true,
@@ -112,8 +131,10 @@ export function PublishStep({
       {
         id: "design-template",
         label: "Template ausgewählt",
+        // Dieselbe Namensauflösung wie im Template-Schritt: Die interne Kennung
+        // ist NICHT der Anzeigename („presse“ heißt im Picker „Bistrokarte“).
         description: design.template
-          ? `${design.template.charAt(0).toUpperCase()}${design.template.slice(1)}`
+          ? templateAnzeigename(design.template)
           : "Nicht ausgewählt",
         checked: !!design.template,
         required: true,
@@ -168,6 +189,8 @@ export function PublishStep({
       },
     ],
     [
+      templateAnzeigename,
+      displayDomain,
       business.name,
       business.type,
       design.template,

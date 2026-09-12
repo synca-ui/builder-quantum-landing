@@ -62,6 +62,7 @@ export function oeffentlicheSiteFelder(
   const features = config.features ?? {};
   const contact = config.contact ?? {};
   const pages = config.pages ?? {};
+  const payments = config.payments ?? {};
 
   return {
     // Die Adresse der Seite selbst - kein Geheimnis, und von
@@ -140,8 +141,19 @@ export function oeffentlicheSiteFelder(
     email: contact.email || config.email || "",
     phone: contact.phone || config.phone || "",
 
-    offers: config.offers || [],
-    offerBanner: config.offerBanner,
+    // ANLASS: Hier stand nur die FLACHE Form (`config.offers`). Der
+    // Konfigurator schreibt Angebote aber unter `payments` — und `flatConfig`
+    // im Publish (server/routes/webapps.ts) kennt diese drei Felder gar nicht,
+    // die flache Form entsteht also nie. Ergebnis, gemessen an bella12:
+    // `offers: []`, `offerBanner: null`. Der Wirt legte im Schritt „Angebote"
+    // ein Angebot an, sah es in der Vorschau — und auf der veröffentlichten
+    // Seite fehlten Banner UND Angebote-Tab spurlos.
+    offers: payments.offers || config.offers || [],
+    offerBanner: payments.offerBanner || config.offerBanner,
+    // Der Schalter „Angebote-Seite anzeigen" (OffersStep) fehlte in dieser
+    // Liste komplett; AppRenderer setzt den Navigationspunkt daran fest.
+    offerPageEnabled:
+      payments.offerPageEnabled ?? config.offerPageEnabled ?? false,
 
     status: "published",
     publishedAt: kontext.publishedAt,

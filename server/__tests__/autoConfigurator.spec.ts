@@ -39,7 +39,11 @@ const { prismaMock, verifyTokenMock, getUserMock, db } = vi.hoisted(() => {
 
   /** Prismas `where` nachgebildet: alle angegebenen Felder müssen passen. */
   const matches = (row: Record<string, any>, where: Record<string, any> = {}) =>
-    Object.entries(where).every(([key, value]) => row[key] === value);
+    Object.entries(where).every(([key, value]) =>
+      value && typeof value === "object" && Array.isArray(value.in)
+        ? value.in.includes(row[key])
+        : row[key] === value,
+    );
 
   const prismaMock = {
     user: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
@@ -108,6 +112,7 @@ vi.mock("@clerk/clerk-sdk-node", () => ({
 }));
 
 const { createServer } = await import("../index");
+const { normalizeWebsiteUrl } = await import("../routes/scraper");
 
 const app = createServer();
 
@@ -515,6 +520,21 @@ describe("Altrouten: abgesichert, aber der Score bleibt öffentlich", () => {
     expect(body).not.toContain("Kiepenkerl");
   });
 
+  it("GET /api/scraper-job/score findet auch die Zeile mit Schrägstrich am Ende", async () => {
+    // Die Landingpage pollt mit dem eingetippten Link, n8n hatte bis 11.09.2026
+    // aber "https://…de/" upgesertet. Der exakte Vergleich fand die Zeile nie,
+    // das Polling lief zwei Minuten ins Leere.
+    seedJob({ websiteUrl: `${SITE}/`, userId: null });
+
+    const res = await request(app).get(
+      `/api/scraper-job/score?websiteUrl=${encodeURIComponent(SITE)}`,
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("completed");
+    expect(res.body.maitrScore).toBe(72);
+  });
+
   it("GET /api/scraper-jobs/:id mit fremdem Token: 404, nicht die Daten", async () => {
     const job = seedJob({ userId: OWNER.id, suggestedConfig: SUGGESTED });
 
@@ -524,5 +544,30 @@ describe("Altrouten: abgesichert, aber der Score bleibt öffentlich", () => {
 
     expect(res.status).toBe(404);
     expect(JSON.stringify(res.body)).not.toContain("info@kleiner-kiepenkerl.de");
+  });
+});
+
+describe("normalizeWebsiteUrl: eine Schreibweise je Website", () => {
+  it("führt Schrägstrich-Varianten und Groß-/Kleinschreibung des Hosts zusammen", () => {
+    // In der Produktion standen "https://kleiner-kiepenkerl.de" und
+    // "https://kleiner-kiepenkerl.de/" als zwei Zeilen mit zwei Ergebnissen.
+    expect(normalizeWebsiteUrl("https://kleiner-kiepenkerl.de/")).toBe(
+      "https://kleiner-kiepenkerl.de",
+    );
+    expect(normalizeWebsiteUrl("https://Kleiner-Kiepenkerl.DE")).toBe(
+      "https://kleiner-kiepenkerl.de",
+    );
+    expect(normalizeWebsiteUrl("https://www.haus-toeller.de/#start")).toBe(
+      "https://www.haus-toeller.de",
+    );
+  });
+
+  it("lässt Unterseiten und Abfragen unangetastet – nur der Endschrägstrich fällt", () => {
+    expect(normalizeWebsiteUrl("https://example.de/speisekarte/")).toBe(
+      "https://example.de/speisekarte",
+    );
+    expect(normalizeWebsiteUrl("https://example.de/?lang=de")).toBe(
+      "https://example.de/?lang=de",
+    );
   });
 });

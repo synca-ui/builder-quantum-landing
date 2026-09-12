@@ -98,6 +98,19 @@ export const metaConnector: ChannelConnector = {
     const body = (await res.json()) as MetaInsightsResponse;
     return normalizeMetaEngagement(body);
   },
+
+  async revokeAccess(tokens, fetchImpl) {
+    // `DELETE /me/permissions` entzieht der App ALLE Berechtigungen dieses Nutzers -
+    // genau das, was "Verbindung trennen" verspricht. Das Token trägt der
+    // Authorization-Header, nie die Query (siehe fetchReviews).
+    const res = await fetchImpl(`${GRAPH_BASE}/me/permissions`, {
+      method: "DELETE",
+      headers: bearer(tokens.accessToken),
+    });
+    if (!res.ok) return false;
+    const body = (await res.json()) as { success?: boolean };
+    return body.success === true;
+  },
 };
 
 /** Meta-Konto-/Seiten-IDs sind numerisch. Alles andere ist ein Manipulationsversuch. */
