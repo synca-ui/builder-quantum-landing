@@ -98,12 +98,11 @@ export function DomainHostingStep({
   const business = useConfiguratorStore((s) => s.business);
   const actions = useConfiguratorActions();
 
-  const [domainSearch, setDomainSearch] = useState("");
-  const [availableDomains] = useState([
-    { domain: "yourbusiness.com", available: true, price: "$12.99/year" },
-    { domain: "yourbusiness.net", available: true, price: "$13.99/year" },
-    { domain: "yourbusiness.org", available: false, price: "Taken" },
-  ]);
+  // Hier standen bis Runde 8 (M1) eine hartcodierte Liste „verfügbarer"
+  // Domains und eine Karte, die eine Anbindung an Vercel/Netlify/Cloudflare
+  // behauptete — beides gab es nicht. Eine eigene Domain wird nach der
+  // Veröffentlichung von Hand eingerichtet; der Schritt prüft deshalb nur
+  // noch das Format (pruefeDomainFormat).
 
   // Subdomain validation state
   const [validationStatus, setValidationStatus] =
@@ -573,95 +572,6 @@ export function DomainHostingStep({
                     </div>
                   </div>
                 )}
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Oder neue Domain suchen
-              </h3>
-              <div className="flex space-x-2 mb-4">
-                <Input
-                  type="text"
-                  placeholder="Domain-Name eingeben"
-                  value={domainSearch}
-                  onChange={(e) => setDomainSearch(e.target.value)}
-                  className="flex-1"
-                />
-                <Button variant="outline">Suchen</Button>
-              </div>
-
-              <div className="space-y-3">
-                {availableDomains.map((domain, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-3 h-3 rounded-full ${domain.available ? "bg-green-500" : "bg-red-500"}`}
-                      ></div>
-                      <span className="font-mono font-medium">
-                        {domain.domain}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={`text-sm ${domain.available ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {domain.price}
-                      </span>
-                      {domain.available && (
-                        <Button
-                          size="sm"
-                          className="bg-teal-500 hover:bg-teal-600"
-                          onClick={() =>
-                            actions.business.setBusinessInfo({
-                              domain: {
-                                ...business.domain,
-                                domainName: domain.domain,
-                              },
-                            })
-                          }
-                        >
-                          {t("domain.select")}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <Globe className="w-5 h-5 mr-2 text-purple-600" />
-                Automatische Domain-Verwaltung
-              </h3>
-              <p className="text-sm text-gray-700 mb-4">
-                Wir integrieren mit führenden Domain- und Hosting-Anbietern:
-              </p>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg p-3 border border-purple-100">
-                  <h4 className="font-semibold text-purple-900 text-sm mb-1">
-                    Vercel
-                  </h4>
-                  <p className="text-xs text-gray-600">
-                    Auto-Deploy & Custom Domains
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-purple-100">
-                  <h4 className="font-semibold text-purple-900 text-sm mb-1">
-                    Netlify
-                  </h4>
-                  <p className="text-xs text-gray-600">Edge Functions & DNS</p>
-                </div>
-                <div className="bg-white rounded-lg p-3 border border-purple-100">
-                  <h4 className="font-semibold text-purple-900 text-sm mb-1">
-                    CloudFlare
-                  </h4>
-                  <p className="text-xs text-gray-600">CDN & Sicherheit</p>
-                </div>
               </div>
             </Card>
           </div>
