@@ -34,7 +34,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { jsonSchemaOutputFormat } from "@anthropic-ai/sdk/helpers/json-schema";
-import type { ParsedMenuItem } from "../../shared/menuParser";
+import { extractLabels, type ParsedMenuItem } from "../../shared/menuParser";
 
 /**
  * Haiku, nicht Opus: gemessen gleichwertig bei einem Fünftel des Preises.
@@ -231,6 +231,15 @@ export function zuGerichten(
     const beschreibung = text(g?.beschreibung);
     const allergene = kuerzel(g?.allergene);
 
+    // Ernährungs-Labels ("vegan", "glutenfrei") stehen wörtlich im Text —
+    // dafür braucht das Schema kein eigenes Feld, das das Modell füllen (und
+    // notfalls raten) müsste: Das Muster des Regel-Parsers findet sie
+    // deterministisch und gratis. Name UND Beschreibung, weil "vegan" mal am
+    // einen, mal am anderen Ort steht; die Rubrik zählt bewusst NICHT mit —
+    // unter "Vegetarisch" trüge sonst jedes Gericht das Label, auch das mit
+    // Speck.
+    const labels = extractLabels(`${name} ${beschreibung}`);
+
     items.push({
       id: `${idPrefix}-${items.length + 1}`,
       name,
@@ -238,6 +247,7 @@ export function zuGerichten(
       ...(kategorie ? { category: kategorie } : {}),
       ...(beschreibung ? { description: beschreibung } : {}),
       ...(allergene.length ? { allergens: allergene } : {}),
+      ...(labels.length ? { labels } : {}),
     });
   }
 
