@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { configurationApi, sessionApi } from "../api";
+import { configurationApi } from "../api";
 
 // Alle Routen in server/routes/configurations.ts antworten mit
 // `{ success, data, message }`. apiRequest reichte diese Hülle früher als
@@ -71,10 +71,7 @@ describe("configurationApi.save", () => {
   });
 
   it("meldet abgelehnte Validierung als Fehlschlag", async () => {
-    antworteMit(
-      { error: "Invalid configuration data", details: [] },
-      400,
-    );
+    antworteMit({ error: "Invalid configuration data", details: [] }, 400);
 
     const res = await configurationApi.save({ businessName: "" }, "tok");
 
@@ -99,7 +96,10 @@ describe("übrige Aufrufer der Antworthülle", () => {
   });
 
   it("delete gilt ohne data als Erfolg – die Route liefert keine", async () => {
-    antworteMit({ success: true, message: "Configuration deleted successfully" });
+    antworteMit({
+      success: true,
+      message: "Configuration deleted successfully",
+    });
 
     const res = await configurationApi.delete("cfg_1", "tok");
 
@@ -107,7 +107,7 @@ describe("übrige Aufrufer der Antworthülle", () => {
     expect(res.data).toBeUndefined();
   });
 
-  it("getAll liefert die Liste und getLatestConfiguration die neueste", async () => {
+  it("getAll liefert die Liste statt der Antworthülle", async () => {
     const liste = [
       { id: "alt", updatedAt: "2026-09-01T10:00:00.000Z" },
       { id: "neu", updatedAt: "2026-09-10T10:00:00.000Z" },
@@ -115,11 +115,8 @@ describe("übrige Aufrufer der Antworthülle", () => {
     antworteMit({ success: true, data: liste });
 
     const alle = await configurationApi.getAll("tok");
+
     expect(alle.success).toBe(true);
     expect(alle.data).toEqual(liste);
-
-    antworteMit({ success: true, data: liste });
-    const neueste = await sessionApi.getLatestConfiguration("tok");
-    expect(neueste?.id).toBe("neu");
   });
 });

@@ -98,8 +98,14 @@ export const SCHEMA = {
         required: ["kuerzel", "bedeutung"],
         additionalProperties: false,
         properties: {
-          kuerzel: { type: "string", description: 'Das Kürzel, z.B. "a1" oder "g".' },
-          bedeutung: { type: "string", description: 'Was es laut Karte bedeutet, z.B. "Weizen".' },
+          kuerzel: {
+            type: "string",
+            description: 'Das Kürzel, z.B. "a1" oder "g".',
+          },
+          bedeutung: {
+            type: "string",
+            description: 'Was es laut Karte bedeutet, z.B. "Weizen".',
+          },
         },
       },
     },
@@ -107,7 +113,14 @@ export const SCHEMA = {
       type: "array",
       items: {
         type: "object",
-        required: ["name", "preis", "kategorie", "variante_von", "beschreibung", "allergene"],
+        required: [
+          "name",
+          "preis",
+          "kategorie",
+          "variante_von",
+          "beschreibung",
+          "allergene",
+        ],
         additionalProperties: false,
         properties: {
           name: {
@@ -201,7 +214,9 @@ export function zuGerichten(
     /** Alte Form: offene Abbildung. Bleibt lesbar, siehe leseLegende. */
     allergenLegend?: unknown;
   };
-  const liste = Array.isArray(daten?.gerichte) ? (daten.gerichte as RohGericht[]) : [];
+  const liste = Array.isArray(daten?.gerichte)
+    ? (daten.gerichte as RohGericht[])
+    : [];
 
   const items: ParsedMenuItem[] = [];
   for (const g of liste) {
@@ -218,7 +233,9 @@ export function zuGerichten(
         (haupt.extras ??= []).push({
           name,
           ...(preis ? { price: preis } : {}),
-          ...(kuerzel(g?.allergene).length ? { allergens: kuerzel(g?.allergene) } : {}),
+          ...(kuerzel(g?.allergene).length
+            ? { allergens: kuerzel(g?.allergene) }
+            : {}),
         });
         continue;
       }
@@ -261,7 +278,9 @@ function kuerzel(v: unknown): string[] {
   if (!Array.isArray(v)) return [];
   const raus: string[] = [];
   for (const e of v) {
-    const k = text(e).toLowerCase().replace(/[^a-z0-9]/g, "");
+    const k = text(e)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
     if (k && !raus.includes(k)) raus.push(k);
   }
   return raus;
@@ -309,7 +328,9 @@ export async function structureMenuText(
   }
   const gekuerzt = kartentext.slice(0, MAX_ZEICHEN);
   if (gekuerzt.trim().length < MIN_ZEICHEN) {
-    throw new Error(`Zu wenig Text zum Strukturieren (${gekuerzt.trim().length} Zeichen)`);
+    throw new Error(
+      `Zu wenig Text zum Strukturieren (${gekuerzt.trim().length} Zeichen)`,
+    );
   }
 
   const client = new Anthropic({
@@ -344,7 +365,9 @@ export async function structureMenuText(
        * Produktion stumm auf die Regeln zurückgefallen wäre.
        */
       output_config: { format: jsonSchemaOutputFormat(SCHEMA as any) },
-      messages: [{ role: "user", content: `${ANWEISUNG}\n\n---\n\n${gekuerzt}` }],
+      messages: [
+        { role: "user", content: `${ANWEISUNG}\n\n---\n\n${gekuerzt}` },
+      ],
     })
     .finalMessage();
 
@@ -357,7 +380,9 @@ export async function structureMenuText(
   const { items, allergenLegend } = zuGerichten(roh, options.idPrefix ?? "ki");
   if (!items.length) throw new Error("Modell lieferte kein einziges Gericht");
 
-  const u = (message as { usage?: { input_tokens?: number; output_tokens?: number } }).usage;
+  const u = (
+    message as { usage?: { input_tokens?: number; output_tokens?: number } }
+  ).usage;
   const abgeschnitten =
     (message as { stop_reason?: string }).stop_reason === "max_tokens"
       ? " – ACHTUNG: an der Token-Grenze abgeschnitten, Karte womöglich unvollständig"
@@ -380,11 +405,14 @@ export async function structureMenuText(
  */
 export function jsonAusAntwort(message: unknown): unknown {
   const m = message as { parsed_output?: unknown; content?: unknown };
-  if (m?.parsed_output && typeof m.parsed_output === "object") return m.parsed_output;
+  if (m?.parsed_output && typeof m.parsed_output === "object")
+    return m.parsed_output;
 
   const content = Array.isArray(m?.content) ? m.content : [];
   const roh = content
-    .map((b: any) => (b?.type === "text" && typeof b.text === "string" ? b.text : ""))
+    .map((b: any) =>
+      b?.type === "text" && typeof b.text === "string" ? b.text : "",
+    )
     .join("")
     .trim();
   if (!roh) throw new Error("Antwort ohne Inhalt");

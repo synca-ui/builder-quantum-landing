@@ -28,7 +28,7 @@ import {
   Shield,
   TrendingUp,
   Users,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { openCookieSettings } from "@/components/cookie-banner";
@@ -44,7 +44,6 @@ import GoogleProfileSection from "@/components/sections/GoogleProfileSection";
 // des Workflow-Abschnitts weiter unten.
 import MaitrWorkflowStill from "@/components/MaitrWorkflowStill";
 import WorkflowStatsSection from "@/components/sections/WorkflowStatsSection";
-import { sessionApi } from "@/lib/api";
 import {
   useResourcePreloader,
   useLazyCSS,
@@ -232,31 +231,30 @@ const Navigation = () => {
     // Menü). Er zeichnet seine Kinder sofort und lädt Clerk erst im Leerlauf —
     // Begründung in client/components/HeaderAuth.tsx.
     <HeaderAuthGate>
-    <nav
-      aria-label="Hauptnavigation"
-      className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <div className="relative group">
-              {/* Wortmarke, keine Seitenüberschrift: das <h1> der Seite ist die
+      <nav
+        aria-label="Hauptnavigation"
+        className={`fixed top-0 w-full z-50 transition-all duration-700 ease-out ${scrolled ? "glass border-b border-white/30 backdrop-blur-xl shadow-xl py-2" : "bg-transparent border-b border-transparent py-4"}`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="relative group">
+                {/* Wortmarke, keine Seitenüberschrift: das <h1> der Seite ist die
                   Hero-Headline weiter unten. Zwei <h1> pro Seite sind ein
                   Fehler in der Dokumentstruktur. <div> statt <h1> ändert die
                   Darstellung nicht (Tailwind Preflight setzt Heading-Margins
                   ohnehin auf 0). */}
-              <div className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
-                Maitr
+                <div className="text-2xl font-black text-gradient cursor-pointer transition-all duration-500 group-hover:scale-110">
+                  Maitr
+                </div>
+                <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
               </div>
-              <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-purple-400/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-lg"></div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-teal-400 to-purple-400 rounded-full animate-bounce group-hover:animate-pulse"></div>
             </div>
-          </div>
 
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
-              {navItems
-                .map((item) => (
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-1 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
+                {navItems.map((item) => (
                   <a
                     key={item.id}
                     href={item.href}
@@ -282,11 +280,11 @@ const Navigation = () => {
                     ></div>
                   </a>
                 ))}
+              </div>
             </div>
-          </div>
 
-          <div className="hidden md:flex items-center space-x-3">
-            {/*
+            <div className="hidden md:flex items-center space-x-3">
+              {/*
               Der Clerk-Knopf, aber erst nach dem ersten Zeichnen: bis dahin
               steht der gleich große Platzhalter, der ebenfalls zur Anmeldung
               führt. Begründung und Maße in client/components/HeaderAuth.tsx.
@@ -295,107 +293,105 @@ const Navigation = () => {
               (angemeldet = eigener Avatar), und @clerk/clerk-react bleibt aus
               dem Ladepfad der Startseite heraus.
             */}
-            <HeaderAuthButton />
-            <a href="/mode-selection">
-              <Button
-                size="sm"
-                className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                <div className="relative flex items-center space-x-2">
-                  <div className="transition-all duration-300 group-hover:rotate-45">
-                    <Settings className="w-4 h-4" />
-                  </div>
-                  <span>Start Building</span>
-                  <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
-                </div>
-              </Button>
-            </a>
-          </div>
-
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label={isMenuOpen ? "Menü schließen" : "Menü öffnen"}
-              aria-expanded={isMenuOpen}
-              aria-controls="mobile-menu"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="relative p-2 text-gray-700 transition-all duration-300"
-            >
-              <div
-                className={`transition-all duration-300 ${isMenuOpen ? "rotate-90 scale-110" : "rotate-0 scale-100"}`}
-              >
-                {isMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
-              </div>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div
-        id="mobile-menu"
-        /*
-         * max-h-96 statt max-h-64: Der Anmeldeknopf ist als sechste Zeile
-         * dazugekommen und lag mit 256px Deckel ausserhalb des Sichtfensters —
-         * durch overflow-hidden unsichtbar UND unerreichbar. Wer den Deckel
-         * hier anfasst, muss die Zahl der Zeilen im Menue mitzaehlen.
-         */
-        className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
-      >
-        <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
-          <div className="px-4 py-4 space-y-2">
-            {navItems.map((item, index) => (
-              <a
-                key={item.id}
-                href={item.href}
-                className="group flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 font-bold transition-all duration-300"
-                style={{ animationDelay: `${index * 100}ms` }}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
-                  {item.icon}
-                </div>
-                <span>{item.label}</span>
-                <div className="ml-auto w-0 group-hover:w-2 h-2 bg-gradient-to-r from-teal-500 to-purple-500 rounded-full transition-all duration-300"></div>
-              </a>
-            ))}
-
-            <div className="pt-2 border-t border-gray-200/50 space-y-2">
-              {/* Gleicher Knopf wie im Desktop-Kopf, siehe Begründung dort. */}
-              <div
-                className="flex justify-center py-1"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <HeaderAuthButton />
-              </div>
-
-              <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
+              <HeaderAuthButton />
+              <a href="/mode-selection">
                 <Button
                   size="sm"
-                  className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-xl py-3 transition-all duration-300 hover:scale-105"
+                  className="group relative overflow-hidden bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white px-8 py-3 text-sm font-bold rounded-full transition-all duration-500 hover:scale-110 shadow-lg hover:shadow-teal-500/25"
                 >
-                  <div className="flex items-center justify-center space-x-2">
-                    <Settings className="w-4 h-4" />
-                    <span>Jetzt starten</span>
-                    <Sparkles className="w-4 h-4" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <div className="relative flex items-center space-x-2">
+                    <div className="transition-all duration-300 group-hover:rotate-45">
+                      <Settings className="w-4 h-4" />
+                    </div>
+                    <span>Start Building</span>
+                    <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse group-hover:animate-bounce"></div>
                   </div>
                 </Button>
               </a>
             </div>
+
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={isMenuOpen ? "Menü schließen" : "Menü öffnen"}
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="relative p-2 text-gray-700 transition-all duration-300"
+              >
+                <div
+                  className={`transition-all duration-300 ${isMenuOpen ? "rotate-90 scale-110" : "rotate-0 scale-100"}`}
+                >
+                  {isMenuOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
+                </div>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-    </nav>
+        <div
+          id="mobile-menu"
+          /*
+           * max-h-96 statt max-h-64: Der Anmeldeknopf ist als sechste Zeile
+           * dazugekommen und lag mit 256px Deckel ausserhalb des Sichtfensters —
+           * durch overflow-hidden unsichtbar UND unerreichbar. Wer den Deckel
+           * hier anfasst, muss die Zahl der Zeilen im Menue mitzaehlen.
+           */
+          className={`md:hidden transition-all duration-500 ease-out overflow-hidden ${isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
+        >
+          <div className="glass border-t border-white/20 backdrop-blur-xl mx-4 mt-2 rounded-2xl">
+            <div className="px-4 py-4 space-y-2">
+              {navItems.map((item, index) => (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className="group flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:text-teal-600 hover:bg-teal-50/50 font-bold transition-all duration-300"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                    {item.icon}
+                  </div>
+                  <span>{item.label}</span>
+                  <div className="ml-auto w-0 group-hover:w-2 h-2 bg-gradient-to-r from-teal-500 to-purple-500 rounded-full transition-all duration-300"></div>
+                </a>
+              ))}
+
+              <div className="pt-2 border-t border-gray-200/50 space-y-2">
+                {/* Gleicher Knopf wie im Desktop-Kopf, siehe Begründung dort. */}
+                <div
+                  className="flex justify-center py-1"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <HeaderAuthButton />
+                </div>
+
+                <a href="/mode-selection" onClick={() => setIsMenuOpen(false)}>
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white font-bold rounded-xl py-3 transition-all duration-300 hover:scale-105"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <Settings className="w-4 h-4" />
+                      <span>Jetzt starten</span>
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
     </HeaderAuthGate>
   );
 };
-
 
 function IndexContent() {
   const [activeDemo, setActiveDemo] = useState(0);
@@ -464,7 +460,10 @@ function IndexContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white relative w-full" style={{ overflowX: "clip" }}>
+    <div
+      className="min-h-screen bg-white relative w-full"
+      style={{ overflowX: "clip" }}
+    >
       {/* Auf Seitenebene, nicht in <nav>: dorthin hatte inject-seo.cjs das
           Element ursprünglich eingesetzt. */}
       <PageSEO {...SEO.home} />
@@ -492,25 +491,25 @@ function IndexContent() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
                 </div>
               </div>
-            
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
-              <span className="font-display text-gradient">
-                Deine eigene Restaurant-App.
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent inline-block mt-2 sm:mt-0">
-                In 30 Sekunden.
-              </span>
-            </h1>
-            
-            <p className="text-base sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed font-medium px-4 sm:px-2">
+
+              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
+                <span className="font-display text-gradient">
+                  Deine eigene Restaurant-App.
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-teal-600 via-purple-600 to-orange-600 bg-clip-text text-transparent inline-block mt-2 sm:mt-0">
+                  In 30 Sekunden.
+                </span>
+              </h1>
+
+              <p className="text-base sm:text-xl md:text-2xl text-gray-600 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed font-medium px-4 sm:px-2">
                 Link einfügen, fertig. Maitr erstellt automatisch deine digitale
                 Speisekarte und dein Reservierungssystem – bereit zum Servieren.
                 🍒
-            </p>
+              </p>
 
-            <div className="w-full max-w-3xl mx-auto mt-6">
-              <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="w-full max-w-3xl mx-auto mt-6">
+                <div className="flex flex-col md:flex-row items-center gap-4">
                   <form
                     onSubmit={handleMagicSubmit}
                     className={`flex flex-col sm:flex-row items-stretch sm:items-center rounded-3xl sm:rounded-full bg-white/90 backdrop-blur shadow-2xl p-1.5 flex-1 border transition-colors duration-300 ${inputError ? "border-red-300 shadow-red-100" : "border-white/20"}`}
@@ -578,10 +577,11 @@ function IndexContent() {
                 {inputError && (
                   <div className="w-full mt-3 animate-in slide-in-from-top-2 duration-300">
                     <div
-                      className={`rounded-2xl border p-4 backdrop-blur-sm ${inputError === "invalid_format"
-                        ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
-                        : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
-                        }`}
+                      className={`rounded-2xl border p-4 backdrop-blur-sm ${
+                        inputError === "invalid_format"
+                          ? "bg-white/95 border-red-100 shadow-lg shadow-red-50"
+                          : "bg-white/95 border-orange-100 shadow-lg shadow-orange-50"
+                      }`}
                     >
                       <div className="flex items-start gap-3 mb-3">
                         <div
@@ -719,8 +719,6 @@ function IndexContent() {
         </div>
       </section>
 
-
-
       <section
         id="features"
         className="py-32 bg-gradient-to-br from-white to-gray-50 relative overflow-hidden"
@@ -807,8 +805,8 @@ function IndexContent() {
             {/* Solange der Stripe-Checkout nicht live ist: ehrlich benennen, dass
                 noch nichts abgerechnet wird. Entfernen, sobald Billing aktiv ist. */}
             <p className="mt-6 inline-block rounded-full bg-amber-50 border border-amber-200 px-5 py-2 text-sm font-semibold text-amber-900">
-              Die Abrechnung ist noch nicht freigeschaltet — aktuell nutzt du Maitr
-              kostenlos.
+              Die Abrechnung ist noch nicht freigeschaltet — aktuell nutzt du
+              Maitr kostenlos.
             </p>
           </div>
 
@@ -816,13 +814,15 @@ function IndexContent() {
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl border-2 ${plan.popular
-                  ? "border-purple-200 shadow-purple-100/50"
-                  : "border-gray-200 hover:border-teal-200"
-                  } ${plan.cta === "Kommt bald"
+                className={`group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl border-2 ${
+                  plan.popular
+                    ? "border-purple-200 shadow-purple-100/50"
+                    : "border-gray-200 hover:border-teal-200"
+                } ${
+                  plan.cta === "Kommt bald"
                     ? "opacity-60 pointer-events-none grayscale"
                     : ""
-                  }`}
+                }`}
               >
                 {plan.popular && (
                   <div className="absolute top-0 right-0 bg-gradient-to-r from-teal-500 to-purple-500 text-white px-4 py-1 text-xs font-bold rounded-bl-2xl">
@@ -892,10 +892,11 @@ function IndexContent() {
                           war der Button ohne onClick/href komplett wirkungslos. */}
                       <a href="/mode-selection" className="block">
                         <Button
-                          className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${plan.popular
-                            ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
-                            : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
-                            }`}
+                          className={`w-full py-6 text-base font-bold rounded-full transition-all duration-500 ${
+                            plan.popular
+                              ? "bg-gradient-to-r from-teal-500 to-purple-500 hover:from-teal-600 hover:to-purple-600 text-white shadow-lg hover:shadow-purple-500/25 hover:scale-105"
+                              : "bg-white border-2 border-gray-300 text-gray-700 hover:border-teal-500 hover:text-teal-600 hover:scale-105"
+                          }`}
                         >
                           <div className="flex items-center justify-center gap-2">
                             <span>{plan.cta}</span>
@@ -962,13 +963,22 @@ function IndexContent() {
               >
                 Kontakt
               </a>
-              <a href="/impressum" className="text-sm font-medium text-gray-700 hover:text-teal-600">
+              <a
+                href="/impressum"
+                className="text-sm font-medium text-gray-700 hover:text-teal-600"
+              >
                 Impressum
               </a>
-              <a href="/datenschutz" className="text-sm font-medium text-gray-700 hover:text-teal-600">
+              <a
+                href="/datenschutz"
+                className="text-sm font-medium text-gray-700 hover:text-teal-600"
+              >
                 Datenschutz
               </a>
-              <a href="/agb" className="text-sm font-medium text-gray-700 hover:text-teal-600">
+              <a
+                href="/agb"
+                className="text-sm font-medium text-gray-700 hover:text-teal-600"
+              >
                 AGB
               </a>
               <button

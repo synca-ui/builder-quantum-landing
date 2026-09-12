@@ -142,13 +142,17 @@ export async function extractMenuViaN8n(
         dateiname,
         mimeType,
         base64: buffer.toString("base64"),
-        ...(process.env.N8N_MENU_MODEL ? { modell: process.env.N8N_MENU_MODEL } : {}),
+        ...(process.env.N8N_MENU_MODEL
+          ? { modell: process.env.N8N_MENU_MODEL }
+          : {}),
         // Ausweis gegenüber dem Flow. Der n8n-Webhook ist öffentlich
         // erreichbar und jeder Lauf kostet Gemini-Kontingent; steht drüben
         // MENU_OCR_TOKEN, lehnt der Flow alles ohne passenden Wert ab. Fehlt
         // die Variable hier, wird nichts mitgeschickt — dann muss sie auch
         // drüben fehlen, sonst weist der Flow uns selbst ab.
-        ...(process.env.N8N_MENU_TOKEN ? { token: process.env.N8N_MENU_TOKEN } : {}),
+        ...(process.env.N8N_MENU_TOKEN
+          ? { token: process.env.N8N_MENU_TOKEN }
+          : {}),
       }),
       signal: abbruch.signal,
     });
@@ -161,7 +165,9 @@ export async function extractMenuViaN8n(
     if (!res.ok) {
       return {
         items: [],
-        diagnostics: [`n8n antwortete HTTP ${res.status}: ${roh.slice(0, 200)}`],
+        diagnostics: [
+          `n8n antwortete HTTP ${res.status}: ${roh.slice(0, 200)}`,
+        ],
       };
     }
 
@@ -190,7 +196,10 @@ export async function extractMenuViaN8n(
      * N8N_MENU_TOKEN exakt so aus wie eine unlesbare Karte, und man suchte den
      * Fehler beim Foto des Wirts statt in der Umgebungsvariablen.
      */
-    if (antwort.ok === undefined && typeof (antwort as { message?: unknown }).message === "string") {
+    if (
+      antwort.ok === undefined &&
+      typeof (antwort as { message?: unknown }).message === "string"
+    ) {
       return {
         items: [],
         diagnostics: [

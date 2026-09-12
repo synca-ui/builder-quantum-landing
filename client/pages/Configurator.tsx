@@ -64,7 +64,6 @@ import { usePersistence } from "@/lib/stepPersistence";
 // raten (siehe Kopfkommentar dort).
 import { CONFIGURATOR_STEPS_CONFIG } from "@/lib/configuratorSteps";
 
-
 function ShareQRButton({
   url,
   t,
@@ -328,7 +327,8 @@ export default function Configurator() {
    * hat "Domain wählen" komplett verschluckt.
    */
   const skipsFeatureConfig = useCallback(
-    (target: number) => featureConfigIndex >= 0 && target === featureConfigIndex,
+    (target: number) =>
+      featureConfigIndex >= 0 && target === featureConfigIndex,
     [featureConfigIndex],
   );
 
@@ -725,13 +725,17 @@ export default function Configurator() {
                 <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Monitor className="w-6 h-6 text-orange-600" />
                 </div>
-                <h2 className="text-lg font-bold text-gray-900 mb-2">Desktop benötigt</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-2">
+                  Desktop benötigt
+                </h2>
                 <p className="text-gray-600 text-sm mb-6">
-                  Die Website-Konfiguration ist für größere Bildschirme optimiert. Bitte wechsle an einen Computer oder ein Tablet, um deine Seite zu bearbeiten.
+                  Die Website-Konfiguration ist für größere Bildschirme
+                  optimiert. Bitte wechsle an einen Computer oder ein Tablet, um
+                  deine Seite zu bearbeiten.
                 </p>
-                <Button 
-                  onClick={() => setCurrentStep(-1)} 
-                  variant="outline" 
+                <Button
+                  onClick={() => setCurrentStep(-1)}
+                  variant="outline"
                   className="w-full text-sm font-medium border-gray-300"
                 >
                   Zurück zum Dashboard
@@ -741,11 +745,16 @@ export default function Configurator() {
               <div className="w-full">
                 <div className="flex items-center justify-center space-x-2 mb-4 opacity-60">
                   <Smartphone className="w-4 h-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Aktuelle Live-Vorschau</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Aktuelle Live-Vorschau
+                  </span>
                 </div>
-                
+
                 {/* Embedded Template Preview Content directly without the LivePreview component wrapping, scaled appropriately */}
-                <div className="bg-white border-[6px] border-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden relative mx-auto" style={{ width: '320px', height: '650px' }}>
+                <div
+                  className="bg-white border-[6px] border-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden relative mx-auto"
+                  style={{ width: "320px", height: "650px" }}
+                >
                   {/* Fake Notch */}
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-gray-900 rounded-b-xl z-20"></div>
                   <div className="w-full h-full bg-white relative z-10 overflow-y-auto">
