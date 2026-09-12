@@ -97,35 +97,74 @@ function ClerkLogin() {
       {Platform.OS === "ios" ? <AppleKnopf /> : null}
       <Trennlinie />
       <EmailAnmeldung />
+      <ShowcaseKnopf />
     </LoginRahmen>
   );
 }
 
-/** Nativer „Mit Apple anmelden"-Dialog (Face ID statt Browserwechsel). */
+/**
+ * „Mit Apple anmelden" - nativer Systemdialog, mit Browser-Weg als Rueckfall.
+ *
+ * Warum zwei Wege statt einem: Apple stellt beim Anmelden ein Identitaetstoken aus,
+ * dessen `aud`-Feld sagt, fuer wen es gilt. Nativ steht dort die BUNDLE-ID
+ * (app.maitr.mobile), im Browser dagegen die SERVICES ID. Clerk prueft `aud` gegen
+ * seine hinterlegten Clients - kennt es die Bundle-ID nicht, weist es das native
+ * Token mit "You are not authorized to perform this request" ab, waehrend derselbe
+ * Nutzer ueber den Browser problemlos hereinkommt.
+ *
+ * Genau dieser Zustand liegt vor (gemessen am Geraet). Statt den Knopf bis zur
+ * Dashboard-Ergaenzung tot zu lassen, faellt er auf den Browser zurueck: Der Nutzer
+ * kommt heute herein, und sobald die Bundle-ID in Clerk steht, greift automatisch
+ * wieder der native Dialog - ohne dass hier etwas geaendert werden muss.
+ */
 function AppleKnopf() {
   const router = useRouter();
   const toast = useToast();
   const { signIn } = useStore();
-  const { startAppleAuthenticationFlow } = requireClerk().useSignInWithApple();
+  const clerk = requireClerk();
+  const { startAppleAuthenticationFlow } = clerk.useSignInWithApple();
+  const { startSSOFlow } = clerk.useSSO();
   const [busy, setBusy] = useState(false);
+
+  /** Sitzung aktivieren und weiter - fuer beide Wege identisch. */
+  const anmelden = async (
+    sitzung: string | null | undefined,
+    setActive: ((opts: { session: string }) => Promise<void>) | undefined,
+  ) => {
+    if (!sitzung) return false;
+    await setActive?.({ session: sitzung });
+    signIn();
+    router.replace("/");
+    return true;
+  };
 
   const start = async () => {
     if (busy) return;
     setBusy(true);
     try {
-      const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
-
-      if (!createdSessionId) {
-        // Der Normalfall bei Abbruch im Systemdialog - kein Fehler.
+      try {
+        const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
+        // Kein Fehler, sondern Abbruch im Systemdialog.
+        if (!createdSessionId) return;
+        await anmelden(createdSessionId, setActive as never);
         return;
+      } catch (nativerFehler) {
+        // Abbruch bleibt Abbruch - auch hier nicht auf den Browser ausweichen,
+        // sonst oeffnet sich nach dem Wegtippen unaufgefordert Safari.
+        if (istAbbruch(nativerFehler)) return;
+        if (!istNichtFreigeschaltet(nativerFehler)) throw nativerFehler;
+
+        console.warn(
+          "[login] Nativer Apple-Weg abgelehnt (Bundle-ID fehlt in Clerk) - weiche auf den Browser aus",
+          nativerFehler,
+        );
       }
 
-      await setActive?.({ session: createdSessionId });
-      signIn();
-      router.replace("/");
+      // Rueckfall: derselbe Anbieter, aber ueber die Services ID.
+      const { createdSessionId, setActive } = await startSSOFlow({ strategy: "oauth_apple" });
+      if (!createdSessionId) return;
+      await anmelden(createdSessionId, setActive as never);
     } catch (error) {
-      // Ein Abbruch durch den Nutzer kommt hier als Fehler an (`ERR_REQUEST_CANCELED`).
-      // Den still schlucken: Wer selbst abbricht, braucht keine Fehlermeldung.
       if (istAbbruch(error)) return;
       console.warn("[login] Apple-Anmeldung fehlgeschlagen", error);
       toast.show(
@@ -145,6 +184,34 @@ function AppleKnopf() {
       disabled={busy}
       onPress={() => void start()}
     />
+  );
+}
+
+/**
+ * Einstieg in die Vorfuehrung.
+ *
+ * Bewusst unten, klein und ohne Farbe: Wer ein Konto hat, soll sich anmelden - der
+ * Showcase ist fuer Vorfuehrungen gedacht, nicht als bequemerer Nebenweg. Die
+ * Beschriftung nennt beim Namen, was passiert ("Beispieldaten"), damit niemand
+ * hinterher echte Zahlen zu sehen glaubt.
+ */
+function ShowcaseKnopf() {
+  const router = useRouter();
+  const { betreteShowcase } = useStore();
+
+  return (
+    <View style={styles.showcase}>
+      <PillButton
+        label="Showcase mit Beispieldaten ansehen"
+        variant="ghost"
+        onPress={() => {
+          betreteShowcase();
+          // Ueber die Weiche wie jede andere Anmeldung - sie kennt den
+          // Demo-Betrieb und schickt direkt weiter, ohne Onboarding.
+          router.replace("/");
+        }}
+      />
+    </View>
   );
 }
 
@@ -526,6 +593,18 @@ function istUnbekanntesKonto(error: unknown): boolean {
   return clerkFehler(error)?.code === "form_identifier_not_found";
 }
 
+/**
+ * „Dieser Anmeldeweg ist bei Clerk nicht freigeschaltet."
+ *
+ * Der native Apple-Weg antwortet nicht in Clerks ueblicher `errors[]`-Form, sondern
+ * mit `{ reason, sign_in_id }`. `clerkFehler()` faengt beide Formen ab.
+ */
+function istNichtFreigeschaltet(error: unknown): boolean {
+  const fehler = clerkFehler(error);
+  const text = `${fehler?.code ?? ""} ${fehler?.message ?? ""}`.toLowerCase();
+  return text.includes("not authorized") || text.includes("unauthorized");
+}
+
 /** Abbruch im Apple-Systemdialog. Kein Fehler, sondern eine Entscheidung des Nutzers. */
 function istAbbruch(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
@@ -578,6 +657,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   formular: { gap: 14 },
+  showcase: { marginTop: 2 },
   hinweisZeile: { textAlign: "center", fontSize: 14 },
   trennlinie: { flexDirection: "row", alignItems: "center", gap: 12 },
   strich: { flex: 1, height: StyleSheet.hairlineWidth },

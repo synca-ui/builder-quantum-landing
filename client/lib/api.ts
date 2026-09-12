@@ -14,6 +14,7 @@ export interface Configuration {
   homepageDishImageVisibility?: string;
   primaryColor: string;
   secondaryColor: string;
+  backgroundColor?: string;
   fontFamily: string;
   selectedPages: string[];
   customPages: string[];

@@ -523,6 +523,23 @@ describe("einstiegsWeiche", () => {
       einstiegsWeiche({ angemeldet: true, echterAnmeldebetrieb: true, betrieb: "bekannt" }),
     ).toBe("start");
   });
+
+  it("der Showcase verhaelt sich wie der Demobetrieb - er darf nicht ewig warten", () => {
+    // Gemessener Fehler: Der Showcase-Einstieg meldete an, unterband aber den
+    // Betriebsabruf. Uebergab `app/index.tsx` weiterhin `echterAnmeldebetrieb:
+    // hasRealAuth()` - mit hinterlegtem Clerk-Schluessel also `true` -, blieb
+    // `betrieb` fuer immer auf "unbekannt" und die Weiche antwortete "warten":
+    // Die Vorfuehrung endete auf einer leeren Flaeche statt in der App.
+    //
+    // Der Aufrufer muss deshalb `hasRealAuth() && !showcase` uebergeben. Diese
+    // beiden Faelle halten das fest.
+    expect(
+      einstiegsWeiche({ angemeldet: true, echterAnmeldebetrieb: false, betrieb: "unbekannt" }),
+    ).toBe("start");
+    expect(
+      einstiegsWeiche({ angemeldet: true, echterAnmeldebetrieb: false, betrieb: "bekannt" }),
+    ).toBe("start");
+  });
 });
 
 /* ── brauchtNeueAnmeldung ─────────────────────────────────────────────────── */

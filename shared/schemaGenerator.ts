@@ -1,9 +1,8 @@
-import {
-  SchemaOrganization,
-  MenuItem as SchemaMenuItem,
+import type {
   MenuSection,
   RestaurantSchemaConfig,
-} from "../../shared/types/schema";
+  SchemaOrganization,
+} from "./types/schema";
 
 /**
  * Dietary restriction keywords to detect from menu item descriptions
@@ -43,11 +42,21 @@ const DIETARY_FLAGS = {
   },
 };
 
+const DAY_MAP: Record<string, string> = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
+};
+
 /**
  * Extract dietary flags from menu item description
  */
 export function extractDietaryFlags(description?: string): string[] {
-  if (!description) return [];
+  if (typeof description !== "string" || !description) return [];
 
   const lowerDesc = description.toLowerCase();
   const flags: string[] = [];
@@ -61,6 +70,32 @@ export function extractDietaryFlags(description?: string): string[] {
   return flags;
 }
 
+function text(wert: unknown): string | undefined {
+  return typeof wert === "string" && wert.trim() ? wert.trim() : undefined;
+}
+
+/** Nur absolute Web-Adressen: blob:-/data:-URLs und Instagram-Handles kann Google nicht abrufen. */
+function webUrl(wert: unknown): string | undefined {
+  const url = text(wert);
+  return url && /^https?:\/\//i.test(url) ? url : undefined;
+}
+
+/**
+ * Preis im schema.org-Format ("14.50"). Karten liefern "14,50 €", 7.9 oder
+ * "auf Anfrage" - Letzteres ergibt keinen Preis statt eines ungültigen.
+ */
+export function schemaPreis(price: unknown): string | undefined {
+  let betrag = Number.NaN;
+  if (typeof price === "number") {
+    betrag = price;
+  } else if (typeof price === "string") {
+    let roh = price.replace(/[^\d,.]/g, "");
+    if (roh.includes(",")) roh = roh.replace(/\./g, "").replace(",", ".");
+    betrag = Number.parseFloat(roh);
+  }
+  return Number.isFinite(betrag) && betrag > 0 ? betrag.toFixed(2) : undefined;
+}
+
 /**
  * Group menu items by category for MenuSection structure
  */
@@ -70,7 +105,8 @@ function groupByCategory(
   const grouped: Record<string, RestaurantSchemaConfig["menuItems"]> = {};
 
   items.forEach((item) => {
-    const category = item.category || "Main";
+    if (!text(item?.name)) return;
+    const category = text(item.category) || "Main";
     if (!grouped[category]) {
       grouped[category] = [];
     }
@@ -81,29 +117,58 @@ function groupByCategory(
 }
 
 /**
- * Convert opening hours object to OpeningHoursSpecification array
+ * Öffnungszeiten → OpeningHoursSpecification. Geschlossene Tage fallen weg,
+ * ebenso 00:00–00:00: So schreiben schema.org-Quellen und der Scraper einen
+ * Ruhetag, und genau so stand er schon einmal als offener Tag auf einer Seite.
  */
-function formatOpeningHours(
-  hours?: Record<string, { open: string; close: string }>,
-) {
-  if (!hours || Object.keys(hours).length === 0) return undefined;
+function formatOpeningHours(hours?: RestaurantSchemaConfig["openingHours"]) {
+  if (!hours || typeof hours !== "object") return undefined;
 
-  const dayMap: Record<string, string> = {
-    monday: "Monday",
-    tuesday: "Tuesday",
-    wednesday: "Wednesday",
-    thursday: "Thursday",
-    friday: "Friday",
-    saturday: "Saturday",
-    sunday: "Sunday",
+  const spezifikation = Object.entries(hours)
+    .filter(
+      ([, tag]) =>
+        tag &&
+        !tag.closed &&
+        text(tag.open) &&
+        text(tag.close) &&
+        tag.open !== tag.close,
+    )
+    .map(([day, { open, close }]) => ({
+      "@type": "OpeningHoursSpecification" as const,
+      dayOfWeek: DAY_MAP[day.toLowerCase()] || day,
+      opens: open,
+      closes: close,
+    }));
+
+  return spezifikation.length > 0 ? spezifikation : undefined;
+}
+
+/** "Weyerstraße 96, 50676 Köln" → Straße, Postleitzahl und Ort getrennt. */
+function postalAddress(adresse?: string): SchemaOrganization["address"] {
+  const roh = text(adresse);
+  if (!roh) return undefined;
+
+  const plzOrt = roh.match(/^(.+?),?\s+(\d{5})\s+(.+)$/);
+  if (plzOrt) {
+    return {
+      "@type": "PostalAddress",
+      streetAddress: plzOrt[1].trim(),
+      postalCode: plzOrt[2],
+      addressLocality: plzOrt[3].trim(),
+      addressCountry: "DE",
+    };
+  }
+
+  const teile = roh
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  return {
+    "@type": "PostalAddress",
+    streetAddress: teile[0],
+    addressLocality: teile.slice(1).join(", "),
+    addressCountry: "DE",
   };
-
-  return Object.entries(hours).map(([day, { open, close }]) => ({
-    "@type": "OpeningHoursSpecification" as const,
-    dayOfWeek: dayMap[day.toLowerCase()] || day,
-    opens: open,
-    closes: close,
-  }));
 }
 
 /**
@@ -112,50 +177,32 @@ function formatOpeningHours(
 export function generateRestaurantSchema(
   config: RestaurantSchemaConfig,
 ): SchemaOrganization {
-  // Group menu items by category
   const groupedItems = groupByCategory(config.menuItems);
 
-  // Convert grouped items to MenuSection format
   const menuSections: MenuSection[] = Object.entries(groupedItems).map(
     ([categoryName, items]) => ({
       "@type": "MenuSection" as const,
       name: categoryName,
-      description: undefined,
-      hasMenuItem: items.map((item) => ({
-        "@type": "MenuItem" as const,
-        name: item.name,
-        description: item.description,
-        image: item.image,
-        offers: item.price
-          ? {
-              "@type": "Offer" as const,
-              priceCurrency: "EUR", // Default to EUR for EU restaurants
-              price:
-                typeof item.price === "number"
-                  ? item.price.toFixed(2)
-                  : item.price,
-            }
-          : undefined,
-        suitableForDiet: extractDietaryFlags(item.description),
-      })),
+      hasMenuItem: items.map((item) => {
+        const price = schemaPreis(item.price);
+        return {
+          "@type": "MenuItem" as const,
+          name: item.name,
+          description: text(item.description),
+          image: webUrl(item.image),
+          offers: price
+            ? {
+                "@type": "Offer" as const,
+                priceCurrency: "EUR",
+                price,
+              }
+            : undefined,
+          suitableForDiet: extractDietaryFlags(item.description),
+        };
+      }),
     }),
   );
 
-  // Build address
-  const addressParts = config.address?.split(",").map((p) => p.trim()) || [];
-  const address =
-    addressParts.length > 0
-      ? {
-          "@type": "PostalAddress" as const,
-          streetAddress: addressParts[0] || "",
-          addressLocality: addressParts[1] || "",
-          addressRegion: addressParts[2] || "",
-          postalCode: addressParts[3] || "",
-          addressCountry: "DE", // Default to Germany for EU
-        }
-      : undefined;
-
-  // Build aggregated rating if reviews exist
   const aggregateRating =
     config.reviews && config.reviews.length > 0
       ? {
@@ -169,24 +216,27 @@ export function generateRestaurantSchema(
         }
       : undefined;
 
-  // Build sameAs links from social
-  const sameAs: string[] = [];
-  if (config.socialLinks?.facebook) sameAs.push(config.socialLinks.facebook);
-  if (config.socialLinks?.instagram) sameAs.push(config.socialLinks.instagram);
-  if (config.socialLinks?.twitter) sameAs.push(config.socialLinks.twitter);
-  if (config.socialLinks?.linkedin) sameAs.push(config.socialLinks.linkedin);
+  const sameAs = [
+    config.socialLinks?.facebook,
+    config.socialLinks?.instagram,
+    config.socialLinks?.twitter,
+    config.socialLinks?.linkedin,
+  ]
+    .map(webUrl)
+    .filter((url): url is string => Boolean(url));
 
-  // Construct the final schema
+  const logo = webUrl(config.logo);
+
   const schema: SchemaOrganization = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
     name: config.businessName,
-    description: config.description,
-    url: config.website,
-    image: config.logo || undefined,
-    telephone: config.phone,
-    email: config.email,
-    address: address,
+    description: text(config.description),
+    url: webUrl(config.website),
+    image: logo,
+    telephone: text(config.phone),
+    email: text(config.email),
+    address: postalAddress(config.address),
     ...(config.latitude && config.longitude
       ? {
           geo: {
@@ -210,7 +260,7 @@ export function generateRestaurantSchema(
       : {}),
     aggregateRating: aggregateRating,
     ...(sameAs.length > 0 ? { sameAs } : {}),
-    ...(config.logo ? { logo: config.logo } : {}),
+    ...(logo ? { logo } : {}),
   };
 
   return schema;
@@ -220,7 +270,6 @@ export function generateRestaurantSchema(
  * Validate and sanitize schema before storing
  */
 export function validateSchema(schema: any): boolean {
-  // Basic validation - ensure required fields are present
   if (!schema["@context"] || schema["@context"] !== "https://schema.org") {
     return false;
   }

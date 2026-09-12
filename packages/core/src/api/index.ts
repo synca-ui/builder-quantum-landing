@@ -58,6 +58,8 @@ export const BETRIEB_PFADE = {
   oeffentlich: (slug: string) => `/venues/${teil(slug)}/public`,
   integrationen: "/integrations",
   integrationVerbinden: (provider: ProviderId) => `/integrations/${teil(provider)}/connect`,
+  /** DELETE: Verbindung trennen (Widerruf beim Anbieter + Token löschen). */
+  integrationTrennen: (provider: ProviderId) => `/integrations/${teil(provider)}`,
 } as const;
 
 export const briefing = {
@@ -231,6 +233,23 @@ export const integrations = {
       query: { venueId },
       signal,
     });
+  },
+
+  /**
+   * Verbindung trennen: Freigabe beim Anbieter widerrufen, Token serverseitig
+   * löschen. Nur der Inhaber (sonst 403 `nur_inhaber`); 404 `nicht_verbunden`,
+   * wenn es nichts zu trennen gibt.
+   *
+   * `providerRevoked: false` heißt: Die Verbindung ist bei uns weg, aber Google
+   * bzw. Meta hat den Widerruf nicht bestätigt (Token schon ungültig, Anbieter
+   * nicht erreichbar). Dann dem Betrieb raten, die Freigabe in seinen
+   * Kontoeinstellungen beim Anbieter selbst zu prüfen.
+   */
+  disconnect(venueId: string, provider: ProviderId, signal?: AbortSignal) {
+    return request<{ provider: "GOOGLE" | "META"; providerRevoked: boolean }>(
+      BETRIEB_PFADE.integrationTrennen(provider),
+      { method: "DELETE", query: { venueId }, signal },
+    );
   },
 };
 

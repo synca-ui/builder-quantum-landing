@@ -31,7 +31,6 @@ export {
   BusinessHoursSection,
   type BusinessHoursSectionProps,
 } from "./BusinessHoursSection";
-export { ContactSection, type ContactSectionProps } from "./ContactSection";
 
 // Re-export for convenience
 export type {

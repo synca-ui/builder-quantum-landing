@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 // Letztes inhaltliches Änderungsdatum. Bewusst fest hinterlegt statt
 // new Date(): Die Seite wird zur Build-Zeit vorgerendert, ein berechnetes
 // Datum würde sonst den Deploy-Tag als Änderungsdatum ausweisen.
-const STAND = "Juli 2026";
+const STAND = "September 2026";
 
 const sections = [
     { id: "geltungsbereich", label: "§ 1 Geltungsbereich" },
@@ -248,7 +248,7 @@ export default function AGB() {
                                 <strong>Kündigung:</strong> Kann jederzeit über das Dashboard des Nutzerkontos oder per E-Mail an julian.heinrich@maitr.de erfolgen.
                             </p>
                             <p>
-                                <strong>Folgen der Kündigung:</strong> Nach Ablauf des bezahlten Zeitraums wird der Zugang zur Plattform deaktiviert. Die erstellten Web-Apps des Nutzers sind dann nicht mehr öffentlich zugänglich. Der Nutzer hat bis zur Deaktivierung die Möglichkeit, seine Daten (App-Konfigurationen, Inhalte) über das Dashboard zu exportieren. Nach Ablauf einer Aufbewahrungsfrist von 30 Tagen nach Kündigung werden alle Nutzerdaten unwiderruflich gelöscht.
+                                <strong>Folgen der Kündigung:</strong> Nach Ablauf des bezahlten Zeitraums wird der Zugang zur Plattform deaktiviert. Die erstellten Web-Apps des Nutzers sind dann nicht mehr öffentlich zugänglich. Der Nutzer hat bis zur Deaktivierung die Möglichkeit, seine Daten (App-Konfigurationen, Inhalte) über das Dashboard zu exportieren. Der Nutzer kann sein Konto jederzeit in der App löschen oder die Löschung per E-Mail beauftragen; damit werden seine Daten unverzüglich und unwiderruflich gelöscht (Einzelheiten in der Datenschutzerklärung). Ohne Löschauftrag bleiben die Daten nach Vertragsende zunächst gespeichert, damit der Vertrag wieder aufgenommen werden kann; eine Löschung erfolgt jederzeit auf Anfrage. Gesetzliche Aufbewahrungspflichten bleiben unberührt.
                             </p>
                         </section>
 

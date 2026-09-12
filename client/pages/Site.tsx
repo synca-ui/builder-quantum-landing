@@ -108,6 +108,13 @@ const FALLBACK_CONFIG: Configuration = {
   },
   contactMethods: ["Email: contact@juju.cafe", "Phone: (555) 123-4567"],
   reservationsEnabled: true,
+  customPages: [],
+  maxGuests: 10,
+  notificationMethod: "email",
+  onlineOrdering: false,
+  onlineStore: false,
+  teamArea: false,
+  hasDomain: false,
 };
 
 // This is the main component that renders the site, now unified with the preview logic.
@@ -556,7 +563,7 @@ function SiteRenderer({ config: formData }: { config: Configuration }) {
       className={`min-h-screen relative ${fontClass}`}
       style={{ background: styles.userBackground, color: styles.userFontColor }}
     >
-      <RestaurantJsonLd config={formData} />
+      {formData.id !== FALLBACK_CONFIG.id && <RestaurantJsonLd config={formData} />}
       <div
         className="w-full bg-white"
         style={{ height: "max(env(safe-area-inset-top, 50px), 50px)" }}

@@ -91,12 +91,14 @@ function matchesCondition(value: unknown, condition: unknown): boolean {
   return hatBereichsOperator;
 }
 
-function filterRows<T extends Record<string, unknown>>(
+function filterRows<T extends object>(
   rows: T[],
   where: Record<string, unknown> = {},
 ): T[] {
   return rows.filter((row) =>
-    Object.entries(where).every(([key, cond]) => matchesCondition(row[key], cond)),
+    Object.entries(where).every(([key, cond]) =>
+      matchesCondition((row as Record<string, unknown>)[key], cond),
+    ),
   );
 }
 

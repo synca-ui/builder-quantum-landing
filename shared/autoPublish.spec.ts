@@ -188,7 +188,7 @@ describe("deriveCohesiveColors: Farben aus der gescrapten Palette", () => {
 });
 
 describe("markHighlights: die Aushängeschilder der Startseite", () => {
-  const dish = (id, category, price, description) => ({
+  const dish = (id: string, category: string, price: string, description?: string) => ({
     id, name: id, category, price, ...(description ? { description } : {}),
   });
 
