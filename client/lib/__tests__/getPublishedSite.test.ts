@@ -2,9 +2,10 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { configurationApi } from "../api";
 
 // GET /api/sites/:subdomain antwortet mit `{ success, data }`. apiRequest
-// packt nur `configuration`/`configurations`/`site` aus und reichte deshalb die
-// ganze Hülle als Konfiguration weiter – /site/bella12 zeigte „Your Business“
-// statt „Bella“ und keine Inhalte.
+// packte früher nur `configuration`/`configurations`/`site` aus und reichte
+// deshalb die ganze Hülle als Konfiguration weiter – /site/bella12 zeigte
+// „Your Business“ statt „Bella“ und keine Inhalte. Seitdem packt apiRequest
+// die Hülle zentral aus; dieser Test sichert das für getPublishedSite ab.
 function antworteMit(body: unknown, status = 200) {
   const fetchMock = vi.fn().mockResolvedValue(
     new Response(JSON.stringify(body), {
