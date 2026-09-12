@@ -35,6 +35,13 @@ deutschsprachigen Raum, die:
 - professionell online wirken wollen,
 - Provisionen an Plattformen satt haben,
 - Zeit über alles schätzen.
+
+**Vorschlag zur Verengung (offen, Gründerentscheidung).** Jeder 2026 finanzierte
+Wettbewerber zielt auf Betriebe mit Bestellgeschäft, Kassensystem oder mehreren
+Standorten. Die Zeile, in der heute niemand mit mehr Kapital steht: inhabergeführte
+Cafés und Bars **ohne Liefergeschäft und ohne Kassenwechsel-Bereitschaft**, bei denen
+der Wert Zeit und Präsenz ist, nicht Bestellvolumen. Das ist enger als „Kleingastronomie
+DACH" — und verteidigbar. Begründung: [../analyse/WETTBEWERB_2026.md](../analyse/WETTBEWERB_2026.md).
 _Demo-Betrieb: „Café Goldstück", Köln-Ehrenfeld._
 
 ## Was die App heute kann (Demo, verifiziert)
@@ -61,12 +68,25 @@ _Demo-Betrieb: „Café Goldstück", Köln-Ehrenfeld._
 
 ## Warum Maitr gewinnt (Moat)
 1. **Eigener Gäste-Graph** — dem Betrieb gehörende, portable Gästebeziehung (Segmente,
-   Churn-/No-Show-Risiko, **Lifetime Value in €**). Plattformen bauen das nie — für sie
-   ist der Gast das Produkt.
+   Churn-/No-Show-Risiko, **Lifetime Value in €**). Plattformen bauen den Gäste-Graph
+   durchaus — aber für sich. Was sie nicht hergeben, ist der **Besitz**: der Betrieb nimmt
+   seine Gästebeziehung mit, wenn er kündigt.
 2. **Provisionsfreie Reservierung mit €-ROI** — die harte Antwort auf „Warum nicht TheFork?".
 3. **Automatisierung, die handelt** — erledigte Arbeit statt Dashboard.
 4. **Eine Präsenz-Oberfläche** über Google + Meta, verdichtet auf den Präsenzscore.
 5. **Lokaler Benchmark** als Gewohnheits-Haken und Upsell-Hebel.
+
+## Wettbewerb (Stand 09/2026)
+Vier finanzierte europäische Teams sind 2026 in dieses Feld eingetreten: **SOUS**
+(Amsterdam, 4 Mio. €, gleiche Architektur, Expansion nach Deutschland angekündigt),
+**Choice** (Prag, 7,1 Mio. $), **allO** (München, 12 Mio. €, 1.000+ deutsche Standorte)
+und **Malou** (Paris, ab 3 Standorten). Dazu hat OpenTable im August 2026 sein
+Guest Relationship Management stark ausgebaut.
+
+Kein Anbieter füllt alle fünf USPs — das Bündel ist echt. Aber vier von fünf sind
+einzeln am Markt. **Die Trennlinie ist der Zielkunde, nicht mehr das Bündel.**
+Vollständige Analyse mit Quellen und offenen Punkten:
+[../analyse/WETTBEWERB_2026.md](../analyse/WETTBEWERB_2026.md).
 
 ## Product-Market-Fit-These
 Die Kleingastronomie **zahlt bereits** — an Plattformen (Provision) und mit ihrer Zeit.
@@ -78,6 +98,11 @@ Der Einstieg ist ein tägliches Ritual (Habit), der Ausbau ein natürlicher Upse
 ## Preis
 Kostenlos zum Start, Abo im Produkt: **Start 0 € · Pro 29 € · Autopilot 59 €** / Monat.
 (Anker: eine verhinderte No-Show oder gesparte Provision zahlt das Abo.)
+
+_Offen: SOUS nimmt gut 100 € im Monat von derselben Zielgruppe in Europa, Owner.com
+499 $ in den USA. 29/59 € ist damit nicht der aggressive, sondern der auffällig
+niedrige Preis — bei einem Vertrauensprodukt kein Vorteil. Nicht geändert, bewusst
+offengelassen._
 
 ## Ehrlicher Reifegrad
 Voll funktionierende, minimalistische **Demo auf Beispieldaten**, nativ auf iPhone
