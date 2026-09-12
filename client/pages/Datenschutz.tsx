@@ -264,13 +264,9 @@ export default function Datenschutz() {
 
               <h3 className="text-lg font-semibold text-slate-800 mt-8 mb-3">Google Fonts</h3>
               <p>
-                Die Schriftarten auf maitr.de hosten wir selbst – beim Aufruf dieser Website findet
-                keine Verbindung zu Google-Servern statt und es werden keine personenbezogenen Daten
-                an Google übertragen. Auf den durch Maitr erzeugten Restaurant-Websites unserer Kunden
-                kann die vom Kunden gewählte Schriftart von Google Fonts (fonts.googleapis.com,
-                fonts.gstatic.com) nachgeladen werden; dabei wird die IP-Adresse des Besuchers an Google
-                übertragen. Verantwortlich dafür ist der jeweilige Restaurant-Betreiber, der in seiner
-                eigenen Datenschutzerklärung darüber informiert.
+                Die Schriftarten auf maitr.de und auf den durch Maitr erzeugten Restaurant-Websites
+                hosten wir selbst – beim Seitenaufruf findet keine Verbindung zu Google-Servern statt
+                und es werden keine personenbezogenen Daten an Google übertragen.
               </p>
 
               <h3 className="text-lg font-semibold text-slate-800 mt-8 mb-3">Google Sign-In (über Clerk)</h3>
