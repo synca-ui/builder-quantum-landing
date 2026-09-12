@@ -264,25 +264,42 @@ export function separateFromPrimary(
  * Preise in der Sekundärfarbe (statt des markenfremden Standard-Grüns), mit
  * demselben Lesbarkeits-Rückfall. Bereits gesetzte Werte bleiben unberührt.
  */
-export function deriveCohesiveColors(
-  design: Partial<DesignConfig>,
-): Partial<DesignConfig> {
-  const out = { ...design };
-  // A4.1: Der Hintergrund wird hier entschärft, BEVOR die übrigen Farben
-  // daraus abgeleitet werden. Sonst rechnet der Rest gegen einen Grund, der so
-  // nie ausgeliefert wird, und die Kontrastprüfungen unten stimmen nicht mehr.
-  const weich = softenBackground(out.backgroundColor);
-  if (weich) out.backgroundColor = weich;
+/**
+ * Der Hintergrund, wie er tatsächlich ausgeliefert wird: entschärft UND von
+ * der Primärfarbe abgesetzt.
+ *
+ * Die eine Stelle für beide Schritte — Vorschau (ErgebnisFarben) und Publish
+ * (deriveCohesiveColors) müssen denselben Ton zeigen. Vorher wandte die
+ * Vorschau nur softenBackground an; bei monochromen Quellseiten (Haus Töller:
+ * Primär- = Hintergrundfarbe = #0a1b2e) sah der Wirt in dem Moment, in dem er
+ * „so veröffentlichen" entschied, einen anderen Ton als den, der live ging
+ * (Prüfung Runde 8, M2).
+ */
+export function ausgelieferterHintergrund(
+  design: Pick<Partial<DesignConfig>, "backgroundColor" | "primaryColor">,
+): string | undefined {
+  // A4.1: erst entschärfen, dann absetzen — sonst rechnet das Absetzen gegen
+  // einen Grund, der so nie ausgeliefert wird.
+  const weich =
+    softenBackground(design.backgroundColor) ?? design.backgroundColor;
   // Zusammengefallene Palette: Liefert das Stylesheet nur EINE Farbe, setzt
   // der Scrape-Flow sie als Primär-, Sekundär- UND Hintergrundfarbe (gemessen
   // an haus-toeller.de: dreimal #0a1b2e). Die Knöpfe der Web-App tragen die
   // Primärfarbe auf dem Hintergrund – bei gleicher Farbe sind sie unsichtbar,
-  // und die Preise fielen auf den Lesbarkeits-Rückfall zurück. Hier wird der
-  // Hintergrund deshalb vom Primärton abgesetzt: derselbe Farbton, aber hell
-  // und weich, wie bei allen Vorlagen im Picker. Die Marke bleibt in Knöpfen
-  // und Kopfzeile erkennbar, die Fläche dahinter wird lesbar.
-  const abgesetzt = separateFromPrimary(out.backgroundColor, out.primaryColor);
-  if (abgesetzt) out.backgroundColor = abgesetzt;
+  // und die Preise fielen auf den Lesbarkeits-Rückfall zurück. Deshalb wird
+  // der Hintergrund vom Primärton abgesetzt: derselbe Farbton, aber hell und
+  // weich, wie bei allen Vorlagen im Picker.
+  return separateFromPrimary(weich, design.primaryColor) ?? weich;
+}
+
+export function deriveCohesiveColors(
+  design: Partial<DesignConfig>,
+): Partial<DesignConfig> {
+  const out = { ...design };
+  // Der Hintergrund wird hier festgelegt, BEVOR die übrigen Farben daraus
+  // abgeleitet werden — sonst stimmen die Kontrastprüfungen unten nicht.
+  const hintergrund = ausgelieferterHintergrund(out);
+  if (hintergrund) out.backgroundColor = hintergrund;
   const background = out.backgroundColor ?? "#FFFFFF";
 
   if (!out.fontColor) out.fontColor = readableTextOn(background);

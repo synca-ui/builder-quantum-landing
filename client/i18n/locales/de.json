@@ -297,6 +297,8 @@
     "square": "Eckig",
     "availableTimeSlots": "Verfügbare Zeitfenster",
     "timeSlotsDesc": "Lege die Zeiten fest, zu denen Kunden reservieren können",
+    "outsideHours": "Außerhalb der Öffnungszeiten – wird Gästen nicht angeboten",
+    "outsideHoursHint": "Gestrichelte Zeitfenster liegen an keinem Tag in den Öffnungszeiten (Schritt „Öffnungszeiten“) und werden Gästen nicht angeboten.",
     "reserveTable": "Tisch reservieren"
   },
   "pages": {

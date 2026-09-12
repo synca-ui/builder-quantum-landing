@@ -8,6 +8,7 @@ import {
   useConfiguratorStore,
   useConfiguratorActions,
 } from "@/store/configuratorStore";
+import { slotInnerhalbOeffnungszeiten } from "@/lib/reservierungSlotHinweis";
 
 interface ReservationsStepProps {
   nextStep: () => void;
@@ -67,6 +68,10 @@ export function ReservationsStep({
     const hour = 10 + i;
     return `${hour}:00`;
   });
+
+  // Für den Hinweis, welche Fenster an keinem Tag in den Öffnungszeiten
+  // liegen (Runde 8, M5) — zur Laufzeit filtert slotsFuerDatum sie ohnehin.
+  const openingHours = useConfiguratorStore((s) => s.content.openingHours);
 
   // FIX: Sichere Selektion der TimeSlots ohne neues Array-Objekt
   const rawSlots = useConfiguratorStore((s) => s.features.timeSlots);
@@ -377,12 +382,20 @@ export function ReservationsStep({
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {timeSlots.map((time) => {
                   const isSelected = selectedTimeSlots.includes(time);
+                  const imBetrieb = slotInnerhalbOeffnungszeiten(
+                    time,
+                    openingHours,
+                  );
 
                   return (
                     <Button
                       key={time}
                       variant={isSelected ? "default" : "outline"}
                       size="sm"
+                      title={
+                        imBetrieb ? undefined : t("reservations.outsideHours")
+                      }
+                      data-ausserhalb={imBetrieb ? undefined : ""}
                       onClick={() => {
                         const newSlots = isSelected
                           ? selectedTimeSlots.filter(
@@ -391,15 +404,25 @@ export function ReservationsStep({
                           : [...selectedTimeSlots, time];
                         updateTimeSlots(newSlots);
                       }}
-                      className={
+                      className={`${
                         isSelected ? "bg-teal-500 hover:bg-teal-600" : ""
-                      }
+                      } ${imBetrieb ? "" : "border-dashed opacity-60"}`}
                     >
                       {time}
                     </Button>
                   );
                 })}
               </div>
+              {timeSlots.some(
+                (time) => !slotInnerhalbOeffnungszeiten(time, openingHours),
+              ) && (
+                <p
+                  className="text-sm text-amber-700 mt-4"
+                  data-ausserhalb-hinweis
+                >
+                  {t("reservations.outsideHoursHint")}
+                </p>
+              )}
             </Card>
           </>
         )}
