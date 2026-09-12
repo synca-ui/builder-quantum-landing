@@ -65,11 +65,21 @@ function getUserId(): string {
   return userId;
 }
 
-// Base API request function with improved error handling
+// Base API request function with improved error handling.
+//
+// Alle Routen in server/routes/configurations.ts antworten mit
+// `{ success, data, message }`. Diese Hülle wird HIER ausgepackt, sodass
+// `ApiResponse.data` die Nutzlast selbst ist. Früher kam die ganze Hülle als
+// `data` an: /site/:subdomain zeigte „Your Business“, und der Konfigurator
+// merkte sich nie die id – jedes Speichern legte eine neue Konfiguration an.
+//
+// `expectData`: Ein 2xx ohne `data` gilt als Fehlschlag, weil fast jede Route
+// eine Nutzlast verspricht. Nur Routen ohne Nutzlast (DELETE) schalten das ab.
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
   token?: string,
+  { expectData = true }: { expectData?: boolean } = {},
 ): Promise<ApiResponse<T>> {
   try {
     // Add timeout to prevent hanging requests
@@ -89,25 +99,43 @@ async function apiRequest<T>(
     clearTimeout(timeoutId);
 
     // Handle non-JSON responses
-    let data;
+    let body;
     try {
-      data = await response.json();
+      body = await response.json();
     } catch (jsonError) {
       console.warn("Failed to parse JSON response:", jsonError);
-      data = { error: "Invalid server response" };
-    }
-
-    if (!response.ok) {
       return {
         success: false,
-        error: data.error || `HTTP error! status: ${response.status}`,
+        error: response.ok
+          ? "Invalid server response"
+          : `HTTP error! status: ${response.status}`,
+      };
+    }
+
+    if (!response.ok || body?.success === false) {
+      return {
+        success: false,
+        error: body?.error || `HTTP error! status: ${response.status}`,
+        message: body?.message,
+      };
+    }
+
+    const isEnvelope =
+      body !== null && typeof body === "object" && "success" in body;
+    const payload = isEnvelope ? body.data : body;
+
+    if (expectData && payload == null) {
+      return {
+        success: false,
+        error: "Server response contained no data",
+        message: body?.message,
       };
     }
 
     return {
       success: true,
-      data: data.configuration || data.configurations || data.site || data,
-      message: data.message,
+      data: payload,
+      message: isEnvelope ? body.message : undefined,
     };
   } catch (error) {
     console.warn("API request failed:", { endpoint, error });
@@ -206,6 +234,8 @@ export const configurationApi = {
           method: "DELETE",
         },
         token,
+        // Die Route antwortet nur mit `{ success, message }`.
+        { expectData: false },
       );
     } catch (error) {
       console.warn("Failed to delete configuration:", error);

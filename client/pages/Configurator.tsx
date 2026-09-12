@@ -219,10 +219,17 @@ export default function Configurator() {
           ? { ...data, id: currentConfigId }
           : data;
         const res = await configurationApi.save(payload, token);
-        const saved = (res as any).data || res;
-        if (!currentConfigId && saved?.id) {
-          setCurrentConfigId(saved.id);
-          persistence.setConfigId(saved.id);
+        // Ohne diese Prüfung zeigte ein abgelehntes Speichern (400/403/404)
+        // trotzdem „gespeichert“ an.
+        if (!res.success || !res.data) {
+          throw new Error(res.error || "Configuration could not be saved");
+        }
+        // Erst die id macht aus dem nächsten Speichern ein Update – ohne sie
+        // legt saveConfiguration auf dem Server jedes Mal eine neue
+        // Konfiguration an.
+        if (!currentConfigId && res.data.id) {
+          setCurrentConfigId(res.data.id);
+          persistence.setConfigId(res.data.id);
         }
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
