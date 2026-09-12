@@ -57,7 +57,8 @@ import { TemplatePreviewContent } from "@/components/configurator/preview/Templa
 import QRCode from "@/components/qr/QRCode";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
-import { configurationApi, type Configuration } from "@/lib/api";
+import { type Configuration } from "@/lib/api";
+import { konfigurationSpeichern } from "@/lib/konfigurationSpeichern";
 import { usePersistence } from "@/lib/stepPersistence";
 // Die Schrittliste liegt in client/lib/configuratorSteps.ts, damit der
 // automatische Modus gezielt in einen Schritt springen kann, ohne Indizes zu
@@ -214,10 +215,17 @@ export default function Configurator() {
       try {
         const token = await getToken();
         if (!token) throw new Error("No token");
-        const payload = currentConfigId
-          ? { ...data, id: currentConfigId }
-          : data;
-        const res = await configurationApi.save(payload, token);
+        const { res, idVerworfen } = await konfigurationSpeichern(
+          data,
+          currentConfigId,
+          token,
+        );
+        if (idVerworfen) {
+          // Der Server kannte die gemerkte id nicht mehr (anderes Konto im
+          // selben Browser, Konfiguration gelöscht) — neu angelegt.
+          setCurrentConfigId(null);
+          persistence.clearConfigId();
+        }
         // Ohne diese Prüfung zeigte ein abgelehntes Speichern (400/403/404)
         // trotzdem „gespeichert“ an.
         if (!res.success || !res.data) {
@@ -226,7 +234,7 @@ export default function Configurator() {
         // Erst die id macht aus dem nächsten Speichern ein Update – ohne sie
         // legt saveConfiguration auf dem Server jedes Mal eine neue
         // Konfiguration an.
-        if (!currentConfigId && res.data.id) {
+        if ((idVerworfen || !currentConfigId) && res.data.id) {
           setCurrentConfigId(res.data.id);
           persistence.setConfigId(res.data.id);
         }
