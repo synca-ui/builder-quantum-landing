@@ -9,7 +9,7 @@ import { env } from "./env";
 /**
  * Supabase-Client der Mobile-App.
  *
- * Zwei Unterschiede zur Web-Variante in `client/lib/supabaseClient.ts`:
+ * Zwei Abweichungen von den Browser-Voreinstellungen von supabase-js:
  * - `storage: AsyncStorage`, weil React Native kein `localStorage` hat.
  * - `detectSessionInUrl: false`, weil es keinen Browser-Redirect gibt, aus dem eine
  *   Session gelesen werden könnte.

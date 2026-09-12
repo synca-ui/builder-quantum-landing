@@ -278,7 +278,12 @@ const defaultFeatureFlags: FeatureFlags = {
   reservationTimeSlotInterval: 30,
   reservationDaysAhead: 7,
   timeSlots: ["12:00", "13:00", "18:00", "19:00"],
-  reservationButtonColor: "#2563EB",
+  // Kein Default hier (wie in client/lib/normalizeConfig.ts): "#2563EB" ist
+  // eine echte Farbe und hebelt damit den Markenfarben-Rueckfall in Vorschau
+  // UND Live-Renderer aus (`reservationButtonColor || primaryColor`).
+  // `undefined` gilt bereits als "unveraendert" fuer den Template-Wechsel
+  // weiter unten (`currentBtn == null`).
+  reservationButtonColor: undefined,
   reservationButtonTextColor: "#FFFFFF",
   reservationButtonShape: "rounded",
   onlineOrderingEnabled: false,

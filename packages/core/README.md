@@ -30,5 +30,5 @@ const today = await api.briefing.today(venueId);
 `watchFolders` auf, `mobile/tsconfig.json` mappt `@maitr/core` auf die Quellen.
 
 **Web** (noch offen): im Root-`tsconfig.json` und in `vite.config.ts` denselben Alias
-`@maitr/core` -> `packages/core/src` ergaenzen, dann `client/lib/apiClient.ts` und
-`client/lib/supabaseClient.ts` schrittweise dagegen austauschen.
+`@maitr/core` -> `packages/core/src` ergaenzen, dann `client/lib/apiClient.ts`
+schrittweise dagegen austauschen.

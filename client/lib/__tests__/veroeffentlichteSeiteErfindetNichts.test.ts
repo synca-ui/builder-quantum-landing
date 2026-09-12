@@ -82,6 +82,29 @@ describe("normalizeConfig für die ausgelieferte Seite (applyDefaults=false)", (
   });
 });
 
+describe("reservationButtonColor auf der ausgelieferten Seite", () => {
+  it("erfindet keine Knopffarbe, wenn keine gesetzt ist", () => {
+    // War #2563EB (Hartblau) — hebelte den Rueckfall auf die Markenfarbe in
+    // Hero/HeroSection/AppRenderer/ReservationCta aus (die alle bereits
+    // `reservationButtonColor || primaryColor` rechnen). Server-Pfad
+    // (server/utils/publicSiteView.ts) liefert aus demselben Grund ebenfalls
+    // undefined.
+    const c = normalizeConfig(
+      { ...VOM_SERVER, reservationsEnabled: true } as any,
+      false,
+    );
+    expect(c.features.reservationButtonColor).toBeUndefined();
+  });
+
+  it("gibt eine hinterlegte Knopffarbe unverändert weiter", () => {
+    const c = normalizeConfig(
+      { ...VOM_SERVER, reservationButtonColor: "#7C3AED" } as any,
+      false,
+    );
+    expect(c.features.reservationButtonColor).toBe("#7C3AED");
+  });
+});
+
 describe("normalizeLogo", () => {
   it("nimmt die blosse Adresse an, die der Server wirklich liefert", () => {
     const c = normalizeConfig(VOM_SERVER as any, false);

@@ -698,10 +698,15 @@ export function normalizeConfig(
         featuresObj.notificationMethod ||
         flatConfig.notificationMethod ||
         DEFAULT_FEATURE_FLAGS.notificationMethod,
+      // Kein Default hier (wie reservationUrl/-Provider oben): Ein fest
+      // verdrahtetes "#2563EB" hebelt sonst den Markenfarben-Rueckfall in
+      // Hero/HeroSection/AppRenderer/ReservationCta aus (die alle bereits
+      // `reservationButtonColor || primaryColor` rechnen). Server-Pfad
+      // (publicSiteView.ts) liefert aus demselben Grund ebenfalls undefined.
       reservationButtonColor:
         featuresObj.reservationButtonColor ||
         flatConfig.reservationButtonColor ||
-        DEFAULT_FEATURE_FLAGS.reservationButtonColor,
+        undefined,
       reservationButtonTextColor:
         featuresObj.reservationButtonTextColor ||
         flatConfig.reservationButtonTextColor ||

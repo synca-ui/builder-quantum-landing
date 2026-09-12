@@ -450,3 +450,206 @@ erscheinen nicht, Routen antworten 503 — nichts bricht.
 - `tsc`: 0 Fehler in angefassten Dateien
 - Neue Dependencies: jszip, node-forge (+types) — **per pnpm** (das Projekt
   ist pnpm-verwaltet; npm-Arborist bricht am .pnpm-Baum ab)
+
+---
+
+# Runde 8 — Vollprüfung beider Konfiguratoren durch vier parallele Audit-Agenten (10.09.2026)
+
+Stand: main-Zweig `29c49ee` (nach dem Vorlagenkatalog-Merge, 16 Templates).
+Vier Agenten haben **rein lesend/testend** (keine Produktivcode-Änderungen)
+jeweils einen Bereich geprüft: manueller Konfigurator Schritte 1–8, Schritte
+9–15 + Renderer-Parität, Auto-Konfigurator + Nachbearbeitung, Templates +
+Kennzeichnung. Browserprüfung der Clerk-geschützten Seiten war wie in Runde
+[[konfigurator-nachbearbeitung]] dokumentiert lokal nicht möglich (Prod-Clerk-
+Keys lehnen localhost ab); Ersatz waren Code-Audit + die vorhandene RTL-/
+Vitest-Suite. n8n-MCP war diese Session nicht erreichbar — Aussagen zum
+Scraper-Flow selbst sind daher nicht live nachverifiziert.
+
+**Gesamt-Testlauf (Baseline vor den gezielten Agent-Läufen):** `DATABASE_URL`
+auf Fake gesetzt, Node 22.21.1, frisch installierte `node_modules` im
+Worktree (keine vorhanden, s. [[worktree-env-prod-falle]]): **1451 Tests
+grün** (91 Dateien im Hauptprojekt). 4 mobile-Spezifikationen scheitern
+mangels `mobile/node_modules` — außerhalb des Prüfumfangs (Web-Konfiguratoren,
+nicht die App). `tsc --noEmit`: 104 vorbestehende Fehler, keiner in den
+geprüften Dateien.
+
+## Kritisch
+
+**K1 · Galerie-Bulk-Upload kann den Store-Wächter auslösen und crashen.**
+`client/components/configurator/steps/MediaGalleryStep.tsx:31-61`
+(`handleFileUpload`) ruft pro ausgewählter Datei einzeln
+`actions.content.addGalleryImage(...)` auf. Ab ≥51 Bildern in einer
+Mehrfachauswahl (z. B. ein ganzer Kamera-Ordner) wirft
+`checkThrottleGuard("addGalleryImage")` (`configuratorStore.ts:48-55`) eine
+Exception — der Rest der Auswahl wird nie hinzugefügt, ohne verständliche
+Meldung. Für Speisekarten-Bulk-Imports gibt es dafür bereits einen
+Batch-Pfad (`addMenuItems`, ein Store-Aufruf statt vieler); das Pendant für
+die Galerie fehlt. UI verspricht zusätzlich ein Limit ("Maximal 20 Bilder"),
+das nirgends durchgesetzt wird (siehe M3).
+
+## Hoch
+
+**H1 · `reservationButtonColor`-Regression: Server-Fix wurde im Client wieder ausgehebelt — BEHOBEN (10.09.2026, im Anschluss an diese Prüfung).**
+Von zwei unabhängigen Agenten (Renderer-Parität UND Templates) übereinstimmend
+gefunden, dann noch am selben Tag behoben. Der Bug saß an DREI Stellen, alle
+mit demselben Muster (eine echte Farbe als "Default" statt `undefined`, die
+den Markenfarben-Rückfall aushebelt):
+1. `client/lib/normalizeConfig.ts` — `DEFAULT_FEATURE_FLAGS.reservationButtonColor
+   = "#2563EB"`, unconditional in den Merge übernommen (Live-Renderer-Pfad,
+   `AppRenderer.tsx:80`/`HostAwareRoot.tsx:108` rufen `normalizeConfig(raw,
+   false)`). Fix: kein Default mehr, exakt wie bei `reservationUrl`/
+   `-Provider` in derselben Funktion.
+2. `client/store/configuratorStore.ts` — `defaultFeatureFlags.
+   reservationButtonColor = "#2563EB"` als Store-Startwert einer neuen
+   Konfiguration; die Editor-Vorschau (`TemplatePreviewContent.tsx:177-179`)
+   liest diesen Wert direkt und zeigte deshalb Hellblau statt Markenfarbe,
+   solange der Nutzer nichts eingestellt hatte. Fix: Startwert `undefined`
+   (die Template-Wechsel-Kopplung, Zeile ~594-600, behandelt `== null`
+   bereits korrekt als "unverändert").
+3. `client/pages/Configurator.tsx` — die CSS-Injektion für die Editor-Chrome
+   erzwang `features.reservationButtonColor || "#94e3fe"` und hebelte damit
+   den eigenen, bereits korrekten Rückfall von `styleInjector.ts` (`||
+   var(--color-primary)`) aus. Genau dieser Farbwert ("#94e3fe") war schon
+   einmal serverseitig als derselbe Bug behoben worden
+   (`server/routes/configurations.ts:717-729`) — im Client lebte er weiter.
+   Fix: Farbe unverändert durchreichen, keine Ersatzfarbe erzwingen.
+
+`ReservationsStep.tsx` zeigt den Farbwähler jetzt mit `reservationButtonColor
+|| primaryColor` als Anzeigewert (Store bleibt bis zur ersten bewussten
+Auswahl `undefined`), damit der native Color-Picker nicht Schwarz statt der
+tatsächlich wirksamen Farbe zeigt. Regressionstest ergänzt in
+`client/lib/__tests__/veroeffentlichteSeiteErfindetNichts.test.ts`
+("reservationButtonColor auf der ausgelieferten Seite"). Volle Suite danach:
+**1453 Tests grün** (87 Dateien, 2 neue), `tsc --noEmit` weiterhin 104
+vorbestehende Fehler (keiner neu).
+
+**H2 · Publish-Race: Bild-Upload kann noch laufen, wenn "Veröffentlichen" geklickt wird.**
+Weder `PublishStep.tsx` noch `Configurator.tsx:handlePublish` (Z. 232-301)
+prüfen, ob ein Bild-Upload (`mediaUpload.ts`) noch aktiv ist, bevor
+`getFullConfiguration()` für den Publish gelesen wird. Klickt der Wirt
+direkt nach einem Bild-Upload auf "Veröffentlichen", kann die noch nicht
+ersetzte `blob:`-Vorschau-URL live gehen (leeres Bild für jeden Gast) —
+deckungsgleich mit der Altmemo "Publish verliert Bilder (blob-URLs)".
+
+## Mittel
+
+**M1 · Custom-Domain-Schritt ist vollständig Mock.** `DomainHostingStep.tsx`:
+„Domain prüfen" löst nur `alert(...)` ohne echte Prüfung aus (Z. 99-104),
+die Liste verfügbarer Domains ist hartcodiert (Z. 488-499), und die Karte
+„Automatische Domain-Verwaltung" (Vercel/Netlify/Cloudflare) behauptet eine
+Funktion, die nicht existiert (Z. 543-583). Ein Wirt mit echter Domain
+bekommt fälschlich Erfolg suggeriert.
+
+**M2 · Farbvorschau im Auto-Konfigurator-Ergebnis kann vom tatsächlich
+veröffentlichten Ton abweichen.** `ErgebnisFarben.tsx:66-69` wendet auf den
+rohen Entwurf nur `softenBackground` an; der volle Publish-Pfad
+(`shared/autoPublish.ts:249-260`) hängt danach noch `separateFromPrimary`
+dahinter, falls Hintergrund/Primärfarbe zu ähnlich sind. Bei monochromen
+Quellseiten (verifiziert am Haus-Töller-Fall, `primaryColor ===
+backgroundColor === "#0a1b2e"`) zeigt der erste Blick auf die Vorschau noch
+den unveränderten dunklen Ton, obwohl tatsächlich ein deutlich hellerer Ton
+veröffentlicht wird — genau in dem Moment, in dem der Nutzer "so
+veröffentlichen" oder "anpassen" entscheidet. Verschwindet, sobald der
+Nutzer eine Farbe anfasst.
+
+**M3 · Keine clientseitige Durchsetzung beworbener Upload-Limits.**
+Galerie (max. 20 Bilder/5 MB laut UI-Text) und Logo (max. 2 MB laut UI-Text)
+prüfen weder Dateigröße noch Anzahl (`MediaGalleryStep.tsx:31-61`,
+`BusinessInfoStep.tsx:182-223`, `mediaUpload.ts`).
+
+**M4 · Kein Schutz vor negativem Preis.** `MenuProductsStep.tsx:1069-1078`:
+Preisfeld ohne `min="0"`, Hinzufügen-Bedingung prüft nur auf nicht-leeren
+String — `-5` wird anstandslos als Gerichtpreis gespeichert und angezeigt.
+
+**M5 · Verfügbare-Zeitfenster-Konfiguration ignoriert echte Öffnungszeiten.**
+`ReservationsStep.tsx:60-63` zeigt ein hartcodiertes 10:00–23:00-Raster ohne
+Abgleich mit `content.openingHours`. Zur Laufzeit filtert
+`slotsFuerDatum` zwar korrekt gegen echte Öffnungszeiten, aber die
+Konfigurationsoberfläche gibt dazu keine Rückmeldung — ein aktivierter Slot
+nach Ladenschluss wirkt im Editor, als würde er greifen.
+
+**M6 · Testlücke Kennzeichnung:** `dishListLayout.test.tsx` prüft
+Kürzel/Label/Legende-Slots nur für 5 von 16 Templates (presse, vitrine,
+imbiss, konditorei, minimalist) — Code-Review bestätigt korrekte
+Umsetzung in allen 16, aber ein künftiger Copy-Paste-Fehler in einer der 11
+ungetesteten Formen (gelato, brauhaus, ramen, izakaya, kiosk, morgen,
+roesterei, markt, aperitivo, hofladen) würde nicht auffallen.
+
+## Niedrig / kosmetisch
+
+- `useConfiguratorActions()` (`configuratorStore.ts:1373-1374`) abonniert
+  den GESAMTEN Store ohne Selector — jede Schritt-Komponente rendert bei
+  jeder Store-Änderung neu, nicht nur bei Aktionsänderungen (Anti-Pattern,
+  kein harter Bug).
+- Debug-`console.log` mit Nutzdaten in Produktion: `DebouncedInput.tsx:68-71,
+  96-99, 118-121` (Name/Ort/Slogan bei jedem Debounce-Commit) und
+  `TemplatePreviewContent.tsx:533` (Kategorie-Filter der Vorschau).
+- `OpeningHoursStep.tsx`: Wochentag-Namen in der Einzeltage-Ansicht auf 3
+  Zeichen gekürzt (Z. 218), Wochenend-Block zeigt volle Namen (Z. 279) —
+  uneinheitlich.
+- `ContactSocialStep.tsx`: Telefon/E-Mail-Felder mit `type="text"` statt
+  `type="tel"`/`type="email"`, kein `autoComplete` (im Gegensatz zu
+  BusinessInfoStep).
+- Reload im Konfigurator springt weiterhin auf Schritt 1 zurück (Daten
+  bleiben im Store erhalten, `ui`-Slice ist bewusst nicht persistiert).
+- `document.title` bleibt während des gesamten Konfigurators auf "Modus
+  auswählen".
+- `PUT /apps/:id` (`webapps.ts:685-718`) ruft kein `invalidateSite` auf —
+  aktuell folgenlos, da kein UI-Pfad diesen Endpunkt nutzt (toter Code),
+  aber eine Landmine, falls er reaktiviert wird.
+- Keine serverseitige Sperre gegen zwei fast gleichzeitige
+  `POST /api/scraper`-Analysen derselben URL vom selben Nutzer (Client
+  verhindert den Normalfall durch deaktivierten Button); im schlimmsten
+  Fall ein durcheinandergemischtes `suggestedConfig`, behebbar durch
+  erneutes Analysieren.
+- `AutoConfigurator.tsx` prüft beim Laden nicht serverseitig, ob der
+  eingeloggte Nutzer bereits eine veröffentlichte Web-App hat (nur
+  `localStorage`) — auf neuem Gerät/Browser verpasst man den Einstieg in
+  die Nachbearbeitung.
+- Totes Emoji-Rendering in `client/components/sections/MenuSection.tsx` —
+  Komponente wird nirgends importiert, kein aktiver Pfad, Aufräum-Kandidat.
+- `DishModal.tsx` zeigt bei fehlendem Bild keinen
+  Anfangsbuchstaben-Platzhalter (nur `DishCard` tut das) — Abweichung ohne
+  funktionale Störung.
+- "Galerie" erscheint weiterhin in der Navigation, sobald ein Bild
+  existiert, auch wenn im Schritt "Seiten auswählen" abgewählt — unverändert
+  offene, bewusste Produktentscheidung (P6 aus Runde 1).
+- Stempelkarte/Treue bleibt im Web-Publish-Pfad als "Bald verfügbar"
+  gegated — korrekt, weil `AppRenderer`/`TemplatePreviewContent` das Feature
+  gar nicht rendern (das fertige Stempelkarten-System ist ein getrenntes
+  App/Wallet-Feature, siehe [[maitr-konfigurator-fixes]]); nur das Label
+  könnte missverständlich wirken.
+
+## Bestätigt weiterhin korrekt (Auszug, vollständig behoben seit früheren Runden)
+
+Domain-Skip-Bug, toter Weiter-Button, Blob-Bug bei allen fünf Bildstellen
+(Logo/Galerie/Gericht/Angebot/Social), Angebote-Schema-Falle,
+`offerPageEnabled`/`offerBanner.enabled`-Inkonsistenz, Ruhetag-Erfindung,
+Offen/Geschlossen-Badge (jetzt minutenbasiert), `normalizeLogo`-Fallback,
+`reservationUrl`/-Provider in öffentlichen Sichten, `invalidateSite` in den
+aktiv genutzten Publish-Pfaden, Auto-Pfad schreibt `publishPlan.config` (nie
+`draft`), Hero-Fallback ohne Doppel-Willkommen, `hasReservation`-Kompensation
+(11 Anbieter + Wix-Modul, Gutscheine ausgeschlossen), Allergen-Kennzeichnung
+nach LMIDV (DEHOGA-Schema, Merge-Legende, Warnung bei unerklärten Kürzeln),
+alle 16 Templates im Katalog mit Kontrast-/Font-/Google-Fonts-Wächtern,
+Kein-Emoji-Regel im aktiven Rendering-Pfad, Fotokarte-Fallback (vitrine).
+
+## Prüfstand Runde 8
+
+- Baseline: **1451 Tests grün** (Hauptprojekt), Node 22.21.1, Fake-DB.
+- Zusätzlich von den vier Audit-Agenten gezielt ausgeführt (überschneidet
+  sich teils mit der Baseline): u. a. `templateParitaet.test.tsx` (63),
+  `templateKontrast.test.ts` (112), `templateFonts.test.ts` (15),
+  `keineGoogleFonts.test.ts` (3), `templateCatalog.spec.ts` (17),
+  `dishListLayout.test.tsx` (32), `kennzeichnung.test.ts` (9),
+  `menuKennzeichnung.test.tsx` (4), `AutoConfigurator.test.tsx` (28),
+  `autoConfigurator.spec.ts` (20), `veroeffentlichteFassung.test.ts` (8),
+  `reservation.spec.ts` (18), `angeboteSchema.spec.ts`,
+  `publicSiteAngebote.spec.ts`, `reservierungGrenzen.spec.ts`,
+  `reservierungsSlots.spec.ts` — alle grün, keine Fehlschläge.
+- Keiner der neuen Funde (K1, H1, H2, M1–M6) ist durch einen bestehenden
+  Test abgedeckt — das ist erwartbar, da es sich um neu entdeckte Lücken
+  handelt, nicht um Regressionen bereits getesteter Fälle.
+- `tsc --noEmit`: 104 vorbestehende Fehler, keiner in den geprüften Dateien.
+- Kein Produktivcode geändert. n8n-Flow-Stand nicht live nachgeprüft
+  (MCP-Server nicht erreichbar).

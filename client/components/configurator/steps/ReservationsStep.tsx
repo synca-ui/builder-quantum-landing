@@ -38,9 +38,14 @@ export function ReservationsStep({
   const reservationEmail = rawReservationEmail || user?.primaryEmailAddress?.emailAddress || "";
 
   // Reservierungsbutton-Einstellungen aus Store laden
-  const reservationButtonColor = useConfiguratorStore(
-    (s) => s.features.reservationButtonColor,
-  );
+  const primaryColor = useConfiguratorStore((s) => s.design.primaryColor);
+  // Ungesetzt heisst "folgt der Markenfarbe" (wie Vorschau/Live-Renderer) -
+  // hier trotzdem mit Wert anzeigen, sonst zeigt der native Color-Picker
+  // Schwarz statt der tatsächlich wirksamen Farbe. Erst ein bewusster Klick
+  // schreibt einen eigenen Wert in den Store.
+  const reservationButtonColor =
+    useConfiguratorStore((s) => s.features.reservationButtonColor) ||
+    primaryColor;
   const reservationButtonTextColor = useConfiguratorStore(
     (s) => s.features.reservationButtonTextColor,
   );

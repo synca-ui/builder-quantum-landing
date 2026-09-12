@@ -594,7 +594,10 @@ export const DishList = memo(function DishList({
 
   const liste = (items: MenuItem[]) =>
     band ? (
-      <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-5 px-5 pb-1 snap-x">
+      // scroll-pl-5: Ohne Scroll-Padding zieht snap-start die erste Karte an
+      // die Kante des Scrollbereichs — der Seitenrand war weg, die Karte klebte
+      // am Rand (scrollLeft 20 direkt nach dem Laden).
+      <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-5 px-5 pb-1 snap-x scroll-pl-5">
         {karten(items, "w-[220px] shrink-0 snap-start")}
       </div>
     ) : layout.raster === "gestapelt" ? (

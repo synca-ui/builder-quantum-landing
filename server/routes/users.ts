@@ -237,7 +237,7 @@ usersRouter.delete("/me", async (req, res) => {
 usersRouter.put("/profile", async (req, res) => {
   try {
     const userId = req.user!.id;
-    const clerkId = req.user!.sub || req.user!.id;
+    const clerkId = req.user!.clerkId;
     const { fullName } = req.body || {};
 
     // CRITICAL FIX: Update both NeonDB and Clerk simultaneously

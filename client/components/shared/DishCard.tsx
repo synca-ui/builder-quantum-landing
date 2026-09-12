@@ -1022,14 +1022,16 @@ export const DishCard = memo(function DishCard({
         {/* Center: Name + Description */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            {/* Name — mit Allergen-Kürzeln, wie in jeder anderen Form */}
+            {/* Name — die Kürzel stehen NEBEN der Überschrift, nicht darin:
+                der Name wird abgeschnitten (truncate), die Kürzel sollen
+                auch bei langen Namen sichtbar bleiben. */}
             <h3
               className="text-base font-bold leading-tight truncate"
               style={{ color: fontColor }}
             >
               {item.name}
-              {kuerzel}
             </h3>
+            {kuerzel && <span className="shrink-0">{kuerzel}</span>}
           </div>
 
           {/* Description */}

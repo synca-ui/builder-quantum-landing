@@ -46,6 +46,7 @@ import { DishModal } from "@/components/shared/DishModal";
 import { OpeningHours } from "@/components/shared/OpeningHours";
 import { CategoryFilter } from "@/components/shared/CategoryFilter";
 import ReservationFormModern from "@/components/dynamic/ReservationFormModern";
+import { ReservationClassicForm } from "@/components/shared/ReservationClassicForm";
 import { OffersSection } from "@/components/shared/OffersSection";
 import { OfferBanner } from "@/components/shared/OfferBanner";
 import { AboutSection } from "@/components/shared/AboutSection";
@@ -756,94 +757,19 @@ export function TemplatePreviewContent() {
       );
     }
 
+    // Klassische Seite — geteilt mit der Live-Seite (ReservationClassicForm).
     return (
-      <div className="space-y-6 animate-in fade-in duration-300">
-        <div className="text-center">
-          <div
-            className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: `${primaryColor}20` }}
-          >
-            <CalendarCheck
-              className="w-8 h-8"
-              style={{ color: primaryColor }}
-            />
-          </div>
-          <h2 className={styles.titleClass} style={styles.titleStyle}>Reservierung</h2>
-          <p className={`${styles.bodyClass} opacity-70`}>
-            Buchen Sie Ihren Tisch online
-          </p>
-        </div>
-
-        <div
-          className="space-y-4 p-4 border border-current/10 bg-white/5"
-          style={{ borderRadius: "var(--radius-card, 16px)" }}
-        >
-          {/* Form Fields (Preview Only) */}
-          {[
-            { label: "Datum", icon: Calendar, placeholder: "Datum wählen..." },
-            { label: "Uhrzeit", icon: Clock, placeholder: "Zeit wählen..." },
-            { label: "Anzahl Gäste", icon: Users, placeholder: "2 Personen" },
-          ].map(({ label, icon: Icon, placeholder }) => (
-            <div key={label}>
-              <label className="block text-xs font-bold mb-2 opacity-70">
-                {label}
-              </label>
-              <div
-                className="flex items-center gap-2 p-3 border border-current/10 bg-white/50"
-                style={{ borderRadius: "var(--radius-button, 12px)" }}
-              >
-                <Icon className="w-4 h-4 opacity-50" />
-                <span className="text-sm opacity-70">{placeholder}</span>
-              </div>
-            </div>
-          ))}
-
-          <div>
-            <label className="block text-xs font-bold mb-2 opacity-70">
-              Name
-            </label>
-            <div
-              className="p-3 border border-current/10 bg-white/50"
-              style={{ borderRadius: "var(--radius-button, 12px)" }}
-            >
-              <span className="text-sm opacity-50">Ihr Name...</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold mb-2 opacity-70">
-              Telefon / E-Mail
-            </label>
-            <div
-              className="p-3 border border-current/10 bg-white/50"
-              style={{ borderRadius: "var(--radius-button, 12px)" }}
-            >
-              <span className="text-sm opacity-50">
-                Kontakt für Bestätigung...
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {reservationsEnabled && (
-          <ReservationButton
-            color={reservationButtonColor}
-            textColor={reservationButtonTextColor}
-            shape={reservationButtonShape as "rounded" | "pill" | "square"}
-            className="w-full shadow-lg"
-          >
-            Reservierung anfragen
-          </ReservationButton>
-        )}
-
-        <div className="text-center opacity-60 text-xs space-y-1">
-          <p>Sie erhalten eine Bestätigung per E-Mail</p>
-          <p className="flex items-center justify-center gap-1">
-            <Phone className="w-3 h-3" />
-            Oder rufen Sie uns an
-          </p>
-        </div>
-      </div>
+      <ReservationClassicForm
+        previewSlots={timeSlots}
+        previewOpeningHours={openingHours as any}
+        maxGuests={maxGuests}
+        primaryColor={primaryColor}
+        fontColor={fontColor}
+        buttonColor={reservationButtonColor || primaryColor}
+        buttonTextColor={reservationButtonTextColor || "#FFFFFF"}
+        buttonShape={reservationButtonShape as "rounded" | "pill" | "square"}
+        titleStyle={styles.titleStyle}
+      />
     );
   };
 

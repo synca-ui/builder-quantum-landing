@@ -39,7 +39,11 @@ const { prismaMock, verifyTokenMock, getUserMock, db } = vi.hoisted(() => {
 
   /** Prismas `where` nachgebildet: alle angegebenen Felder müssen passen. */
   const matches = (row: Record<string, any>, where: Record<string, any> = {}) =>
-    Object.entries(where).every(([key, value]) => row[key] === value);
+    Object.entries(where).every(([key, value]) =>
+      value && typeof value === "object" && Array.isArray(value.in)
+        ? value.in.includes(row[key])
+        : row[key] === value,
+    );
 
   const prismaMock = {
     user: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
@@ -514,6 +518,21 @@ describe("Altrouten: abgesichert, aber der Score bleibt öffentlich", () => {
     expect(body).not.toContain("info@kleiner-kiepenkerl.de");
     expect(body).not.toContain("0251 43416");
     expect(body).not.toContain("Kiepenkerl");
+  });
+
+  it("GET /api/scraper-job/score findet auch die Zeile mit Schrägstrich am Ende", async () => {
+    // Die Landingpage pollt mit dem eingetippten Link, n8n hatte bis 11.09.2026
+    // aber "https://…de/" upgesertet. Der exakte Vergleich fand die Zeile nie,
+    // das Polling lief zwei Minuten ins Leere.
+    seedJob({ websiteUrl: `${SITE}/`, userId: null });
+
+    const res = await request(app).get(
+      `/api/scraper-job/score?websiteUrl=${encodeURIComponent(SITE)}`,
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("completed");
+    expect(res.body.maitrScore).toBe(72);
   });
 
   it("GET /api/scraper-jobs/:id mit fremdem Token: 404, nicht die Daten", async () => {
