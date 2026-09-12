@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, Clock, Users, MessageSquare, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, Clock, User, Users, MessageSquare, CheckCircle, XCircle } from "lucide-react";
 
 export default function ManageReservation() {
   const { id } = useParams();

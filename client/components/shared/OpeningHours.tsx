@@ -90,19 +90,61 @@ function formatDayHours(
   return `${day.open} - ${day.close}`;
 }
 
+/** "18:30" → 1110 Minuten seit Mitternacht. Unlesbares → null. */
+function minuten(zeit: string | undefined): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec((zeit ?? "").trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 24 || min > 59) return null;
+  return h * 60 + min;
+}
+
 /**
- * Prüft ob aktuell geöffnet ist
+ * Prüft, ob zu `jetzt` (Minuten seit Mitternacht) geöffnet ist - für einen
+ * einzelnen Tageseintrag. `versatz` verschiebt das Fenster um einen Tag nach
+ * hinten (für den Blick auf gestern, siehe unten).
+ */
+function istImFenster(
+  tag: { open: string; close: string; closed: boolean } | undefined,
+  jetzt: number,
+  versatz = 0,
+): boolean {
+  if (!tag || tag.closed) return false;
+  const auf = minuten(tag.open);
+  let zu = minuten(tag.close);
+  if (auf === null || zu === null) return false;
+  // Sperrstunde nach Mitternacht: "18:00-02:00" endet am Folgetag. Auch
+  // "18:00-00:00" gehört hierher - Mitternacht ist das Ende, nicht der Anfang.
+  if (zu <= auf) zu += 24 * 60;
+  const zeit = jetzt + versatz;
+  return zeit >= auf && zeit <= zu;
+}
+
+/**
+ * Prüft, ob aktuell geöffnet ist.
+ *
+ * ANLASS: Hier stand ein Vergleich auf ZEICHENKETTEN
+ * (`currentTime >= open && currentTime <= close`). Für eine Bar mit
+ * 18:00-02:00 war das um 22:00 Uhr falsch ("22:00" <= "02:00" ist falsch) -
+ * die Seite meldete "Geschlossen", während der Laden voll war. Umgekehrt
+ * blieb um 00:30 das noch laufende Fenster des Vortags unsichtbar, weil nur
+ * der heutige Eintrag geprüft wurde.
+ *
+ * Deshalb: in Minuten rechnen, ein Fenster über Mitternacht als solches
+ * behandeln und zusätzlich den Vortag befragen.
  */
 function isCurrentlyOpen(hours: OpeningHoursType): boolean {
-  const today = getCurrentDay();
-  const todayHours = hours[today];
-
-  if (!todayHours || todayHours.closed) return false;
-
   const now = new Date();
-  const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+  const jetzt = now.getHours() * 60 + now.getMinutes();
 
-  return currentTime >= todayHours.open && currentTime <= todayHours.close;
+  if (istImFenster(hours[getCurrentDay()], jetzt)) return true;
+
+  // Gestern 18:00-02:00 und jetzt ist 00:30: Das Fenster läuft noch. Aus Sicht
+  // von gestern liegt "jetzt" 24 Stunden später.
+  const gestern =
+    DAY_ORDER[(DAY_ORDER.indexOf(getCurrentDay()) + DAY_ORDER.length - 1) % DAY_ORDER.length];
+  return istImFenster(hours[gestern], jetzt, 24 * 60);
 }
 
 // ============================================

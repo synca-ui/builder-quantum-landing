@@ -216,23 +216,31 @@ Feld und „Nicht angemeldet. Bitte neu anmelden.", Name bleibt stehen.
 - **C5.1** Audit von Struktur **und** Sicherheit. Keine Überschneidungen
   zwischen Kunden — jede Zeile gehört genau einem Betrieb
 
-### C6 — Kanalverbindung trennen. **Blockiert den Google-Antrag.**
-Es gibt **keinen** Endpunkt zum Trennen einer Verbindung. In
-`server/maitr/routes.ts` steht dazu nur ein Kommentar. Wer im Client
-„Verbindung trennen" drückt, lässt die Token serverseitig aktiv.
+### C6 — Kanalverbindung trennen. **erledigt 11.9.** — entblockt den Google-Antrag
+Es gab **keinen** Endpunkt zum Trennen einer Verbindung; „Verbindung trennen"
+im Client ließ die Token serverseitig aktiv. **Google fragt im OAuth-Antrag
+ausdrücklich, wie Nutzer den Zugriff widerrufen** — die Frage ist jetzt
+wahrheitsgemäß zu beantworten: *In der App unter Kanäle → „Verbindung trennen";
+Maitr widerruft die Freigabe bei Google und löscht die gespeicherten Token.*
 
-Das ist nicht bloß unschön: **Google fragt im OAuth-Antrag ausdrücklich, wie
-Nutzer den Zugriff widerrufen.** Diese Frage ist derzeit nicht wahrheitsgemäß
-zu beantworten — der Endpunkt gehört gebaut, *bevor* der Antrag rausgeht.
-
-- **C6.1** `DELETE /integrations/:provider` — Token löschen, Status auf
-  `REVOKED`, hinter `ownerGuard`
-- **C6.2** Beim Anbieter mit-widerrufen, nicht nur lokal vergessen
-  (Google `oauth2/revoke`, Meta `DELETE /{user-id}/permissions`)
-- **C6.3** Client verdrahten — der Knopf existiert, sein Gegenstück nicht
-- **C6.4** `[?]` Was passiert mit bereits geholten Bewertungen und
-  Reichweitendaten? Löschen oder behalten ist eine Entscheidung, keine
-  Programmierfrage
+- **C6.1** ~~`DELETE /integrations/:provider`~~ gebaut, hinter `venueGuard` +
+  `ownerGuard`. **Abweichung von der Vorgabe:** Die Zeile wird **gelöscht**,
+  nicht auf `REVOKED` gesetzt — `encAccessToken` ist NOT NULL, eine
+  REVOKED-Zeile hieße „Token bleibt gespeichert" oder ein Platzhalter-Chiffrat.
+  Wiederverbinden legt per upsert neu an
+- **C6.2** ~~Beim Anbieter mit-widerrufen~~ `revokeAccess` je Connector in
+  `packages/core/src/integrations/` (Google `POST oauth2/revoke` mit Refresh-Token
+  im Rumpf, Meta `DELETE /me/permissions` mit Bearer-Header). Widerruf läuft
+  **vor** dem Löschen; gelöscht wird in jedem Fall, die Antwort trägt
+  `providerRevoked`, damit die App bei `false` zum Nachprüfen beim Anbieter rät
+- **C6.3** ~~Client verdrahten~~ `api.integrations.disconnect()` in
+  `packages/core/src/api`, `ChannelDetailScreen` ruft ihn bei echtem Betrieb;
+  bei einem Fehlschlag (außer 404) bleibt die Verbindung in der Ansicht stehen
+- **C6.4** **Entschieden: behalten.** Bewertungen und Reichweitendaten gehören
+  zum Betrieb, nicht zur Verbindung; sie fallen mit dem Betrieb (Cascade).
+  Steht so in `docs/legal/PRIVACY.md` 3.7/3.8
+- Belegt in `server/__tests__/maitrIntegrationTrennen.spec.ts` (10 Fälle:
+  Endpunkt, Token-Ort, Reihenfolge, Ablehnung, Netzfehler, Rolle, 404, 400)
 
 ### C7 — Das 30-Tage-Löschversprechen einlösen
 `client/pages/AGB.tsx` verspricht **öffentlich**, alle Nutzerdaten würden
@@ -240,8 +248,10 @@ zu beantworten — der Endpunkt gehört gebaut, *bevor* der Antrag rausgeht.
 nicht — kein Treffer auf `purge`, `retention` oder `Aufbewahrung` im gesamten
 Serverbestand.
 
-- **C7.1** Entweder den Job bauen oder das Versprechen in der AGB ändern.
-  Beides ist vertretbar, der jetzige Zustand nicht
+- **C7.1** ~~Entweder den Job bauen oder das Versprechen in der AGB ändern~~
+  **erledigt 11.9., per Text:** § 7 verspricht jetzt, was der Code tut —
+  Löschung über die App (`DELETE /users/me`) oder auf Anfrage, keine
+  automatische Frist. Ein Purge-Job bleibt eine spätere Option (C7.2)
 - **C7.2** Falls Job: `server/maitr/scheduler.ts` ist der Ort. Achtung — er
   läuft nur, wenn genau **eine** Instanz aktiv ist
 
@@ -272,8 +282,17 @@ weil der Text behaupten sollte, was der Code nicht tut.*
 
 ## E · Aus früherer Arbeit offen, nicht aus diesem Feedback
 
-- **E1** Rechtstexte (Datenschutz + AGB) — **blockiert den Google-Antrag mit
-  60 Tagen Vorlauf.** Lauf ist am Sitzungslimit gescheitert
+- **E1** ~~Rechtstexte (Datenschutz + AGB)~~ **erledigt 11.9. für den
+  Google-Antrag:** `client/pages/Datenschutz.tsx` hat einen neuen Abschnitt 6
+  „Maitr-App und verbundene Kanäle" (Google Business Profile mit Scope,
+  Datenarten, Zweck, Speicherung, Weitergabe, Limited-Use-Hinweis, Widerruf;
+  Meta; Push; Gästedaten als Auftragsverarbeitung; Kontolöschung), Abschnitt 8
+  nennt Supabase, n8n und die KI-Dienste (Gemini, Anthropic). Drei falsche
+  Aussagen korrigiert (AVV-Pauschale, IP-Anonymisierung nach 7 Tagen, Google
+  Fonts nur für maitr.de zutreffend). `docs/legal/PRIVACY.md` und `TERMS.md`
+  bleiben als Entwürfe für die anwaltliche Prüfung liegen — die dort markierten
+  Entscheidungen (Speicherfristen, AVV-Muster, Gesundheitsdaten C8) sind
+  **nicht** durch die Web-Seite erledigt
 - **E2** Meta-Bewertungen: `/{page-id}/ratings` gibt es seit Graph v22.0 nicht
   mehr. **Produktentscheidung offen.** Solange sie offen ist, kann v21.0 nicht
   angehoben werden — die läuft am 21.01.2027 ab

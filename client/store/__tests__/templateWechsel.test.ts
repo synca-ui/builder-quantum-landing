@@ -43,6 +43,26 @@ describe("updateTemplate", () => {
     expect(d.backgroundColor).toBe(cozy.backgroundColor); // folgt dem Template
   });
 
+  it("Papier-Templates machen den Reservieren-Knopf eckig — eigene Form bleibt", () => {
+    useConfiguratorStore.getState().updateTemplate("kiosk");
+    expect(useConfiguratorStore.getState().features.reservationButtonShape).toBe(
+      "square",
+    );
+    // Zurück zu einem Bestands-Template: wieder abgerundet
+    useConfiguratorStore.getState().updateTemplate("modern");
+    expect(useConfiguratorStore.getState().features.reservationButtonShape).toBe(
+      "rounded",
+    );
+    // Eigene Wahl überlebt den Wechsel
+    useConfiguratorStore
+      .getState()
+      .updateFeatureFlags({ reservationButtonShape: "pill" } as any);
+    useConfiguratorStore.getState().updateTemplate("presse");
+    expect(useConfiguratorStore.getState().features.reservationButtonShape).toBe(
+      "pill",
+    );
+  });
+
   it("'modern' entspricht exakt dem Ausgangszustand des Konfigurators", () => {
     const before = { ...useConfiguratorStore.getState().design };
     useConfiguratorStore.getState().updateTemplate("modern");

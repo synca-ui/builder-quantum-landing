@@ -16,8 +16,8 @@ export interface SchemaOrganization {
     "@type": "PostalAddress";
     streetAddress: string;
     addressLocality: string;
-    addressRegion: string;
-    postalCode: string;
+    addressRegion?: string;
+    postalCode?: string;
     addressCountry: string;
   };
   geo?: {
@@ -102,7 +102,7 @@ export interface RestaurantSchemaConfig {
   website?: string;
   logo?: string;
   primaryColor?: string;
-  openingHours?: Record<string, { open: string; close: string }>;
+  openingHours?: Record<string, { open: string; close: string; closed?: boolean }>;
   menuItems?: Array<{
     id?: string;
     name: string;

@@ -129,11 +129,32 @@ describe("handleForwardN8n", () => {
     expect(holen).toHaveBeenCalledTimes(1);
     const gesendet = JSON.parse(String(holen.mock.calls[0][1]?.body));
     expect(gesendet).toEqual({
-      link: "https://example.com/",
+      link: "https://example.com",
       timestamp: "2026-08-14T10:00:00.000Z",
     });
     expect(gesendet).not.toHaveProperty("userId");
     expect(gesendet).not.toHaveProperty("deepScrape");
+  });
+
+  it("schickt den Link in derselben Schreibweise wie POST /api/scraper", async () => {
+    // n8n upsertet exakt auf diesen String, die Landingpage pollt danach mit dem
+    // eingetippten Link. Mit `URL.toString()` kam "https://example.com/" an –
+    // das Polling fand die Zeile nie und lief in den Timeout.
+    // Je Aufruf eine frische Antwort – ein Response-Body laesst sich nur einmal lesen.
+    const holen = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => new global.Response("{}", { status: 200 }));
+
+    for (const [link, erwartet] of [
+      ["https://example.com", "https://example.com"],
+      ["https://EXAMPLE.com/#oben", "https://example.com"],
+      ["https://example.com/speisekarte/", "https://example.com/speisekarte"],
+    ]) {
+      holen.mockClear();
+      await handleForwardN8n(anfrage({ link }), antwortDoppel());
+      const gesendet = JSON.parse(String(holen.mock.calls[0][1]?.body));
+      expect(gesendet.link, link).toBe(erwartet);
+    }
   });
 
   it("gibt die Antwort von n8n im Fehlerfall NICHT nach draussen", async () => {

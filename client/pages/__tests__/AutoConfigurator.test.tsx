@@ -9,6 +9,8 @@ import {
 import { MemoryRouter } from "react-router-dom";
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import AutoConfigurator from "../AutoConfigurator";
+import { useConfiguratorStore } from "@/store/configuratorStore";
+import { schrittIndex } from "@/lib/configuratorSteps";
 
 /**
  * Wartezeit für waitFor heraufgesetzt.
@@ -611,5 +613,161 @@ describe("AutoConfigurator: URL rein, Web-App raus", () => {
     });
     expect(screen.getByRole("button", { name: /Jetzt veröffentlichen/i })).toBeDisabled();
     expect(publishCalls()).toHaveLength(0);
+  });
+  test("löst eine relative Menü-Adresse gegen die Website auf", async () => {
+    // haus-toeller.de: Der Flow lieferte menuUrl "/speisekarte/". Roh an die
+    // Erkennung geschickt, scheiterte sie – und die Karte fehlte.
+    stubFetch({ menuUrl: "/speisekarte/" });
+    renderPage();
+    await runAnalysis();
+
+    await waitFor(() => expect(menuCalls()).toHaveLength(1));
+    expect(menuCalls()[0].body.url).toBe("https://kleiner-kiepenkerl.de/speisekarte/");
+  });
+
+  test("füllt eine dünne Galerie mit den Bildern aus den strukturierten Daten auf", async () => {
+    stubFetch({
+      site: {
+        ...SITE_DETAILS,
+        images: [
+          "https://kleiner-kiepenkerl.de/bild-1.jpg",
+          "https://kleiner-kiepenkerl.de/hero.webp",
+        ],
+      },
+      publish: [{ status: 200, body: { success: true, publishedUrl: "https://x.maitr.de" } }],
+    });
+    renderPage();
+    await runAnalysis();
+    await waitFor(() =>
+      expect(calls.some((c) => c.url === "/api/site/details")).toBe(true),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Jetzt veröffentlichen/i }));
+    await waitFor(() => expect(publishCalls()).toHaveLength(1));
+
+    const urls = publishCalls()[0].body.config.content.gallery.map((g: any) => g.url);
+    // Das Scrape-Bild bleibt vorn, das neue kommt dazu, das doppelte nicht.
+    expect(urls).toEqual([
+      "https://kleiner-kiepenkerl.de/bild-1.jpg",
+      "https://kleiner-kiepenkerl.de/hero.webp",
+    ]);
+  });
+  // ── Nachbearbeitung: alles anpassen, nachdem die Seite online ist ─────────
+  //
+  // ANLASS: Nach dem Veröffentlichen gab es genau einen Textlink ("Inhalte noch
+  // anpassen"), der im ersten Schritt landete. Wer die Vorlage wechseln wollte -
+  // der häufigste Wunsch - musste sich rückwärts durch den Konfigurator klicken.
+
+  test("bietet nach dem Veröffentlichen alle Bereiche zum Anpassen an", async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: { success: true, publishedUrl: "https://kleiner-kiepenkerl.maitr.de" },
+      },
+    ]);
+    renderPage();
+    await runAnalysis();
+    fireEvent.click(screen.getByRole("button", { name: /Jetzt veröffentlichen/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: /Alles anpassen/i })).toBeInTheDocument(),
+    );
+    // Die Vorlage ausdrücklich - sie ist der Grund, aus dem die meisten
+    // zurückkommen, und lag als Schritt 1 am weitesten weg.
+    expect(screen.getByRole("button", { name: /Vorlage/i })).toBeInTheDocument();
+    for (const bereich of [
+      /Farben & Schrift/i,
+      /Speisekarte/i,
+      /Bilder & Logo/i,
+      /Öffnungszeiten/i,
+      /Kontakt & soziale Netze/i,
+      /Reservierung/i,
+      /Suchmaschinen/i,
+    ]) {
+      expect(screen.getByRole("button", { name: bereich })).toBeInTheDocument();
+    }
+    // Ohne diesen Hinweis ändert jemand die Vorlage und wundert sich, dass
+    // seine Adresse weiter die alte Seite zeigt.
+    expect(screen.getByText(/erst live, wenn du/i)).toBeInTheDocument();
+  });
+
+  test("springt in genau den Schritt, den der Bereich nennt", async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: { success: true, publishedUrl: "https://kleiner-kiepenkerl.maitr.de" },
+      },
+    ]);
+    renderPage();
+    await runAnalysis();
+    fireEvent.click(screen.getByRole("button", { name: /Jetzt veröffentlichen/i }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Vorlage/i })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Vorlage/i }));
+    // Index aus der gemeinsamen Liste, nicht abgeschrieben: Wer einen Schritt
+    // einfügt, verschiebt alle folgenden.
+    expect(useConfiguratorStore.getState().ui.currentStep).toBe(
+      schrittIndex("template"),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Speisekarte/i }));
+    expect(useConfiguratorStore.getState().ui.currentStep).toBe(
+      schrittIndex("menu-products"),
+    );
+  });
+
+  test("der Store trägt danach die veröffentlichte Seite, nicht den rohen Entwurf", async () => {
+    stubFetch([
+      {
+        status: 200,
+        body: { success: true, publishedUrl: "https://kleiner-kiepenkerl.maitr.de" },
+      },
+    ]);
+    renderPage();
+    await runAnalysis();
+    fireEvent.click(screen.getByRole("button", { name: /Jetzt veröffentlichen/i }));
+    await waitFor(() => expect(publishCalls()).toHaveLength(1));
+
+    const gesendet = publishCalls()[0].body.config;
+    const state = useConfiguratorStore.getState();
+    // Genau das, was an den Server ging - sonst überschreibt das nächste
+    // Veröffentlichen aus dem Konfigurator die Seite mit etwas anderem.
+    expect(state.design).toMatchObject(gesendet.design);
+    expect(state.business.domain?.selectedDomain).toBe("kleiner-kiepenkerl");
+    expect(state.publishing.status).toBe("published");
+    expect(state.publishing.publishedUrl).toBe(
+      "https://kleiner-kiepenkerl.maitr.de",
+    );
+    // Der Scrape lieferte nur den Montag; die übrigen Tage sind Ruhetage und
+    // keine erfundenen Öffnungszeiten.
+    const hours = state.content.openingHours as any;
+    expect(hours.monday).toEqual({ open: "11:00", close: "23:00", closed: false });
+    expect(hours.tuesday.closed).toBe(true);
+  });
+
+  test("begrüßt beim Wiederkommen mit der bestehenden Web-App", async () => {
+    // Kein Publish in diesem Test: Der Zustand kommt aus dem Speicher, so wie
+    // beim späteren Öffnen der Seite. Vorher sah man nur das leere Formular -
+    // als gäbe es die eigene Web-App nicht.
+    useConfiguratorStore.getState().resetConfig();
+    useConfiguratorStore.getState().updatePublishingInfo({
+      status: "published",
+      publishedUrl: "https://kleiner-kiepenkerl.maitr.de",
+    });
+    stubFetch({});
+    renderPage();
+
+    expect(
+      screen.getByRole("heading", { name: /Deine Web-App ist live/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/kleiner-kiepenkerl\.maitr\.de/i),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Farben & Schrift/i }));
+    expect(useConfiguratorStore.getState().ui.currentStep).toBe(
+      schrittIndex("design-customization"),
+    );
   });
 });

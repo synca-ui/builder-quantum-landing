@@ -10,6 +10,7 @@ import { Eyebrow } from "../../components/ui/Eyebrow";
 import { PhotoTile } from "../../components/ui/Media";
 import { PillButton } from "../../components/ui/PillButton";
 import { Emphasis, Text } from "../../components/ui/Text";
+import { useDailyBriefing } from "../start/useDailyBriefing";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
@@ -26,12 +27,33 @@ export function PublicProfileScreen() {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const { venueProfile } = useStore();
+  const { venueProfile, venueId } = useStore();
+  const { briefing, source } = useDailyBriefing(venueId);
+
+  /**
+   * Die Bewertung - echt oder gar nicht.
+   *
+   * Hier stand `"★ 4,8 · 128"` fest im Code, mitten zwischen Feldern, die aus dem
+   * Betriebsprofil kommen. Auf einem Bildschirm, der zeigt, "wie Gäste dich sehen",
+   * ist eine erfundene Bewertung die unangenehmste Sorte Attrappe: Sie sieht aus wie
+   * eine Auskunft über den eigenen Ruf.
+   *
+   * Der Wert kommt jetzt aus dem Tagesbriefing (`stats.rating`, serverseitig aus
+   * MaitrReview gemittelt). `source` entscheidet, ob er echt ist: Fällt das Briefing
+   * auf seine Fixture zurück (Demomodus, Showcase, kein Netz), wird die Plakette
+   * weggelassen statt mit Beispielzahlen gefüllt.
+   *
+   * Die Anzahl der Bewertungen fehlt bewusst: Der Server liefert im Briefing nur den
+   * Durchschnitt. Lieber "★ 4,8" ohne Anzahl als "· 128" zu erfinden.
+   */
+  const bewertung =
+    source === "api" && typeof briefing.stats.rating === "number" && briefing.stats.rating > 0
+      ? `★ ${briefing.stats.rating.toFixed(1).replace(".", ",")}`
+      : null;
 
   const profile = {
     name: venueProfile.name,
     tagline: `${venueProfile.tagline} · ${venueProfile.city.replace(/^\d+\s/, "")}`,
-    rating: "★ 4,8 · 128",
     tags: venueProfile.tags.slice(0, 3),
     openUntil: "bis 22:00",
   };
@@ -75,20 +97,22 @@ export function PublicProfileScreen() {
         </Pressable>
       ) : null}
 
-      <View style={{ position: "absolute", top: insets.top + 14, right: 24 }}>
-        <View
-          style={{
-            backgroundColor: "rgba(251,253,252,0.85)",
-            borderRadius: theme.radius.pill,
-            paddingVertical: 8,
-            paddingHorizontal: 14,
-          }}
-        >
-          <Text variant="numeric" style={{ fontSize: 12 }}>
-            {profile.rating}
-          </Text>
+      {bewertung ? (
+        <View style={{ position: "absolute", top: insets.top + 14, right: 24 }}>
+          <View
+            style={{
+              backgroundColor: "rgba(251,253,252,0.85)",
+              borderRadius: theme.radius.pill,
+              paddingVertical: 8,
+              paddingHorizontal: 14,
+            }}
+          >
+            <Text variant="numeric" style={{ fontSize: 12 }}>
+              {bewertung}
+            </Text>
+          </View>
         </View>
-      </View>
+      ) : null}
 
       <View
         style={{
