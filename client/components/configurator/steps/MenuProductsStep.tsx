@@ -124,8 +124,8 @@ function KennzeichnungFelder({
           ))}
         </div>
         <p className="text-xs text-gray-500 mt-1.5">
-          „glutenfrei“ ist eine geregelte Angabe (höchstens 20 mg/kg Gluten,
-          VO (EU) 828/2014) — nur setzen, wenn die Küche das sicherstellt.
+          „glutenfrei“ ist eine geregelte Angabe (höchstens 20 mg/kg Gluten, VO
+          (EU) 828/2014) — nur setzen, wenn die Küche das sicherstellt.
         </p>
       </div>
       <div>
@@ -201,12 +201,11 @@ function LegendeKarte() {
         </h3>
       </div>
       <p className="text-sm text-gray-600 mb-4">
-        Die 14 Hauptallergene müssen bei jedem Gericht erkennbar sein
-        (LMIV, LMIDV § 2). Kürzel sind erlaubt, wenn ihre Bedeutung in
-        derselben Karte gut lesbar steht — diese Legende erscheint unter
-        deiner Speisekarte. Allergene und Zusatzstoffe sollen unterscheidbar
-        bleiben, üblich sind Buchstaben für Allergene und Ziffern für
-        Zusatzstoffe.
+        Die 14 Hauptallergene müssen bei jedem Gericht erkennbar sein (LMIV,
+        LMIDV § 2). Kürzel sind erlaubt, wenn ihre Bedeutung in derselben Karte
+        gut lesbar steht — diese Legende erscheint unter deiner Speisekarte.
+        Allergene und Zusatzstoffe sollen unterscheidbar bleiben, üblich sind
+        Buchstaben für Allergene und Ziffern für Zusatzstoffe.
       </p>
 
       {fehlend.length > 0 && (
@@ -414,8 +413,13 @@ export function MenuProductsStep({
     ? menuItems.filter((item) => (item as any).category === activeCategory)
     : menuItems;
 
+  // Preis muss eine Zahl ≥ 0 sein: Das Zahlenfeld lässt „-5" zu, und ein
+  // negativer Preis stand vorher anstandslos auf der Karte (Runde 8, M4).
+  const preisGueltig = (preis: string) =>
+    preis.trim() !== "" && Number.isFinite(Number(preis)) && Number(preis) >= 0;
+
   const addMenuItem = () => {
-    if (newItem.name && newItem.price) {
+    if (newItem.name && preisGueltig(newItem.price)) {
       const itemToAdd: MenuItem = {
         id: Date.now().toString(),
         name: newItem.name,
@@ -475,7 +479,10 @@ export function MenuProductsStep({
    * Tagessuppe. Ein Index in eine gefilterte Liste ist als Schluessel
    * grundsaetzlich unbrauchbar; die id ist eindeutig.
    */
-  const handleUploadImagesForItem = (item: MenuItem, files: FileList | null) => {
+  const handleUploadImagesForItem = (
+    item: MenuItem,
+    files: FileList | null,
+  ) => {
     if (!files || !item) return;
 
     const images = Array.from(files).map((file) => {
@@ -637,6 +644,8 @@ export function MenuProductsStep({
               descIdx !== -1 ? cells[descIdx] || "" : "",
             );
             const priceRaw = num(cells[priceIdx] || "");
+            // Negative Preise aus der CSV nicht übernehmen (Runde 8, M4).
+            if (priceRaw && Number(priceRaw) < 0) return null;
 
             const price = priceRaw
               ? isNaN(Number(priceRaw))
@@ -766,7 +775,9 @@ export function MenuProductsStep({
           // beim Mittagstisch nach Wochentagen etwa ganze Blöcke.
           ...(gericht.price ? { price: gericht.price } : {}),
           ...(gericht.category ? { category: gericht.category } : {}),
-          ...(gericht.allergens?.length ? { allergens: gericht.allergens } : {}),
+          ...(gericht.allergens?.length
+            ? { allergens: gericht.allergens }
+            : {}),
           ...(gericht.labels?.length ? { labels: gericht.labels } : {}),
           ...(gericht.extras?.length ? { extras: gericht.extras } : {}),
         } as MenuItem);
@@ -795,7 +806,8 @@ export function MenuProductsStep({
       for (const g of neue) {
         const rubrik = (g.category || "").trim();
         if (!rubrik) continue;
-        if (categories.includes(rubrik) || neueRubriken.includes(rubrik)) continue;
+        if (categories.includes(rubrik) || neueRubriken.includes(rubrik))
+          continue;
         neueRubriken.push(rubrik);
       }
       if (neueRubriken.length) {
@@ -816,7 +828,7 @@ export function MenuProductsStep({
           ergebnis.items.length > 0
             ? "Diese Gerichte stehen schon in der Liste"
             : ergebnis.diagnostics[ergebnis.diagnostics.length - 1] ||
-              "Auf dieser Datei war keine Speisekarte zu erkennen",
+                "Auf dieser Datei war keine Speisekarte zu erkennen",
           { id: meldung, duration: 8000 },
         );
       }
@@ -1103,6 +1115,7 @@ export function MenuProductsStep({
               <Input
                 type="number"
                 step="0.01"
+                min="0"
                 placeholder="9.99"
                 value={newItem.price}
                 onChange={(e) =>
@@ -1112,7 +1125,7 @@ export function MenuProductsStep({
               />
               <Button
                 onClick={addMenuItem}
-                disabled={!newItem.name || !newItem.price}
+                disabled={!newItem.name || !preisGueltig(newItem.price)}
                 className="ml-2 bg-teal-500 hover:bg-teal-600"
               >
                 <Plus className="w-4 h-4" />

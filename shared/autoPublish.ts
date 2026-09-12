@@ -67,7 +67,13 @@ export interface PublishConfig {
 /** Relative Leuchtdichte nach WCAG. 0 = schwarz, 1 = weiß. */
 export function relativeLuminance(hex: string): number {
   const raw = hex.replace("#", "");
-  const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
+  const full =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : raw;
   const channel = (i: number) => {
     const v = parseInt(full.slice(i * 2, i * 2 + 2), 16) / 255;
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
@@ -95,7 +101,13 @@ const MIN_CONTRAST = 4.5;
 
 function hexZuRgb(hex: string): [number, number, number] | null {
   const raw = hex.replace("#", "").trim();
-  const full = raw.length === 3 ? raw.split("").map((c) => c + c).join("") : raw;
+  const full =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : raw;
   if (!/^[0-9a-f]{6}$/i.test(full)) return null;
   return [
     parseInt(full.slice(0, 2), 16),
@@ -106,14 +118,23 @@ function hexZuRgb(hex: string): [number, number, number] | null {
 
 function rgbZuHex(r: number, g: number, b: number): string {
   const teil = (v: number) =>
-    Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+    Math.max(0, Math.min(255, Math.round(v)))
+      .toString(16)
+      .padStart(2, "0");
   return `#${teil(r)}${teil(g)}${teil(b)}`;
 }
 
 /** RGB (0–255) nach HSL (h in Grad, s und l als 0–1). */
-export function rgbZuHsl(r: number, g: number, b: number): [number, number, number] {
-  const rn = r / 255, gn = g / 255, bn = b / 255;
-  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+export function rgbZuHsl(
+  r: number,
+  g: number,
+  b: number,
+): [number, number, number] {
+  const rn = r / 255,
+    gn = g / 255,
+    bn = b / 255;
+  const max = Math.max(rn, gn, bn),
+    min = Math.min(rn, gn, bn);
   const l = (max + min) / 2;
   if (max === min) return [0, 0, l];
   const d = max - min;
@@ -126,7 +147,11 @@ export function rgbZuHsl(r: number, g: number, b: number): [number, number, numb
 }
 
 /** HSL zurück nach RGB. */
-export function hslZuRgb(h: number, s: number, l: number): [number, number, number] {
+export function hslZuRgb(
+  h: number,
+  s: number,
+  l: number,
+): [number, number, number] {
   if (s === 0) return [l * 255, l * 255, l * 255];
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
   const p = 2 * l - q;
@@ -239,25 +264,42 @@ export function separateFromPrimary(
  * Preise in der Sekundärfarbe (statt des markenfremden Standard-Grüns), mit
  * demselben Lesbarkeits-Rückfall. Bereits gesetzte Werte bleiben unberührt.
  */
-export function deriveCohesiveColors(
-  design: Partial<DesignConfig>,
-): Partial<DesignConfig> {
-  const out = { ...design };
-  // A4.1: Der Hintergrund wird hier entschärft, BEVOR die übrigen Farben
-  // daraus abgeleitet werden. Sonst rechnet der Rest gegen einen Grund, der so
-  // nie ausgeliefert wird, und die Kontrastprüfungen unten stimmen nicht mehr.
-  const weich = softenBackground(out.backgroundColor);
-  if (weich) out.backgroundColor = weich;
+/**
+ * Der Hintergrund, wie er tatsächlich ausgeliefert wird: entschärft UND von
+ * der Primärfarbe abgesetzt.
+ *
+ * Die eine Stelle für beide Schritte — Vorschau (ErgebnisFarben) und Publish
+ * (deriveCohesiveColors) müssen denselben Ton zeigen. Vorher wandte die
+ * Vorschau nur softenBackground an; bei monochromen Quellseiten (Haus Töller:
+ * Primär- = Hintergrundfarbe = #0a1b2e) sah der Wirt in dem Moment, in dem er
+ * „so veröffentlichen" entschied, einen anderen Ton als den, der live ging
+ * (Prüfung Runde 8, M2).
+ */
+export function ausgelieferterHintergrund(
+  design: Pick<Partial<DesignConfig>, "backgroundColor" | "primaryColor">,
+): string | undefined {
+  // A4.1: erst entschärfen, dann absetzen — sonst rechnet das Absetzen gegen
+  // einen Grund, der so nie ausgeliefert wird.
+  const weich =
+    softenBackground(design.backgroundColor) ?? design.backgroundColor;
   // Zusammengefallene Palette: Liefert das Stylesheet nur EINE Farbe, setzt
   // der Scrape-Flow sie als Primär-, Sekundär- UND Hintergrundfarbe (gemessen
   // an haus-toeller.de: dreimal #0a1b2e). Die Knöpfe der Web-App tragen die
   // Primärfarbe auf dem Hintergrund – bei gleicher Farbe sind sie unsichtbar,
-  // und die Preise fielen auf den Lesbarkeits-Rückfall zurück. Hier wird der
-  // Hintergrund deshalb vom Primärton abgesetzt: derselbe Farbton, aber hell
-  // und weich, wie bei allen Vorlagen im Picker. Die Marke bleibt in Knöpfen
-  // und Kopfzeile erkennbar, die Fläche dahinter wird lesbar.
-  const abgesetzt = separateFromPrimary(out.backgroundColor, out.primaryColor);
-  if (abgesetzt) out.backgroundColor = abgesetzt;
+  // und die Preise fielen auf den Lesbarkeits-Rückfall zurück. Deshalb wird
+  // der Hintergrund vom Primärton abgesetzt: derselbe Farbton, aber hell und
+  // weich, wie bei allen Vorlagen im Picker.
+  return separateFromPrimary(weich, design.primaryColor) ?? weich;
+}
+
+export function deriveCohesiveColors(
+  design: Partial<DesignConfig>,
+): Partial<DesignConfig> {
+  const out = { ...design };
+  // Der Hintergrund wird hier festgelegt, BEVOR die übrigen Farben daraus
+  // abgeleitet werden — sonst stimmen die Kontrastprüfungen unten nicht.
+  const hintergrund = ausgelieferterHintergrund(out);
+  if (hintergrund) out.backgroundColor = hintergrund;
   const background = out.backgroundColor ?? "#FFFFFF";
 
   if (!out.fontColor) out.fontColor = readableTextOn(background);
@@ -290,12 +332,23 @@ export function deriveCohesiveColors(
  * nicht: Niemand wirbt auf der Startseite mit einer Cola.
  */
 const HIGHLIGHT_CATEGORIES = new Set([
-  "Hauptgerichte", "Fisch", "Vom Grill", "Schnitzel", "Vegetarisch",
-  "Pasta", "Pizza", "Burger", "Vorspeisen",
+  "Hauptgerichte",
+  "Fisch",
+  "Vom Grill",
+  "Schnitzel",
+  "Vegetarisch",
+  "Pasta",
+  "Pizza",
+  "Burger",
+  "Vorspeisen",
 ]);
 
 const DRINK_CATEGORIES = new Set([
-  "Getränke", "Weine", "Biere", "Cocktails", "Heißgetränke",
+  "Getränke",
+  "Weine",
+  "Biere",
+  "Cocktails",
+  "Heißgetränke",
 ]);
 
 /**

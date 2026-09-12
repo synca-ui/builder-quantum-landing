@@ -14,6 +14,9 @@ import { toast } from "sonner";
 import type { GalleryImage } from "@/types/domain";
 
 const UPLOAD_PARALLEL = 4;
+/** Was der Hinweistext (gallery.sizeLimit) verspricht — und jetzt auch gilt. */
+const MAX_BILDER = 20;
+const MAX_BYTES_PRO_BILD = 5 * 1024 * 1024;
 
 interface MediaGalleryStepProps {
   nextStep: () => void;
@@ -32,7 +35,27 @@ export function MediaGalleryStep({
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const newFiles = Array.from(files);
+    // Die Limits aus dem Hinweistext durchsetzen (Runde 8, M3): zu große
+    // Dateien überspringen, über 20 Bilder hinaus nichts mehr annehmen —
+    // und beides sagen, statt still zu verwerfen.
+    const alle = Array.from(files);
+    const zuGross = alle.filter((f) => f.size > MAX_BYTES_PRO_BILD);
+    if (zuGross.length) {
+      toast.error(
+        `${zuGross.length === 1 ? "Ein Bild ist" : `${zuGross.length} Bilder sind`} größer als 5 MB und wurde${zuGross.length === 1 ? "" : "n"} übersprungen: ${zuGross.map((f) => f.name).join(", ")}`,
+      );
+    }
+    let newFiles = alle.filter((f) => f.size <= MAX_BYTES_PRO_BILD);
+    const platz = Math.max(0, MAX_BILDER - gallery.length);
+    if (newFiles.length > platz) {
+      toast.error(
+        platz === 0
+          ? `Die Galerie ist voll — maximal ${MAX_BILDER} Bilder.`
+          : `Maximal ${MAX_BILDER} Bilder — nur die ersten ${platz} wurden übernommen.`,
+      );
+      newFiles = newFiles.slice(0, platz);
+    }
+    if (newFiles.length === 0) return;
     setSelectedFiles((prev) => [...prev, ...newFiles]);
 
     // Sofortige lokale Vorschau; die blob:-URL überlebt aber weder Reload

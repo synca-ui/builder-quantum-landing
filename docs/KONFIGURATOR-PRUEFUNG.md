@@ -475,7 +475,7 @@ geprüften Dateien.
 
 ## Kritisch
 
-**K1 · Galerie-Bulk-Upload kann den Store-Wächter auslösen und crashen.**
+**K1 · Galerie-Bulk-Upload kann den Store-Wächter auslösen und crashen — BEHOBEN (12.09.2026, `addGalleryImages` + Uploads mit max. 4 parallel, Test `galerieBatch.test.ts`).**
 `client/components/configurator/steps/MediaGalleryStep.tsx:31-61`
 (`handleFileUpload`) ruft pro ausgewählter Datei einzeln
 `actions.content.addGalleryImage(...)` auf. Ab ≥51 Bildern in einer
@@ -523,7 +523,7 @@ tatsächlich wirksamen Farbe zeigt. Regressionstest ergänzt in
 **1453 Tests grün** (87 Dateien, 2 neue), `tsc --noEmit` weiterhin 104
 vorbestehende Fehler (keiner neu).
 
-**H2 · Publish-Race: Bild-Upload kann noch laufen, wenn "Veröffentlichen" geklickt wird.**
+**H2 · Publish-Race: Bild-Upload kann noch laufen, wenn "Veröffentlichen" geklickt wird — BEHOBEN (12.09.2026): `mediaUpload.ts` zählt laufende Uploads; beide Publish-Pfade warten per `warteAufUploads()`, der Knopf im PublishStep ist währenddessen gesperrt und sagt, wie viele Bilder noch laufen.**
 Weder `PublishStep.tsx` noch `Configurator.tsx:handlePublish` (Z. 232-301)
 prüfen, ob ein Bild-Upload (`mediaUpload.ts`) noch aktiv ist, bevor
 `getFullConfiguration()` für den Publish gelesen wird. Klickt der Wirt
@@ -533,7 +533,7 @@ deckungsgleich mit der Altmemo "Publish verliert Bilder (blob-URLs)".
 
 ## Mittel
 
-**M1 · Custom-Domain-Schritt ist vollständig Mock.** `DomainHostingStep.tsx`:
+**M1 · Custom-Domain-Schritt ist vollständig Mock — BEHOBEN (12.09.2026): Domain-Suche mit hartcodierter Liste und die Karte „Automatische Domain-Verwaltung“ entfernt; es bleibt die Formatprüfung der eigenen Domain.** `DomainHostingStep.tsx`:
 „Domain prüfen" löst nur `alert(...)` ohne echte Prüfung aus (Z. 99-104),
 die Liste verfügbarer Domains ist hartcodiert (Z. 488-499), und die Karte
 „Automatische Domain-Verwaltung" (Vercel/Netlify/Cloudflare) behauptet eine
@@ -541,7 +541,7 @@ Funktion, die nicht existiert (Z. 543-583). Ein Wirt mit echter Domain
 bekommt fälschlich Erfolg suggeriert.
 
 **M2 · Farbvorschau im Auto-Konfigurator-Ergebnis kann vom tatsächlich
-veröffentlichten Ton abweichen.** `ErgebnisFarben.tsx:66-69` wendet auf den
+veröffentlichten Ton abweichen — BEHOBEN (12.09.2026): `ausgelieferterHintergrund()` in `shared/autoPublish.ts` ist die eine Quelle für Vorschau und Publish, Test `ausgelieferterHintergrund.spec.ts`.** `ErgebnisFarben.tsx:66-69` wendet auf den
 rohen Entwurf nur `softenBackground` an; der volle Publish-Pfad
 (`shared/autoPublish.ts:249-260`) hängt danach noch `separateFromPrimary`
 dahinter, falls Hintergrund/Primärfarbe zu ähnlich sind. Bei monochromen
@@ -552,23 +552,23 @@ veröffentlicht wird — genau in dem Moment, in dem der Nutzer "so
 veröffentlichen" oder "anpassen" entscheidet. Verschwindet, sobald der
 Nutzer eine Farbe anfasst.
 
-**M3 · Keine clientseitige Durchsetzung beworbener Upload-Limits.**
+**M3 · Keine clientseitige Durchsetzung beworbener Upload-Limits — BEHOBEN (12.09.2026): Galerie 20 Bilder / 5 MB, Logo 2 MB, jeweils mit Meldung statt stillem Verwerfen.**
 Galerie (max. 20 Bilder/5 MB laut UI-Text) und Logo (max. 2 MB laut UI-Text)
 prüfen weder Dateigröße noch Anzahl (`MediaGalleryStep.tsx:31-61`,
 `BusinessInfoStep.tsx:182-223`, `mediaUpload.ts`).
 
-**M4 · Kein Schutz vor negativem Preis.** `MenuProductsStep.tsx:1069-1078`:
+**M4 · Kein Schutz vor negativem Preis — BEHOBEN (12.09.2026): `min="0"`, Hinzufügen nur bei Zahl ≥ 0, CSV-Import überspringt negative Preise.** `MenuProductsStep.tsx:1069-1078`:
 Preisfeld ohne `min="0"`, Hinzufügen-Bedingung prüft nur auf nicht-leeren
 String — `-5` wird anstandslos als Gerichtpreis gespeichert und angezeigt.
 
-**M5 · Verfügbare-Zeitfenster-Konfiguration ignoriert echte Öffnungszeiten.**
+**M5 · Verfügbare-Zeitfenster-Konfiguration ignoriert echte Öffnungszeiten — BEHOBEN (12.09.2026): Fenster außerhalb aller Öffnungszeiten sind gestrichelt, tragen einen Tooltip und einen Hinweis unter dem Raster (`reservierungSlotHinweis.ts`, Test).**
 `ReservationsStep.tsx:60-63` zeigt ein hartcodiertes 10:00–23:00-Raster ohne
 Abgleich mit `content.openingHours`. Zur Laufzeit filtert
 `slotsFuerDatum` zwar korrekt gegen echte Öffnungszeiten, aber die
 Konfigurationsoberfläche gibt dazu keine Rückmeldung — ein aktivierter Slot
 nach Ladenschluss wirkt im Editor, als würde er greifen.
 
-**M6 · Testlücke Kennzeichnung:** `dishListLayout.test.tsx` prüft
+**M6 · Testlücke Kennzeichnung — BEHOBEN (12.09.2026, `test.each` über alle 16 Formen):** `dishListLayout.test.tsx` prüft
 Kürzel/Label/Legende-Slots nur für 5 von 16 Templates (presse, vitrine,
 imbiss, konditorei, minimalist) — Code-Review bestätigt korrekte
 Umsetzung in allen 16, aber ein künftiger Copy-Paste-Fehler in einer der 11
@@ -577,24 +577,24 @@ roesterei, markt, aperitivo, hofladen) würde nicht auffallen.
 
 ## Niedrig / kosmetisch
 
-- `useConfiguratorActions()` (`configuratorStore.ts:1373-1374`) abonniert
+- BEHOBEN 12.09.: `useConfiguratorActions()` (`configuratorStore.ts:1373-1374`) abonniert
   den GESAMTEN Store ohne Selector — jede Schritt-Komponente rendert bei
   jeder Store-Änderung neu, nicht nur bei Aktionsänderungen (Anti-Pattern,
   kein harter Bug).
-- Debug-`console.log` mit Nutzdaten in Produktion: `DebouncedInput.tsx:68-71,
+- BEHOBEN 12.09.: Debug-`console.log` mit Nutzdaten in Produktion: `DebouncedInput.tsx:68-71,
   96-99, 118-121` (Name/Ort/Slogan bei jedem Debounce-Commit) und
   `TemplatePreviewContent.tsx:533` (Kategorie-Filter der Vorschau).
-- `OpeningHoursStep.tsx`: Wochentag-Namen in der Einzeltage-Ansicht auf 3
+- BEHOBEN 12.09.: `OpeningHoursStep.tsx`: Wochentag-Namen in der Einzeltage-Ansicht auf 3
   Zeichen gekürzt (Z. 218), Wochenend-Block zeigt volle Namen (Z. 279) —
   uneinheitlich.
-- `ContactSocialStep.tsx`: Telefon/E-Mail-Felder mit `type="text"` statt
+- BEHOBEN 12.09.: `ContactSocialStep.tsx`: Telefon/E-Mail-Felder mit `type="text"` statt
   `type="tel"`/`type="email"`, kein `autoComplete` (im Gegensatz zu
   BusinessInfoStep).
 - Reload im Konfigurator springt weiterhin auf Schritt 1 zurück (Daten
   bleiben im Store erhalten, `ui`-Slice ist bewusst nicht persistiert).
 - `document.title` bleibt während des gesamten Konfigurators auf "Modus
   auswählen".
-- `PUT /apps/:id` (`webapps.ts:685-718`) ruft kein `invalidateSite` auf —
+- BEHOBEN 12.09.: `PUT /apps/:id` (`webapps.ts:685-718`) ruft kein `invalidateSite` auf —
   aktuell folgenlos, da kein UI-Pfad diesen Endpunkt nutzt (toter Code),
   aber eine Landmine, falls er reaktiviert wird.
 - Keine serverseitige Sperre gegen zwei fast gleichzeitige
@@ -606,7 +606,7 @@ roesterei, markt, aperitivo, hofladen) würde nicht auffallen.
   eingeloggte Nutzer bereits eine veröffentlichte Web-App hat (nur
   `localStorage`) — auf neuem Gerät/Browser verpasst man den Einstieg in
   die Nachbearbeitung.
-- Totes Emoji-Rendering in `client/components/sections/MenuSection.tsx` —
+- BEHOBEN 12.09. (gelöscht): Totes Emoji-Rendering in `client/components/sections/MenuSection.tsx` —
   Komponente wird nirgends importiert, kein aktiver Pfad, Aufräum-Kandidat.
 - `DishModal.tsx` zeigt bei fehlendem Bild keinen
   Anfangsbuchstaben-Platzhalter (nur `DishCard` tut das) — Abweichung ohne
@@ -633,6 +633,14 @@ aktiv genutzten Publish-Pfaden, Auto-Pfad schreibt `publishPlan.config` (nie
 nach LMIDV (DEHOGA-Schema, Merge-Legende, Warnung bei unerklärten Kürzeln),
 alle 16 Templates im Katalog mit Kontrast-/Font-/Google-Fonts-Wächtern,
 Kein-Emoji-Regel im aktiven Rendering-Pfad, Fotokarte-Fallback (vitrine).
+
+## Abarbeitung Runde 8 (12.09.2026)
+
+K1, H2, M1–M6 und sechs der Kleinbefunde sind behoben (Markierung „BEHOBEN
+12.09.“ am jeweiligen Fund). Bewusst offen geblieben: Reload springt auf
+Schritt 1 (Produktentscheidung), `document.title`, Scraper-Doppelanalyse,
+`AutoConfigurator`-Einstieg nur per localStorage, DishModal-Platzhalter
+(kosmetisch), „Galerie“ in der Navigation (P6), Stempelkarten-Label.
 
 ## Prüfstand Runde 8
 

@@ -213,9 +213,9 @@ export function OpeningHoursStep({
                 };
                 return (
                   <div key={day} className="flex items-center justify-between">
-                    <div className="w-24">
+                    <div className="w-28">
                       <span className="text-sm font-medium text-gray-700">
-                        {t(`hours.${day}`).slice(0, 3)}
+                        {t(`hours.${day}`)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">

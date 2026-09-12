@@ -20,8 +20,8 @@
  */
 import { useCallback } from "react";
 import {
+  ausgelieferterHintergrund,
   deriveCohesiveColors,
-  softenBackground,
 } from "@shared/autoPublish";
 import type { DesignConfig } from "@shared/suggestedConfig";
 
@@ -63,10 +63,17 @@ export function ErgebnisFarben({ design, onChange }: ErgebnisFarbenProps) {
       <p className="text-xs font-semibold text-gray-800 mb-2.5">Farben</p>
       <div className="space-y-2">
         {FELDER.map(({ key, label, hinweis }) => {
-          // Für den Hintergrund den Ton zeigen, der wirklich ausgeliefert wird.
+          // Für den Hintergrund den Ton zeigen, der wirklich ausgeliefert
+          // wird — derselbe Rechenweg wie beim Veröffentlichen, nicht nur
+          // die Entschärfung (Runde 8, M2).
           const roh = design[key] ?? "#ffffff";
           const gezeigt =
-            key === "backgroundColor" ? (softenBackground(roh) ?? roh) : roh;
+            key === "backgroundColor"
+              ? (ausgelieferterHintergrund({
+                  ...design,
+                  backgroundColor: roh,
+                }) ?? roh)
+              : roh;
           return (
             <label
               key={key}

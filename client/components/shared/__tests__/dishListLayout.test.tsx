@@ -10,15 +10,50 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 import { DishList } from "../DishList";
-import { EIGENE_TEMPLATES, getTemplateLayout, waehleHighlights } from "@/lib/templateLayout";
+import {
+  EIGENE_TEMPLATES,
+  getTemplateLayout,
+  waehleHighlights,
+} from "@/lib/templateLayout";
 import type { MenuItem } from "@/types/domain";
 
 const ITEMS: MenuItem[] = [
-  { id: "m1", name: "Karaage", description: "Yuzu-Mayo", price: 8.5, category: "Kleine Teller" },
-  { id: "m2", name: "Nasu Dengaku", description: "Miso, Aubergine", price: 7, category: "Kleine Teller", isHighlight: true },
-  { id: "m3", name: "Gyoza, 6 Stk.", description: "Schwein, Lauch", price: 7.5, category: "Kleine Teller" },
-  { id: "m4", name: "Highball", description: "Toki, Soda", price: 9, category: "Getränke" },
-  { id: "m5", name: "Sake Junmai", description: "0,1 l", price: 6, category: "Getränke" },
+  {
+    id: "m1",
+    name: "Karaage",
+    description: "Yuzu-Mayo",
+    price: 8.5,
+    category: "Kleine Teller",
+  },
+  {
+    id: "m2",
+    name: "Nasu Dengaku",
+    description: "Miso, Aubergine",
+    price: 7,
+    category: "Kleine Teller",
+    isHighlight: true,
+  },
+  {
+    id: "m3",
+    name: "Gyoza, 6 Stk.",
+    description: "Schwein, Lauch",
+    price: 7.5,
+    category: "Kleine Teller",
+  },
+  {
+    id: "m4",
+    name: "Highball",
+    description: "Toki, Soda",
+    price: 9,
+    category: "Getränke",
+  },
+  {
+    id: "m5",
+    name: "Sake Junmai",
+    description: "0,1 l",
+    price: 6,
+    category: "Getränke",
+  },
 ] as MenuItem[];
 
 const FARBEN = {
@@ -62,9 +97,9 @@ describe("kiosk — numeriertes Register", () => {
     const { container, getByText, getByLabelText } = highlights("kiosk", 3);
     expect(getByText("Register")).toBeInTheDocument();
     // Highlights: m2 (markiert) zuerst, dann m1, m3 → Positionen 02, 01, 03
-    expect(getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " ")).toBe(
-      "01 — 03 / 05",
-    );
+    expect(
+      getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " "),
+    ).toBe("01 — 03 / 05");
     const zeilen = container.querySelectorAll('[data-dish-variant="register"]');
     expect(zeilen).toHaveLength(3);
     expect(zeilen[0].textContent).toContain("02");
@@ -78,10 +113,12 @@ describe("kiosk — numeriertes Register", () => {
     const { container, getByText } = karte("kiosk");
     expect(getByText("Kleine Teller")).toBeInTheDocument();
     expect(getByText("Getränke")).toBeInTheDocument();
-    expect(container.querySelectorAll('[data-dish-variant="register"]')).toHaveLength(5);
+    expect(
+      container.querySelectorAll('[data-dish-variant="register"]'),
+    ).toHaveLength(5);
     // Nummern folgen der Position in der ganzen Karte: Highball ist Nr. 04
-    const highball = Array.from(container.querySelectorAll("article")).find((a) =>
-      a.textContent?.includes("Highball"),
+    const highball = Array.from(container.querySelectorAll("article")).find(
+      (a) => a.textContent?.includes("Highball"),
     );
     expect(highball?.textContent).toContain("04");
   });
@@ -92,9 +129,14 @@ describe("izakaya — Rahmenkästen 2×2", () => {
     const { container, getByText, getByLabelText } = highlights("izakaya", 4);
     expect(getByText("Heute")).toBeInTheDocument();
     expect(getByLabelText("Ganze Karte anzeigen").textContent).toBe("4 von 5");
-    expect(container.querySelectorAll('[data-dish-variant="box"]')).toHaveLength(4);
+    expect(
+      container.querySelectorAll('[data-dish-variant="box"]'),
+    ).toHaveLength(4);
     // gerade Anzahl → keine Füllzelle
-    expect(container.querySelectorAll('section [aria-hidden="true"]:not(img)').length).toBe(
+    expect(
+      container.querySelectorAll('section [aria-hidden="true"]:not(img)')
+        .length,
+    ).toBe(
       // Bildplatzhalter (4 Kästen ohne Bild) — aber keine leere Füllzelle:
       4,
     );
@@ -118,7 +160,9 @@ describe("presse — Punktlinien", () => {
     expect(getByText("Kleine Teller").className).toContain("uppercase");
     const zeilen = container.querySelectorAll('[data-dish-variant="leader"]');
     expect(zeilen).toHaveLength(5);
-    const highball = Array.from(zeilen).find((a) => a.textContent?.includes("Highball"));
+    const highball = Array.from(zeilen).find((a) =>
+      a.textContent?.includes("Highball"),
+    );
     expect(highball?.textContent).toContain("9");
     expect(highball?.textContent).not.toContain("9,00");
     expect(highball?.querySelector(".border-dotted")).not.toBeNull();
@@ -138,7 +182,9 @@ describe("morgen — Linienkarte", () => {
     const kopf = getByText("Kleine Teller");
     expect(kopf.className).toContain("italic");
     expect((kopf as HTMLElement).style.color).toBe("rgb(156, 43, 34)"); // primaryColor
-    expect(container.querySelectorAll('[data-dish-variant="ruled"]')).toHaveLength(5);
+    expect(
+      container.querySelectorAll('[data-dish-variant="ruled"]'),
+    ).toHaveLength(5);
   });
 });
 
@@ -150,11 +196,17 @@ describe("vitrine — Fotokacheln", () => {
   test("ohne ein einziges Bild: schlichte Liste statt Platzhalter-Raster, Leiste „Empfehlungen“", () => {
     const { container, getByText, getByLabelText } = highlights("vitrine", 4);
     expect(getByText("Empfehlungen").className).toContain("text-[17px]");
-    expect(getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " ")).toBe("Alle 5 →");
+    expect(
+      getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " "),
+    ).toBe("Alle 5 →");
     expect(container.querySelector(".grid.grid-cols-2")).toBeNull();
-    const zeilen = container.querySelectorAll('[data-dish-variant="foto"][data-form="zeile"]');
+    const zeilen = container.querySelectorAll(
+      '[data-dish-variant="foto"][data-form="zeile"]',
+    );
     expect(zeilen).toHaveLength(4);
-    expect(zeilen[0].querySelector('[aria-hidden="true"]')?.textContent).toBe("N");
+    expect(zeilen[0].querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      "N",
+    );
     expect(container.textContent).not.toContain("€");
   });
 
@@ -174,11 +226,17 @@ describe("vitrine — Fotokacheln", () => {
       />,
     );
     expect(container.querySelector(".grid.grid-cols-2.gap-3")).not.toBeNull();
-    const kacheln = container.querySelectorAll('[data-dish-variant="foto"][data-form="kachel"]');
+    const kacheln = container.querySelectorAll(
+      '[data-dish-variant="foto"][data-form="kachel"]',
+    );
     expect(kacheln).toHaveLength(5);
-    expect(kacheln[0].querySelector("img")?.getAttribute("src")).toContain("karaage.jpg");
+    expect(kacheln[0].querySelector("img")?.getAttribute("src")).toContain(
+      "karaage.jpg",
+    );
     expect(kacheln[1].querySelector("img")).toBeNull();
-    expect(kacheln[1].querySelector('[aria-hidden="true"]')?.textContent).toBe("N");
+    expect(kacheln[1].querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      "N",
+    );
   });
 });
 
@@ -187,24 +245,34 @@ describe("gelato — Sticker", () => {
     const { getByText, getByLabelText } = highlights("gelato", 3);
     const kopf = getByText("Lieblinge").closest("h3")!;
     expect(kopf.querySelectorAll(".rounded-full")).toHaveLength(2);
-    expect(getByLabelText("Ganze Karte anzeigen").className).toContain("rounded-full");
+    expect(getByLabelText("Ganze Karte anzeigen").className).toContain(
+      "rounded-full",
+    );
   });
 
   test("getönte Karte, Kreis mit Zeichen, Preis in der Pille", () => {
     const { container } = karte("gelato");
-    const zeile = container.querySelector('[data-dish-variant="sticker"]') as HTMLElement;
+    const zeile = container.querySelector(
+      '[data-dish-variant="sticker"]',
+    ) as HTMLElement;
     expect(zeile.style.borderRadius).toContain("--radius-card");
     expect(zeile.querySelector(".rounded-full")).not.toBeNull();
-    const pille = Array.from(zeile.querySelectorAll("span")).find((el) => el.textContent === "8,50");
+    const pille = Array.from(zeile.querySelectorAll("span")).find(
+      (el) => el.textContent === "8,50",
+    );
     expect(pille?.className).toContain("rounded-full");
-    expect((pille as HTMLElement).style.backgroundColor).toBe("rgb(30, 27, 22)"); // priceColor
+    expect((pille as HTMLElement).style.backgroundColor).toBe(
+      "rgb(30, 27, 22)",
+    ); // priceColor
   });
 });
 
 describe("brauhaus — Strichlinien und Ornament", () => {
   test("gestrichelte Linie zum Preis, Rauten in der Kategorie-Überschrift", () => {
     const { container, getByText } = karte("brauhaus");
-    expect(container.querySelectorAll('[data-dish-variant="strich"]')).toHaveLength(5);
+    expect(
+      container.querySelectorAll('[data-dish-variant="strich"]'),
+    ).toHaveLength(5);
     expect(container.querySelector(".border-dashed")).not.toBeNull();
     const kopf = getByText("Kleine Teller").closest("h3")!;
     expect(kopf.textContent).toContain("◆");
@@ -214,10 +282,18 @@ describe("brauhaus — Strichlinien und Ornament", () => {
     const mitEmoji = [{ ...ITEMS[0], emoji: "🍗" }] as MenuItem[];
     for (const t of EIGENE_TEMPLATES.concat("minimalist", "modern")) {
       const { container, unmount } = render(
-        <DishList template={t} modus="karte" alle={mitEmoji} anzeigen={mitEmoji} {...FARBEN} />,
+        <DishList
+          template={t}
+          modus="karte"
+          alle={mitEmoji}
+          anzeigen={mitEmoji}
+          {...FARBEN}
+        />,
       );
       expect(container.textContent, t).not.toContain("🍗");
-      expect(container.querySelector("h3")?.textContent, t).toContain("Karaage");
+      expect(container.querySelector("h3")?.textContent, t).toContain(
+        "Karaage",
+      );
       unmount();
     }
   });
@@ -230,7 +306,9 @@ describe("ramen — Haarlinie und Siegel", () => {
     expect(zeilen).toHaveLength(5);
     const strich = zeilen[0].querySelector(".w-4.h-px") as HTMLElement;
     expect(strich.style.backgroundColor).toBe("rgb(156, 43, 34)"); // primaryColor
-    const quadrat = getByText("Kleine Teller").closest("h3")!.querySelector(".w-2.h-2") as HTMLElement;
+    const quadrat = getByText("Kleine Teller")
+      .closest("h3")!
+      .querySelector(".w-2.h-2") as HTMLElement;
     expect(quadrat.style.backgroundColor).toBe("rgb(156, 43, 34)");
   });
 
@@ -245,7 +323,9 @@ describe("imbiss — Schild", () => {
     const { getByText, getByLabelText } = highlights("imbiss", 3);
     const balken = getByText("Highlights").parentElement as HTMLElement;
     expect(balken.style.backgroundColor).toBe("rgb(30, 27, 22)");
-    expect(getByLabelText("Ganze Karte anzeigen").textContent).toContain("Ganze Karte");
+    expect(getByLabelText("Ganze Karte anzeigen").textContent).toContain(
+      "Ganze Karte",
+    );
   });
 
   test("gefüllter Kategorie-Balken, Preis als Schild, Linie unter der letzten Zeile", () => {
@@ -255,10 +335,14 @@ describe("imbiss — Schild", () => {
     expect(kopf.style.backgroundColor).toBe("rgb(30, 27, 22)"); // fontColor als Fläche
     const zeilen = container.querySelectorAll('[data-dish-variant="schild"]');
     expect(zeilen).toHaveLength(5);
-    const schild = Array.from(zeilen[0].querySelectorAll("span")).find((el) => el.textContent === "8,50") as HTMLElement;
+    const schild = Array.from(zeilen[0].querySelectorAll("span")).find(
+      (el) => el.textContent === "8,50",
+    ) as HTMLElement;
     expect(schild.style.backgroundColor).toBe("rgb(30, 27, 22)");
     // Die Liste selbst trägt die Linie unter der letzten Zeile
-    expect((zeilen[0].parentElement as HTMLElement).style.borderBottom).toContain("2px solid");
+    expect(
+      (zeilen[0].parentElement as HTMLElement).style.borderBottom,
+    ).toContain("2px solid");
   });
 });
 
@@ -267,7 +351,9 @@ describe("konditorei — Mittelachse", () => {
     const { container } = karte("konditorei");
     const zeile = container.querySelector('[data-dish-variant="zentriert"]')!;
     expect(zeile.className).toContain("text-center");
-    const preis = Array.from(zeile.querySelectorAll("span")).find((el) => el.textContent === "8,50") as HTMLElement;
+    const preis = Array.from(zeile.querySelectorAll("span")).find(
+      (el) => el.textContent === "8,50",
+    ) as HTMLElement;
     expect(preis.className).toContain("text-[16px]");
     expect(preis.className).not.toContain("uppercase");
     expect(preis.style.fontFamily).toContain("font-template-display");
@@ -275,7 +361,9 @@ describe("konditorei — Mittelachse", () => {
     expect(beschreibung.className).toContain("text-[15px]");
     expect(beschreibung.style.fontWeight).toBe("500");
     const { getByText } = highlights("konditorei", 3);
-    expect(getByText("Zur Karte").closest("button")!.className).toContain("mx-auto");
+    expect(getByText("Zur Karte").closest("button")!.className).toContain(
+      "mx-auto",
+    );
   });
 });
 
@@ -283,7 +371,9 @@ describe("roesterei — Etiketten als Band", () => {
   test("Highlights wischen im Band, jedes Etikett trägt Nummer und Rubrik, Leiste zählt", () => {
     const { container, getByText, getByLabelText } = highlights("roesterei", 4);
     expect(getByText("Auswahl")).toBeInTheDocument();
-    expect(getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " ")).toBe("04 / 05 →");
+    expect(
+      getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " "),
+    ).toBe("04 / 05 →");
     const band = container.querySelector(".overflow-x-auto") as HTMLElement;
     expect(band).not.toBeNull();
     const etiketten = band.querySelectorAll('[data-dish-variant="etikett"]');
@@ -305,12 +395,16 @@ describe("markt — Preisschild zuerst", () => {
   test("Leiste „Frisch heute“ mit Zähler", () => {
     const { getByText, getByLabelText } = highlights("markt", 3);
     expect(getByText("Frisch heute")).toBeInTheDocument();
-    expect(getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " ")).toBe("3 von 5 →");
+    expect(
+      getByLabelText("Ganze Karte anzeigen").textContent?.replace(/\s+/g, " "),
+    ).toBe("3 von 5 →");
   });
 
   test("das erste Kind jeder Zeile ist der Preis, gefüllt in der Preisfarbe", () => {
     const { container } = karte("markt");
-    const zeile = container.querySelector('[data-dish-variant="preisschild"]') as HTMLElement;
+    const zeile = container.querySelector(
+      '[data-dish-variant="preisschild"]',
+    ) as HTMLElement;
     const erstes = zeile.firstElementChild as HTMLElement;
     expect(erstes.textContent).toBe("8,50");
     expect(erstes.style.backgroundColor).toBe("rgb(30, 27, 22)");
@@ -323,7 +417,9 @@ describe("aperitivo — Kreisbild im Raster", () => {
   test("vier Highlights als getönte Karten mit Kreis in der Primärfarbe, Leiste im Marker", () => {
     const { container, getByText, getByLabelText } = highlights("aperitivo", 4);
     expect(getByText("Unsere Favoriten").className).toContain("rounded-md");
-    expect(getByLabelText("Ganze Karte anzeigen").textContent).toContain("Zur Karte");
+    expect(getByLabelText("Ganze Karte anzeigen").textContent).toContain(
+      "Zur Karte",
+    );
     expect(container.querySelector(".grid.grid-cols-2.gap-3")).not.toBeNull();
     const karten = container.querySelectorAll('[data-dish-variant="kreis"]');
     expect(karten).toHaveLength(4);
@@ -335,7 +431,9 @@ describe("aperitivo — Kreisbild im Raster", () => {
 describe("hofladen — Karteikarten", () => {
   test("gestrichelter Rahmen, kursive Überschrift mit kurzem Strich", () => {
     const { container, getByText } = karte("hofladen");
-    const zeile = container.querySelector('[data-dish-variant="karteikarte"]') as HTMLElement;
+    const zeile = container.querySelector(
+      '[data-dish-variant="karteikarte"]',
+    ) as HTMLElement;
     expect(zeile.style.border).toContain("dashed");
     const kopf = getByText("Kleine Teller");
     expect(kopf.className).toContain("italic");
@@ -345,13 +443,40 @@ describe("hofladen — Karteikarten", () => {
 
 describe("Kennzeichnung — Kürzel, Labels, Legende", () => {
   const GEKENNZEICHNET: MenuItem[] = [
-    { id: "k1", name: "Karaage", price: 8.5, category: "Kleine Teller", allergens: ["a", "c"], labels: ["scharf"] },
-    { id: "k2", name: "Gemüse-Gyoza", price: 7, category: "Kleine Teller", allergens: ["A", "f"], labels: ["vegan", "glutenfrei"] },
-    { id: "k3", name: "Highball", price: 9, category: "Getränke", allergens: ["2"] },
+    {
+      id: "k1",
+      name: "Karaage",
+      price: 8.5,
+      category: "Kleine Teller",
+      allergens: ["a", "c"],
+      labels: ["scharf"],
+    },
+    {
+      id: "k2",
+      name: "Gemüse-Gyoza",
+      price: 7,
+      category: "Kleine Teller",
+      allergens: ["A", "f"],
+      labels: ["vegan", "glutenfrei"],
+    },
+    {
+      id: "k3",
+      name: "Highball",
+      price: 9,
+      category: "Getränke",
+      allergens: ["2"],
+    },
   ] as MenuItem[];
-  const LEGENDE = { a: "Glutenhaltiges Getreide", c: "Eier", "2": "mit Farbstoff", g: "Milch" };
+  const LEGENDE = {
+    a: "Glutenhaltiges Getreide",
+    c: "Eier",
+    "2": "mit Farbstoff",
+    g: "Milch",
+  };
 
-  test.each(["presse", "vitrine", "imbiss", "konditorei", "minimalist"])(
+  // ALLE Formen, nicht fünf: Ein Copy-Paste-Fehler in einer der elf anderen
+  // fiel vorher nicht auf (Prüfung Runde 8, M6).
+  test.each(EIGENE_TEMPLATES.concat("minimalist", "modern"))(
     "'%s': Kürzel hinter dem Namen, Labels als Zeile, Legende nur mit erklärten Kürzeln",
     (t) => {
       const { container } = render(
@@ -366,13 +491,19 @@ describe("Kennzeichnung — Kürzel, Labels, Legende", () => {
           {...FARBEN}
         />,
       );
-      const kuerzel = Array.from(container.querySelectorAll("[data-kuerzel]")).map((el) => el.textContent);
+      const kuerzel = Array.from(
+        container.querySelectorAll("[data-kuerzel]"),
+      ).map((el) => el.textContent);
       expect(kuerzel).toEqual(["A, C", "A, F", "2"]);
-      const labels = Array.from(container.querySelectorAll("[data-labels]")).map((el) => el.textContent);
+      const labels = Array.from(
+        container.querySelectorAll("[data-labels]"),
+      ).map((el) => el.textContent);
       expect(labels).toEqual(["scharf", "vegan · glutenfrei"]);
       const legende = container.querySelector("[data-legende]") as HTMLElement;
       expect(legende).not.toBeNull();
-      const dt = Array.from(legende.querySelectorAll("dt")).map((el) => el.textContent);
+      const dt = Array.from(legende.querySelectorAll("dt")).map(
+        (el) => el.textContent,
+      );
       // „f“ ist nicht erklärt → fehlt; „g“ wird nicht verwendet → fehlt
       expect(dt).toEqual(["A", "C", "2"]);
       expect(legende.textContent).toContain("Glutenhaltiges Getreide");
@@ -382,7 +513,13 @@ describe("Kennzeichnung — Kürzel, Labels, Legende", () => {
 
   test("ohne Legende keine Legende — und auf der Startseite nie", () => {
     const ohne = render(
-      <DishList template="ramen" modus="karte" alle={GEKENNZEICHNET} anzeigen={GEKENNZEICHNET} {...FARBEN} />,
+      <DishList
+        template="ramen"
+        modus="karte"
+        alle={GEKENNZEICHNET}
+        anzeigen={GEKENNZEICHNET}
+        {...FARBEN}
+      />,
     );
     expect(ohne.container.querySelector("[data-legende]")).toBeNull();
     // Die Kürzel stehen trotzdem am Gericht — sichtbar ist besser als versteckt.
@@ -413,8 +550,14 @@ describe("Zuordnung", () => {
   test("jede Liste trägt ihr Template als Datenattribut — Anker für den Paritätstest", () => {
     for (const t of EIGENE_TEMPLATES) {
       const { container, unmount } = karte(t);
-      expect(container.querySelector(`[data-template-list="${t}"]`)).not.toBeNull();
-      expect(container.querySelector(`[data-dish-variant="${getTemplateLayout(t).dish}"]`)).not.toBeNull();
+      expect(
+        container.querySelector(`[data-template-list="${t}"]`),
+      ).not.toBeNull();
+      expect(
+        container.querySelector(
+          `[data-dish-variant="${getTemplateLayout(t).dish}"]`,
+        ),
+      ).not.toBeNull();
       unmount();
     }
   });

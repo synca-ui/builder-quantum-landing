@@ -33,6 +33,9 @@ import { uploadImageFile } from "@/lib/mediaUpload";
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
+/** Was der Hinweistext unter dem Logo-Feld verspricht. */
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+
 // Business type options matching the original Configurator
 const BUSINESS_TYPES = [
   {
@@ -181,6 +184,15 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
+                    // „PNG, JPG bis 2MB" steht darunter — und gilt jetzt auch
+                    // (Runde 8, M3).
+                    if (file && file.size > LOGO_MAX_BYTES) {
+                      toast.error(
+                        `„${file.name}" ist größer als 2 MB. Bitte ein kleineres Logo wählen.`,
+                      );
+                      e.target.value = "";
+                      return;
+                    }
                     if (file) {
                       // Lokale Vorschau sofort; echte URL nach dem Upload —
                       // nur die überlebt Reload und Veröffentlichung.
@@ -213,7 +225,9 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
                             "Logo konnte nicht hochgeladen werden — es erscheint nicht auf der veröffentlichten Website.",
                             {
                               description:
-                                err instanceof Error ? err.message : String(err),
+                                err instanceof Error
+                                  ? err.message
+                                  : String(err),
                               duration: 12000,
                             },
                           );
@@ -259,10 +273,11 @@ export function BusinessInfoStep({ nextStep, prevStep }: StepProps) {
             {BUSINESS_TYPES.map((type) => (
               <Card
                 key={type.value}
-                className={`cursor-pointer transition-all duration-300 border-2 ${business.type === type.value
+                className={`cursor-pointer transition-all duration-300 border-2 ${
+                  business.type === type.value
                     ? "border-teal-500 bg-teal-50"
                     : "border-gray-200 hover:border-teal-300"
-                  }`}
+                }`}
                 onClick={() => handleBusinessTypeChange(type.value)}
               >
                 <CardContent className="p-3 text-center">

@@ -297,6 +297,8 @@
     "square": "Square",
     "availableTimeSlots": "Available Time Slots",
     "timeSlotsDesc": "Set the times when customers can make reservations",
+    "outsideHours": "Outside opening hours – not offered to guests",
+    "outsideHoursHint": "Dashed time slots fall outside the opening hours on every day (step “Opening hours”) and are not offered to guests.",
     "reserveTable": "Reserve Table"
   },
   "pages": {

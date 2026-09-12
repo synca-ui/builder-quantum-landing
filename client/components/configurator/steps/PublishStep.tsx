@@ -25,6 +25,7 @@ import {
   useConfiguratorActions,
 } from "@/store/configuratorStore";
 import { deploy, type DeploymentStage } from "@/lib/deployment";
+import { useLaufendeUploads, warteAufUploads } from "@/lib/mediaUpload";
 import { typLabel } from "@/lib/heroFallback";
 import { templateNameKey } from "@shared/templateCatalog";
 import type { Configuration } from "@/types/domain";
@@ -217,6 +218,7 @@ export function PublishStep({
   );
 
   const canPublish = completedRequired.length === requiredItems.length;
+  const laufendeUploads = useLaufendeUploads();
 
   const handlePublish = useCallback(async () => {
     setIsPublishing(true);
@@ -224,6 +226,9 @@ export function PublishStep({
     setCurrentStage("validating");
 
     try {
+      // 0. Auf laufende Bild-Uploads warten: Sonst steht die blob:-Vorschau
+      //    in der Konfiguration und geht live (Prüfung Runde 8, H2).
+      await warteAufUploads();
       // 1. Daten und Token holen
       const configData = actions.data.getFullConfiguration();
       const token = await getToken();
@@ -475,20 +480,22 @@ export function PublishStep({
             {checklist.map((item) => (
               <div
                 key={item.id}
-                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${item.checked
+                className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${
+                  item.checked
                     ? "bg-green-50 border-green-200"
                     : item.required
                       ? "bg-orange-50 border-orange-200"
                       : "bg-gray-50 border-gray-200"
-                  }`}
+                }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${item.checked
+                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                    item.checked
                       ? "bg-green-500"
                       : item.required
                         ? "bg-orange-300"
                         : "bg-gray-300"
-                    }`}
+                  }`}
                 >
                   {item.checked && <Check className="w-4 h-4 text-white" />}
                 </div>
@@ -562,20 +569,23 @@ export function PublishStep({
                 handlePublish();
               }
             }}
-            disabled={isPublishing || !canPublish}
+            disabled={isPublishing || !canPublish || laufendeUploads > 0}
             size="lg"
-            className={`px-12 py-6 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${canPublish
+            className={`px-12 py-6 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${
+              canPublish
                 ? "bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 hover:from-teal-600 hover:via-purple-600 hover:to-orange-600 hover:scale-105"
                 : "bg-gray-300 cursor-not-allowed"
-              }`}
+            }`}
           >
             <Rocket className="mr-3 w-6 h-6" />
             Web-App veröffentlichen
           </Button>
           <p className="text-sm text-gray-500 mt-4">
-            {canPublish
-              ? "Deine Web-App ist in wenigen Sekunden online!"
-              : "Bitte fülle alle Pflichtfelder aus"}
+            {laufendeUploads > 0
+              ? `${laufendeUploads === 1 ? "Ein Bild wird" : `${laufendeUploads} Bilder werden`} noch hochgeladen – gleich geht es weiter.`
+              : canPublish
+                ? "Deine Web-App ist in wenigen Sekunden online!"
+                : "Bitte fülle alle Pflichtfelder aus"}
           </p>
         </div>
       </div>
