@@ -9,12 +9,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PerformanceErrorBoundary } from "@/components/PerformanceErrorBoundary";
 
@@ -37,7 +32,6 @@ const JulianPortfolio = lazy(() => import("./pages/JulianPortfolio"));
 // Lazy load heavy components for better performance
 const AutoConfigurator = lazy(() => import("./pages/AutoConfigurator"));
 const Site = lazy(() => import("./pages/Site"));
-const TestSite = lazy(() => import("./pages/TestSite"));
 import NotFound from "./pages/NotFound";
 import HostAwareRoot from "./pages/HostAwareRoot";
 // Login, Signup und RequireAuth importieren @clerk/clerk-react direkt. Als
@@ -61,7 +55,9 @@ const CookieBanner = lazy(() => import("./components/cookie-banner"));
 // Dashboard Pages (lazy loaded)
 const InsightsPage = lazy(() => import("./pages/dashboard/InsightsPage"));
 const StaffPage = lazy(() => import("./pages/dashboard/StaffPage"));
-const ReservationsDashboard = lazy(() => import("./pages/dashboard/ReservationsDashboard"));
+const ReservationsDashboard = lazy(
+  () => import("./pages/dashboard/ReservationsDashboard"),
+);
 const FloorPlanPage = lazy(() => import("./pages/dashboard/FloorPlanPage"));
 const CreativeStudioPage = lazy(
   () => import("./pages/dashboard/CreativeStudioPage"),
@@ -84,8 +80,8 @@ const queryClient = new QueryClient({
         }
         return failureCount < 3;
       },
-      staleTime: 5 * 60 * 1000,  // 5 minutes — data considered fresh
-      gcTime: 10 * 60 * 1000,    // 10 minutes — keep in cache before GC
+      staleTime: 5 * 60 * 1000, // 5 minutes — data considered fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes — keep in cache before GC
     },
   },
 });
@@ -99,7 +95,7 @@ const App = () => {
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   useEffect(() => {
     const show = () => setShowCookieBanner(true);
-    if ('requestIdleCallback' in window) {
+    if ("requestIdleCallback" in window) {
       (window as any).requestIdleCallback(show, { timeout: 3000 });
     } else {
       setTimeout(show, 1500);
@@ -109,63 +105,74 @@ const App = () => {
   return (
     <PerformanceErrorBoundary>
       <ErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <HelmetProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-                  <Suspense fallback={<div className="min-h-screen bg-white"></div>}>
-                    <Routes>
-                      {/* Demo Dashboard Routes (Public - No Auth Required) */}
-                      <Route
-                        path="/demo-dashboard"
-                        element={<DemoDashboardHome />}
-                      />
-                      <Route
-                        path="/demo-dashboard/*"
-                        element={<DemoDashboardHome />}
-                      />
+        <QueryClientProvider client={queryClient}>
+          <HelmetProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+                <Suspense
+                  fallback={<div className="min-h-screen bg-white"></div>}
+                >
+                  <Routes>
+                    {/* Demo Dashboard Routes (Public - No Auth Required) */}
+                    <Route
+                      path="/demo-dashboard"
+                      element={<DemoDashboardHome />}
+                    />
+                    <Route
+                      path="/demo-dashboard/*"
+                      element={<DemoDashboardHome />}
+                    />
 
-                      {/* Check Landing Page Preview (local dev) */}
-                      <Route path="/check-landing" element={<CheckLanding />} />
-                      <Route path="/julian-preview" element={<JulianPortfolio />} />
+                    {/* Check Landing Page Preview (local dev) */}
+                    <Route path="/check-landing" element={<CheckLanding />} />
+                    <Route
+                      path="/julian-preview"
+                      element={<JulianPortfolio />}
+                    />
 
-                      {/* Legal Pages */}
-                      <Route path="/impressum" element={<Impressum />} />
-                      <Route path="/datenschutz" element={<Datenschutz />} />
-                      <Route path="/agb" element={<AGB />} />
-                      <Route path="/impressum-check" element={<CheckImpressum />} />
-                      <Route path="/datenschutz-check" element={<CheckDatenschutz />} />
-                      {/* Public Routes */}
-                      <Route path="/" element={<HostAwareRoot />} />
-                      <Route path="/r/:id" element={<ManageReservation />} />
-                      {/* Gast-Stempelkarte: der QR/Link aus der Betreiber-App */}
-                      <Route path="/karte/:cardId" element={<GastStempelkarte />} />
+                    {/* Legal Pages */}
+                    <Route path="/impressum" element={<Impressum />} />
+                    <Route path="/datenschutz" element={<Datenschutz />} />
+                    <Route path="/agb" element={<AGB />} />
+                    <Route
+                      path="/impressum-check"
+                      element={<CheckImpressum />}
+                    />
+                    <Route
+                      path="/datenschutz-check"
+                      element={<CheckDatenschutz />}
+                    />
+                    {/* Public Routes */}
+                    <Route path="/" element={<HostAwareRoot />} />
+                    <Route path="/r/:id" element={<ManageReservation />} />
+                    {/* Gast-Stempelkarte: der QR/Link aus der Betreiber-App */}
+                    <Route
+                      path="/karte/:cardId"
+                      element={<GastStempelkarte />}
+                    />
 
-                      {/*
+                    {/*
                         App-Bereich: alles, was Clerk und/oder i18next braucht.
                         AppAreaShell ist eine Layout-Route ohne eigenen Pfad —
                         sie setzt nur die beiden Provider und rendert die
                         Zielseite in ihrem <Outlet>. Dadurch bleibt das Auth-SDK
                         aus dem Ladepfad der öffentlichen Seiten.
                       */}
-                      <Route element={<AppAreaShell />}>
-                        <Route path="/login/*" element={<Login />} />
-                        <Route path="/signup/*" element={<Signup />} />
-                        <Route
-                          path="/mode-selection"
-                          element={<ModeSelection />}
-                        />
-                        <Route
-                          path="/configurator"
-                          element={<Configurator />}
-                        />
-                        <Route
-                          path="/configurator/manual"
-                          element={<Configurator />}
-                        />
-                        {/*
+                    <Route element={<AppAreaShell />}>
+                      <Route path="/login/*" element={<Login />} />
+                      <Route path="/signup/*" element={<Signup />} />
+                      <Route
+                        path="/mode-selection"
+                        element={<ModeSelection />}
+                      />
+                      <Route path="/configurator" element={<Configurator />} />
+                      <Route
+                        path="/configurator/manual"
+                        element={<Configurator />}
+                      />
+                      {/*
                           Anders als der manuelle Konfigurator braucht der
                           automatische zwingend eine Anmeldung: Er legt den
                           Scraper-Job unter der userId an und fragt ihn
@@ -173,97 +180,94 @@ const App = () => {
                           nicht angemeldeter Besucher eine Analyse starten, die
                           er anschließend nie abrufen kann.
                         */}
-                        <Route
-                          path="/configurator/auto"
-                          element={
-                            <RequireAuth>
-                              <AutoConfigurator />
-                            </RequireAuth>
-                          }
-                        />
+                      <Route
+                        path="/configurator/auto"
+                        element={
+                          <RequireAuth>
+                            <AutoConfigurator />
+                          </RequireAuth>
+                        }
+                      />
 
-                        {/* Dashboard Routes */}
-                        <Route
-                          path="/dashboard/insights"
-                          element={
-                            <RequireAuth>
-                              <InsightsPage />
-                            </RequireAuth>
-                          }
-                        />
-                        <Route
-                          path="/dashboard/staff"
-                          element={
-                            <RequireAuth>
-                              <StaffPage />
-                            </RequireAuth>
-                          }
-                        />
-                        <Route
-                          path="/dashboard/reservations"
-                          element={
-                            <RequireAuth>
-                              <ReservationsDashboard />
-                            </RequireAuth>
-                          }
-                        />
-                        <Route
-                          path="/dashboard/floor-plan"
-                          element={
-                            <RequireAuth>
-                              <FloorPlanPage />
-                            </RequireAuth>
-                          }
-                        />
-                        <Route
-                          path="/dashboard/creative"
-                          element={
-                            <RequireAuth>
-                              <CreativeStudioPage />
-                            </RequireAuth>
-                          }
-                        />
-                        <Route
-                          path="/dashboard/admin"
-                          element={
-                            <RequireAuth>
-                              <AdminPage />
-                            </RequireAuth>
-                          }
-                        />
+                      {/* Dashboard Routes */}
+                      <Route
+                        path="/dashboard/insights"
+                        element={
+                          <RequireAuth>
+                            <InsightsPage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/dashboard/staff"
+                        element={
+                          <RequireAuth>
+                            <StaffPage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/dashboard/reservations"
+                        element={
+                          <RequireAuth>
+                            <ReservationsDashboard />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/dashboard/floor-plan"
+                        element={
+                          <RequireAuth>
+                            <FloorPlanPage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/dashboard/creative"
+                        element={
+                          <RequireAuth>
+                            <CreativeStudioPage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/dashboard/admin"
+                        element={
+                          <RequireAuth>
+                            <AdminPage />
+                          </RequireAuth>
+                        }
+                      />
 
-                        <Route
-                          path="/profile"
-                          element={
-                            <RequireAuth>
-                              <Profile />
-                            </RequireAuth>
-                          }
-                        />
-                        <Route
-                          path="/dashboard"
-                          element={
-                            <Navigate to="/dashboard/insights" replace />
-                          }
-                        />
-                      </Route>
+                      <Route
+                        path="/profile"
+                        element={
+                          <RequireAuth>
+                            <Profile />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/dashboard"
+                        element={<Navigate to="/dashboard/insights" replace />}
+                      />
+                    </Route>
 
-                      <Route path="/site/:subdomain/*" element={<Site />} />
-                      <Route path="/:id/:name/*" element={<Site />} />
-                      <Route path="/test-site" element={<TestSite />} />
-                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </BrowserRouter>
-              </TooltipProvider>
-            </HelmetProvider>
-            {showCookieBanner && (
-              <Suspense fallback={null}>
-                <CookieBanner />
-              </Suspense>
-            )}
-          </QueryClientProvider>
+                    <Route path="/site/:subdomain/*" element={<Site />} />
+                    <Route path="/:id/:name/*" element={<Site />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </HelmetProvider>
+          {showCookieBanner && (
+            <Suspense fallback={null}>
+              <CookieBanner />
+            </Suspense>
+          )}
+        </QueryClientProvider>
       </ErrorBoundary>
     </PerformanceErrorBoundary>
   );
@@ -282,12 +286,15 @@ if (rootElement) {
   if (!window.__APP_ROOT__) {
     // Global error handler for chunk loading issues (e.g., after a new deployment)
     window.addEventListener("unhandledrejection", (event) => {
-      if (event.reason && (
-        event.reason.name === "ChunkLoadError" || 
-        event.reason.message?.includes("MIME type") ||
-        event.reason.message?.includes("Loading chunk")
-      )) {
-        console.warn("🔄 Chunk load error detected, forcing reload to get latest version...");
+      if (
+        event.reason &&
+        (event.reason.name === "ChunkLoadError" ||
+          event.reason.message?.includes("MIME type") ||
+          event.reason.message?.includes("Loading chunk"))
+      ) {
+        console.warn(
+          "🔄 Chunk load error detected, forcing reload to get latest version...",
+        );
         window.location.reload();
       }
     });
