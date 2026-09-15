@@ -1,4 +1,5 @@
-import { SignIn } from "@clerk/clerk-react";
+import { useEffect } from "react";
+import { SignIn, useAuth } from "@clerk/clerk-react";
 import { X, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +10,12 @@ interface AuthGateModalProps {
   continueWithoutLabel?: string;
   headline?: string;
   subline?: string;
+  /**
+   * Wohin Clerk nach dem letzten Anmeldeschritt (auch nach dem 2FA-Code)
+   * springt. Ohne Angabe: genau die Seite, auf der das Modal offen ist,
+   * inklusive Query – sonst gehen z. B. ?sourceLink= oder Schritt-Parameter
+   * verloren.
+   */
   redirectUrl?: string;
 }
 
@@ -21,7 +28,17 @@ export function AuthGateModal({
   subline = "Erstelle ein kostenloses Konto oder melde dich an, um das volle Erlebnis zu genießen.",
   redirectUrl,
 }: AuthGateModalProps) {
-  if (!open) return null;
+  const { isSignedIn } = useAuth();
+
+  // Nach erfolgreicher Anmeldung schließt sich das Modal selbst. Liegt das
+  // Rücksprungziel auf derselben Seite (Veröffentlichen-Schritt), stand es
+  // sonst mit einer leeren Clerk-Karte weiter offen – wirkte, als hinge der
+  // Login nach dem Code.
+  useEffect(() => {
+    if (open && isSignedIn) onClose();
+  }, [open, isSignedIn, onClose]);
+
+  if (!open || isSignedIn) return null;
 
   return (
     <div
@@ -63,7 +80,14 @@ export function AuthGateModal({
         <div className="px-6 pb-4">
           <SignIn
             routing="virtual"
-            fallbackRedirectUrl={redirectUrl ?? window.location.pathname}
+            forceRedirectUrl={
+              redirectUrl ??
+              `${window.location.pathname}${window.location.search}${window.location.hash}`
+            }
+            signUpForceRedirectUrl={
+              redirectUrl ??
+              `${window.location.pathname}${window.location.search}${window.location.hash}`
+            }
             appearance={{
               layout: {
                 socialButtonsVariant: "blockButton",
