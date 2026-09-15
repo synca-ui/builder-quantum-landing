@@ -1,6 +1,6 @@
 import { PageSEO } from "@/components/seo/PageSEO";
 import { SEO } from "@/lib/seo";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Settings, Sparkles, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,11 @@ export default function ModeSelection() {
   const { isLoading, n8nData } = useAnalysis();
   const { isSignedIn } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  // Ziel nach der Anmeldung im Modal. null = Modal zu. Je Knopf eigenes Ziel:
+  // Wer "automatisch" wählt, soll nach Passwort/2FA-Code auch dort landen und
+  // nicht im manuellen Konfigurator.
+  const [authRedirect, setAuthRedirect] = useState<string | null>(null);
+  const closeAuthModal = useCallback(() => setAuthRedirect(null), []);
   const [scraperData, setScraperData] = useState<ScraperJobData | null>(null);
   const [scraperLoading, setScraperLoading] = useState(false);
 
@@ -161,7 +165,7 @@ export default function ModeSelection() {
     if (isSignedIn) {
       navigate("/configurator/manual");
     } else {
-      setShowAuthModal(true);
+      setAuthRedirect("/configurator/manual");
     }
   };
 
@@ -181,15 +185,14 @@ export default function ModeSelection() {
    * Besitzer, über den das Ergebnis später abrufbar wäre.
    */
   const handleAutoConfiguratorClick = () => {
+    const ziel = urlSource
+      ? `/configurator/auto?sourceLink=${encodeURIComponent(decodedUrl ?? "")}`
+      : "/configurator/auto";
     if (!isSignedIn) {
-      setShowAuthModal(true);
+      setAuthRedirect(ziel);
       return;
     }
-    navigate(
-      urlSource
-        ? `/configurator/auto?sourceLink=${encodeURIComponent(decodedUrl ?? "")}`
-        : "/configurator/auto",
-    );
+    navigate(ziel);
   };
 
   const handleCopy = async () => {
@@ -216,15 +219,15 @@ export default function ModeSelection() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-teal-50/40 to-gray-100">
       <AuthGateModal
-        open={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        open={authRedirect !== null}
+        onClose={closeAuthModal}
         onContinueWithout={() => {
-          setShowAuthModal(false);
+          setAuthRedirect(null);
           navigate("/configurator/manual");
         }}
         headline="Jetzt einloggen – kostenlos starten"
         subline="Erstelle ein kostenloses Konto, um deine Konfiguration zu speichern und deine Website live zu schalten. Du kannst auch erst einmal ohne Account stöbern."
-        redirectUrl="/configurator/manual"
+        redirectUrl={authRedirect ?? undefined}
       />
       <PageSEO {...SEO.modeSelection} />
 

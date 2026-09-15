@@ -80,7 +80,7 @@ function DemoLogin() {
 }
 
 /**
- * Mit Clerk-Schlüssel: nativer Apple-Dialog, E-Mail mit Passwort, Einmalcode als Alternative.
+ * Mit Clerk-Schlüssel: Apple-Anmeldung, E-Mail mit Passwort, Einmalcode als Alternative.
  *
  * Google ist bewusst raus. Es war der einzige Weg, der zuverlässig lief, aber die
  * Freigabe des Google-Business-Profils steht aus - jeder Tester lief in eine
@@ -91,10 +91,10 @@ function DemoLogin() {
 function ClerkLogin() {
   return (
     <LoginRahmen footnote="Geschützt durch Clerk">
-      {/* Nur auf iOS: `useSignInWithApple` setzt `expo-apple-authentication`
-          voraus, und den nativen Dialog gibt es nur dort. Eigene Komponente,
-          damit der Hook nicht bedingt aufgerufen wird. */}
-      {Platform.OS === "ios" ? <AppleKnopf /> : null}
+      {/* Auf jeder Plattform: iOS nimmt den nativen Dialog, alle anderen den
+          Browser - die Weiche liegt im Knopf selbst. Eigene Komponente, damit
+          die Hooks nicht bedingt aufgerufen werden. */}
+      <AppleKnopf />
       <Trennlinie />
       <EmailAnmeldung />
       <ShowcaseKnopf />
@@ -103,9 +103,15 @@ function ClerkLogin() {
 }
 
 /**
- * „Mit Apple anmelden" - nativer Systemdialog, mit Browser-Weg als Rueckfall.
+ * „Weiter mit Apple" - auf iOS der native Systemdialog, sonst der Browser.
  *
- * Warum zwei Wege statt einem: Apple stellt beim Anmelden ein Identitaetstoken aus,
+ * Auf iOS zuerst nativ: Face ID statt Browserwechsel, den Weg erwarten die
+ * App-Store-Pruefer. Auf Android gibt es den Systemdialog nicht (`useSignInWithApple`
+ * ist dort nur ein Platzhalter, der beim Aufruf wirft), deshalb fuehrt derselbe
+ * Knopf dort direkt ueber den Browser zu Apple. Beide Wege enden in derselben
+ * Clerk-Sitzung - fuer den Server ist es dasselbe Konto.
+ *
+ * Warum iOS zwei Wege braucht: Apple stellt beim Anmelden ein Identitaetstoken aus,
  * dessen `aud`-Feld sagt, fuer wen es gilt. Nativ steht dort die BUNDLE-ID
  * (app.maitr.mobile), im Browser dagegen die SERVICES ID. Clerk prueft `aud` gegen
  * seine hinterlegten Clients - kennt es die Bundle-ID nicht, weist es das native
@@ -142,25 +148,27 @@ function AppleKnopf() {
     if (busy) return;
     setBusy(true);
     try {
-      try {
-        const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
-        // Kein Fehler, sondern Abbruch im Systemdialog.
-        if (!createdSessionId) return;
-        await anmelden(createdSessionId, setActive as never);
-        return;
-      } catch (nativerFehler) {
-        // Abbruch bleibt Abbruch - auch hier nicht auf den Browser ausweichen,
-        // sonst oeffnet sich nach dem Wegtippen unaufgefordert Safari.
-        if (istAbbruch(nativerFehler)) return;
-        if (!istNichtFreigeschaltet(nativerFehler)) throw nativerFehler;
+      if (Platform.OS === "ios") {
+        try {
+          const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
+          // Kein Fehler, sondern Abbruch im Systemdialog.
+          if (!createdSessionId) return;
+          await anmelden(createdSessionId, setActive as never);
+          return;
+        } catch (nativerFehler) {
+          // Abbruch bleibt Abbruch - auch hier nicht auf den Browser ausweichen,
+          // sonst oeffnet sich nach dem Wegtippen unaufgefordert Safari.
+          if (istAbbruch(nativerFehler)) return;
+          if (!istNichtFreigeschaltet(nativerFehler)) throw nativerFehler;
 
-        console.warn(
-          "[login] Nativer Apple-Weg abgelehnt (Bundle-ID fehlt in Clerk) - weiche auf den Browser aus",
-          nativerFehler,
-        );
+          console.warn(
+            "[login] Nativer Apple-Weg abgelehnt (Bundle-ID fehlt in Clerk) - weiche auf den Browser aus",
+            nativerFehler,
+          );
+        }
       }
 
-      // Rueckfall: derselbe Anbieter, aber ueber die Services ID.
+      // Browser-Weg ueber die Services ID: auf Android der einzige, auf iOS der Rueckfall.
       const { createdSessionId, setActive } = await startSSOFlow({ strategy: "oauth_apple" });
       if (!createdSessionId) return;
       await anmelden(createdSessionId, setActive as never);

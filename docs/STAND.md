@@ -94,7 +94,7 @@ Service-Layer mit Mock-Umschaltung über `ENABLE_PRODUCTION_APIS`.
 
 | Was | Wer | Wirkung |
 |---|---|---|
-| **Clerk → Configure → Native applications einschalten** | du | Ohne das ist **keine Anmeldung** möglich. `Business` hat in Produktion 0 Zeilen — es existiert noch kein einziger echter Betrieb. |
+| **Clerk → Native applications → iOS-App registrieren** (Team-ID `3MX55UN8BD`, Bundle-ID `app.maitr.mobile`) | du | E-Mail- und Apple-Anmeldung laufen am Gerät (seit `6fd1497`); nur den **nativen** Apple-Dialog weist Clerk ab („not authorized“), der Knopf fällt dann auf den Browser zurück. Im Web läuft Apple (15.9. geprüft). Anleitung: [integrations/APPLE_LOGIN.md](integrations/APPLE_LOGIN.md). `Business` hatte am 5.8. in Produktion 0 Zeilen. |
 | ~~`MAITR_*`-Variablen in Railway setzen~~ | **erledigt 11.9.** (per Railway-MCP) | Alle neun gesetzt: 5 echte Werte, `GOOGLE_*`/`META_APP_*` als `PLATZHALTER-bis-…-freigabe`. Deploy `098ce993` grün, Server startet, `/api/maitr/venues` → 401. `MAITR_ENCRYPTION_KEY` **nie rotieren**, im Dashboard auf „sealed" stellen. |
 | `SUPABASE_SERVICE_ROLE_KEY` in Railway auf Projekt `qzsdrgvwoddqkvqxhxfi` umstellen | du | `SUPABASE_URL` zeigt seit 11.9. auf dieses Projekt; der Key ist sealed und stammt vermutlich vom gelöschten Vorgänger. Das Projekt pausiert auf dem Free-Tier nach Inaktivität (am 11.9. per MCP wieder hochgefahren). |
 | Google „Business Profile API access" beantragen | du | ~60 Tage Vorlauf, ohne Freigabe ist die Quota **null**. Kritischer Pfad. Die Widerrufs-Frage im Antrag ist seit 11.9. beantwortbar (AUFGABEN.md C6). |

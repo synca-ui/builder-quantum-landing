@@ -610,7 +610,11 @@ Kontrolle laufen ließ — **14 von 14 bestanden**.
 
 **Clerk** (Voraussetzung für a1)
 - [ ] Clerk-Projekt für die Mobile-App, Publishable Key beschaffen
-- [ ] Google und Apple als Anmeldeanbieter konfigurieren
+- [x] Apple als Anmeldeanbieter konfigurieren — Web läuft (15.9. geprüft), die App
+  fällt bis zur Registrierung der iOS-App unter „Native applications“ auf den
+  Browser zurück; siehe [integrations/APPLE_LOGIN.md](integrations/APPLE_LOGIN.md)
+- [ ] Google als Anmeldeanbieter: im Web aktiv, in der App seit `c9b3f69` bewusst
+  ausgebaut, bis die Google-Freigabe da ist
 - [ ] Bestätigen, dass der Web- und der App-Mandant derselbe sein sollen — sonst kennen sich die Konten nicht
 
 **Google Business Profile** (Voraussetzung für b5)
