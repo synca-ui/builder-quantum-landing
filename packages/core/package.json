@@ -13,7 +13,8 @@
     "./supabase": "./src/supabase/index.ts",
     "./types": "./src/types/index.ts",
     "./analytics": "./src/analytics/index.ts",
-    "./integrations": "./src/integrations/index.ts"
+    "./integrations": "./src/integrations/index.ts",
+    "./zeitzone": "./src/zeitzone.ts"
   },
   "sideEffects": false
 }

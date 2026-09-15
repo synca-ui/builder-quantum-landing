@@ -22,6 +22,11 @@ type IconComponent = ComponentType<{ size?: number; color?: string }>;
  * Jede zeigt Icon + Wert + klares Label und führt zu ihrem Bereich
  * (Bewertungen, Profil-Check, Wachstum). Das Label sorgt dafür, dass eindeutig
  * ist, wofür jede Zahl steht.
+ *
+ * Was nicht gemessen ist, steht als Strich da, nicht als Null: „0,0" läse sich wie
+ * eine vernichtende Bewertung, „0 Aufrufe" wie ein unsichtbares Profil - beides
+ * wäre eine Behauptung, die niemand erhoben hat. Die Fixture (4,8 / 64 / 4.812)
+ * trägt weder `reviewCount` noch `impressionsKnown` und erscheint unverändert.
  */
 export function StatRow({ stats, onRating, onScore, onImpressions }: StatRowProps) {
   return (
@@ -29,27 +34,76 @@ export function StatRow({ stats, onRating, onScore, onImpressions }: StatRowProp
       <StatTile
         onPress={onRating}
         Icon={ReviewIcon}
-        value={formatRating(stats.rating)}
+        value={hatBewertung(stats.rating) ? formatRating(stats.rating) : STRICH}
         label="Bewertung"
-        accessibilityLabel={`Bewertung ${formatRating(stats.rating)}, öffnet Bewertungen`}
+        accessibilityLabel={bewertungLabel(stats)}
       />
       <StatTile
         onPress={onScore}
         Icon={TargetIcon}
-        value={String(stats.score)}
-        suffix="/ 100"
+        // Kein Score für einen echten Betrieb, solange weder Briefing noch
+        // Präsenzbericht geantwortet haben (StartScreen `kennzahlen`): Strich statt
+        // des Demo-Werts 64.
+        value={Number.isFinite(stats.score) ? String(stats.score) : STRICH}
+        suffix={Number.isFinite(stats.score) ? "/ 100" : undefined}
         label="Präsenz"
-        accessibilityLabel={`Präsenzscore ${stats.score} von 100, öffnet Profil-Check`}
+        accessibilityLabel={scoreLabel(stats)}
       />
       <StatTile
         onPress={onImpressions}
         Icon={EyeIcon}
-        value={formatCount(stats.impressions)}
+        // Fehlt das Feld (älterer Server, Fixture), gilt der Wert als gemessen -
+        // deshalb der Vergleich auf `false`, nicht auf „falsy".
+        value={stats.impressionsKnown === false ? STRICH : formatCount(stats.impressions)}
         label="Aufrufe"
-        accessibilityLabel={`${stats.impressions} Profilaufrufe, öffnet Wachstum`}
+        accessibilityLabel={
+          stats.impressionsKnown === false
+            ? "Profilaufrufe noch nicht gemessen, öffnet Wachstum"
+            : `${stats.impressions} Profilaufrufe, öffnet Wachstum`
+        }
       />
     </View>
   );
+}
+
+/** Gedankenstrich als Platzhalter für „nicht gemessen" - nie eine Beispielzahl. */
+const STRICH = "–";
+
+/**
+ * 0 bedeutet laut `PresenceStats` „noch keine Bewertung bekannt". Positiv geprüft
+ * (`> 0`) statt `<= 0` ausgeschlossen, damit auch ein `null` oder `NaN` aus einer
+ * unvollständigen Antwort als fehlend gilt, statt als „NaN" in der Kachel zu landen.
+ */
+function hatBewertung(rating: number): boolean {
+  return rating > 0;
+}
+
+/**
+ * Die Anzahl gehört in die Ansage, nicht in die Kachel: Drei Kacheln nebeneinander
+ * haben keinen Platz für „(312)", aber wer vorlesen lässt, soll hören, wie viel
+ * hinter dem Schnitt steckt - 4,9 aus 3 Bewertungen ist etwas anderes als aus 300.
+ */
+function bewertungLabel(stats: PresenceStats): string {
+  if (!hatBewertung(stats.rating)) return "Noch keine Bewertung, öffnet Bewertungen";
+  const anzahl = stats.reviewCount;
+  const aus =
+    typeof anzahl === "number" && anzahl > 0
+      ? ` aus ${formatCount(anzahl)} ${anzahl === 1 ? "Bewertung" : "Bewertungen"}`
+      : "";
+  return `Bewertung ${formatRating(stats.rating)}${aus}, öffnet Bewertungen`;
+}
+
+/**
+ * Beruht der Score nur auf einem Teil der Faktoren, sagt der Server das in
+ * `scoreHint`. Sichtbar ist dafür kein Platz; vorgelesen wird es mit, damit die
+ * Zahl nicht vollständiger klingt, als sie ist.
+ */
+function scoreLabel(stats: PresenceStats): string {
+  if (!Number.isFinite(stats.score)) return "Präsenzscore noch nicht berechnet, öffnet Profil-Check";
+  const hinweis = stats.scoreHint?.trim();
+  // Ohne Hinweis exakt die bisherige Ansage - die Fixture trägt keinen.
+  if (!hinweis) return `Präsenzscore ${stats.score} von 100, öffnet Profil-Check`;
+  return `Präsenzscore ${stats.score} von 100. ${hinweis} Öffnet Profil-Check`;
 }
 
 function StatTile({

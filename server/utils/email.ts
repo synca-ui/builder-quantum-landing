@@ -77,7 +77,11 @@ export function bereinigeBetreff(wert: string | null | undefined): string {
  * Format a Date to German locale string
  */
 function formatDate(date: Date): string {
-  return date.toLocaleString("de-DE", { dateStyle: "full", timeStyle: "short" });
+  // Ausdrücklich Europe/Berlin: Ohne timeZone formatierte das in der Zone des
+  // Serverprozesses (Railway: UTC). Das ging nur gut, solange die Web-App
+  // Wanduhrzeiten als UTC speicherte - seit echte Zeitpunkte gespeichert werden
+  // (server/utils/zeitzone.ts), stünde hier sonst 17:00 statt 19:00.
+  return date.toLocaleString("de-DE", { dateStyle: "full", timeStyle: "short", timeZone: "Europe/Berlin" });
 }
 
 /**

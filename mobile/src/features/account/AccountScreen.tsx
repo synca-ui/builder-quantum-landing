@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -11,10 +12,10 @@ import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
 import { Toggle } from "../../components/ui/Toggle";
 import { useAppearance } from "../../lib/appearance";
+import { hasRealAuth, mobileAuthAdapter } from "../../lib/auth";
 import { useStore, type PlanId } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
-import { useState } from "react";
 
 /**
  * Rechnungen - vorerst keine.
@@ -37,22 +38,101 @@ const PLAN_INFO: Record<PlanId, { name: string; price?: string; blurb: string }>
   autopilot: { name: "Maitr Autopilot", blurb: "Maitr übernimmt: Antworten, Beiträge, Auslastung." },
 };
 
+/** Inhaber aus der Clerk-Sitzung - nur, was dort wirklich steht. */
+export interface Inhaber {
+  name?: string;
+  email?: string;
+}
+
+/**
+ * `mobileAuthAdapter.getUser()` → Inhaber. Form prüfen statt vertrauen: Ein
+ * leerer Name ist kein Name, und ein Demo-Eintrag aus dem AsyncStorage hat
+ * womöglich gar keine Felder.
+ */
+export function inhaberAus(wert: unknown): Inhaber | null {
+  if (!wert || typeof wert !== "object") return null;
+  const u = wert as { displayName?: unknown; email?: unknown };
+  const name = typeof u.displayName === "string" && u.displayName.trim() ? u.displayName.trim() : undefined;
+  const email = typeof u.email === "string" && u.email.trim() ? u.email.trim() : undefined;
+  return name || email ? { ...(name ? { name } : {}), ...(email ? { email } : {}) } : null;
+}
+
+/**
+ * Den Inhaber der laufenden Clerk-Sitzung lesen - für Konto und Löschwarnung.
+ *
+ * ANLASS (Prüfbericht Punkt 1): Beide Screens nannten "Sofia Brandt" und
+ * sofia@cafe-goldstueck.de, auch für einen echten Wirt - der Store liefert
+ * als `user` immer die Demo-Attrappe. Im Demomodus und Showcase fragt der Hook
+ * nichts ab und liefert `null`.
+ */
+export function useInhaber(echtesKonto: boolean, anlass: string): Inhaber | null {
+  const [inhaber, setInhaber] = useState<Inhaber | null>(null);
+  useEffect(() => {
+    if (!echtesKonto) return;
+    let aktiv = true;
+    mobileAuthAdapter
+      .getUser()
+      .then((u) => {
+        if (aktiv) setInhaber(inhaberAus(u));
+      })
+      .catch(() => {
+        // Ohne Sitzungsdaten bleibt der Kopf beim Betrieb - kein erfundener Name.
+        if (aktiv) setInhaber(null);
+      });
+    return () => {
+      aktiv = false;
+    };
+    // `anlass` (die Betriebskennung) fragt nach einer Anmeldung erneut: Clerk
+    // kennt den Nutzer beim allerersten Rendern womöglich noch nicht.
+  }, [echtesKonto, anlass]);
+  // Nach dem Wechsel in den Showcase gilt ein zuvor gelesener Inhaber nicht mehr.
+  return echtesKonto ? inhaber : null;
+}
+
+/** "Julia Nowak" → "JN", "Trattoria da Enzo" → "TD". */
+function initialenAus(text: string): string {
+  const woerter = text.trim().split(/\s+/).filter(Boolean);
+  return woerter.slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+}
+
 /**
  * Screen 12 · Konto & Abo.
  *
  * Der Schalter „Nachtbar" ist hier keine Attrappe: er schaltet die App wirklich in die
  * dunkle Palette und damit den Start-Screen auf die Abend-Fassung (Screen 16).
+ *
+ * Für ein echtes Konto (Prüfbericht Punkte 1, 32, 34): Name und E-Mail aus der
+ * Clerk-Sitzung, Betrieb und Ort aus dem Profil. Kein "Maitr Pro · Aktiv" - unter
+ * /api/maitr gibt es keinen Abo-Stand, `currentPlan` ist nur eine lokale Auswahl.
+ * Keine Visa-Karte, weil keine Zahlungsart angebunden ist. Und der Push um 7:00
+ * steht nicht auf "an", solange es weder Präferenz noch Versand gibt. Demo und
+ * Showcase zeigen den Vorführzustand unverändert.
  */
 export function AccountScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
   const { nightMode, toggleNightMode, accessibleMode, toggleAccessibleMode } = useAppearance();
-  const { user, signOut, currentPlan } = useStore();
+  const { user, signOut, currentPlan, venueProfile, venueId, hasRealVenue, showcase } = useStore();
   const plan = PLAN_INFO[currentPlan];
 
   const [dailyPush, setDailyPush] = useState(true);
   const [abmeldung, setAbmeldung] = useState(false);
+
+  // Zwei Begriffe mit Absicht: Ein echtes Konto kann (noch) ohne Betrieb sein -
+  // dann ist `venueProfile` die Demo-Fixture und darf nicht als eigener Betrieb
+  // erscheinen.
+  const echtesKonto = hasRealAuth() && !showcase;
+  const echterBetrieb = hasRealVenue && !showcase;
+  const echt = echtesKonto || echterBetrieb;
+  const inhaber = useInhaber(echtesKonto, venueId);
+
+  const stadt = venueProfile.city.replace(/^\d+\s/, "").trim();
+  const betriebsname = echterBetrieb ? venueProfile.name.trim() : "";
+  const kopfTitel = inhaber?.name ?? (betriebsname || "Dein Konto");
+  const kopfZeile = [inhaber?.name ? betriebsname : "", echterBetrieb ? stadt : ""]
+    .filter(Boolean)
+    .join(" · ");
 
   /**
    * Abmelden.
@@ -88,104 +168,159 @@ export function AccountScreen() {
 
   return (
     <Screen withTabBar contentStyle={{ gap: 9 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-        <Avatar initials={user?.initials ?? "SB"} size={54} variant="ink" />
-        <View style={{ flex: 1 }}>
-          <Text variant="sectionTitle" style={{ fontSize: 22 }}>
-            {user?.name ?? "Sofia Brandt"}
-          </Text>
-          <Eyebrow style={{ marginTop: 1 }}>
-            {user?.venueName ?? "Café Goldstück"} · {user?.district ?? "Ehrenfeld"}
-          </Eyebrow>
-        </View>
-      </View>
-
-      <DarkPanel style={{ paddingVertical: theme.spacing.lg, paddingHorizontal: 18, gap: 6 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Eyebrow color={onDarkPanel.accent}>{plan.name}</Eyebrow>
-          <Eyebrow color={onDarkPanel.accent}>Aktiv</Eyebrow>
-        </View>
-
-        {/* Ohne Preis trägt der Planname die große Zeile - sonst klaffte hier eine
-            Lücke, wo vorher „29 € / Monat" stand. */}
-        {plan.price ? (
-          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
-            <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 38, lineHeight: 42 }}>
-              {plan.price}
+      {echt ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <Avatar initials={initialenAus(kopfTitel)} size={54} variant="ink" />
+          <View style={{ flex: 1 }}>
+            <Text variant="sectionTitle" style={{ fontSize: 22 }}>
+              {kopfTitel}
             </Text>
-            <Text variant="body" color={onDarkPanel.body}>
-              / Monat
-            </Text>
+            {kopfZeile ? <Eyebrow style={{ marginTop: 1 }}>{kopfZeile}</Eyebrow> : null}
+            {inhaber?.email ? (
+              <Text variant="bodySm" tone="muted" style={{ fontSize: 13, marginTop: 2 }}>
+                {inhaber.email}
+              </Text>
+            ) : null}
           </View>
-        ) : (
+        </View>
+      ) : (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <Avatar initials={user?.initials ?? "SB"} size={54} variant="ink" />
+          <View style={{ flex: 1 }}>
+            <Text variant="sectionTitle" style={{ fontSize: 22 }}>
+              {user?.name ?? "Sofia Brandt"}
+            </Text>
+            <Eyebrow style={{ marginTop: 1 }}>
+              {user?.venueName ?? "Café Goldstück"} · {user?.district ?? "Ehrenfeld"}
+            </Eyebrow>
+          </View>
+        </View>
+      )}
+
+      {echt ? (
+        <DarkPanel style={{ paddingVertical: theme.spacing.lg, paddingHorizontal: 18, gap: 6 }}>
+          <Eyebrow color={onDarkPanel.accent}>Dein Zugang</Eyebrow>
           <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 36 }}>
-            {plan.name}
+            Ohne Abrechnung
           </Text>
-        )}
-
-        <Text variant="quote" color={onDarkPanel.bodyStrong} style={{ fontSize: 15 }}>
-          {plan.blurb}
-        </Text>
-        {/* Kein „Nächste Abrechnung: 1. August" mehr - es gibt keine Abrechnung.
-            Der Satz erweckte den Eindruck eines laufenden Vertrags. */}
-        <Eyebrow color={onDarkPanel.meta} style={{ marginTop: 4 }}>
-          Preise stehen noch nicht fest · Zugang derzeit ohne Abrechnung
-        </Eyebrow>
-
-        <View
-          style={{ flexDirection: "row", alignItems: "center", gap: 18, marginTop: theme.spacing.sm }}
-        >
+          <Text variant="quote" color={onDarkPanel.bodyStrong} style={{ fontSize: 15 }}>
+            Preise stehen noch nicht fest. Welcher Plan zu deinem Konto gehört, kann die App noch
+            nicht abrufen.
+          </Text>
           <PillButton
-            label="Abo verwalten"
+            label="Pläne ansehen"
             size="compact"
             labelColor={onDarkPanel.onAccent}
             onPress={() => router.push("/abo")}
-            style={{ flex: 1, backgroundColor: onDarkPanel.title }}
+            style={{ marginTop: theme.spacing.sm, backgroundColor: onDarkPanel.title }}
           />
-          <Text
-            variant="action"
-            color={onDarkPanel.title}
-            style={{ fontSize: 15, textDecorationLine: "underline" }}
-            onPress={() => router.push("/abo")}
-            accessibilityRole="button"
-          >
-            Pläne
-          </Text>
-        </View>
-      </DarkPanel>
+        </DarkPanel>
+      ) : (
+        <DarkPanel style={{ paddingVertical: theme.spacing.lg, paddingHorizontal: 18, gap: 6 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <Eyebrow color={onDarkPanel.accent}>{plan.name}</Eyebrow>
+            <Eyebrow color={onDarkPanel.accent}>Aktiv</Eyebrow>
+          </View>
 
-      <Card
-        emphasis="default"
-        padding={0}
-        style={{
-          borderRadius: theme.radius.tile,
-          paddingVertical: theme.spacing.md,
-          paddingHorizontal: 18,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 14,
-        }}
-      >
-        <View
+          {/* Ohne Preis trägt der Planname die große Zeile - sonst klaffte hier eine
+              Lücke, wo vorher „29 € / Monat" stand. */}
+          {plan.price ? (
+            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+              <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 38, lineHeight: 42 }}>
+                {plan.price}
+              </Text>
+              <Text variant="body" color={onDarkPanel.body}>
+                / Monat
+              </Text>
+            </View>
+          ) : (
+            <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 36 }}>
+              {plan.name}
+            </Text>
+          )}
+
+          <Text variant="quote" color={onDarkPanel.bodyStrong} style={{ fontSize: 15 }}>
+            {plan.blurb}
+          </Text>
+          {/* Kein „Nächste Abrechnung: 1. August" mehr - es gibt keine Abrechnung.
+              Der Satz erweckte den Eindruck eines laufenden Vertrags. */}
+          <Eyebrow color={onDarkPanel.meta} style={{ marginTop: 4 }}>
+            Preise stehen noch nicht fest · Zugang derzeit ohne Abrechnung
+          </Eyebrow>
+
+          <View
+            style={{ flexDirection: "row", alignItems: "center", gap: 18, marginTop: theme.spacing.sm }}
+          >
+            <PillButton
+              label="Abo verwalten"
+              size="compact"
+              labelColor={onDarkPanel.onAccent}
+              onPress={() => router.push("/abo")}
+              style={{ flex: 1, backgroundColor: onDarkPanel.title }}
+            />
+            <Text
+              variant="action"
+              color={onDarkPanel.title}
+              style={{ fontSize: 15, textDecorationLine: "underline" }}
+              onPress={() => router.push("/abo")}
+              accessibilityRole="button"
+            >
+              Pläne
+            </Text>
+          </View>
+        </DarkPanel>
+      )}
+
+      {echt ? (
+        <Card
+          emphasis="default"
+          padding={0}
           style={{
-            backgroundColor: theme.colors.inkAction,
-            borderRadius: 7,
-            paddingVertical: 6,
-            paddingHorizontal: 10,
+            borderRadius: theme.radius.tile,
+            paddingVertical: theme.spacing.md,
+            paddingHorizontal: 18,
+            gap: 2,
           }}
         >
-          <Eyebrow color={theme.colors.onInkAction} style={{ fontSize: 12 }}>
-            Visa
-          </Eyebrow>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text variant="numeric" style={{ fontSize: 17, letterSpacing: 0.7 }}>
-            •••• 4242
+          <Text variant="numeric" style={{ fontSize: 17 }}>
+            Keine Zahlungsart
           </Text>
-          <Eyebrow style={{ fontSize: 10, marginTop: 1 }}>Läuft ab 08/28</Eyebrow>
-        </View>
-        <LinkAction label="Ändern" onPress={() => router.push("/abo")} />
-      </Card>
+          <Eyebrow style={{ fontSize: 10 }}>Die Abrechnung ist noch nicht angebunden</Eyebrow>
+        </Card>
+      ) : (
+        <Card
+          emphasis="default"
+          padding={0}
+          style={{
+            borderRadius: theme.radius.tile,
+            paddingVertical: theme.spacing.md,
+            paddingHorizontal: 18,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: theme.colors.inkAction,
+              borderRadius: 7,
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+            }}
+          >
+            <Eyebrow color={theme.colors.onInkAction} style={{ fontSize: 12 }}>
+              Visa
+            </Eyebrow>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text variant="numeric" style={{ fontSize: 17, letterSpacing: 0.7 }}>
+              •••• 4242
+            </Text>
+            <Eyebrow style={{ fontSize: 10, marginTop: 1 }}>Läuft ab 08/28</Eyebrow>
+          </View>
+          <LinkAction label="Ändern" onPress={() => router.push("/abo")} />
+        </Card>
+      )}
 
       <Card
         emphasis="default"
@@ -251,16 +386,23 @@ export function AccountScreen() {
             />
           }
         />
-        <ListRow
-          title="Push täglich 7:00"
-          trailing={
-            <Toggle
-              value={dailyPush}
-              onValueChange={setDailyPush}
-              accessibilityLabel="Tägliche Push-Benachrichtigung um 7 Uhr"
-            />
-          }
-        />
+        {/* Echtes Konto: kein Schalter. Er stand auf "an", aber weder eine
+            Präferenz noch ein Tagesversand existiert (server/maitr/scheduler.ts) -
+            ein Schalter, der nichts schaltet, verspricht Nachrichten, die nie kommen. */}
+        {echt ? (
+          <ListRow title="Push täglich 7:00" meta="Noch nicht verfügbar" />
+        ) : (
+          <ListRow
+            title="Push täglich 7:00"
+            trailing={
+              <Toggle
+                value={dailyPush}
+                onValueChange={setDailyPush}
+                accessibilityLabel="Tägliche Push-Benachrichtigung um 7 Uhr"
+              />
+            }
+          />
+        )}
       </ListCard>
 
       <ListCard style={{ borderRadius: 18 }}>

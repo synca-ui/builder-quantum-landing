@@ -84,7 +84,11 @@ export function AbonnementScreen() {
   const router = useRouter();
   const toast = useToast();
   const dataset = useVenueDataset();
-  const { currentPlan, setPlan } = useStore();
+  const { currentPlan, setPlan, hasRealVenue, showcase } = useStore();
+  // Die ROI-Zahl rechnet auf `useVenueDataset` - Fixtures des Demo-Cafés (61
+  // erfundene Reservierungen, Juli 2025). Für einen echten Betrieb wäre das eine
+  // erfundene Euro-Behauptung; im Wachstum ist sie aus demselben Grund entfernt.
+  const echterBetrieb = hasRealVenue && !showcase;
   const roi = analytics.reservationRoi(dataset.reservations, dataset.averageCheck);
   const euro = (v: number) => `${Math.round(v).toLocaleString("de-DE")} €`;
 
@@ -104,15 +108,24 @@ export function AbonnementScreen() {
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
       <NavHeader title="Pläne" fallback="/konto" />
 
-      <DarkPanel style={{ gap: 6 }}>
-        <Eyebrow color={onDarkPanel.accent}>Was Maitr diesen Monat gebracht hat</Eyebrow>
-        <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 34 }}>
-          {euro(roi.revenue)} vermittelt
-        </Text>
-        <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
-          {roi.covers} Gäste provisionsfrei über Maitr, {euro(roi.savedCommission)} Provision gespart.
-        </Text>
-      </DarkPanel>
+      {echterBetrieb ? (
+        <DarkPanel style={{ gap: 6 }}>
+          <Eyebrow color={onDarkPanel.accent}>Vorschau</Eyebrow>
+          <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
+            Die Abrechnung ist noch nicht angebunden. Ein Plan lässt sich hier ansehen, aber noch nicht buchen.
+          </Text>
+        </DarkPanel>
+      ) : (
+        <DarkPanel style={{ gap: 6 }}>
+          <Eyebrow color={onDarkPanel.accent}>Was Maitr diesen Monat gebracht hat</Eyebrow>
+          <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 30, lineHeight: 34 }}>
+            {euro(roi.revenue)} vermittelt
+          </Text>
+          <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
+            {roi.covers} Gäste provisionsfrei über Maitr, {euro(roi.savedCommission)} Provision gespart.
+          </Text>
+        </DarkPanel>
+      )}
 
       <View style={{ gap: theme.spacing.md }}>
         {PLANS.map((plan) => (
@@ -121,7 +134,7 @@ export function AbonnementScreen() {
       </View>
 
       <Eyebrow tone="faint" style={{ textAlign: "center" }}>
-        Jederzeit kündbar · Abrechnung über Clerk &amp; Stripe
+        {echterBetrieb ? "Abrechnung folgt · noch keine Kosten" : "Jederzeit kündbar · Abrechnung über Clerk & Stripe"}
       </Eyebrow>
     </Screen>
   );

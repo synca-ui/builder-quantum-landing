@@ -33,6 +33,9 @@ const { prismaMock } = vi.hoisted(() => ({
     maitrEngagementPoint: { findMany: vi.fn() },
     maitrGuest: { findMany: vi.fn() },
     reservation: { findMany: vi.fn() },
+    channelConnection: { findMany: vi.fn().mockResolvedValue([]) },
+    menuItem: { count: vi.fn().mockResolvedValue(0) },
+    presenceSnapshot: { findUnique: vi.fn().mockResolvedValue(null) },
     taskDecision: { findMany: vi.fn(), upsert: vi.fn() },
     insightsCache: { findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
   },
@@ -221,6 +224,29 @@ describe("POST /briefing/tasks/:taskId/approve", () => {
     const res = await request(appAlsAngemeldet()).post("/briefing/tasks/review%20r1/approve");
 
     expect(res.status).toBe(400);
+    expect(prismaMock.taskDecision.upsert).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /briefing/tasks/:taskId/dismiss", () => {
+  it("speichert das Verwerfen mit Wiedervorlage und blendet die Aufgabe aus", async () => {
+    expect(await offeneAufgaben()).toContain(AUFGABE);
+
+    const res = await request(appAlsAngemeldet()).post(`/briefing/tasks/${AUFGABE}/dismiss`);
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(res.body.state).toBe("dismissed");
+    const arg = prismaMock.taskDecision.upsert.mock.calls[0][0];
+    expect(arg.create).toMatchObject({ businessId: MEIN_BETRIEB, taskId: AUFGABE, state: "DISMISSED", decidedByUserId: ICH });
+    const reopen = (arg.create.reopenAt as Date).getTime() - Date.now();
+    expect(reopen).toBeGreaterThan(6.9 * TAG_MS);
+    expect(prismaMock.insightsCache.deleteMany).toHaveBeenCalledWith({ where: { businessId: MEIN_BETRIEB } });
+    expect(await offeneAufgaben()).not.toContain(AUFGABE);
+  });
+
+  it("legt für eine erfundene Kennung nichts an", async () => {
+    const res = await request(appAlsAngemeldet()).post("/briefing/tasks/review_gibtsnicht/dismiss");
+    expect(res.status).toBe(404);
     expect(prismaMock.taskDecision.upsert).not.toHaveBeenCalled();
   });
 });

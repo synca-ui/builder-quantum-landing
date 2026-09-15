@@ -16,7 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { createServer } from "../index";
 import { API_PATHS } from "../../client/lib/apiPaths";
-import { BETRIEB_PFADE, LOYALTY_PFADE } from "../../packages/core/src/api";
+import { BETRIEB_PFADE, LOYALTY_PFADE, RESERVIERUNG_PFADE } from "../../packages/core/src/api";
 
 /** Wandelt die Regex eines gemounteten Routers zurück in sein Pfad-Präfix. */
 function prefixFromLayer(layer: any): string {
@@ -80,6 +80,8 @@ const ERWARTETE_METHODEN: Record<keyof typeof BETRIEB_PFADE, string[]> = {
   betriebe: ["get", "post"], // mine() und create()
   betrieb: ["patch"], // update()
   speisekarte: ["get"], // venues.menu() - die Karte der veroeffentlichten Web-App
+  praesenz: ["get"], // venues.presence() - gespeicherter Stand der oeffentlichen Praesenz
+  praesenzAktualisieren: ["post"], // venues.refreshPresence() - Google + Website neu abrufen
 
   oeffentlich: ["get"], // publicProfile()
   integrationen: ["get"], // integrations.list()
@@ -88,6 +90,27 @@ const ERWARTETE_METHODEN: Record<keyof typeof BETRIEB_PFADE, string[]> = {
 };
 
 describe("API-Vertrag zwischen Client und Server", () => {
+  /**
+   * „Konto löschen" in der App ruft `request("/users/me", { method: "DELETE" })`
+   * (mobile/src/features/account/DeleteAccountScreen.tsx) gegen die Basis
+   * /api/maitr. Bis 15.09.2026 gab es dort keine Route - die Löschung endete in
+   * 404, obwohl sie unter /api/users längst gebaut war.
+   */
+  it("DELETE /api/maitr/users/me existiert (In-App-Kontolöschung)", () => {
+    const eintrag = routeEintraege.find((e) => e.path === "/api/maitr/users/me" && e.methods.includes("delete"));
+    expect(eintrag, `Bekannte Routen:\n  ${routes.sort().join("\n  ")}`).toBeDefined();
+  });
+
+  it.each([
+    ["kommende", "get", `/api/maitr${RESERVIERUNG_PFADE.kommende}`],
+    ["status", "patch", `/api/maitr${RESERVIERUNG_PFADE.status("__id__").replace("__id__", ":id")}`],
+    ["eine", "delete", `/api/maitr${RESERVIERUNG_PFADE.eine("__id__").replace("__id__", ":reservationId")}`],
+    ["dismissTask", "post", "/api/maitr/briefing/tasks/:taskId/dismiss"],
+  ] as const)("reservations/briefing %s (%s %s) existiert serverseitig", (_name, methode, pfad) => {
+    const eintrag = routeEintraege.find((e) => e.path === pfad && e.methods.includes(methode));
+    expect(eintrag, `Bekannte Routen:\n  ${routes.sort().join("\n  ")}`).toBeDefined();
+  });
+
   it("die Routing-Tabelle lässt sich überhaupt auslesen", () => {
     // Schlägt das fehl, prüft der Rest nichts mehr – dann ist die
     // Express-Version umgestellt und prefixFromLayer muss nachgezogen werden.

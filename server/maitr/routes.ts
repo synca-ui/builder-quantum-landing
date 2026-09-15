@@ -77,6 +77,8 @@ import {
   gastKartenToken,
 } from "../routes/publicStampcards";
 import { istExpoPushToken } from "../services/push";
+import { tagesbeginnIn } from "../utils/zeitzone";
+import { aktualisierePraesenz, ladePraesenz } from "./praesenz";
 import { passUpdatePushen } from "../wallet/update";
 
 const DAY_MS = 86_400_000;
@@ -300,6 +302,40 @@ venuesRouter.get(
         })),
       })),
     });
+  }),
+);
+
+/**
+ * GET /venues/:venueId/presence - die öffentliche Präsenz des Betriebs: der
+ * Google-Maps-Eintrag (Schnitt, Anzahl, fünf Bewertungen, Fotos, Zeiten), die
+ * Prüfung seiner Website und der daraus gerechnete Präsenzbericht. Alles ohne
+ * Google-Freigabe erhoben (server/maitr/praesenz/).
+ *
+ * Nur lesen, kein Fremdabruf: `status: "ausstehend"` sagt der App, dass sie
+ * den Abruf anstoßen soll. Hinter `venueGuard` - auch das Personal darf sehen,
+ * wie der Betrieb bei Google dasteht.
+ */
+venuesRouter.get(
+  "/:venueId/presence",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    res.json(await ladePraesenz(venueOf(req)));
+  }),
+);
+
+/**
+ * POST /venues/:venueId/presence/refresh - Google und Website neu abrufen.
+ *
+ * Kostet Geld (Places ist ein bezahlter Dienst). Deshalb gedrosselt IM ABLAUF
+ * statt per IP-Limiter: Liegt der letzte Abruf keine zehn Minuten zurück, kommt
+ * der gespeicherte Stand zurück - unabhängig davon, wer oder wie oft fragt. Ein
+ * `erzwingen` gibt es über diese Route bewusst nicht.
+ */
+venuesRouter.post(
+  "/:venueId/presence/refresh",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    res.json(await aktualisierePraesenz(venueOf(req)));
   }),
 );
 
@@ -587,6 +623,54 @@ reservationsRouter.get(
   }),
 );
 
+// Liegt in server/utils/zeitzone.ts, weil die öffentliche Reservierung dieselbe
+// Rechnung braucht. Hier weiter exportiert - der Reservierungstest importiert sie.
+export { tagesbeginnIn };
+
+/**
+ * GET /reservations/upcoming?venueId&tage - Reservierungen ab heute.
+ *
+ * ANLASS: Web-App-Buchungen landen in `Reservation` (source "website", Status
+ * PENDING), und der Server schickt dem Wirt einen Push. Die App zeigte danach
+ * trotzdem ihre Fixture-Tage vom Juli 2025: `GET /day` liefert rohe Prisma-Zeilen
+ * in einer Form, die kein Client-Typ beschreibt, und niemand rief sie auf. Diese
+ * Route liefert die Vertragsform (`toApiReservation`) über mehrere Tage, damit
+ * Tische, Abend und Posteingang dieselbe Liste lesen.
+ *
+ * "Heute" beginnt in der Zeitzone des Betriebs, nicht in der des Servers - eine
+ * Buchung um 00:30 gehört sonst in Köln zum Vortag. Das Ende ist ebenso ein
+ * Kalendertag: Mitternacht des Tages `start + tage` in der Betriebszone.
+ */
+reservationsRouter.get(
+  "/upcoming",
+  venueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const rohTage = Number(req.query.tage ?? 14);
+    const tage = Number.isFinite(rohTage) ? Math.min(60, Math.max(1, Math.floor(rohTage))) : 14;
+
+    const betrieb = await prisma.business.findUnique({
+      where: { id: venueId },
+      select: { timezone: true },
+    });
+    const zone = betrieb?.timezone ?? "Europe/Berlin";
+    const start = tagesbeginnIn(new Date(), zone);
+    // NICHT start + tage × 24 h. ANLASS (Prüfbefund): Am 25.10. (25-Stunden-Tag)
+    // endete "heute" um 23:00 - die Buchung um 23:30 fehlte auf dem Abend-Screen;
+    // am 29.03. (23 Stunden) zählte 00:30 des Folgetags als "noch heute". Ein halber
+    // Tag Puffer landet sicher im Zieltag, `tagesbeginnIn` schneidet auf dessen
+    // Mitternacht - dieselbe Rechnung wie in server/routes/publicReservations.ts.
+    const ende = tagesbeginnIn(new Date(start.getTime() + tage * DAY_MS + DAY_MS / 2), zone);
+
+    const zeilen = await prisma.reservation.findMany({
+      where: { businessId: venueId, reservationTime: { gte: start, lt: ende } },
+      orderBy: { reservationTime: "asc" },
+      take: 500,
+    });
+    return res.json(zeilen.map(toApiReservation));
+  }),
+);
+
 const createReservationSchema = z.object({
   venueId: z.string().min(1),
   guestName: z.string().min(1).max(120),
@@ -619,15 +703,20 @@ reservationsRouter.post(
         guestPhone: phone,
         reservationTime: new Date(start),
         source: "maitr",
+        // Der Betrieb trägt selbst ein - eine Anfrage an sich selbst gibt es nicht.
+        // Vorher blieb der Vorgabewert PENDING stehen, und die eigene Buchung stand
+        // im Posteingang als offene Anfrage.
+        status: "CONFIRMED",
       },
     });
-    return res.status(201).json(reservation);
+    // Vertragsform statt roher Prisma-Zeile - der Client typisiert `Reservation`.
+    return res.status(201).json(toApiReservation(reservation));
   }),
 );
 
 const statusSchema = z.object({
   venueId: z.string().min(1),
-  status: z.enum(["confirmed", "cancelled"]),
+  status: z.enum(["confirmed", "cancelled", "no_show"]),
 });
 
 /**
@@ -660,8 +749,35 @@ reservationsRouter.patch(
         .status(400)
         .json({ error: "Diese Reservierung ist bereits abgeschlossen." });
     }
+    // Eine Absage ist für den Gast endgültig: Er hat (bei einer Anfrage) die
+    // Absage-Mail bekommen. Still wieder auf CONFIRMED zu setzen hieße, einen Tisch
+    // für jemanden freizuhalten, der nicht mehr kommt - und es ginge keine Mail raus,
+    // weil nur Übergänge aus PENDING mailen. Wer den Gast doch empfangen will, trägt
+    // die Reservierung neu ein.
+    if (existing.status === "CANCELLED" && status !== "cancelled") {
+      return res
+        .status(400)
+        .json({ error: "Diese Reservierung wurde abgesagt. Bitte trag sie bei Bedarf neu ein." });
+    }
 
-    const zielStatus = status === "confirmed" ? "CONFIRMED" : "CANCELLED";
+    const zielStatus =
+      status === "confirmed" ? "CONFIRMED" : status === "no_show" ? "NO_SHOW" : "CANCELLED";
+    // Ein No-Show setzt eine Zusage voraus. ANLASS (Prüfbefund): Eine nie
+    // beantwortete Web-Anfrage (PENDING) ließ sich nach Terminbeginn auf NO_SHOW
+    // setzen - ohne Mail, der Gast hatte weder Zu- noch Absage, und die Zeile zählte
+    // im Dataset als "no_show". Die App bietet den Knopf dort nicht an
+    // (erlaubteAktionen in mobile/src/features/reservations/echteReservierungen.ts);
+    // die Route hält dieselbe Regel.
+    if (zielStatus === "NO_SHOW" && !["CONFIRMED", "ARRIVED"].includes(existing.status)) {
+      return res
+        .status(400)
+        .json({ error: "Ein No-Show geht nur bei einer bestätigten Reservierung." });
+    }
+    // Ein No-Show ist erst möglich, wenn der Termin begonnen hat - vorher wäre es
+    // eine Absage unter falschem Namen und verfälschte die No-Show-Quote.
+    if (zielStatus === "NO_SHOW" && existing.reservationTime.getTime() > Date.now()) {
+      return res.status(400).json({ error: "Ein No-Show geht erst ab Beginn der Reservierung." });
+    }
     // ANLASS: Der Besitz wurde oben per findFirst geprüft, das Update selbst
     // lief aber über ein bloßes { id } - genau das Anti-Pattern, vor dem der
     // Kommentar bei DELETE /:reservationId (unten) warnt. updateMany mit
@@ -679,8 +795,8 @@ reservationsRouter.patch(
     });
 
     // Gast informieren — nur beim ECHTEN Übergang aus PENDING, nicht bei
-    // idempotenten Wiederholungen.
-    if (existing.status === "PENDING" && existing.guestEmail) {
+    // idempotenten Wiederholungen. Ein No-Show bekommt keine Mail.
+    if (existing.status === "PENDING" && existing.guestEmail && zielStatus !== "NO_SHOW") {
       if (zielStatus === "CONFIRMED") {
         await sendReservationConfirmation(
           existing.guestEmail,
@@ -717,10 +833,13 @@ interface ReservationRow {
   guestName: string;
   guestCount: number;
   guestPhone: string | null;
+  guestEmail?: string | null;
+  specialRequests?: string | null;
   reservationTime: Date;
   duration: number;
   status: string;
   source: string;
+  createdAt?: Date;
 }
 
 /** Prisma-`ReservationStatus` → Status des API-Vertrags (`@maitr/core/types`). */
@@ -745,7 +864,9 @@ function toApiReservation(r: ReservationRow): ApiReservation {
   // Reihenfolge mit Absicht: Eine Stornierung schlägt die Quelle. Sonst sähe ein
   // stornierter Walk-in im Client weiterhin nach belegtem Tisch aus.
   const status: ApiReservation["status"] =
-    r.status === "CANCELLED" || r.status === "NO_SHOW"
+    r.status === "NO_SHOW"
+      ? "no_show"
+      : r.status === "CANCELLED"
       ? "cancelled"
       : r.source === "walk_in"
         ? "walk_in"
@@ -759,6 +880,10 @@ function toApiReservation(r: ReservationRow): ApiReservation {
     end: new Date(r.reservationTime.getTime() + r.duration * 60_000).toISOString(),
     status,
     phone: r.guestPhone ?? undefined,
+    ...(r.guestEmail ? { email: r.guestEmail } : {}),
+    ...(r.specialRequests ? { note: r.specialRequests } : {}),
+    source: r.source,
+    ...(r.createdAt ? { createdAt: r.createdAt.toISOString() } : {}),
   };
 }
 
@@ -1011,6 +1136,43 @@ briefingRouter.post(
   }),
 );
 
+/**
+ * Aufgabe verwerfen - das Gegenstück zur Freigabe für "nicht relevant".
+ *
+ * Vorher verschwand eine weggewischte Aufgabe nur aus dem Komponentenzustand der
+ * Sitzung (`TaskDecisionState.DISMISSED` existierte, eine Route nicht) und kam beim
+ * nächsten Öffnen wieder. Dieselbe Wiedervorlage wie bei der Freigabe: Eine
+ * Daueraufgabe verschwindet nicht für immer, nur weil sie heute nicht passte.
+ */
+briefingRouter.post(
+  "/tasks/:taskId/dismiss",
+  taskVenueGuard,
+  asyncHandler(async (req, res) => {
+    const venueId = (req as typeof req & { venueId?: string }).venueId!;
+    const taskId = String(req.params.taskId ?? "");
+    if (!TASK_ID_PATTERN.test(taskId)) return res.status(400).json({ error: "Ungültige Aufgabenkennung" });
+
+    const now = new Date();
+    const task = await resolveTask(venueId, taskId, now);
+    if (!task) return res.status(404).json({ error: "Aufgabe nicht gefunden" });
+
+    const entschieden = {
+      state: "DISMISSED" as const,
+      decidedAt: now,
+      decidedByUserId: req.userId!,
+      reopenAt: new Date(now.getTime() + REOPEN_AFTER_MS),
+    };
+    const decision: TaskDecisionRow = await prisma.taskDecision.upsert({
+      where: { businessId_taskId: { businessId: venueId, taskId } },
+      create: { businessId: venueId, taskId, ...entschieden },
+      update: entschieden,
+    });
+
+    await invalidateBriefingCache(venueId);
+    return res.json(withDecision(task, decision));
+  }),
+);
+
 const draftSchema = z.object({ draft: z.string().min(1).max(4000) });
 
 /**
@@ -1129,7 +1291,7 @@ const ownerGuard: RequestHandler = (req, res, next) => {
  */
 
 /**
- * Die vier änderbaren Profilfelder - alle optional, mindestens eines nötig (siehe
+ * Die fünf änderbaren Profilfelder - alle optional, mindestens eines nötig (siehe
  * `.refine` unten). `venueId` muss erlaubt bleiben: `resolveVenue` liest sie aus dem
  * Rumpf, und `validateBody` läuft danach (siehe die Begründung bei `programFelder`
  * unten).
@@ -1149,6 +1311,16 @@ const patchVenueSchema = z
      * gar keine Tagline.
      */
     tagline: z.string().trim().max(200).optional(),
+    /**
+     * Die längere Beschreibung ("Über uns"). Dieselben Regeln wie `tagline`: "" löscht
+     * (→ null im Handler), ausgelassen lässt sie unverändert. Die Länge übernimmt sie
+     * von `createVenueSchema` - dieselbe Grenze beim Anlegen wie beim Ändern.
+     *
+     * ANLASS: Der Präsenz-Hebel „Beschreibung ergänzen" misst `Business.description`,
+     * aber kein Weg aus der App schrieb die Spalte - „Profil verwalten" speicherte nur
+     * auf dem Gerät. Der Hebel ließ sich in der App nicht erledigen.
+     */
+    description: createVenueSchema.shape.description,
     timezone: createVenueSchema.shape.timezone,
     /**
      * `server/schemas/configuration.ts#StrictOpeningHoursSchema` - die enge Form
@@ -1185,17 +1357,25 @@ venuesRouter.patch(
     // Schreibkennung dürfen nie auseinanderfallen.
     const venueId = venueOf(req);
 
-    const { venueId: _ignoriert, tagline, openingHours, ...rest } =
+    const { venueId: _ignoriert, tagline, description, openingHours, ...rest } =
       req.body as z.infer<typeof patchVenueSchema>;
 
     // Prisma ignoriert `undefined`-Felder in `data` (kein Schreibzugriff auf die
     // Spalte) - `name` und `timezone` können deshalb unverändert durchgereicht
-    // werden. `tagline` und `openingHours` brauchen je eine eigene Zeile.
+    // werden. `tagline`, `description` und `openingHours` brauchen je eine eigene
+    // Zeile.
     const data: Record<string, unknown> = { ...rest };
     // "" löscht die Tagline (→ null); das Schema selbst lässt hier keinen
     // `null`-Wert zu, die Umwandlung geschieht erst hier.
     if (tagline !== undefined) {
       data.tagline = tagline === "" ? null : tagline;
+    }
+    // Dieselbe Regel für die Beschreibung. Stünde sie in `rest`, landete "" als
+    // leerer String in der Spalte - `toOwnerVenue` blendete ihn zwar aus, aber der
+    // Präsenzbericht und jeder andere Leser der Spalte müssten "" und NULL als
+    // dieselbe Aussage erkennen.
+    if (description !== undefined) {
+      data.description = description === "" ? null : description;
     }
     if (openingHours !== undefined) {
       // Json-Spalten verlangen bei Prisma ein Sentinel statt eines blossen `null` -
@@ -1215,6 +1395,14 @@ venuesRouter.patch(
     }
 
     const business = await prisma.business.update({ where: { id: venueId }, data });
+    // Beschreibung und Öffnungszeiten fließen in Score und Aufgaben des Briefings.
+    // ANLASS (Prüfbefund): Der Präsenzbericht rechnet bei jedem Lesen neu und zeigte
+    // den erledigten Hebel "Beschreibung ergänzen" sofort - `GET /briefing/today`
+    // lieferte bis zu 15 Minuten den alten Score samt alter Aufgabe. Ein Fehler beim
+    // Verwerfen darf die gespeicherte Änderung nicht als gescheitert melden.
+    await invalidateBriefingCache(venueId).catch((err: unknown) => {
+      console.warn(`[maitr] Briefing-Cache für Betrieb ${venueId} nicht verworfen: ${(err as Error)?.message}`);
+    });
     return res.json(toOwnerVenue(business));
   }),
 );

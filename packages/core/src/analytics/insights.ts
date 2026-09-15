@@ -24,8 +24,14 @@ function euro(value: number): string {
 export function buildInsights(data: VenueDataset): Insight[] {
   const insights: Insight[] = [];
 
-  /* Unbeantwortete Bewertungen - je frischer und schlechter, desto dringender. */
+  /* Unbeantwortete Bewertungen - je frischer und schlechter, desto dringender.
+     NUR, wenn der Antwortstatus überhaupt bekannt ist: Ohne Google-Freigabe
+     stammen die Bewertungen aus Google Places, und Places nennt keine
+     Inhaberantworten. Jede davon wäre sonst "offen" - auch die längst
+     beantwortete - und der Start-Screen forderte zu Antworten auf, die es gibt. */
+  const antwortstatusBekannt = !data.coverage?.unknown?.includes("responsiveness");
   const unanswered = data.reviews
+    .filter(() => antwortstatusBekannt)
     .filter((r) => !r.repliedAt)
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   for (const r of unanswered.slice(0, 3)) {

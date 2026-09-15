@@ -4,14 +4,28 @@
  * gewichtete Rechnung über fünf Faktoren. Jeder Faktor liefert seinen erreichten
  * Anteil und den offenen Hebel zurück, damit die UI sagen kann, *was* den Score
  * hebt - nicht nur, dass er niedrig ist.
+ *
+ * DECKUNG (seit der öffentlichen Präsenzprüfung): Nicht jede Datenlage kennt
+ * alle fünf Faktoren. Ohne Google-Freigabe gibt es keine Antwortquote und keine
+ * Reichweite - `data.coverage.unknown` nennt sie. Solche Faktoren tragen dann
+ * NICHT als Null bei (das wäre ein Abzug für etwas, das nie gemessen wurde),
+ * sondern fallen aus der Rechnung; die übrigen Gewichte werden auf 1 normiert.
+ * Der Score sagt über `coverage.measuredWeight`, worauf er beruht, und die
+ * Oberfläche sagt es dem Wirt weiter ("beruht auf 3 von 5 Faktoren").
  */
 
 import { clamp01, daysBetween, round } from "./math";
 import { reviewAnalytics } from "./reviews";
-import type { PresenceScoreResult, ScoreFactor, VenueDataset } from "./types";
+import type {
+  PresenceScoreResult,
+  ScoreFactor,
+  ScoreFactorKey,
+  ScoreFactorStatus,
+  VenueDataset,
+} from "./types";
 
 interface FactorSpec {
-  key: string;
+  key: ScoreFactorKey;
   label: string;
   weight: number;
   hint: string;
@@ -26,7 +40,9 @@ const FACTORS: FactorSpec[] = [
     weight: 0.3,
     hint: "Sterne-Schnitt über alle Kanäle - der stärkste Vertrauensfaktor.",
     achieved: (d) => {
-      const r = reviewAnalytics(d.reviews, d.now).averageRating;
+      // Googles eigener Schnitt über alle Bewertungen schlägt die Stichprobe
+      // aus `reviews` (ohne Freigabe sind das nur fünf).
+      const r = d.reviewSummary?.averageRating ?? reviewAnalytics(d.reviews, d.now).averageRating;
       // 3,0★ gilt als Boden, 5,0★ als Voll - darunter trägt der Faktor nichts.
       return clamp01((r - 3) / 2);
     },
@@ -42,16 +58,23 @@ const FACTORS: FactorSpec[] = [
     key: "completeness",
     label: "Profil-Vollständigkeit",
     weight: 0.25,
-    hint: "Speisekarte, Feiertagszeiten, Außenplätze, Bio und ≥5 Fotos.",
+    hint: "Speisekarte, Fotos, Öffnungszeiten, Website, Telefon, Bio - alles, was Gäste vorab suchen.",
     achieved: (d) => {
       const p = d.profile;
+      // Nur Flags, die die Quelle wirklich gemessen hat (siehe ProfileSignals).
       const flags = [
         p.hasMenu,
         p.hasHolidayHours,
         p.hasOutdoorAttribute,
         p.hasBio,
-        p.photoCount >= 5,
-      ];
+        typeof p.photoCount === "number" ? p.photoCount >= 5 : undefined,
+        p.hasOpeningHours,
+        p.hasWebsite,
+        p.hasPhone,
+        p.hasInstagram,
+        p.hasReservation,
+      ].filter((f): f is boolean => typeof f === "boolean");
+      if (flags.length === 0) return 0;
       return flags.filter(Boolean).length / flags.length;
     },
   },
@@ -82,24 +105,57 @@ const FACTORS: FactorSpec[] = [
 ];
 
 export function presenceScore(data: VenueDataset): PresenceScoreResult {
+  const unknown = new Set<ScoreFactorKey>(data.coverage?.unknown ?? []);
+  const estimated = new Set<ScoreFactorKey>(data.coverage?.estimated ?? []);
+
+  // Erst die Deckung bestimmen, dann rechnen: Die offenen Punkte je Faktor
+  // hängen davon ab, wie viel Gewicht überhaupt in der Rechnung ist.
+  const statusVon = (key: ScoreFactorKey): ScoreFactorStatus =>
+    unknown.has(key) ? "unbekannt" : estimated.has(key) ? "geschaetzt" : "gemessen";
+  const measuredWeight = round(
+    FACTORS.filter((f) => statusVon(f.key) !== "unbekannt").reduce((s, f) => s + f.weight, 0),
+    4,
+  );
+
   const factors: ScoreFactor[] = FACTORS.map((f) => {
-    const achieved = clamp01(f.achieved(data));
+    const status = statusVon(f.key);
+    const achieved = status === "unbekannt" ? 0 : clamp01(f.achieved(data));
+    // Auf das gemessene Gewicht normiert: Fehlen Faktoren, teilen sich die
+    // übrigen die 100 Punkte, damit Score + offene Punkte weiter 100 ergeben.
+    const anteil = measuredWeight > 0 ? f.weight / measuredWeight : 0;
     return {
       key: f.key,
       label: f.label,
       achieved,
       weight: f.weight,
-      openPoints: round((1 - achieved) * f.weight * 100),
+      openPoints: status === "unbekannt" ? 0 : round((1 - achieved) * anteil * 100),
       hint: f.hint,
+      status,
     };
   });
 
-  const score = round(factors.reduce((sum, f) => sum + f.achieved * f.weight * 100, 0));
+  const score =
+    measuredWeight > 0
+      ? round(
+          factors
+            .filter((f) => f.status !== "unbekannt")
+            .reduce((sum, f) => sum + (f.achieved * f.weight) / measuredWeight, 0) * 100,
+        )
+      : 0;
 
   const biggestLever =
     factors
-      .filter((f) => f.openPoints > 0)
+      .filter((f) => f.status !== "unbekannt" && f.openPoints > 0)
       .sort((a, b) => b.openPoints - a.openPoints)[0] ?? null;
 
-  return { score, factors, biggestLever };
+  return {
+    score,
+    factors,
+    biggestLever,
+    coverage: {
+      measuredWeight,
+      unknown: factors.filter((f) => f.status === "unbekannt").map((f) => f.key),
+      estimated: factors.filter((f) => f.status === "geschaetzt").map((f) => f.key),
+    },
+  };
 }

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import { request } from "@maitr/core";
+import { api, isCoreConfigured, request } from "@maitr/core";
 
 import { Card } from "../../components/ui/Card";
 import { Eyebrow } from "../../components/ui/Eyebrow";
@@ -9,10 +9,11 @@ import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
-import { mobileAuthAdapter } from "../../lib/auth";
+import { hasRealAuth, mobileAuthAdapter } from "../../lib/auth";
 import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
+import { useInhaber } from "./AccountScreen";
 
 /**
  * Das Wort, das getippt werden muss. Beide Schreibweisen zählen: Auf der
@@ -61,7 +62,48 @@ export function DeleteAccountScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
-  const { user, deleteLocalData } = useStore();
+  const { user, deleteLocalData, venueId, hasRealVenue, showcase } = useStore();
+
+  // Die Warnung muss das Konto nennen, das wirklich gelöscht wird. `user` ist im
+  // Store immer die Demo-Attrappe - für ein echtes Konto stand hier deshalb
+  // sofia@cafe-goldstueck.de (Prüfbericht Punkt 1). Ohne bekannte E-Mail fehlt
+  // die Klammer lieber, als eine fremde Adresse zu zeigen.
+  const echtesKonto = hasRealAuth() && !showcase;
+  const echterBetrieb = hasRealVenue && !showcase;
+  const inhaber = useInhaber(echtesKonto, venueId);
+  const email = echtesKonto || echterBetrieb ? inhaber?.email : user?.email;
+
+  // Welche Betriebe die Löschung trifft, fragt der Screen selbst ab, statt den
+  // Namen aus dem Store zu nehmen. Der Store kennt nur den ERSTEN Eintrag aus
+  // GET /venues (store.tsx), DELETE /api/users/me löscht aber jeden Betrieb
+  // des Kontos, an dem sonst niemand hängt (server/routes/users.ts). Wer über
+  // die Web-App zwei Betriebe veröffentlicht hat (ensureUserBusiness legt pro
+  // Name einen an), bekäme sonst bei einer Aktion ohne Rückweg nur einen
+  // genannt. `null` heißt „nicht abrufbar" - dann nennt die Warnung keinen
+  // Namen, statt einen womöglich unvollständigen.
+  const [betriebe, setBetriebe] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!echtesKonto || !isCoreConfigured()) return;
+    let aktiv = true;
+    api.venues
+      .mine()
+      .then((liste) => {
+        if (!aktiv) return;
+        setBetriebe(
+          Array.isArray(liste)
+            ? liste.map((v) => (typeof v?.name === "string" ? v.name.trim() : "")).filter(Boolean)
+            : null,
+        );
+      })
+      .catch(() => {
+        if (aktiv) setBetriebe(null);
+      });
+    return () => {
+      aktiv = false;
+    };
+    // `venueId` fragt nach einer Anmeldung oder Übernahme erneut.
+  }, [echtesKonto, venueId]);
+  const bekannteBetriebe = echtesKonto ? betriebe : null;
 
   const [aufgeklappt, setAufgeklappt] = useState(false);
   const [wort, setWort] = useState("");
@@ -140,9 +182,26 @@ export function DeleteAccountScreen() {
           keinen Weg zurück, den diese App oder ein Support anbieten könnte.
         */}
         <Text variant="body" tone="secondary">
-          Mit dem Konto {user?.email ? `(${user.email}) ` : ""}werden die Daten deines
-          Betriebs gelöscht. Es gibt danach keinen Weg, sie wiederherzustellen - auch
-          nicht auf Nachfrage bei uns.
+          Mit dem Konto {email ? `(${email}) ` : ""}werden{" "}
+          {!echtesKonto && !echterBetrieb ? (
+            // Demo und Showcase: Wortlaut wie bisher.
+            "die Daten deines Betriebs"
+          ) : bekannteBetriebe === null ? (
+            "die Daten aller Betriebe, die nur an deinem Konto hängen,"
+          ) : bekannteBetriebe.length === 0 ? (
+            "deine Daten"
+          ) : bekannteBetriebe.length === 1 ? (
+            <>
+              die Daten von <Text variant="body">{bekannteBetriebe[0]}</Text>
+            </>
+          ) : (
+            <>
+              die Daten deiner {bekannteBetriebe.length} Betriebe{" "}
+              <Text variant="body">{bekannteBetriebe.join(", ")}</Text>
+            </>
+          )}{" "}
+          gelöscht. Es gibt danach keinen Weg, sie wiederherzustellen - auch nicht auf
+          Nachfrage bei uns.
         </Text>
 
         <View style={{ gap: 8, marginTop: theme.spacing.xs }}>

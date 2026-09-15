@@ -23,6 +23,7 @@
  * Railway-Instanz läuft, ist das unkritisch. Bei Skalierung gehört der Aufruf
  * nach aussen, etwa als geschützte Route, die ein echter Cron anstösst.
  */
+import { aktualisiereVeraltetePraesenz } from "./praesenz";
 import { syncAll } from "./sync";
 
 /** Kleinster sinnvoller Abstand. Darunter treibt man nur die Fremd-Kontingente hoch. */
@@ -40,14 +41,26 @@ async function tick(): Promise<void> {
   running = true;
   const started = Date.now();
   try {
-    await syncAll();
+    try {
+      await syncAll();
+    } catch (err) {
+      // Fehlende Tabellen (Migration nicht eingespielt) und fehlende
+      // MAITR_*-Variablen landen beide hier. syncAll faengt bereits je Verbindung
+      // ab; was bis hierher durchkommt, betrifft den ganzen Lauf. Nur melden,
+      // niemals den Prozess mitreissen — die uebrige API haengt daran.
+      console.error("[maitr] Zeitgeber: Lauf fehlgeschlagen:", (err as Error).message);
+    }
+    // Öffentliche Präsenz (Google Places + Website) für Betriebe, deren Stand
+    // älter als 24 Stunden ist - gedeckelt je Tick, siehe praesenz/index.ts.
+    // Eigener Block: Ein gescheiterter Kanal-Sync darf die Präsenz nicht
+    // mitreißen und umgekehrt - die meisten Betriebe haben gar keinen Kanal.
+    try {
+      const aufgefrischt = await aktualisiereVeraltetePraesenz();
+      if (aufgefrischt) console.log(`[maitr] Zeitgeber: Präsenz für ${aufgefrischt} Betrieb(e) aufgefrischt`);
+    } catch (err) {
+      console.error("[maitr] Zeitgeber: Präsenz-Lauf fehlgeschlagen:", (err as Error).message);
+    }
     console.log(`[maitr] Zeitgeber: Lauf fertig in ${Date.now() - started} ms`);
-  } catch (err) {
-    // Fehlende Tabellen (Migration nicht eingespielt) und fehlende
-    // MAITR_*-Variablen landen beide hier. syncAll faengt bereits je Verbindung
-    // ab; was bis hierher durchkommt, betrifft den ganzen Lauf. Nur melden,
-    // niemals den Prozess mitreissen — die uebrige API haengt daran.
-    console.error("[maitr] Zeitgeber: Lauf fehlgeschlagen:", (err as Error).message);
   } finally {
     running = false;
   }

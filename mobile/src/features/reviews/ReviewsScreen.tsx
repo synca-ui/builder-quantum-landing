@@ -14,6 +14,8 @@ import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 
+import { BewertungenLaden, GoogleBewertungenAnsicht } from "./GoogleBewertungenAnsicht";
+
 export interface Review {
   id: string;
   author: string;
@@ -58,14 +60,48 @@ export const reviews: Review[] = [
  * Screen 13 · Bewertungen - seit dem Tabbar-Umbau ein Hauptbereich, nicht mehr ein
  * Unter-Screen von Start.
  *
- * Antwortstatus liegt im Store: „Freigeben" markiert die Bewertung als beantwortet,
- * der Zähler oben zählt runter, und die Karte verliert Rahmen und Aktionen.
+ * Drei Fälle, entschieden allein über den Store:
+ *  - Präsenz da (echter Betrieb, Abruf gelaufen): die öffentlichen Google-Bewertungen
+ *    (`GoogleBewertungenAnsicht`). Ohne Google-Freigabe gibt es dort nichts zu
+ *    beantworten - also auch kein „Freigeben".
+ *  - Echter Betrieb, Präsenz noch nicht da: Laden bzw. „Erneut versuchen". Keine
+ *    Demo-Bewertungen als Lückenfüller, die sähen aus wie die eigenen.
+ *  - Demomodus und Showcase: die bisherige Vorführung, unverändert.
+ *
+ * Die Hooks der drei Ansichten stecken in je eigenen Komponenten. Wechselt der Fall
+ * (die erste Antwort kommt an), tauscht React die Komponente aus, statt Hooks hinter
+ * einer Bedingung ein- oder auszuschalten.
  *
  * Kein `NavHeader`: Als Tab-Wurzel gibt es nichts, wohin ein Zurück-Pfeil führen
  * könnte - Start, Beiträge, Wachstum und Konto tragen aus demselben Grund keinen.
  * Der Weg zurück ist die Tab-Leiste.
  */
 export function ReviewsScreen() {
+  const { praesenz, praesenzLaedt, aktualisierePraesenz, hasRealVenue, showcase, channels } =
+    useStore();
+
+  if (praesenz) {
+    return (
+      <GoogleBewertungenAnsicht
+        praesenz={praesenz}
+        laedt={praesenzLaedt}
+        aktualisiere={aktualisierePraesenz}
+        googleVerbunden={Boolean(channels.google)}
+      />
+    );
+  }
+  if (hasRealVenue && !showcase) {
+    return <BewertungenLaden laedt={praesenzLaedt} aktualisiere={aktualisierePraesenz} />;
+  }
+  return <DemoBewertungen />;
+}
+
+/**
+ * Die Vorführung (Café Goldstück): Antwortstatus liegt im Store, „Freigeben"
+ * markiert die Bewertung als beantwortet, der Zähler oben zählt runter, und die
+ * Karte verliert Rahmen und Aktionen.
+ */
+function DemoBewertungen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();

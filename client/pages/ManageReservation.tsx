@@ -5,6 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar, Clock, User, Users, MessageSquare, CheckCircle, XCircle } from "lucide-react";
+import { formatiereInZone, STANDARD_ZONE, wanduhrFeldIn, zeitpunktAusWanduhrFeld } from "@maitr/core/zeitzone";
+
+/**
+ * Uhrzeiten dieser Seite sind Wanduhr des BETRIEBS, nicht des Browsers und nicht
+ * UTC. ANLASS (15.09.2026): Das Feld wurde mit `toISOString().slice(0, 16)`
+ * belegt (19:00 Köln stand als 17:00 da), und `handleUpdate` schickte die Zeit
+ * bei JEDEM Speichern mit, im Browser gelesen - wer nur die Personenzahl
+ * änderte, rückte die Buchung zwei Stunden nach vorn.
+ */
+function zoneDer(reservation: any): string {
+  return reservation?.business?.timezone || STANDARD_ZONE;
+}
+
+function formularAus(reservation: any) {
+  return {
+    guestName: reservation.guestName,
+    guestCount: reservation.guestCount,
+    reservationTime: wanduhrFeldIn(new Date(reservation.reservationTime), zoneDer(reservation)),
+    specialRequests: reservation.specialRequests || "",
+  };
+}
 
 export default function ManageReservation() {
   const { id } = useParams();
@@ -36,12 +57,7 @@ export default function ManageReservation() {
       const data = await res.json();
       if (data.success) {
         setReservation(data.data);
-        setEditForm({
-          guestName: data.data.guestName,
-          guestCount: data.data.guestCount,
-          reservationTime: new Date(data.data.reservationTime).toISOString().slice(0, 16),
-          specialRequests: data.data.specialRequests || "",
-        });
+        setEditForm(formularAus(data.data));
       } else {
         setError(data.error);
       }
@@ -53,20 +69,30 @@ export default function ManageReservation() {
   };
 
   const handleUpdate = async () => {
+    // Zeit nur schicken, wenn der Gast sie wirklich geändert hat - verglichen
+    // mit genau dem Wert, mit dem das Feld vorbelegt wurde.
+    const { reservationTime: feldZeit, ...rest } = editForm;
+    const zeitGeaendert = feldZeit !== formularAus(reservation).reservationTime;
+    const neueZeit = zeitGeaendert ? zeitpunktAusWanduhrFeld(feldZeit, zoneDer(reservation)) : null;
+    if (zeitGeaendert && !neueZeit) {
+      alert("Bitte gib Datum und Uhrzeit vollständig an.");
+      return;
+    }
     try {
       setLoading(true);
       const res = await fetch(`/api/public/reservations/${id}${tokenQuery}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...editForm,
+          ...rest,
           guestCount: Number(editForm.guestCount),
-          reservationTime: new Date(editForm.reservationTime).toISOString(),
+          ...(neueZeit ? { reservationTime: neueZeit.toISOString() } : {}),
         })
       });
       const data = await res.json();
       if (data.success) {
         setReservation(data.data);
+        setEditForm(formularAus(data.data));
         setIsEditing(false);
       } else {
         alert(data.error);
@@ -146,7 +172,7 @@ export default function ManageReservation() {
                     <div>
                       <p className="text-sm text-gray-500">Datum & Uhrzeit</p>
                       <p className="font-medium">
-                        {new Date(reservation.reservationTime).toLocaleString("de-DE", { dateStyle: "full", timeStyle: "short" })} Uhr
+                        {formatiereInZone(new Date(reservation.reservationTime), zoneDer(reservation), { dateStyle: "full", timeStyle: "short" })} Uhr
                       </p>
                     </div>
                   </div>
@@ -189,7 +215,15 @@ export default function ManageReservation() {
                   <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={handleCancel}>
                     Stornieren
                   </Button>
-                  <Button className="bg-teal-600 hover:bg-teal-700 text-white" onClick={() => setIsEditing(true)}>
+                  <Button
+                    className="bg-teal-600 hover:bg-teal-700 text-white"
+                    onClick={() => {
+                      // Frisch aus dem gespeicherten Stand: Ein abgebrochener
+                      // Entwurf darf beim nächsten Speichern nicht mitreisen.
+                      setEditForm(formularAus(reservation));
+                      setIsEditing(true);
+                    }}
+                  >
                     Ändern
                   </Button>
                 </>

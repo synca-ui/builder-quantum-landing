@@ -134,6 +134,9 @@ model Business {
   // Nachbarschafts-Benchmark
   benchmarkSnapshots BenchmarkSnapshot[]
 
+  // Oeffentliche Praesenz (Google Places + Website, ohne Freigabe)
+  presenceSnapshot PresenceSnapshot?
+
   @@index([slug])
   @@index([status])
   // Kohortenbildung fuer den Benchmark: exakter Treffer auf die Postleitzahl.
@@ -1042,6 +1045,42 @@ model ChannelConnection {
 }
 
 /// Gecachtes Analytics-Ergebnis, damit /briefing/today nicht bei jedem Aufruf neu rechnet.
+/// Oeffentliche Praesenz eines Betriebs - was Google Places und die eigene
+/// Website OHNE Google-Freigabe hergeben (server/maitr/praesenz/). Genau eine
+/// Zeile je Betrieb.
+///
+/// Gespeichert sind NUR die Rohdaten der beiden Fremdabrufe (google, website).
+/// Der Praesenzbericht (Score, Hebel) wird bei jedem Lesen neu gerechnet
+/// (packages/core/src/analytics/oeffentlichePraesenz.ts) - so reagiert er
+/// sofort auf Maitr-seitige Aenderungen (Speisekarte, Beschreibung) und auf
+/// Formelaenderungen, ohne dass jemand alle Zeilen neu schreiben muss.
+///
+/// Bewusst KEINE Zeilen in MaitrReview: Places liefert nur die fuenf
+/// "relevantesten" Bewertungen mit eigener Kennung. Sobald die Google-Freigabe
+/// steht, holt sync.ts die vollstaendige Liste ueber die Business-Profile-API -
+/// dann ist MaitrReview die Wahrheit, und dataset.ts hoert auf, hier zu lesen.
+model PresenceSnapshot {
+  id         String   @id @default(uuid())
+  businessId String   @unique
+  /// Google-Place-ID, sobald ein Eintrag gefunden wurde.
+  placeId    String?
+  /// "bereit" | "nicht_gefunden" | "fehler" - Zustand des letzten Google-Abrufs.
+  status     String
+  /// Klartext bei "fehler".
+  fehler     String?
+  /// GoogleEintrag (oeffentlichePraesenz.ts) oder NULL.
+  google     Json?
+  /// WebsitePruefung (oeffentlichePraesenz.ts) oder NULL.
+  website    Json?
+  /// Wann Google und Website zuletzt abgerufen wurden (Drossel + Veraltet-Lauf).
+  fetchedAt  DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([fetchedAt])
+}
+
 model InsightsCache {
   id         String   @id @default(uuid())
   businessId String   @unique

@@ -21,6 +21,12 @@ export interface RequestOptions {
   signal?: AbortSignal;
   /** Überspringt das Anhängen des Bearer-Tokens (z. B. für öffentliche Gast-Endpunkte). */
   anonymous?: boolean;
+  /**
+   * Timeout nur für diesen Aufruf. Für Endpunkte, die selbst Fremddienste abfragen
+   * (Präsenz-Abruf: Google Places + Website) und deshalb länger als der
+   * Vorgabewert brauchen dürfen.
+   */
+  timeoutMs?: number;
 }
 
 function buildUrl(
@@ -84,7 +90,7 @@ export async function request<T>(
   // Default-Timeout gegen hängende Verbindungen; kombiniert mit einem ggf.
   // übergebenen options.signal (beide können den Request abbrechen).
   const controller = new AbortController();
-  const timeoutMs = cfg.requestTimeoutMs ?? 15000;
+  const timeoutMs = options.timeoutMs ?? cfg.requestTimeoutMs ?? 15000;
   const timer = setTimeout(() => controller.abort(new Error("Request-Timeout")), timeoutMs);
   const onExternalAbort = () => controller.abort((options.signal as AbortSignal).reason);
   if (options.signal) {

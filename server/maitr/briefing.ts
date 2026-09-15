@@ -199,7 +199,8 @@ export async function computeBriefing(venueId: string, now: Date = new Date()): 
   const decisions = await loadDecisions(venueId);
 
   const ra = reviewAnalytics(dataset.reviews, dataset.now);
-  const score = presenceScore(dataset).score;
+  const praesenz = presenceScore(dataset);
+  const score = praesenz.score;
   const impressions = dataset.engagement
     .filter((e) => now.getTime() - Date.parse(e.at) <= 30 * DAY_MS)
     .reduce((sum, e) => sum + e.impressions, 0);
@@ -208,8 +209,9 @@ export async function computeBriefing(venueId: string, now: Date = new Date()): 
   // zwar weg, ihr Platz aber leer geblieben - der Betrieb bekäme zwei Karten statt
   // drei, obwohl weitere offene Aufgaben vorliegen.
   const offeneAufgaben = applyDecisions(buildInsights(dataset).map(insightToTask), decisions, now);
+  const tasks = offeneAufgaben.slice(0, 3);
 
-  const part = daypart(now.getHours());
+  const part = daypart(stundeIn(now, business.timezone));
   return {
     venue: {
       id: business.id,
@@ -220,13 +222,76 @@ export async function computeBriefing(venueId: string, now: Date = new Date()): 
     },
     now: dataset.now,
     daypart: part,
-    greeting: part === "morning" ? "Guten Morgen," : part === "evening" ? "Guten Abend," : "Hallo,",
-    subline: "Drei Entscheidungen, dann übernimmt Maitr.",
-    stats: { rating: ra.averageRating, score, impressions },
-    tasks: offeneAufgaben.slice(0, 3),
+    greeting: begruessung(part),
+    subline: unterzeile(tasks.length),
+    stats: {
+      // Googles Schnitt über ALLE Bewertungen schlägt die Fünfer-Stichprobe aus Places.
+      rating: dataset.reviewSummary?.averageRating ?? ra.averageRating,
+      score,
+      impressions,
+      reviewCount: dataset.reviewSummary?.total ?? ra.total,
+      impressionsKnown: !praesenz.coverage.unknown.includes("reach"),
+      ...(praesenz.coverage.measuredWeight < 1
+        ? {
+            scoreHint: `Beruht auf ${praesenz.factors.filter((f) => f.status !== "unbekannt").length} von ${praesenz.factors.length} Faktoren.`,
+          }
+        : {}),
+    },
+    tasks,
   };
 }
 
-function daypart(hour: number): "morning" | "day" | "evening" {
+/* ── Texte des Start-Kopfs ───────────────────────────────────────────────── */
+
+/** Rückfall, wenn `Business.timezone` fehlt oder Intl sie nicht kennt (Spalten-Default). */
+const STANDARD_ZEITZONE = "Europe/Berlin";
+
+/**
+ * Stunde (0-23) von `now` in der Zeitzone des Betriebs.
+ *
+ * ANLASS: Vorher `now.getHours()` - die Stunde in der Zeitzone des
+ * Serverprozesses. Auf Railway ist TZ nirgends gesetzt, der Prozess läuft in UTC:
+ * Ein Kölner Wirt bekam im Sommer bis 12:59 Uhr "Guten Morgen" und um 18:30 Uhr
+ * noch "Hallo" (Integrationsprüfung, Querschnitt 9).
+ */
+export function stundeIn(now: Date, timezone: string | null | undefined): number {
+  const stunde = (zone: string) => {
+    const teil = new Intl.DateTimeFormat("de-DE", { hour: "numeric", hourCycle: "h23", timeZone: zone })
+      .formatToParts(now)
+      .find((t) => t.type === "hour");
+    return Number(teil?.value);
+  };
+  try {
+    const wert = stunde(timezone?.trim() || STANDARD_ZEITZONE);
+    if (Number.isInteger(wert)) return wert;
+  } catch {
+    // Unbekannte Zone ("Köln", Tippfehler aus einem Import) - RangeError aus Intl.
+  }
+  return stunde(STANDARD_ZEITZONE);
+}
+
+export function daypart(hour: number): "morning" | "day" | "evening" {
   return hour < 11 ? "morning" : hour < 17 ? "day" : "evening";
+}
+
+export function begruessung(part: ReturnType<typeof daypart>): string {
+  return part === "morning" ? "Guten Morgen," : part === "evening" ? "Guten Abend," : "Hallo,";
+}
+
+const ZAHLWORT: Record<number, string> = { 2: "Zwei", 3: "Drei" };
+
+/**
+ * Unterzeile aus der Zahl der AUSGELIEFERTEN Aufgaben (nach Entscheidungen und
+ * Kappung auf drei).
+ *
+ * ANLASS: Vorher stand fest "Drei Entscheidungen, dann übernimmt Maitr." - auch
+ * über einer einzigen Karte oder über gar keiner. Ohne Google-Freigabe ist oft nur
+ * die Profil-Aufgabe da; der Kopf versprach dann zwei Entscheidungen, die es nicht
+ * gibt (Integrationsprüfung, Punkt 12).
+ */
+export function unterzeile(anzahlAufgaben: number): string {
+  const anzahl = Number.isFinite(anzahlAufgaben) ? Math.floor(anzahlAufgaben) : 0;
+  if (anzahl <= 0) return "Heute ist nichts zu entscheiden.";
+  if (anzahl === 1) return "Eine Entscheidung, dann übernimmt Maitr.";
+  return `${ZAHLWORT[anzahl] ?? anzahl} Entscheidungen, dann übernimmt Maitr.`;
 }
