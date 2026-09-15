@@ -11,20 +11,27 @@ import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 import { CHANNELS } from "./channels";
+import { kanalStatus, kanalStatusText, kanalZaehlung, kanalZweck } from "./kanaele";
 
 /**
  * Screen 11 · Deine Kanäle.
  *
  * Jede Zeile führt auf die Verbinden-/Verwalten-Seite des Kanals. Verbindungsstatus
  * liegt im Store und ist mit der Journey (Screen 23) geteilt.
+ *
+ * Für den echten Betrieb (Integrationsprüfung 15.09., Punkt 2) zählt „x von y“
+ * nur Kanäle mit Connector (Google, Instagram/Facebook über Meta); Yelp und
+ * TheFork stehen als „Nicht verfügbar“ da statt mit einem Verbinden, das nichts
+ * verbinden kann. Demo und Showcase zeigen den Vorführzustand wie bisher.
  */
 export function ChannelsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
-  const { channels } = useStore();
+  const { channels, hasRealVenue, showcase } = useStore();
 
-  const connectedCount = CHANNELS.filter((c) => channels[c.id]).length;
+  const echterBetrieb = hasRealVenue && !showcase;
+  const zaehlung = kanalZaehlung(channels, echterBetrieb);
 
   return (
     <Screen withTabBar contentStyle={{ gap: theme.spacing.lg }}>
@@ -35,28 +42,36 @@ export function ChannelsScreen() {
           Deine Kanäle
         </Text>
         <Text variant="body" tone="secondary" style={{ marginTop: 6 }}>
-          Ein Ort, Maitr hält alles andere synchron.
+          {echterBetrieb
+            ? "Verbundene Kanäle liest Maitr mit. Veröffentlicht wird nichts."
+            : "Ein Ort, Maitr hält alles andere synchron."}
         </Text>
       </View>
 
-      <Eyebrow>{connectedCount} von {CHANNELS.length} verbunden</Eyebrow>
+      <Eyebrow>
+        {zaehlung.verbunden} von {zaehlung.gesamt} verbunden
+      </Eyebrow>
 
       <ListCard>
         {CHANNELS.map((channel) => {
-          const connected = channels[channel.id];
+          const status = kanalStatus(channel.id, channels, echterBetrieb);
           return (
             <ListRow
               key={channel.id}
               title={channel.name}
-              meta={channel.purpose}
+              meta={kanalZweck(channel, echterBetrieb)}
               leading={<Avatar initials={channel.initials} color={channel.color} />}
               onPress={() => router.push({ pathname: "/kanal/[id]", params: { id: channel.id } })}
               trailing={
-                connected ? (
-                  <StatusLabel label="Verbunden" color={theme.colors.success} />
+                status === "verbunden" ? (
+                  <StatusLabel label={kanalStatusText(status)} color={theme.colors.success} />
                 ) : (
-                  <Text variant="numeric" tone="accent" style={{ fontSize: 14 }}>
-                    Verbinden ›
+                  <Text
+                    variant="numeric"
+                    tone={status === "verbinden" ? "accent" : "faint"}
+                    style={{ fontSize: 14 }}
+                  >
+                    {kanalStatusText(status)}
                   </Text>
                 )
               }
@@ -65,16 +80,20 @@ export function ChannelsScreen() {
         })}
       </ListCard>
 
-      <Eyebrow tone="faint" style={{ textAlign: "center", marginTop: theme.spacing.sm }}>
-        Plattform fehlt?{" "}
-        <Eyebrow
-          tone="accent"
-          style={{ textDecorationLine: "underline" }}
-          onPress={() => toast.show("Wunsch gesendet — danke!")}
-        >
-          Wunsch senden
+      {/* „Wunsch gesendet" hat keinen Versandweg - für den echten Betrieb wäre es eine
+          Erfolgsmeldung ohne Mechanik. Im Demo bleibt es Teil der Vorführung. */}
+      {!echterBetrieb ? (
+        <Eyebrow tone="faint" style={{ textAlign: "center", marginTop: theme.spacing.sm }}>
+          Plattform fehlt?{" "}
+          <Eyebrow
+            tone="accent"
+            style={{ textDecorationLine: "underline" }}
+            onPress={() => toast.show("Wunsch gesendet — danke!")}
+          >
+            Wunsch senden
+          </Eyebrow>
         </Eyebrow>
-      </Eyebrow>
+      ) : null}
     </Screen>
   );
 }

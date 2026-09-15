@@ -19,6 +19,7 @@ import {
 import { ingestGallery } from "../services/imageIngest";
 import { oeffentlicheSiteFelder } from "../utils/publicSiteView";
 import { invalidateSite } from "../utils/siteCache";
+import { praesenzNachVeroeffentlichung } from "../maitr/praesenz";
 
 // ============================================
 // VALIDATION HELPERS
@@ -254,6 +255,10 @@ webAppsRouter.post("/apps/publish", async (req: Request, res: Response) => {
         speisekarte,
       );
       businessId = betrieb.businessId;
+      // Google-Eintrag und Website-Prüfung im Hintergrund holen, damit die
+      // Maitr-App beim ersten Öffnen schon Bewertungen und Präsenzscore zeigt.
+      // Wartet nicht - die Veröffentlichung hängt nie an Google.
+      if (businessId) praesenzNachVeroeffentlichung(businessId);
     } catch (error) {
       // Hier stand "Non-fatal - continue without business link". Das war der
       // Grund, warum niemand etwas gemerkt hat: Ohne Betrieb gibt es keine

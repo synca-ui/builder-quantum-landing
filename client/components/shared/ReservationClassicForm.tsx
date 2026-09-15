@@ -18,6 +18,7 @@ import React, { memo, useEffect, useState } from "react";
 import { Calendar, CalendarCheck, CheckCircle, Clock, Loader2, Phone, User, Users } from "lucide-react";
 import { slotsFuerDatum } from "@maitr/core/reservierungsSlots";
 import type { OpeningHours } from "@maitr/core/types";
+import { lokalesDatumISO, STANDARD_ZONE, zeitpunktAusDatumUndUhrzeit } from "@maitr/core/zeitzone";
 import type { ReservationShape } from "@/components/ui/ReservationButton";
 
 interface Slot {
@@ -42,10 +43,11 @@ export interface ReservationClassicFormProps {
   titleStyle?: React.CSSProperties;
 }
 
+// Lokaler Kalendertag des Gastes. ANLASS (15.09.2026): Hier stand
+// `toISOString().split("T")[0]` auf der lokalen Mitternacht - in Berlin der
+// Vortag, als Vorgabe UND als `min` des Datumsfelds.
 function heuteISO(): string {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().split("T")[0];
+  return lokalesDatumISO(new Date());
 }
 
 export const ReservationClassicForm = memo(function ReservationClassicForm({
@@ -78,7 +80,14 @@ export const ReservationClassicForm = memo(function ReservationClassicForm({
     if (!datum) return;
     if (vorschau) {
       const gefiltert = slotsFuerDatum(previewSlots!, previewOpeningHours ?? null, datum);
-      setSlots(gefiltert.map((time) => ({ time, datetime: `${datum}T${time}:00.000Z`, available: true })));
+      // Dieselben Zeitpunkte wie GET /slots (Wanduhr in Europe/Berlin), nicht
+      // `${datum}T19:00:00.000Z` - Vorschau und Server rechnen gleich.
+      setSlots(
+        gefiltert.flatMap((time) => {
+          const zeitpunkt = zeitpunktAusDatumUndUhrzeit(datum, time, STANDARD_ZONE);
+          return zeitpunkt ? [{ time, datetime: zeitpunkt.toISOString(), available: true }] : [];
+        }),
+      );
       return;
     }
     if (!configId) {

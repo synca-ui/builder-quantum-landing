@@ -1,11 +1,12 @@
 import { View } from "react-native";
-import { useRouter } from "expo-router";
 
+import { Card } from "../../components/ui/Card";
 import { DarkPanel, onDarkPanel } from "../../components/ui/DataDisplay";
 import { Eyebrow } from "../../components/ui/Eyebrow";
 import { NavHeader } from "../../components/ui/NavHeader";
 import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
+import { useStore } from "../../lib/store";
 import { useTheme } from "../../theme";
 
 interface Msg {
@@ -30,7 +31,10 @@ const THREAD: Msg[] = [
  */
 export function ConciergeScreen() {
   const theme = useTheme();
-  const router = useRouter();
+  const { hasRealVenue, showcase } = useStore();
+
+  // Hinter allen Hooks: Die Weiche darf deren Aufrufreihenfolge nicht brechen.
+  if (hasRealVenue && !showcase) return <ConciergeOhneFreigabe />;
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
@@ -55,6 +59,43 @@ export function ConciergeScreen() {
       <Eyebrow tone="faint" style={{ textAlign: "center" }}>
         Maitr antwortet rund um die Uhr — aus Öffnungszeiten &amp; Speisekarte.
       </Eyebrow>
+    </Screen>
+  );
+}
+
+/**
+ * Echter Betrieb: kein Verlauf, denn es gibt keinen.
+ *
+ * ANLASS (Integrationsprüfung, Abschnitt 4): Der Screen zeigte jedem Wirt das
+ * Gespräch mit „M. Weber" und „Reservierung angelegt" - frei erfunden. Einen
+ * WhatsApp-Kanal hat Maitr bisher nicht: Das Schema steht, ein Router fehlt, und
+ * ohne eine bei Meta verifizierte Nummer samt Zustimmung der Gäste darf ohnehin
+ * niemand automatisch schreiben. Das sagt der Screen jetzt, statt es vorzuführen.
+ */
+function ConciergeOhneFreigabe() {
+  const theme = useTheme();
+  return (
+    <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
+      <NavHeader title="WhatsApp-Concierge" fallback="/inbox" />
+
+      <Card emphasis="subtle" padding={theme.spacing.xl} style={{ gap: theme.spacing.sm, borderRadius: 18 }}>
+        <Text variant="cardTitleSm" style={{ fontSize: 16 }}>
+          Noch nicht eingerichtet
+        </Text>
+        <Text variant="bodySm" tone="secondary" style={{ fontSize: 14, lineHeight: 20 }}>
+          Der Concierge soll Gästen auf WhatsApp Öffnungszeiten und Speisekarte nennen und
+          Tischanfragen annehmen. Dafür braucht es eine eigene Freigabe: eine bei Meta
+          verifizierte WhatsApp-Business-Nummer deines Betriebs und die Zustimmung der Gäste.
+        </Text>
+        <Text variant="bodySm" tone="secondary" style={{ fontSize: 14, lineHeight: 20 }}>
+          Diese Anbindung gibt es in Maitr noch nicht. Bis dahin beantwortet Maitr keine
+          WhatsApp-Nachrichten, und hier erscheint kein Verlauf.
+        </Text>
+      </Card>
+
+      <Text variant="bodySm" tone="faint" style={{ textAlign: "center", fontSize: 13, lineHeight: 18 }}>
+        Reservierungsanfragen aus deiner Web-App findest du im Posteingang.
+      </Text>
     </Screen>
   );
 }

@@ -56,6 +56,15 @@ function validateEnvironment() {
     );
   }
 
+  // Ohne Places-Schlüssel fehlt der Google-Teil der öffentlichen Präsenz
+  // (server/maitr/praesenz/places.ts). Kein Abbruch: Website-Prüfung und
+  // Maitr-Daten laufen weiter, die App sagt ehrlich, dass Google-Daten fehlen.
+  if (!process.env.GOOGLE_PLACES_API_KEY) {
+    warnings.push(
+      "⚠️  GOOGLE_PLACES_API_KEY is not set — presence reports will run without Google Maps data",
+    );
+  }
+
   warnings.forEach((w) => console.warn(w));
 
   // If any errors, log them and exit

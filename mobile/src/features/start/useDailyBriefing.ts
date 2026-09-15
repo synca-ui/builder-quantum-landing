@@ -44,33 +44,23 @@ export function useDailyBriefing(venueId: string): BriefingState {
     const controller = new AbortController();
     setLoading(true);
 
-    api.briefing
-      .today(venueId, controller.signal)
-      .then((data) => {
+    void ladeBriefing(api.briefing.today(venueId, controller.signal), controller.signal, {
+      erfolg: (data) => {
         if (!mounted.current) return;
-        // Antwort auf Form prüfen, nicht nur auf Erfolg. Ein HTTP 200 sagt nichts
-        // darüber, dass wirklich ein Briefing kam: Zeigt die Basis-URL versehentlich
-        // auf einen fremden Dienst, antwortet der ebenfalls mit 200 und die Seite
-        // stürzte beim ersten `briefing.tasks.filter(...)` ab. Genau so ist es im
-        // Simulator passiert, als der Vorgabewert auf Metros Port zeigte.
-        // Der `catch`-Zweig unten konnte das nie fangen — er greift nur bei
-        // geworfenen Fehlern, nicht bei einer erfolgreichen falschen Antwort.
-        if (!data || !Array.isArray((data as { tasks?: unknown }).tasks)) {
-          throw new Error("Antwort ist kein Briefing (tasks fehlt)");
-        }
         setBriefing(data);
         setSource("api");
         setError(null);
-      })
-      .catch((err: Error) => {
-        if (!mounted.current || controller.signal.aborted) return;
+      },
+      fehler: (err) => {
+        if (!mounted.current) return;
         setBriefing(briefingFixture);
         setSource("fixture");
         setError(err);
-      })
-      .finally(() => {
+      },
+      fertig: () => {
         if (mounted.current) setLoading(false);
-      });
+      },
+    });
 
     return () => controller.abort();
   }, [venueId, nonce]);
@@ -78,4 +68,50 @@ export function useDailyBriefing(venueId: string): BriefingState {
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
   return { briefing, source, loading, error, refresh };
+}
+
+/**
+ * Einen Briefing-Abruf auswerten - ohne React, damit es sich prüfen lässt
+ * (useDailyBriefing.spec.ts).
+ *
+ * Nach einem Abbruch meldet der Abruf NICHTS mehr, auch nicht „fertig". Anlass
+ * (Prüfer-Befund 27, 15.09.): `finally` setzte `loading` auch für einen
+ * abgebrochenen Abruf auf false. Stellt der Start-Screen nach einem neuen
+ * Präsenzstand oder einem Betriebswechsel den Abruf neu, lief Abruf 2 noch, während
+ * Abruf 1 schon „fertig" meldete - ein echter Betrieb sah so lange „Tagesbriefing
+ * gerade nicht abrufbar" samt „Erneut versuchen". Dieselbe Prüfung wie in
+ * `usePosteingang` und `useKommendeReservierungen`. Auch eine späte Erfolgsantwort
+ * des abgebrochenen Abrufs zählt nicht: Sie gehört zum vorigen Betrieb.
+ */
+export function ladeBriefing(
+  abruf: Promise<unknown>,
+  signal: AbortSignal,
+  melde: {
+    erfolg: (briefing: DailyBriefing) => void;
+    fehler: (err: Error) => void;
+    fertig: () => void;
+  },
+): Promise<void> {
+  return abruf
+    .then((data) => {
+      if (signal.aborted) return;
+      // Antwort auf Form prüfen, nicht nur auf Erfolg. Ein HTTP 200 sagt nichts
+      // darüber, dass wirklich ein Briefing kam: Zeigt die Basis-URL versehentlich
+      // auf einen fremden Dienst, antwortet der ebenfalls mit 200 und die Seite
+      // stürzte beim ersten `briefing.tasks.filter(...)` ab. Genau so ist es im
+      // Simulator passiert, als der Vorgabewert auf Metros Port zeigte.
+      // Der `catch`-Zweig unten konnte das nie fangen — er greift nur bei
+      // geworfenen Fehlern, nicht bei einer erfolgreichen falschen Antwort.
+      if (!data || !Array.isArray((data as { tasks?: unknown }).tasks)) {
+        throw new Error("Antwort ist kein Briefing (tasks fehlt)");
+      }
+      melde.erfolg(data as DailyBriefing);
+    })
+    .catch((err: Error) => {
+      if (signal.aborted) return;
+      melde.fehler(err);
+    })
+    .finally(() => {
+      if (!signal.aborted) melde.fertig();
+    });
 }

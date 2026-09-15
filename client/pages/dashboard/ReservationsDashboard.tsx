@@ -16,6 +16,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useConfiguratorStore } from "@/store/configuratorStore";
+import {
+  datumIn,
+  lokalesDatumAusISO,
+  lokalesDatumISO,
+  STANDARD_ZONE,
+  uhrzeitIn,
+  zeitpunktAusDatumUndUhrzeit,
+} from "@maitr/core/zeitzone";
 
 interface Reservation {
   id: string;
@@ -47,6 +55,10 @@ export default function ReservationsDashboard() {
 
   const configId = useConfiguratorStore(s => s.business.name ? "demo" : "demo"); // Actually we need configId. The best way is to fetch configurations and select the active one, or assume single tenant for now. Wait, how do other dashboard pages get configId?
   const [activeConfigId, setActiveConfigId] = useState<string | null>(null);
+  // Zone des Betriebs (GET /api/dashboard/reservations liefert sie mit). Alle
+  // Uhrzeiten dieser Seite sind Wanduhr des Restaurants - nicht die des Browsers
+  // und nicht UTC. Siehe @maitr/core/zeitzone.
+  const [zone, setZone] = useState<string>(STANDARD_ZONE);
 
   useEffect(() => {
     async function init() {
@@ -86,6 +98,7 @@ export default function ReservationsDashboard() {
       const data = await response.json();
       if (data.success) {
         setReservations(data.data);
+        if (typeof data.timezone === "string" && data.timezone) setZone(data.timezone);
       }
     } catch (error) {
       console.error("Failed to fetch reservations:", error);
@@ -118,10 +131,17 @@ export default function ReservationsDashboard() {
     if (!activeConfigId) return;
     try {
       const token = await getToken();
-      // combine selectedDate and time
-      const datePart = selectedDate ? selectedDate.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+      // Datum + Uhrzeit sind Wanduhr des Restaurants. ANLASS (15.09.2026): Hier
+      // stand `${datePart}T${timePart}:00.000Z` - 19:00 wurde als 19:00 UTC
+      // gespeichert. Seit GET /slots echte Zeitpunkte rechnet, galt damit 21:00
+      // als belegt, 19:00 blieb für Web-Gäste frei, und die Bestätigungsmail
+      // nannte 21:00. Das Datum kam zudem aus toISOString(), in Berlin also der
+      // Vortag der Kalenderauswahl.
+      const datePart = lokalesDatumISO(selectedDate ?? new Date());
       const timePart = newReservation.reservationTime || "12:00";
-      const datetime = new Date(`${datePart}T${timePart}:00.000Z`).toISOString();
+      const zeitpunkt = zeitpunktAusDatumUndUhrzeit(datePart, timePart, zone);
+      if (!zeitpunkt) return;
+      const datetime = zeitpunkt.toISOString();
 
       const response = await fetch("/api/dashboard/reservations", {
         method: "POST",
@@ -156,8 +176,9 @@ export default function ReservationsDashboard() {
 
   const filteredReservations = reservations.filter(r => {
     if (!selectedDate) return true;
-    const rDate = new Date(r.reservationTime);
-    return rDate.toDateString() === selectedDate.toDateString();
+    // Kalendertag in der Zone des Betriebs gegen den gewählten Kalendertag -
+    // eine Buchung um 23:30 in Köln gehört nicht in UTC zum Vortag.
+    return datumIn(new Date(r.reservationTime), zone) === lokalesDatumISO(selectedDate);
   });
 
   if (loading) {
@@ -236,7 +257,7 @@ export default function ReservationsDashboard() {
                     <div key={res.id} className="p-4 border rounded-xl flex items-center justify-between hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="bg-teal-100 text-teal-800 p-3 rounded-lg flex flex-col items-center justify-center min-w-[70px]">
-                          <span className="text-sm font-bold">{new Date(res.reservationTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-sm font-bold">{uhrzeitIn(new Date(res.reservationTime), zone)}</span>
                           <span className="text-xs">{res.guestCount} Gäste</span>
                         </div>
                         <div>
@@ -291,7 +312,7 @@ export default function ReservationsDashboard() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Datum</Label>
-                <Input type="date" value={selectedDate ? selectedDate.toISOString().split("T")[0] : ""} onChange={e => setSelectedDate(new Date(e.target.value))} />
+                <Input type="date" value={selectedDate ? lokalesDatumISO(selectedDate) : ""} onChange={e => setSelectedDate(lokalesDatumAusISO(e.target.value) ?? undefined)} />
               </div>
               <div>
                 <Label>Uhrzeit</Label>

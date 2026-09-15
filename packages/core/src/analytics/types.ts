@@ -67,13 +67,64 @@ export interface GuestRecord {
   tags: string[];
 }
 
-/** Vollständigkeitssignale des öffentlichen Profils. */
+/**
+ * Vollständigkeitssignale des öffentlichen Profils.
+ *
+ * Die vier Ursprungsflags sind Pflicht, weil Demo und Server sie immer setzen.
+ * Die übrigen sind optional und zählen NUR, wenn sie gesetzt sind: Sie stammen
+ * aus der öffentlichen Google-/Website-Prüfung (`oeffentlichePraesenz.ts`), und
+ * ein Betrieb ohne diese Prüfung darf für "Website bei Google" weder Punkte
+ * bekommen noch verlieren - `undefined` heißt "nicht gemessen", nicht "fehlt".
+ * `hasHolidayHours` ist aus demselben Grund optional geworden: Ohne
+ * Google-Freigabe weiß niemand, ob Feiertagszeiten gepflegt sind.
+ */
 export interface ProfileSignals {
   hasMenu: boolean;
-  hasHolidayHours: boolean;
-  hasOutdoorAttribute: boolean;
-  photoCount: number;
+  hasHolidayHours?: boolean;
+  hasOutdoorAttribute?: boolean;
+  /** Fotos im öffentlichen Profil. `undefined` = keine Quelle hat gezählt. */
+  photoCount?: number;
   hasBio: boolean;
+  /** Öffnungszeiten stehen bei Google. */
+  hasOpeningHours?: boolean;
+  /** Google kennt eine Website des Betriebs. */
+  hasWebsite?: boolean;
+  /** Google kennt eine Telefonnummer. */
+  hasPhone?: boolean;
+  /** Ein Instagram-Konto ist verlinkt (Maitr-Profil oder Website). */
+  hasInstagram?: boolean;
+  /** Gäste können online reservieren (Website-Widget oder Google-Attribut). */
+  hasReservation?: boolean;
+}
+
+/** Die fünf Faktoren des Präsenzscores - Schlüssel wie in `presence.ts`. */
+export type ScoreFactorKey = "rating" | "responsiveness" | "completeness" | "activity" | "reach";
+
+/**
+ * Was die Datenlage NICHT hergibt.
+ *
+ * Ohne Google-Freigabe (Business-Profile-API) kennt niemand die Antwortquote
+ * (Google Places nennt keine Inhaberantworten) und die Reichweite (Profilaufrufe
+ * gibt es nur über die Performance-API). Die Aktivität lässt sich aus den fünf
+ * Places-Bewertungen nur schätzen. Der Score rechnet dann über die bekannten
+ * Faktoren und sagt dazu, worauf er beruht - statt 30 Punkte für etwas
+ * abzuziehen, das nie gemessen wurde.
+ */
+export interface PresenceCoverage {
+  unknown?: ScoreFactorKey[];
+  estimated?: ScoreFactorKey[];
+}
+
+/**
+ * Bewertungsschnitt über ALLE Bewertungen, wie Google ihn ausweist.
+ *
+ * `reviews` trägt ohne Google-Freigabe nur die fünf Bewertungen, die Places
+ * herausgibt - ein Schnitt daraus wäre eine Stichprobe von fünf. Google nennt
+ * daneben Schnitt und Anzahl über alle; liegt das vor, rechnet der Score damit.
+ */
+export interface ReviewSummary {
+  averageRating: number;
+  total: number;
 }
 
 /** Gebündelte Rohdaten eines Betriebs für einen Auswertungslauf. */
@@ -87,28 +138,46 @@ export interface VenueDataset {
   profile: ProfileSignals;
   /** Durchschnittlicher Umsatz je Gedeck in Euro - Basis der ROI-Rechnung. */
   averageCheck: number;
+  /** Schnitt und Anzahl über alle Bewertungen, falls die Quelle sie nennt (siehe Typ). */
+  reviewSummary?: ReviewSummary;
+  /** Welche Score-Faktoren diese Datenlage nicht hergibt (siehe Typ). */
+  coverage?: PresenceCoverage;
 }
 
 /* ── Ausgaben ─────────────────────────────────────────────────────────────── */
 
+/** Liegt der Faktor vor, ist er nur geschätzt, oder fehlt er ganz? */
+export type ScoreFactorStatus = "gemessen" | "geschaetzt" | "unbekannt";
+
 export interface ScoreFactor {
-  key: string;
+  key: ScoreFactorKey;
   label: string;
-  /** Erreichter Anteil 0-1. */
+  /** Erreichter Anteil 0-1. Bei `status: "unbekannt"` immer 0 - kein Messwert. */
   achieved: number;
   /** Gewicht im Gesamtscore 0-1 (Summe aller Gewichte = 1). */
   weight: number;
-  /** Punkte, die dieser Faktor noch beitragen kann (gerundet). */
+  /**
+   * Punkte, die dieser Faktor noch beitragen kann (gerundet). Bezogen auf den
+   * ausgewiesenen Score: Fehlen Faktoren, sind die übrigen entsprechend
+   * hochgewichtet, damit Score + offene Punkte weiter 100 ergeben.
+   */
   openPoints: number;
   hint: string;
+  status: ScoreFactorStatus;
 }
 
 export interface PresenceScoreResult {
-  /** 0-100. */
+  /** 0-100. Bei fehlenden Faktoren über die bekannten gerechnet (siehe `coverage`). */
   score: number;
   factors: ScoreFactor[];
   /** Der Faktor mit dem größten offenen Hebel - treibt die Top-Empfehlung. */
   biggestLever: ScoreFactor | null;
+  /** Worauf der Score beruht. `measuredWeight` 1 = alle fünf Faktoren liegen vor. */
+  coverage: {
+    measuredWeight: number;
+    unknown: ScoreFactorKey[];
+    estimated: ScoreFactorKey[];
+  };
 }
 
 export type GuestSegment = "neu" | "stammgast" | "vip" | "gefährdet" | "verloren";

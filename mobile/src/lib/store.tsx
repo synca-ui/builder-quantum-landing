@@ -10,13 +10,33 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { api, isCoreConfigured } from "@maitr/core";
+import { api, isCoreConfigured, type Venue, type VenuePresence } from "@maitr/core";
 
 import { formatHour, type TimelineBooking, type TimelineTable } from "../components/ui/Timeline";
 import { serviceDays as seedDays, type ServiceDayFixture } from "../features/reservations/fixtures";
 import type { BetriebBekanntheit } from "../features/onboarding/ablauf";
 import { hasRealAuth, mobileAuthAdapter, subscribeToRealAuthSession } from "./auth";
-import { darfMenuUebernehmen, menuZeilenAusServer, profilAusVenue } from "./venueAdopt";
+import {
+  darfMenuUebernehmen,
+  menuZeilenAusServer,
+  profilAusSchnappschuss,
+  profilAusVenue,
+} from "./venueAdopt";
+import {
+  brauchtAbruf,
+  istPraesenz,
+  praesenzEintragAus,
+  praesenzFuer,
+  type PraesenzEintrag,
+} from "./praesenz";
+import {
+  kaltstartOhneSitzung,
+  wendeZustandAn,
+  zustandNachWechsel,
+  type Setzer,
+  type Sitzungswechsel,
+  type Startwerte,
+} from "./sitzungswechsel";
 
 /**
  * Zentraler App-Zustand der Demo.
@@ -268,6 +288,23 @@ export interface VenueProfile {
   city: string;
   tags: string[];
   hours: OpeningHour[];
+  /*
+   * Nur für einen ECHTEN Betrieb gesetzt - aus `GET /venues` bzw. der Antwort von
+   * `api.venues.update` (siehe `profilAusVenue` in venueAdopt.ts). Der Demo-Seed
+   * trägt sie bewusst nicht: Beispielnummern oder ein Beispielkonto sähen in einem
+   * Screen, der sie liest, wie echte Angaben aus. Optional, weil Schnappschüsse im
+   * Gerätespeicher von vor diesen Feldern sie nicht kennen - jeder Leser rechnet
+   * mit `undefined`.
+   */
+  /** Telefon des Betriebs (Web-App-Kontaktdaten). */
+  phone?: string;
+  /** Die veröffentlichte Web-App. */
+  website?: string;
+  /** Instagram-Verweis aus der Web-App, meist als URL - verlinkt, NICHT verbunden. */
+  instagram?: string;
+  logoUrl?: string;
+  /** Adresse des Betriebs in Maitr, unveränderlich. */
+  slug?: string;
 }
 
 const VENUE_PROFILE_SEED: VenueProfile = {
@@ -404,6 +441,12 @@ interface StoreValue {
 
   // Kanäle (Screen 11 + Journey 23): verbunden ja/nein je Plattform
   channels: Record<string, boolean>;
+  /**
+   * Kanalstatus eines echten Betriebs neu von `GET /integrations` holen - etwa
+   * nach dem OAuth-Rücksprung auf der Kanalseite. Im Demomodus und Showcase ohne
+   * Wirkung. Wirft nie.
+   */
+  aktualisiereKanaele: () => Promise<void>;
   connectChannel: (id: string) => void;
   setChannel: (id: string, connected: boolean) => void;
 
@@ -414,6 +457,15 @@ interface StoreValue {
   // Tagesbriefing (Screen 04): freigegebene Aufgaben verschwinden
   taskDone: Record<string, boolean>;
   completeTask: (id: string) => void;
+  /**
+   * Zähler „das Briefing des echten Betriebs ist veraltet". Der Start-Screen lädt
+   * sein Briefing neu, sobald er sich ändert. Anlass (Prüfer-Befund 25, 15.09.):
+   * Nach „Profil gespeichert" blieb Start bei Aufgabe und Score von vorher - der
+   * Nachlade-Auslöser dort hing allein an einem neuen `fetchedAt`, und den liefert
+   * der gedrosselte Präsenzabruf nicht.
+   */
+  briefingVersion: number;
+  bumpBriefing: () => void;
 
   // Bewertungen (Screen 13): beantwortete Reviews
   reviewAnswered: Record<string, boolean>;
@@ -456,12 +508,23 @@ interface StoreValue {
    * Kennung auch den Namen im Betriebsprofil, damit nicht die halbe App weiter
    * „Café Goldstück" zeigt, während der Server einen anderen Betrieb meint.
    */
-  adoptVenue: (venue: {
-    id: string;
-    name?: string;
-    tagline?: string;
-    tags?: string[];
-  }) => void;
+  adoptVenue: (venue: Partial<Venue> & { id: string }) => void;
+
+  /**
+   * Öffentliche Präsenz des ECHTEN Betriebs: Google-Eintrag (Schnitt, Anzahl,
+   * Bewertungen, Fotos), Website-Prüfung und Präsenzbericht - ohne Google-Freigabe
+   * erhoben (server/maitr/praesenz/). `null` im Demomodus, im Showcase und bis die
+   * erste Antwort da ist. Screens fallen dann auf ihre bisherige Darstellung zurück.
+   */
+  praesenz: VenuePresence | null;
+  /** Ein Abruf läuft (Laden oder Auffrischen). */
+  praesenzLaedt: boolean;
+  /**
+   * Google und Website neu abrufen lassen. Der Server drosselt auf zehn Minuten -
+   * wer öfter tippt, bekommt den gespeicherten Stand. Wirft nie; ein Fehlschlag
+   * lässt den bisherigen Stand stehen und liefert `false`.
+   */
+  aktualisierePraesenz: () => Promise<boolean>;
 
   // Betriebsprofil (Google Business / Instagram)
   venueProfile: VenueProfile;
@@ -588,6 +651,14 @@ const CHANNELS_SEED: Record<string, boolean> = {
   facebook: false,
 };
 const PROFILE_DONE_SEED: Record<string, boolean> = { photos: true };
+/** Kanalstatus eines echten Betriebs, solange `GET /integrations` nicht geantwortet hat. */
+const KEINE_KANAELE: Record<string, boolean> = {
+  google: false,
+  instagram: false,
+  yelp: false,
+  thefork: false,
+  facebook: false,
+};
 const REVIEW_ANSWERED_SEED: Record<string, boolean> = { rev_tobias: true };
 const CHANNEL_META_SEED: Record<string, { account: string; since: string }> = {
   google: { account: "Sofia Brandt · Inhaberin", since: "verbunden vor 4 Min" },
@@ -609,6 +680,37 @@ function seedServiceDays(): ServiceDayState[] {
       bookings: table.bookings.map((booking) => ({ ...booking })),
     })),
   }));
+}
+
+/**
+ * Startzustand einer frischen Installation - für die Sitzungswechsel in
+ * `sitzungswechsel.ts`. Eine Funktion statt einer Konstante: `initialVenueKnown()`
+ * und die tiefe Kopie der Seed-Tage müssen bei jedem Wechsel neu entstehen.
+ */
+function startwerte(): Startwerte {
+  return {
+    venueId: DEMO_VENUE_ID,
+    venueKnown: initialVenueKnown(),
+    praesenzEintrag: null,
+    praesenzLaedt: false,
+    kanaeleGeprueftFuer: null,
+    lastBooking: null,
+    channels: CHANNELS_SEED,
+    channelMeta: CHANNEL_META_SEED,
+    menu: MENU_SEED,
+    venueProfile: VENUE_PROFILE_SEED,
+    taskDone: {},
+    profileDone: PROFILE_DONE_SEED,
+    posts: POSTS_SEED,
+    inboxRead: {},
+    reviewAnswered: REVIEW_ANSWERED_SEED,
+    days: seedServiceDays(),
+    guests: GUESTS_SEED,
+    activityLog: ACTIVITY_SEED,
+    autopilot: AUTOPILOT_SEED,
+    currentPlan: PLAN_SEED,
+    keineKanaele: KEINE_KANAELE,
+  };
 }
 
 /** Überschneiden sich zwei Zeitfenster? (Ende exklusiv, damit 20–22 an 18–20 anschließt.) */
@@ -636,19 +738,34 @@ function uid(prefix: string): string {
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   const [showcase, setShowcase] = useState(false);
-  // Fuer das Clerk-Abo weiter unten: Dessen Effekt haengt bewusst an [] und darf sich
-  // nicht neu binden, kennt den Zustand also nur ueber diese Referenz.
+  // Fuer das Clerk-Abo weiter unten: Dessen Effekt haengt bewusst nur an stabilen
+  // Werten und darf sich nicht neu binden, kennt den Zustand also nur ueber diese Referenz.
   const showcaseRef = useRef(showcase);
   showcaseRef.current = showcase;
+  // Ebenfalls für das Clerk-Abo: Nur ein Wechsel von angemeldet auf abgemeldet
+  // räumt den Betriebszustand (siehe dort).
+  const signedInRef = useRef(signedIn);
+  signedInRef.current = signedIn;
   const [channels, setChannels] = useState<Record<string, boolean>>(CHANNELS_SEED);
   const [profileDone, setProfileDone] = useState<Record<string, boolean>>(PROFILE_DONE_SEED);
   const [taskDone, setTaskDone] = useState<Record<string, boolean>>({});
+  // Nur im Arbeitsspeicher: Ein Neustart lädt das Briefing ohnehin neu.
+  const [briefingVersion, setBriefingVersion] = useState(0);
   const [reviewAnswered, setReviewAnswered] =
     useState<Record<string, boolean>>(REVIEW_ANSWERED_SEED);
   const [posts, setPosts] = useState<Post[]>(POSTS_SEED);
   const [venueId, setVenueId] = useState<string>(DEMO_VENUE_ID);
   const [venueKnown, setVenueKnown] = useState<BetriebBekanntheit>(initialVenueKnown);
   const [venueProfile, setVenueProfile] = useState<VenueProfile>(VENUE_PROFILE_SEED);
+  const [praesenzEintrag, setPraesenzEintrag] = useState<PraesenzEintrag | null>(null);
+  const [praesenzLaedt, setPraesenzLaedt] = useState(false);
+  /**
+   * Für welchen Betrieb `GET /integrations` schon geantwortet hat. Bis dahin zeigt
+   * ein echter Betrieb keine Kanäle als verbunden - sonst stünde nach frischer
+   * Installation eine Sekunde lang der Seed "Google verbunden" da, und Bewertungen,
+   * Kanäle und Wachstum sprängen danach um.
+   */
+  const [kanaeleGeprueftFuer, setKanaeleGeprueftFuer] = useState<string | null>(null);
   const [channelMeta, setChannelMeta] =
     useState<Record<string, { account: string; since: string }>>(CHANNEL_META_SEED);
   const [days, setDays] = useState<ServiceDayState[]>(seedServiceDays);
@@ -670,6 +787,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
    * entscheidet diese Weiche genau einmal.
    */
   const [sessionKnown, setSessionKnown] = useState(() => !hasRealAuth());
+  /**
+   * Clerks erste Meldung in diesem Lauf (`null`: noch keine) - für die
+   * Kaltstartprüfung weiter unten. Bewusst getrennt von `sessionKnown`: Das setzt
+   * auch die Notbremse, und die weiß nichts über die Sitzung.
+   */
+  const [ersteClerkMeldung, setErsteClerkMeldung] = useState<boolean | null>(null);
+  const kaltstartGeprueft = useRef(false);
 
   const setPlan = useCallback((plan: PlanId) => setCurrentPlan(plan), []);
 
@@ -698,6 +822,41 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(() => setSignedIn(true), []);
 
   /**
+   * Sitzungswechsel umsetzen. Was sich ändert, entscheidet `zustandNachWechsel`
+   * (sitzungswechsel.ts, dort begründet und geprüft); hier steht nur, welcher
+   * Setter welchen Teil übernimmt. Der Typ `Setzer` verlangt jeden Teil - ein neuer
+   * Slice im Räumen kann hier nicht still vergessen werden.
+   */
+  const wechsleSitzung = useCallback((wechsel: Sitzungswechsel, vorherShowcase: boolean) => {
+    const setzer: Setzer = {
+      venueId: setVenueId,
+      venueKnown: setVenueKnown,
+      praesenzEintrag: setPraesenzEintrag,
+      praesenzLaedt: setPraesenzLaedt,
+      kanaeleGeprueftFuer: setKanaeleGeprueftFuer,
+      lastBooking: setLastBookingState,
+      channels: setChannels,
+      channelMeta: setChannelMeta,
+      menu: setMenu,
+      venueProfile: setVenueProfile,
+      taskDone: setTaskDone,
+      profileDone: setProfileDone,
+      posts: setPosts,
+      inboxRead: setInboxRead,
+      reviewAnswered: setReviewAnswered,
+      days: setDays,
+      guests: setGuests,
+      activityLog: setActivityLog,
+      autopilot: setAutopilotState,
+      currentPlan: setCurrentPlan,
+    };
+    wendeZustandAn(
+      zustandNachWechsel(wechsel, { echterAnmeldebetrieb: hasRealAuth(), showcase: vorherShowcase }, startwerte()),
+      setzer,
+    );
+  }, []);
+
+  /**
    * Showcase betreten.
    *
    * Meldet lokal an und markiert den Lauf als Vorfuehrung. Es entsteht keine
@@ -707,9 +866,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
    * Fehlermeldungen.
    */
   const betreteShowcase = useCallback(() => {
+    // Im echten Anmeldebetrieb beginnt die Vorführung im kuratierten Startzustand.
+    // Vorher übernahm sie, was auf dem Gerät lag - nach einer ohne Abmelden
+    // beendeten Sitzung also Kanalstatus, Profil und Speisekarte eines echten
+    // Betriebs („0 von 5 verbunden", Prüfer-Befund 28). Im Demomodus ohne Wirkung.
+    wechsleSitzung("showcase_betreten", showcaseRef.current);
     setShowcase(true);
     setSignedIn(true);
-  }, []);
+  }, [wechsleSitzung]);
 
   /**
    * Abmelden - und zwar vollständig.
@@ -729,18 +893,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // Der Showcase endet mit der Abmeldung - sonst startet die App erneut in der
     // Vorfuehrung, obwohl der Nutzer sie gerade verlassen hat.
     setShowcase(false);
-    // Ohne Sitzung gibt es keinen eigenen Betrieb mehr. Bliebe die echte Kennung
-    // stehen, lüde der nächste Anmelder für einen Wimpernschlag das Briefing eines
-    // fremden Betriebs - bis die eigene Abfrage antwortet.
-    setVenueId(DEMO_VENUE_ID);
-    // Dieselbe Lücke bei der Bekanntheit: bliebe sie auf „bekannt" stehen, sähe die
-    // Einstiegsweiche für den nächsten Anmelder für einen Wimpernschlag einen
-    // bestätigten Betrieb, der gar nicht seiner ist. Zurück auf den Anfangswert -
-    // im Demomodus sofort wieder „bekannt" (der Demo-Betrieb bleibt die Wahrheit),
-    // im echten Anmeldebetrieb „unbekannt", bis die nächste Anmeldung neu fragt.
-    setVenueKnown(initialVenueKnown());
+    // Ohne Sitzung gibt es keinen eigenen Betrieb mehr: Kennung, Bekanntheit,
+    // Präsenz und letzte Buchung zurück - in jedem Modus. Im echten Anmeldebetrieb
+    // zusätzlich Speisekarte, Profil, Kanalstatus samt Prüfmerker, erledigte
+    // Aufgaben, Beiträge und Gelesen-Merker, und zwar AUCH aus dem Showcase: Die
+    // Ausnahme dafür ließ ein vorgeführtes Gericht in der echten Sitzung liegen, wo
+    // es die Server-Speisekarte blockierte (Prüfer-Befund 22). Welche Teile genau,
+    // steht in `zustandNachWechsel` (sitzungswechsel.ts).
+    wechsleSitzung("abmelden", showcaseRef.current);
     await mobileAuthAdapter.signOut();
-  }, []);
+  }, [wechsleSitzung]);
 
   const connectChannel = useCallback(
     (id: string) => setChannels((c) => ({ ...c, [id]: true })),
@@ -759,9 +921,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     (id: string) => setTaskDone((t) => ({ ...t, [id]: true })),
     [],
   );
+  const bumpBriefing = useCallback(() => setBriefingVersion((v) => v + 1), []);
   const answerReview = useCallback(
     (id: string, author?: string) => {
       setReviewAnswered((r) => ({ ...r, [id]: true }));
+      // Für einen ECHTEN Betrieb kein Chronik-Eintrag: Es gibt keinen Weg, eine
+      // Antwort bei Google zu veröffentlichen (ohne Freigabe gar nicht, und auch mit
+      // ist `reviews.updateReply` nicht gebaut). „Bewertungsantwort veröffentlicht"
+      // stünde dauerhaft im Autopilot-Verlauf - eine Erfolgsmeldung ohne Mechanik
+      // (Integrationsprüfung 15.09., Punkt 9). Demo und Showcase behalten ihren Beleg.
+      if (venueId !== DEMO_VENUE_ID && !showcase) return;
       logActivity({
         kind: "review",
         title: "Bewertungsantwort veröffentlicht",
@@ -769,7 +938,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         auto: false,
       });
     },
-    [logActivity],
+    [logActivity, venueId, showcase],
   );
   const patchPost = useCallback(
     (id: string, patch: Partial<Post>) =>
@@ -841,8 +1010,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     if (!venue.name) return;
     // Das ganze Profil übernehmen, nicht nur den Namen: Seit die Veröffentlichung
     // der Web-App den Betrieb vollständig anlegt, bringt `GET /venues` Slogan,
-    // Adresse, Öffnungszeiten und Beschreibung mit. Der Server ist die Wahrheit -
-    // was er nicht liefert, bleibt leer statt Fixture (siehe venueAdopt.ts).
+    // Adresse, Öffnungszeiten und Beschreibung mit - und seit der
+    // Integrationsprüfung auch Telefon, Website, Instagram-Verweis, Logo und Slug,
+    // die vorher verworfen wurden. Der Server ist die Wahrheit - was er nicht
+    // liefert, bleibt leer statt Fixture (siehe venueAdopt.ts).
     const profil = profilAusVenue(venue);
     setVenueProfile((v) => ({ ...v, ...profil }));
   }, []);
@@ -868,6 +1039,112 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       });
     return () => controller.abort();
   }, [venueKnown, venueId]);
+
+  /* ── Öffentliche Präsenz des Betriebs laden ─────────────────────────────────
+     Läuft, sobald ein echter Betrieb bekannt ist - dieselben Bedingungen wie bei
+     der Speisekarte, plus: nicht im Showcase und nicht für die Demokennung.
+
+     Zwei Schritte: erst den gespeicherten Stand holen (schnell, kein Fremdabruf),
+     damit Score und Bewertungen sofort da sind. Ist er nie abgerufen oder älter
+     als 24 Stunden, danach den Abruf anstoßen (Google Places + Website, ein paar
+     Sekunden) und den frischen Stand übernehmen. So sieht ein Wirt direkt nach
+     der Anmeldung seinen Betrieb, wie Gäste ihn bei Google sehen. */
+  useEffect(() => {
+    if (
+      venueKnown !== "bekannt" ||
+      venueId === DEMO_VENUE_ID ||
+      showcase ||
+      !hasRealAuth() ||
+      !isCoreConfigured()
+    ) {
+      return;
+    }
+    const controller = new AbortController();
+    const abgebrochen = () => controller.signal.aborted;
+    setPraesenzLaedt(true);
+
+    api.venues
+      .presence(venueId, controller.signal)
+      .then(async (daten) => {
+        if (abgebrochen()) return;
+        if (!istPraesenz(daten)) throw new Error("Antwort ist keine Präsenz");
+        setPraesenzEintrag({ venueId, daten });
+        if (!brauchtAbruf(daten, Date.now())) return;
+        const frisch = await api.venues.refreshPresence(venueId, controller.signal);
+        if (!abgebrochen() && istPraesenz(frisch)) setPraesenzEintrag({ venueId, daten: frisch });
+      })
+      .catch(() => {
+        // Kein Netz, 403, Server ohne Route: Der gespeicherte Stand (falls einer
+        // aus dem Gerätespeicher kam) bleibt stehen - die Screens zeigen dann
+        // ihr "Stand vor …", statt einen Fehler vorzuschieben.
+      })
+      .finally(() => {
+        if (!abgebrochen()) setPraesenzLaedt(false);
+      });
+
+    return () => controller.abort();
+  }, [venueKnown, venueId, showcase]);
+
+  /* ── Kanalstatus des echten Betriebs ────────────────────────────────────────
+     Der Seed sagt "Google und Instagram verbunden" - für einen echten Betrieb ist
+     das eine Behauptung. `GET /integrations` kennt die Wahrheit (aktive
+     ChannelConnection-Zeilen, ohne Tokens). Yelp und TheFork haben keine
+     Anbindung und stehen deshalb für einen echten Betrieb immer auf "nicht
+     verbunden". Instagram und Facebook hängen gemeinsam an der META-Verbindung. */
+  const ladeKanaele = useCallback(
+    async (signal?: AbortSignal) => {
+      if (venueId === DEMO_VENUE_ID || showcase || !hasRealAuth() || !isCoreConfigured()) return;
+      const betrieb = venueId;
+      try {
+        const liste = await api.integrations.list(betrieb, signal);
+        if (signal?.aborted || !Array.isArray(liste)) return;
+        const aktiv = (provider: string) =>
+          liste.find((c) => c?.provider === provider && c?.status === "ACTIVE");
+        const google = aktiv("GOOGLE");
+        const meta = aktiv("META");
+        setChannels({ google: Boolean(google), instagram: Boolean(meta), facebook: Boolean(meta), yelp: false, thefork: false });
+        const metaZeile = (label: string) => ({ account: label, since: "verbunden" });
+        setChannelMeta({
+          ...(google ? { google: metaZeile("Google-Unternehmensprofil") } : {}),
+          ...(meta ? { instagram: metaZeile("Meta-Konto"), facebook: metaZeile("Meta-Konto") } : {}),
+        });
+        setKanaeleGeprueftFuer(betrieb);
+      } catch {
+        // Nicht prüfbar heißt nicht "verbunden": Für einen echten Betrieb bleibt
+        // nichts vom Seed stehen, sonst behauptete die App Google-Zugriff, den es
+        // womöglich nie gab.
+        if (signal?.aborted) return;
+        setChannels({ google: false, instagram: false, facebook: false, yelp: false, thefork: false });
+        setChannelMeta({});
+        setKanaeleGeprueftFuer(betrieb);
+      }
+    },
+    [venueId, showcase],
+  );
+
+  useEffect(() => {
+    if (venueKnown !== "bekannt") return;
+    const controller = new AbortController();
+    void ladeKanaele(controller.signal);
+    return () => controller.abort();
+  }, [venueKnown, ladeKanaele]);
+
+  const aktualisiereKanaele = useCallback<StoreValue["aktualisiereKanaele"]>(() => ladeKanaele(), [ladeKanaele]);
+
+  const aktualisierePraesenz = useCallback<StoreValue["aktualisierePraesenz"]>(async () => {
+    if (venueId === DEMO_VENUE_ID || showcase || !hasRealAuth() || !isCoreConfigured()) return false;
+    setPraesenzLaedt(true);
+    try {
+      const frisch = await api.venues.refreshPresence(venueId);
+      if (!istPraesenz(frisch)) return false;
+      setPraesenzEintrag({ venueId, daten: frisch });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setPraesenzLaedt(false);
+    }
+  }, [venueId, showcase]);
 
   /* ── Welcher Betrieb gehört zu dieser Anmeldung? ────────────────────────────
      Genau eine Stelle fragt das, und sie fragt es nur, wenn es etwas zu fragen gibt.
@@ -901,6 +1178,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           // kein Betrieb - anders als „noch nicht gefragt" (siehe `venueKnown`).
           // Die Einstiegsweiche schickt diesen Fall ins Onboarding.
           setVenueKnown("keiner");
+          // Kein Betrieb heißt auch: keine fremde Kennung und keine fremde Präsenz.
+          // Stand hier noch die Kennung aus dem Gerätespeicher oder einer Sitzung, die
+          // ohne Abmelden endete, zeigte die App dem neuen Konto Präsenz und Profil
+          // des alten (Prüfer-Befund 23).
+          setVenueId(DEMO_VENUE_ID);
+          setPraesenzEintrag(null);
         }
       })
       .catch(() => {
@@ -1192,6 +1475,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // allerersten Start (siehe `initialVenueKnown`).
     setVenueKnown(initialVenueKnown());
     setVenueProfile(VENUE_PROFILE_SEED);
+    setPraesenzEintrag(null);
+    setPraesenzLaedt(false);
+    // Sonst gälte der Kanalstatus nach einer neuen Anmeldung desselben Betriebs als
+    // schon geprüft, und der Seed „Google verbunden" stünde bis zur Antwort da.
+    setKanaeleGeprueftFuer(null);
     setInboxRead({});
     setDays(seedServiceDays());
     setGuests(GUESTS_SEED);
@@ -1270,7 +1558,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // wurde. `initialVenueKnown()` bleibt also die einzige Quelle für den
         // Anfangswert, und der echte Netzabruf (Effekt „Welcher Betrieb gehört zu
         // dieser Anmeldung?") korrigiert ihn bei jedem Start neu.
-        if (s.venueProfile) setVenueProfile(s.venueProfile);
+        // Feld für Feld geprüft statt blind übernommen: Das Profil hat optionale
+        // Felder dazubekommen, und ein falsch geformter Wert (z. B. `hours` kein
+        // Array) ließe sonst bei JEDEM Kaltstart den ersten lesenden Screen abstürzen.
+        // Alte Schnappschüsse ohne die neuen Felder kommen unverändert durch.
+        const profil = profilAusSchnappschuss(s.venueProfile, VENUE_PROFILE_SEED);
+        if (profil) setVenueProfile(profil);
+        // Nur im echten Anmeldebetrieb - im Demomodus gibt es keinen Betrieb, zu dem
+        // eine gespeicherte Präsenz gehören könnte. Die Betriebsbindung prüft
+        // `praesenzFuer` bei jedem Lesen.
+        // `Date.now()`: Ein Stand über dem Höchstalter der Google-Inhalte wird verworfen
+        // (siehe `praesenzEintragAus`).
+        if (hasRealAuth()) setPraesenzEintrag(praesenzEintragAus(s.praesenz, Date.now()));
         if (s.inboxRead) setInboxRead(s.inboxRead);
         if (s.days) setDays(s.days);
         if (s.guests) setGuests(s.guests);
@@ -1319,7 +1618,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       // spaeter "keine Clerk-Sitzung" (die gibt es im Showcase ja nie), setzte
       // `signedIn` zurueck auf false, und das Tabs-Layout warf sofort auf den Login.
       // Von aussen sah es aus, als reagiere der Knopf nicht.
+      const warAngemeldet = signedInRef.current;
       setSignedIn((vorher) => (showcaseRef.current ? vorher : signedInAtClerk));
+      // Endet die Sitzung bei Clerk ohne den Abmelden-Knopf (Widerruf, „überall
+      // abmelden", Passwort-Reset), räumt dieselbe Stelle wie `signOut`. Vorher
+      // setzte das Abo nur `signedIn` zurück: Das nächste Konto landete über die
+      // noch „bekannte" Einstiegsweiche sofort auf Start, mit Namen, Präsenz und
+      // Speisekarte des alten Betriebs (Prüfer-Befund 23). Im Showcase ohne Wirkung.
+      if (warAngemeldet && !signedInAtClerk) wechsleSitzung("sitzung_beendet", showcaseRef.current);
+      // Endete die Sitzung, während die App zu war, gibt es diesen Wechsel nicht -
+      // das übernimmt die Kaltstartprüfung unten, gestützt auf Clerks erste Meldung.
+      setErsteClerkMeldung((vorher) => (vorher === null ? signedInAtClerk : vorher));
       setSessionKnown(true);
     });
 
@@ -1327,7 +1636,29 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       clearTimeout(notbremse);
       unsubscribe();
     };
-  }, []);
+    // `wechsleSitzung` ist stabil (nur useState-Setter) - das Abo bindet sich nie neu.
+  }, [wechsleSitzung]);
+
+  /* ── Kaltstart ohne Clerk-Sitzung räumt den Schnappschuss ──────────────────
+     Nachprüfung zu Befund 23: Wurde die Sitzung widerrufen, während die App beendet
+     war, spielte die Hydrierung Kennung, Profil, Speisekarte, Beiträge und Merker des
+     alten Kontos ein, und das Abo oben räumte nicht - `signedIn` stand beim
+     Kaltstart schon auf false, es gab keinen Wechsel. Das nächste Konto erbte den
+     Stand. Wann hier geräumt wird (erst nach dem Einlesen, nie im Showcase, nie auf
+     die Notbremse hin), entscheidet `kaltstartOhneSitzung` (sitzungswechsel.ts).
+     Die Prüfung läuft einmal pro App-Lauf; spätere Sitzungsenden sind Sache des Abos. */
+  useEffect(() => {
+    if (kaltstartGeprueft.current) return;
+    const schritt = kaltstartOhneSitzung({
+      echterAnmeldebetrieb: hasRealAuth(),
+      ersteClerkMeldung,
+      schnappschussEingelesen: storageHydrated,
+      showcase,
+    });
+    if (schritt === "warten") return;
+    kaltstartGeprueft.current = true;
+    if (schritt === "raeumen") wechsleSitzung("sitzung_beendet", showcase);
+  }, [ersteClerkMeldung, storageHydrated, showcase, wechsleSitzung]);
 
   useEffect(() => {
     // Erst nach dem Hydrieren schreiben - sonst überschreiben die Defaults den Speicher.
@@ -1347,6 +1678,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       posts,
       venueId,
       venueProfile,
+      praesenz: praesenzEintrag,
       inboxRead,
       days,
       guests,
@@ -1369,6 +1701,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     posts,
     venueId,
     venueProfile,
+    praesenzEintrag,
     inboxRead,
     days,
     guests,
@@ -1426,13 +1759,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       signIn,
       betreteShowcase,
       signOut,
-      channels,
+      channels:
+        venueId !== DEMO_VENUE_ID && !showcase && hasRealAuth() && kanaeleGeprueftFuer !== venueId
+          ? KEINE_KANAELE
+          : channels,
+      aktualisiereKanaele,
       connectChannel,
       setChannel,
       profileDone,
       toggleProfileItem,
       taskDone,
       completeTask,
+      briefingVersion,
+      bumpBriefing,
       reviewAnswered,
       answerReview,
       posts,
@@ -1445,6 +1784,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       hasRealVenue: venueId !== DEMO_VENUE_ID,
       venueKnown,
       adoptVenue,
+      praesenz: venueId === DEMO_VENUE_ID || showcase ? null : praesenzFuer(praesenzEintrag, venueId),
+      praesenzLaedt,
+      aktualisierePraesenz,
       venueProfile,
       updateVenueProfile,
       updateHour,
@@ -1491,6 +1833,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       toggleProfileItem,
       taskDone,
       completeTask,
+      briefingVersion,
+      bumpBriefing,
       reviewAnswered,
       answerReview,
       posts,
@@ -1502,6 +1846,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       venueId,
       venueKnown,
       adoptVenue,
+      kanaeleGeprueftFuer,
+      aktualisiereKanaele,
+      praesenzEintrag,
+      praesenzLaedt,
+      aktualisierePraesenz,
       venueProfile,
       updateVenueProfile,
       updateHour,

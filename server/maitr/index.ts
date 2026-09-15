@@ -11,6 +11,7 @@
  */
 import express, { Router, type Express, type NextFunction, type Request, type Response } from "express";
 import { requireAuth } from "../middleware/auth";
+import { usersRouter } from "../routes/users";
 import {
   briefingRouter,
   integrationsRouter,
@@ -39,6 +40,13 @@ maitrRouter.use("/integrations", integrationsRouter);
 maitrRouter.use("/loyalty", loyaltyRouter);
 // Push-Registrierung: user-scoped (Begruendung am Router in routes.ts).
 maitrRouter.use("/push", pushRouter);
+// Konto (GET /users/me, DELETE /users/me). Derselbe Router wie unter /api/users,
+// hier ein zweites Mal eingehängt, weil die App ausschließlich /api/maitr
+// anspricht (mobile/src/lib/env.ts). Vorher rief „Konto löschen" in der App
+// DELETE /api/maitr/users/me - eine Route, die es nicht gab: 404, und die
+// App-Store-Pflicht zur In-App-Kontolöschung war nur behauptet. `requireAuth`
+// steht oben, `req.user` ist also gesetzt wie unter /api/users.
+maitrRouter.use("/users", usersRouter);
 
 /**
  * Fehler-Middleware des Maitr-Routers. MUSS als Letztes am Router hängen — Express

@@ -2,6 +2,7 @@ import { View } from "react-native";
 
 import { BarChart } from "../../components/ui/DataDisplay";
 import { Card } from "../../components/ui/Card";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { Eyebrow } from "../../components/ui/Eyebrow";
 import { ListCard, ListRow } from "../../components/ui/ListCard";
 import { NavHeader } from "../../components/ui/NavHeader";
@@ -9,17 +10,47 @@ import { Screen } from "../../components/ui/Screen";
 import { Text } from "../../components/ui/Text";
 import { useStore } from "../../lib/store";
 import { useTheme } from "../../theme";
+import { bewertungKachel, kennzahlLeerzustand } from "./kanaele";
 
 const MONTHS = ["Feb", "Mär", "Apr", "Mai", "Jun", "Jul"];
 
 /**
  * Kennzahl-Detail (aus Screen 09). Zeigt die 6-Monats-Kurve, den aktuellen Wert und
  * eine Monatsaufschlüsselung - echte Dummy-Zeitreihen aus dem Store.
+ *
+ * Für den echten Betrieb gibt es keine dieser Reihen (Integrationsprüfung 15.09.,
+ * Punkt 23): Aufrufe und Routen liefert ohne Google-Freigabe niemand, und die
+ * Präsenz speichert nur den letzten Stand, keine Historie. Statt der Kurve von
+ * Café Goldstück steht dort ein ehrlicher Leerzustand; bei Bewertungen dazu der
+ * aktuelle Google-Stand, der wirklich gemessen ist.
  */
 export function MetricDetailScreen({ metricKey }: { metricKey?: string }) {
   const theme = useTheme();
-  const { growthMetrics } = useStore();
+  const { growthMetrics, hasRealVenue, showcase, praesenz, praesenzLaedt, channels } = useStore();
   const metric = growthMetrics.find((m) => m.key === metricKey) ?? growthMetrics[0];
+
+  if (hasRealVenue && !showcase) {
+    const bekannt = growthMetrics.find((m) => m.key === metricKey);
+    const leer = kennzahlLeerzustand(bekannt?.key, channels.google === true);
+    const bewertung = bekannt?.key === "bewertungen" ? bewertungKachel(praesenz, praesenzLaedt) : null;
+
+    return (
+      <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
+        <NavHeader title={bekannt?.label ?? "Kennzahl"} fallback="/wachstum" />
+
+        {bewertung ? (
+          <View style={{ gap: 2 }}>
+            <Text variant="numeric" style={{ fontSize: 44, lineHeight: 48 }}>
+              {bewertung.value}
+            </Text>
+            <Eyebrow>{bewertung.delta}</Eyebrow>
+          </View>
+        ) : null}
+
+        <EmptyState title={leer.title} message={leer.message} />
+      </Screen>
+    );
+  }
 
   const max = Math.max(...metric.series);
   const rows = [...metric.series]

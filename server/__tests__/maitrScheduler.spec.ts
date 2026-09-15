@@ -15,6 +15,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const syncAll = vi.fn();
 vi.mock("../maitr/sync", () => ({ syncAll: () => syncAll() }));
+const praesenz = vi.fn();
+vi.mock("../maitr/praesenz", () => ({ aktualisiereVeraltetePraesenz: () => praesenz() }));
 
 import { startMaitrScheduler, stopMaitrScheduler } from "../maitr/scheduler";
 
@@ -24,6 +26,7 @@ describe("Maitr-Zeitgeber", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     syncAll.mockReset().mockResolvedValue(undefined);
+    praesenz.mockReset().mockResolvedValue(0);
     delete process.env[VAR];
   });
 
@@ -102,6 +105,28 @@ describe("Maitr-Zeitgeber", () => {
     // Entscheidend: Der Zeitgeber ist nach dem Fehler nicht blockiert.
     await vi.advanceTimersByTimeAsync(5 * 60_000);
     expect(syncAll).toHaveBeenCalledTimes(2);
+  });
+
+  it("frischt in jedem Tick auch die öffentliche Präsenz auf", async () => {
+    process.env[VAR] = "5";
+    startMaitrScheduler();
+    await vi.advanceTimersByTimeAsync(2 * 5 * 60_000);
+    expect(praesenz).toHaveBeenCalledTimes(2);
+  });
+
+  it("ein gescheiterter Kanal-Sync reißt die Präsenz nicht mit - und umgekehrt", async () => {
+    process.env[VAR] = "5";
+    syncAll.mockRejectedValueOnce(new Error("Google refresh HTTP 400"));
+    praesenz.mockRejectedValueOnce(new Error("PresenceSnapshot does not exist"));
+    startMaitrScheduler();
+
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(syncAll).toHaveBeenCalledTimes(1);
+    expect(praesenz).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(syncAll).toHaveBeenCalledTimes(2);
+    expect(praesenz).toHaveBeenCalledTimes(2);
   });
 
   it("hört nach dem Stoppen auf", () => {

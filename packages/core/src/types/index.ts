@@ -81,7 +81,10 @@ export interface Venue {
    */
   /** Adresse des Betriebs in Maitr (Business.slug) - unveränderlich. */
   slug?: string;
-  /** Längere Beschreibung ("Über uns"). */
+  /**
+   * Längere Beschreibung ("Über uns"). Fehlt, solange keine gesetzt ist - auch nach
+   * `description: ""` über `api.venues.update` (der Server speichert dann NULL).
+   */
   description?: string;
   /** Art des Betriebs, z. B. "restaurant", "cafe", "bar". */
   cuisine?: string;
@@ -127,8 +130,10 @@ export interface VenueMenu {
  * Eingabe für `api.venues.update` - Änderungen an einem bestehenden Betrieb.
  *
  * Alle Felder optional, aber mindestens eines ist Pflicht (der Server lehnt eine
- * leere Anfrage ab). `tagline: ""` löscht die Kurzbeschreibung (Server setzt
- * intern `null`). `openingHours: null` löscht die Öffnungszeiten vollständig.
+ * leere Anfrage ab). `tagline: ""` löscht die Kurzbeschreibung, `description: ""`
+ * die Beschreibung (Server setzt jeweils intern `null`). `openingHours: null`
+ * löscht die Öffnungszeiten vollständig - und `openingHours` ERSETZT immer den
+ * ganzen Wochenplan, ein fehlender Tag gilt danach als „ohne Angabe".
  *
  * Absichtlich KEIN slug-Feld - wie bei `CreateVenueInput` leitet der Server die
  * Adresse selbst ab, und hier gilt zusätzlich: der Slug ändert sich mit diesem
@@ -137,7 +142,14 @@ export interface VenueMenu {
  */
 export interface UpdateVenueInput {
   name?: string;
+  /** Höchstens 200 Zeichen (nach dem Trimmen). */
   tagline?: string;
+  /**
+   * Längere Beschreibung ("Über uns"), höchstens 2000 Zeichen nach dem Trimmen -
+   * dieselbe Grenze wie `CreateVenueInput.description`. Die Spalte, die der
+   * Präsenz-Hebel „Beschreibung ergänzen" misst.
+   */
+  description?: string;
   /** IANA-Zone wie "Europe/Berlin". */
   timezone?: string;
   openingHours?: OpeningHours | null;
@@ -194,12 +206,22 @@ export interface DailyTask {
 }
 
 export interface PresenceStats {
-  /** Google-Sternebewertung, z. B. 4.6. */
+  /** Google-Sternebewertung, z. B. 4.6. 0 = noch keine Bewertung bekannt. */
   rating: number;
   /** Maitr-Präsenzscore 0-100. */
   score: number;
   /** Profilaufrufe im laufenden Zeitraum. */
   impressions: number;
+  /** Anzahl der Bewertungen hinter `rating` (Google-Gesamtzahl, falls bekannt). */
+  reviewCount?: number;
+  /**
+   * `false` = Profilaufrufe sind nicht gemessen (ohne Google-Freigabe gibt es
+   * keine). Dann ist `impressions` 0 und die Oberfläche zeigt einen Strich statt
+   * einer Null. Fehlt das Feld (älterer Server), gilt der Wert als gemessen.
+   */
+  impressionsKnown?: boolean;
+  /** Worauf der Score beruht, z. B. "Beruht auf 3 von 5 Faktoren. …". */
+  scoreHint?: string;
 }
 
 export interface DailyBriefing {
@@ -227,8 +249,21 @@ export interface Reservation {
   partySize: number;
   start: Iso8601;
   end: Iso8601;
-  status: "confirmed" | "pending" | "cancelled" | "walk_in";
+  /**
+   * `pending` = Anfrage, die der Betrieb noch bestätigen oder absagen muss (so kommt
+   * jede Buchung aus der Web-App an). `no_show` = Gast nicht erschienen - früher auf
+   * `cancelled` gefaltet, dann ließ sich eine Absage nicht von einem No-Show trennen.
+   */
+  status: "confirmed" | "pending" | "cancelled" | "walk_in" | "no_show";
   phone?: string;
+  /** Nur in der Inhaber-Sicht: E-Mail des Gastes (Bestätigungs-Mails). */
+  email?: string;
+  /** Sonderwünsche aus dem Buchungsformular. */
+  note?: string;
+  /** Woher die Buchung kam: "website" (Web-App), "maitr" (App), "walk_in". */
+  source?: string;
+  /** Eingang der Buchung - für "neu seit" im Posteingang. */
+  createdAt?: Iso8601;
 }
 
 export interface ServiceDay {

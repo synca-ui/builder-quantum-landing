@@ -10,6 +10,7 @@ import {
 } from "../utils/email";
 import { slotsFuerDatum } from "@maitr/core/reservierungsSlots";
 import { pushAnBetrieb } from "../services/push";
+import { STANDARD_ZONE, tagesbeginnIn, uhrzeitIn, zeitpunktAusDatumUndUhrzeit } from "../utils/zeitzone";
 import type { OpeningHours } from "@maitr/core/types";
 
 const router = Router();
@@ -104,7 +105,7 @@ const RESERVIERUNGS_AUSWAHL = {
   reservationTime: true,
   specialRequests: true,
   status: true,
-  business: { select: { name: true } },
+  business: { select: { name: true, timezone: true } },
 } as const;
 
 function oeffentlicheReservierungsAnsicht(reservation: {
@@ -114,7 +115,7 @@ function oeffentlicheReservierungsAnsicht(reservation: {
   reservationTime: Date;
   specialRequests: string | null;
   status: string;
-  business: { name: string };
+  business: { name: string; timezone?: string | null };
 }) {
   return {
     id: reservation.id,
@@ -123,7 +124,12 @@ function oeffentlicheReservierungsAnsicht(reservation: {
     reservationTime: reservation.reservationTime,
     specialRequests: reservation.specialRequests,
     status: reservation.status,
-    business: { name: reservation.business.name },
+    // `timezone`: ManageReservation.tsx zeigt und bearbeitet die Uhrzeit als
+    // Wanduhr des Betriebs. ANLASS (15.09.2026): Die Seite nahm
+    // `toISOString().slice(0, 16)` und schrieb bei JEDEM Speichern die im
+    // Browser gelesene Zeit zurück - eine 19:00-Buchung in Köln rückte so auf
+    // 17:00. Keine personenbezogene Angabe, nur die Zone des Betriebs.
+    business: { name: reservation.business.name, timezone: reservation.business.timezone || STANDARD_ZONE },
     // ABSICHTLICH NICHT dabei: guestEmail, guestPhone (ManageReservation.tsx
     // zeigt sie nicht einmal dem Gast selbst an), businessId, tableId, source,
     // createdAt/updatedAt, business.logoUrl (unbenutzt) - siehe Kommentar oben.
@@ -214,6 +220,7 @@ router.get("/slots", async (req: Request, res: Response) => {
 
     const config = await prisma.configuration.findUnique({
       where: { id: configId as string },
+      include: { business: { select: { timezone: true } } },
     });
 
     if (!config) {
@@ -242,29 +249,32 @@ router.get("/slots", async (req: Request, res: Response) => {
       dayStr,
     );
 
-    // Build all slot datetimes for the given day
-    const slots = rawSlots.map((timeStr: string) => {
-      const [h, m] = timeStr.split(":").map(Number);
-      const dt = new Date(`${dayStr}T${String(h).padStart(2, "0")}:${String(m ?? 0).padStart(2, "0")}:00.000Z`);
-      return { time: timeStr, datetime: dt.toISOString() };
-    });
+    // Zeitfenster als ECHTE Zeitpunkte in der Zone des Betriebs. Vorher stand
+    // hier `${dayStr}T19:00:00.000Z` - die Wanduhr als UTC. Gespeichert wurde
+    // damit 19:00 UTC, Push und App zeigten 21:00 (siehe server/utils/zeitzone.ts).
+    const zone = (config as any).business?.timezone || STANDARD_ZONE;
+    const slots = rawSlots
+      .map((timeStr: string) => {
+        const zeitpunkt = zeitpunktAusDatumUndUhrzeit(dayStr, timeStr, zone);
+        return zeitpunkt ? { time: timeStr, datetime: zeitpunkt.toISOString() } : null;
+      })
+      .filter((s): s is { time: string; datetime: string } => s !== null);
 
-    // Find already-booked slots for this business on this day
+    // Belegte Zeitfenster dieses Kalendertags - Tagesgrenzen und Uhrzeit in der
+    // Zone des Betriebs, sonst fielen späte Buchungen in den Nachbartag.
     let bookedSlots: string[] = [];
-    if (config.businessId) {
-      const dayStart = new Date(`${dayStr}T00:00:00.000Z`);
-      const dayEnd = new Date(`${dayStr}T23:59:59.999Z`);
+    const tagesbeginn = zeitpunktAusDatumUndUhrzeit(dayStr, "00:00", zone);
+    if (config.businessId && tagesbeginn) {
+      const naechsterTag = tagesbeginnIn(new Date(tagesbeginn.getTime() + 36 * 3_600_000), zone);
       const existing = await prisma.reservation.findMany({
         where: {
           businessId: config.businessId,
-          reservationTime: { gte: dayStart, lte: dayEnd },
+          reservationTime: { gte: tagesbeginn, lt: naechsterTag },
           status: { notIn: ["CANCELLED"] },
         },
         select: { reservationTime: true },
       });
-      bookedSlots = existing.map((r) =>
-        r.reservationTime.toISOString().slice(11, 16)
-      );
+      bookedSlots = existing.map((r) => uhrzeitIn(r.reservationTime, zone));
     }
 
     // Mark slots as available/unavailable
@@ -502,7 +512,7 @@ router.post("/", async (req: Request, res: Response) => {
       success: true,
       data: oeffentlicheReservierungsAnsicht({
         ...reservation,
-        business: { name: config.business.name },
+        business: { name: config.business.name, timezone: config.business.timezone },
       }),
     });
   } catch (error) {

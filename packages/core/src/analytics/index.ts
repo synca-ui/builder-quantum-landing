@@ -23,3 +23,20 @@ export { bestPostingSlots } from "./timing";
 export { reservationRoi } from "./roi";
 export { forecastSeries } from "./forecast";
 export { buildInsights } from "./insights";
+export {
+  datasetAusPraesenz,
+  oeffnungszeitenWeichenAb,
+  praesenzBericht,
+} from "./oeffentlichePraesenz";
+export type {
+  GoogleAbrufStatus,
+  GoogleBetriebsstatus,
+  GoogleEintrag,
+  MaitrProfil,
+  OeffentlicheBewertung,
+  PraesenzBericht,
+  PraesenzHebel,
+  PraesenzSnapshot,
+  WebsiteBefund,
+  WebsitePruefung,
+} from "./oeffentlichePraesenz";

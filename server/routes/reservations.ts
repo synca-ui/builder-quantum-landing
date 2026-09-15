@@ -4,6 +4,7 @@ import prisma from "../db/prisma";
 import { z } from "zod";
 import { sendReservationConfirmation, sendReservationDeclined } from "../utils/email";
 import { AKTIONS_SECRET, reservierungsAktionsToken } from "./publicReservations";
+import { STANDARD_ZONE } from "../utils/zeitzone";
 
 const router = Router();
 
@@ -70,12 +71,21 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
 
     const businessId = await ensureBusinessForConfig(configId, userId);
 
-    const reservations = await prisma.reservation.findMany({
-      where: { businessId },
-      orderBy: { reservationTime: "asc" }
-    });
+    const [reservations, business] = await Promise.all([
+      prisma.reservation.findMany({
+        where: { businessId },
+        orderBy: { reservationTime: "asc" }
+      }),
+      prisma.business.findUnique({ where: { id: businessId }, select: { timezone: true } }),
+    ]);
 
-    res.json({ success: true, data: reservations });
+    // `timezone` neben `data`: Das Dashboard baut neue Reservierungen aus
+    // Datum + Uhrzeit und zeigt Uhrzeiten an - beides in der Zone des Betriebs,
+    // derselben, mit der GET /api/public/reservations/slots rechnet. ANLASS
+    // (15.09.2026): Das Dashboard schickte `${datum}T19:00:00.000Z` (Wanduhr als
+    // UTC); nach dem Zonenfix der Slots galt so 21:00 als belegt, 19:00 blieb für
+    // Web-Gäste frei, und die Bestätigungsmail nannte 21:00.
+    res.json({ success: true, data: reservations, timezone: business?.timezone || STANDARD_ZONE });
   } catch (error) {
     console.error("Error fetching reservations:", error);
     res.status(500).json({ error: "Failed to fetch reservations" });
@@ -101,6 +111,8 @@ router.post("/", requireAuth, async (req: Request, res: Response) => {
         guestEmail: rest.guestEmail || null,
         guestPhone: rest.guestPhone || null,
         guestCount: rest.guestCount,
+        // Ein echter Zeitpunkt: Das Dashboard rechnet Datum + Uhrzeit in der
+        // Zone des Betriebs um (zeitpunktAusDatumUndUhrzeit), wie GET /slots.
         reservationTime: new Date(rest.reservationTime),
         specialRequests: rest.specialRequests || null,
         source: "dashboard"

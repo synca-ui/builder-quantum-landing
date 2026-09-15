@@ -6,6 +6,7 @@ import { analytics } from "@maitr/core";
 import { Avatar } from "../../components/ui/Avatar";
 import { Card } from "../../components/ui/Card";
 import { DarkPanel, onDarkPanel } from "../../components/ui/DataDisplay";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { Eyebrow } from "../../components/ui/Eyebrow";
 import { NavHeader } from "../../components/ui/NavHeader";
 import { PillButton } from "../../components/ui/PillButton";
@@ -21,14 +22,31 @@ import { useTheme } from "../../theme";
  * abzuwarten. Maitr sieht den ruhigen Tag kommen und lädt genau die Stammgäste ein,
  * die dann gern kommen. „Leerer Tisch" wird zur adressierbaren Euro-Größe - ein Zug,
  * den Plattformen nicht machen, weil ihnen die Beziehung nicht gehört.
+ *
+ * Für den echten Betrieb gibt es beides noch nicht (Integrationsprüfung 15.09.):
+ * keine Gäste-Route (die Stammgäste hier kamen aus dem Fixture-Datensatz) und
+ * keinen Versandweg (WhatsApp Cloud API ist nicht gebaut). „3 Einladungen
+ * gesendet“ wäre eine Erfolgsmeldung ohne Mechanik - deshalb ein Leerzustand.
  */
 export function CampaignScreen() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
   const dataset = useVenueDataset();
-  const { logActivity } = useStore();
+  const { logActivity, hasRealVenue, showcase } = useStore();
   const [sent, setSent] = useState(false);
+
+  if (hasRealVenue && !showcase) {
+    return (
+      <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
+        <NavHeader title="Auslastung" fallback="/wachstum" />
+        <EmptyState
+          title="Noch keine Stammgäste erfasst"
+          message="Einladungen an Stammgäste brauchen Gästedaten und einen Versandweg. Beides ist für deinen Betrieb noch nicht angebunden."
+        />
+      </Screen>
+    );
+  }
 
   const regulars = analytics
     .guestInsights(dataset)

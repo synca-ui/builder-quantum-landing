@@ -43,6 +43,8 @@ const { prismaMock } = vi.hoisted(() => ({
     // wie GET /venues.
     business: { update: vi.fn(), findUnique: vi.fn() },
     businessMember: { findUnique: vi.fn(), findMany: vi.fn() },
+    // Der Briefing-Cache, den PATCH /venues/:venueId verwirft.
+    insightsCache: { deleteMany: vi.fn() },
   },
 }));
 
@@ -65,6 +67,8 @@ interface BetriebZeile {
   slug: string;
   name: string;
   tagline: string | null;
+  /** Wie die echte Spalte: `String?`. Fehlt in Zeilen, die nie eine hatten. */
+  description?: string | null;
   timezone: string;
   tags: string[];
   /** Wie die echte Spalte: `Json?`. */
@@ -215,6 +219,7 @@ beforeEach(() => {
     async ({ where }: { where: { slug: string } }) =>
       betriebe.find((b) => b.slug === where.slug) ?? null,
   );
+  prismaMock.insightsCache.deleteMany.mockResolvedValue({ count: 1 });
 });
 
 describe("PATCH /venues/:venueId - Profil ändern", () => {
@@ -378,12 +383,149 @@ describe("PATCH /venues/:venueId - die beiden Löschpfade", () => {
 });
 
 /**
+ * Die Beschreibung (`description`) - ANLASS: Der Präsenz-Hebel „Beschreibung
+ * ergänzen" misst `Business.description`, aber PATCH kannte das Feld nicht
+ * (`.strict()` wies es mit 422 ab). „Profil verwalten" in der App speicherte die
+ * Beschreibung deshalb nur auf dem Gerät, und der Hebel blieb für immer offen.
+ */
+describe("PATCH /venues/:venueId - Beschreibung", () => {
+  it("setzt die Beschreibung getrimmt - in der Zeile, in der Antwort und in GET /venues", async () => {
+    const app = appAls(ICH);
+    const res = await request(app)
+      .patch("/venues/biz-1")
+      .send({ description: "  Kölsch vom Holzfass, seit 1889.  " });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(betriebe[0].description).toBe("Kölsch vom Holzfass, seit 1889.");
+    // Die App übernimmt ihr Profil aus DIESER Antwort (profilAusVenue) - fehlte das
+    // Feld hier, stünde nach dem Speichern wieder die leere Beschreibung im Formular.
+    expect(res.body.description).toBe("Kölsch vom Holzfass, seit 1889.");
+    const liste = await request(app).get("/venues");
+    expect(liste.body).toEqual([res.body]);
+    // Nur die Beschreibung ist geschrieben - Name und Tagline blieben unberührt.
+    expect(letzteSchreibDaten).toEqual({ description: "Kölsch vom Holzfass, seit 1889." });
+  });
+
+  it.each([
+    ["leerer String", ""],
+    ["nur Leerzeichen", "   "],
+  ])("%s leert die Beschreibung zu echtem null, nicht zu einem leeren String", async (_label, wert) => {
+    const app = appAls(ICH);
+    // Erst wirklich etwas hinterlegen - sonst bewiese "danach ist sie weg" nichts.
+    const gesetzt = await request(app).patch("/venues/biz-1").send({ description: "Vorher" });
+    expect(gesetzt.status, JSON.stringify(gesetzt.body)).toBe(200);
+    expect(betriebe[0].description).toBe("Vorher");
+
+    const res = await request(app).patch("/venues/biz-1").send({ description: wert });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(letzteSchreibDaten?.description).toBeNull();
+    expect(betriebe[0].description).toBeNull();
+    expect(res.body).not.toHaveProperty("description");
+  });
+
+  it("mehr als 2000 Zeichen werden mit 422 abgewiesen, ohne Schreibversuch", async () => {
+    const res = await request(appAls(ICH))
+      .patch("/venues/biz-1")
+      .send({ description: "x".repeat(2001) });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(422);
+    expect(schreibversuche).toBe(0);
+    expect(betriebe[0]).not.toHaveProperty("description");
+  });
+
+  it("genau 2000 Zeichen gehen durch - die Grenze ist nicht um eins verschoben", async () => {
+    const res = await request(appAls(ICH))
+      .patch("/venues/biz-1")
+      .send({ description: "x".repeat(2000) });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(betriebe[0].description).toHaveLength(2000);
+  });
+
+  it("Aushilfe (Rolle STAFF) darf die Beschreibung nicht ändern: 403 nur_inhaber", async () => {
+    const res = await request(appAls(MITARBEITER))
+      .patch("/venues/biz-1")
+      .send({ description: "Von der Aushilfe" });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(403);
+    expect(res.body).toEqual({ error: "nur_inhaber" });
+    expect(schreibversuche).toBe(0);
+    expect(betriebe[0]).not.toHaveProperty("description");
+  });
+
+  it("Beschreibung zusammen mit Name, Tagline und Öffnungszeiten in einem Aufruf", async () => {
+    // So schickt „Profil verwalten" die Änderungen - ein Aufruf, alle Felder.
+    const res = await request(appAls(ICH))
+      .patch("/venues/biz-1")
+      .send({
+        name: "Café Neu",
+        tagline: "Kaffee & Kuchen",
+        description: "Seit 1998 am Platz.",
+        openingHours: { sunday: { closed: true } },
+      });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(res.body).toMatchObject({
+      name: "Café Neu",
+      tagline: "Kaffee & Kuchen",
+      description: "Seit 1998 am Platz.",
+      openingHours: { sunday: { closed: true } },
+    });
+  });
+
+  it("weitere unbekannte Felder bleiben verboten (.strict())", async () => {
+    // Die Erweiterung um `description` darf den Riegel nicht lockern: `tags` oder
+    // `slug` gehören nicht in diesen Schreibweg.
+    const res = await request(appAls(ICH))
+      .patch("/venues/biz-1")
+      .send({ description: "ok", slug: "gekapert" });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(422);
+    expect(schreibversuche).toBe(0);
+    expect(betriebe[0].slug).toBe("cafe-mueller");
+  });
+});
+
+/**
  * `geprüfteOeffnungszeiten` im LESEPFAD (`toApiVenue`, benutzt von GET /venues UND
  * dem unangemeldeten GET /venues/:slug/public). Business.openingHours kann
  * Altbestand von VOR `StrictOpeningHoursSchema` enthalten - Zeilen, die nie durch
  * die neue Schranke am Schreibpfad liefen. Beide Lesewege dürfen daran weder
  * scheitern noch die kaputte Form durchreichen.
  */
+/*
+ * ANLASS (Prüfbefund): Der Wirt erledigt den Hebel "Beschreibung ergänzen" oder
+ * ändert Öffnungszeiten. Der Präsenzbericht rechnet sofort neu, `GET
+ * /briefing/today` lieferte aber bis zu 15 Minuten das gecachte Briefing mit altem
+ * Score und alter Aufgabe - Start und Profil-Check zeigten zwei Scores.
+ */
+describe("PATCH /venues/:venueId - Briefing-Cache", () => {
+  it("verwirft den Cache des geänderten Betriebs - und nur dessen", async () => {
+    const res = await request(appAls(ICH)).patch("/venues/biz-1").send({ description: "Kaffee aus eigener Röstung." });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(prismaMock.insightsCache.deleteMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.insightsCache.deleteMany).toHaveBeenCalledWith({ where: { businessId: "biz-1" } });
+  });
+
+  it("meldet die gespeicherte Änderung nicht als gescheitert, wenn das Verwerfen scheitert", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    prismaMock.insightsCache.deleteMany.mockRejectedValue(new Error("The table `public.InsightsCache` does not exist"));
+
+    const res = await request(appAls(ICH)).patch("/venues/biz-1").send({ name: "Café Neu" });
+
+    expect(res.status).toBe(200);
+    expect(betriebe[0].name).toBe("Café Neu");
+    warn.mockRestore();
+  });
+
+  it("ein abgewiesenes Patch verwirft nichts", async () => {
+    await request(appAls(MITARBEITER)).patch("/venues/biz-1").send({ description: "x" });
+    expect(prismaMock.insightsCache.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
 describe("Lesepfad: kaputte openingHours-Altzeilen dürfen keinen Client erreichen", () => {
   it.each([
     ["fremde Tagesschlüssel/Kurzform (deutsch)", { Mo: "9-17" } as unknown],

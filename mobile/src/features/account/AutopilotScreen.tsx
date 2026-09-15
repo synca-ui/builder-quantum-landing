@@ -28,8 +28,14 @@ const CATEGORIES: { key: AutopilotCategory; title: string; meta: string }[] = [
 export function AutopilotScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { activityLog, autopilot, setAutopilot, guests, reactivateGuest } = useStore();
+  const { activityLog, autopilot, setAutopilot, guests, reactivateGuest, hasRealVenue, showcase } = useStore();
   const autoCount = activityLog.filter((a) => a.auto).length;
+  // Für einen echten Betrieb gibt es keinen Autopiloten: Maitr kann heute weder
+  // Bewertungen beantworten noch Beiträge veröffentlichen noch WhatsApp senden.
+  // Vorher zeigte der Screen auch echten Konten die Seed-Chronik ("5★-Antwort
+  // veröffentlicht · Tobias R.") und simulierte beim Einschalten Rückholungen
+  // für die Beispielgäste.
+  const echterBetrieb = hasRealVenue && !showcase;
 
   // Der Regler steuert wirklich etwas: „winback" einschalten holt sofort alle
   // inaktiven Gäste zurück - mit auto-Belegen. Kein Lichtschalter ohne Kabel.
@@ -39,6 +45,33 @@ export function AutopilotScreen() {
       guests.filter((g) => g.status === "inaktiv").forEach((g) => reactivateGuest(g.id, g.name, true));
     }
   };
+
+  if (echterBetrieb) {
+    return (
+      <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>
+        <NavHeader title="Autopilot" fallback="/konto" />
+        <DarkPanel style={{ gap: 6 }}>
+          <Eyebrow color={onDarkPanel.accent}>Noch nicht verfügbar</Eyebrow>
+          <Text variant="numeric" color={onDarkPanel.title} style={{ fontSize: 24, lineHeight: 28 }}>
+            Maitr erledigt noch nichts automatisch
+          </Text>
+          <Text variant="bodySm" color={onDarkPanel.body} style={{ fontSize: 13.5, lineHeight: 19 }}>
+            Automatische Bewertungsantworten, Beiträge und Rückhol-Nachrichten brauchen Schreibzugriff auf
+            Google, Instagram und WhatsApp. Den gibt es noch nicht - bis dahin entscheidest du auf dem
+            Start-Screen, und nichts geht ohne dich raus.
+          </Text>
+        </DarkPanel>
+        <View style={{ gap: theme.spacing.sm }}>
+          <Eyebrow>Geplant</Eyebrow>
+          <ListCard style={{ borderRadius: 18 }}>
+            {CATEGORIES.map((c) => (
+              <ListRow key={c.key} title={c.title} meta={c.meta} trailing={<Eyebrow tone="faint">Später</Eyebrow>} />
+            ))}
+          </ListCard>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen animated="subtle" contentStyle={{ gap: theme.spacing.lg }}>

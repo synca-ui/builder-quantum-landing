@@ -330,7 +330,7 @@ export function AblaufGoogle() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
-  const { venueId } = useStore();
+  const { venueId, aktualisiereKanaele } = useStore();
 
   const [stufe, setStufe] = useState<GoogleStufe>("prueft");
   const [fehler, setFehler] = useState<string | null>(null);
@@ -351,7 +351,12 @@ export function AblaufGoogle() {
       .list(venueId)
       .then((liste) => {
         if (!aktiv.current) return;
-        setStufe(googleVerbunden(liste) ? "verbunden" : "bereit");
+        const verbunden = googleVerbunden(liste);
+        setStufe(verbunden ? "verbunden" : "bereit");
+        // Der Store kennt den Kanalstatus nur aus seinem eigenen Abruf - ohne Nachladen
+        // behaupteten Bewertungen, Kanäle und Wachstum weiter „nicht verbunden"
+        // (Prüfer-Befund 21). Wirft nie, im Demomodus ohne Wirkung.
+        if (verbunden) void aktualisiereKanaele();
       })
       .catch(() => {
         if (!aktiv.current) return;
@@ -360,7 +365,7 @@ export function AblaufGoogle() {
         // festzuhängen, die ein Tipp auf "Verbinden" ohnehin gleich mit klärt.
         setStufe("bereit");
       });
-  }, [venueId]);
+  }, [venueId, aktualisiereKanaele]);
 
   const verbinden = useCallback(() => {
     setFehler(null);
@@ -384,6 +389,8 @@ export function AblaufGoogle() {
           if (!aktiv.current) return;
           if (googleVerbunden(liste)) {
             setStufe("verbunden");
+            // Siehe oben: den Kanalstatus des Stores nachziehen (Prüfer-Befund 21).
+            void aktualisiereKanaele();
             toast.show("Google verbunden");
           } else {
             setStufe("fehlgeschlagen");
@@ -398,7 +405,7 @@ export function AblaufGoogle() {
         setStufe("fehlgeschlagen");
         setFehler(fehlerText(err));
       });
-  }, [venueId, toast]);
+  }, [venueId, toast, aktualisiereKanaele]);
 
   const weiterZuZeiten = useCallback(() => router.push("/onboarding/zeiten"), [router]);
 

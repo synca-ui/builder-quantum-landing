@@ -11,6 +11,7 @@ import type {
   VenueMenu,
 } from "../types";
 import type { ProviderId } from "../integrations";
+import type { GoogleAbrufStatus, GoogleEintrag, PraesenzBericht, WebsitePruefung } from "../analytics";
 
 /**
  * Endpunkt-Wrapper. Dünne Schicht über `request()` - keine UI-Logik, kein State.
@@ -55,6 +56,10 @@ export const BETRIEB_PFADE = {
   betrieb: (venueId: string) => `/venues/${teil(venueId)}`,
   /** Speisekarte des Betriebs, wie sie beim Veröffentlichen der Web-App entstand. */
   speisekarte: (venueId: string) => `/venues/${teil(venueId)}/menu`,
+  /** Öffentliche Präsenz (Google-Eintrag, Website-Prüfung, Score-Bericht) - GET. */
+  praesenz: (venueId: string) => `/venues/${teil(venueId)}/presence`,
+  /** Öffentliche Präsenz neu abrufen - POST, antwortet mit dem frischen Stand. */
+  praesenzAktualisieren: (venueId: string) => `/venues/${teil(venueId)}/presence/refresh`,
   oeffentlich: (slug: string) => `/venues/${teil(slug)}/public`,
   integrationen: "/integrations",
   integrationVerbinden: (provider: ProviderId) => `/integrations/${teil(provider)}/connect`,
@@ -83,6 +88,18 @@ export const briefing = {
     });
   },
 
+  /**
+   * Aufgabe verwerfen ("nicht relevant"). Wie eine Freigabe mit Wiedervorlage:
+   * Daueraufgaben (Profil-Hebel, Auslastung) kommen nach sieben Tagen wieder,
+   * solange ihr Anlass besteht. `venueId` wie bei `approveTask`.
+   */
+  dismissTask(taskId: string, venueId?: string) {
+    return request<DailyTask>(`/briefing/tasks/${teil(taskId)}/dismiss`, {
+      method: "POST",
+      ...(venueId ? { query: { venueId } } : {}),
+    });
+  },
+
   /** Entwurf vor der Freigabe anpassen. `venueId` wie bei `approveTask`. */
   updateDraft(taskId: string, draft: string, venueId?: string) {
     return request<DailyTask>(`/briefing/tasks/${teil(taskId)}`, {
@@ -93,7 +110,42 @@ export const briefing = {
   },
 };
 
+/** Reservierungspfade an EINER Stelle - geprüft in server/__tests__/apiContract.spec.ts. */
+export const RESERVIERUNG_PFADE = {
+  kommende: "/reservations/upcoming",
+  status: (reservationId: string) => `/reservations/${teil(reservationId)}/status`,
+  eine: (reservationId: string) => `/reservations/${teil(reservationId)}`,
+} as const;
+
+/** Was der Betrieb an einer Reservierung ändern darf. */
+export type ReservierungsEntscheidung = "confirmed" | "cancelled" | "no_show";
+
 export const reservations = {
+  /**
+   * Reservierungen ab heute (Tagesbeginn in der Zeitzone des Betriebs) für die
+   * nächsten `tage` Tage (Vorgabe 14, höchstens 60), aufsteigend nach Beginn.
+   * Enthält ALLE Zustände - auch Anfragen aus der Web-App (`pending`) und
+   * Absagen, damit die App sie als erledigt zeigen kann.
+   */
+  upcoming(venueId: string, tage?: number, signal?: AbortSignal) {
+    return request<Reservation[]>(RESERVIERUNG_PFADE.kommende, {
+      query: { venueId, ...(tage ? { tage } : {}) },
+      signal,
+    });
+  },
+
+  /**
+   * Anfrage bestätigen, absagen oder als No-Show markieren. Bestätigen und Absagen
+   * einer Anfrage schicken dem Gast die üblichen Mails (wenn er eine E-Mail
+   * hinterlassen hat). 400, wenn die Reservierung schon abgeschlossen ist.
+   */
+  setStatus(reservationId: string, venueId: string, status: ReservierungsEntscheidung) {
+    return request<Reservation>(RESERVIERUNG_PFADE.status(reservationId), {
+      method: "PATCH",
+      body: { venueId, status },
+    });
+  },
+
   /** Tischbelegung eines Servicetags. */
   day(venueId: string, date: string, signal?: AbortSignal) {
     return request<ServiceDay>("/reservations/day", { query: { venueId, date }, signal });
@@ -114,10 +166,49 @@ export const reservations = {
     return request<Reservation>("/reservations/walk-in", { method: "POST", body: input });
   },
 
-  cancel(reservationId: string) {
-    return request<void>(`/reservations/${reservationId}`, { method: "DELETE" });
+  /**
+   * `venueId` ist Pflicht: Die Route hängt hinter `venueGuard`, und ohne Kennung
+   * antwortete sie ausnahmslos 400 "venueId fehlt" - die Stornierung war für den
+   * einzigen Aufrufer unbenutzbar.
+   */
+  cancel(reservationId: string, venueId: string) {
+    return request<void>(RESERVIERUNG_PFADE.eine(reservationId), {
+      method: "DELETE",
+      query: { venueId },
+    });
   },
 };
+
+/**
+ * Zustand des Präsenz-Abrufs, wie `GET /venues/:venueId/presence` ihn nennt.
+ *
+ *  - `bereit`: Google-Eintrag liegt vor (und ggf. die Website-Prüfung).
+ *  - `kein_schluessel`: Der Server hat keinen Places-Schlüssel - Google-Daten
+ *    fehlen, der Bericht beruht auf Maitr- und Website-Wissen.
+ *  - `nicht_gefunden`: Places kennt keinen passenden Eintrag.
+ *  - `fehler`: Der Abruf ist gescheitert (`hinweis` sagt, woran).
+ *  - `ausstehend`: Noch nie abgerufen - `refreshPresence()` holt ihn.
+ */
+export type PraesenzStatus = GoogleAbrufStatus;
+
+/**
+ * Form von `GET /venues/:venueId/presence` und der Antwort von
+ * `POST /venues/:venueId/presence/refresh`.
+ *
+ * `bericht` ist IMMER da - auch ohne Google-Eintrag rechnet der Server über das,
+ * was Maitr selbst weiß, und sagt in `bericht.deckung`, worauf der Score beruht.
+ * `google` und `website` fehlen, wenn die jeweilige Quelle nichts hergab.
+ */
+export interface VenuePresence {
+  status: PraesenzStatus;
+  /** Wann Google und Website zuletzt abgerufen wurden. Fehlt bei `ausstehend`. */
+  fetchedAt?: Iso8601;
+  /** Klartext für die Oberfläche, wenn etwas fehlt oder scheiterte. */
+  hinweis?: string;
+  google?: GoogleEintrag;
+  website?: WebsitePruefung;
+  bericht: PraesenzBericht;
+}
 
 export const venues = {
   /**
@@ -132,6 +223,35 @@ export const venues = {
   /** Speisekarte des Betriebs - nur lesen, gepflegt wird sie im Konfigurator. */
   menu(venueId: string, signal?: AbortSignal) {
     return request<VenueMenu>(BETRIEB_PFADE.speisekarte(venueId), { signal });
+  },
+
+  /**
+   * Öffentliche Präsenz des Betriebs: Google-Eintrag (Schnitt, Anzahl, fünf
+   * Bewertungen, Fotos, Zeiten, Telefon, Website), Website-Prüfung und der
+   * daraus gerechnete Präsenzbericht. Alles ohne Google-Freigabe erhoben.
+   *
+   * Liefert den gespeicherten Stand - `status: "ausstehend"` heißt: noch nie
+   * abgerufen, dann `refreshPresence()` rufen. Der Bericht ist auch dann da.
+   */
+  presence(venueId: string, signal?: AbortSignal) {
+    return request<VenuePresence>(BETRIEB_PFADE.praesenz(venueId), { signal });
+  },
+
+  /**
+   * Google und Website neu abrufen und den Bericht neu rechnen. Dauert ein paar
+   * Sekunden (zwei Fremdabrufe). Der Server drosselt: Liegt der letzte Abruf
+   * keine zehn Minuten zurück, kommt der gespeicherte Stand zurück - ohne
+   * erneuten Abruf, aber mit frisch gerechnetem Bericht.
+   */
+  refreshPresence(venueId: string, signal?: AbortSignal) {
+    return request<VenuePresence>(BETRIEB_PFADE.praesenzAktualisieren(venueId), {
+      method: "POST",
+      signal,
+      // Der Server fragt Google Places, bis zu fünf Fotos und die Website ab -
+      // gedeckelt auf gut 20 s, damit er unter der 26-s-Grenze des Netlify-Proxys
+      // bleibt. Der Vorgabewert von 15 s bräche sonst vorher ab.
+      timeoutMs: 30_000,
+    });
   },
 
   /**

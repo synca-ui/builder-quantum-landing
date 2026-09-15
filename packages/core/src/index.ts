@@ -24,6 +24,8 @@ export * as api from "./api";
  * Additiv, ändert an vorhandenen Aufrufern nichts.
  */
 export type {
+  PraesenzStatus,
+  VenuePresence,
   StampCardDetail,
   StampCardFilter,
   StampCardRow,

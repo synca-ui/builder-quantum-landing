@@ -19,17 +19,39 @@ import { useStore, type Guest, type GuestStatus } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 
+import { EchteGaesteAnsicht } from "./EchteGaesteAnsicht";
+
 type Filter = "alle" | "stammgast" | "inaktiv";
 
 /**
- * Gäste-CRM - der verteidigbare Kern von Maitr.
+ * Gäste.
+ *
+ * Zwei Fälle, entschieden allein über den Store:
+ *  - Echter Betrieb (nicht Showcase): Gäste, abgeleitet aus den echten Reservierungen
+ *    der nächsten 14 Tage (`EchteGaesteAnsicht`). Eine Gästekartei mit Besuchen,
+ *    Wert und Segmenten gibt es auf dem Server nicht - die Vorführung zeigte sie
+ *    trotzdem jedem Betrieb, samt „Maitr formuliert und sendet", ohne dass je
+ *    etwas gesendet wurde.
+ *  - Demomodus und Showcase: die bisherige Vorführung, unverändert.
+ *
+ * Wie in `ReservationsScreen`: Die Hooks jeder Ansicht stecken in ihrer eigenen
+ * Komponente, damit ein Fallwechsel die Komponente tauscht statt Hooks umzuschalten.
+ */
+export function GuestsScreen() {
+  const { venueId, hasRealVenue, showcase } = useStore();
+  if (hasRealVenue && !showcase) return <EchteGaesteAnsicht venueId={venueId} />;
+  return <DemoGaeste />;
+}
+
+/**
+ * Gäste-CRM - der verteidigbare Kern von Maitr (Vorführung).
  *
  * Die Gästebeziehung gehört dem Betrieb, nicht der Plattform. Jede Reservierung reichert
  * sie an (Besuche, letzter Besuch). Der Copilot handelt: inaktive Gäste in einem Tap
  * zurückholen - genau der Automatisierungs-Moment, der Maitr von einem Verzeichnis
  * unterscheidet.
  */
-export function GuestsScreen() {
+function DemoGaeste() {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();

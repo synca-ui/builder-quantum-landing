@@ -15,14 +15,35 @@ import { useStore } from "../../lib/store";
 import { useToast } from "../../lib/toast";
 import { useTheme } from "../../theme";
 
+import { EchteReservierungenAnsicht } from "./EchteReservierungenAnsicht";
+
 /**
- * Screens 05-07 · Reservierung.
+ * Tab „Tische" · Reservierung.
+ *
+ * Zwei Fälle, entschieden allein über den Store:
+ *  - Echter Betrieb (nicht Showcase): die echten Reservierungen der nächsten 14 Tage
+ *    (`EchteReservierungenAnsicht`). Einen Tischplan gibt es dort nicht - der Server
+ *    kennt keine Tische, und die Fixture-Tage vom Juli 2025 sähen aus wie die eigenen.
+ *  - Demomodus und Showcase: die bisherige Vorführung, unverändert.
+ *
+ * Die Hooks beider Ansichten stecken in je eigenen Komponenten. Wechselt der Fall
+ * (der Betrieb wird nach dem Laden bekannt), tauscht React die Komponente aus,
+ * statt Hooks hinter einer Bedingung ein- oder auszuschalten.
+ */
+export function ReservationsScreen() {
+  const { venueId, hasRealVenue, showcase } = useStore();
+  if (hasRealVenue && !showcase) return <EchteReservierungenAnsicht venueId={venueId} />;
+  return <DemoReservierung />;
+}
+
+/**
+ * Screens 05-07 · Reservierung (Vorführung).
  *
  * Ein Screen, drei Zustände: teilbelegt, ausgebucht, leerer Tag. Die Tage kommen aus dem
  * Store, nicht aus der Fixture - so erscheint eine Gastbuchung oder ein Walk-in hier
  * sofort in der Zeitschiene. Im Betrieb blättert man mit den Pfeilen durch die Tage.
  */
-export function ReservationsScreen() {
+function DemoReservierung() {
   const theme = useTheme();
   const toast = useToast();
   const router = useRouter();

@@ -11,7 +11,11 @@ export interface GreetingHeaderProps {
   greeting: string;
   venueName: string;
   subline: string;
-  /** Ungelesene Posteingangs-Nachrichten - Badge auf der Glocke. */
+  /**
+   * Ungelesene Posteingangs-Nachrichten - Badge auf der Glocke. Kommt aus
+   * `usePosteingang` (echter Betrieb: Anfragen, Präsenz-Warnungen, neue
+   * Bewertungen; Demo: der Seed), nicht mehr direkt aus `store.unreadCount`.
+   */
   unread?: number;
   onOpenInbox?: () => void;
   onToggleNightMode?: () => void;
@@ -58,7 +62,8 @@ export function GreetingHeader({
             {unread > 0 ? (
               <View style={[styles.badge, { backgroundColor: theme.colors.primary }]}>
                 <Text variant="eyebrow" color={theme.colors.onPrimary} style={styles.badgeText}>
-                  {unread}
+                  {/* Echte Anfragen können zweistellig werden; der 16-pt-Punkt nicht. */}
+                  {unread > 9 ? "9+" : unread}
                 </Text>
               </View>
             ) : null}

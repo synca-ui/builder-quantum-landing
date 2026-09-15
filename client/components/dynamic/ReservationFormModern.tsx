@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from "react";
 import { slotsFuerDatum } from "@maitr/core/reservierungsSlots";
 import type { OpeningHours } from "@maitr/core/types";
+import { lokalesDatumISO, STANDARD_ZONE, zeitpunktAusDatumUndUhrzeit } from "@maitr/core/zeitzone";
 import { CheckCircle, ChevronLeft, Loader2 } from "lucide-react";
 
 interface Slot {
@@ -86,8 +87,12 @@ export default function ReservationFormModern({
     return d.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
   }
 
+  // Lokaler Kalendertag, nicht der UTC-Tag. ANLASS (15.09.2026): Hier stand
+  // `d.toISOString().split("T")[0]` auf lokalen Mitternächten - in Berlin ist
+  // das der Vortag. „Morgen“ buchte für heute, „Heute“ fragte gestern ab und
+  // scheiterte mit „max. 7 Tage im Voraus“.
   function toISO(d: Date): string {
-    return d.toISOString().split("T")[0];
+    return lokalesDatumISO(d);
   }
 
   // ── Init: set today as default ─────────────────────────────────────────────
@@ -106,12 +111,14 @@ export default function ReservationFormModern({
         previewOpeningHours ?? null,
         selectedDateISO,
       );
+      // Dieselben Zeitpunkte wie GET /slots (Wanduhr in Europe/Berlin), nicht
+      // `${datum}T19:00:00.000Z` - sonst zeigte die Vorschau andere Daten als
+      // die veröffentlichte Seite.
       setSlots(
-        gefiltert.map((time) => ({
-          time,
-          datetime: `${selectedDateISO}T${time}:00.000Z`,
-          available: true,
-        })),
+        gefiltert.flatMap((time) => {
+          const zeitpunkt = zeitpunktAusDatumUndUhrzeit(selectedDateISO, time, STANDARD_ZONE);
+          return zeitpunkt ? [{ time, datetime: zeitpunkt.toISOString(), available: true }] : [];
+        }),
       );
       setLoadingSlots(false);
       return;
