@@ -596,7 +596,6 @@ export function PublishStep({
         onClose={() => setShowAuthModal(false)}
         headline="Login erforderlich zum Veröffentlichen"
         subline="Erstelle ein kostenloses Konto oder melde dich an, um deine Web-App live zu schalten und dauerhaft zu speichern."
-        redirectUrl={window.location.pathname}
       />
 
       <div className="flex justify-between mt-8">
