@@ -34,7 +34,7 @@ import {
 } from "@/store/configuratorStore";
 import { normalizeImageSrc } from "@/lib/configurator-data";
 import { uploadImageFile } from "@/lib/mediaUpload";
-import { extractMenuFromFile } from "@/lib/menuExtract";
+import { extractMenuFromFile, erkennungsHinweis } from "@/lib/menuExtract";
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import type { MenuItem } from "@/types/domain";
@@ -821,6 +821,10 @@ export function MenuProductsStep({
           `${uebernommen} ${uebernommen === 1 ? "Gericht" : "Gerichte"} übernommen`,
           { id: meldung },
         );
+        // Lief nur der Regel-Rückfall, ist das Ergebnis grob — das muss der
+        // Wirt wissen, BEVOR er die Karte so veröffentlicht.
+        const hinweis = erkennungsHinweis(ergebnis.diagnostics);
+        if (hinweis) toast.warning(hinweis, { duration: 10000 });
       } else {
         // Ehrlich sagen, WARUM nichts kam — die Diagnose des Servers nennt den
         // Grund (kein OCR-Anbieter, Datei unlesbar, Karte ohne Preise).

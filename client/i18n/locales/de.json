@@ -155,7 +155,9 @@
     "aperitivo": "Aperitivo",
     "aperitivoDesc": "Koralle und Pfirsich, runde Karten mit Kreisbild — für Cocktailbars bei Tag, Aperitivo-Abende und Weinbars.",
     "hofladen": "Hofcafé",
-    "hofladenDesc": "Leinen, Salbeigrün, gestrichelte Karteikarten und ein Stempel mit der Betriebsart — für Hofcafés, Biergärten und regionale Küche."
+    "hofladenDesc": "Leinen, Salbeigrün, gestrichelte Karteikarten und ein Stempel mit der Betriebsart — für Hofcafés, Biergärten und regionale Küche.",
+    "filterAll": "Alle",
+    "filterLabel": "Für welchen Betrieb?"
   },
   "business": {
     "name": "Geschäftsname",

@@ -244,9 +244,22 @@ export default function Configurator() {
       } catch (e) {
         console.error(e);
         setSaveStatus("idle");
+        // Vorher endete ein gescheitertes Speichern hier WORTLOS: Status
+        // zurück auf idle, sonst nichts. Beim Live-Test am 12.09.2026 lief
+        // jedes Speichern auf HTTP 500 (Prisma kannte ein Feld nicht), und
+        // die Oberfläche sah aus wie immer. Der Wirt hätte den Browser
+        // geschlossen und alles verloren.
+        toast({
+          title: "Speichern fehlgeschlagen",
+          description:
+            e instanceof Error && e.message && e.message !== "No token"
+              ? e.message
+              : "Der Server hat die Konfiguration nicht angenommen.",
+          variant: "destructive",
+        });
       }
     },
-    [isSignedIn, getToken, currentConfigId, persistence],
+    [isSignedIn, getToken, currentConfigId, persistence, toast],
   );
 
   const handlePublish = useCallback(async () => {
